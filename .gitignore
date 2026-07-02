@@ -14,3 +14,6 @@ framework/**/.pytest_cache/
 # board/ — генерируемая проекция (источник правды: test-cases/, bugs/, runs/).
 # Версионируем, чтобы TrackState на Pages читал её из репозитория; локально
 # пересобирается scripts/board_sync.py.
+
+# Локальный HTML-просмотр борды — эфемерный, пересобирается board_view.py, не коммитим
+board-view.html

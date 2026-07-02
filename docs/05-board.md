@@ -33,24 +33,43 @@ Sync-Board        # запускает board_sync.py И делает git commit 
 > директорию. Поэтому после генерации нужен `git commit` — `Sync-Board` делает это сам.
 > Либо запускается скиллом `/board`.
 
-## Как смотреть — локально (сейчас)
+## Как смотреть — локально (стадия 1)
 
-Десктоп-приложение (портативное, Flutter, без установки Flutter SDK):
-`tools/trackstate/trackstate.exe` (скачано из релиза TrackState).
+Есть два способа. Для повседневного «глянуть статусы» — первый (без коммитов).
+
+### A. Быстрый HTML-просмотр — БЕЗ git и коммитов (рекомендуется на стадии 1)
+
+Отдельная лёгкая борда [scripts/board_view.py](../scripts/board_view.py) читает те же
+артефакты и рендерит самодостаточный `board-view.html` (данные вшиты, открывается по
+`file://`). Обновил и открыл — **никаких коммитов**.
 
 ```powershell
 . D:\AO3_tests\scripts\board.ps1
-Open-Board        # запускает trackstate.exe
-# В приложении: выбрать Local repository (target = local) и папку D:\AO3_tests
+Show-Board        # пересобирает board-view.html из артефактов и открывает в браузере
 ```
 
-Быстрый headless-просмотр без GUI (тот же движок, JQL):
+`board-view.html` в `.gitignore` (эфемерный). Это канбан-доска по типам
+(Test Cases / Bugs / Runs) с колонками-статусами, карточками, приоритетами и метками.
+
+### B. Полноценный TrackState (десктоп) — нужен commit
+
+Нужен, когда хочется именно UI TrackState (иерархия, JQL-фильтры и т.п.) или перед
+переходом на Pages. Локальный провайдер TrackState читает **закоммиченный HEAD**,
+поэтому здесь коммит обязателен:
+
 ```powershell
-Show-BoardCli     # tools/ts-cli/trackstate.exe search --target local --jql "project = AO3"
+Sync-Board        # пересобрать board/ + git commit
+Open-Board        # trackstate.exe -> Local repository -> папка D:\AO3_tests
+Show-BoardCli     # или headless: JQL-поиск через CLI, тоже читает HEAD
 ```
 
 Проверено: CLI/приложение читают борду (`session --target local` → ok, JQL находит все
 тикеты). Требование локального провайдера — репозиторий инициализирован git (сделано).
+
+> **Почему так:** TrackState — git-native, его локальный провайдер берёт содержимое
+> через `git show HEAD:<path>`, то есть видит только закоммиченное. Поэтому для «просто
+> посмотреть без коммитов» используем HTML-просмотр (A); TrackState (B) — когда нужен
+> его UI или публикация на Pages.
 
 ## Как смотреть — по URL (потом, GitHub Pages)
 

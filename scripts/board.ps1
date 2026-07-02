@@ -18,6 +18,14 @@ function Sync-Board {
     Pop-Location
 }
 
+function Show-Board {
+    # Стадия 1: локальный просмотр БЕЗ git и коммитов. Пересобирает HTML из артефактов
+    # и открывает его в браузере. Быстро, эфемерно, никаких коммитов.
+    & $py "$root\scripts\board_view.py"
+    Start-Process "$root\board-view.html"
+    Write-Host "board-view.html открыт (обновлён из артефактов, без коммитов)." -ForegroundColor Green
+}
+
 function Open-Board {
     # Десктоп-приложение TrackState. В приложении выбрать Local target и папку D:\AO3_tests.
     Start-Process "$root\tools\trackstate\trackstate.exe"
@@ -29,4 +37,7 @@ function Show-BoardCli {
     & "$root\tools\ts-cli\trackstate.exe" search --target local --jql "project = AO3 ORDER BY key ASC"
 }
 
-Write-Host "Board loaded: Sync-Board (пересобрать+commit), Open-Board (GUI), Show-BoardCli (JQL)" -ForegroundColor Green
+Write-Host "Board loaded:" -ForegroundColor Green
+Write-Host "  Show-Board   — быстрый HTML-просмотр локально, БЕЗ коммитов (стадия 1)" -ForegroundColor Green
+Write-Host "  Sync-Board   — пересобрать board/ + git commit (для TrackState/Pages)" -ForegroundColor Green
+Write-Host "  Open-Board   — десктоп TrackState (нужен commit); Show-BoardCli — JQL" -ForegroundColor Green
