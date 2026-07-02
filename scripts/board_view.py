@@ -48,10 +48,12 @@ def collect():
     return by_type
 
 
-def render(by_type) -> str:
+def render(by_type, live: bool = False) -> str:
     def esc(s):
         return html.escape(str(s))
 
+    import datetime
+    stamp = datetime.datetime.now().strftime("%H:%M:%S")
     sections = []
     total = 0
     for itype in ("test-case", "bug", "run"):
@@ -77,6 +79,14 @@ def render(by_type) -> str:
             f'<div class="board">{"".join(cols_html)}</div>'
         )
 
+    if live:
+        # На сервере каждый GET пересобирает доску из артефактов, поэтому кнопка = reload.
+        refresh_btn = '<button class="refresh" onclick="location.reload()" title="Пересобрать из артефактов">↻ Обновить</button>'
+        mode_note = "Живой просмотр без коммитов (кнопка пересобирает из артефактов)"
+    else:
+        refresh_btn = ""
+        mode_note = "Статический снимок без коммитов · пересобрать: python scripts/board_view.py"
+
     return f"""<!doctype html><html lang=ru><head><meta charset=utf-8>
 <title>AO3 QA — борда</title>
 <style>
@@ -95,9 +105,12 @@ h2{{margin:26px 0 10px;font-size:16px}} .cnt{{color:#888;font-weight:normal}}
 .pP0{{background:#c0392b;color:#fff}}.pP1{{background:#e08600;color:#fff}}.pP2{{background:#dfd8cf;color:#333}}.pP3{{background:#eee;color:#777}}
 .lbls span{{display:inline-block;font-size:10px;color:#777;background:#f1ece7;border-radius:6px;padding:0 5px;margin:2px 3px 0 0}}
 .empty{{color:#bbb;text-align:center;padding:6px}}
+.refresh{{font:600 13px system-ui;cursor:pointer;border:1px solid #c94;background:#c0392b;color:#fff;border-radius:6px;padding:7px 14px;margin-left:12px}}
+.refresh:hover{{background:#a93226}} .refresh:active{{transform:translateY(1px)}}
+.head{{display:flex;align-items:center;flex-wrap:wrap;gap:6px}}
 </style></head><body>
-<h1>AO3 Reader — QA борда</h1>
-<div class=sub>Локальный просмотр без коммитов · {total} тикетов · источник: test-cases/ · bugs/ · runs/ · пересобрать: <code>python scripts/board_view.py</code></div>
+<div class=head><h1>AO3 Reader — QA борда</h1>{refresh_btn}</div>
+<div class=sub>{mode_note} · {total} тикетов · обновлено {stamp} · источник: test-cases/ · bugs/ · runs/</div>
 {"".join(sections)}
 </body></html>"""
 

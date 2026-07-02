@@ -19,11 +19,16 @@ function Sync-Board {
 }
 
 function Show-Board {
-    # Стадия 1: локальный просмотр БЕЗ git и коммитов. Пересобирает HTML из артефактов
-    # и открывает его в браузере. Быстро, эфемерно, никаких коммитов.
+    # Стадия 1: живая доска БЕЗ git и коммитов. Поднимает локальный сервер, который
+    # пересобирает доску из артефактов на каждый запрос; в окне есть кнопка «↻ Обновить»
+    # (= перезагрузка страницы). Ctrl+C в этом окне — остановить сервер.
+    & $py "$root\scripts\board_server.py"
+}
+
+function Save-BoardHtml {
+    # Разовый статический снимок в board-view.html (без сервера и кнопки).
     & $py "$root\scripts\board_view.py"
     Start-Process "$root\board-view.html"
-    Write-Host "board-view.html открыт (обновлён из артефактов, без коммитов)." -ForegroundColor Green
 }
 
 function Open-Board {
@@ -38,6 +43,7 @@ function Show-BoardCli {
 }
 
 Write-Host "Board loaded:" -ForegroundColor Green
-Write-Host "  Show-Board   — быстрый HTML-просмотр локально, БЕЗ коммитов (стадия 1)" -ForegroundColor Green
-Write-Host "  Sync-Board   — пересобрать board/ + git commit (для TrackState/Pages)" -ForegroundColor Green
-Write-Host "  Open-Board   — десктоп TrackState (нужен commit); Show-BoardCli — JQL" -ForegroundColor Green
+Write-Host "  Show-Board     — живая доска в браузере с кнопкой Обновить, БЕЗ коммитов (стадия 1)" -ForegroundColor Green
+Write-Host "  Save-BoardHtml — разовый статический HTML-снимок (без сервера)" -ForegroundColor Green
+Write-Host "  Sync-Board     — пересобрать board/ + git commit (для TrackState/Pages)" -ForegroundColor Green
+Write-Host "  Open-Board     — десктоп TrackState (нужен commit); Show-BoardCli — JQL" -ForegroundColor Green

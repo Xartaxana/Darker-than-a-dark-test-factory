@@ -55,12 +55,14 @@ test-runner, failure-analyst, bug-reporter, fix-verifier, test-maintainer. У к
 
 ```powershell
 . D:\AO3_tests\scripts\board.ps1
-Sync-Board     # пересобрать board/ из артефактов + git commit
-Open-Board     # открыть десктоп TrackState (Local repository -> D:\AO3_tests)
+Show-Board     # живая доска в браузере с кнопкой «↻ Обновить», БЕЗ коммитов (стадия 1)
+Sync-Board     # пересобрать board/ + git commit (для десктоп TrackState / Pages)
+Open-Board     # десктоп TrackState (Local repository -> D:\AO3_tests)
 ```
 
-Или скилл `/board`. Проверено официальным CLI TrackState: борда читается, 8 стартовых
-тикетов (6 TC, 1 bug, 1 run) видны через JQL.
+Или скилл `/board`. Живая HTML-доска (`Show-Board`) пересобирается из артефактов по
+кнопке, без коммитов. Полный TrackState проверен официальным CLI: 8 стартовых тикетов
+(6 TC, 1 bug, 1 run) видны через JQL.
 
 Быстрое возобновление работы — [docs/HANDOFF.md](docs/HANDOFF.md).
 
