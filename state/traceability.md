@@ -7,9 +7,14 @@
 |---|---|---|---|---|---|
 | R-04 | (P0 smoke: рейтинг→вкладка) | P0 | framework/tests/test_smoke.py::test_seeded_work_appears_in_correct_tab | Automated (де-факто) | 9/9 зелёные 2026-07-02 |
 | R-01 | (P0 smoke: clear all) | P0 | test_smoke.py::test_clear_all_ratings | Automated (де-факто) | зелёный |
+| R-04 | TC-007 (5 рейтингов со страницы работы, панель) | P0 | framework/tests/test_rating.py::test_rate_work_from_work_page_panel | Automated | 3/3 зелёные 2026-07-03 (+ полный P0 smoke 17/17) |
+| R-04 | TC-008 (deselect повторным тапом, панель работы) | P0 | framework/tests/test_rating.py::test_deselect_rating_on_work_page_panel | Automated | 3/3 зелёные 2026-07-03 (+ полный P0 smoke 17/17) |
+| R-04 | TC-016 (смена рейтинга между вкладками Library) | P0 | framework/tests/test_library.py::test_change_rating_moves_work_between_tabs | Automated | 3/3 зелёные 2026-07-03 (+ полный P0 smoke 17/17) |
+| R-04 | TC-017 (comment-only не в рейтинговых вкладках) | P0 | framework/tests/test_library.py::test_comment_only_not_in_any_rating_tab | Automated | 3/3 зелёные 2026-07-03 (+ полный P0 smoke 17/17) |
 | R-06 | TC-013 (Disliked скрыт при фильтрации) | P0 | — | Review (Blocked) | не прогонялся — заблокирован отсутствием replay-фикстур листинга (см. заметку в TC-013.md) |
 | R-06 | TC-014 (work без рейтинга/comment-only не скрывается) | P0 | — | Review (Blocked) | не прогонялся — тот же replay-блокер; `seed_db.seed_with_comment` добавлен заранее для разблокирования |
 | R-06 | TC-015 (Enable filtering off → всё видно) | P0 | — | Review (Blocked) | не прогонялся — replay-блокер + расхождение PROJECT.md/код (нет глобального тумблера "Enable filtering", только per-rating), см. заметку в TC-015.md |
+| R-04 | TC-009 (5 рейтингов из листинга, bottom-sheet) | P0 | — | Review (Blocked) | не прогонялся — тот же replay-блокер (нужен детерминированный листинг с блёрбом синтетической работы), см. заметку в TC-009.md |
 
 > Примечание: smoke Фазы 1 написан напрямую (до формального тест-дизайна). В Фазе 2
 > test-designer оформит соответствующие TC-xxx и свяжет их обратными ссылками.

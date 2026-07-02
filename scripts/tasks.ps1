@@ -20,7 +20,10 @@ function Start-Emulator {
 function Start-Appium {
     param([int]$TimeoutSeconds = 60)
     Push-Location "$root\tools\appium"
-    Start-Process -FilePath "npx" `
+    # "npx" (без расширения) через Start-Process на некоторых машинах резолвится не в
+    # npx.cmd, а в постороннюю ShellExecute-ассоциацию (наблюдалось: открывался Notepad).
+    # npx.cmd — однозначный путь к реальному исполняемому файлу.
+    Start-Process -FilePath "npx.cmd" `
         -ArgumentList "appium","--log-level","warn","--allow-insecure","uiautomator2:chromedriver_autodownload" `
         -WindowStyle Minimized
     Pop-Location

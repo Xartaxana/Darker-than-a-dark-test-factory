@@ -58,6 +58,33 @@ def seeded_library():
 
 
 @pytest.fixture()
+def loved_work_seeded():
+    """Работа LOVED засеяна с рейтингом SAVE (Favorite) до старта сессии Appium —
+    тот же порядок обязателен, что и в `seeded_library`/`comment_only_work`: иначе
+    driver успевает запустить приложение до сидинга, а `pm clear`/сидинг после
+    запуска сессии не перезапускает уже работающий процесс (WebView остаётся в
+    неопределённом состоянии — см. TC-008)."""
+    app_steps.clean_state()
+    app_steps.seed_library([(W.LOVED, "SAVE")])
+    yield W.LOVED
+
+
+@pytest.fixture()
+def placeholder_seeded_work(request):
+    """Работа `request.param` засеяна как placeholder БЕЗ рейтинга (rating=None), но
+    с полными title/author/fandom/wordCount — до старта сессии Appium (тот же порядок,
+    что и `seeded_library`). Нужна для TC-007: `savePanelRating` (BrowserViewModel.kt)
+    скрейпит title/author из живого DOM страницы работы только когда для `workId` ещё
+    нет строки в Room; для синтетических `ao3_id` (не существующих на archiveofourown.org)
+    скрейп страницы вернёт пустые поля. Предзаполненный placeholder переводит панель на
+    ветку "обновить существующую строку" — без сетевого скрейпа, см. test_rating.py."""
+    work = request.param
+    app_steps.clean_state()
+    app_steps.seed_with_comment([(work, None, None, None)])
+    yield work
+
+
+@pytest.fixture()
 def comment_only_work():
     """Одна работа засеяна как comment-only (rating=NULL, непустой comment) —
     без обращения к AO3. Сидинг делается до создания сессии Appium (см.
