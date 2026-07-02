@@ -2,7 +2,7 @@
 key: "TC-017"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p0"
 summary: "Comment-only запись (rating=null) не появляется ни в одной рейтинговой вкладке Library"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T17:05:35Z"
-updated: "2026-07-02T17:05:35Z"
+created: "2026-07-03T00:55:00Z"
+updated: "2026-07-03T00:55:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Comment-only запись (rating=null) не появляется ни в одной рейтинговой вкладке Library
 
 _Спроецировано из `test-cases/library/TC-017.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-017 — Comment-only не появляется в рейтинговых вкладках
 
@@ -61,3 +61,11 @@ DISLIKED экрана Library
 - [x] Then проверяет наблюдаемое поведение, а не реализацию
 - [x] Указаны приоритет, область и источник требования
 - [x] Кейс независим от порядка выполнения других кейсов
+
+## Автоматизация (test-automator, 2026-07-03)
+
+Реализовано в `framework/tests/test_library.py::test_comment_only_not_in_any_rating_tab`.
+Сидинг через фикстуру `comment_only_work` (`framework/tests/conftest.py`,
+`seed_db.seed_with_comment` — `rating=None`, `comment="test note"`). Не требует
+живого AO3 (нет навигации на страницу работы). 3/3 стабильных зелёных прогона
+подряд (плюс полный P0 smoke 17/17 без регрессий).

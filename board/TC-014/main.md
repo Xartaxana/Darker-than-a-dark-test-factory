@@ -2,7 +2,7 @@
 key: "TC-014"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-review"
 priority: "p0"
 summary: "Work без рейтинга (или comment-only, rating=null) никогда не скрывается фильтрацией"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T17:16:21Z"
-updated: "2026-07-02T17:16:21Z"
+created: "2026-07-02T22:00:34Z"
+updated: "2026-07-02T22:00:34Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Work без рейтинга (или comment-only, rating=null) никогда не скрывается фильтрацией
 
 _Спроецировано из `test-cases/visibility/TC-014.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Review**._
 
 # TC-014 — Work без рейтинга / comment-only не скрывается
 
@@ -65,3 +65,28 @@ _Спроецировано из `test-cases/visibility/TC-014.md` (источн
 - [x] Then проверяет наблюдаемое поведение, а не реализацию
 - [x] Указаны приоритет, область и источник требования
 - [x] Кейс независим от порядка выполнения других кейсов
+
+## Заблокировано (test-automator, 2026-07-02)
+
+Возвращён в `Review` — невозможно закодировать имеющимися средствами.
+
+**Причина (та же, что у TC-013/TC-015):** кейс требует «листинговую страницу
+(replay-фикстуру), содержащую блёрбы работ A и B» с `li#work_{ao3Id}` для
+засеянных синтетических `ao3_id`. Таких работ не существует на реальном
+archiveofourown.org, а replay-транспорт (mitmproxy) на этом стенде не готов —
+`framework/data/recordings/` пуста, захват трафика эмулятора на Windows-хосте
+ещё не доведён (см. `docs/environment-setup.md` спайк B, `docs/04-roadmap.md`
+Фаза 1). Подробности — в блоке «Заблокировано» в `TC-013.md`.
+
+**Отдельно, для будущего разблокирования — seed_db.py оценён и готов:**
+`_insert_rows`/`seed()` действительно жёстко требовали `rating` из
+`_RATING_ENUM` и писали `comment=None`. Это расширение сделано в рамках работы
+над кейсом (`framework/data/seed_db.py`): добавлена функция `seed_with_comment`
+(и расширена сигнатура вставки), принимающая опциональные `rating=None` и
+`comment`, не ломающая существующий `seed()`/`_insert_rows` (см. отчёт ниже,
+раздел про seed_db.py). Как только replay будет готов, для TC-014 понадобится
+только записать/сконструировать фикстуру — сидинг уже поддержан.
+
+**Что нужно, чтобы разблокировать:** то же, что для TC-013 (доводка спайка B +
+mitm-фикстура листинга с двумя блёрбами A/B; A вообще не засеивать, B засеять
+через `seed_with_comment(work=..., rating=None, comment="test note")`).

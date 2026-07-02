@@ -2,7 +2,7 @@
 key: "TC-008"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p0"
 summary: "Повторный тап по выбранному рейтингу снимает его (deselect) на панели работы"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T17:05:52Z"
-updated: "2026-07-02T17:05:52Z"
+created: "2026-07-03T00:55:00Z"
+updated: "2026-07-03T00:55:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Повторный тап по выбранному рейтингу снимает его (deselect) на панели работы
 
 _Спроецировано из `test-cases/rating/TC-008.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-008 — Deselect рейтинга повторным тапом (панель работы)
 
@@ -67,3 +67,15 @@ comment-only (не исчезает полностью из Library/Downloads т
 - [x] Then проверяет наблюдаемое поведение, а не реализацию
 - [x] Указаны приоритет, область и источник требования
 - [x] Кейс независим от порядка выполнения других кейсов
+
+## Автоматизация (test-automator, 2026-07-03)
+
+Реализовано в `framework/tests/test_rating.py::test_deselect_rating_on_work_page_panel`.
+3/3 стабильных зелёных прогона подряд (плюс полный P0 smoke 17/17 без регрессий).
+Сидинг через новую фикстуру `loved_work_seeded` (`framework/tests/conftest.py`,
+работа LOVED с `rating=SAVE` — строка в Room уже существует, поэтому deselect идёт
+через `removeRating`, без сетевого скрейпа страницы работы — см. заметку в TC-007
+про синтетические `ao3_id`). Дополнительно потребовалась явная навигация на нативную
+вкладку Browse после проверки Library и перед повторным тапом — `RatingMenu`
+(`WorkRatingPanel`) рендерится только когда `selectedTab == AppTab.BROWSE` (см.
+`BottomBar.kt`), тот же приём, что уже применялся в TC-016.

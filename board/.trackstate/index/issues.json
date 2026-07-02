@@ -447,7 +447,7 @@
     "epicPath": null,
     "summary": "Смена рейтинга перемещает work из одной вкладки Library в другую",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -455,8 +455,8 @@
       "area:library",
       "risk:R-04"
     ],
-    "updated": "2026-07-02T17:03:31Z",
-    "resolution": null,
+    "updated": "2026-07-02T21:20:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -469,7 +469,7 @@
     "epicPath": null,
     "summary": "Comment-only запись (rating=null) не появляется ни в одной рейтинговой вкладке Library",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -477,8 +477,8 @@
       "area:library",
       "risk:R-04"
     ],
-    "updated": "2026-07-02T17:05:35Z",
-    "resolution": null,
+    "updated": "2026-07-03T00:55:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -601,7 +601,7 @@
     "epicPath": null,
     "summary": "Простановка каждого из 5 рейтингов со страницы работы (панель)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -609,8 +609,8 @@
       "area:rating",
       "risk:R-04"
     ],
-    "updated": "2026-07-02T17:05:43Z",
-    "resolution": null,
+    "updated": "2026-07-03T00:55:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -623,7 +623,7 @@
     "epicPath": null,
     "summary": "Повторный тап по выбранному рейтингу снимает его (deselect) на панели работы",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -631,8 +631,8 @@
       "area:rating",
       "risk:R-04"
     ],
-    "updated": "2026-07-02T17:05:52Z",
-    "resolution": null,
+    "updated": "2026-07-03T00:55:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -645,7 +645,7 @@
     "epicPath": null,
     "summary": "Простановка каждого из 5 рейтингов из листинга (Rate-кнопка → bottom-sheet)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-review",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -653,7 +653,7 @@
       "area:rating",
       "risk:R-04"
     ],
-    "updated": "2026-07-02T17:05:58Z",
+    "updated": "2026-07-03T00:55:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1149,7 +1149,7 @@
     "epicPath": null,
     "summary": "Work с рейтингом Disliked скрыт на листинге при включённой фильтрации",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-review",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -1157,7 +1157,7 @@
       "area:visibility",
       "risk:R-06"
     ],
-    "updated": "2026-07-02T17:16:11Z",
+    "updated": "2026-07-02T22:00:26Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1171,7 +1171,7 @@
     "epicPath": null,
     "summary": "Work без рейтинга (или comment-only, rating=null) никогда не скрывается фильтрацией",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-review",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -1179,7 +1179,7 @@
       "area:visibility",
       "risk:R-06"
     ],
-    "updated": "2026-07-02T17:16:21Z",
+    "updated": "2026-07-02T22:00:34Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1193,7 +1193,7 @@
     "epicPath": null,
     "summary": "Выключение \"Enable filtering\" в Settings показывает все работы независимо от рейтинга",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-review",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -1201,7 +1201,7 @@
       "area:visibility",
       "risk:R-06"
     ],
-    "updated": "2026-07-02T17:16:31Z",
+    "updated": "2026-07-02T22:00:42Z",
     "resolution": null,
     "children": [],
     "archived": false
