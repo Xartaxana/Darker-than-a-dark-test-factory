@@ -3,7 +3,10 @@
   "name": "AO3 Reader QA",
   "defaultLocale": "en",
   "attachmentStorage": {
-    "mode": "none"
+    "mode": "repository-path",
+    "repositoryPath": {
+      "path": "board/.trackstate/attachments"
+    }
   },
   "issueKeyPattern": "AO3-{number}",
   "dataModel": "nested-tree",

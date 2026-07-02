@@ -173,7 +173,7 @@ def build():
         "key": PROJECT_KEY,
         "name": "AO3 Reader QA",
         "defaultLocale": "en",
-        "attachmentStorage": {"mode": "none"},
+        "attachmentStorage": {"mode": "repository-path", "repositoryPath": {"path": "board/.trackstate/attachments"}},
         "issueKeyPattern": PROJECT_KEY + "-{number}",
         "dataModel": "nested-tree",
         "configPath": "config",
