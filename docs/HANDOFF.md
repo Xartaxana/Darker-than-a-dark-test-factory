@@ -1,49 +1,66 @@
 # HANDOFF — точка возобновления
 
-Дата: 2026-07-02. Модель: Fable 5.
+Обновлено: 2026-07-02 (Fable 5). Читать первым при старте новой сессии.
 
-## Где мы
+## Что готово
 
-- **Фаза 0** (окружение) и **Фаза 1** (каркас фреймворка) — завершены.
-- Фреймворк: `framework/`, Appium 3.5.2 + pytest + Allure. P0 smoke = 9 тестов,
-  дважды подряд 9/9 зелёные (~3.5 мин на AVD). Запуск: `scripts/env.ps1` +
-  `scripts/tasks.ps1`. Appium стартовать с
-  `--allow-insecure uiautomator2:chromedriver_autodownload`.
-- Окружение портативно в `tools/` (JDK 21, Android SDK, AVD `ao3_test_api34`,
-  Appium, venv в `framework/.venv`). Виртуализация включена (AEHD 2.2).
+- **Фаза 0** (окружение) и **Фаза 1** (каркас фреймворка) — завершены. P0 smoke = 9
+  тестов, дважды подряд 9/9 зелёные. Детали: [environment-setup.md](environment-setup.md),
+  [../framework/README.md](../framework/README.md).
+- **9 агентов** в `.claude/agents/` + оркестрация `state/rules.yaml` + скиллы
+  `.claude/skills/` (`/qa-loop`, `/run-suite`, `/triage`, `/board`). См.
+  [03-agent-system.md](03-agent-system.md).
+- **Визуальная борда** (проекция артефактов в TrackState): [05-board.md](05-board.md).
+  Живой локальный просмотр без коммитов: `Show-Board` (сервер 127.0.0.1:8777 с кнопкой
+  «↻ Обновить»). Полный TrackState/Pages — `Sync-Board`/`Open-Board`.
+- Репозиторий под git (нужно провайдеру TrackState и для Pages потом). Всё закоммичено.
 
-## Текущая задача: СОЗДАНИЕ АГЕНТОВ (решение пользователя)
+## Как поднять окружение (в новом окне)
 
-Начинаем с агентов, НЕ с тест-дизайна. Реализовать 9 агентов из
-[03-agent-system.md](03-agent-system.md) как субагенты Claude Code:
+```powershell
+. D:\AO3_tests\scripts\env.ps1     # JAVA_HOME/ANDROID_HOME/PATH
+. D:\AO3_tests\scripts\tasks.ps1   # Start-Emulator, Start-Appium, Install-App, Invoke-Smoke
+. D:\AO3_tests\scripts\board.ps1   # Show-Board (живая доска)
+```
+Appium ОБЯЗАТЕЛЬНО с `--allow-insecure uiautomator2:chromedriver_autodownload`
+(Start-Appium это делает). Эмулятор `ao3_test_api34`, API 34.
 
-`.claude/agents/*.md` — по одному файлу на агента. Стандарт содержимого (docs/03 §5):
-персона+границы (для всех: «не изменять код в app-under-test/»), триггер (условие
-запуска, проверяется самим агентом), пошаговый воркфлоу, ссылка на шаблон из
-`docs/templates/`, чек-лист готовности, протокол эскалации (`Blocked`).
+## СЛЕДУЮЩАЯ ЗАДАЧА: Фаза 2 — тест-дизайн P0/P1
 
-9 агентов: qa-orchestrator, test-strategist, test-designer, test-automator,
-test-runner, failure-analyst, bug-reporter, fix-verifier, test-maintainer
-(триггеры и артефакты — docs/03 §1, статусные машины — §2, правила — §3).
+Цель: агенты **test-strategist** и **test-designer** оформляют полноценные тест-кейсы
+в формате Given-When-Then по всем P0/P1-областям (docs/01 §6): рейтинги, фильтрация
+видимости, табы (10 шт., undo, персистентность), Library (фильтры/сортировки),
+downloads, filter-profiles, заметки/теги, backup/restore, settings, error page.
+Ориентир ~60–80 кейсов. Человек утверждает P0/P1 (Draft/Review → Approved).
 
-Оркестрация: `state/rules.yaml` (правила из docs/03 §3) + скиллы
-`.claude/skills/`: `/qa-loop`, `/run-suite`, `/triage`.
+Порядок: можно через `/qa-loop` (оркестратор подхватит правила «needs-design» и
+«PROJECT.md изменился»), либо запускать агентов точечно через Task. После создания
+кейсов пересобрать борду (`Show-Board`) и дать человеку на утверждение.
 
-Артефакты — markdown+YAML frontmatter: `test-cases/`, `bugs/`, `runs/`, `state/`.
+Уже есть стартовые артефакты (не с нуля): `test-cases/smoke/TC-001..005` (Automated),
+`test-cases/library/TC-006` (Draft), `bugs/BUG-001` (Open, подписи Library), `runs/RUN-...`
+(Closed). Фоновая задача task_1397829e — расхождение подписей Library для test-designer.
 
-## Открытые хвосты
+## Критичные факты, чтобы не переоткрывать (беречь токены — см. [[token-efficiency-practices]])
 
-- Фоновая задача task_1397829e для test-designer: расхождение подписей вкладок Library
-  (PROJECT.md «Loved/Liked/Downloads» vs факт «Favorite/Kudosed/Files»).
+- **Локаторы выводить из кода приложения (место рендера!) → живое дерево → скриншот в
+  последнюю очередь.** Ловушки Compose: `tab.label.uppercase()` (вкладки Library в
+  ВЕРХНЕМ регистре FAVORITE/KUDOSED/READ/PENDING/DISLIKED/FILES), `AnimatedVisibility`
+  (нижняя навигация Browse/Library/Settings скрыта на Browse за нижней ручкой-пилюлей —
+  `BottomNav._expand_pill`), клик висит на родителе текстового узла, `UiScrollable` не
+  видит Compose-скролл (использовать `swipe_to_text`). Панель инструментов — слева.
+- **Сидинг Library:** `framework/data/seed_db.py` (взять созданную приложением БД →
+  INSERT в `work_ratings` → вернуть; rating = имя enum SAVE/LIKE/READ/PENDING/DISLIKE;
+  тянуть db+wal+shm вместе). Работает на debug-сборке через run-as.
+- **Cloudflare bot-check** иногда на старте (риск R-03) — smoke это обходит (нативный UI+сидинг).
+- **Git Bash + adb:** экспортировать `MSYS_NO_PATHCONV=1`. Фоновые процессы — не через
+  Start-Process (умирают по завершении вызова).
+- **Борда TrackState (десктоп/CLI) читает закоммиченный HEAD**, не рабочую папку; живой
+  HTML-просмотр (`Show-Board`/board_server.py) — без коммитов.
+
+## Открытые хвосты (не блокируют Фазу 2)
+
 - Спайк B (mitmproxy replay): захват трафика эмулятора на Windows пуст — вероятно
-  Windows Firewall на mitmdump. Не блокирует; доводится когда дойдём до replay.
-
-## Факты об UI (сверено с живым приложением, важно для локаторов)
-
-- Нижняя навигация Browse/Library/Settings скрыта на Browse за нижней ручкой-пилюлей.
-- Вкладки Library в ВЕРХНЕМ регистре: FAVORITE/KUDOSED/READ/PENDING/DISLIKED/FILES.
-- Панель инструментов — вертикальная слева (PanelSide.LEFT).
-- Кнопка «Clear…» с юникод-многоточием, клик в Compose на родителе.
-- Cloudflare bot-check иногда на старте (риск R-03).
-- Сидинг Library: `framework/data/seed_db.py` (взять БД приложения → INSERT в
-  `work_ratings` → вернуть; rating = имя enum SAVE/LIKE/READ/PENDING/DISLIKE).
+  Windows Firewall на mitmdump. Довести, когда дойдём до replay-режима.
+- Фоновый сервер борды (порт 8777) мог остаться запущен из прошлой сессии — при нужде
+  перезапустить `Show-Board`.
