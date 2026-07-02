@@ -21,6 +21,19 @@ tools: Read, Bash, Write, Edit
 ## Воркфлоу
 1. Убедись, что эмулятор и Appium подняты (`scripts/tasks.ps1`:
    `Start-Emulator`/`Start-Appium`), APK установлен (`Install-App`).
+   **Используй ТОЛЬКО эти функции из `scripts/tasks.ps1` — не пиши руками
+   `nohup`/фоновые `&`/циклы с `curl`+`sleep` для ожидания готовности Appium/эмулятора,
+   не собирай `export JAVA_HOME=...; export PATH=...` вручную.** `Start-Appium` уже
+   сам ждёт готовности (health-check на `/status`, кидает исключение по таймауту);
+   `Start-Emulator` сам ждёт `boot_completed`; `Stop-NodeProcesses` убивает зависшие
+   node-процессы. Причина: самодельные многострочные bash/PowerShell-скрипты с
+   подстановками/фоном/циклами почти всегда триггерят проверку sandbox «cannot be
+   statically analyzed» и требуют от пользователя ручного подтверждения на каждый
+   отличающийся вызов — тогда как вызов именованной функции из `tasks.ps1` уже
+   разрешён и не создаёт новых запросов.
+   **ОДНА команда — ОДИН вызов Bash:** не склеивай несколько statement'ов в один
+   многострочный вызов — он гарантированно уйдёт на ручное подтверждение, даже если
+   каждая часть по отдельности разрешена.
 2. Запусти нужный suite: `pytest -m <p0|p1|...>` в нужном `AO3_MODE` (live/replay).
 3. Собери итоги: passed/failed/skipped/quarantined, длительность, каталог Allure.
 4. Создай `runs/RUN-<timestamp>.md` по шаблону `docs/templates/run-report.md`.

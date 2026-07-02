@@ -2,8 +2,8 @@
 key: "TC-046"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
-priority: "p1"
+status: "tc-approved"
+priority: "p2"
 summary: "Ошибка загрузки главного фрейма показывает кастомную error page с Retry"
 assignee: "qa-agents"
 reporter: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T00:00:00Z"
-updated: "2026-07-02T00:00:00Z"
+created: "2026-07-02T17:31:59Z"
+updated: "2026-07-02T17:31:59Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Ошибка загрузки главного фрейма показывает кастомную error page с Retry
 
 _Спроецировано из `test-cases/errors/TC-046.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-046 — Кастомная error page с Retry при ошибке загрузки
 

@@ -3,7 +3,7 @@ key: "TC-031"
 project: "AO3"
 issueType: "test-case"
 status: "tc-review"
-priority: "p1"
+priority: "p3"
 summary: "Работы без word_count уходят в конец списка при сортировке Word count"
 assignee: "qa-agents"
 reporter: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T00:00:00Z"
-updated: "2026-07-02T00:00:00Z"
+created: "2026-07-02T17:19:00Z"
+updated: "2026-07-02T17:19:00Z"
 archived: false
 resolution: null
 ---

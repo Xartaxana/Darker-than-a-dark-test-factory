@@ -2,7 +2,7 @@
 key: "TC-007"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p0"
 summary: "Простановка каждого из 5 рейтингов со страницы работы (панель)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T00:00:00Z"
-updated: "2026-07-02T00:00:00Z"
+created: "2026-07-02T17:05:43Z"
+updated: "2026-07-02T17:05:43Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Простановка каждого из 5 рейтингов со страницы работы (панель)
 
 _Спроецировано из `test-cases/rating/TC-007.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-007 — Пять рейтингов со страницы работы
 

@@ -2,8 +2,8 @@
 key: "TC-011"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
-priority: "p0"
+status: "tc-approved"
+priority: "p2"
 summary: "Бейдж Rate-кнопки на карточке листинга обновляется мгновенно после рейтинга из bottom-sheet (без перезагрузки)"
 assignee: "qa-agents"
 reporter: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T00:00:00Z"
-updated: "2026-07-02T00:00:00Z"
+created: "2026-07-02T17:32:50Z"
+updated: "2026-07-02T17:32:50Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Бейдж Rate-кнопки на карточке листинга обновляется мгновенно после рейтинга из bottom-sheet (без перезагрузки)
 
 _Спроецировано из `test-cases/rating/TC-011.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-011 — Мгновенное обновление бейджа (вход: листинг)
 

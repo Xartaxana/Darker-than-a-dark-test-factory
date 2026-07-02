@@ -17,3 +17,9 @@ framework/**/.pytest_cache/
 
 # Локальный HTML-просмотр борды — эфемерный, пересобирается board_view.py, не коммитим
 board-view.html
+
+# Отладочный мусор прогонов (логи фоновых процессов, разовые скриншоты)
+framework/*.log
+framework/*.png
+scratch_screen*.png
+dump.xml

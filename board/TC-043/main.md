@@ -2,7 +2,7 @@
 key: "TC-043"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Comment-only запись (rating=null) не появляется в рейтинговых вкладках и не скрывается фильтрацией"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T00:00:00Z"
-updated: "2026-07-02T00:00:00Z"
+created: "2026-07-02T17:19:27Z"
+updated: "2026-07-02T17:19:27Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Comment-only запись (rating=null) не появляется в рейтинговых вкладках и не скрывается фильтрацией
 
 _Спроецировано из `test-cases/rating/TC-043.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-043 — Comment-only работа: видимость и отсутствие в рейтинговых вкладках
 

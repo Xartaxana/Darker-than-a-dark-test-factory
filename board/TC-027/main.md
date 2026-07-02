@@ -2,7 +2,7 @@
 key: "TC-027"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Фильтр по word count (min/max) скрывает работы вне диапазона на вкладке Library"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T00:00:00Z"
-updated: "2026-07-02T00:00:00Z"
+created: "2026-07-02T17:18:32Z"
+updated: "2026-07-02T17:18:32Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Фильтр по word count (min/max) скрывает работы вне диапазона на вкладке Library
 
 _Спроецировано из `test-cases/library/TC-027.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-027 — Фильтр word count min/max сужает список работ
 

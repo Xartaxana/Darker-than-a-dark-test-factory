@@ -2,7 +2,7 @@
 key: "TC-025"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Персистентность URL и скролла вкладок после рестарта приложения"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T00:00:00Z"
-updated: "2026-07-02T00:00:00Z"
+created: "2026-07-02T17:31:33Z"
+updated: "2026-07-02T17:31:33Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Персистентность URL и скролла вкладок после рестарта приложения
 
 _Спроецировано из `test-cases/tabs/TC-025.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-025 — Вкладки переживают adb kill/relaunch с URL и скроллом
 

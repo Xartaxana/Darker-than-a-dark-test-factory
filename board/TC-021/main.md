@@ -2,7 +2,7 @@
 key: "TC-021"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p0"
 summary: "Backup → Clear all ratings → Restore возвращает исходные данные"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T00:00:00Z"
-updated: "2026-07-02T00:00:00Z"
+created: "2026-07-02T17:02:59Z"
+updated: "2026-07-02T17:02:59Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Backup → Clear all ratings → Restore возвращает исходные данные
 
 _Спроецировано из `test-cases/backup/TC-021.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-021 — Backup → Clear → Restore возвращает данные
 

@@ -2,7 +2,7 @@
 key: "TC-016"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p0"
 summary: "Смена рейтинга перемещает work из одной вкладки Library в другую"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T00:00:00Z"
-updated: "2026-07-02T00:00:00Z"
+created: "2026-07-02T17:03:31Z"
+updated: "2026-07-02T17:03:31Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Смена рейтинга перемещает work из одной вкладки Library в другую
 
 _Спроецировано из `test-cases/library/TC-016.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-016 — Смена рейтинга перемещает work между вкладками Library
 

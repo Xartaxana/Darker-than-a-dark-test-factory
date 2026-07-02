@@ -2,7 +2,7 @@
 key: "TC-008"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p0"
 summary: "Повторный тап по выбранному рейтингу снимает его (deselect) на панели работы"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T00:00:00Z"
-updated: "2026-07-02T00:00:00Z"
+created: "2026-07-02T17:05:52Z"
+updated: "2026-07-02T17:05:52Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Повторный тап по выбранному рейтингу снимает его (deselect) на панели работы
 
 _Спроецировано из `test-cases/rating/TC-008.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-008 — Deselect рейтинга повторным тапом (панель работы)
 

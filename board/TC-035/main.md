@@ -2,7 +2,7 @@
 key: "TC-035"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Delete downloaded file удаляет только файл, сохраняя строку рейтинга"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T00:00:00Z"
-updated: "2026-07-02T00:00:00Z"
+created: "2026-07-02T17:16:50Z"
+updated: "2026-07-02T17:16:50Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Delete downloaded file удаляет только файл, сохраняя строку рейтинга
 
 _Спроецировано из `test-cases/downloads/TC-035.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-035 — Delete downloaded file сохраняет WorkRating
 

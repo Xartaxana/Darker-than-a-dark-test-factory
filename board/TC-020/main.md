@@ -3,7 +3,7 @@ key: "TC-020"
 project: "AO3"
 issueType: "test-case"
 status: "tc-review"
-priority: "p0"
+priority: "p3"
 summary: "Clear all ratings сбрасывает бейджи на открытых страницах AO3 без перезагрузки"
 assignee: "qa-agents"
 reporter: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T00:00:00Z"
-updated: "2026-07-02T00:00:00Z"
+created: "2026-07-02T17:15:54Z"
+updated: "2026-07-02T17:15:54Z"
 archived: false
 resolution: null
 ---

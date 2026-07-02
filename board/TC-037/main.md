@@ -3,7 +3,7 @@ key: "TC-037"
 project: "AO3"
 issueType: "test-case"
 status: "tc-review"
-priority: "p1"
+priority: "p3"
 summary: "Scan for downloads (ручной триггер) показывает диалог результата даже при 0 файлов"
 assignee: "qa-agents"
 reporter: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T00:00:00Z"
-updated: "2026-07-02T00:00:00Z"
+created: "2026-07-02T17:17:15Z"
+updated: "2026-07-02T17:17:15Z"
 archived: false
 resolution: null
 ---

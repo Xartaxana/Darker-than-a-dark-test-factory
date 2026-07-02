@@ -10,11 +10,14 @@
 from __future__ import annotations
 
 import http.server
+import json
 import socketserver
 import sys
 import threading
 import webbrowser
+from urllib.parse import parse_qs, urlsplit
 
+from board_sync import approve_test_case, set_priority
 from board_view import collect, render
 
 HOST = "127.0.0.1"
@@ -34,6 +37,32 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Cache-Control", "no-store")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_POST(self):
+        parts = urlsplit(self.path)
+        qs = parse_qs(parts.query)
+        key = qs.get("key", [""])[0]
+        if parts.path == "/approve":
+            try:
+                ok, message = approve_test_case(key) if key else (False, "не передан key")
+            except Exception as e:  # noqa: BLE001
+                ok, message = False, str(e)
+        elif parts.path == "/priority":
+            priority = qs.get("priority", [""])[0]
+            try:
+                ok, message = set_priority(key, priority) if key and priority else (False, "не передан key/priority")
+            except Exception as e:  # noqa: BLE001
+                ok, message = False, str(e)
+        else:
+            self.send_response(404)
+            self.end_headers()
+            return
+        body = json.dumps({"ok": ok, "message": message}).encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)

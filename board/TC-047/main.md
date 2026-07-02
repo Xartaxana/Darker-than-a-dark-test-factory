@@ -2,7 +2,7 @@
 key: "TC-047"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Переключение темы Dark в Settings применяется мгновенно без пересоздания Activity"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T00:00:00Z"
-updated: "2026-07-02T00:00:00Z"
+created: "2026-07-02T17:19:47Z"
+updated: "2026-07-02T17:19:47Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Переключение темы Dark в Settings применяется мгновенно без пересоздания Activity
 
 _Спроецировано из `test-cases/settings/TC-047.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-047 — Переключение Dark применяется мгновенно, Activity не пересоздаётся
 

@@ -57,6 +57,17 @@ def seeded_library():
     yield W
 
 
+@pytest.fixture()
+def comment_only_work():
+    """Одна работа засеяна как comment-only (rating=NULL, непустой comment) —
+    без обращения к AO3. Сидинг делается до создания сессии Appium (см.
+    seeded_library — тот же порядок обязателен, иначе драйвер успевает
+    запустить приложение раньше сидинга)."""
+    app_steps.clean_state()
+    app_steps.seed_with_comment([(W.KUDOSED, None, "test note", None)])
+    yield W.KUDOSED
+
+
 # --- Артефакты падений ---
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):

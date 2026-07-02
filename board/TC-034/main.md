@@ -2,7 +2,7 @@
 key: "TC-034"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Открытие скачанного файла применяет мобильный viewport и reader.css"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T00:00:00Z"
-updated: "2026-07-02T00:00:00Z"
+created: "2026-07-02T17:16:44Z"
+updated: "2026-07-02T17:16:44Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Открытие скачанного файла применяет мобильный viewport и reader.css
 
 _Спроецировано из `test-cases/downloads/TC-034.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-034 — Открытие file:// применяет стилизацию (viewport + reader.css)
 

@@ -2,7 +2,7 @@
 key: "TC-014"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p0"
 summary: "Work без рейтинга (или comment-only, rating=null) никогда не скрывается фильтрацией"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T00:00:00Z"
-updated: "2026-07-02T00:00:00Z"
+created: "2026-07-02T17:16:21Z"
+updated: "2026-07-02T17:16:21Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Work без рейтинга (или comment-only, rating=null) никогда не скрывается фильтрацией
 
 _Спроецировано из `test-cases/visibility/TC-014.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-014 — Work без рейтинга / comment-only не скрывается
 

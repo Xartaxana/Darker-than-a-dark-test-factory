@@ -2,7 +2,7 @@
 key: "TC-017"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p0"
 summary: "Comment-only запись (rating=null) не появляется ни в одной рейтинговой вкладке Library"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T00:00:00Z"
-updated: "2026-07-02T00:00:00Z"
+created: "2026-07-02T17:05:35Z"
+updated: "2026-07-02T17:05:35Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Comment-only запись (rating=null) не появляется ни в одной рейтинговой вкладке Library
 
 _Спроецировано из `test-cases/library/TC-017.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-017 — Comment-only не появляется в рейтинговых вкладках
 

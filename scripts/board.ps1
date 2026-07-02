@@ -1,4 +1,4 @@
-# Борда TrackState. Использование: . D:\AO3_tests\scripts\board.ps1 ; Sync-Board ; Open-Board
+﻿# Борда TrackState. Использование: . D:\AO3_tests\scripts\board.ps1 ; Sync-Board ; Open-Board
 # ВАЖНО: локальный провайдер TrackState читает ЗАКОММИЧЕННЫЙ HEAD, поэтому Sync-Board
 # после генерации делает git commit — иначе приложение не увидит изменения.
 $root = "D:\AO3_tests"

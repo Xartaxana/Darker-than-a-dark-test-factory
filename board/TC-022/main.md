@@ -2,7 +2,7 @@
 key: "TC-022"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Достижение лимита MAX_TABS=10 не создаёт 11-ю вкладку"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T00:00:00Z"
-updated: "2026-07-02T00:00:00Z"
+created: "2026-07-02T17:31:06Z"
+updated: "2026-07-02T17:31:06Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Достижение лимита MAX_TABS=10 не создаёт 11-ю вкладку
 
 _Спроецировано из `test-cases/tabs/TC-022.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-022 — Лимит 10 вкладок не превышается
 

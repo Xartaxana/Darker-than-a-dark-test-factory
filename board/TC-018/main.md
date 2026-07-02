@@ -2,8 +2,8 @@
 key: "TC-018"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
-priority: "p0"
+status: "tc-approved"
+priority: "p2"
 summary: "Clear all ratings показывает диалог подтверждения перед очисткой"
 assignee: "qa-agents"
 reporter: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T00:00:00Z"
-updated: "2026-07-02T00:00:00Z"
+created: "2026-07-02T17:32:54Z"
+updated: "2026-07-02T17:32:54Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Clear all ratings показывает диалог подтверждения перед очисткой
 
 _Спроецировано из `test-cases/settings/TC-018.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-018 — Диалог подтверждения перед Clear all ratings
 

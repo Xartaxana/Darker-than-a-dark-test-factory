@@ -18,13 +18,25 @@ function Start-Emulator {
 }
 
 function Start-Appium {
+    param([int]$TimeoutSeconds = 60)
     Push-Location "$root\tools\appium"
     Start-Process -FilePath "npx" `
         -ArgumentList "appium","--log-level","warn","--allow-insecure","uiautomator2:chromedriver_autodownload" `
         -WindowStyle Minimized
     Pop-Location
-    Start-Sleep 6
-    Write-Host "Appium started on :4723" -ForegroundColor Green
+    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+    do {
+        Start-Sleep 2
+        try { $ready = (Invoke-WebRequest -Uri "http://127.0.0.1:4723/status" -UseBasicParsing -TimeoutSec 3).Content -match '"ready":true' } catch { $ready = $false }
+    } while (-not $ready -and (Get-Date) -lt $deadline)
+    if (-not $ready) { throw "Appium not ready after ${TimeoutSeconds}s (http://127.0.0.1:4723/status)" }
+    Write-Host "Appium started and ready on :4723" -ForegroundColor Green
+}
+
+function Stop-NodeProcesses {
+    Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+    Start-Sleep 1
+    Write-Host "Node processes stopped." -ForegroundColor Green
 }
 
 function Install-App {
@@ -51,4 +63,4 @@ function Show-Report {
     Pop-Location
 }
 
-Write-Host "Tasks loaded: Start-Emulator, Start-Appium, Install-App, Invoke-Smoke, Invoke-Suite, Show-Report" -ForegroundColor Green
+Write-Host "Tasks loaded: Start-Emulator, Start-Appium, Stop-NodeProcesses, Install-App, Invoke-Smoke, Invoke-Suite, Show-Report" -ForegroundColor Green

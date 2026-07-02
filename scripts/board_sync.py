@@ -162,6 +162,47 @@ def _labels_for(itype: str, meta: dict) -> list[str]:
     return labels
 
 
+def approve_test_case(key: str) -> tuple[bool, str]:
+    """Переводит test-case Review -> Approved прямо в исходном .md файле."""
+    for itype, meta, _body, src in _iter_artifacts():
+        if itype != "test-case" or str(meta.get("id")) != key:
+            continue
+        if str(meta.get("status")) != "Review":
+            return False, f"{key}: статус «{meta.get('status')}», ожидался Review"
+        text = src.read_text(encoding="utf-8")
+        new_text = re.sub(r"(?m)^status:\s*Review\s*$", "status: Approved", text, count=1)
+        if new_text == text:
+            return False, f"{key}: не нашёл строку status: Review в файле"
+        import datetime
+        stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        new_text = re.sub(r'(?m)^updated:.*$', f'updated: "{stamp}"', new_text, count=1)
+        src.write_text(new_text, encoding="utf-8")
+        return True, f"{key}: Review → Approved"
+    return False, f"{key}: не найден среди test-case"
+
+
+def set_priority(key: str, priority: str) -> tuple[bool, str]:
+    """Меняет priority: PN во frontmatter test-case/bug .md файла."""
+    priority = priority.upper()
+    if priority not in {"P0", "P1", "P2", "P3"}:
+        return False, f"недопустимый приоритет «{priority}»"
+    for itype, meta, _body, src in _iter_artifacts():
+        if itype not in ("test-case", "bug") or str(meta.get("id")) != key:
+            continue
+        if itype == "bug":
+            return False, f"{key}: у багов приоритет выводится из severity, не редактируется напрямую"
+        text = src.read_text(encoding="utf-8")
+        new_text = re.sub(r"(?m)^priority:\s*P[0-3]\s*$", f"priority: {priority}", text, count=1)
+        if new_text == text:
+            return False, f"{key}: не нашёл строку priority: PN в файле"
+        import datetime
+        stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        new_text = re.sub(r'(?m)^updated:.*$', f'updated: "{stamp}"', new_text, count=1)
+        src.write_text(new_text, encoding="utf-8")
+        return True, f"{key}: priority → {priority}"
+    return False, f"{key}: не найден среди test-case"
+
+
 def build():
     if BOARD.exists():
         shutil.rmtree(BOARD)

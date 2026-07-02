@@ -2,7 +2,7 @@
 key: "TC-015"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p0"
 summary: "Выключение \"Enable filtering\" в Settings показывает все работы независимо от рейтинга"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T00:00:00Z"
-updated: "2026-07-02T00:00:00Z"
+created: "2026-07-02T17:16:31Z"
+updated: "2026-07-02T17:16:31Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Выключение "Enable filtering" в Settings показывает все работы независимо от рейтинга
 
 _Спроецировано из `test-cases/visibility/TC-015.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-015 — Enable filtering выключен → всё видно
 

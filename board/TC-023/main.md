@@ -2,7 +2,7 @@
 key: "TC-023"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Swipe-up закрывает вкладку, Undo из snackbar восстанавливает её на исходной позиции"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T00:00:00Z"
-updated: "2026-07-02T00:00:00Z"
+created: "2026-07-02T17:31:13Z"
+updated: "2026-07-02T17:31:13Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Swipe-up закрывает вкладку, Undo из snackbar восстанавливает её на исходной позиции
 
 _Спроецировано из `test-cases/tabs/TC-023.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-023 — Undo закрытия вкладки восстанавливает позицию и историю
 

@@ -9,6 +9,7 @@ from __future__ import annotations
 import allure
 
 from framework.screens.browser_screen import BrowserScreen
+from framework.screens.navigation import BottomNav
 from framework.screens.rating_overlay import RatingOverlay
 
 
@@ -19,6 +20,11 @@ def open_work_page(driver, work_id: str):
 
 @allure.step("When на странице работы выставлен рейтинг {rating}")
 def rate_current_work(driver, rating: str):
+    # Встроенная панель WorkRatingPanel (RatingMenu) на странице работы, как и
+    # нижняя навигация, скрыта на вкладке Browse за нижней ручкой-пилюлей
+    # (BottomBar.kt: AnimatedVisibility(selectedTab != BROWSE || navExpanded)) —
+    # раскрываем её тем же механизмом, что и BottomNav.
+    BottomNav(driver).ensure_visible()
     overlay = RatingOverlay(driver)
     assert overlay.is_visible(), "меню рейтинга не появилось на странице работы"
     overlay.choose(rating)

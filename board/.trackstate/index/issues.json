@@ -8,7 +8,7 @@
     "epicPath": null,
     "summary": "Backup → Clear all ratings → Restore возвращает исходные данные",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -16,7 +16,139 @@
       "area:backup",
       "risk:R-01"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:02:59Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-050",
+    "path": "board/TC-050/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Contrast-иконка в side panel переключает тему мгновенно во всём UI (WebView + нативный)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-11 (proposed, не утверждён в §5)"
+    ],
+    "updated": "2026-07-02T20:02:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-051",
+    "path": "board/TC-051/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "A+/A- в side panel меняют размер шрифта в WebView мгновенно и переживают рестарт",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-11 (proposed, не утверждён в §5)"
+    ],
+    "updated": "2026-07-02T20:02:04Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-052",
+    "path": "board/TC-052/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Кнопки шрифта в side panel отключаются на границах диапазона (шаг 0 и 6)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-11 (proposed, не утверждён в §5)"
+    ],
+    "updated": "2026-07-02T20:02:14Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-053",
+    "path": "board/TC-053/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Двухпальцевый pinch/spread на Browse меняет размер шрифта (тот же fontSizeStep)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-11 (proposed, не утверждён в §5)"
+    ],
+    "updated": "2026-07-02T20:02:19Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-054",
+    "path": "board/TC-054/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Тема и шрифт из side panel и из Settings — один общий стейт (эквивалентность входов)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-11 (proposed, не утверждён в §5)"
+    ],
+    "updated": "2026-07-02T20:02:25Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-055",
+    "path": "board/TC-055/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Двухпальцевый вертикальный драг меняет яркость; ниже минимума включается чёрный overlay",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-11 (proposed, не утверждён в §5)"
+    ],
+    "updated": "2026-07-02T20:02:30Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -30,7 +162,7 @@
     "epicPath": null,
     "summary": "Авто-скачивание запускается при простановке Loved с включённым Auto-download",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -38,7 +170,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:03:07Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -52,7 +184,7 @@
     "epicPath": null,
     "summary": "Ручное скачивание работы из Library добавляет локальный файл",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -60,7 +192,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:16:37Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -74,7 +206,7 @@
     "epicPath": null,
     "summary": "Открытие скачанного файла применяет мобильный viewport и reader.css",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -82,7 +214,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:16:44Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -96,7 +228,7 @@
     "epicPath": null,
     "summary": "Delete downloaded file удаляет только файл, сохраняя строку рейтинга",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -104,7 +236,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:16:50Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -118,7 +250,7 @@
     "epicPath": null,
     "summary": "Delete work удаляет и файл, и строку рейтинга целиком",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -126,7 +258,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:17:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -141,14 +273,14 @@
     "summary": "Scan for downloads (ручной триггер) показывает диалог результата даже при 0 файлов",
     "issueType": "test-case",
     "status": "tc-review",
-    "priority": "p1",
+    "priority": "p3",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:17:15Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -162,15 +294,15 @@
     "epicPath": null,
     "summary": "Смена папки загрузок автоматически запускает silent-скан и перелинковывает orphan-файлы",
     "issueType": "test-case",
-    "status": "tc-review",
-    "priority": "p1",
+    "status": "tc-approved",
+    "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:31:42Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -184,15 +316,15 @@
     "epicPath": null,
     "summary": "Restore from backup сворачивает результат scanForOrphanedDownloads в один диалог",
     "issueType": "test-case",
-    "status": "tc-review",
-    "priority": "p1",
+    "status": "tc-approved",
+    "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:31:55Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -206,15 +338,15 @@
     "epicPath": null,
     "summary": "Ошибка загрузки главного фрейма показывает кастомную error page с Retry",
     "issueType": "test-case",
-    "status": "tc-review",
-    "priority": "p1",
+    "status": "tc-approved",
+    "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:errors",
       "risk:R-03 (частично, TECH)"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:31:59Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -228,7 +360,7 @@
     "epicPath": null,
     "summary": "Save filter сохраняет текущий запрос AO3 Sort&Filter под именем",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -236,7 +368,7 @@
       "area:filter-profiles",
       "risk:R-09 (proposed, не утверждён в §5)"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:17:59Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -250,7 +382,7 @@
     "epicPath": null,
     "summary": "Применение сохранённого фильтр-профиля из панели на листинговой странице",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -258,7 +390,7 @@
       "area:filter-profiles",
       "risk:R-09 (proposed, не утверждён в §5)"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:18:18Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -272,7 +404,7 @@
     "epicPath": null,
     "summary": "Удаление фильтр-профиля из Settings убирает его из списка и панели",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -280,7 +412,7 @@
       "area:filter-profiles",
       "risk:R-09 (proposed, не утверждён в §5)"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:18:24Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -315,7 +447,7 @@
     "epicPath": null,
     "summary": "Смена рейтинга перемещает work из одной вкладки Library в другую",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -323,7 +455,7 @@
       "area:library",
       "risk:R-04"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:03:31Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -337,7 +469,7 @@
     "epicPath": null,
     "summary": "Comment-only запись (rating=null) не появляется ни в одной рейтинговой вкладке Library",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -345,7 +477,7 @@
       "area:library",
       "risk:R-04"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:05:35Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -359,7 +491,7 @@
     "epicPath": null,
     "summary": "Фильтр по word count (min/max) скрывает работы вне диапазона на вкладке Library",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -367,7 +499,7 @@
       "area:library",
       "risk:R-06"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:18:32Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -381,7 +513,7 @@
     "epicPath": null,
     "summary": "Фильтр downloaded-only показывает только работы с локальным файлом",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -389,7 +521,7 @@
       "area:library",
       "risk:R-06"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:18:36Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -403,7 +535,7 @@
     "epicPath": null,
     "summary": "Фильтр по фандому сужает список до совпадающих работ",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -411,7 +543,7 @@
       "area:library",
       "risk:R-06"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:18:39Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -425,7 +557,7 @@
     "epicPath": null,
     "summary": "Сортировка Word count (high to low) упорядочивает список и сбрасывает скролл",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -433,7 +565,7 @@
       "area:library",
       "risk:R-06"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:18:53Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -448,14 +580,14 @@
     "summary": "Работы без word_count уходят в конец списка при сортировке Word count",
     "issueType": "test-case",
     "status": "tc-review",
-    "priority": "p1",
+    "priority": "p3",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:library",
       "risk:R-06"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:19:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -469,7 +601,7 @@
     "epicPath": null,
     "summary": "Простановка каждого из 5 рейтингов со страницы работы (панель)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -477,7 +609,7 @@
       "area:rating",
       "risk:R-04"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:05:43Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -491,7 +623,7 @@
     "epicPath": null,
     "summary": "Повторный тап по выбранному рейтингу снимает его (deselect) на панели работы",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -499,7 +631,7 @@
       "area:rating",
       "risk:R-04"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:05:52Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -513,7 +645,7 @@
     "epicPath": null,
     "summary": "Простановка каждого из 5 рейтингов из листинга (Rate-кнопка → bottom-sheet)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -521,7 +653,7 @@
       "area:rating",
       "risk:R-04"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:05:58Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -535,15 +667,15 @@
     "epicPath": null,
     "summary": "Бейдж на карточке листинга обновляется мгновенно после рейтинга из панели работы (без перезагрузки)",
     "issueType": "test-case",
-    "status": "tc-review",
-    "priority": "p0",
+    "status": "tc-approved",
+    "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:rating",
       "risk:R-04"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:32:04Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -557,15 +689,15 @@
     "epicPath": null,
     "summary": "Бейдж Rate-кнопки на карточке листинга обновляется мгновенно после рейтинга из bottom-sheet (без перезагрузки)",
     "issueType": "test-case",
-    "status": "tc-review",
-    "priority": "p0",
+    "status": "tc-approved",
+    "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:rating",
       "risk:R-04"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:32:50Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -579,15 +711,15 @@
     "epicPath": null,
     "summary": "applyRatings синхронизирует бейдж во всех открытых вхождениях одной работы на странице",
     "issueType": "test-case",
-    "status": "tc-review",
-    "priority": "p0",
+    "status": "tc-approved",
+    "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:rating",
       "risk:R-04"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:19:18Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -601,7 +733,7 @@
     "epicPath": null,
     "summary": "Comment-only запись (rating=null) не появляется в рейтинговых вкладках и не скрывается фильтрацией",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -609,7 +741,7 @@
       "area:rating",
       "risk:R-10 (proposed, не утверждён в §5)"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:19:27Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -623,7 +755,7 @@
     "epicPath": null,
     "summary": "Note-кнопка на листинге открывает overlay с развёрнутым полем комментария",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -631,7 +763,7 @@
       "area:rating",
       "risk:R-10 (proposed, не утверждён в §5)"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:19:33Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -645,7 +777,7 @@
     "epicPath": null,
     "summary": "Личные теги не влияют на видимость работы независимо от фильтрации",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -653,7 +785,7 @@
       "area:rating",
       "risk:R-10 (proposed, не утверждён в §5)"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:19:41Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -667,15 +799,15 @@
     "epicPath": null,
     "summary": "Clear all ratings показывает диалог подтверждения перед очисткой",
     "issueType": "test-case",
-    "status": "tc-review",
-    "priority": "p0",
+    "status": "tc-approved",
+    "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:settings",
       "risk:R-01"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:32:54Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -689,15 +821,15 @@
     "epicPath": null,
     "summary": "Отмена диалога Clear all ratings не удаляет данные",
     "issueType": "test-case",
-    "status": "tc-review",
-    "priority": "p0",
+    "status": "tc-approved",
+    "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:settings",
       "risk:R-01"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:32:59Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -712,14 +844,14 @@
     "summary": "Clear all ratings сбрасывает бейджи на открытых страницах AO3 без перезагрузки",
     "issueType": "test-case",
     "status": "tc-review",
-    "priority": "p0",
+    "priority": "p3",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:settings",
       "risk:R-01"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:15:54Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -733,7 +865,7 @@
     "epicPath": null,
     "summary": "Переключение темы Dark в Settings применяется мгновенно без пересоздания Activity",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -741,7 +873,7 @@
       "area:settings",
       "risk:R-11 (proposed, не утверждён в §5)"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:19:47Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -753,9 +885,9 @@
     "epic": null,
     "parentPath": null,
     "epicPath": null,
-    "summary": "WebView dark mode применяется только после холодного рестарта, не мгновенно",
+    "summary": "WebView dark mode применяется мгновенно вместе с остальным UI (без холодного рестарта)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -763,7 +895,7 @@
       "area:settings",
       "risk:R-11 (proposed, не утверждён в §5)"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T20:02:34Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -777,7 +909,7 @@
     "epicPath": null,
     "summary": "Тема System следует за настройками ОС",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -785,7 +917,7 @@
       "area:settings",
       "risk:R-11 (proposed, не утверждён в §5)"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:31:01Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -907,7 +1039,7 @@
     "epicPath": null,
     "summary": "Достижение лимита MAX_TABS=10 не создаёт 11-ю вкладку",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -915,7 +1047,7 @@
       "area:tabs",
       "risk:R-08"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:31:06Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -929,7 +1061,7 @@
     "epicPath": null,
     "summary": "Swipe-up закрывает вкладку, Undo из snackbar восстанавливает её на исходной позиции",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -937,7 +1069,7 @@
       "area:tabs",
       "risk:R-08"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:31:13Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -952,14 +1084,14 @@
     "summary": "Более 5 закрытых вкладок вытесняют самый старый снапшот из Undo-истории",
     "issueType": "test-case",
     "status": "tc-review",
-    "priority": "p1",
+    "priority": "p3",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:tabs",
       "risk:R-08"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:31:23Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -973,7 +1105,7 @@
     "epicPath": null,
     "summary": "Персистентность URL и скролла вкладок после рестарта приложения",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -981,7 +1113,7 @@
       "area:tabs",
       "risk:R-08"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:31:33Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -995,7 +1127,7 @@
     "epicPath": null,
     "summary": "Long-press по ссылке открывает фоновую вкладку без переключения активной",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1003,7 +1135,7 @@
       "area:tabs",
       "risk:R-08"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:31:37Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1017,7 +1149,7 @@
     "epicPath": null,
     "summary": "Work с рейтингом Disliked скрыт на листинге при включённой фильтрации",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -1025,7 +1157,7 @@
       "area:visibility",
       "risk:R-06"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:16:11Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1039,7 +1171,7 @@
     "epicPath": null,
     "summary": "Work без рейтинга (или comment-only, rating=null) никогда не скрывается фильтрацией",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -1047,7 +1179,7 @@
       "area:visibility",
       "risk:R-06"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:16:21Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1061,7 +1193,7 @@
     "epicPath": null,
     "summary": "Выключение \"Enable filtering\" в Settings показывает все работы независимо от рейтинга",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -1069,7 +1201,7 @@
       "area:visibility",
       "risk:R-06"
     ],
-    "updated": "2026-07-02T00:00:00Z",
+    "updated": "2026-07-02T17:16:31Z",
     "resolution": null,
     "children": [],
     "archived": false

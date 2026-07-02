@@ -83,6 +83,30 @@ def _insert_rows(db: Path, works: list[tuple[Work, str]]) -> None:
     con.close()
 
 
+def _insert_rows_full(
+    db: Path,
+    rows: list[tuple[Work, str | None, str | None, str | None]],
+) -> None:
+    """Как `_insert_rows`, но допускает `rating=None` (comment-only запись — см.
+    `WorkRating.rating: Rating?` в app-under-test) и опциональные `comment`/`tags`.
+    Используется `seed_with_comment` для кейсов, которым `seed()` не хватает
+    (TC-014: work без рейтинга с непустым comment)."""
+    con = sqlite3.connect(db)
+    cur = con.cursor()
+    now = int(time.time() * 1000)
+    for work, rating, comment, tags in rows:
+        assert rating is None or rating in _RATING_ENUM, f"неизвестный rating: {rating}"
+        cur.execute(
+            """INSERT OR REPLACE INTO work_ratings
+               (ao3Id, title, author, url, rating, timestamp, fandom, wordCount, comment, downloadPath, tags)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+            (work.ao3_id, work.title, work.author, work.url, rating, now,
+             work.fandom, work.word_count, comment, None, tags),
+        )
+    con.commit()
+    con.close()
+
+
 def seed(works: list[tuple[Work, str]]) -> None:
     """Заливает список (Work, rating) в БД приложения. Приложение должно быть остановлено;
     после вызова стартуйте его заново (Room прочитает свежий файл)."""
@@ -93,6 +117,28 @@ def seed(works: list[tuple[Work, str]]) -> None:
         db = _pull_baseline(tmp)
         _insert_rows(db, works)
         # Убираем возможные wal/shm на устройстве и кладём свёрнутый db
+        adb.run_as(f"rm -f {_WAL} {_SHM}")
+        adb.push_app_file(db, _DB_REL)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def seed_with_comment(
+    rows: list[tuple[Work, str | None, str | None, str | None]],
+) -> None:
+    """Расширенный сидинг: каждая строка — (Work, rating, comment, tags), где `rating`
+    и `comment`/`tags` независимо опциональны (`None`). Поддерживает comment-only
+    записи (`rating=None`, непустой `comment`) — соответствует модели
+    `WorkRating.rating: Rating?` в app-under-test (см.
+    `app-under-test/.../data/model/WorkRating.kt`: null означает comment-only).
+    Не заменяет `seed()` — отдельная функция для кейсов, которым нужен контроль
+    над comment/tags/null-рейтингом (например TC-014)."""
+    adb.force_stop()
+    ensure_db_initialized()
+    tmp = Path(tempfile.mkdtemp(prefix="ao3seed_"))
+    try:
+        db = _pull_baseline(tmp)
+        _insert_rows_full(db, rows)
         adb.run_as(f"rm -f {_WAL} {_SHM}")
         adb.push_app_file(db, _DB_REL)
     finally:

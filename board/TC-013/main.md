@@ -2,7 +2,7 @@
 key: "TC-013"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p0"
 summary: "Work с рейтингом Disliked скрыт на листинге при включённой фильтрации"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T00:00:00Z"
-updated: "2026-07-02T00:00:00Z"
+created: "2026-07-02T17:16:11Z"
+updated: "2026-07-02T17:16:11Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Work с рейтингом Disliked скрыт на листинге при включённой фильтрации
 
 _Спроецировано из `test-cases/visibility/TC-013.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-013 — Disliked скрыт при включённой фильтрации
 

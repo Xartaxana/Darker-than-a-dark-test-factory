@@ -2,7 +2,7 @@
 key: "TC-049"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Тема System следует за настройками ОС"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T00:00:00Z"
-updated: "2026-07-02T00:00:00Z"
+created: "2026-07-02T17:31:01Z"
+updated: "2026-07-02T17:31:01Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Тема System следует за настройками ОС
 
 _Спроецировано из `test-cases/settings/TC-049.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-049 — Тема System переключается вместе с системной темой ОС
 

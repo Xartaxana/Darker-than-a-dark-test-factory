@@ -25,6 +25,11 @@ def seed_library(works: list[tuple[Work, str]]):
     seed_db.seed(works)
 
 
+@allure.step("Given в библиотеку засеяны записи с опциональными rating/comment/tags")
+def seed_with_comment(rows: list[tuple[Work, str | None, str | None, str | None]]):
+    seed_db.seed_with_comment(rows)
+
+
 @allure.step("When приложение запущено (нативный UI готов)")
 def wait_ui_ready(driver) -> None:
     """Ждёт отрисовки нативной оболочки (WebView-контейнер в дереве) — без ожидания
