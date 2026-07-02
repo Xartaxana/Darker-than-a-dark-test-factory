@@ -1,0 +1,49 @@
+# Правила оркестратора (аналог sm.json из dmtools). qa-orchestrator идёт сверху вниз,
+# берёт первый подходящий артефакт БЕЗ лока и не в Blocked/wip, ставит лок, диспатчит
+# агента, снимает лок. Порядок = приоритет: сперва разбор текущих прогонов и багов,
+# потом новая автоматизация и планирование.
+version: 1
+max_triggered_workflows: 3
+
+# Статусы-паузы: артефакты в них всегда пропускаются (точки вмешательства человека)
+skip_statuses: [Blocked]
+skip_locks: [wip]
+
+rules:
+  - name: "Новая сборка → smoke, затем regression"
+    when: "state/app-under-test.yaml изменился (versionCode/hash != последнего прогона)"
+    dispatch: test-runner
+    args: { suite: [smoke, regression], mode: replay }
+
+  - name: "Разобрать падения прогона"
+    when: "run.status == NeedsTriage"
+    dispatch: failure-analyst
+
+  - name: "Завести баг по APP_BUG"
+    when: "run содержит вердикт APP_BUG без linked_bug"
+    dispatch: bug-reporter
+
+  - name: "Починить тест по TEST_BUG/SITE_CHANGED"
+    when: "падение с вердиктом TEST_BUG или SITE_CHANGED без resolution"
+    dispatch: test-maintainer
+
+  - name: "Верифицировать исправленный баг"
+    when: "bug.status == Fixed И есть сборка новее bug.found_in"
+    dispatch: fix-verifier
+
+  - name: "Автоматизировать Approved-кейс"
+    when: "test-case.status == Approved И пусто automated_by"
+    dispatch: test-automator
+
+  - name: "Спроектировать кейсы для области без покрытия"
+    when: "в docs/01-test-strategy.md есть область needs-design"
+    dispatch: test-designer
+
+  - name: "Обновить стратегию при изменении приложения"
+    when: "app-under-test/PROJECT.md изменился с последнего анализа"
+    dispatch: test-strategist
+
+  - name: "Ежедневный canary на live AO3"
+    when: "расписание: раз в сутки"
+    dispatch: test-runner
+    args: { suite: [canary], mode: live }

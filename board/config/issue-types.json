@@ -1,0 +1,23 @@
+[
+  {
+    "id": "test-case",
+    "name": "Test Case",
+    "hierarchyLevel": 0,
+    "icon": "story",
+    "workflow": "test-workflow"
+  },
+  {
+    "id": "bug",
+    "name": "Bug",
+    "hierarchyLevel": 0,
+    "icon": "issue",
+    "workflow": "bug-workflow"
+  },
+  {
+    "id": "run",
+    "name": "Test Run",
+    "hierarchyLevel": 0,
+    "icon": "task",
+    "workflow": "run-workflow"
+  }
+]

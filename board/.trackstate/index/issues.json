@@ -1,0 +1,173 @@
+[
+  {
+    "key": "TC-006",
+    "path": "board/TC-006/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Подписи вкладок Library соответствуют фактическому UI",
+    "issueType": "test-case",
+    "status": "tc-draft",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:library"
+    ],
+    "updated": "2026-07-02T04:30:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-001",
+    "path": "board/TC-001/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Запуск приложения и загрузка AO3 в WebView",
+    "issueType": "test-case",
+    "status": "tc-automated",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:smoke",
+      "risk:R-03"
+    ],
+    "updated": "2026-07-02T03:00:00Z",
+    "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-002",
+    "path": "board/TC-002/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Нижняя навигация переключает Browse/Library/Settings",
+    "issueType": "test-case",
+    "status": "tc-automated",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:smoke"
+    ],
+    "updated": "2026-07-02T03:00:00Z",
+    "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-003",
+    "path": "board/TC-003/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Засеянная работа попадает в свою вкладку Library",
+    "issueType": "test-case",
+    "status": "tc-automated",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:library",
+      "risk:R-04"
+    ],
+    "updated": "2026-07-02T03:00:00Z",
+    "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-004",
+    "path": "board/TC-004/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Clear all ratings очищает библиотеку",
+    "issueType": "test-case",
+    "status": "tc-automated",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:settings",
+      "risk:R-01"
+    ],
+    "updated": "2026-07-02T03:00:00Z",
+    "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-005",
+    "path": "board/TC-005/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Переключение темы Light/Dark/System не роняет приложение",
+    "issueType": "test-case",
+    "status": "tc-automated",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:settings"
+    ],
+    "updated": "2026-07-02T03:00:00Z",
+    "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-001",
+    "path": "board/BUG-001/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Подписи вкладок Library и меню рейтинга расходятся с PROJECT.md",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-006",
+      "sev:minor"
+    ],
+    "updated": "2026-07-02T04:30:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "RUN-20260702-0300",
+    "path": "board/RUN-20260702-0300/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "RUN-20260702-0300",
+    "issueType": "run",
+    "status": "run-closed",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "run"
+    ],
+    "updated": "2026-07-02T03:35:00Z",
+    "resolution": "done",
+    "children": [],
+    "archived": false
+  }
+]

@@ -1,0 +1,72 @@
+[
+  {
+    "id": "tc-draft",
+    "name": "Draft",
+    "category": "new"
+  },
+  {
+    "id": "tc-review",
+    "name": "Review",
+    "category": "indeterminate"
+  },
+  {
+    "id": "tc-approved",
+    "name": "Approved",
+    "category": "indeterminate"
+  },
+  {
+    "id": "tc-automated",
+    "name": "Automated",
+    "category": "done"
+  },
+  {
+    "id": "bug-open",
+    "name": "Open",
+    "category": "new"
+  },
+  {
+    "id": "bug-reopened",
+    "name": "Reopened",
+    "category": "new"
+  },
+  {
+    "id": "bug-blocked",
+    "name": "Blocked",
+    "category": "indeterminate"
+  },
+  {
+    "id": "bug-fixed",
+    "name": "Fixed",
+    "category": "indeterminate"
+  },
+  {
+    "id": "bug-verified",
+    "name": "Verified",
+    "category": "done"
+  },
+  {
+    "id": "bug-rejected",
+    "name": "Rejected",
+    "category": "done"
+  },
+  {
+    "id": "bug-intended",
+    "name": "Intended",
+    "category": "done"
+  },
+  {
+    "id": "run-needstriage",
+    "name": "NeedsTriage",
+    "category": "new"
+  },
+  {
+    "id": "run-triaged",
+    "name": "Triaged",
+    "category": "indeterminate"
+  },
+  {
+    "id": "run-closed",
+    "name": "Closed",
+    "category": "done"
+  }
+]

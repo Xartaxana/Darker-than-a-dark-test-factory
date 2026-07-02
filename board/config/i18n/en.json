@@ -1,0 +1,36 @@
+{
+  "issueTypes": {
+    "test-case": "Test Case",
+    "bug": "Bug",
+    "run": "Test Run"
+  },
+  "statuses": {
+    "tc-draft": "Draft",
+    "tc-review": "Review",
+    "tc-approved": "Approved",
+    "tc-automated": "Automated",
+    "bug-open": "Open",
+    "bug-reopened": "Reopened",
+    "bug-blocked": "Blocked",
+    "bug-fixed": "Fixed",
+    "bug-verified": "Verified",
+    "bug-rejected": "Rejected",
+    "bug-intended": "Intended",
+    "run-needstriage": "NeedsTriage",
+    "run-triaged": "Triaged",
+    "run-closed": "Closed"
+  },
+  "priorities": {
+    "p0": "P0",
+    "p1": "P1",
+    "p2": "P2",
+    "p3": "P3"
+  },
+  "fields": {
+    "summary": "Summary",
+    "description": "Description",
+    "priority": "Priority",
+    "assignee": "Assignee",
+    "labels": "Labels"
+  }
+}

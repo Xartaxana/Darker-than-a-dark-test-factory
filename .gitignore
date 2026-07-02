@@ -1,0 +1,16 @@
+# Портативный инструментарий и артефакты сборки — не версионируем
+tools/
+app-under-test/
+framework/.venv/
+framework/allure-results/
+framework/allure-report/
+framework/**/__pycache__/
+**/__pycache__/
+*.pyc
+
+# Временные результаты прогонов (Allure/скриншоты); сами отчёты runs/*.md версионируем
+framework/**/.pytest_cache/
+
+# board/ — генерируемая проекция (источник правды: test-cases/, bugs/, runs/).
+# Версионируем, чтобы TrackState на Pages читал её из репозитория; локально
+# пересобирается scripts/board_sync.py.

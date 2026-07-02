@@ -1,0 +1,32 @@
+[
+  {
+    "id": "summary",
+    "name": "Summary",
+    "type": "string",
+    "required": true
+  },
+  {
+    "id": "description",
+    "name": "Description",
+    "type": "markdown",
+    "required": false
+  },
+  {
+    "id": "priority",
+    "name": "Priority",
+    "type": "option",
+    "required": false
+  },
+  {
+    "id": "assignee",
+    "name": "Assignee",
+    "type": "user",
+    "required": false
+  },
+  {
+    "id": "labels",
+    "name": "Labels",
+    "type": "array",
+    "required": false
+  }
+]

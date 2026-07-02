@@ -1,0 +1,13 @@
+# Тестируемая сборка. Обновляется при каждой новой сборке приложения —
+# изменение этого файла = триггер для test-runner (см. docs/03 §3, правило 1).
+app: ao3-wrapper
+repo: https://gitlab.com/Xartaxana1/ao3-wrapper
+source_commit: 63f6aac3b1ea1dfad82f68b8196aa6cf56f41853   # 2026-06-28
+version_name: "1.10"
+version_code: 11
+build_type: debug
+apk_path: app-under-test/app/build/outputs/apk/debug/app-debug.apk
+apk_sha256: "6455af0cfc2c937e81975f59a250476c77aecb73088a65b5e814210df3c87544"
+built_at: "2026-07-02T02:39:46"
+smoke_status: not_run     # not_run | passed | failed
+regression_status: not_run

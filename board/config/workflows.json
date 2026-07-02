@@ -1,0 +1,91 @@
+{
+  "test-workflow": {
+    "name": "Test Case Workflow",
+    "statuses": [
+      "tc-draft",
+      "tc-review",
+      "tc-approved",
+      "tc-automated"
+    ],
+    "transitions": [
+      {
+        "id": "tc-submit",
+        "name": "Submit for review",
+        "from": "tc-draft",
+        "to": "tc-review"
+      },
+      {
+        "id": "tc-approve",
+        "name": "Approve",
+        "from": "tc-review",
+        "to": "tc-approved"
+      },
+      {
+        "id": "tc-automate",
+        "name": "Automated",
+        "from": "tc-approved",
+        "to": "tc-automated"
+      }
+    ]
+  },
+  "bug-workflow": {
+    "name": "Bug Workflow",
+    "statuses": [
+      "bug-open",
+      "bug-fixed",
+      "bug-verified",
+      "bug-reopened",
+      "bug-blocked",
+      "bug-rejected",
+      "bug-intended"
+    ],
+    "transitions": [
+      {
+        "id": "bug-fix",
+        "name": "Mark fixed (\u0447\u0435\u043b\u043e\u0432\u0435\u043a)",
+        "from": "bug-open",
+        "to": "bug-fixed"
+      },
+      {
+        "id": "bug-verify",
+        "name": "Verify fix",
+        "from": "bug-fixed",
+        "to": "bug-verified"
+      },
+      {
+        "id": "bug-reopen",
+        "name": "Reopen",
+        "from": "bug-fixed",
+        "to": "bug-reopened"
+      },
+      {
+        "id": "bug-reject",
+        "name": "Reject / Intended",
+        "from": "bug-open",
+        "to": "bug-rejected"
+      }
+    ]
+  },
+  "run-workflow": {
+    "name": "Test Run Workflow",
+    "statuses": [
+      "run-needstriage",
+      "run-triaged",
+      "run-closed"
+    ],
+    "transitions": [
+      {
+        "id": "run-triage",
+        "name": "Triaged",
+        "from": "run-needstriage",
+        "to": "run-triaged"
+      },
+      {
+        "id": "run-close",
+        "name": "Close",
+        "from": "run-triaged",
+        "to": "run-closed"
+      }
+    ]
+  }
+}

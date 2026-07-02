@@ -1,0 +1,14 @@
+{
+  "key": "AO3",
+  "name": "AO3 Reader QA",
+  "defaultLocale": "en",
+  "attachmentStorage": {
+    "mode": "none"
+  },
+  "issueKeyPattern": "AO3-{number}",
+  "dataModel": "nested-tree",
+  "configPath": "config",
+  "supportedLocales": [
+    "en"
+  ]
+}
