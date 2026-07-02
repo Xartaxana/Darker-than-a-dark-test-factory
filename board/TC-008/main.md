@@ -1,0 +1,69 @@
+---
+key: "TC-008"
+project: "AO3"
+issueType: "test-case"
+status: "tc-review"
+priority: "p0"
+summary: "Повторный тап по выбранному рейтингу снимает его (deselect) на панели работы"
+assignee: "qa-agents"
+reporter: "qa-agents"
+labels: ["test-case", "area:rating", "risk:R-04"]
+components: []
+fixVersions: []
+watchers: []
+parent: null
+epic: null
+created: "2026-07-02T00:00:00Z"
+updated: "2026-07-02T00:00:00Z"
+archived: false
+resolution: null
+---
+
+# Повторный тап по выбранному рейтингу снимает его (deselect) на панели работы
+
+_Спроецировано из `test-cases/rating/TC-008.md` (источник правды).
+Статус в нашей машине: **Review**._
+
+# TC-008 — Deselect рейтинга повторным тапом (панель работы)
+
+## Предусловия
+- Приложение запущено, на странице работы `/works/{id}` уже выставлен рейтинг
+  (например Loved) — через панель (см. TC-007) или сидинг Room
+  (`framework/data/seed_db.py`).
+- Панель `RatingMenu` раскрыта, кнопка выбранного рейтинга отображается как selected.
+
+## Сценарий (Given-When-Then)
+
+**Given** приложение запущено и на странице работы `/works/{id}` уже выбран рейтинг
+«Loved» (кнопка в состоянии selected)
+
+**When** пользователь повторно нажимает ту же кнопку «Loved»
+
+**Then** кнопка «Loved» переходит в состояние не выбрано (deselect)
+**And** бейдж на странице сбрасывается (`rating=null`) без перезагрузки WebView
+**And** работа больше не отображается во вкладке FAVORITE экрана Library
+**And** если у работы был comment или личные теги — запись остаётся в БД как
+comment-only (не исчезает полностью из Library/Downloads там, где это применимо),
+т.к. `removeRating` удаляет строку только если не осталось comment/tags/downloadPath
+
+## Проверяемые данные
+| Параметр | Значение |
+|---|---|
+| Работа | `ao3_id` из `framework/data/works.py`, предварительно рейтингована Loved |
+
+## Заметки для автоматизации
+- Ключевая проверка на deselect, а не просто "снятие видимого выделения" — реальный
+  индикатор успеха: работа пропадает из вкладки FAVORITE Library.
+- Отдельный под-сценарий (comment preservation) можно вынести в area=rating/notes при
+  P1-дизайне заметок — здесь фиксируется как наблюдение "not lost", без глубокой
+  проверки содержимого комментария (это должно быть в TC для notes/tags, P1).
+- Deselect-логика источник: app-under-test/CLAUDE.md §Rating entry points, п.1 —
+  "Tapping the already-selected button deselects it... comment and tags are
+  preserved."
+
+## Чек-лист качества (test-designer проходит перед `Review`)
+- [x] Один сценарий — один кейс; нет «и ещё проверить...»
+- [x] Given описывает полное состояние, воспроизводимое фикстурами
+- [x] Then проверяет наблюдаемое поведение, а не реализацию
+- [x] Указаны приоритет, область и источник требования
+- [x] Кейс независим от порядка выполнения других кейсов
