@@ -1,4 +1,5 @@
 ﻿# Борда TrackState. Использование: . D:\AO3_tests\scripts\board.ps1 ; Sync-Board ; Open-Board
+# Обратный канал (человек -> артефакты): Sync-BoardInbound [-DryRun] (docs/07).
 # ВАЖНО: локальный провайдер TrackState читает ЗАКОММИЧЕННЫЙ HEAD, поэтому Sync-Board
 # после генерации делает git commit — иначе приложение не увидит изменения.
 $root = "D:\AO3_tests"
@@ -22,6 +23,19 @@ function Sync-Board {
     } else {
         Write-Host "board/ без изменений." -ForegroundColor Yellow
     }
+    Pop-Location
+}
+
+function Sync-BoardInbound {
+    # Обратный канал борды (docs/07): переходы/комментарии человека с борды -> артефакты.
+    # Шаг 0 автономного прохода, ДО Sync-Board. Сам делает git pull origin (деградирует
+    # при офлайне), применяет whitelist-переходы (docs/06 §3), переносит комментарии
+    # карточек в ## Обсуждение, конфликты -> Blocked + state/escalations.md.
+    # Флаг -DryRun — показать действия, ничего не писать в артефакты.
+    param([switch]$DryRun)
+    Push-Location $root
+    if ($DryRun) { & $py "$root\scripts\board_inbound.py" --dry-run }
+    else         { & $py "$root\scripts\board_inbound.py" }
     Pop-Location
 }
 
@@ -53,4 +67,5 @@ Write-Host "Board loaded:" -ForegroundColor Green
 Write-Host "  Show-Board     — живая доска в браузере с кнопкой Обновить, БЕЗ коммитов (стадия 1)" -ForegroundColor Green
 Write-Host "  Save-BoardHtml — разовый статический HTML-снимок (без сервера)" -ForegroundColor Green
 Write-Host "  Sync-Board     — пересобрать board/ + git commit (для TrackState/Pages)" -ForegroundColor Green
+Write-Host "  Sync-BoardInbound [-DryRun] — обратный канал: переходы/комментарии человека с борды -> артефакты (docs/07)" -ForegroundColor Green
 Write-Host "  Open-Board     — десктоп TrackState (нужен commit); Show-BoardCli — JQL" -ForegroundColor Green
