@@ -8,8 +8,13 @@ $root = "D:\AO3_tests"
 $venv = "$root\framework\.venv\Scripts"
 
 function Start-Emulator {
+    # -WritableSystem: нужен для replay-режима (установка CA mitmproxy в системное
+    # хранилище, scripts/install-mitm-ca.sh). Для live-прогонов не требуется.
+    param([switch]$WritableSystem)
+    $emuArgs = @("-avd","ao3_test_api34","-no-boot-anim","-gpu","swiftshader_indirect")
+    if ($WritableSystem) { $emuArgs += "-writable-system" }
     Start-Process -FilePath "$env:ANDROID_HOME\emulator\emulator.exe" `
-        -ArgumentList "-avd","ao3_test_api34","-no-boot-anim","-gpu","swiftshader_indirect" `
+        -ArgumentList $emuArgs `
         -WindowStyle Minimized
     Write-Host "Waiting for device boot..." -ForegroundColor Cyan
     & "$env:ANDROID_HOME\platform-tools\adb.exe" wait-for-device

@@ -57,7 +57,7 @@ cd D:\AO3_tests\tools\appium; npx appium
 |---|---|---|
 | Сборка APK из исходников без правок | ✅ | `app-debug.apk` 20.4 MB, v1.10 (11), см. `state/app-under-test.yaml` |
 | A: WEBVIEW-контекст на debug-сборке | ✅ | Appium видит `['NATIVE_APP','WEBVIEW_com.example.ao3_wrapper']`; переключились в WebView, прочитали `https://archiveofourown.org/` / title «Home \| Archive of Our Own». Нужен флаг `appium:chromedriverAutodownload=true` (WebView Chrome 113 → chromedriver качается автоматически; сервер стартовать с `--allow-insecure uiautomator2:chromedriver_autodownload`) |
-| B: mitmproxy + системный CA (для replay) | ⚠️ частично | **Механизм доказан:** rootable AVD + `adb root` + `-writable-system` + overlayfs remount ✓; CA mitmproxy внедрён в `/system/etc/security/cacerts` **и** APEX-хранилище `/apex/com.android.conscrypt/cacerts` (Android 14) ✓ (скрипт `scripts/install-mitm-ca.sh`); mitmproxy расшифровывает TLS ✓ (с хоста: CONNECT-туннель + предъявлен сертификат mitmproxy). **Открыто:** захват трафика эмулятора на этом Windows-хосте пока пустой — гость по 10.0.2.2/`-http-proxy` до mitmdump доходит по TCP, но обмен не завершается. Вероятная причина — Windows Defender Firewall (входящее на python/mitmdump) или NAT qemu. Довести в Фазе 1 (правило файрвола для mitmdump / проверка на реальном устройстве). **Не блокирует каркас фреймворка** — Фаза 1 строится в live-режиме, replay подключается позже |
+| B: mitmproxy + системный CA (для replay) | ✅ РЕШЁН (2026-07-03) | Доказан полный цикл **record→replay** HTTPS-трафика WebView. 48 флоу записано (22 к archiveofourown.org, расшифрованы html/css/json), затем те же страницы отданы приложению из записи (`[replay] << 200 OK` на `GET https://archiveofourown.org/`). Ноль ошибок доверия. См. подробный разбор ниже (§Спайк B — как решён). Recording-фикстура: `framework/data/recordings/ao3_home_smoke.mitm`. Разблокирует TC-009/013/014/015 |
 | C: сидинг Room через run-as | ✅ | На debug-сборке `run-as com.example.ao3_wrapper` даёт чтение и запись `databases/` (`ao3_ratings.db`), `shared_prefs/` (`ao3_settings.xml`), `files/`. Снятие/заливка состояния — `scripts/seed-room-db.sh`. **Нюанс:** Room в WAL — тянуть/класть `*.db` + `*.db-wal` + `*.db-shm` вместе |
 
 ### Приёмы, зафиксированные в спайках (для фреймворка)
@@ -66,6 +66,45 @@ cd D:\AO3_tests\tools\appium; npx appium
 - **CA-mount не переживает reboot** эмулятора — `install-mitm-ca.sh` прогонять после каждого старта.
 
 ### Что нужно от окружения перед Фазой 1
-- Ничего блокирующего. Опционально для replay: добавить правило Windows Firewall,
-  разрешающее входящие подключения к `mitmdump`/`python.exe` на порту прокси (нужны
-  права администратора — разовое действие владельца).
+- Ничего блокирующего.
+
+## Спайк B — как решён (2026-07-03)
+
+Прошлая гипотеза («пустой захват из-за Windows Firewall») оказалась **неверной**.
+Реальных причин было две, обе — не в сети хоста:
+
+1. **Методика проверки.** Первый «пустой захват» был артефактом теста: `nc` в госте
+   закрывал сокет по EOF раньше, чем mitmproxy успевал сходить на сервер. HTTP-прокси
+   через `10.0.2.2:8080` работает сразу (qemi NAT-ит гостя в loopback хоста —
+   в логе mitmdump клиент виден как `127.0.0.1:xxxxx`). Firewall ни при чём.
+
+2. **Главный блокер — доверие к CA в mount-namespace приложения (Android 14).**
+   Системный CA-стор переехал в APEX-модуль conscrypt. tmpfs-mount поверх
+   `/apex/com.android.conscrypt/cacerts`, сделанный из `adb shell su`, попадает в
+   mount-namespace **init'а**, а уже запущенные zygote и приложение живут в
+   **отдельных** namespace и наш CA не видят. WebView/Chromium через Conscrypt
+   валидировал цепочку по своему (немодифицированному) стору → `Trust anchor for
+   certification path not found`. Проверка `ls ... | grep hash` в install-скрипте
+   проходила в том же adb-namespace, где монтировали, — оттого ложное «OK».
+
+**Рабочее решение** (`scripts/install-mitm-ca.sh` + `scripts/ca-mount.sh`):
+- эмулятор стартует с `-writable-system` (`Start-Emulator -WritableSystem`);
+- CA + системные сертификаты монтируются tmpfs'ом поверх **обоих** каталогов доверия
+  в **init-namespace** (adb shell = namespace init'а);
+- **перезапуск фреймворка** (`stop && start`): новый zygote форкается из init и
+  **наследует** mount (после рестарта zygote64 оказывается в namespace init'а —
+  проверено). nsenter не годится: в toybox 0.8.9-android флаг `-t` всегда даёт pid 0;
+- **критично для стабильности:** самим каталогам-точкам монтирования нужно вернуть
+  SELinux-контекст `system_security_cacerts_file` (не только файлам). Иначе
+  system_server не может прочитать каталог доверия → `NullPointerException: get length
+  of null array` → крэш-луп загрузки. (Контекст `system_file`, который казался
+  правильным по родителю APEX, приводит к тому же крэшу — эталон снят с чистой
+  загрузки: и каталог, и файлы = `system_security_cacerts_file:s0`.)
+
+**Workflow записи/воспроизведения** (обёрнут в `framework/core/mitm.py`):
+- запись: `mitmdump -w rec.mitm`, прокси гостя на `10.0.2.2:8080`, прогнать сценарий;
+- воспроизведение: `mitmdump --server-replay rec.mitm --set server_replay_reuse=true
+  --set server_replay_extra=forward --set connection_strategy=lazy`.
+
+**Не переживает reboot эмулятора** — `install-mitm-ca.sh` прогонять после каждого
+старта (mount'ы tmpfs исчезают; скрипт сам перезапускает фреймворк и проверяет CA).

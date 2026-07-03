@@ -164,11 +164,32 @@ P1 и т.д. TC-021 (backup/SAF) — лок `test-automator:2026-07-02T22:22:24Z
 - **Не гонять сканирование/просмотр нескольких файлов через bash-цикл** — Grep/Read
   по одному, иначе гарантированное подтверждение (sandbox-эвристика на циклы).
 
+## Спайк B (mitmproxy replay) — РЕШЁН (2026-07-03)
+
+Полный цикл record→replay HTTPS WebView доказан. Блокером был НЕ firewall (прежняя
+гипотеза неверна), а доверие к CA в mount-namespace приложения на Android 14. Решение
+и разбор — [environment-setup.md](environment-setup.md) §Спайк B. Артефакты сессии:
+- `scripts/install-mitm-ca.sh` переписан (namespace-aware: mount в init-ns + `stop&&start`
+  фреймворка + верный SELinux-контекст каталогов); новый `scripts/ca-mount.sh`.
+- `scripts/tasks.ps1::Start-Emulator` получил флаг `-WritableSystem`.
+- `framework/core/mitm.py` — рабочие флаги replay + `set/clear_device_proxy`.
+- Recording-фикстура закоммичена: `framework/data/recordings/ao3_home_smoke.mitm`
+  (домашняя AO3, 48 флоу). Разблокирует TC-009/013/014/015.
+- **Порядок запуска replay-прогона:** `Start-Emulator -WritableSystem` → дождаться
+  boot → `bash scripts/install-mitm-ca.sh` (сам перезапускает фреймворк, ~1 мин) →
+  `Install-App` → mitmdump в нужном режиме → прокси гостя `10.0.2.2:8080`. Mount'ы
+  не переживают reboot эмулятора — install-скрипт прогонять после каждого старта.
+- **Хвост:** сейчас `install-mitm-ca.sh` — отдельный ручной шаг. Стоит встроить его в
+  `test-runner`/`run-suite` для replay-режима (поднять окружение целиком автономно).
+  TC-009/013/014/015 всё ещё требуют фикстуру ЛИСТИНГА с блёрбом синтетической работы
+  (домашняя записана; нужна запись страницы поиска/листинга — отдельная задача дизайна).
+
 ## Открытые хвосты
 
 - 41 Approved-кейс ждёт автоматизации (следующий батч).
-- TC-009/013/014/015 в Review — блокер replay (нужна фикстура листинга с блёрбом
-  синтетической работы; `framework/data/recordings/` пусто, спайк B не завершён).
+- TC-009/013/014/015 в Review — транспорт replay готов (спайк B решён); осталось
+  записать фикстуру листинга с блёрбом синтетической работы и встроить установку CA
+  в test-runner.
 - 4 кейса P3 в Review (TC-020/024/031/037) + TC-006 Draft (ждёт решения по BUG-001).
 - R-09 (filter-profiles), R-10 (notes/tags) — proposed, ждут утверждения человеком.
 - Спайк B (mitmproxy replay) — захват на Windows пуст (вероятно firewall), довести
