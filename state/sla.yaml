@@ -1,0 +1,40 @@
+# SLA-пороги тёмной фабрики (docs/06 §4). Проверяются sla-sweep'ом на шаге 0
+# каждого прохода qa-loop: артефакт, чей status_since старше порога, попадает в
+# state/escalations.md и получает метку attention на борде.
+# Часы указаны в часах реального времени, не рабочих.
+version: 1
+
+thresholds:
+  # Баг открыт и не чинится (варнинг «баг долго не решается»)
+  bug_open_blocker: 24      # blocker: алерт немедленно при создании + напоминание сутками
+  bug_open_critical: 72
+  bug_open_major: 168       # неделя
+  bug_open_minor: 720       # месяц — только строка в дайджесте
+
+  # Разработчик пометил Fixed, но новой сборки всё нет
+  bug_fixed_waiting_build: 72
+
+  # Артефакт в Blocked ждёт решения человека (варнинг «долго ждём ответа»)
+  blocked_any: 24
+
+  # Прогон висит без триажа (конвейер, вероятно, встал)
+  run_needs_triage: 12
+
+  # Вопрос к человеку в ## Обсуждение без ответа (awaiting: dev)
+  question_unanswered: 48
+
+  # Пинг-понг: столько Reopened (или споров по Rejected) => Blocked + эскалация
+  reopened_pingpong: 2
+
+  # Лок старше этого времени без записи о завершении = упавший агент; снять, залогировать
+  lock_stale: 2
+
+# Каналы (docs/06 §4): 1 — реестр+метка на борде, 2 — дневной дайджест, 3 — немедленный алерт
+escalation_output: state/escalations.md
+digest:
+  time: "09:00"             # раз в сутки, сводка вместо потока пингов
+  delivery: file            # file | push | email — доставку наружу решает владелец [план]
+immediate_alerts:
+  - new_blocker_bug
+  - env_issue_twice_in_a_row
+  - board_conflict

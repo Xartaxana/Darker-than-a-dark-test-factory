@@ -2,12 +2,22 @@
 # берёт первый подходящий артефакт БЕЗ лока и не в Blocked/wip, ставит лок, диспатчит
 # агента, снимает лок. Порядок = приоритет: сперва разбор текущих прогонов и багов,
 # потом новая автоматизация и планирование.
-version: 1
+# v2 (2026-07-03): pre_steps (событийный контур тёмной фабрики) + правила реакции на
+# действия разработчика D1–D12 — спецификация в docs/06-dark-factory.md.
+version: 2
 max_triggered_workflows: 3
 
 # Статусы-паузы: артефакты в них всегда пропускаются (точки вмешательства человека)
 skip_statuses: [Blocked]
 skip_locks: [wip]
+
+# Шаг 0 каждого прохода — выполняет сам оркестратор ДО правил (docs/06 §1).
+# Помеченные [план] шаги пропускаются молча, пока скрипт не реализован (Фаза 4.5).
+pre_steps:
+  - name: stale_locks     # lock старше sla.lock_stale без завершения в логе → снять, залогировать
+  - name: sla_sweep       # просрочки по state/sla.yaml → state/escalations.md + метка attention
+  - name: board_inbound   # [план] переходы/комментарии человека на борде → артефакты (docs/06 §3)
+  - name: build_watch     # [план] git fetch app-under-test; новые коммиты → сборка APK → app-under-test.yaml
 
 rules:
   - name: "Новая сборка → smoke, затем regression"
@@ -18,18 +28,43 @@ rules:
   - name: "Разобрать падения прогона"
     when: "run.status == NeedsTriage"
     dispatch: failure-analyst
+    # Вердикты: APP_BUG | TEST_BUG | SITE_CHANGED | APP_CHANGED | ENV_ISSUE | FLAKY
+    # APP_CHANGED (docs/06 D9): поведение изменено коммитом приложения без тикета —
+    # analyst сверяется с git log app-under-test между сборками.
 
   - name: "Завести баг по APP_BUG"
     when: "run содержит вердикт APP_BUG без linked_bug"
     dispatch: bug-reporter
 
-  - name: "Починить тест по TEST_BUG/SITE_CHANGED"
-    when: "падение с вердиктом TEST_BUG или SITE_CHANGED без resolution"
+  - name: "Ответить на вопрос разработчика в баге"   # docs/06 D6
+    when: "bug имеет реплику с awaiting: qa в ## Обсуждение"
+    dispatch: bug-reporter
+    args: { role: responder }
+
+  - name: "Починить тест по TEST_BUG/SITE_CHANGED/APP_CHANGED"
+    when: "падение с вердиктом TEST_BUG, SITE_CHANGED или APP_CHANGED без resolution"
     dispatch: test-maintainer
 
-  - name: "Верифицировать исправленный баг"
+  - name: "Верифицировать исправленный баг"          # docs/06 D1
     when: "bug.status == Fixed И есть сборка новее bug.found_in"
     dispatch: fix-verifier
+
+  - name: "Перепроверить отклонённый баг"            # docs/06 D4
+    when: "bug.status == Rejected И нет строки верификации на актуальной сборке"
+    dispatch: fix-verifier
+    args: { mode: recheck-rejected }
+    # Воспроизвёлся → доказательства в ## Обсуждение, awaiting: dev, dispute_count+1
+    # (при достижении sla.reopened_pingpong — Blocked + эскалация).
+    # Не воспроизвёлся → принять Rejected; ложноположительный тест → test-maintainer.
+
+  - name: "Согласовать тесты с задуманным поведением"  # docs/06 D5
+    when: "bug.status == Intended И связанные TC/тесты не обновлены"
+    dispatch: test-maintainer
+
+  - name: "Перепроверить репро старых багов на новой сборке"  # docs/06 D3
+    when: "после smoke/regression на новой сборке есть Open/Reopened blocker|critical с last_seen_in < текущей сборки"
+    dispatch: fix-verifier
+    args: { mode: still-repro }
 
   - name: "Автоматизировать Approved-кейс"
     when: "test-case.status == Approved И пусто automated_by"
@@ -40,7 +75,7 @@ rules:
     dispatch: test-designer
 
   - name: "Обновить стратегию при изменении приложения"
-    when: "app-under-test/PROJECT.md изменился с последнего анализа"
+    when: "app-under-test/PROJECT.md изменился с последнего анализа ИЛИ появился вердикт APP_CHANGED"
     dispatch: test-strategist
 
   - name: "Ежедневный canary на live AO3"

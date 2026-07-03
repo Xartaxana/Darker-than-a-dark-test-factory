@@ -5,9 +5,15 @@ severity: major        # blocker | critical | major | minor | trivial
 status: Open           # Open | Fixed | Verified | Reopened | Rejected | Intended | Blocked
 found_in: "1.10 (versionCode 11), build <hash>"   # из state/app-under-test.yaml
 fixed_in: ""           # заполняет человек при переводе в Fixed
+last_seen_in: ""       # последняя сборка, где репро подтверждено (fix-verifier, mode=still-repro)
 test_cases: [TC-031]   # связанные тест-кейсы
 runs: [RUN-20260702-0130]   # прогоны, где воспроизводился
 duplicates: []         # если dubl — ссылка на оригинал, статус Rejected
+regression_of: ""      # если баг — регрессия от фикса другого бага (docs/06 D7)
+status_since: "2026-07-03T00:00:00Z"   # когда установлен текущий status (для SLA-sweep)
+reopen_count: 0        # сколько раз Reopened; >= sla.reopened_pingpong → эскалация
+dispute_count: 0       # сколько раз фабрика оспаривала Rejected (docs/06 D4)
+awaiting: none         # dev | qa | none — чей ход в ## Обсуждение
 lock: ""
 ---
 
@@ -38,6 +44,13 @@ logcat, сопоставление с ожидаемым поведением п
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+
+## Обсуждение
+Канал человек ↔ фабрика (зеркалится в комментарии карточки на борде, docs/06 §3).
+Формат реплики: `**[автор @ ISO-время]** текст`. После своей реплики автор ставит
+`awaiting:` на противоположную сторону; фабрика отвечает на `awaiting: qa` в
+ближайший проход (bug-reporter, role=responder), просрочка `awaiting: dev`
+контролируется SLA `question_unanswered`.
 
 ## Чек-лист качества (bug-reporter проходит перед публикацией)
 - [ ] Проверены дубликаты среди открытых багов (`bugs/`, status != Verified/Rejected)
