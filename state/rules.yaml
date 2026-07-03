@@ -16,7 +16,7 @@ skip_locks: [wip]
 pre_steps:
   - name: stale_locks     # lock старше sla.lock_stale без завершения в логе → снять, залогировать
   - name: sla_sweep       # просрочки по state/sla.yaml → state/escalations.md + метка attention
-  - name: board_inbound   # [план] переходы/комментарии человека на борде → артефакты (docs/06 §3)
+  - name: board_inbound   # переходы/комментарии человека на борде → артефакты (docs/06 §3, docs/07); scripts/board_inbound.py
   - name: build_watch     # [план] git fetch app-under-test; новые коммиты → сборка APK → app-under-test.yaml
 
 rules:

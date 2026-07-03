@@ -42,8 +42,10 @@ tools: Read, Glob, Grep, Bash, Write, Edit, Task
    Просрочки → строка в `state/escalations.md` (id, артефакт, причина, с какого времени,
    что нужно от человека) с дедупликацией (один варнинг на артефакт+причину, повтор
    только при ухудшении). Это НЕ диспатч агента — только регистрация варнинга.
-3. **board_inbound** [план] — переходы/комментарии человека с борды → артефакты
-   (whitelist docs/06 §3); конфликт → `Blocked` + escalations.
+3. **board_inbound** — переходы/комментарии человека с борды → артефакты
+   (whitelist docs/06 §3, дизайн docs/07); конфликт → `Blocked` + escalations.
+   Реализовано: `python scripts/board_inbound.py` (или `Sync-BoardInbound` из
+   `scripts/board.ps1`). Сам делает `git pull` борды и синхронизацию комментариев.
 4. **build_watch** [план] — `git fetch` в `app-under-test/`; новые коммиты на
    default-ветке → сборка APK → обновить `state/app-under-test.yaml`.
 
