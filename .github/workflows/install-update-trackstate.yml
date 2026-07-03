@@ -1,0 +1,87 @@
+# Установка/обновление борды TrackState на GitHub Pages (docs/05).
+# Адаптация IstiN/trackstate-setup: собирает Flutter web-приложение TrackState и
+# публикует на Pages; данные борды оно читает В РАНТАЙМЕ через GitHub API из
+# board/ этого репозитория (первый найденный project.json в дереве), поэтому
+# обновление артефактов/board НЕ требует пересборки — этот workflow нужен только
+# для установки и обновления самого приложения.
+# flutter analyze/test из оригинала опущены: ref запинен на релиз, уже
+# провалидированный CI апстрима.
+name: Install / Update TrackState
+
+on:
+  workflow_dispatch:
+    inputs:
+      trackstate_ref:
+        description: "TrackState source ref: branch, tag, or commit SHA"
+        required: true
+        default: v2099.173.100715142411
+  push:
+    branches: [master]
+    paths:
+      - .github/workflows/install-update-trackstate.yml
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  TRACKSTATE_DEFAULT_REF: v2099.173.100715142411
+
+jobs:
+  install-update:
+    name: Build TrackState board for this repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout TrackState source
+        uses: actions/checkout@v6
+        with:
+          repository: IstiN/trackstate
+          ref: ${{ github.event.inputs.trackstate_ref || env.TRACKSTATE_DEFAULT_REF }}
+          path: trackstate-source
+          submodules: true
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.3'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        working-directory: trackstate-source
+        run: flutter pub get
+
+      # Первый запуск: пытается сам создать Pages-сайт (Source: GitHub Actions).
+      # Если у GITHUB_TOKEN не хватит прав — один раз включить руками:
+      # Settings -> Pages -> Source: GitHub Actions, затем перезапустить workflow.
+      - name: Enable GitHub Pages (first run)
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Build Flutter web app for this repository
+        working-directory: trackstate-source
+        run: |
+          flutter build web --release \
+            --base-href "/${{ github.event.repository.name }}/" \
+            --dart-define TRACKSTATE_REPOSITORY="${{ github.repository }}" \
+            --dart-define TRACKSTATE_SOURCE_REF="${{ github.event.inputs.trackstate_ref || env.TRACKSTATE_DEFAULT_REF }}" \
+            --dart-define TRACKSTATE_DATA_REF="master"
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: trackstate-source/build/web
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
