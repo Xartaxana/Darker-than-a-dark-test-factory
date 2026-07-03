@@ -12,6 +12,13 @@ function Sync-Board {
     if ($changed) {
         git -c user.email="qa@ao3tests.local" -c user.name="AO3 QA" commit -q -m "board: sync проекции из артефактов"
         Write-Host "board/ пересобрана и закоммичена." -ForegroundColor Green
+        # Публикация: борда на GitHub Pages читает origin/master в рантайме (docs/05),
+        # поэтому без push опубликованная борда отстаёт от локальной.
+        if (git remote 2>$null | Select-String -Quiet '^origin$') {
+            git push -q origin HEAD
+            if ($?) { Write-Host "запушено на origin — Pages-борда актуальна." -ForegroundColor Green }
+            else    { Write-Host "push не удался (офлайн?) — опубликованная борда отстаёт." -ForegroundColor Yellow }
+        }
     } else {
         Write-Host "board/ без изменений." -ForegroundColor Yellow
     }
