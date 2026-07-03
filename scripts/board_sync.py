@@ -16,7 +16,14 @@ from __future__ import annotations
 import json
 import re
 import shutil
+import sys
 from pathlib import Path
+
+# Windows-консоль (cp1251) искажает кириллицу в print — форсируем UTF-8.
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except (AttributeError, ValueError):
+    pass
 
 REPO = Path(__file__).resolve().parents[1]
 BOARD = REPO / "board"
@@ -275,8 +282,29 @@ def build():
 
     (BOARD / ".trackstate" / "index" / "issues.json").write_text(json.dumps(index, indent=2, ensure_ascii=False), encoding="utf-8")
     (BOARD / ".trackstate" / "index" / "tombstones.json").write_text("[]", encoding="utf-8")
+
+    # Курсор для board_inbound (docs/07 §2): снимок «что борда и артефакты содержали
+    # в момент этой синхронизации» — по построению они здесь идентичны. Это ТРЕТЬЯ
+    # точка отсчёта, по которой обратный канал отличает правку человека от рассинхрона.
+    _write_inbound_cursor()
+
     print(f"board/ собрана: {count} тикетов ({sum(1 for i in index if i['issueType']=='test-case')} TC, "
           f"{sum(1 for i in index if i['issueType']=='bug')} bug, {sum(1 for i in index if i['issueType']=='run')} run)")
+
+
+def _write_inbound_cursor():
+    """Пишет state/board-cursor.json: key -> {itype, artifact_status, board_status}.
+
+    Контракт с scripts/board_inbound.py (docs/07). Вызывается в конце build(), когда
+    board/ уже консистентна артефактам, поэтому board_status == artifact_status."""
+    cursor = {}
+    for itype, meta, _body, _src in _iter_artifacts():
+        key = str(meta.get("id"))
+        status = str(meta.get("status", ""))
+        cursor[key] = {"itype": itype, "artifact_status": status, "board_status": status}
+    cursor_path = REPO / "state" / "board-cursor.json"
+    cursor_path.parent.mkdir(parents=True, exist_ok=True)
+    cursor_path.write_text(json.dumps(cursor, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
 if __name__ == "__main__":
