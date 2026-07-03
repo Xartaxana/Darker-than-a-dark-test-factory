@@ -44,6 +44,15 @@
   (docs/04): скрипты build-watch/sla-sweep/board-inbound + обновление 4 агентов
   под новые режимы. Матрица D1–D12 действует уже сейчас (переходы человек пока
   делает правкой frontmatter).
+- **Борда опубликована на GitHub Pages (2026-07-03)** —
+  https://xartaxana.github.io/Darker-than-a-dark-test-factory/ (репозиторий
+  https://github.com/Xartaxana/Darker-than-a-dark-test-factory, публичный, ветка
+  master). Данные читаются в рантайме из board/ HEAD — `Sync-Board` теперь сам
+  пушит origin. Пользователь создал fine-grained PAT (Contents: RW) и подключил
+  на борде — запись С борды работает, но **договорённость: карточки не двигаем**,
+  пока не реализован board-inbound (иначе Sync-Board перезапишет изменения борды).
+  gh CLI НЕ авторизован; GitHub API — токеном из git credential fill (см. память
+  github-auth-via-gcm). Приоритетный следующий шаг Фазы 4.5: board_inbound.py.
 
 ## СЛЕДУЮЩАЯ ЗАДАЧА: продолжить Фазу 3
 
