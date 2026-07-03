@@ -1,7 +1,36 @@
 # HANDOFF — точка возобновления
 
-Обновлено: 2026-07-03 (Fable 5 → Sonnet 5, продолжение той же даты). Читать первым
-при старте новой сессии.
+Обновлено: 2026-07-03 (сессия Opus 4.8). Читать первым при старте новой сессии.
+
+## Итоги сессии 2026-07-03 (Opus 4.8) — коротко
+
+Сессия шла по «архитектурным» задачам под сильную модель:
+1. **Спецификация тёмной фабрики** (docs/06) + `rules.yaml` v2 + `sla.yaml` — детали ниже.
+2. **Борда опубликована на GitHub Pages** — https://xartaxana.github.io/Darker-than-a-dark-test-factory/
+   (репозиторий https://github.com/Xartaxana/Darker-than-a-dark-test-factory, `origin`,
+   ветка master). PAT подключён, карточки НЕ двигать до board-inbound.
+3. **Спайк B РЕШЁН** (mitmproxy record→replay) — детали в отдельном разделе ниже.
+4. **Пункт 2 ЗАВЕРШЁН:** инструкции агентов обновлены под docs/06 (5 файлов
+   `.claude/agents/`):
+   - **failure-analyst** — вердикт `APP_CHANGED` (D9) + сверка `git log app-under-test`
+     между сборками (только чтение), цитата коммита в обоснование;
+   - **fix-verifier** — три режима: `verify` (D1), `recheck-rejected` (D4),
+     `still-repro` (D3); ведёт `status_since`/`reopen_count`/`dispute_count`/
+     `last_seen_in`; пинг-понг ≥ `sla.reopened_pingpong` → Blocked + эскалация;
+   - **bug-reporter** — роли `creator`/`responder` (D6, ведёт `## Обсуждение`,
+     `awaiting`), `regression_of` (D7), дубликат от человека (D10);
+   - **test-maintainer** — охватывает `APP_CHANGED`/`Intended` (D5/D9): тест под НОВОЕ
+     поведение, не маскировка;
+   - **qa-orchestrator** — Шаг 0 `pre_steps` (stale_locks, sla_sweep,
+     board_inbound[план], build_watch[план]); принцип «permission-окно = дефект»
+     (деградировать+логировать, не ждать); передаёт `mode`/`role` в Task.
+   Всё согласовано с `state/rules.yaml` v2.
+
+Порядок «архитектурного» плана (согласован с владельцем): спайк B ✓ → обновление
+агентов под docs/06 ✓ → **дизайн board_inbound** (следующий) → репетиция тёмного дня
+→ SAF-пикер.
+Рутина (sla-sweep/stale-locks/build-watch скрипты, автоматизация 41 Approved-кейса) —
+не под сильную модель, отложена.
 
 ## Что готово
 
