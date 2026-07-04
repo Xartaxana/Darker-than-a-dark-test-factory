@@ -63,6 +63,34 @@ def test_conflict_both_moved(repo):
     assert "BUG-102" in bi.ESCALATIONS_PATH.read_text(encoding="utf-8")
 
 
+def test_cursor_advanced_prevents_false_conflict(repo):
+    """Регрессия: после apply курсор продвигается, поэтому повторный проход БЕЗ
+    board_sync (краш/пропуск sync) даёт noop, а НЕ ложный конфликт.
+
+    Без продвижения курсора: проход 2 видел бы борду=Fixed (человек), артефакт=Fixed
+    (применили), курсор=Open/Open → human_moved И agent_moved → ложный конфликт →
+    баг ошибочно в Blocked + эскалация. Проверяем, что этого не происходит."""
+    import json
+    src = repo.bug("BUG-108", "Open", extra="status_since: \"2026-07-01T00:00:00Z\"\n")
+    repo.board_card("BUG-108", "bug", "Fixed")
+    repo.cursor({"BUG-108": {"itype": "bug", "artifact_status": "Open", "board_status": "Open"}})
+
+    # Проход 1: применяет Open→Fixed и продвигает курсор.
+    bi.reconcile(dry=False)
+    assert "status: Fixed" in src.read_text(encoding="utf-8")
+    cur = json.loads(bi.CURSOR_PATH.read_text(encoding="utf-8"))
+    assert cur["BUG-108"] == {"itype": "bug", "artifact_status": "Fixed", "board_status": "Fixed"}
+
+    # Проход 2 БЕЗ board_sync между ними (борда всё ещё Fixed, артефакт Fixed).
+    actions2 = bi.reconcile(dry=False)
+    a2 = next(a for a in actions2 if a.key == "BUG-108")
+    assert a2.kind == "noop", f"ожидался noop, получено {a2.kind}: {a2.detail}"
+    # Артефакт не должен быть переведён в Blocked, эскалации по BUG-108 быть не должно.
+    assert "status: Fixed" in src.read_text(encoding="utf-8")
+    if bi.ESCALATIONS_PATH.exists():
+        assert "BUG-108" not in bi.ESCALATIONS_PATH.read_text(encoding="utf-8")
+
+
 def test_noop_stale_only_agent(repo):
     """Только агент подвинул артефакт (борда отстала) → noop, sync догонит."""
     repo.bug("BUG-103", "Fixed")

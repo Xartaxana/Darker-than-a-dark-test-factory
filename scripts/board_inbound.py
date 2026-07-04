@@ -494,7 +494,35 @@ def reconcile(*, dry: bool) -> list[Action]:
           f"{applied} применено, {conflicts} конфликтов, {rejected} отклонено, "
           f"{comments_moved} реплик перенесено, "
           f"{len(actions) - applied - conflicts - rejected} без изменений")
+    # Продвигаем курсор к ТЕКУЩЕМУ согласованному состоянию (docs/07 §2.1). Курсор
+    # обязан продвигать тот, кто ОБРАБОТАЛ изменения, а не только board_sync: иначе
+    # если sync не отработает в конце прохода (краш/пропуск), следующий проход увидит
+    # ЛОЖНЫЙ конфликт (борда=цель человека, артефакт=применённая цель, курсор=старый →
+    # human_moved И agent_moved). board_sync в конце прохода перезапишет курсор финалом.
+    if not dry:
+        _advance_cursor()
     return actions
+
+
+def _advance_cursor() -> None:
+    """Пишет state/board-cursor.json = текущее (артефакт, борда) для каждого тикета.
+
+    Вызывается в конце board_inbound после применения. В отличие от курсора board_sync
+    (там борда == артефакт по построению), здесь фиксируем ФАКТИЧЕСКИЕ раздельные
+    состояния борды и артефакта — это корректная база отсчёта для следующего прохода
+    даже если борда отстала от артефакта (агент менял, sync не успел)."""
+    arts = _read_artifact_status()   # key -> (itype, status, path)
+    board = _read_board_status()     # key -> (itype, наш_статус)
+    cursor = {}
+    for key in set(arts) | set(board):
+        itype = (arts.get(key) or board.get(key) or (None,))[0]
+        cursor[key] = {
+            "itype": itype,
+            "artifact_status": arts.get(key, (None, None, None))[1],
+            "board_status": board.get(key, (None, None))[1],
+        }
+    CURSOR_PATH.parent.mkdir(parents=True, exist_ok=True)
+    CURSOR_PATH.write_text(json.dumps(cursor, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
 def main() -> None:
