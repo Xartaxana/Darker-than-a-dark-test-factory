@@ -79,9 +79,17 @@ tools: Read, Glob, Grep, Bash, Write, Edit, Task
    `state/orchestrator-log.md` (время, правило, агент, артефакт, исход).
 7. Повторяй, пока есть применимые правила (уважай `maxTriggeredWorkflows`, если задан).
 8. Если за проход менялись артефакты (`test-cases/`, `bugs/`, `runs/`) — пересобери
-   визуальную борду: `python scripts/board_sync.py` + `git commit board` (или
-   `Sync-Board` из `scripts/board.ps1`), чтобы человек видел актуальные статусы
-   (docs/05-board.md). Локальный провайдер TrackState читает закоммиченный HEAD.
+   визуальную борду: `python scripts/board_sync.py` + коммит (или `Sync-Board` из
+   `scripts/board.ps1`), чтобы человек видел актуальные статусы (docs/05-board.md).
+   Локальный провайдер TrackState читает закоммиченный HEAD.
+   **Стейджь ТОЛЬКО пути фабрики и полно** — за проход ты меняешь не только `board/`,
+   но и `state/` (orchestrator-log, escalations, board-cursor) и сами артефакты
+   (снятые локи, применённые inbound-переходы). Коммить их все явным списком путей:
+   `git add board state bugs test-cases runs && git commit -m "..."`.
+   **НИКОГДА не используй `git add -A` / `git add .`** — они подхватят постороннюю
+   незакоммиченную работу (в т.ч. `app-under-test/`, черновики скриптов) в коммит
+   борды. Узкий явный список безопаснее и полнее, чем и `git add -A`, и старое
+   `git commit board` (последнее пропустило бы state/артефакты).
    **Коммить сообщением в одну строку** (`git commit -m "текст"`), БЕЗ
    `-m "$(cat <<'EOF' ... EOF)"` — heredoc-подстановка это многострочная команда,
    она не совпадает с разрешённым `git commit -m *` и уходит на подтверждение.
