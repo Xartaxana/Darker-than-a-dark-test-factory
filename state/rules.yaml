@@ -1,23 +1,27 @@
-# Правила оркестратора (аналог sm.json из dmtools). qa-orchestrator идёт сверху вниз,
+# Правила конвейера (аналог sm.json из dmtools). Исполнитель — ВЕРХНИЙ уровень
+# /qa-loop (не субагент; docs/03 §1, находка репетиции 2026-07-04): идёт сверху вниз,
 # берёт первый подходящий артефакт БЕЗ лока и не в Blocked/wip, ставит лок, диспатчит
-# агента, снимает лок. Порядок = приоритет: сперва разбор текущих прогонов и багов,
-# потом новая автоматизация и планирование.
+# воркера глубины 1 синхронным Task, снимает лок. Порядок = приоритет: сперва разбор
+# текущих прогонов и багов, потом новая автоматизация и планирование.
+# qa-orchestrator — только read-only планировщик для /qa-loop --dry-run.
 # v2 (2026-07-03): pre_steps (событийный контур тёмной фабрики) + правила реакции на
 # действия разработчика D1–D12 — спецификация в docs/06-dark-factory.md.
-version: 2
+# v3 (2026-07-07): диспетчеризация перенесена на верхний уровень (A1 из docs/09).
+version: 3
 max_triggered_workflows: 3
 
 # Статусы-паузы: артефакты в них всегда пропускаются (точки вмешательства человека)
 skip_statuses: [Blocked]
 skip_locks: [wip]
 
-# Шаг 0 каждого прохода — выполняет сам оркестратор ДО правил (docs/06 §1).
-# Помеченные [план] шаги пропускаются молча, пока скрипт не реализован (Фаза 4.5).
+# Шаг 0 каждого прохода — выполняет верхний уровень /qa-loop ДО правил запуском
+# скриптов (docs/06 §1). Помеченные [план] шаги пропускаются молча, пока скрипт
+# не реализован.
 pre_steps:
-  - name: stale_locks     # lock старше sla.lock_stale без завершения в логе → снять, залогировать
-  - name: sla_sweep       # просрочки по state/sla.yaml → state/escalations.md + метка attention
-  - name: board_inbound   # переходы/комментарии человека на борде → артефакты (docs/06 §3, docs/07); scripts/board_inbound.py
-  - name: build_watch     # [план] git fetch app-under-test; новые коммиты → сборка APK → app-under-test.yaml
+  - name: stale_locks     # scripts/stale_locks.py: lock старше sla.lock_stale без завершения в логе → снять, залогировать
+  - name: sla_sweep       # scripts/sla_sweep.py: просрочки по state/sla.yaml → state/escalations.md + метка attention
+  - name: board_inbound   # scripts/board_inbound.py: переходы/комментарии человека на борде → артефакты (docs/06 §3, docs/07)
+  - name: build_watch     # [план] scripts/build_watch.py: git fetch app-under-test; новые коммиты → сборка APK → app-under-test.yaml
 
 rules:
   - name: "Новая сборка → smoke, затем regression"

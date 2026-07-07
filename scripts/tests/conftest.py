@@ -20,6 +20,8 @@ if str(SCRIPTS_DIR) not in sys.path:
 
 import board_sync as bs          # noqa: E402
 import board_inbound as bi       # noqa: E402
+import stale_locks as sl         # noqa: E402
+import sla_sweep as ss           # noqa: E402
 
 
 def _write(path: Path, text: str) -> None:
@@ -36,7 +38,8 @@ class Repo:
         (root / "state").mkdir(parents=True, exist_ok=True)
 
     # --- артефакты (источник правды) ---
-    def bug(self, key: str, status: str, *, extra: str = "", discussion: str | None = None) -> Path:
+    def bug(self, key: str, status: str, *, extra: str = "", discussion: str | None = None,
+            lock: str = "") -> Path:
         body = "\n## Обсуждение\n\n" + discussion if discussion is not None else ""
         text = (
             f"---\n"
@@ -46,20 +49,49 @@ class Repo:
             f"status: {status}\n"
             f"{extra}"
             f"updated: \"2026-07-01T00:00:00Z\"\n"
-            f"lock: \"\"\n"
+            f"lock: \"{lock}\"\n"
             f"---\n\n# {key}\n\nтело{body}\n"
         )
         p = self.root / "bugs" / f"{key}.md"
         _write(p, text)
         return p
 
-    def test_case(self, key: str, status: str) -> Path:
+    def test_case(self, key: str, status: str, *, lock: str | None = None) -> Path:
+        lock_line = f"lock: \"{lock}\"\n" if lock is not None else ""
         text = (
             f"---\nid: {key}\ntitle: TC {key}\npriority: P1\nstatus: {status}\n"
-            f"updated: \"2026-07-01T00:00:00Z\"\n---\n\n# {key}\n\nтело\n"
+            f"updated: \"2026-07-01T00:00:00Z\"\n{lock_line}---\n\n# {key}\n\nтело\n"
         )
         p = self.root / "test-cases" / f"{key}.md"
         _write(p, text)
+        return p
+
+    def run(self, key: str, status: str, *, extra: str = "") -> Path:
+        text = (
+            f"---\nid: {key}\ntitle: Прогон {key}\nstatus: {status}\n{extra}"
+            f"updated: \"2026-07-01T00:00:00Z\"\nlock: \"\"\n---\n\n# {key}\n\nтело\n"
+        )
+        p = self.root / "runs" / f"{key}.md"
+        _write(p, text)
+        return p
+
+    def app_under_test(self, built_at: str) -> Path:
+        p = self.root / "state" / "app-under-test.yaml"
+        _write(p, f"app: ao3-wrapper\nversion_code: 11\nbuilt_at: \"{built_at}\"\n")
+        return p
+
+    # --- state/sla.yaml и журнал оркестратора (для pre_steps-скриптов) ---
+    def sla(self, **thresholds) -> Path:
+        lines = "\n".join(f"  {k}: {v}" for k, v in thresholds.items())
+        p = self.root / "state" / "sla.yaml"
+        _write(p, f"version: 1\nthresholds:\n{lines}\n")
+        return p
+
+    def orch_log(self, *rows: str) -> Path:
+        header = ("# Журнал оркестратора\n\n"
+                  "| Время | Правило | Агент | Артефакт | Исход |\n|---|---|---|---|---|\n")
+        p = self.root / "state" / "orchestrator-log.md"
+        _write(p, header + "".join(r.rstrip("\n") + "\n" for r in rows))
         return p
 
     # --- board/<KEY>/main.md (status = id TrackState) ---
@@ -97,4 +129,12 @@ def repo(tmp_path, monkeypatch) -> Repo:
     monkeypatch.setattr(bi, "BOARD", root / "board", raising=True)
     monkeypatch.setattr(bi, "CURSOR_PATH", root / "state" / "board-cursor.json", raising=True)
     monkeypatch.setattr(bi, "ESCALATIONS_PATH", root / "state" / "escalations.md", raising=True)
+    monkeypatch.setattr(sl, "REPO", root, raising=True)
+    monkeypatch.setattr(sl, "SLA_PATH", root / "state" / "sla.yaml", raising=True)
+    monkeypatch.setattr(sl, "ORCH_LOG", root / "state" / "orchestrator-log.md", raising=True)
+    monkeypatch.setattr(ss, "REPO", root, raising=True)
+    monkeypatch.setattr(ss, "SLA_PATH", root / "state" / "sla.yaml", raising=True)
+    monkeypatch.setattr(ss, "ESCALATIONS_PATH", root / "state" / "escalations.md", raising=True)
+    monkeypatch.setattr(ss, "ORCH_LOG", root / "state" / "orchestrator-log.md", raising=True)
+    monkeypatch.setattr(ss, "AUT_PATH", root / "state" / "app-under-test.yaml", raising=True)
     return Repo(root)

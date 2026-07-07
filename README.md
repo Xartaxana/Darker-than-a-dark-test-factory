@@ -38,8 +38,9 @@ D:\AO3_tests\
 
 ## Как это запускать (агенты)
 
-- `/qa-loop` — один проход конвейера: **qa-orchestrator** сканирует статусы артефактов
-  и по [state/rules.yaml](state/rules.yaml) диспатчит нужных агентов.
+- `/qa-loop` — один проход конвейера: **верхний уровень** сам выполняет pre_steps,
+  сканирует статусы артефактов и по [state/rules.yaml](state/rules.yaml) диспатчит
+  воркеров глубины 1 (qa-orchestrator — только планировщик для `--dry-run`, docs/03 §1).
 - `/run-suite [smoke|regression|canary]` — прогон набора через **test-runner**.
 - `/triage [RUN-…]` — разбор падений: **failure-analyst** → **bug-reporter** /
   **test-maintainer**.
