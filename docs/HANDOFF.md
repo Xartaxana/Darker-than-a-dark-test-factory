@@ -16,50 +16,38 @@ docs/09). Всё остальное живёт в своих местах:
 
 ## Где мы (2026-07-07, ночь)
 
-**Этап 1 docs/09 ЗАВЕРШЁН** (включая разрешения в settings.json). В работе **Этап 2**:
+**Этапы 1 и 2 docs/09 ЗАВЕРШЕНЫ** (165 тестов scripts/tests зелёные). Из Этапа 2
+вынесено решением владельца: GitLab Issues для critical+ → Этап 4 (вместе с
+Telegram-ботом); хвост «репетиция тёмного дня как регресс» — после обкатки
+живым проходом. Сводка сделанного — docs/09 (✅ у пунктов), контракты — docs/06
+(«B1/B2/B5», «B3/B4», «F1»), журнал — git log.
 
-- ✅ **C3+F3**: матрица переходов `schemas/transitions.yaml` + `scripts/transitions.py`;
-  whitelist board_inbound выводится из неё; попутно исправлен pingpong sla_sweep
-  (из Fixed не блокируем, из Rejected по D4 — блокируем). 15 self-tests.
-- ✅ **F2**: `schemas/agent-output.schema.yaml` + `scripts/agent_output.py` —
-  воркер завершает ответ ```yaml-блоком agent_output (result: success|blocked|
-  degraded|failed…); контракт в /qa-loop (требование в промпте диспатча) и
-  docs/03 §5 п.7.
-- ✅ **B1/B2/B5**: `resolution: accepted_risk|wontfix` + обязательный
-  `resolution_comment` (bug.schema.yaml, кросс-проверка в validate_frontmatter.py —
-  ERROR при отсутствии комментария); `known_issue: true` (дедуп APP_BUG в
-  bug-reporter.md проверяет known_issue в первую очередь; still-repro D3 расширен
-  на known_issue любой severity, не только blocker/critical; digest — секция
-  «Известные проблемы» в queue_snapshot.py); `blocked_reason` enum во ВСЕХ трёх
-  схемах (bug/test-case/run — `Blocked` есть в каждой машине); sla_sweep pingpong
-  и board_inbound-конфликт проставляют `blocked_reason: product_decision`
-  автоматически; validate_frontmatter — WARN (не ERROR) при пустом blocked_reason
-  на status Blocked. Заодно: sla_sweep больше не шлёт периодический
-  bug_open_severity-варнинг для resolution/known_issue багов (docs/06 D13/D14) —
-  решение уже принято человеком, нагрузка была бы шумом. Итого 86 тестов
-  scripts/tests зелёные (было 76, +10).
-- ✅ **B3/B4**: машина `automation` (lifecycle автотеста; карантин с SLA
-  quarantine_expired, выход только через test-maintainer после 3 зелёных) +
-  test debt в `bugs/` с `type: test_debt` (guard-переходы Fixed для фабрики,
-  без ожидания сборки, вне severity-SLA, секция в digest). Два новых правила в
-  rules.yaml (карантин — выше новой автоматизации). Первый клиент — BUG-002.
-- ✅ **C1** (Sonnet): `scripts/arch_check.py` — AST-чек архитектуры фреймворка
-  (запрет screens/локаторов в tests/, обязательные allure.id + suite-маркер);
-  preflight-шаг 3 /qa-loop; реальные нарушения test_smoke.py → ALLOWLIST + BUG-002.
-- ✅ **Тесты permission_audit** (Sonnet): 35 тестов, вынос collect_suspects.
-  Итого 154 теста scripts/tests зелёные.
-- ✅ **F1**: роль test-reviewer (model: opus) — гейт Approved→Automated только
-  через ревьюера («вторые глаза», код не правит); test-automator заполняет
-  automated_by, статус не меняет; возврат через `review: changes_requested` +
-  правило «Доработать автотест по ревью». Попутно владелец назначил model
-  воркерам (automator/maintainer=sonnet, analyst/reviewer=opus).
-- ✅ **C2** (Sonnet): `schemas/evidence.yaml` (6 вердиктов, 21 элемент evidence;
-  FLAKY включает quarantine_decision) + `scripts/evidence.py` + контракт в
-  failure-analyst/fix-verifier. Итого 165 тестов scripts/tests зелёные.
-- **Этап 2 ПОЧТИ закрыт. Осталось:** GitLab Issues для critical+ (нужен токен от
-  владельца — ЗАПРОСИТЬ при следующем контакте); хвост — репетиция тёмного дня
-  как регресс (после обкатки F2/F1 живым проходом конвейера). Дальше — Этап 3
-  (автоматизация 37 Approved батчами по area; первые клиенты нового гейта F1).
+## СЛЕДУЮЩИЙ ШАГ: живой проход /qa-loop (решение владельца, запуск в новой сессии)
+
+Первый боевой запуск конвейера после волны Этапа 2. Обкатывает разом:
+pre_steps, preflight (doctor → validate_frontmatter → arch_check), контракт
+agent_output (F2), гейт ревью (F1), маршрут test_debt (B4), model-роутинг
+воркеров. Наблюдения фиксировать — они лягут в «репетицию тёмного дня как
+регресс» (docs/09, хвост C3). Шероховатости agent_output у воркеров ОЖИДАЕМЫ
+(F2 живьём не обкатан): фиксировать как находки, не перестраивать конвейер на лету.
+
+Что в очереди (актуальное — `state/factory-status.md`, генерируется):
+
+- **BUG-002** (test_debt, weak_locator, Open) → правило «Устранить test debt» →
+  test-maintainer: вынести импорты screens/`.by_text` из `test_smoke.py` в steps,
+  проставить 5 недостающих `@allure.id` (если под smoke-тесты нет TC — сначала
+  test-designer/человек), убрать пары из ALLOWLIST в `scripts/arch_check.py`.
+- **37 Approved-кейсов** → «Автоматизировать Approved-кейс» → test-automator
+  батчами по area, P0 → P1 (решение владельца). ВАЖНО: автоматор теперь НЕ
+  переводит в Automated — после него срабатывает «Ревью нового автотеста» →
+  test-reviewer (первые живые клиенты гейта F1).
+- docs/01 §9 (needs-design) протух → правило 11 может диспатчить test-strategist
+  вхолостую; актуализация стратегии — легитимная часть прохода, не находка.
+
+Свежее от владельца (коммит b8125a0, routing MVP): модели воркеров назначены
+(automator/maintainer=sonnet, analyst/reviewer=opus), появились общие субагенты
+scout(haiku)/builder(sonnet)/critic(opus) и журнал делегирования — при
+диспетчеризации сверяться с routing policy владельца.
 
 Итог Этапа 1 (для истории):
 
@@ -77,13 +65,9 @@ docs/09). Всё остальное живёт в своих местах:
   TC-021), планировщик `--dry-run` вернул корректный план и 3 находки:
   smoke_status рассинхрон (исправлен), §9 стратегии протух, canary-правило без
   suite (закомментировано [план] в rules.yaml до Этапа 3).
-- ⏳ Осталось из Этапа 1: блок разрешений для новых скриптов в
-  `.claude/settings.json` — правка требует подтверждения владельца (classifier
-  блокирует самоизменение разрешений).
-
-**Фаза 3 (автоматизация Approved-кейсов) — на паузе по решению владельца** до
-конца Этапа 1; возобновлять батчами по area (P0 → P1) через обновлённый конвейер.
-Лок TC-021 (висит с 2026-07-02) снимет stale_locks при первом проходе.
+**Фаза 3 (автоматизация Approved-кейсов) РАЗМОРОЖЕНА**: Этапы 1–2 закрыты,
+возобновление — батчами по area (P0 → P1) внутри живого `/qa-loop` (см.
+«СЛЕДУЮЩИЙ ШАГ» выше). Протухший лок TC-021 снят stale_locks ещё 2026-07-07.
 
 ## Как поднять окружение (в новом окне)
 
