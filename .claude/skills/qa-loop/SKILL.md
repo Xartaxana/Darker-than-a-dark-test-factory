@@ -33,12 +33,15 @@ description: Запустить один проход QA-конвейера — 
 ## Проход
 
 ### 1. Preflight и контекст
-`python scripts/doctor.py` — самопроверка окружения. Код 1 (FAIL) = эскалация уже
-записана doctor'ом: правила, требующие окружения (test-runner/fix-verifier/
-test-automator), в этом проходе пропусти с записью в лог; документные шаги
-(pre_steps, триаж по имеющимся артефактам, bug-responder) продолжай.
-Затем прочитай `state/rules.yaml` (порядок правил = приоритет) и
-`state/app-under-test.yaml`.
+1. `python scripts/doctor.py` — самопроверка окружения. Код 1 (FAIL) = эскалация
+   уже записана doctor'ом: правила, требующие окружения (test-runner/fix-verifier/
+   test-automator), в этом проходе пропусти с записью в лог; документные шаги
+   (pre_steps, триаж по имеющимся артефактам, bug-responder) продолжай.
+2. `python scripts/validate_frontmatter.py` — валидация артефактов по `schemas/`.
+   Код 1 = есть битые артефакты: НЕ диспетчеризируй правила по ним (перечислены
+   в выводе), остальные обрабатывай; битые — в orchestrator-log + эскалация.
+3. Прочитай `state/rules.yaml` (порядок правил = приоритет) и
+   `state/app-under-test.yaml`.
 
 ### 2. Шаг 0 — pre_steps (запуск скриптов, НЕ диспатч агентов)
 Выполни по порядку из `rules.yaml → pre_steps`, каждый — одним вызовом Bash:

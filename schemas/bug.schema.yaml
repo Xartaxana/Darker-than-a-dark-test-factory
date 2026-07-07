@@ -1,0 +1,21 @@
+# Схема frontmatter бага (G3, docs/09). Поля матрицы D1–D12 (docs/06 §2) опциональны —
+# вставляются агентами/board_inbound по мере переходов.
+type: bug
+id_pattern: "^BUG-\\d{3,}$"
+required: [id, title, severity, status, updated]
+fields:
+  severity: { enum: [blocker, critical, major, minor] }
+  status:   { enum: [Open, Reopened, Fixed, Verified, Rejected, Intended, Blocked] }
+  updated:  { pattern: "^\\d{4}-\\d{2}-\\d{2}[T ][\\d:.+]+Z?$" }
+  status_since: { pattern: "^\\d{4}-\\d{2}-\\d{2}[T ][\\d:.+]+Z?$" }
+  lock:     { pattern: "^$|^wip$|^[A-Za-z0-9_-]+:\\d{4}-\\d{2}-\\d{2}T[\\d:.]+Z?$" }
+  awaiting: { enum: [dev, qa, none] }
+  reopen_count:  { pattern: "^\\d+$" }
+  dispute_count: { pattern: "^\\d+$" }
+  regression_of: { pattern: "^BUG-\\d{3,}$" }
+  last_seen_in: {}
+  found_in: {}
+  fixed_in: {}
+  test_cases: {}
+  runs: {}
+  duplicates: {}

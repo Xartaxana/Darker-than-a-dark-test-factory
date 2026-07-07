@@ -60,7 +60,7 @@ class Repo:
     def test_case(self, key: str, status: str, *, lock: str | None = None) -> Path:
         lock_line = f"lock: \"{lock}\"\n" if lock is not None else ""
         text = (
-            f"---\nid: {key}\ntitle: TC {key}\npriority: P1\nstatus: {status}\n"
+            f"---\nid: {key}\ntitle: TC {key}\narea: test\npriority: P1\nstatus: {status}\n"
             f"updated: \"2026-07-01T00:00:00Z\"\n{lock_line}---\n\n# {key}\n\nтело\n"
         )
         p = self.root / "test-cases" / f"{key}.md"
