@@ -1,0 +1,76 @@
+# Evidence contract (C2, docs/09 Этап 2) — минимальный пакет доказательств на вердикт.
+# Источник: docs/08-external-architecture-review.md §4 C2 (таблица Verdict → Minimum evidence).
+#
+# Проблема, которую закрывает файл: вердикт без доказательств непроверяем. Раньше
+# минимальный набор жил только в свободном тексте инструкций агентов — этот файл
+# делает его машиночитаемым и единым источником правды.
+#
+# Реестр вердиктов (6, стабилен): APP_BUG, TEST_BUG, SITE_CHANGED, APP_CHANGED,
+# ENV_ISSUE, FLAKY — см. state/rules.yaml (комментарий "Вердикты:"), описание
+# .claude/agents/failure-analyst.md и docs/templates/run-report.md. Добавление
+# нового вердикта в реестр обязано добавить и его строку сюда (иначе test_evidence
+# упадёт на паритете множеств).
+#
+# Кто ей подчиняется:
+# - failure-analyst перед записью вердикта в таблицу отчёта прогона (`runs/RUN-*.md`)
+#   собирает и линкует именно этот набор (ссылки на Allure-артефакты — logcat,
+#   скриншот, page source — плюс текстовые пункты типа build hash/steps);
+# - fix-verifier несёт эквивалентную идею для верификации бага: таблица
+#   «Верификация» обязана нести версию сборки, прогнанные TC и результат
+#   (см. .claude/agents/fix-verifier.md, раздел Evidence contract);
+# - self-tests (scripts/tests/test_evidence.py) проверяют: множество вердиктов
+#   здесь == реестру, у каждого вердикта непустой список элементов, id уникальны
+#   в пределах вердикта, ни один элемент не пуст.
+#
+# Отличие от schemas/agent-output.schema.yaml поля `evidence`: там — свободный
+# список путей к доказательствам, который агент прикладывает к своему машинному
+# ответу; здесь — типизированный ЧЕК-ЛИСТ обязательных категорий доказательств
+# на конкретный вердикт (что именно обязано быть собрано, а не куда сложено).
+#
+# Менять ТОЛЬКО вместе с тестами: правка контракта без зелёного test_evidence —
+# нарушение контракта (по аналогии с schemas/transitions.yaml).
+#
+# Формат элемента: {id, description}
+#   id          — стабильный машинный ключ (snake_case), уникален в пределах вердикта
+#   description — короткое человекочитаемое описание на русском
+version: 1
+
+verdicts:
+  APP_BUG:
+    evidence:
+      - {id: build_hash, description: "версия/хеш сборки приложения (app_version прогона)"}
+      - {id: test_case, description: "TC, на котором получено падение"}
+      - {id: steps, description: "шаги воспроизведения"}
+      - {id: screenshot, description: "скриншот падения (Allure)"}
+      - {id: logcat, description: "logcat на момент падения"}
+      - {id: page_source, description: "page source / дерево экрана на момент падения"}
+      - {id: expected_actual, description: "ожидаемое и фактическое поведение"}
+
+  TEST_BUG:
+    evidence:
+      - {id: failing_test, description: "какой тест упал (файл/имя/allure.id)"}
+      - {id: root_cause, description: "причина в тесте или фреймворке, а не в приложении"}
+      - {id: fix_or_debt, description: "фикс теста либо заведённая test_debt-запись"}
+
+  SITE_CHANGED:
+    evidence:
+      - {id: live_replay_diff, description: "сравнение live/replay: что именно изменилось на AO3"}
+      - {id: affected_selector, description: "затронутый селектор/локатор или mitmproxy-запись"}
+
+  APP_CHANGED:
+    evidence:
+      - {id: commit_range, description: "диапазон коммитов приложения между старой и новой сборкой"}
+      - {id: changed_behavior, description: "цитата коммита, доказывающая намеренность изменения поведения"}
+      - {id: affected_tc, description: "затронутые тест-кейсы"}
+
+  ENV_ISSUE:
+    evidence:
+      - {id: env_check, description: "проверка окружения (эмулятор/Appium/прокси/сеть)"}
+      - {id: retry_result, description: "результат изолированного перезапуска"}
+      - {id: logs, description: "логи окружения на момент падения"}
+
+  FLAKY:
+    evidence:
+      - {id: rerun_history, description: "история повторных прогонов (сколько раз, с каким результатом)"}
+      - {id: failure_signature, description: "сигнатура падения (одинаковая ли ошибка при перезапусках)"}
+      - {id: quarantine_decision, description: "решение о карантине: automation_status: quarantined + quarantine_reason/since/owner, и заведённый test_debt-баг (B3/B4, см. failure-analyst.md п.6)"}
