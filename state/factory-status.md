@@ -1,12 +1,12 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-07T03:04:00Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-07-07T03:08:19Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Сборка под тестом
 
 - 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: not_run · regression: not_run
+- smoke: passed · regression: not_run
 
 ## Тест-кейсы (55)
 

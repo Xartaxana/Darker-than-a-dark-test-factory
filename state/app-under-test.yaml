@@ -9,5 +9,5 @@ build_type: debug
 apk_path: app-under-test/app/build/outputs/apk/debug/app-debug.apk
 apk_sha256: "6455af0cfc2c937e81975f59a250476c77aecb73088a65b5e814210df3c87544"
 built_at: "2026-07-02T02:39:46"
-smoke_status: not_run     # not_run | passed | failed
+smoke_status: passed      # not_run | passed | failed; RUN-20260702-0300 9/9 + P0 smoke 17/17 (2026-07-03) на этой сборке
 regression_status: not_run

@@ -14,6 +14,9 @@ max_triggered_workflows: 3
 skip_statuses: [Blocked]
 skip_locks: [wip]
 
+# Порядок выбора артефакта внутри правила: лексикографический по пути файла
+# (как обходит rglob/Grep). Зафиксировано 2026-07-07 по вопросу планировщика.
+
 # Шаг 0 каждого прохода — выполняет верхний уровень /qa-loop ДО правил запуском
 # скриптов (docs/06 §1). Все 4 шага реализованы и покрыты тестами (scripts/tests/).
 pre_steps:
@@ -81,7 +84,10 @@ rules:
     when: "app-under-test/PROJECT.md изменился с последнего анализа ИЛИ появился вердикт APP_CHANGED"
     dispatch: test-strategist
 
-  - name: "Ежедневный canary на live AO3"
-    when: "расписание: раз в сутки"
-    dispatch: test-runner
-    args: { suite: [canary], mode: live }
+  # [план] Включить, когда canary-suite реально существует (сейчас в framework/tests
+  # нет canary-тестов — находка планировщика 2026-07-07; иначе ежедневный холостой
+  # диспатч test-runner в стену). Создание canary-suite — Этап 3 docs/09.
+  # - name: "Ежедневный canary на live AO3"
+  #   when: "расписание: раз в сутки"
+  #   dispatch: test-runner
+  #   args: { suite: [canary], mode: live }
