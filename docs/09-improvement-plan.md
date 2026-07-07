@@ -101,9 +101,13 @@
    next_rules/escalations), парсер `scripts/agent_output.py` (последний
    ```yaml-блок с ключом agent_output; нет блока → degraded), контракт вшит в
    /qa-loop (требование в промпте каждого диспатча) и docs/03 §5 п.7; 6 тестов.
-6. **F1 — test-reviewer.** Роль (или режим test-maintainer): ревью нового автотеста
-   (архитектурные правила, evidence, flake-риск, traceability) до перевода TC в
-   стабильную автоматизацию.
+6. **F1 — test-reviewer.** ✅ 2026-07-07: отдельная роль (`.claude/agents/
+   test-reviewer.md`, model: opus) — «вторые глаза», тестовый код не правит.
+   Гейт в матрице: Approved→Automated переводит ТОЛЬКО test-reviewer (он же ставит
+   automation_status: active); test-automator заполняет automated_by, статус не
+   меняет. Возврат: `review: changes_requested` (поле в схеме TC) + замечания в
+   кейсе → правило «Доработать автотест по ревью». Чек-лист: arch_check,
+   traceability, GWT по смыслу, фикстуры, flake-риск, независимый прогон.
 7. **GitLab Issues для критичных багов** (решение владельца): bug-reporter при
    severity выше major создаёт Issue в репозитории приложения; ссылка — в frontmatter
    бага. Нужен GitLab-токен (запросить у владельца при реализации).

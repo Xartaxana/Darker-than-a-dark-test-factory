@@ -88,6 +88,18 @@ rules:
     # test-maintainer чинит долг фреймворка (flaky/slow/фикстуры/локаторы) и переводит
     # Open→Fixed сам (guard-переход в матрице); верификация — общим правилом D1.
 
+  - name: "Доработать автотест по ревью"                    # F1, выше нового ревью и новой автоматизации
+    when: "test-case.review == changes_requested"
+    dispatch: test-automator
+    # Автор отрабатывает замечания из раздела «## Ревью автотеста», удаляет review →
+    # кейс возвращается на повторное ревью следующим правилом.
+
+  - name: "Ревью нового автотеста"                          # F1
+    when: "test-case.status == Approved И automated_by заполнен И нет review"
+    dispatch: test-reviewer
+    # Гейт: Approved→Automated переводит ТОЛЬКО test-reviewer (матрица transitions.yaml).
+    # Он же ставит automation_status: active (B3).
+
   - name: "Автоматизировать Approved-кейс"
     when: "test-case.status == Approved И пусто automated_by"
     dispatch: test-automator

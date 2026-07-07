@@ -82,6 +82,21 @@ def test_deprecated_is_human_or_strategist_retired_is_terminal():
             assert not tr.is_allowed("automation", "retired", to, actor), (actor, to)
 
 
+# --- F1: гейт ревью нового автотеста ------------------------------------------
+
+def test_review_gate_only_reviewer_automates():
+    """Approved→Automated переводит ТОЛЬКО test-reviewer; автор (automator) — нет."""
+    assert tr.is_allowed("test-case", "Approved", "Automated", "test-reviewer")
+    assert not tr.is_allowed("test-case", "Approved", "Automated", "test-automator")
+    assert not tr.is_allowed("test-case", "Approved", "Automated", "human")
+    assert "automated_by_required" in tr.effects_for("test-case", "Approved", "Automated")
+
+
+def test_review_field_in_tc_schema():
+    schema = yaml.safe_load((SCHEMAS / "test-case.schema.yaml").read_text(encoding="utf-8"))
+    assert schema["fields"]["review"]["enum"] == ["changes_requested"]
+
+
 # --- B4: guard-переходы test_debt --------------------------------------------
 
 def test_test_debt_guard_lets_factory_fix():

@@ -22,6 +22,12 @@ fields:
   # иначе SLA-надзор slа_sweep (правило quarantine_expired) слеп — карантин не
   # бывает бесконечным.
   automation_status: { enum: [active, quarantined, needs_maintenance, deprecated, retired] }
+  # F1 (docs/09 Этап 2): гейт ревью нового автотеста. Кейс с заполненным automated_by
+  # остаётся Approved, пока test-reviewer не переведёт в Automated. changes_requested
+  # ставит ревьюер (замечания — в тело кейса), снимает test-automator после доработки.
+  review: { enum: [changes_requested] }
+  reviewed_by: {}
+  reviewed_at: { pattern: "^\\d{4}-\\d{2}-\\d{2}[T ][\\d:.+]+Z?$" }
   quarantine_reason: {}
   quarantine_since: { pattern: "^\\d{4}-\\d{2}-\\d{2}[T ][\\d:.+]+Z?$" }
   quarantine_expiry: { pattern: "^\\d{4}-\\d{2}-\\d{2}[T ][\\d:.+]+Z?$" }

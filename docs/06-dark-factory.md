@@ -79,6 +79,15 @@ dev_answer|permissions`, все три схемы — bug/test-case/run, т.к. 
   дедлайн `quarantine_expiry`, а без него `quarantine_since + sla.quarantine_max`
   (дефолт 336 ч). Правило конвейера «Починить автотест в карантине» стоит ВЫШЕ
   новой автоматизации (сначала гасим долг, потом наращиваем покрытие).
+**F1 (docs/09 Этап 2, добавлено 2026-07-07):** гейт ревью нового автотеста.
+`Approved → Automated` переводит ТОЛЬКО **test-reviewer** (матрица C3) после
+чек-листа: arch_check (C1), traceability (`allure.id`/маркеры/traceability.md),
+соответствие теста GWT кейса по смыслу, фикстуры (ownership/cleanup), flake-риск,
+независимый прогон. test-automator заполняет `automated_by` и добивается 3 зелёных,
+но кейс остаётся `Approved`; замечания — `review: changes_requested` + раздел
+«## Ревью автотеста» в кейсе → доработка автором → повторное ревью. Ревьюер не
+правит тестовый код (иначе он автор). Два круга по одному пункту — эскалация.
+
 - **B4 — test debt** живёт в `bugs/` с `type: test_debt` (+ `debt_kind:
   flaky_test|slow_test|missing_fixture|weak_locator|obsolete_test_case|
   missing_evidence|broken_environment`). Отличия от app_bug: чинит фабрика —

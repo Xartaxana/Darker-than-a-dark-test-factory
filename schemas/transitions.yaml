@@ -26,7 +26,7 @@ actors:
   groups:
     factory: [qa-loop, test-runner, failure-analyst, bug-reporter, fix-verifier,
               test-automator, test-designer, test-maintainer, test-strategist,
-              sla_sweep, board_inbound, stale_locks, build_watch]
+              test-reviewer, sla_sweep, board_inbound, stale_locks, build_watch]
 
 # Эффекты ЛЮБОГО перехода: оба поля обновляются меткой момента перехода.
 always_effects: [status_since, updated]
@@ -80,8 +80,12 @@ machines:
          ref: "авто-approve допущен ТОЛЬКО для P2/P3 (docs/03 §2); пока не реализован"}
       - {from: Draft,    to: Review,   by: [test-designer],
          ref: "кейс дозрел: спорный вопрос снят"}
-      - {from: Approved, to: Automated, by: [test-automator], effects: [automated_by_required],
-         ref: "стабильный автотест: 3 зелёных прогона подряд + linked allure.id"}
+      # F1: гейт ревью. test-automator ЗАПОЛНЯЕТ automated_by (3 зелёных + allure.id),
+      # но статус не меняет; в Automated переводит ТОЛЬКО test-reviewer после чек-листа
+      # (архитектура/evidence/фикстуры/flake-риск/traceability) — «вторые глаза»,
+      # автор не принимает собственную работу.
+      - {from: Approved, to: Automated, by: [test-reviewer], effects: [automated_by_required],
+         ref: "F1: ревью пройдено; заодно ревьюер ставит automation_status: active (B3)"}
       - {from: "*",      to: Review, by: [human, test-automator, test-maintainer], via_board: true,
          ref: "вернуть на доработку (прецедент TC-009: replay-блокер)"}
       - {from: "*",      to: Blocked, by: [factory], effects: [escalation],
@@ -108,7 +112,7 @@ machines:
   # автотеста управляет фабрика, человек решает только deprecated (кейс устарел).
   automation:
     field: automation_status
-    initial: [active]          # ставит test-automator вместе с status: Automated
+    initial: [active]          # ставит test-reviewer вместе с status: Automated (F1)
     terminal: [retired]
     statuses: [active, quarantined, needs_maintenance, deprecated, retired]
     transitions:
