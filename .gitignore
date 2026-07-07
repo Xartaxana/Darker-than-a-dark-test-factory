@@ -23,3 +23,6 @@ framework/*.log
 framework/*.png
 scratch_screen*.png
 dump.xml
+
+# residue стороннего агент-тулинга (копия .claude/skills с путями .Codex — внешний ревьюер)
+.agents/

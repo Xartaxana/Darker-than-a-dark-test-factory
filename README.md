@@ -17,6 +17,8 @@
 | [docs/03-agent-system.md](docs/03-agent-system.md) | Система агентов: роли, триггеры, статусная машина артефактов, оркестрация |
 | [docs/04-roadmap.md](docs/04-roadmap.md) | Дорожная карта внедрения по фазам с критериями выхода |
 | [docs/templates/](docs/templates/) | Шаблоны артефактов: тест-кейс (GWT), баг-репорт, отчёт о прогоне |
+| [docs/08-external-architecture-review.md](docs/08-external-architecture-review.md) | Внешнее ревью архитектуры тёмной QA-фабрики: пробелы, best practices и предложения к roadmap |
+| [docs/09-improvement-plan.md](docs/09-improvement-plan.md) | План улучшений по итогам ревью 08 + решения владельца (2026-07-07): этапы, критерии выхода, отклонённое |
 
 ## Целевая структура репозитория (после реализации)
 
