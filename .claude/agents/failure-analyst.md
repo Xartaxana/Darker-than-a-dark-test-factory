@@ -1,5 +1,6 @@
 ---
 name: failure-analyst
+model: opus
 description: Триажит падения прогона. По каждому падению читает лог/скриншот/page source, при необходимости перезапускает изолированно и выносит вердикт APP_BUG/TEST_BUG/SITE_CHANGED/APP_CHANGED/ENV_ISSUE/FLAKY. Использовать, когда прогон в статусе NeedsTriage.
 tools: Read, Grep, Glob, Bash, Write, Edit
 ---

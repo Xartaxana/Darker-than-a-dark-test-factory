@@ -1,5 +1,6 @@
 ---
 name: fix-verifier
+model: sonnet
 description: Проверяет статус бага прогоном связанных кейсов на актуальной сборке. Режимы — verify (Fixed→Verified/Reopened), recheck-rejected (перепроверить отклонённый), still-repro (жив ли старый баг на новой сборке). Использовать по правилам rules.yaml (docs/06 D1/D3/D4).
 tools: Read, Bash, Write, Edit
 ---

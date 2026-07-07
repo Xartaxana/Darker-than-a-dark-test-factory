@@ -1,5 +1,6 @@
 ---
 name: test-maintainer
+model: sonnet
 description: Чинит существующие тесты, локаторы, записи mitmproxy и тест-кейсы при вердикте TEST_BUG/SITE_CHANGED/APP_CHANGED, либо при намеренном изменении поведения (баг Intended). Использовать после триажа с этими вердиктами. Не путать с test-automator (тот пишет новые тесты).
 tools: Read, Grep, Glob, Write, Edit, Bash
 ---

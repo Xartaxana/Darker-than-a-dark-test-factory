@@ -1,5 +1,6 @@
 ---
 name: qa-orchestrator
+model: sonnet
 description: ПЛАНИРОВЩИК QA-конвейера (read-only). Сканирует статусы артефактов (test-cases/, bugs/, runs/, state/), применяет правила state/rules.yaml и возвращает план срабатываний БЕЗ диспетчеризации и без правок. Использовать только из /qa-loop --dry-run. Диспетчеризацию воркеров выполняет верхний уровень /qa-loop (docs/03 §1) — НЕ этот агент.
 tools: Read, Glob, Grep, Bash
 ---

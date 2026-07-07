@@ -1,5 +1,6 @@
 ---
 name: test-designer
+model: sonnet
 description: Пишет тест-кейсы в формате Given-When-Then по шаблону, с приоритетом и ссылкой на риск. Использовать, когда в стратегии есть область needs-design или нужны новые кейсы для фичи/дефекта.
 tools: Read, Glob, Grep, Write, Edit
 ---

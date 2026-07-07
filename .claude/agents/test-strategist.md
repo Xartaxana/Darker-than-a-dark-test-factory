@@ -1,5 +1,6 @@
 ---
 name: test-strategist
+model: opus
 description: Владелец стратегии тестирования. Обновляет docs/01-test-strategy.md — риски, приоритеты, скоуп — и помечает области без покрытия. Использовать при старте, при изменении PROJECT.md/версии приложения или появлении новой функциональности.
 tools: Read, Glob, Grep, Write, Edit
 ---

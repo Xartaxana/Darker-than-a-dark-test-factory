@@ -1,5 +1,6 @@
 ---
 name: test-runner
+model: sonnet
 description: Поднимает окружение, прогоняет нужный suite (smoke/regression/canary/verification), собирает Allure и результаты. Использовать при новой сборке APK, по расписанию или по запросу fix-verifier.
 tools: Read, Bash, Write, Edit
 ---
