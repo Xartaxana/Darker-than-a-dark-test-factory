@@ -22,6 +22,7 @@ import board_sync as bs          # noqa: E402
 import board_inbound as bi       # noqa: E402
 import stale_locks as sl         # noqa: E402
 import sla_sweep as ss           # noqa: E402
+import build_watch as bw         # noqa: E402
 
 
 def _write(path: Path, text: str) -> None:
@@ -137,4 +138,10 @@ def repo(tmp_path, monkeypatch) -> Repo:
     monkeypatch.setattr(ss, "ESCALATIONS_PATH", root / "state" / "escalations.md", raising=True)
     monkeypatch.setattr(ss, "ORCH_LOG", root / "state" / "orchestrator-log.md", raising=True)
     monkeypatch.setattr(ss, "AUT_PATH", root / "state" / "app-under-test.yaml", raising=True)
+    monkeypatch.setattr(bw, "REPO", root, raising=True)
+    monkeypatch.setattr(bw, "APP", root / "app-under-test", raising=True)
+    monkeypatch.setattr(bw, "AUT_PATH", root / "state" / "app-under-test.yaml", raising=True)
+    monkeypatch.setattr(bw, "ESCALATIONS_PATH", root / "state" / "escalations.md", raising=True)
+    monkeypatch.setattr(bw, "ORCH_LOG", root / "state" / "orchestrator-log.md", raising=True)
+    monkeypatch.setattr(bw, "ENV_PS1", root / "scripts" / "env.ps1", raising=True)
     return Repo(root)
