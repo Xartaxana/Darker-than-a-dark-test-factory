@@ -14,9 +14,25 @@ docs/09). Всё остальное живёт в своих местах:
 | Окружение, спайки A/B/C | [environment-setup.md](environment-setup.md) |
 | История сессий | git log (подробные итоги — в сообщениях коммитов) |
 
-## Где мы (2026-07-07)
+## Где мы (2026-07-07, вечер)
 
-Идёт **Этап 1 docs/09** (runtime-фундамент по внешнему ревью docs/08):
+**Этап 1 docs/09 ЗАВЕРШЁН** (включая разрешения в settings.json). Начат **Этап 2**:
+
+- ✅ **C3+F3**: матрица переходов `schemas/transitions.yaml` + `scripts/transitions.py`;
+  whitelist board_inbound выводится из неё; попутно исправлен pingpong sla_sweep
+  (из Fixed не блокируем, из Rejected по D4 — блокируем). 15 self-tests.
+- ✅ **F2**: `schemas/agent-output.schema.yaml` + `scripts/agent_output.py` —
+  воркер завершает ответ ```yaml-блоком agent_output (result: success|blocked|
+  degraded|failed…); контракт в /qa-loop (требование в промпте диспатча) и
+  docs/03 §5 п.7. Всего 76 тестов scripts/tests зелёные.
+- **Дальше по Этапу 2 (порядок сильной модели):** B1/B2/B5 (accepted_risk/wontfix,
+  known_issue+дедуп, blocked_reason — строить на матрице C3), B3/B4 (lifecycle
+  автотеста + test debt), F1 (test-reviewer), C1 (архитектурные чеки), C2
+  (evidence contract — рутина), GitLab Issues для critical+ (нужен токен от
+  владельца). Хвосты C3/F3: тесты парсера permission_audit; репетиция тёмного
+  дня как регресс (после обкатки F2 живым проходом).
+
+Итог Этапа 1 (для истории):
 
 - ✅ **A1**: `/qa-loop` диспатчит воркеров с ВЕРХНЕГО уровня (вложенная оркестрация
   не работает — находка репетиции 2026-07-04); qa-orchestrator — read-only
