@@ -93,9 +93,10 @@
    «Починить автотест в карантине» (выше новой автоматизации) и «Устранить test
    debt» в rules.yaml. Первый клиент: BUG-002 (test_debt на нарушения arch_check
    в test_smoke.py). Подробности — docs/06 «B3/B4».
-4. **C2 — evidence contract.** Минимальный пакет доказательств на каждый вердикт
-   (таблица из ревью §4 C2) → инструкции failure-analyst/fix-verifier + проверка
-   в self-tests.
+4. **C2 — evidence contract.** ✅ 2026-07-07 (Sonnet-сессия): `schemas/evidence.yaml`
+   (6 вердиктов, 21 элемент; FLAKY включает quarantine_decision по B3/B4) +
+   `scripts/evidence.py` (load/validate/missing + CLI) + разделы «Evidence
+   contract (C2)» в failure-analyst/fix-verifier + 9 self-tests.
 5. **F2 — agent output schema.** ✅ 2026-07-07: `schemas/agent-output.schema.yaml`
    (result: success|blocked|degraded|failed + summary/changed_files/evidence/
    next_rules/escalations), парсер `scripts/agent_output.py` (последний

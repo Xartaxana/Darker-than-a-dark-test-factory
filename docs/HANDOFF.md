@@ -48,10 +48,18 @@ docs/09). Всё остальное живёт в своих местах:
   preflight-шаг 3 /qa-loop; реальные нарушения test_smoke.py → ALLOWLIST + BUG-002.
 - ✅ **Тесты permission_audit** (Sonnet): 35 тестов, вынос collect_suspects.
   Итого 154 теста scripts/tests зелёные.
-- **Дальше по Этапу 2 (порядок сильной модели):** C2 (evidence contract — рутина,
-  можно Sonnet), F1 (test-reviewer — дизайн роли за сильной моделью), GitLab
-  Issues для critical+ (нужен токен от владельца — запросить). Хвост: репетиция
-  тёмного дня как регресс (после обкатки F2 живым проходом).
+- ✅ **F1**: роль test-reviewer (model: opus) — гейт Approved→Automated только
+  через ревьюера («вторые глаза», код не правит); test-automator заполняет
+  automated_by, статус не меняет; возврат через `review: changes_requested` +
+  правило «Доработать автотест по ревью». Попутно владелец назначил model
+  воркерам (automator/maintainer=sonnet, analyst/reviewer=opus).
+- ✅ **C2** (Sonnet): `schemas/evidence.yaml` (6 вердиктов, 21 элемент evidence;
+  FLAKY включает quarantine_decision) + `scripts/evidence.py` + контракт в
+  failure-analyst/fix-verifier. Итого 165 тестов scripts/tests зелёные.
+- **Этап 2 ПОЧТИ закрыт. Осталось:** GitLab Issues для critical+ (нужен токен от
+  владельца — ЗАПРОСИТЬ при следующем контакте); хвост — репетиция тёмного дня
+  как регресс (после обкатки F2/F1 живым проходом конвейера). Дальше — Этап 3
+  (автоматизация 37 Approved батчами по area; первые клиенты нового гейта F1).
 
 Итог Этапа 1 (для истории):
 
