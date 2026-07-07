@@ -14,6 +14,10 @@ status_since: "2026-07-03T00:00:00Z"   # когда установлен тек�
 reopen_count: 0        # сколько раз Reopened; >= sla.reopened_pingpong → эскалация
 dispute_count: 0       # сколько раз фабрика оспаривала Rejected (docs/06 D4)
 awaiting: none         # dev | qa | none — чей ход в ## Обсуждение
+resolution: ""         # accepted_risk | wontfix (docs/06 D13) — обязателен resolution_comment
+resolution_comment: "" # обоснование человека, если задан resolution
+known_issue: "false"   # true — подтверждён, релиз идёт с ним (docs/06 D14, дедуп + digest)
+blocked_reason: ""     # environment | missing_fixture | product_decision | dev_answer | permissions (docs/06 B5) — заполнить при status: Blocked
 lock: ""
 ---
 

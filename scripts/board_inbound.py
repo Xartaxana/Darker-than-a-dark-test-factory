@@ -245,6 +245,8 @@ def apply_conflict(action: Action, ts_board: str, ts_agent: str, *, dry: bool) -
     new, changed = _rewrite_field(text, "status", "Blocked")
     new = _set_field(new, "status_since", f'"{stamp}"')
     new, _ = _rewrite_field(new, "updated", f'"{stamp}"')
+    # B5: конфликт борда↔артефакт нужно решить человеку — product_decision.
+    new = _set_field(new, "blocked_reason", "product_decision")
     if not dry and changed:
         action.src.write_text(new, encoding="utf-8")
         _append_escalation(

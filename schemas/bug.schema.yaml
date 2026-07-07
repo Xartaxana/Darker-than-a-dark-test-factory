@@ -19,3 +19,15 @@ fields:
   test_cases: {}
   runs: {}
   duplicates: {}
+  # B1 (docs/09 Этап 2, docs/06 D13): реальный баг, риск принят / не чинится в этом
+  # релизе — НЕ Rejected (это баг) и НЕ Intended (это не задумано). Обязателен
+  # resolution_comment (кросс-проверка validate_frontmatter.py); не блокирует TC/gate.
+  resolution: { enum: [accepted_risk, wontfix] }
+  resolution_comment: {}
+  # B2 (docs/06 D14): подтверждённый баг, релиз идёт с ним — в digest, дедуп APP_BUG
+  # сверяется с ним в первую очередь, still-repro (D3) проверяет вне зависимости от severity.
+  known_issue: { enum: ["true", "false"] }
+  # B5: причина простоя в Blocked → SLA/digest. Обязателен по смыслу при status: Blocked
+  # (validate_frontmatter.py — WARN, не ERROR: человек с борды может не успеть заполнить
+  # сразу); фактори-переходы (D8 pingpong, конфликт board-inbound) проставляют сами.
+  blocked_reason: { enum: [environment, missing_fixture, product_decision, dev_answer, permissions] }

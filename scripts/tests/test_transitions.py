@@ -31,6 +31,28 @@ def test_statuses_match_schema_enums():
         assert enum == set(tr.statuses(itype)), f"{itype}: схема {enum} != матрица"
 
 
+BLOCKED_REASON_ENUM = {"environment", "missing_fixture", "product_decision", "dev_answer",
+                       "permissions"}
+
+
+def test_blocked_reason_field_on_every_machine_with_blocked():
+    """B5: любой тип, у которого в статусной машине есть Blocked, должен уметь
+    объяснить причину — одинаковый enum во всех трёх схемах."""
+    for itype in ("bug", "test-case", "run"):
+        assert "Blocked" in tr.statuses(itype), itype
+        schema = yaml.safe_load((SCHEMAS / f"{itype}.schema.yaml").read_text(encoding="utf-8"))
+        assert set(schema["fields"]["blocked_reason"]["enum"]) == BLOCKED_REASON_ENUM, itype
+
+
+def test_bug_schema_has_resolution_and_known_issue_fields():
+    """B1/B2: поля недостающих веток workflow присутствуют в схеме бага."""
+    schema = yaml.safe_load((SCHEMAS / "bug.schema.yaml").read_text(encoding="utf-8"))
+    fields = schema["fields"]
+    assert set(fields["resolution"]["enum"]) == {"accepted_risk", "wontfix"}
+    assert "resolution_comment" in fields
+    assert set(fields["known_issue"]["enum"]) == {"true", "false"}
+
+
 # --- паритет board-whitelist (регрессия на переезд с литерала) --------------
 
 LEGACY_WHITELIST = {

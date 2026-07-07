@@ -33,6 +33,22 @@ def test_counts_and_sections(repo, monkeypatch):
     assert "НЕ редактировать руками" in text
 
 
+def test_known_issue_section_and_resolution_tag(repo, monkeypatch):
+    """B1/B2: known_issue — отдельная секция дайджеста; resolution — тег у Open-бага."""
+    monkeypatch.setattr(qs, "REPO", repo.root, raising=True)
+    monkeypatch.setattr(qs, "AUT_PATH", repo.root / "state" / "app-under-test.yaml", raising=True)
+    monkeypatch.setattr(qs, "ESCALATIONS_PATH", repo.root / "state" / "escalations.md", raising=True)
+
+    repo.bug("BUG-060", "Open", extra="known_issue: true\n")
+    repo.bug("BUG-061", "Open", extra="resolution: accepted_risk\nresolution_comment: ok\n")
+
+    text = qs.render(qs.collect(), "T")
+
+    assert "Известные проблемы, known_issue (1)" in text
+    assert "BUG-060" in text.split("## Известные проблемы")[1]
+    assert "BUG-061 [major] Open [accepted_risk]" in text
+
+
 def test_stable_output_same_state(repo, monkeypatch):
     monkeypatch.setattr(qs, "REPO", repo.root, raising=True)
     monkeypatch.setattr(qs, "AUT_PATH", repo.root / "state" / "app-under-test.yaml", raising=True)

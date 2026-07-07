@@ -13,3 +13,5 @@ fields:
   area: {}
   risk: {}
   requirements: {}
+  # B5 (docs/09 Этап 2): причина простоя в Blocked; см. schemas/bug.schema.yaml.
+  blocked_reason: { enum: [environment, missing_fixture, product_decision, dev_answer, permissions] }

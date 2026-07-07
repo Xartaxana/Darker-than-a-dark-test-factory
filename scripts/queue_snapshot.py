@@ -62,6 +62,7 @@ def collect() -> dict:
     tc_by_area: dict[str, Counter] = defaultdict(Counter)
     bug_status: Counter = Counter()
     bugs_open: list[str] = []
+    known_issues: list[str] = []
     run_status: Counter = Counter()
     locks: list[str] = []
     total = Counter()
@@ -80,14 +81,21 @@ def collect() -> dict:
         elif itype == "bug":
             bug_status[status] += 1
             if status in ("Open", "Reopened", "Blocked"):
+                resolution = str(meta.get("resolution") or "").strip()
+                tag = f" [{resolution}]" if resolution else ""
                 bugs_open.append(
+                    f"{key} [{meta.get('severity', '?')}] {status}{tag} — {meta.get('title', '')}")
+            # B2: known_issue — отдельная секция дайджеста, не теряется среди Open.
+            if str(meta.get("known_issue") or "").strip().lower() == "true":
+                known_issues.append(
                     f"{key} [{meta.get('severity', '?')}] {status} — {meta.get('title', '')}")
         elif itype == "run":
             run_status[status] += 1
 
     return {"tc_status": tc_status, "tc_by_area": tc_by_area, "bug_status": bug_status,
-            "bugs_open": bugs_open, "run_status": run_status, "locks": locks,
-            "total": total, "aut": _read_aut(), "escalations": _escalation_lines()}
+            "bugs_open": bugs_open, "known_issues": known_issues, "run_status": run_status,
+            "locks": locks, "total": total, "aut": _read_aut(),
+            "escalations": _escalation_lines()}
 
 
 def _fmt_counter(c: Counter, order: list[str]) -> str:
@@ -129,6 +137,12 @@ def render(data: dict, generated_at: str) -> str:
     ]
     for b in data["bugs_open"]:
         lines.append(f"- {b}")
+    lines += [
+        "",
+        f"## Известные проблемы, known_issue ({len(data['known_issues'])})",
+        "",
+    ]
+    lines += [f"- {b}" for b in data["known_issues"]] or ["- нет"]
     lines += [
         "",
         f"## Прогоны ({sum(data['run_status'].values())})",

@@ -14,9 +14,9 @@ docs/09). Всё остальное живёт в своих местах:
 | Окружение, спайки A/B/C | [environment-setup.md](environment-setup.md) |
 | История сессий | git log (подробные итоги — в сообщениях коммитов) |
 
-## Где мы (2026-07-07, вечер)
+## Где мы (2026-07-07, ночь)
 
-**Этап 1 docs/09 ЗАВЕРШЁН** (включая разрешения в settings.json). Начат **Этап 2**:
+**Этап 1 docs/09 ЗАВЕРШЁН** (включая разрешения в settings.json). В работе **Этап 2**:
 
 - ✅ **C3+F3**: матрица переходов `schemas/transitions.yaml` + `scripts/transitions.py`;
   whitelist board_inbound выводится из неё; попутно исправлен pingpong sla_sweep
@@ -24,13 +24,25 @@ docs/09). Всё остальное живёт в своих местах:
 - ✅ **F2**: `schemas/agent-output.schema.yaml` + `scripts/agent_output.py` —
   воркер завершает ответ ```yaml-блоком agent_output (result: success|blocked|
   degraded|failed…); контракт в /qa-loop (требование в промпте диспатча) и
-  docs/03 §5 п.7. Всего 76 тестов scripts/tests зелёные.
-- **Дальше по Этапу 2 (порядок сильной модели):** B1/B2/B5 (accepted_risk/wontfix,
-  known_issue+дедуп, blocked_reason — строить на матрице C3), B3/B4 (lifecycle
-  автотеста + test debt), F1 (test-reviewer), C1 (архитектурные чеки), C2
-  (evidence contract — рутина), GitLab Issues для critical+ (нужен токен от
-  владельца). Хвосты C3/F3: тесты парсера permission_audit; репетиция тёмного
-  дня как регресс (после обкатки F2 живым проходом).
+  docs/03 §5 п.7.
+- ✅ **B1/B2/B5**: `resolution: accepted_risk|wontfix` + обязательный
+  `resolution_comment` (bug.schema.yaml, кросс-проверка в validate_frontmatter.py —
+  ERROR при отсутствии комментария); `known_issue: true` (дедуп APP_BUG в
+  bug-reporter.md проверяет known_issue в первую очередь; still-repro D3 расширен
+  на known_issue любой severity, не только blocker/critical; digest — секция
+  «Известные проблемы» в queue_snapshot.py); `blocked_reason` enum во ВСЕХ трёх
+  схемах (bug/test-case/run — `Blocked` есть в каждой машине); sla_sweep pingpong
+  и board_inbound-конфликт проставляют `blocked_reason: product_decision`
+  автоматически; validate_frontmatter — WARN (не ERROR) при пустом blocked_reason
+  на status Blocked. Заодно: sla_sweep больше не шлёт периодический
+  bug_open_severity-варнинг для resolution/known_issue багов (docs/06 D13/D14) —
+  решение уже принято человеком, нагрузка была бы шумом. Итого 86 тестов
+  scripts/tests зелёные (было 76, +10).
+- **Дальше по Этапу 2 (порядок сильной модели):** B3/B4 (lifecycle автотеста +
+  test debt), F1 (test-reviewer), C1 (архитектурные чеки), C2 (evidence contract —
+  рутина), GitLab Issues для critical+ (нужен токен от владельца). Хвосты C3/F3:
+  тесты парсера permission_audit; репетиция тёмного дня как регресс (после обкатки
+  F2 живым проходом).
 
 Итог Этапа 1 (для истории):
 

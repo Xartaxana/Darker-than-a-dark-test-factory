@@ -133,6 +133,39 @@ def test_pingpong_blocks_bug(repo):
     text = p.read_text(encoding="utf-8")
     assert "status: Blocked" in text
     assert "[sla:pingpong]" in _esc(repo)
+    # B5: причина известна детерминированно — проставляется автоматически.
+    assert "blocked_reason: product_decision" in text
+
+
+def test_known_issue_skips_severity_escalation(repo):
+    """B2: сознательно оставленный known_issue не шлёт периодический SLA-варнинг."""
+    repo.bug("BUG-040", "Open", extra=f"status_since: {OLD}\nknown_issue: true\n")
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    assert "BUG-040" not in _esc(repo)
+
+
+def test_resolution_skips_severity_escalation(repo):
+    """B1: risk-accepted/wontfix — тоже не нагружает SLA по severity."""
+    repo.bug("BUG-041", "Open",
+             extra=f"status_since: {OLD}\nresolution: accepted_risk\nresolution_comment: ok\n")
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    assert "BUG-041" not in _esc(repo)
+
+
+def test_blocked_any_includes_reason_when_present(repo):
+    repo.bug("BUG-042", "Blocked", extra=f"status_since: {OLD}\nblocked_reason: dev_answer\n")
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    text = _esc(repo)
+    assert "BUG-042" in text and "причина: dev_answer" in text
 
 
 def test_dedup_and_timestamp_preserved(repo):

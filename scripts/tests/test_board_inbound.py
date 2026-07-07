@@ -61,6 +61,8 @@ def test_conflict_both_moved(repo):
     assert "status: Blocked" in src.read_text(encoding="utf-8")
     assert bi.ESCALATIONS_PATH.exists()
     assert "BUG-102" in bi.ESCALATIONS_PATH.read_text(encoding="utf-8")
+    # B5: причина конфликта детерминирована — нужно решение человека.
+    assert "blocked_reason: product_decision" in src.read_text(encoding="utf-8")
 
 
 def test_cursor_advanced_prevents_false_conflict(repo):

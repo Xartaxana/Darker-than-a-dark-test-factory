@@ -51,11 +51,22 @@
 | D10 | Пометил баг дубликатом другого | Слить ссылки: `duplicates` у копии, TC/прогоны перелинковать на оригинал | bug-reporter |
 | D11 | Несколько пушей подряд за короткое время | Coalescing: тестируется только последняя сборка; промежуточные фиксируются в `app-under-test.yaml`-истории прогона как пропущенные | build-watch |
 | D12 | Перевёл TC `Review → Approved` на борде | board-inbound применяет к артефакту → штатное правило «автоматизировать Approved-кейс» | test-automator |
+| D13 | Явно принял риск / решил не чинить в этом релизе (`resolution: accepted_risk\|wontfix`) | Держим linked TC активными, не блокируем release-gate. Обязателен `resolution_comment` (обоснование человека — validate_frontmatter ловит отсутствие как ошибку). sla-sweep больше не шлёт периодический SLA-варнинг по severity для этого бага — решение уже принято, нагрузка была бы шумом | sla-sweep (гасит bug_open_*), test-strategist (учитывает в стратегии) |
+| D14 | Пометил `known_issue: true` («баг подтверждён, релиз идёт с ним») | Баг остаётся `Open`/`Reopened`, попадает в отдельную секцию дайджеста `factory-status.md`; bug-reporter при новом `APP_BUG` сверяется с known-issue багами В ПЕРВУЮ очередь (не плодит дубли); still-repro (D3) проверяет его на каждой новой сборке независимо от severity («не ухудшился»); sla-sweep не шлёт периодический SLA-варнинг по severity (как D13) | bug-reporter (дедуп), fix-verifier (mode=still-repro), sla-sweep |
 
 Новые поля frontmatter бага для поддержки матрицы (внесены в шаблон
 `docs/templates/bug-report.md`): `status_since`, `last_seen_in`, `reopen_count`,
 `dispute_count`, `regression_of`, `awaiting` (`dev|qa|none`) + раздел `## Обсуждение`
 (журнал реплик `[автор @ ISO-время]`, единый канал комментариев борда↔артефакта).
+
+**B1/B2/B5 (docs/09 Этап 2, добавлено 2026-07-07):** `resolution`
+(`accepted_risk|wontfix` + обязательный `resolution_comment`, D13), `known_issue`
+(`true|false`, D14), `blocked_reason` (`environment|missing_fixture|product_decision|
+dev_answer|permissions`, все три схемы — bug/test-case/run, т.к. `Blocked` есть в
+каждой машине). `blocked_reason` обязателен по смыслу при `status: Blocked`
+(validate_frontmatter — WARN, не ERROR: человек с борды может не успеть заполнить
+сразу); детерминированные factory-переходы (D8/D4 pingpong в sla_sweep, конфликт
+борда↔артефакта в board_inbound) проставляют `product_decision` автоматически.
 
 Новый вердикт триажа: `APP_CHANGED` (D9) — добавить в реестр вердиктов
 failure-analyst рядом с `SITE_CHANGED`.

@@ -68,7 +68,9 @@ rules:
     dispatch: test-maintainer
 
   - name: "Перепроверить репро старых багов на новой сборке"  # docs/06 D3
-    when: "после smoke/regression на новой сборке есть Open/Reopened blocker|critical с last_seen_in < текущей сборки"
+    when: "после smoke/regression на новой сборке есть Open/Reopened blocker|critical с
+      last_seen_in < текущей сборки, ИЛИ known_issue: true любой severity (D14, B2 —
+      «не ухудшился» проверяем на каждой сборке независимо от severity)"
     dispatch: fix-verifier
     args: { mode: still-repro }
 

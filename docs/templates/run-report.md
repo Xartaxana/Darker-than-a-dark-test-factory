@@ -6,6 +6,7 @@ app_version: "1.10 (versionCode 11), build <hash>"
 status: NeedsTriage    # NeedsTriage | Triaged | Closed
 totals: { passed: 0, failed: 0, skipped: 0, quarantined: 0, duration_min: 0 }
 allure: "runs/RUN-.../allure/"
+blocked_reason: ""    # environment | missing_fixture | product_decision | dev_answer | permissions — заполнить при status: Blocked (docs/06 B5)
 lock: ""
 ---
 

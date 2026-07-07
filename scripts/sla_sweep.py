@@ -116,6 +116,13 @@ def _age_h(meta: dict, now: datetime.datetime) -> float | None:
     return (now - since).total_seconds() / 3600.0 if since else None
 
 
+def _s_bool(value) -> bool:
+    """`known_issue` во frontmatter: bool (PyYAML) или строка 'true'/'false'."""
+    if isinstance(value, bool):
+        return value
+    return str(value or "").strip().lower() == "true"
+
+
 def _severity_rule(meta: dict) -> str:
     sev = str(meta.get("severity", "major")).lower()
     return f"bug_open_{sev}" if f"bug_open_{sev}" in DEFAULTS else "bug_open_major"
@@ -136,8 +143,10 @@ def collect_wanted(now: datetime.datetime, thr: dict) -> tuple[dict, list]:
 
         # blocked_any — любой тип артефакта
         if status == "Blocked" and age is not None and age > thr["blocked_any"]:
+            reason = str(meta.get("blocked_reason") or "").strip()
+            reason_s = f" (причина: {reason})" if reason else ""
             wanted[(key, "blocked_any")] = (
-                f"в Blocked с {since_s} | нужно: разобрать причину и вывести из Blocked")
+                f"в Blocked с {since_s}{reason_s} | нужно: разобрать причину и вывести из Blocked")
 
         if itype == "run" and status == "NeedsTriage" and age is not None \
                 and age > thr["run_needs_triage"]:
@@ -148,8 +157,13 @@ def collect_wanted(now: datetime.datetime, thr: dict) -> tuple[dict, list]:
         if itype != "bug":
             continue
 
+        # B1/B2: resolution (accepted_risk/wontfix) и known_issue — сознательное
+        # решение владельца оставить баг открытым; периодическая SLA-нагрузка по
+        # severity здесь — шум, не сигнал (docs/06 D13/D14).
+        deliberately_open = bool(str(meta.get("resolution") or "").strip()) \
+            or _s_bool(meta.get("known_issue"))
         sev_rule = _severity_rule(meta)
-        if status in ("Open", "Reopened") and age is not None:
+        if status in ("Open", "Reopened") and age is not None and not deliberately_open:
             immediate_blocker = sev_rule == "bug_open_blocker"
             if immediate_blocker or age > thr[sev_rule]:
                 sev = str(meta.get("severity", "major")).lower()
@@ -191,6 +205,9 @@ def apply_pingpong_block(src: Path, now: datetime.datetime, *, dry: bool) -> str
         return f"  [WARN] {src.name}: нет строки status: — pingpong-блок не применён"
     new = bi._set_field(new, "status_since", f'"{stamp}"')
     new, _ = bi._rewrite_field(new, "updated", f'"{stamp}"')
+    # B5: причина известна детерминированно — фикс/спор не сходится, нужно живое
+    # обсуждение с разработчиком (D8/D4), это и есть product_decision.
+    new = bi._set_field(new, "blocked_reason", "product_decision")
     if not dry:
         src.write_text(new, encoding="utf-8")
     return f"  [BLOCK] {src.name}: pingpong → Blocked{' (dry-run)' if dry else ''}"

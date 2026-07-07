@@ -81,3 +81,35 @@ def test_bad_lock_format(repo, schemas):
 
     errors, _ = vf.validate()
     assert any("lock" in e for e in errors)
+
+
+def test_resolution_without_comment_is_error(repo, schemas):
+    """B1: resolution без resolution_comment — обоснование обязательно."""
+    repo.bug("BUG-050", "Open", extra="resolution: accepted_risk\n")
+
+    errors, _ = vf.validate()
+    assert any("resolution_comment" in e for e in errors)
+
+
+def test_resolution_with_comment_is_clean(repo, schemas):
+    repo.bug("BUG-051", "Open",
+             extra="resolution: wontfix\nresolution_comment: не в этом релизе\n")
+
+    errors, _ = vf.validate()
+    assert errors == []
+
+
+def test_blocked_without_reason_warns(repo, schemas):
+    """B5: WARN, не ERROR — переход с борды может не нести причину сразу."""
+    repo.bug("BUG-052", "Blocked")
+
+    errors, warns = vf.validate()
+    assert errors == []
+    assert any("blocked_reason" in w for w in warns)
+
+
+def test_blocked_with_reason_no_warn(repo, schemas):
+    repo.bug("BUG-053", "Blocked", extra="blocked_reason: environment\n")
+
+    _errors, warns = vf.validate()
+    assert not any("blocked_reason" in w for w in warns)

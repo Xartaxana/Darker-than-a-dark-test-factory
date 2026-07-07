@@ -69,9 +69,17 @@
    блокируем — шанс fix-verifier; Rejected-спор блокируем по D4).
    *Хвосты:* тесты парсера permission_audit; репетиция тёмного дня как повторяемый
    регресс (после F2, когда появится machine-readable результат агентов).
-2. **B1/B2/B5 — недостающие ветки workflow.** `resolution: accepted_risk|wontfix`
-   (обязателен комментарий человека), `known_issue: true` + дедупликация APP_BUG
-   против known issues, `blocked_reason` enum → SLA и дайджест.
+2. **B1/B2/B5 — недостающие ветки workflow.** ✅ 2026-07-07: `resolution:
+   accepted_risk|wontfix` + обязательный `resolution_comment` (bug.schema.yaml,
+   validate_frontmatter кросс-проверка), `known_issue: true` (дедуп APP_BUG в
+   bug-reporter.md — сверка known_issue в первую очередь; still-repro D3 расширен
+   на known_issue любой severity; digest — секция «Известные проблемы» в
+   queue_snapshot.py), `blocked_reason` enum (bug/test-case/run — все три схемы,
+   т.к. `Blocked` есть в каждой машине; sla_sweep pingpong и board_inbound-конфликт
+   проставляют `product_decision` автоматически; validate_frontmatter — WARN при
+   отсутствии на status Blocked). sla_sweep больше не шлёт периодический
+   bug_open_severity-варнинг для resolution/known_issue багов (docs/06 D13/D14).
+   10 новых self-tests (86 всего в scripts/tests).
 3. **B3/B4 — lifecycle автотеста и test debt.** `automation_status:
    active|quarantined|needs_maintenance|deprecated|retired` + `quarantine_*` поля
    с SLA (карантин не бесконечен); test debt — `bugs/` с `type: test_debt`.
