@@ -167,21 +167,18 @@ def iter_tool_calls(minutes: float | None, session: str | None = None):
             continue
 
 
-def main():
-    if os.name == "nt":  # консоль Windows в cp866 душит кириллицу — форсим utf-8
-        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--minutes", type=float, default=180)
-    ap.add_argument("--all", action="store_true")
-    ap.add_argument("--session", help="фильтр: только транскрипты, чьи пути содержат эту подстроку (id сессии)")
-    ap.add_argument("--summary", action="store_true", help="сводка по группам вместо полного списка")
-    args = ap.parse_args()
-    minutes = None if getattr(args, "all") else args.minutes
+def collect_suspects(minutes: float | None, session: str | None = None):
+    """Прогнать все tool_use через allowlist + sandbox-эвристики.
 
+    Возвращает (suspects, total), где suspects — список
+    (when, agent, tool, cmd, reason) для команд, которые ВЕРОЯТНО требовали
+    ручного подтверждения. Вынесено из main() отдельной чистой функцией,
+    чтобы юнит-тесты могли проверять фильтрацию без парсинга stdout.
+    """
     patterns = load_allow_patterns()
     suspects = []
     total = 0
-    for when, fname, agent, tool, cmd in iter_tool_calls(minutes, args.session):
+    for when, fname, agent, tool, cmd in iter_tool_calls(minutes, session):
         total += 1
         allowed = matches_allow(tool, cmd, patterns)
         flags = sandbox_flags(cmd)
@@ -192,6 +189,21 @@ def main():
             reason.append("нет совпадения с allowlist")
         reason += flags
         suspects.append((when, agent, tool, cmd, reason))
+    return suspects, total
+
+
+def main(argv=None):
+    if os.name == "nt":  # консоль Windows в cp866 душит кириллицу — форсим utf-8
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--minutes", type=float, default=180)
+    ap.add_argument("--all", action="store_true")
+    ap.add_argument("--session", help="фильтр: только транскрипты, чьи пути содержат эту подстроку (id сессии)")
+    ap.add_argument("--summary", action="store_true", help="сводка по группам вместо полного списка")
+    args = ap.parse_args(argv)
+    minutes = None if getattr(args, "all") else args.minutes
+
+    suspects, total = collect_suspects(minutes, args.session)
 
     print(f"Просканировано вызовов Bash/PowerShell: {total}"
           + ("" if minutes is None else f" (за последние {minutes:g} мин)")
