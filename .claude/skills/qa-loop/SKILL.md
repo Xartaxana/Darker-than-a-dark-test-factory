@@ -74,8 +74,17 @@ pre_step), но эскалируй, если шаг критичен для те
    и `args` правила: fix-verifier — `mode` (verify|recheck-rejected|still-repro);
    bug-reporter — `role` (creator|responder); test-maintainer при `APP_CHANGED` —
    пометь «намеренное изменение: обновить тесты, не маскировать».
-3. По результату сними лок (`lock: ""`) и запиши строку в
-   `state/orchestrator-log.md` (время, правило, агент, артефакт, исход).
+   **В каждый промпт диспатча включай требование F2**: «заверши ответ fenced-блоком
+   ```yaml с ключом agent_output по schemas/agent-output.schema.yaml
+   (agent/artifact/result: success|blocked|degraded|failed + summary/changed_files/
+   evidence/next_rules/escalations)».
+3. Результат воркера читай ИЗ его agent_output-блока (не из свободного текста):
+   `result` и `summary` — в строку orchestrator-log; `next_rules` — учти в этом же
+   проходе; `escalations` — сверь с state/escalations.md. Блока нет или он битый
+   (проверка — `python scripts/agent_output.py` на сохранённом ответе при
+   сомнении) → исход в логе `degraded (нет agent_output)`, текст прочтёт человек.
+   Затем сними лок (`lock: ""`) и запиши строку в `state/orchestrator-log.md`
+   (время, правило, агент, артефакт, result: summary).
    Любая смена `status` (твоя или воркера) обязана соответствовать переходу из
    `schemas/transitions.yaml` (актор, эффекты); перехода нет → эскалация, не правка.
 4. Воркер вернул blocked/failed — артефакт в `Blocked` не переводи сам, если воркер

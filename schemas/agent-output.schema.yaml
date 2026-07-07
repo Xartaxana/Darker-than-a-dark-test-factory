@@ -1,0 +1,25 @@
+# Схема machine-readable результата агента (F2, docs/09 Этап 2).
+#
+# КОНТРАКТ: каждый воркер, диспатчнутый /qa-loop (или /run-suite, /triage),
+# завершает свой ответ fenced-блоком ```yaml с одним top-level ключом agent_output.
+# Верхний уровень парсит его (scripts/agent_output.py), пишет result в
+# orchestrator-log и НЕ разбирает свободный текст. Блока нет / блок битый →
+# исход прохода по артефакту считается degraded (текст читает уже человек).
+version: 1
+required: [agent, artifact, result]
+fields:
+  agent:    # имя воркера (см. actors.groups.factory в transitions.yaml)
+    enum: [test-strategist, test-designer, test-automator, test-runner,
+           failure-analyst, bug-reporter, fix-verifier, test-maintainer]
+  artifact: {}          # id или путь главного артефакта ("—" если нет)
+  result:
+    enum: [success, blocked, degraded, failed]
+    # success  — чек-лист готовности пройден, статусы переведены
+    # blocked  — артефакт переведён в Blocked (эскалация записана)
+    # degraded — часть шагов пропущена (нет разрешения/окружения), причина в summary
+    # failed   — работа не выполнена, статусы НЕ менялись
+  summary: {}           # 1–2 строки для лога; НЕ замена ## Обсуждение/отчётов
+  changed_files: {}     # список путей, которые агент менял
+  evidence: {}          # список путей к доказательствам (логи, скриншоты, прогоны)
+  next_rules: {}        # подсказки диспетчеру: какие правила проверить следующим проходом
+  escalations: {}       # список строк, УЖЕ записанных агентом в state/escalations.md

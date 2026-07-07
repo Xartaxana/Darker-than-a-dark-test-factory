@@ -78,9 +78,11 @@
 4. **C2 — evidence contract.** Минимальный пакет доказательств на каждый вердикт
    (таблица из ревью §4 C2) → инструкции failure-analyst/fix-verifier + проверка
    в self-tests.
-5. **F2 — agent output schema.** Каждый агент возвращает machine-readable результат
-   (result/changed_files/evidence/escalations); верхний диспетчер не парсит
-   свободный текст.
+5. **F2 — agent output schema.** ✅ 2026-07-07: `schemas/agent-output.schema.yaml`
+   (result: success|blocked|degraded|failed + summary/changed_files/evidence/
+   next_rules/escalations), парсер `scripts/agent_output.py` (последний
+   ```yaml-блок с ключом agent_output; нет блока → degraded), контракт вшит в
+   /qa-loop (требование в промпте каждого диспатча) и docs/03 §5 п.7; 6 тестов.
 6. **F1 — test-reviewer.** Роль (или режим test-maintainer): ревью нового автотеста
    (архитектурные правила, evidence, flake-риск, traceability) до перевода TC в
    стабильную автоматизацию.

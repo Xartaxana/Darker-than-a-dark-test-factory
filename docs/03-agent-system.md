@@ -152,6 +152,13 @@ rules:
 5. **Чек-лист готовности** — агент проходит его перед снятием лока; не прошёл —
    статус не меняется, пишется причина.
 6. **Протокол эскалации** — когда ставить `Blocked` и что писать человеку.
+7. **Machine-readable результат (F2, с 2026-07-07)** — каждый воркер завершает
+   ответ fenced-блоком ```yaml с ключом `agent_output` по
+   `schemas/agent-output.schema.yaml` (agent, artifact,
+   `result: success|blocked|degraded|failed`, summary, changed_files, evidence,
+   next_rules, escalations). Диспетчер (/qa-loop) парсит блок
+   (`scripts/agent_output.py`) и не разбирает свободный текст; требование
+   передаётся в промпте каждого диспатча. Нет блока → исход считается degraded.
 
 ## 6. Пример сквозного цикла (happy + bug path)
 
