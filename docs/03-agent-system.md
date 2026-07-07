@@ -48,6 +48,15 @@ Issues репозитория приложения.
 Каждый артефакт — markdown с YAML frontmatter: `id`, `status`, `priority`, `links`,
 `lock` (агент+timestamp — аналог `addLabel`/`skipIfLabel` из dmtools).
 
+**Машиночитаемый источник правды по переходам — `schemas/transitions.yaml`**
+(C3, с 2026-07-07): для каждого перехода — акторы (`by`), доступность с борды
+(`via_board`), обязательные эффекты (`status_since`/`updated` всегда;
+`reopen_count+1`, `escalation` и т.п.). Из матрицы выводится whitelist
+board_inbound; целостность и паритет закреплены `scripts/tests/test_transitions.py`.
+Схемы ниже — иллюстрация; при расхождении верить матрице. Смена `status` вне
+матрицы запрещена — нет подходящего перехода → это эскалация, а не «переход по
+смыслу».
+
 **Тест-кейс** (`test-cases/`):
 ```
 Draft → Review → Approved → Automated

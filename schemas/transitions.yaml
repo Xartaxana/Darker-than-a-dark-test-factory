@@ -1,0 +1,88 @@
+# Матрица переходов статусных машин (C3, docs/09 Этап 2) — ЕДИНЫЙ источник правды.
+# Свод docs/03 §2 (статусные машины) + docs/06 §2 (матрица D1–D12) + §3 (борда).
+#
+# Кто ей подчиняется:
+# - board_inbound.py строит из неё whitelist переходов с борды (via_board: true);
+# - sla_sweep.py применяет только легальные factory-переходы (pingpong → Blocked);
+# - self-tests (scripts/tests/test_transitions.py) сверяют enum'ы schemas/*.schema.yaml,
+#   паритет board-whitelist и side effects скриптов с матрицей;
+# - агенты перед сменой status обязаны найти свой переход здесь; нет перехода —
+#   это эскалация, а не «переход по смыслу».
+# Менять ТОЛЬКО вместе с тестами: правка матрицы без зелёного test_transitions —
+# нарушение контракта.
+#
+# Поля перехода:
+#   from/to    — статусы ("*" = из любого)
+#   by         — акторы: human | factory (любой агент/скрипт) | конкретное имя
+#   via_board  — true: человек может сделать переход карточкой на борде
+#                (без флага человек правит только frontmatter напрямую)
+#   effects    — обязательные побочные эффекты СВЕРХ always_effects
+#   ref        — пункт спецификации (docs/06 D1–D12) или прецедент
+version: 1
+
+actors:
+  groups:
+    factory: [qa-loop, test-runner, failure-analyst, bug-reporter, fix-verifier,
+              test-automator, test-designer, test-maintainer, test-strategist,
+              sla_sweep, board_inbound, stale_locks, build_watch]
+
+# Эффекты ЛЮБОГО перехода: оба поля обновляются меткой момента перехода.
+always_effects: [status_since, updated]
+
+machines:
+  bug:
+    initial: [Open]            # создаёт bug-reporter (docs/03 §1)
+    terminal: [Verified]       # выход — только ручное переоткрытие человеком
+    statuses: [Open, Reopened, Fixed, Verified, Rejected, Intended, Blocked]
+    transitions:
+      # --- действия человека (разработчика) ---
+      - {from: Open,     to: Fixed,    by: [human], via_board: true, ref: "D1/D2: пофиксил"}
+      - {from: Open,     to: Rejected, by: [human], via_board: true, ref: "D4: не баг / не воспроизводится"}
+      - {from: Open,     to: Intended, by: [human], via_board: true, ref: "D5: так задумано"}
+      - {from: Reopened, to: Fixed,    by: [human], via_board: true, ref: "D1: пофиксил после реопена"}
+      - {from: Reopened, to: Rejected, by: [human], via_board: true, ref: "D4"}
+      - {from: Reopened, to: Intended, by: [human], via_board: true, ref: "D5"}
+      - {from: "*",      to: Open,     by: [human], via_board: true, ref: "ручное переоткрытие из любого статуса"}
+      # --- вердикты фабрики ---
+      - {from: Fixed,    to: Verified, by: [fix-verifier],
+         ref: "D1: связанные TC зелёные на сборке новее found_in; только fix-verifier, человек НЕ закрывает баги мимо верификации"}
+      - {from: Fixed,    to: Reopened, by: [fix-verifier], effects: [reopen_count+1],
+         ref: "D1: репро жив на новой сборке"}
+      # --- эскалации (эффект escalation = строка в state/escalations.md) ---
+      - {from: Open,     to: Blocked, by: [human, factory], via_board: true, effects: [escalation],
+         ref: "D6: продуктовый вопрос / конфликт борды / решение человека"}
+      - {from: Reopened, to: Blocked, by: [human, factory], via_board: true, effects: [escalation],
+         ref: "D8: пинг-понг reopen_count ≥ sla.reopened_pingpong"}
+      - {from: Rejected, to: Blocked, by: [factory], effects: [escalation],
+         ref: "D4: спор по Rejected, dispute_count ≥ sla.reopened_pingpong"}
+
+  test-case:
+    initial: [Draft, Review]   # test-designer: Draft при спорных требованиях, иначе сразу Review
+    terminal: []
+    statuses: [Draft, Review, Approved, Automated, Blocked]
+    transitions:
+      - {from: Draft,    to: Approved, by: [human], via_board: true, ref: "D12: аппрув (в т.ч. с борды)"}
+      - {from: Review,   to: Approved, by: [human], via_board: true, ref: "D12"}
+      - {from: Review,   to: Approved, by: [qa-loop],
+         ref: "авто-approve допущен ТОЛЬКО для P2/P3 (docs/03 §2); пока не реализован"}
+      - {from: Draft,    to: Review,   by: [test-designer],
+         ref: "кейс дозрел: спорный вопрос снят"}
+      - {from: Approved, to: Automated, by: [test-automator], effects: [automated_by_required],
+         ref: "стабильный автотест: 3 зелёных прогона подряд + linked allure.id"}
+      - {from: "*",      to: Review, by: [human, test-automator, test-maintainer], via_board: true,
+         ref: "вернуть на доработку (прецедент TC-009: replay-блокер)"}
+      - {from: "*",      to: Blocked, by: [factory], effects: [escalation],
+         ref: "деградация/конфликт (прецедент TC-013..015)"}
+
+  run:
+    initial: [NeedsTriage, Closed]   # test-runner: есть падения / все зелёные
+    terminal: [Closed]
+    statuses: [NeedsTriage, Triaged, Closed, Blocked]
+    transitions:                     # переходов с борды для run НЕТ (только комментарии)
+      - {from: NeedsTriage, to: Triaged, by: [failure-analyst],
+         ref: "каждое падение получило вердикт из реестра"}
+      - {from: Triaged, to: Closed, by: [bug-reporter, test-maintainer, qa-loop],
+         ref: "все вердикты обработаны: баг заведён / тест починен / карантин"}
+      - {from: "*", to: Blocked, by: [factory], effects: [escalation],
+         ref: "деградация (прецедент RUN-REH-901: нечего гонять — не выдумывать вердикт)"}
+      - {from: Blocked, to: NeedsTriage, by: [human], ref: "человек разобрал причину блока"}

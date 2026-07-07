@@ -40,6 +40,7 @@ def env(repo, monkeypatch):
     touch("app-under-test/gradlew.bat")
     touch("state/rules.yaml")
     touch("state/sla.yaml")
+    touch("schemas/transitions.yaml")
     touch("state/app-under-test.yaml", "apk_path: app-under-test/app.apk\n")
     touch("app-under-test/app.apk")
     # env.ps1 использует $root репозитория — подменяем подстановку на tmp-корень

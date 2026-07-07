@@ -169,9 +169,12 @@ def collect_wanted(now: datetime.datetime, thr: dict) -> tuple[dict, list]:
                 f"ждёт ответа разработчика (awaiting: dev) с {since_s} "
                 f"| нужно: ответить в ## Обсуждение")
 
-        # pingpong (D8): фикс не сходится → Blocked + эскалация
+        # pingpong (D8/D4): фикс/спор не сходится → Blocked + эскалация.
+        # Легальные источники — по матрице (schemas/transitions.yaml): Open, Reopened
+        # (D8, reopen_count) и Rejected (D4, dispute_count). Из Fixed НЕ блокируем —
+        # у fix-verifier должен остаться шанс верифицировать свежий фикс.
         counts = [int(meta.get("reopen_count") or 0), int(meta.get("dispute_count") or 0)]
-        if max(counts) >= thr["reopened_pingpong"] and status not in ("Blocked", "Verified", "Rejected", "Intended"):
+        if max(counts) >= thr["reopened_pingpong"] and status in ("Open", "Reopened", "Rejected"):
             wanted[(key, "pingpong")] = (
                 f"пинг-понг: reopen/dispute достиг {max(counts)} "
                 f"| нужно: живое обсуждение с разработчиком; баг переведён в Blocked")

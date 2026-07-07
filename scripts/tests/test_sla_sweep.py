@@ -98,6 +98,31 @@ def test_awaiting_dev_unanswered(repo):
     assert "BUG-016" not in text
 
 
+def test_pingpong_not_applied_while_fixed(repo):
+    """Из Fixed не блокируем (матрица): у fix-verifier должен остаться шанс
+    верифицировать свежий фикс; заблокируем, только если снова reopened."""
+    p = repo.bug("BUG-030", "Fixed", extra=f"status_since: {FRESH}\nreopen_count: 2\n")
+    _sla(repo)
+
+    report = ss.sweep(now=NOW)
+
+    assert not any("[BLOCK]" in r for r in report)
+    assert "status: Fixed" in p.read_text(encoding="utf-8")
+    assert "pingpong" not in _esc(repo)
+
+
+def test_pingpong_from_rejected_dispute(repo):
+    """D4: спор по Rejected достиг порога → Blocked + эскалация."""
+    p = repo.bug("BUG-031", "Rejected", extra=f"status_since: {FRESH}\ndispute_count: 2\n")
+    _sla(repo)
+
+    report = ss.sweep(now=NOW)
+
+    assert any("[BLOCK]" in r for r in report)
+    assert "status: Blocked" in p.read_text(encoding="utf-8")
+    assert "[sla:pingpong]" in _esc(repo)
+
+
 def test_pingpong_blocks_bug(repo):
     p = repo.bug("BUG-018", "Reopened", extra=f"status_since: {FRESH}\nreopen_count: 2\n")
     _sla(repo)

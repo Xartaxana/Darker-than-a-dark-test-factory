@@ -62,10 +62,13 @@
 
 ## Этап 2 — Исполняемые контракты workflow
 
-1. **C3 + F3 — статусные машины как код.** Transition matrix (bug/TC/run) в YAML +
-   тесты переходов и side effects (`status_since`, локи, эскалации, курсор борды);
-   self-tests фабрики для sla_sweep/stale_locks/build_watch; репетиция тёмного дня —
-   повторяемый регресс фабрики, не разовое событие.
+1. **C3 + F3 — статусные машины как код.** ✅ 2026-07-07: `schemas/transitions.yaml`
+   (акторы, via_board, эффекты, ссылки на D1–D12) + `scripts/transitions.py`;
+   whitelist board_inbound выводится из матрицы; 15 self-tests (валидность, паритет,
+   границы акторов, эффекты); попутно исправлен pingpong в sla_sweep (Fixed не
+   блокируем — шанс fix-verifier; Rejected-спор блокируем по D4).
+   *Хвосты:* тесты парсера permission_audit; репетиция тёмного дня как повторяемый
+   регресс (после F2, когда появится machine-readable результат агентов).
 2. **B1/B2/B5 — недостающие ветки workflow.** `resolution: accepted_risk|wontfix`
    (обязателен комментарий человека), `known_issue: true` + дедупликация APP_BUG
    против known issues, `blocked_reason` enum → SLA и дайджест.

@@ -91,7 +91,8 @@ def run_checks() -> list[Check]:
     else:
         checks.append(Check("venv-python + pytest/yaml", "core", False, f"нет {VENV_PY}"))
 
-    for rel in ("state/rules.yaml", "state/sla.yaml", "state/app-under-test.yaml"):
+    for rel in ("state/rules.yaml", "state/sla.yaml", "state/app-under-test.yaml",
+                "schemas/transitions.yaml"):
         checks.append(Check(rel, "core", (REPO / rel).exists(), "на месте" if (REPO / rel).exists() else "отсутствует"))
 
     # --- run --------------------------------------------------------------

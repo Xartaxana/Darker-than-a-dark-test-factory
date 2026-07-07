@@ -47,22 +47,13 @@ INV_STATUS_MAP = {
     for itype, mapping in bs.STATUS_MAP.items()
 }
 
-# Whitelist переходов человека (docs/06 §3, docs/07 §3). Значение — множество
-# допустимых целевых статусов; "*" среди источников = из любого статуса.
-# Формат: {itype: {from_status: {to_status, ...}}}
-WHITELIST = {
-    "bug": {
-        "Open":     {"Fixed", "Rejected", "Intended", "Blocked"},
-        "Reopened": {"Fixed", "Rejected", "Intended", "Blocked"},
-        "*":        {"Open"},  # ручное переоткрытие из любого статуса
-    },
-    "test-case": {
-        "Draft":  {"Approved"},
-        "Review": {"Approved"},
-        "*":      {"Review"},  # вернуть на доработку из любого статуса
-    },
-    "run": {},  # переходы с борды не принимаются, только комментарии
-}
+# Whitelist переходов человека С БОРДЫ (docs/06 §3, docs/07 §3). С 2026-07-07
+# НЕ литерал: выводится из матрицы schemas/transitions.yaml (переходы с
+# via_board: true и human в by) — единый источник правды C3. Паритет со старым
+# литералом закреплён в scripts/tests/test_transitions.py.
+# Формат: {itype: {from_status: {to_status, ...}}}, "*" = из любого статуса.
+import transitions as tr
+WHITELIST = tr.board_whitelist()
 
 
 def _utcnow() -> str:
