@@ -6,6 +6,11 @@ priority: P1          # P0 | P1 | P2 | P3
 risk: R-04            # ссылка на риск из docs/01 §5 (если есть)
 status: Draft         # Draft | Review | Approved | Automated
 automated_by: ""      # путь к тесту + имя функции, заполняет test-automator
+automation_status: "" # B3, только при Automated: active | quarantined | needs_maintenance | deprecated | retired (машина automation в schemas/transitions.yaml)
+quarantine_reason: "" # обязателен при quarantined (иначе ERROR валидатора)
+quarantine_since: ""  # ISO-время входа в карантин; обязателен при quarantined
+quarantine_expiry: "" # дедлайн карантина; пусто = quarantine_since + sla.quarantine_max
+quarantine_owner: ""  # кто выводит из карантина (обычно test-maintainer)
 requirements: "PROJECT.md §Screens/Browser"   # источник требования
 blocked_reason: ""    # environment | missing_fixture | product_decision | dev_answer | permissions — заполнить при status: Blocked (docs/06 B5)
 lock: ""              # агент:timestamp — ставит оркестратор

@@ -113,3 +113,40 @@ def test_blocked_with_reason_no_warn(repo, schemas):
 
     _errors, warns = vf.validate()
     assert not any("blocked_reason" in w for w in warns)
+
+
+def test_quarantine_without_reason_or_since_is_error(repo, schemas):
+    """B3: карантин без причины/времени — слепое пятно SLA-надзора."""
+    repo.test_case("TC-060", "Automated", extra="automation_status: quarantined\n")
+
+    errors, _ = vf.validate()
+    assert any("quarantine_reason" in e for e in errors)
+    assert any("quarantine_since" in e for e in errors)
+
+
+def test_quarantine_complete_is_clean(repo, schemas):
+    repo.test_case("TC-061", "Automated", extra=(
+        "automation_status: quarantined\n"
+        "quarantine_reason: flaky на CI\n"
+        "quarantine_since: \"2026-07-07T00:00:00Z\"\n"))
+
+    errors, _ = vf.validate()
+    assert errors == []
+
+
+def test_automation_status_on_non_automated_warns(repo, schemas):
+    """B3: lifecycle автотеста живёт только у Automated-кейса."""
+    repo.test_case("TC-062", "Review", extra="automation_status: active\n")
+
+    errors, warns = vf.validate()
+    assert errors == []
+    assert any("automation_status" in w for w in warns)
+
+
+def test_test_debt_without_kind_warns(repo, schemas):
+    """B4: категория долга нужна для digest."""
+    repo.bug("BUG-054", "Open", extra="type: test_debt\n")
+
+    errors, warns = vf.validate()
+    assert errors == []
+    assert any("debt_kind" in w for w in warns)

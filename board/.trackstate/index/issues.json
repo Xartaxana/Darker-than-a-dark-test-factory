@@ -1229,6 +1229,27 @@
     "archived": false
   },
   {
+    "key": "BUG-002",
+    "path": "board/BUG-002/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "test_smoke.py нарушает архитектуру фреймворка: локаторы/импорты screens в tests/, 5 тестов без @allure.id",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:minor"
+    ],
+    "updated": "2026-07-07T14:30:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "RUN-20260702-0300",
     "path": "board/RUN-20260702-0300/main.md",
     "parent": null,

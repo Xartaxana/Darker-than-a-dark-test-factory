@@ -1,0 +1,70 @@
+---
+key: "BUG-002"
+project: "AO3"
+issueType: "bug"
+status: "bug-open"
+priority: "p2"
+summary: "test_smoke.py нарушает архитектуру фреймворка: локаторы/импорты screens в tests/, 5 тестов без @allure.id"
+assignee: "qa-agents"
+reporter: "qa-agents"
+labels: ["bug", "sev:minor"]
+components: []
+fixVersions: []
+watchers: []
+parent: null
+epic: null
+created: "2026-07-07T14:30:00Z"
+updated: "2026-07-07T14:30:00Z"
+archived: false
+resolution: null
+---
+
+# test_smoke.py нарушает архитектуру фреймворка: локаторы/импорты screens в tests/, 5 тестов без @allure.id
+
+_Спроецировано из `bugs/BUG-002.md` (источник правды).
+Статус в нашей машине: **Open**._
+
+# BUG-002 — test_smoke.py нарушает архитектуру фреймворка (C1)
+
+## Окружение
+- Не зависит от сборки приложения: долг тестовой системы (`type: test_debt`),
+  найден статическим чеком `scripts/arch_check.py` (C1, docs/08 §4) при внедрении.
+
+## Суть долга
+
+`framework/tests/test_smoke.py` написан до конвенции слоёв (docs/02, docs/08 C1)
+и зафиксирован в `ALLOWLIST` внутри `arch_check.py` как известное исключение
+(8 [WARN] вместо ошибок). Полный список нарушений:
+
+1. Строка 13: импорт `framework.screens.settings_screen` в tests/ — локаторы и
+   screen-объекты должны быть скрыты за steps/.
+2. Строка 39: импорт `framework.screens.library_screen` в tests/.
+3. Строка 41: вызов `.by_text(...)` — локатор-примитив прямо в теле теста
+   (`test_bottom_nav_switches_screens`).
+4. Строки 20/30/50/60/74: пять тестов без `@allure.id(...)` — не привязаны к
+   тест-кейсам TC-xxx (нет traceability):
+   `test_app_launches_and_loads_ao3`, `test_bottom_nav_switches_screens`,
+   `test_seeded_work_appears_in_correct_tab`, `test_clear_all_ratings`,
+   `test_theme_toggle_stable`.
+
+## Критерий готовности (Fixed)
+
+- Импорты screens и `.by_text` вынесены из tests/ в слой steps (существующие
+  step-функции переиспользованы, новые добавлены при нехватке).
+- Каждому smoke-тесту сопоставлен TC (существующий или заведённый test-designer'ом)
+  и проставлен `@allure.id`.
+- Пары `(test_smoke.py, правило)` УДАЛЕНЫ из `ALLOWLIST` в `scripts/arch_check.py`;
+  `python scripts/arch_check.py` — 0 ошибок и 0 предупреждений.
+- Smoke-suite зелёный 3 прогона подряд (критерий test-maintainer).
+
+## Анализ
+
+Долг заведён при внедрении C1 (arch_check) — не регрессия, а легализация
+существовавшего с первых smoke-тестов отступления. Чинит test-maintainer по
+правилу «Устранить test debt» (B4); Fixed не ждёт сборку приложения.
+
+## Верификация (заполняет fix-verifier)
+| Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
+|---|---|---|---|---|
+
+## Обсуждение

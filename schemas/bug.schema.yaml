@@ -31,3 +31,11 @@ fields:
   # (validate_frontmatter.py — WARN, не ERROR: человек с борды может не успеть заполнить
   # сразу); фактори-переходы (D8 pingpong, конфликт board-inbound) проставляют сами.
   blocked_reason: { enum: [environment, missing_fixture, product_decision, dev_answer, permissions] }
+  # B4 (docs/09 Этап 2): долг ТЕСТОВОЙ СИСТЕМЫ живёт в bugs/ с type: test_debt
+  # (отсутствие поля = app_bug — обратная совместимость всех существующих багов).
+  # Отличия от app_bug: чинит фабрика (test-maintainer/test-automator, guard в
+  # transitions.yaml), Fixed не ждёт сборку приложения, SLA bug_open_* не шумит
+  # (виден в отдельной секции digest). debt_kind — категория из ревью docs/08 B4.
+  type: { enum: [app_bug, test_debt] }
+  debt_kind: { enum: [flaky_test, slow_test, missing_fixture, weak_locator,
+                      obsolete_test_case, missing_evidence, broken_environment] }

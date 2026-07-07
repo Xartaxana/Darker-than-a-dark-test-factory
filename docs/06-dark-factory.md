@@ -68,6 +68,26 @@ dev_answer|permissions`, все три схемы — bug/test-case/run, т.к. 
 сразу); детерминированные factory-переходы (D8/D4 pingpong в sla_sweep, конфликт
 борда↔артефакта в board_inbound) проставляют `product_decision` автоматически.
 
+**B3/B4 (docs/09 Этап 2, добавлено 2026-07-07):** lifecycle автотеста и test debt.
+
+- **B3 — машина `automation`** (`schemas/transitions.yaml`, поле `automation_status`
+  на тест-кейсе, живёт только при `status: Automated`): `active → quarantined`
+  (FLAKY, оформляет failure-analyst с обязательными `quarantine_reason/since`) →
+  `active` (ТОЛЬКО test-maintainer, 3 зелёных прогона подряд); `needs_maintenance`
+  (детерминированная поломка); `deprecated` (решение человека/стратегии) → `retired`
+  (терминал). Карантин не бесконечен: sla_sweep, правило `quarantine_expired` —
+  дедлайн `quarantine_expiry`, а без него `quarantine_since + sla.quarantine_max`
+  (дефолт 336 ч). Правило конвейера «Починить автотест в карантине» стоит ВЫШЕ
+  новой автоматизации (сначала гасим долг, потом наращиваем покрытие).
+- **B4 — test debt** живёт в `bugs/` с `type: test_debt` (+ `debt_kind:
+  flaky_test|slow_test|missing_fixture|weak_locator|obsolete_test_case|
+  missing_evidence|broken_environment`). Отличия от app_bug: чинит фабрика —
+  guard-переходы `Open|Reopened → Fixed by test-maintainer/test-automator
+  (guard: type=test_debt)` в матрице; `Fixed` не ждёт сборку приложения
+  (fix-verifier верифицирует сразу, sla-правило `bug_fixed_waiting_build` молчит);
+  severity-SLA `bug_open_*` не шумит — долг виден в отдельной секции
+  `factory-status.md`. Для app_bug `Fixed` по-прежнему ставит только человек.
+
 Новый вердикт триажа: `APP_CHANGED` (D9) — добавить в реестр вердиктов
 failure-analyst рядом с `SITE_CHANGED`.
 

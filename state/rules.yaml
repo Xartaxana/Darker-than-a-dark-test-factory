@@ -52,7 +52,8 @@ rules:
     dispatch: test-maintainer
 
   - name: "Верифицировать исправленный баг"          # docs/06 D1
-    when: "bug.status == Fixed И есть сборка новее bug.found_in"
+    when: "bug.status == Fixed И (есть сборка новее bug.found_in ИЛИ bug.type == test_debt —
+      долг фреймворка не ждёт сборку приложения, B4)"
     dispatch: fix-verifier
 
   - name: "Перепроверить отклонённый баг"            # docs/06 D4
@@ -73,6 +74,19 @@ rules:
       «не ухудшился» проверяем на каждой сборке независимо от severity)"
     dispatch: fix-verifier
     args: { mode: still-repro }
+
+  - name: "Починить автотест в карантине/на обслуживании"   # B3, приоритет ВЫШЕ новой автоматизации
+    when: "test-case.automation_status == quarantined|needs_maintenance"
+    dispatch: test-maintainer
+    # Выход quarantined→active только через 3 зелёных прогона подряд (матрица
+    # transitions.yaml, машина automation). Просроченный карантин ловит sla_sweep
+    # (quarantine_expired) — правило не даёт долгу копиться молча.
+
+  - name: "Устранить test debt"                             # B4
+    when: "bug.type == test_debt И status == Open|Reopened"
+    dispatch: test-maintainer
+    # test-maintainer чинит долг фреймворка (flaky/slow/фикстуры/локаторы) и переводит
+    # Open→Fixed сам (guard-переход в матрице); верификация — общим правилом D1.
 
   - name: "Автоматизировать Approved-кейс"
     when: "test-case.status == Approved И пусто automated_by"

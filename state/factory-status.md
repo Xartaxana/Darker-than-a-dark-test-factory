@@ -1,6 +1,6 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-07T03:08:19Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-07-07T14:16:00Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Сборка под тестом
@@ -11,6 +11,7 @@ generated_at: 2026-07-07T03:08:19Z · генератор: `scripts/queue_snapsho
 ## Тест-кейсы (55)
 
 - Draft: **1** · Review: **8** · Approved: **37** · Automated: **9**
+- автотесты (B3): —
 
 | Область | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
@@ -30,6 +31,14 @@ generated_at: 2026-07-07T03:08:19Z · генератор: `scripts/queue_snapsho
 
 - Open: **1**
 - BUG-001 [minor] Open — Подписи вкладок Library и меню рейтинга расходятся с PROJECT.md
+
+## Известные проблемы, known_issue (0)
+
+- нет
+
+## Test debt (1)
+
+- BUG-002 [weak_locator] Open — test_smoke.py нарушает архитектуру фреймворка: локаторы/импорты screens в tests/, 5 тестов без @allure.id
 
 ## Прогоны (1)
 

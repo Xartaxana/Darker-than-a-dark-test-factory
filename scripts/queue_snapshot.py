@@ -35,6 +35,7 @@ ESCALATIONS_PATH = REPO / "state" / "escalations.md"
 TC_ORDER = ["Draft", "Review", "Approved", "Automated", "Blocked"]
 BUG_ORDER = ["Open", "Reopened", "Fixed", "Verified", "Rejected", "Intended", "Blocked"]
 RUN_ORDER = ["NeedsTriage", "Triaged", "Closed", "Blocked"]
+AUTOMATION_ORDER = ["active", "quarantined", "needs_maintenance", "deprecated", "retired"]
 
 
 def _read_aut() -> dict:
@@ -60,9 +61,11 @@ def _escalation_lines() -> list[str]:
 def collect() -> dict:
     tc_status: Counter = Counter()
     tc_by_area: dict[str, Counter] = defaultdict(Counter)
+    automation: Counter = Counter()      # B3: lifecycle автотестов (не-active — сигнал)
     bug_status: Counter = Counter()
     bugs_open: list[str] = []
     known_issues: list[str] = []
+    test_debt: list[str] = []            # B4: долг тестовой системы, отдельно от багов
     run_status: Counter = Counter()
     locks: list[str] = []
     total = Counter()
@@ -78,7 +81,17 @@ def collect() -> dict:
             tc_status[status] += 1
             area = src.parent.name if src.parent.name != "test-cases" else "—"
             tc_by_area[area][status] += 1
+            astatus = str(meta.get("automation_status") or "").strip()
+            if astatus:
+                automation[astatus] += 1
         elif itype == "bug":
+            # B4: test_debt — не дефект приложения; своя секция, не пугает счётчики багов.
+            if str(meta.get("type", "")).strip() == "test_debt":
+                if status not in ("Verified", "Rejected"):
+                    kind = str(meta.get("debt_kind") or "?").strip()
+                    test_debt.append(
+                        f"{key} [{kind}] {status} — {meta.get('title', '')}")
+                continue
             bug_status[status] += 1
             if status in ("Open", "Reopened", "Blocked"):
                 resolution = str(meta.get("resolution") or "").strip()
@@ -92,8 +105,9 @@ def collect() -> dict:
         elif itype == "run":
             run_status[status] += 1
 
-    return {"tc_status": tc_status, "tc_by_area": tc_by_area, "bug_status": bug_status,
-            "bugs_open": bugs_open, "known_issues": known_issues, "run_status": run_status,
+    return {"tc_status": tc_status, "tc_by_area": tc_by_area, "automation": automation,
+            "bug_status": bug_status, "bugs_open": bugs_open, "known_issues": known_issues,
+            "test_debt": test_debt, "run_status": run_status,
             "locks": locks, "total": total, "aut": _read_aut(),
             "escalations": _escalation_lines()}
 
@@ -123,6 +137,7 @@ def render(data: dict, generated_at: str) -> str:
         f"## Тест-кейсы ({sum(data['tc_status'].values())})",
         "",
         f"- {_fmt_counter(data['tc_status'], TC_ORDER)}",
+        f"- автотесты (B3): {_fmt_counter(data['automation'], AUTOMATION_ORDER)}",
         "",
         "| Область | " + " | ".join(TC_ORDER) + " |",
         "|---|" + "---|" * len(TC_ORDER),
@@ -143,6 +158,12 @@ def render(data: dict, generated_at: str) -> str:
         "",
     ]
     lines += [f"- {b}" for b in data["known_issues"]] or ["- нет"]
+    lines += [
+        "",
+        f"## Test debt ({len(data['test_debt'])})",
+        "",
+    ]
+    lines += [f"- {b}" for b in data["test_debt"]] or ["- нет"]
     lines += [
         "",
         f"## Прогоны ({sum(data['run_status'].values())})",

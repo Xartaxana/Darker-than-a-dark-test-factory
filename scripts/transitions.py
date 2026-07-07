@@ -58,15 +58,31 @@ def find(itype: str, frm: str, to: str) -> list[dict]:
     return out
 
 
-def is_allowed(itype: str, frm: str, to: str, actor: str) -> bool:
+def _guard_ok(t: dict, meta: dict | None) -> bool:
+    """Guard-переход (B4) существует только для артефактов с указанными полями.
+
+    Без meta guard-переход НЕ доступен (консервативно: чтобы разрешить ветку
+    test_debt, вызывающий обязан показать frontmatter артефакта)."""
+    guard = t.get("guard") or {}
+    if not guard:
+        return True
+    if meta is None:
+        return False
+    return all(str(meta.get(k, "")).strip() == str(v) for k, v in guard.items())
+
+
+def is_allowed(itype: str, frm: str, to: str, actor: str, *, meta: dict | None = None) -> bool:
     """Легален ли переход для актора. Актор: "human", имя агента/скрипта.
 
     "factory" в by разрешает любого актора из actors.groups.factory;
-    неизвестный актор не разрешён ничем, кроме прямого упоминания."""
+    неизвестный актор не разрешён ничем, кроме прямого упоминания.
+    meta — frontmatter артефакта: нужен для guard-переходов (B4, type: test_debt)."""
     if frm == to:
         return False
     factory = _factory_actors()
     for t in find(itype, frm, to):
+        if not _guard_ok(t, meta):
+            continue
         by = t.get("by") or []
         if actor in by:
             return True
@@ -75,11 +91,12 @@ def is_allowed(itype: str, frm: str, to: str, actor: str) -> bool:
     return False
 
 
-def effects_for(itype: str, frm: str, to: str) -> set[str]:
-    """Обязательные эффекты перехода: always_effects + effects всех правил."""
+def effects_for(itype: str, frm: str, to: str, *, meta: dict | None = None) -> set[str]:
+    """Обязательные эффекты перехода: always_effects + effects подходящих правил."""
     eff = set(load().get("always_effects") or [])
     for t in find(itype, frm, to):
-        eff.update(t.get("effects") or [])
+        if _guard_ok(t, meta):
+            eff.update(t.get("effects") or [])
     return eff
 
 
@@ -132,7 +149,11 @@ def validate() -> list[str]:
             for actor in by:
                 if actor not in known_actors:
                     errors.append(f"{itype}: {frm}→{to} неизвестный актор `{actor}`")
-            key = (frm, to, tuple(sorted(by)))
+            guard = t.get("guard")
+            if guard is not None and (not isinstance(guard, dict) or not guard):
+                errors.append(f"{itype}: {frm}→{to} guard обязан быть непустым словарём")
+            key = (frm, to, tuple(sorted(by)),
+                   tuple(sorted((guard or {}).items())))
             if key in seen:
                 errors.append(f"{itype}: дубль правила {frm}→{to} {by}")
             seen.add(key)

@@ -59,6 +59,8 @@ DEFAULTS = {
     "bug_open_blocker": 24, "bug_open_critical": 72, "bug_open_major": 168,
     "bug_open_minor": 720, "bug_fixed_waiting_build": 72, "blocked_any": 24,
     "run_needs_triage": 12, "question_unanswered": 48, "reopened_pingpong": 2,
+    # B3: потолок карантина автотеста, когда quarantine_expiry не задан (часы; 14 дней).
+    "quarantine_max": 336,
 }
 
 
@@ -154,16 +156,33 @@ def collect_wanted(now: datetime.datetime, thr: dict) -> tuple[dict, list]:
                 f"прогон без триажа с {since_s} — конвейер, вероятно, встал "
                 f"| нужно: запустить /qa-loop или разобрать вручную")
 
+        # B3: карантин автотеста не бывает бесконечным (quarantine_expired).
+        # Дедлайн = quarantine_expiry, а без него — quarantine_since + quarantine_max.
+        if itype == "test-case" and str(meta.get("automation_status", "")) == "quarantined":
+            expiry = _parse_ts(meta.get("quarantine_expiry"))
+            q_since = _parse_ts(meta.get("quarantine_since"))
+            if expiry is None and q_since is not None:
+                expiry = q_since + datetime.timedelta(hours=thr["quarantine_max"])
+            if expiry is not None and now > expiry:
+                wanted[(key, "quarantine_expired")] = (
+                    f"карантин автотеста истёк ({expiry.strftime('%Y-%m-%dT%H:%M:%SZ')}) "
+                    f"| нужно: test-maintainer чинит и возвращает active, либо человек "
+                    f"решает deprecated")
+
         if itype != "bug":
             continue
 
         # B1/B2: resolution (accepted_risk/wontfix) и known_issue — сознательное
         # решение владельца оставить баг открытым; периодическая SLA-нагрузка по
         # severity здесь — шум, не сигнал (docs/06 D13/D14).
+        # B4: test_debt — внутренний долг фабрики, живёт в отдельной секции digest,
+        # а не в severity-эскалациях (иначе долг заглушает сигналы приложения).
         deliberately_open = bool(str(meta.get("resolution") or "").strip()) \
             or _s_bool(meta.get("known_issue"))
+        is_test_debt = str(meta.get("type", "")).strip() == "test_debt"
         sev_rule = _severity_rule(meta)
-        if status in ("Open", "Reopened") and age is not None and not deliberately_open:
+        if status in ("Open", "Reopened") and age is not None \
+                and not deliberately_open and not is_test_debt:
             immediate_blocker = sev_rule == "bug_open_blocker"
             if immediate_blocker or age > thr[sev_rule]:
                 sev = str(meta.get("severity", "major")).lower()
@@ -171,7 +190,10 @@ def collect_wanted(now: datetime.datetime, thr: dict) -> tuple[dict, list]:
                     f"{sev}-баг {status.lower()} с {since_s} без движения "
                     f"| нужно: Fixed/Rejected/Intended или комментарий с планом")
 
-        if status == "Fixed" and age is not None and age > thr["bug_fixed_waiting_build"]:
+        # B4: test_debt Fixed не ждёт сборку приложения — фикс в фреймворке,
+        # fix-verifier может верифицировать сразу (правило D1 в rules.yaml).
+        if status == "Fixed" and age is not None and not is_test_debt \
+                and age > thr["bug_fixed_waiting_build"]:
             if built is None or (since is not None and built <= since):
                 wanted[(key, "bug_fixed_waiting_build")] = (
                     f"Fixed с {since_s}, но новой сборки нет "

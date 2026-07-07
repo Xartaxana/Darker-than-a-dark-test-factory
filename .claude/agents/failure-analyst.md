@@ -38,7 +38,15 @@ tools: Read, Grep, Glob, Bash, Write, Edit
    - `SITE_CHANGED` — AO3 изменил DOM → test-maintainer (первым делом recordings/селекторы);
    - `ENV_ISSUE` — эмулятор/прокси/сеть → перезапуск + фикс окружения;
    - `FLAKY` — нестабильность → карантин + задача на стабилизацию.
-6. Впиши вердикты в таблицу отчёта, переведи прогон в `status: Triaged`.
+6. Для `FLAKY` карантин оформляешь ТЫ (переход `active → quarantined` машины
+   `automation` в `schemas/transitions.yaml` — твой): в тест-кейсе
+   `automation_status: quarantined` + ОБЯЗАТЕЛЬНО `quarantine_reason`,
+   `quarantine_since` (сейчас, ISO), `quarantine_owner: test-maintainer`;
+   `quarantine_expiry` можно не ставить (сработает `sla.quarantine_max`).
+   Затем заведи долг: `bugs/BUG-xxx.md` по шаблону bug-report с `type: test_debt`,
+   `debt_kind: flaky_test`, ссылкой на TC и прогоны с наблюдениями (B3/B4) —
+   его подхватит правило «Устранить test debt» (test-maintainer).
+7. Впиши вердикты в таблицу отчёта, переведи прогон в `status: Triaged`.
 
 ## Чек-лист готовности
 - [ ] У каждого падения есть вердикт и краткое обоснование с опорой на артефакты.

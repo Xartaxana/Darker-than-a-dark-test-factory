@@ -17,8 +17,10 @@
 #   via_board  — true: человек может сделать переход карточкой на борде
 #                (без флага человек правит только frontmatter напрямую)
 #   effects    — обязательные побочные эффекты СВЕРХ always_effects
+#   guard      — {поле: значение} frontmatter: переход существует ТОЛЬКО для
+#                артефактов с этим значением (B4: ветки test_debt в машине bug)
 #   ref        — пункт спецификации (docs/06 D1–D12) или прецедент
-version: 1
+version: 2
 
 actors:
   groups:
@@ -31,7 +33,8 @@ always_effects: [status_since, updated]
 
 machines:
   bug:
-    initial: [Open]            # создаёт bug-reporter (docs/03 §1)
+    initial: [Open]            # app_bug создаёт bug-reporter (docs/03 §1);
+                               # test_debt (B4) — failure-analyst/test-maintainer
     terminal: [Verified]       # выход — только ручное переоткрытие человеком
     statuses: [Open, Reopened, Fixed, Verified, Rejected, Intended, Blocked]
     transitions:
@@ -55,6 +58,16 @@ machines:
          ref: "D8: пинг-понг reopen_count ≥ sla.reopened_pingpong"}
       - {from: Rejected, to: Blocked, by: [factory], effects: [escalation],
          ref: "D4: спор по Rejected, dispute_count ≥ sla.reopened_pingpong"}
+      # --- ветки test_debt (B4): долг тестовой системы чинит сама фабрика ---
+      # Для app_bug (guard'а нет/type=app_bug) Fixed по-прежнему ставит ТОЛЬКО человек.
+      # Верификация — общая: Fixed→Verified делает fix-verifier (прогон связанных TC),
+      # для test_debt новая сборка приложения НЕ нужна (фикс в фреймворке).
+      - {from: Open,     to: Fixed, by: [test-maintainer, test-automator],
+         guard: {type: test_debt},
+         ref: "B4: долг устранён (тест починен/фикстура записана), ждёт верификации"}
+      - {from: Reopened, to: Fixed, by: [test-maintainer, test-automator],
+         guard: {type: test_debt},
+         ref: "B4: повторная починка долга после Reopened"}
 
   test-case:
     initial: [Draft, Review]   # test-designer: Draft при спорных требованиях, иначе сразу Review
@@ -86,3 +99,31 @@ machines:
       - {from: "*", to: Blocked, by: [factory], effects: [escalation],
          ref: "деградация (прецедент RUN-REH-901: нечего гонять — не выдумывать вердикт)"}
       - {from: Blocked, to: NeedsTriage, by: [human], ref: "человек разобрал причину блока"}
+
+  # B3 (docs/09 Этап 2): lifecycle АВТОТЕСТА — вторая машина на артефакте test-case,
+  # поле frontmatter `automation_status` (НЕ `status`). Живёт только у Automated-кейсов:
+  # test-automator ставит active при переводе Approved→Automated. Карантин не бывает
+  # бесконечным: quarantined обязан нести quarantine_reason/since (+опц. expiry),
+  # надзор — sla_sweep, правило quarantine_expired. Переходов с борды нет: судьбой
+  # автотеста управляет фабрика, человек решает только deprecated (кейс устарел).
+  automation:
+    field: automation_status
+    initial: [active]          # ставит test-automator вместе с status: Automated
+    terminal: [retired]
+    statuses: [active, quarantined, needs_maintenance, deprecated, retired]
+    transitions:
+      - {from: active, to: quarantined, by: [failure-analyst, test-maintainer],
+         effects: [quarantine_fields],
+         ref: "вердикт FLAKY: тест нестабилен, исключить из сигнала до починки; заводится test_debt (B4)"}
+      - {from: active, to: needs_maintenance, by: [failure-analyst, test-maintainer],
+         ref: "вердикт TEST_BUG/SITE_CHANGED/APP_CHANGED: тест сломан детерминированно"}
+      - {from: quarantined, to: active, by: [test-maintainer], effects: [quarantine_cleared],
+         ref: "починен: 3 зелёных прогона подряд (критерий как у test-automator)"}
+      - {from: quarantined, to: needs_maintenance, by: [test-maintainer],
+         ref: "разобрался: это не flake, а детерминированная поломка"}
+      - {from: needs_maintenance, to: active, by: [test-maintainer],
+         ref: "починен: 3 зелёных прогона подряд"}
+      - {from: "*", to: deprecated, by: [human, test-strategist],
+         ref: "кейс/область устарели — решение человека или стратегии, не воркера"}
+      - {from: deprecated, to: retired, by: [human, test-maintainer],
+         ref: "код теста удалён из suite, allure.id снят; терминал"}

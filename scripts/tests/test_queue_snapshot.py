@@ -49,6 +49,27 @@ def test_known_issue_section_and_resolution_tag(repo, monkeypatch):
     assert "BUG-061 [major] Open [accepted_risk]" in text
 
 
+def test_test_debt_section_and_automation_counter(repo, monkeypatch):
+    """B3/B4: test debt — своя секция (не в счётчиках багов); карантин виден в TC."""
+    monkeypatch.setattr(qs, "REPO", repo.root, raising=True)
+    monkeypatch.setattr(qs, "AUT_PATH", repo.root / "state" / "app-under-test.yaml", raising=True)
+    monkeypatch.setattr(qs, "ESCALATIONS_PATH", repo.root / "state" / "escalations.md", raising=True)
+
+    repo.bug("BUG-080", "Open", extra="type: test_debt\ndebt_kind: flaky_test\n")
+    repo.bug("BUG-081", "Open")   # обычный app_bug
+    repo.test_case("TC-080", "Automated", extra=(
+        "automation_status: quarantined\nquarantine_reason: flaky\n"
+        "quarantine_since: \"2026-07-07T00:00:00Z\"\n"))
+
+    text = qs.render(qs.collect(), "T")
+
+    assert "Test debt (1)" in text
+    assert "BUG-080 [flaky_test] Open" in text.split("## Test debt")[1]
+    # test_debt не считается в секции багов: там только BUG-081
+    assert "## Баги (1)" in text
+    assert "quarantined: **1**" in text
+
+
 def test_stable_output_same_state(repo, monkeypatch):
     monkeypatch.setattr(qs, "REPO", repo.root, raising=True)
     monkeypatch.setattr(qs, "AUT_PATH", repo.root / "state" / "app-under-test.yaml", raising=True)

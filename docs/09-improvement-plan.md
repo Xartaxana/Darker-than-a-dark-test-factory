@@ -67,8 +67,10 @@
    whitelist board_inbound выводится из матрицы; 15 self-tests (валидность, паритет,
    границы акторов, эффекты); попутно исправлен pingpong в sla_sweep (Fixed не
    блокируем — шанс fix-verifier; Rejected-спор блокируем по D4).
-   *Хвосты:* тесты парсера permission_audit; репетиция тёмного дня как повторяемый
-   регресс (после F2, когда появится machine-readable результат агентов).
+   *Хвосты:* тесты парсера permission_audit — ✅ 2026-07-07 (Sonnet-сессия,
+   35 тестов + вынос collect_suspects из main); репетиция тёмного дня как
+   повторяемый регресс (после F2, когда появится machine-readable результат
+   агентов) — осталось.
 2. **B1/B2/B5 — недостающие ветки workflow.** ✅ 2026-07-07: `resolution:
    accepted_risk|wontfix` + обязательный `resolution_comment` (bug.schema.yaml,
    validate_frontmatter кросс-проверка), `known_issue: true` (дедуп APP_BUG в
@@ -80,9 +82,17 @@
    отсутствии на status Blocked). sla_sweep больше не шлёт периодический
    bug_open_severity-варнинг для resolution/known_issue багов (docs/06 D13/D14).
    10 новых self-tests (86 всего в scripts/tests).
-3. **B3/B4 — lifecycle автотеста и test debt.** `automation_status:
-   active|quarantined|needs_maintenance|deprecated|retired` + `quarantine_*` поля
-   с SLA (карантин не бесконечен); test debt — `bugs/` с `type: test_debt`.
+3. **B3/B4 — lifecycle автотеста и test debt.** ✅ 2026-07-07: машина `automation`
+   в transitions.yaml (active/quarantined/needs_maintenance/deprecated/retired;
+   карантинит failure-analyst с обязательными quarantine_reason/since, выводит
+   ТОЛЬКО test-maintainer после 3 зелёных); sla_sweep `quarantine_expired`
+   (expiry или since+quarantine_max 336ч); test debt — `bugs/` c `type: test_debt`
+   + `debt_kind`, guard-переходы Open|Reopened→Fixed для test-maintainer/
+   test-automator (только test_debt; app_bug Fixed — по-прежнему человек),
+   Fixed не ждёт сборку, severity-SLA молчит, отдельная секция digest; правила
+   «Починить автотест в карантине» (выше новой автоматизации) и «Устранить test
+   debt» в rules.yaml. Первый клиент: BUG-002 (test_debt на нарушения arch_check
+   в test_smoke.py). Подробности — docs/06 «B3/B4».
 4. **C2 — evidence contract.** Минимальный пакет доказательств на каждый вердикт
    (таблица из ревью §4 C2) → инструкции failure-analyst/fix-verifier + проверка
    в self-tests.
@@ -97,8 +107,11 @@
 7. **GitLab Issues для критичных багов** (решение владельца): bug-reporter при
    severity выше major создаёт Issue в репозитории приложения; ссылка — в frontmatter
    бага. Нужен GitLab-токен (запросить у владельца при реализации).
-8. **C1 — архитектурные чеки фреймворка.** Статический чек: запрет `driver`/локаторов
-   в `tests/`, обязательные `@allure.id` и markers.
+8. **C1 — архитектурные чеки фреймворка.** ✅ 2026-07-07 (Sonnet-сессия):
+   `scripts/arch_check.py` (AST-чек: запрет импортов screens/web/локаторов и
+   `.find_element`/`.by_text` в tests/, обязательные `@allure.id` + suite-маркер
+   из pytest.ini) + 23 теста; преflight-шаг 3 в /qa-loop. Найденные реальные
+   нарушения test_smoke.py — в ALLOWLIST скрипта + BUG-002 (test_debt).
 
 ## Этап 3 — Возврат к Фазе 3 (автоматизация)
 

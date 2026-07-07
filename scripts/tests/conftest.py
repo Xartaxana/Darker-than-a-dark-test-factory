@@ -57,11 +57,12 @@ class Repo:
         _write(p, text)
         return p
 
-    def test_case(self, key: str, status: str, *, lock: str | None = None) -> Path:
+    def test_case(self, key: str, status: str, *, lock: str | None = None,
+                  extra: str = "") -> Path:
         lock_line = f"lock: \"{lock}\"\n" if lock is not None else ""
         text = (
             f"---\nid: {key}\ntitle: TC {key}\narea: test\npriority: P1\nstatus: {status}\n"
-            f"updated: \"2026-07-01T00:00:00Z\"\n{lock_line}---\n\n# {key}\n\nтело\n"
+            f"{extra}updated: \"2026-07-01T00:00:00Z\"\n{lock_line}---\n\n# {key}\n\nтело\n"
         )
         p = self.root / "test-cases" / f"{key}.md"
         _write(p, text)

@@ -38,11 +38,20 @@ docs/09). Всё остальное живёт в своих местах:
   bug_open_severity-варнинг для resolution/known_issue багов (docs/06 D13/D14) —
   решение уже принято человеком, нагрузка была бы шумом. Итого 86 тестов
   scripts/tests зелёные (было 76, +10).
-- **Дальше по Этапу 2 (порядок сильной модели):** B3/B4 (lifecycle автотеста +
-  test debt), F1 (test-reviewer), C1 (архитектурные чеки), C2 (evidence contract —
-  рутина), GitLab Issues для critical+ (нужен токен от владельца). Хвосты C3/F3:
-  тесты парсера permission_audit; репетиция тёмного дня как регресс (после обкатки
-  F2 живым проходом).
+- ✅ **B3/B4**: машина `automation` (lifecycle автотеста; карантин с SLA
+  quarantine_expired, выход только через test-maintainer после 3 зелёных) +
+  test debt в `bugs/` с `type: test_debt` (guard-переходы Fixed для фабрики,
+  без ожидания сборки, вне severity-SLA, секция в digest). Два новых правила в
+  rules.yaml (карантин — выше новой автоматизации). Первый клиент — BUG-002.
+- ✅ **C1** (Sonnet): `scripts/arch_check.py` — AST-чек архитектуры фреймворка
+  (запрет screens/локаторов в tests/, обязательные allure.id + suite-маркер);
+  preflight-шаг 3 /qa-loop; реальные нарушения test_smoke.py → ALLOWLIST + BUG-002.
+- ✅ **Тесты permission_audit** (Sonnet): 35 тестов, вынос collect_suspects.
+  Итого 154 теста scripts/tests зелёные.
+- **Дальше по Этапу 2 (порядок сильной модели):** C2 (evidence contract — рутина,
+  можно Sonnet), F1 (test-reviewer — дизайн роли за сильной моделью), GitLab
+  Issues для critical+ (нужен токен от владельца — запросить). Хвост: репетиция
+  тёмного дня как регресс (после обкатки F2 живым проходом).
 
 Итог Этапа 1 (для истории):
 

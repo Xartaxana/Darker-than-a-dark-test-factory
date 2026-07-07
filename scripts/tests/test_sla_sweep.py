@@ -168,6 +168,56 @@ def test_blocked_any_includes_reason_when_present(repo):
     assert "BUG-042" in text and "причина: dev_answer" in text
 
 
+def test_quarantine_expiry_passed_escalates(repo):
+    """B3: явный quarantine_expiry в прошлом → эскалация quarantine_expired."""
+    repo.test_case("TC-070", "Automated", extra=(
+        "automation_status: quarantined\nquarantine_reason: flaky\n"
+        "quarantine_since: \"2026-07-01T00:00:00Z\"\n"
+        "quarantine_expiry: \"2026-07-05T00:00:00Z\"\n"))
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    assert "[sla:quarantine_expired]" in _esc(repo) and "TC-070" in _esc(repo)
+
+
+def test_quarantine_max_fallback_without_expiry(repo):
+    """B3: без expiry дедлайн = quarantine_since + quarantine_max."""
+    repo.test_case("TC-071", "Automated", extra=(
+        "automation_status: quarantined\nquarantine_reason: flaky\n"
+        "quarantine_since: \"2026-07-01T00:00:00Z\"\n"))   # 156 ч до NOW
+    _sla(repo, quarantine_max=100)                          # порог 100 ч — просрочен
+
+    ss.sweep(now=NOW)
+
+    assert "[sla:quarantine_expired]" in _esc(repo) and "TC-071" in _esc(repo)
+
+
+def test_fresh_quarantine_is_quiet(repo):
+    repo.test_case("TC-072", "Automated", extra=(
+        "automation_status: quarantined\nquarantine_reason: flaky\n"
+        f"quarantine_since: {FRESH}\n"))
+    _sla(repo)   # quarantine_max default 336 ч
+
+    ss.sweep(now=NOW)
+
+    assert "TC-072" not in _esc(repo)
+
+
+def test_test_debt_skips_severity_and_build_rules(repo):
+    """B4: долг фреймворка не шумит bug_open_* и не ждёт сборку в Fixed."""
+    repo.bug("BUG-070", "Open", extra=f"status_since: {OLD}\ntype: test_debt\n")
+    repo.bug("BUG-071", "Fixed", extra=f"status_since: {OLD}\ntype: test_debt\n")
+    repo.app_under_test(built_at="2026-06-28T00:00:00")   # сборки новее нет
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    text = _esc(repo)
+    assert "BUG-070" not in text
+    assert "BUG-071" not in text
+
+
 def test_dedup_and_timestamp_preserved(repo):
     repo.bug("BUG-019", "Open", extra=f"status_since: {OLD}\n")
     _sla(repo)

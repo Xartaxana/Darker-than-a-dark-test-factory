@@ -1,6 +1,8 @@
 ---
 id: BUG-000
 title: Краткая формулировка дефекта (что сломано, где)
+type: app_bug          # app_bug | test_debt (B4: долг тестовой системы — flaky/slow/фикстуры/локаторы; чинит фабрика, Fixed не ждёт сборку)
+debt_kind: ""          # только для test_debt: flaky_test | slow_test | missing_fixture | weak_locator | obsolete_test_case | missing_evidence | broken_environment
 severity: major        # blocker | critical | major | minor | trivial
 status: Open           # Open | Fixed | Verified | Reopened | Rejected | Intended | Blocked
 found_in: "1.10 (versionCode 11), build <hash>"   # из state/app-under-test.yaml

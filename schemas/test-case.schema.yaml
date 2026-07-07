@@ -15,3 +15,14 @@ fields:
   requirements: {}
   # B5 (docs/09 Этап 2): причина простоя в Blocked; см. schemas/bug.schema.yaml.
   blocked_reason: { enum: [environment, missing_fixture, product_decision, dev_answer, permissions] }
+  # B3 (docs/09 Этап 2): lifecycle АВТОТЕСТА — вторая статусная машина на том же
+  # артефакте (machines.automation в schemas/transitions.yaml). Заполняется только
+  # при status: Automated (test-automator ставит active при переводе); иное — WARN
+  # валидатора. quarantined ОБЯЗАН нести quarantine_reason+quarantine_since (ERROR),
+  # иначе SLA-надзор slа_sweep (правило quarantine_expired) слеп — карантин не
+  # бывает бесконечным.
+  automation_status: { enum: [active, quarantined, needs_maintenance, deprecated, retired] }
+  quarantine_reason: {}
+  quarantine_since: { pattern: "^\\d{4}-\\d{2}-\\d{2}[T ][\\d:.+]+Z?$" }
+  quarantine_expiry: { pattern: "^\\d{4}-\\d{2}-\\d{2}[T ][\\d:.+]+Z?$" }
+  quarantine_owner: {}   # кто отвечает за вывод из карантина (обычно test-maintainer)

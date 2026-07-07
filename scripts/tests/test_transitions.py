@@ -53,6 +53,51 @@ def test_bug_schema_has_resolution_and_known_issue_fields():
     assert set(fields["known_issue"]["enum"]) == {"true", "false"}
 
 
+# --- B3: машина automation (lifecycle автотеста) -----------------------------
+
+def test_automation_machine_matches_tc_schema_enum():
+    """Статусы машины automation == enum поля automation_status в схеме TC."""
+    schema = yaml.safe_load((SCHEMAS / "test-case.schema.yaml").read_text(encoding="utf-8"))
+    assert set(schema["fields"]["automation_status"]["enum"]) == set(tr.statuses("automation"))
+
+
+def test_quarantine_actors_and_effects():
+    """Карантинит триаж/маинтейнер; выводит из карантина ТОЛЬКО test-maintainer."""
+    assert tr.is_allowed("automation", "active", "quarantined", "failure-analyst")
+    assert tr.is_allowed("automation", "active", "quarantined", "test-maintainer")
+    assert not tr.is_allowed("automation", "active", "quarantined", "test-automator")
+    assert tr.is_allowed("automation", "quarantined", "active", "test-maintainer")
+    assert not tr.is_allowed("automation", "quarantined", "active", "failure-analyst")
+    # Вход в карантин обязан заполнить quarantine_*-поля (надзор sla_sweep).
+    assert "quarantine_fields" in tr.effects_for("automation", "active", "quarantined")
+
+
+def test_deprecated_is_human_or_strategist_retired_is_terminal():
+    assert tr.is_allowed("automation", "active", "deprecated", "human")
+    assert tr.is_allowed("automation", "quarantined", "deprecated", "test-strategist")
+    assert not tr.is_allowed("automation", "active", "deprecated", "test-maintainer")
+    # Из терминального retired фабрика не выводит.
+    for actor in ("test-maintainer", "test-automator", "qa-loop"):
+        for to in ("active", "quarantined", "deprecated"):
+            assert not tr.is_allowed("automation", "retired", to, actor), (actor, to)
+
+
+# --- B4: guard-переходы test_debt --------------------------------------------
+
+def test_test_debt_guard_lets_factory_fix():
+    """Долг фреймворка чинит фабрика, но ТОЛЬКО при type: test_debt в meta."""
+    debt = {"type": "test_debt"}
+    assert tr.is_allowed("bug", "Open", "Fixed", "test-maintainer", meta=debt)
+    assert tr.is_allowed("bug", "Reopened", "Fixed", "test-automator", meta=debt)
+    # Без meta (консервативно) и для app_bug — по-прежнему только человек.
+    assert not tr.is_allowed("bug", "Open", "Fixed", "test-maintainer")
+    assert not tr.is_allowed("bug", "Open", "Fixed", "test-maintainer",
+                             meta={"type": "app_bug"})
+    assert not tr.is_allowed("bug", "Open", "Fixed", "fix-verifier", meta=debt)
+    # Человеку guard не мешает (его переход без guard'а).
+    assert tr.is_allowed("bug", "Open", "Fixed", "human", meta=debt)
+
+
 # --- паритет board-whitelist (регрессия на переезд с литерала) --------------
 
 LEGACY_WHITELIST = {
@@ -67,6 +112,9 @@ LEGACY_WHITELIST = {
         "*":      {"Review"},
     },
     "run": {},
+    # B3: у машины автотеста переходов с борды нет — судьбой автотеста управляет
+    # фабрика (человек решает только deprecated, и это правка frontmatter, не борда).
+    "automation": {},
 }
 
 
