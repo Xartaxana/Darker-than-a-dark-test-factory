@@ -65,10 +65,22 @@ function Invoke-Suite {
     Pop-Location
 }
 
+function Invoke-Pytest {
+    # Каноничный запуск произвольных pytest-аргументов из framework/ (venv-python).
+    # Агентам НЕ собирать свои вариации ". env.ps1; <путь к python> -m pytest ..." —
+    # каждая новая форма не совпадает с allowlist и требует подтверждения.
+    Push-Location "$root\framework"
+    if (-not $env:AO3_MODE) { $env:AO3_MODE = "live" }
+    & "$venv\python.exe" -m pytest @args
+    $code = $LASTEXITCODE
+    Pop-Location
+    Write-Host "PYTEST_EXIT=$code"
+}
+
 function Show-Report {
     Push-Location "$root\framework"
     & "$venv\python.exe" -m allure serve allure-results 2>$null
     Pop-Location
 }
 
-Write-Host "Tasks loaded: Start-Emulator, Start-Appium, Stop-NodeProcesses, Install-App, Invoke-Smoke, Invoke-Suite, Show-Report" -ForegroundColor Green
+Write-Host "Tasks loaded: Start-Emulator, Start-Appium, Stop-NodeProcesses, Install-App, Invoke-Smoke, Invoke-Suite, Invoke-Pytest, Show-Report" -ForegroundColor Green

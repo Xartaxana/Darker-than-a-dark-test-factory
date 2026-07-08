@@ -53,6 +53,14 @@ tools: Read, Bash, Write, Edit
 - При смене `status` всегда обновляй `status_since` (текущее ISO-время).
 - Все прогоны — строкой в таблице «Верификация» с точной версией сборки.
 
+## Как запускать команды (не плоди permission-запросы)
+- Окружение/сборка — функции `scripts/tasks.ps1` (`Install-App`, `Start-Emulator`,
+  `Start-Appium`), НЕ ручной `. env.ps1; export ...` и НЕ ручной poll `getprop`/`curl`.
+- Pytest с конкретными кейсами: `powershell -NoProfile -ExecutionPolicy Bypass -Command
+  ". D:\AO3_tests\scripts\tasks.ps1; Invoke-Pytest <аргументы pytest>"` — НЕ собирай свою
+  `". env.ps1; <venv-python> -m pytest ..."`: каждая новая строка требует подтверждения.
+- Правки frontmatter/таблиц — тулами Edit/Write, не `python -c`/heredoc.
+
 ## Evidence contract (C2)
 Запись в таблице «Верификация» без минимального пакета невалидна — не дублируем
 таблицу вердиктов `schemas/evidence.yaml` здесь, для верификации она сводится к трём

@@ -8,3 +8,5 @@
 {"ts":"2026-07-08T09:42:53","event":"accepted","agent":"builder","category":"implementation","notes":"колонка Awaiting Review принята: 200 passed, TC-050..055 в новой колонке на живой доске и в board/, STATUS_MAP не тронут (проекция)"}
 {"ts":"2026-07-08T09:49:19","event":"delegated","agent":"builder","category":"implementation","notes":"scripts/ui_snapshot.py: компактная ref-проекция UI-дерева (идея agent-browser) + правило в промпты automator/maintainer + self-tests"}
 {"ts":"2026-07-08T09:58:05","event":"accepted","agent":"builder","category":"implementation","notes":"ui_snapshot принят: 226 passed (+26), демо на фикстуре корректно (7/11 узлов, by_desc/XPath/tap кандидаты); правило добавлено в промпты automator/maintainer"}
+{"ts": "2026-07-08T10:42:13", "event": "lead_degraded", "agent": "lead", "notes": "D-0042: оператор переключил Lead на opus (/model) в ~10:15 на участке permission-audit (правки settings/skill); гейты и статусы делегационной таблицы не менялись"}
+{"ts": "2026-07-08T10:42:14", "event": "lead_restored", "agent": "lead", "notes": "D-0042: оператор вернул Lead на fable (/model) перед коммитом итогов permission-audit"}

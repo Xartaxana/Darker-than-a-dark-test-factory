@@ -37,6 +37,19 @@ UI-дерева (идея agent-browser), воркерам предписано 
 через неё (`--ref eN` даёт готовые локаторы), правило вшито в промпты
 automator/maintainer.
 
+**Permission-audit за сутки выполнен (2026-07-08, утро)**: 178 запросов разобраны,
+скилл /permission-audit переписан под ДВЕ цели (шум + поиск неправильных действий,
+диагностическая таблица в шаге 2, сводка двумя блоками). Находки поведения починены
+у источника: `scripts/log_append.py` (журналы конвейера, enforce обязательного
+`model` — в старых записях routing-log он молча пропускался), `Invoke-Pytest` в
+tasks.ps1 (вместо ~40 самодельных форм `". env.ps1; <python> -m pytest ..."` у
+воркеров), секция «Дисциплина команд» в CLAUDE.md (канон-формы, запрет cd-префиксов
+и хвоста ` 2>&1`, Edit вместо heredoc, pip только с requirements.txt), инструкции
+test-automator/fix-verifier дополнены, settings.local.json ужат 27→17. Владелец
+добавил D-0042 (ручное переключение модели оператором = lead_degraded/restored).
+Правки инструкций подхватят только НОВЫЕ субагенты — второй проход /qa-loop уже
+пойдёт по новым правилам.
+
 ## СЛЕДУЮЩИЙ ШАГ: второй проход /qa-loop — ревью гейта F1
 
 Первое сработающее правило — **«Ревью нового автотеста»** → test-reviewer (opus)
@@ -133,5 +146,9 @@ automator/maintainer.
   test-designer вхолостую. Актуализировать test-strategist'ом, когда влезет
   в лимит прохода.
 - `settings.local.json` разрастается за прогоны — чистить через `/permission-audit`
-  (шаг 4) периодически; `Invoke-Suite`/`Install-App` через Bash требуют
-  `-ExecutionPolicy Bypass` — зашить Bypass в функции tasks.ps1.
+  периодически (2026-07-08: ужат 27→17, канон pytest теперь `Invoke-Pytest`).
+- Классификатор self-modification не даёт Lead'у самому расширять
+  `permissions.allow` — владельцу добавить в `.claude/settings.json` строки для
+  легитимных скриптов (arch_check, transitions, evidence, ui_snapshot, board_view,
+  board_server, log_append — список в сводке аудита 2026-07-08), иначе они
+  продолжат спрашивать подтверждение у каждого воркера.

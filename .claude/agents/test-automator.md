@@ -70,6 +70,12 @@ tools: Read, Glob, Grep, Write, Edit, Bash
    каждый вызов снова требует подтверждения. Канонический вид:
    `powershell -NoProfile -ExecutionPolicy Bypass -Command ". D:\AO3_tests\scripts\env.ps1; . D:\AO3_tests\scripts\tasks.ps1; Start-Emulator"`
    (аналогично для `Start-Appium`, `Install-App`, `Invoke-Smoke`, `Stop-NodeProcesses`).
+   **Для прогона pytest с ПРОИЗВОЛЬНЫМИ аргументами** (`-k`, конкретный файл/узел,
+   `-m`, `-v`) НЕ собирай свою строку `". env.ps1; <venv-python> -m pytest ..."` —
+   каждый `-k`-фильтр даёт новую несовпадающую строку и новый запрос. Канонический вид:
+   `powershell -NoProfile -ExecutionPolicy Bypass -Command ". D:\AO3_tests\scripts\tasks.ps1; Invoke-Pytest <аргументы pytest>"`
+   (`Invoke-Pytest` сам грузит env.ps1, ставит cwd=framework, ставит AO3_MODE=live
+   если не задан, и печатает `PYTEST_EXIT=N`). Пример: `... Invoke-Pytest tests/test_side_panel.py -k test_home -q`.
    **ОДНА команда — ОДИН вызов Bash.** Не склеивай несколько statement'ов
    (переводами строк, `;` между разнородными командами, `cmd1`-newline-`cmd2`) в один
    вызов: многострочная строка гарантированно уходит на ручное подтверждение
