@@ -40,3 +40,10 @@ SAVE_PROFILE_BTN = "[data-ao3-save-profile]"
 
 def blurb_by_work_id(work_id: str) -> str:
     return f"li#work_{work_id}.work.blurb"
+
+
+# Инжектируется при открытии локально скачанного файла (BrowserScreen.kt
+# injectReaderCss/loadTabContent) — TC-034: мобильный viewport добавляется, только
+# если в сыром HTML его не было, id стиля стабилен ("ao3-reader-css").
+VIEWPORT_META = "meta[name='viewport']"
+READER_CSS_STYLE = "#ao3-reader-css"

@@ -64,6 +64,27 @@ cd D:\AO3_tests\tools\appium; npx appium
 - **Git Bash + adb-пути:** экспортировать `MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL="*"`, иначе `/system/...` → `C:/Program Files/Git/system/...`.
 - **Фоновые процессы (mitmdump, эмулятор):** запускать через фоновые задачи/`nohup`, а не `Start-Process` из разовой PowerShell-команды — иначе процесс умирает по завершении вызова.
 - **CA-mount не переживает reboot** эмулятора — `install-mitm-ca.sh` прогонять после каждого старта.
+- **`getExternalFilesDir` (app-specific external storage) НЕ доступен ни `adb push`,
+  ни `run-as` на Android 11+/API 34** — прямой `adb push` в
+  `/storage/emulated/0/Android/data/<pkg>/files/...` падает
+  (`remote secure_mkdirs failed: Operation not permitted`), а `run-as <pkg> cat/ls`
+  того же пути даёт `Permission denied`, даже когда UID совпадает — adb-процесс не
+  получает нужный FUSE/scoped-storage mount, который есть только у самого
+  app-процесса. Для фикстур файлов, на которые указывает `downloadPath` в Room
+  (TC-034/035/036), кладите файл во ВНУТРЕННЮЮ песочницу приложения
+  (`run-as <pkg> mkdir -p files/...` + `push_app_file`, `/data/user/0/<pkg>/files/...`)
+  — приложение читает/удаляет `downloadPath` голым `File(path)`, не проверяя, что
+  путь лежит именно под external storage, так что для black-box теста это
+  эквивалентно (см. `framework/data/seed_db.py::seed_with_download`).
+- **Несколько открытых WebView-вкладок = ОДИН общий Appium-контекст
+  `WEBVIEW_<package>`** (не по контексту на вкладку) — `driver.current_url`/DOM после
+  `switch_to.context` могут спонтанно указывать на любую из открытых страниц
+  (`mobile: getContexts` показывает все `pages[]` внутри одного `webview`-процесса).
+  Если сценарий открывает новую вкладку поверх уже существующей (например,
+  `BrowserViewModel.openTab` из Library `onOpenFile` — всегда ДОБАВЛЯЕТ вкладку,
+  никогда не заменяет стартовую Home-вкладку), закройте лишние вкладки перед любой
+  DOM-проверкой (см. `framework/screens/browser_screen.py::close_leftmost_tab`),
+  иначе проверки недетерминированно попадают не в ту вкладку.
 
 ### Что нужно от окружения перед Фазой 1
 - Ничего блокирующего.

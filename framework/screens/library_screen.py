@@ -34,3 +34,35 @@ class LibraryScreen(BaseScreen):
 
     def work_card(self, title: str, timeout: int | None = None):
         return self.find(self.by_text(title), timeout)
+
+    # --- Иконки download/open на карточке (WorkCard в LibraryScreen.kt:
+    # Icons.Default.Download contentDescription="Download", Icons.Default.Book
+    # contentDescription="Open downloaded") ---
+    def has_download_icon(self, timeout: int | None = None) -> bool:
+        return self.is_present(self.by_desc("Download"), timeout=timeout or 8)
+
+    def has_open_icon(self, timeout: int | None = None) -> bool:
+        return self.is_present(self.by_desc("Open downloaded"), timeout=timeout or 8)
+
+    def tap_open_icon(self, timeout: int | None = None):
+        self.tap(self.by_desc("Open downloaded"), timeout=timeout)
+        return self
+
+    # --- Long-press overlay (DeleteWorkSheetContent в LibraryScreen.kt:
+    # "Delete work" / "Delete downloaded file") ---
+    def long_press_work(self, title: str, timeout: int | None = None):
+        el = self.find(self.by_text(title), timeout)
+        self.driver.execute_script(
+            "mobile: longClickGesture", {"elementId": el.id, "duration": 1000})
+        return self
+
+    def delete_overlay_visible(self, timeout: int | None = None) -> bool:
+        return self.is_present(self.by_text("Delete work"), timeout=timeout or 6)
+
+    def tap_delete_work(self):
+        self.tap(self.by_text("Delete work"))
+        return self
+
+    def tap_delete_downloaded_file(self):
+        self.tap(self.by_text("Delete downloaded file"))
+        return self

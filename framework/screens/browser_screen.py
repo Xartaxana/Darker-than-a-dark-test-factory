@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import io
 
+from appium.webdriver.common.appiumby import AppiumBy
 from PIL import Image
 from selenium.webdriver.common.actions.action_builder import ActionBuilder
 from selenium.webdriver.common.actions.interaction import POINTER_TOUCH
@@ -37,6 +38,35 @@ class BrowserScreen(BaseScreen):
                 lambda d: f"/works/{work_id}" in (d.current_url or ""),
                 message="страница работы не открылась",
             )
+
+    # --- Управление вкладками (tab bar виден, когда открыто >1 вкладки) ---
+    _CLOSE_TAB_LOCATOR = (AppiumBy.ANDROID_UIAUTOMATOR,
+                          'new UiSelector().description("Close tab")')
+
+    def close_leftmost_tab(self) -> None:
+        """Закрывает самую левую вкладку в tab-баре — используется, чтобы после
+        открытия скачанного файла (BrowserViewModel.openTab ВСЕГДА добавляет
+        вкладку, никогда не заменяет стартовую Home-вкладку) осталась ровно одна
+        WebView-страница: при нескольких открытых страницах в ОДНОМ WEBVIEW-процессе
+        chromedriver подключается к недетерминированной из них (см. TC-034 —
+        `driver.current_url`/DOM-проверки иначе читают чужую вкладку).
+
+        Сразу после открытия новой вкладки tab-бар может ещё анимироваться —
+        вторая кнопка «Close tab» рендерится не мгновенно (гонка, поймана в
+        прогоне полного файла: standalone-прогон не ловит), поэтому явно ждём
+        появления ВТОРОЙ кнопки, а не довольствуемся первым снапшотом списка."""
+        def _at_least_two(d):
+            buttons = d.find_elements(*self._CLOSE_TAB_LOCATOR)
+            return buttons if len(buttons) >= 2 else False
+        try:
+            buttons = wait_until(self.driver, _at_least_two, timeout=8,
+                                 message="в tab-баре не появилась вторая вкладка для закрытия")
+        except Exception:  # noqa: BLE001 — таймаут ожидания второй вкладки не фатален
+            buttons = self.driver.find_elements(*self._CLOSE_TAB_LOCATOR)
+        if len(buttons) <= 1:
+            return
+        leftmost = min(buttons, key=lambda e: e.rect["x"])
+        leftmost.click()
 
     # --- Двухпальцевые жесты над контентом (BrowserScreen.kt pointerInput ~255–312) ---
     # UiAutomator2 различает "font" (span меняется, пальцы движутся врозь по диагонали

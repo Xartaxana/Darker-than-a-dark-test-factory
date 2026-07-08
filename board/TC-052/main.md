@@ -2,27 +2,27 @@
 key: "TC-052"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Кнопки шрифта в side panel отключаются на границах диапазона (шаг 0 и 6)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:browser", "risk:R-11 (proposed, не утверждён в §5)"]
+labels: ["test-case", "area:browser", "risk:R-11 (proposed, не утверждён в §5)", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T20:02:14Z"
-updated: "2026-07-02T20:02:14Z"
+created: "2026-07-08T17:35:00Z"
+updated: "2026-07-08T17:35:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Кнопки шрифта в side panel отключаются на границах диапазона (шаг 0 и 6)
 
 _Спроецировано из `test-cases/browser/TC-052.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-052 — Кнопки шрифта side panel неактивны на границах диапазона
 

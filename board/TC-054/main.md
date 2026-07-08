@@ -2,27 +2,27 @@
 key: "TC-054"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Тема и шрифт из side panel и из Settings — один общий стейт (эквивалентность входов)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:browser", "risk:R-11 (proposed, не утверждён в §5)"]
+labels: ["test-case", "area:browser", "risk:R-11 (proposed, не утверждён в §5)", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T20:02:25Z"
-updated: "2026-07-02T20:02:25Z"
+created: "2026-07-08T17:35:00Z"
+updated: "2026-07-08T17:35:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Тема и шрифт из side panel и из Settings — один общий стейт (эквивалентность входов)
 
 _Спроецировано из `test-cases/browser/TC-054.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-054 — Side panel и Settings делят одно состояние темы/шрифта
 

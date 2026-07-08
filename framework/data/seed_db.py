@@ -143,3 +143,67 @@ def seed_with_comment(
         adb.push_app_file(db, _DB_REL)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
+
+
+# --- Сидинг «уже скачанной» работы (downloadPath) без реального скачивания ---
+# TC-034/TC-035/TC-036 (downloads) требуют работу с заполненным downloadPath на
+# РЕАЛЬНО существующий файл. Фикстура кладётся во ВНУТРЕННЮЮ песочницу приложения
+# (files/..., НЕ getExternalFilesDir/ao3_downloads, как предполагали заметки
+# кейсов) — на API 34 прямой `adb push`/`run-as` в app-specific external storage
+# падает («remote secure_mkdirs failed: Operation not permitted» / «Permission
+# denied» даже под run-as: Android 11+ scoped storage не даёт adb-процессу нужный
+# FUSE-mount, независимо от совпадения UID). Внутренний путь поведенчески
+# эквивалентен для black-box теста: приложение читает/удаляет файл по downloadPath
+# голым `File(path)` (DownloadRepository.deleteDownload, BrowserScreen.loadTabContent)
+# и не проверяет, что путь лежит именно под getExternalFilesDir.
+_DOWNLOAD_FIXTURE_REL_DIR = "files/ao3_test_downloads"
+_DEVICE_DATA_ROOT = f"/data/user/0/{settings.APP_PACKAGE}"
+
+
+def _push_download_fixture(local_html: Path, work: Work) -> str:
+    """Копирует локальный HTML-фикстур в internal-песочницу приложения на
+    устройстве. Возвращает абсолютный путь для записи в `downloadPath`."""
+    rel = f"{_DOWNLOAD_FIXTURE_REL_DIR}/{work.ao3_id}.html"
+    adb.run_as(f"mkdir -p {_DOWNLOAD_FIXTURE_REL_DIR}")
+    adb.push_app_file(local_html, rel)
+    return f"{_DEVICE_DATA_ROOT}/{rel}"
+
+
+def _insert_rows_with_download(db: Path, rows: list[tuple[Work, str, str]]) -> None:
+    con = sqlite3.connect(db)
+    cur = con.cursor()
+    now = int(time.time() * 1000)
+    for work, rating, download_path in rows:
+        assert rating in _RATING_ENUM, f"неизвестный rating: {rating}"
+        cur.execute(
+            """INSERT OR REPLACE INTO work_ratings
+               (ao3Id, title, author, url, rating, timestamp, fandom, wordCount, comment, downloadPath, tags)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+            (work.ao3_id, work.title, work.author, work.url, rating, now,
+             work.fandom, work.word_count, None, download_path, None),
+        )
+    con.commit()
+    con.close()
+
+
+def seed_with_download(rows: list[tuple[Work, str, Path]]) -> dict[str, str]:
+    """Как `seed()`, но дополнительно кладёт на устройство локальный HTML-фикстур
+    для каждой строки и заполняет `downloadPath` результирующим путём — имитирует
+    уже скачанную работу без обращения к `DownloadRepository`/сети (TC-034/035/036).
+    rows: (work, rating, local_html_path). Возвращает {ao3_id: путь на устройстве}."""
+    adb.force_stop()
+    ensure_db_initialized()
+    device_paths: dict[str, str] = {}
+    for work, _rating, local_html in rows:
+        device_paths[work.ao3_id] = _push_download_fixture(local_html, work)
+    tmp = Path(tempfile.mkdtemp(prefix="ao3seed_"))
+    try:
+        db = _pull_baseline(tmp)
+        _insert_rows_with_download(
+            db, [(work, rating, device_paths[work.ao3_id]) for work, rating, _ in rows]
+        )
+        adb.run_as(f"rm -f {_WAL} {_SHM}")
+        adb.push_app_file(db, _DB_REL)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return device_paths

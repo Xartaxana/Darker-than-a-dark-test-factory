@@ -2,7 +2,7 @@
 key: "TC-035"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Delete downloaded file удаляет только файл, сохраняя строку рейтинга"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T17:16:50Z"
-updated: "2026-07-02T17:16:50Z"
+created: "2026-07-08T17:26:00Z"
+updated: "2026-07-08T17:26:00Z"
 archived: false
 resolution: null
 ---

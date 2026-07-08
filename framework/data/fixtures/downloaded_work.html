@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<!--
+  Фикстура для TC-034/TC-035/TC-036 (downloads): сырой AO3 HTML-экспорт без
+  meta-тега мобильного viewport — так реально выглядят офлайн-скачивания с AO3
+  (см. DownloadRepository.kt комментарий и BrowserScreen.kt injectReaderCss).
+  ВАЖНО: injectReaderCss ищет подстроку viewport-атрибута ПО ВСЕМУ сырому HTML
+  (naive String.contains, не DOM-парсинг) — этот комментарий намеренно не
+  содержит буквального текста атрибута, иначе инъекция посчитает viewport уже
+  присутствующим и не добавит его (сама и напоролась на это при первой версии
+  фикстуры). Файл кладётся на устройство через seed_db.seed_with_download
+  (framework/data/seed_db.py), без реального сетевого скачивания.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>A Loved Test Work - seed_author_a - Fandom Alpha [Archive of Our Own]</title>
+  <style>
+    body { width: 700px; margin: 0 auto; font-family: Georgia, serif; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div id="workskin">
+    <h1 class="title heading">A Loved Test Work</h1>
+    <h3 class="byline heading">by seed_author_a</h3>
+    <div id="chapters">
+      <div id="chapter-1" class="chapter">
+        <div class="userstuff">
+          <p>This is a fixture chapter body used only for TC-034/TC-035/TC-036
+          automation (framework/data/fixtures/downloaded_work.html) — not real
+          AO3 content, no network access involved.</p>
+          <p>Second paragraph so the reader page has more than one line of text.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -2,27 +2,27 @@
 key: "TC-051"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "A+/A- в side panel меняют размер шрифта в WebView мгновенно и переживают рестарт"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:browser", "risk:R-11 (proposed, не утверждён в §5)"]
+labels: ["test-case", "area:browser", "risk:R-11 (proposed, не утверждён в §5)", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T20:02:04Z"
-updated: "2026-07-02T20:02:04Z"
+created: "2026-07-08T17:35:00Z"
+updated: "2026-07-08T17:35:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # A+/A- в side panel меняют размер шрифта в WebView мгновенно и переживают рестарт
 
 _Спроецировано из `test-cases/browser/TC-051.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-051 — Font size из side panel применяется мгновенно и персистится
 

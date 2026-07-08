@@ -2,27 +2,27 @@
 key: "TC-050"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Contrast-иконка в side panel переключает тему мгновенно во всём UI (WebView + нативный)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:browser", "risk:R-11 (proposed, не утверждён в §5)"]
+labels: ["test-case", "area:browser", "risk:R-11 (proposed, не утверждён в §5)", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T20:02:00Z"
-updated: "2026-07-02T20:02:00Z"
+created: "2026-07-08T17:35:00Z"
+updated: "2026-07-08T17:35:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Contrast-иконка в side panel переключает тему мгновенно во всём UI (WebView + нативный)
 
 _Спроецировано из `test-cases/browser/TC-050.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-050 — Side panel Contrast переключает тему мгновенно (вход через панель)
 

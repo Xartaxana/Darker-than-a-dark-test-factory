@@ -30,16 +30,17 @@
     "epicPath": null,
     "summary": "Contrast-иконка в side panel переключает тему мгновенно во всём UI (WebView + нативный)",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:browser",
-      "risk:R-11 (proposed, не утверждён в §5)"
+      "risk:R-11 (proposed, не утверждён в §5)",
+      "automation:active"
     ],
-    "updated": "2026-07-02T20:02:00Z",
-    "resolution": null,
+    "updated": "2026-07-08T17:35:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -52,16 +53,17 @@
     "epicPath": null,
     "summary": "A+/A- в side panel меняют размер шрифта в WebView мгновенно и переживают рестарт",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:browser",
-      "risk:R-11 (proposed, не утверждён в §5)"
+      "risk:R-11 (proposed, не утверждён в §5)",
+      "automation:active"
     ],
-    "updated": "2026-07-02T20:02:04Z",
-    "resolution": null,
+    "updated": "2026-07-08T17:35:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -74,16 +76,17 @@
     "epicPath": null,
     "summary": "Кнопки шрифта в side panel отключаются на границах диапазона (шаг 0 и 6)",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:browser",
-      "risk:R-11 (proposed, не утверждён в §5)"
+      "risk:R-11 (proposed, не утверждён в §5)",
+      "automation:active"
     ],
-    "updated": "2026-07-02T20:02:14Z",
-    "resolution": null,
+    "updated": "2026-07-08T17:35:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -96,16 +99,17 @@
     "epicPath": null,
     "summary": "Двухпальцевый pinch/spread на Browse меняет размер шрифта (тот же fontSizeStep)",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:browser",
-      "risk:R-11 (proposed, не утверждён в §5)"
+      "risk:R-11 (proposed, не утверждён в §5)",
+      "automation:active"
     ],
-    "updated": "2026-07-02T20:02:19Z",
-    "resolution": null,
+    "updated": "2026-07-08T17:35:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -118,16 +122,17 @@
     "epicPath": null,
     "summary": "Тема и шрифт из side panel и из Settings — один общий стейт (эквивалентность входов)",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:browser",
-      "risk:R-11 (proposed, не утверждён в §5)"
+      "risk:R-11 (proposed, не утверждён в §5)",
+      "automation:active"
     ],
-    "updated": "2026-07-02T20:02:25Z",
-    "resolution": null,
+    "updated": "2026-07-08T17:35:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -140,16 +145,17 @@
     "epicPath": null,
     "summary": "Двухпальцевый вертикальный драг меняет яркость; ниже минимума включается чёрный overlay",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:browser",
-      "risk:R-11 (proposed, не утверждён в §5)"
+      "risk:R-11 (proposed, не утверждён в §5)",
+      "automation:active"
     ],
-    "updated": "2026-07-02T20:02:30Z",
-    "resolution": null,
+    "updated": "2026-07-08T17:35:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -162,7 +168,7 @@
     "epicPath": null,
     "summary": "Авто-скачивание запускается при простановке Loved с включённым Auto-download",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -170,7 +176,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-07-02T17:03:07Z",
+    "updated": "2026-07-08T17:26:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -184,7 +190,7 @@
     "epicPath": null,
     "summary": "Ручное скачивание работы из Library добавляет локальный файл",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -192,7 +198,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-07-02T17:16:37Z",
+    "updated": "2026-07-08T17:26:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -206,7 +212,7 @@
     "epicPath": null,
     "summary": "Открытие скачанного файла применяет мобильный viewport и reader.css",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -214,7 +220,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-07-02T17:16:44Z",
+    "updated": "2026-07-08T17:26:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -228,7 +234,7 @@
     "epicPath": null,
     "summary": "Delete downloaded file удаляет только файл, сохраняя строку рейтинга",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -236,7 +242,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-07-02T17:16:50Z",
+    "updated": "2026-07-08T17:26:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -250,7 +256,7 @@
     "epicPath": null,
     "summary": "Delete work удаляет и файл, и строку рейтинга целиком",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -258,7 +264,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-07-02T17:17:00Z",
+    "updated": "2026-07-08T17:26:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -711,7 +717,7 @@
     "epicPath": null,
     "summary": "applyRatings синхронизирует бейдж во всех открытых вхождениях одной работы на странице",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -719,7 +725,7 @@
       "area:rating",
       "risk:R-04"
     ],
-    "updated": "2026-07-02T17:19:18Z",
+    "updated": "2026-07-08T19:00:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -733,7 +739,7 @@
     "epicPath": null,
     "summary": "Comment-only запись (rating=null) не появляется в рейтинговых вкладках и не скрывается фильтрацией",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -741,7 +747,7 @@
       "area:rating",
       "risk:R-10 (proposed, не утверждён в §5)"
     ],
-    "updated": "2026-07-02T17:19:27Z",
+    "updated": "2026-07-08T19:00:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -755,7 +761,7 @@
     "epicPath": null,
     "summary": "Note-кнопка на листинге открывает overlay с развёрнутым полем комментария",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -763,7 +769,7 @@
       "area:rating",
       "risk:R-10 (proposed, не утверждён в §5)"
     ],
-    "updated": "2026-07-02T17:19:33Z",
+    "updated": "2026-07-08T19:00:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -777,7 +783,7 @@
     "epicPath": null,
     "summary": "Личные теги не влияют на видимость работы независимо от фильтрации",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -785,7 +791,7 @@
       "area:rating",
       "risk:R-10 (proposed, не утверждён в §5)"
     ],
-    "updated": "2026-07-02T17:19:41Z",
+    "updated": "2026-07-08T19:00:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1251,6 +1257,62 @@
     ],
     "updated": "2026-07-07T20:05:00Z",
     "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-003",
+    "path": "board/BUG-003/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Кейсы, автоматизированные до гейта F1 (TC-007/008/016/017), не несут полей жизненного цикла B3 (automation_status/reviewed_by/reviewed_at)",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-007",
+      "test_case:TC-008",
+      "test_case:TC-016",
+      "test_case:TC-017",
+      "sev:minor"
+    ],
+    "updated": "2026-07-08T15:25:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-004",
+    "path": "board/BUG-004/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Replay-инфраструктура не доведена: нет записей work/листинг-страниц и mitm-фикстуры в conftest — блокирует автоматизацию 10 P0/P1 кейсов",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-009",
+      "test_case:TC-013",
+      "test_case:TC-014",
+      "test_case:TC-015",
+      "test_case:TC-032",
+      "test_case:TC-033",
+      "test_case:TC-012",
+      "test_case:TC-043",
+      "test_case:TC-044",
+      "test_case:TC-045",
+      "sev:major"
+    ],
+    "updated": "2026-07-08T19:00:00Z",
+    "resolution": null,
     "children": [],
     "archived": false
   },

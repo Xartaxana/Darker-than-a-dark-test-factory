@@ -2,7 +2,7 @@
 key: "TC-036"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Delete work удаляет и файл, и строку рейтинга целиком"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T17:17:00Z"
-updated: "2026-07-02T17:17:00Z"
+created: "2026-07-08T17:26:00Z"
+updated: "2026-07-08T17:26:00Z"
 archived: false
 resolution: null
 ---

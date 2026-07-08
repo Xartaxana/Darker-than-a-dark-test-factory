@@ -2,7 +2,7 @@
 key: "TC-044"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-review"
 priority: "p1"
 summary: "Note-кнопка на листинге открывает overlay с развёрнутым полем комментария"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T17:19:33Z"
-updated: "2026-07-02T17:19:33Z"
+created: "2026-07-08T19:00:00Z"
+updated: "2026-07-08T19:00:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Note-кнопка на листинге открывает overlay с развёрнутым полем комментария
 
 _Спроецировано из `test-cases/rating/TC-044.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Review**._
 
 # TC-044 — Note-кнопка открывает overlay с раскрытым комментарием
 
@@ -63,3 +63,26 @@ _Спроецировано из `test-cases/rating/TC-044.md` (источник
 - [x] Then проверяет наблюдаемое поведение, а не реализацию
 - [x] Указаны приоритет, область и источник требования
 - [x] Кейс независим от порядка выполнения других кейсов
+
+## Заблокировано (test-automator, 2026-07-08)
+
+Возвращён в `Review` — невозможно закодировать имеющимися средствами, тот же класс
+блокера, что и TC-009/013/014/015/032/033 (см. `bugs/BUG-004.md`).
+
+**Причина:** Note-кнопка (`makeNoteButton`, `ao3_bridge.js`) рендерится и кликается
+ТОЛЬКО внутри `li[id^="work_"].work.blurb` на реальной странице листинга (карандаш
+слева от Rate-кнопки, вставляется `applyRatings` при непустом `comment`). Это не
+work-page панель (`RatingMenu`, TC-007/008 — Automated через URL-паттерн
+`/works/{id}` без нужды в реальном HTML) — здесь принципиально нужен HTML листинга
+с блёрбом конкретной синтетической работы W, чтобы вообще был DOM-узел, на котором
+искать/кликать локатор кнопки. На archiveofourown.org такой работы не существует;
+`framework/data/recordings/` пока содержит только `ao3_home_smoke.mitm`;
+`framework/core/mitm.py` не подключён ни к одной pytest-фикстуре в `conftest.py`.
+
+**Что нужно, чтобы разблокировать:** см. критерий готовности в `bugs/BUG-004.md`
+(replay-фикстура листинга с блёрбом синтетической работы, у которой есть непустой
+comment — сидинг через `seed_with_comment` уже готов) + подключение
+`framework/core/mitm.py` к `conftest.py`.
+
+Область помечена нуждающейся в доводке replay-инфраструктуры — не APP_BUG,
+не TEST_BUG; инфраструктурный блокер, тот же класс, что и в rating/visibility/downloads.

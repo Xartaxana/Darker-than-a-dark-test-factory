@@ -8,9 +8,12 @@ from __future__ import annotations
 
 import pytest
 
+from framework.config import settings
 from framework.core import adb, driver_factory, reporting
 from framework.data import works as W
 from framework.steps import app_steps
+
+_DOWNLOADED_WORK_FIXTURE = settings.DATA_DIR / "fixtures" / "downloaded_work.html"
 
 
 def pytest_configure(config):
@@ -82,6 +85,18 @@ def placeholder_seeded_work(request):
     app_steps.clean_state()
     app_steps.seed_with_comment([(work, None, None, None)])
     yield work
+
+
+@pytest.fixture()
+def downloaded_work_seeded():
+    """Работа LOVED засеяна с рейтингом Loved (SAVE) и уже «скачанным» локальным
+    HTML-файлом (downloadPath заполнен, файл реально существует на устройстве) —
+    без сетевого скачивания (DownloadRepository не задействован), см.
+    TC-034/TC-035/TC-036. Тот же порядок (clean_state до сессии Appium), что и
+    seeded_library/loved_work_seeded — обязателен."""
+    app_steps.clean_state()
+    app_steps.seed_downloaded_work(W.LOVED, "SAVE", _DOWNLOADED_WORK_FIXTURE)
+    yield W.LOVED
 
 
 @pytest.fixture()
