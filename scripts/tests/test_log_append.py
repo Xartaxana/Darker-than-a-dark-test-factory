@@ -20,14 +20,15 @@ def logs(tmp_path, monkeypatch):
 def test_routing_appends_json_line_with_ts(logs):
     routing, _ = logs
     la.main(["routing", "--event", "delegated", "--agent", "builder",
-             "--model", "sonnet", "--category", "implementation",
-             "--notes", "тест"])
+             "--model", "sonnet", "--task-id", "t-001",
+             "--category", "implementation", "--notes", "тест"])
     lines = routing.read_text(encoding="utf-8").splitlines()
     assert len(lines) == 1
     rec = json.loads(lines[0])
     assert rec["event"] == "delegated"
     assert rec["agent"] == "builder"
     assert rec["model"] == "sonnet"
+    assert rec["task_id"] == "t-001"
     assert rec["notes"] == "тест"
     assert rec["ts"].startswith("20") and "T" in rec["ts"]
 
@@ -59,14 +60,60 @@ def test_routing_events_match_claude_md_policy(logs):
 
 
 def test_routing_accepts_defect_found_without_model(logs):
-    # D-0052 OS-репо: defect_found ссылается на исходный accepted;
-    # model не требуется — её несёт исходное событие диспатча.
+    # D-0052/D-0053 OS-репо: defect_found ссылается полем ref на task_id
+    # исходного accepted; model не требуется — её несёт исходное событие.
     routing, _ = logs
-    la.append_routing("defect_found", "builder", category="implementation",
-                      notes="что сломалось + ссылка на accepted <ts>")
+    la.append_routing("defect_found", "builder", task_id="t-002",
+                      ref="t-001", category="implementation",
+                      notes="что сломалось")
     rec = json.loads(routing.read_text(encoding="utf-8"))
     assert rec["event"] == "defect_found"
+    assert rec["ref"] == "t-001"
     assert "model" not in rec
+
+
+def test_routing_task_id_required_for_task_events(logs):
+    # D-0053: несущие факты — типизированными полями, не прозой в notes.
+    routing, _ = logs
+    for event in ("delegated", "accepted", "escalated"):
+        with pytest.raises(SystemExit):
+            la.append_routing(event, "scout", model="haiku")
+    with pytest.raises(SystemExit):
+        la.append_routing("defect_found", "builder", ref="t-001")
+    assert not routing.exists()
+
+
+def test_routing_rejected_requires_attempt_and_failure_class(logs):
+    routing, _ = logs
+    with pytest.raises(SystemExit):  # нет failure_class
+        la.append_routing("rejected", "builder", model="sonnet",
+                          task_id="t-003", attempt=1)
+    with pytest.raises(SystemExit):  # failure_class вне enum
+        la.append_routing("rejected", "builder", model="sonnet",
+                          task_id="t-003", attempt=1, failure_class="vibes")
+    with pytest.raises(SystemExit):  # нет attempt
+        la.append_routing("rejected", "builder", model="sonnet",
+                          task_id="t-003", failure_class="spec")
+    la.append_routing("rejected", "builder", model="sonnet", task_id="t-003",
+                      attempt=2, failure_class="capability", notes="причина")
+    rec = json.loads(routing.read_text(encoding="utf-8"))
+    assert rec["attempt"] == 2
+    assert rec["failure_class"] == "capability"
+
+
+def test_routing_accepted_builder_requires_witness(logs):
+    # D-0052: accepted по builder без witness = самосертификация.
+    routing, _ = logs
+    with pytest.raises(SystemExit):
+        la.append_routing("accepted", "builder", model="sonnet",
+                          task_id="t-004")
+    la.append_routing("accepted", "builder", model="sonnet", task_id="t-004",
+                      witness="python -m pytest scripts/tests -q -> 241 passed")
+    rec = json.loads(routing.read_text(encoding="utf-8"))
+    assert "241 passed" in rec["witness"]
+    # scout принимается без witness (его след — Trail в дайджесте, D-0046)
+    la.append_routing("accepted", "scout", model="haiku", task_id="t-005")
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 2
 
 
 def test_routing_accepts_dispatch_skipped_without_model(logs):
@@ -85,8 +132,9 @@ def test_routing_rejects_unknown_event(logs):
 
 def test_routing_appends_not_overwrites(logs):
     routing, _ = logs
-    la.append_routing("delegated", "builder", model="sonnet")
-    la.append_routing("accepted", "builder", model="sonnet")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-006")
+    la.append_routing("accepted", "builder", model="sonnet", task_id="t-006",
+                      witness="pytest -q -> passed")
     assert len(routing.read_text(encoding="utf-8").splitlines()) == 2
 
 

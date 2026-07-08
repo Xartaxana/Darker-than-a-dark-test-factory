@@ -11,8 +11,12 @@
 
 routing      -> logs/routing-log.jsonl (одна JSON-строка; ts подставляется сам;
                 model ОБЯЗАТЕЛЬНА для delegated/escalated/accepted/rejected —
-                CLAUDE.md; defect_found ссылается в notes на исходный
-                accepted, model не требуется — она в исходном событии)
+                CLAUDE.md; типизированные поля D-0053 OS-репо:
+                --task-id обязателен для delegated/accepted/rejected/
+                escalated/defect_found; --attempt и --failure-class —
+                для rejected; --witness — для accepted по builder;
+                --ref (task_id исходного accepted) — для defect_found,
+                model там не требуется — она в исходном событии)
 orchestrator -> state/orchestrator-log.md (строка таблицы `| ts | ... |`,
                 ровно 4 ячейки после времени; ts подставляется сам)
 """
@@ -32,6 +36,9 @@ ROUTING_EVENTS = {"delegated", "accepted", "rejected", "escalated",
                   "decomposable", "dispatch_skipped", "defect_found",
                   "lead_degraded", "lead_restored"}
 MODEL_REQUIRED_EVENTS = {"delegated", "escalated", "accepted", "rejected"}
+TASK_REQUIRED_EVENTS = {"delegated", "accepted", "rejected", "escalated",
+                        "defect_found"}
+FAILURE_CLASSES = {"spec", "capability", "recon", "tooling"}
 
 
 def _now_iso(*, suffix_z: bool = False) -> str:
@@ -46,15 +53,39 @@ def _append_line(path: Path, line: str) -> None:
 
 
 def append_routing(event: str, agent: str, *, model: str = "",
-                   category: str = "", notes: str = "") -> str:
+                   category: str = "", notes: str = "", task_id: str = "",
+                   attempt: int = 0, failure_class: str = "",
+                   witness: str = "", ref: str = "") -> str:
     if event not in ROUTING_EVENTS:
         raise SystemExit(f"неизвестное событие '{event}'; допустимы: "
                          + ", ".join(sorted(ROUTING_EVENTS)))
     if event in MODEL_REQUIRED_EVENTS and not model:
         raise SystemExit(f"--model обязательна для события '{event}' (CLAUDE.md, журнал маршрутизации)")
-    record: dict[str, str] = {"ts": _now_iso(), "event": event, "agent": agent}
+    if event in TASK_REQUIRED_EVENTS and not task_id:
+        raise SystemExit(f"--task-id обязателен для события '{event}' (D-0053 OS-репо)")
+    if event == "rejected":
+        if failure_class not in FAILURE_CLASSES:
+            raise SystemExit("--failure-class обязателен для 'rejected': "
+                             + "/".join(sorted(FAILURE_CLASSES)) + " (D-0052/D-0053)")
+        if attempt < 1:
+            raise SystemExit("--attempt (>=1) обязателен для 'rejected' (правило 6, D-0053)")
+    if event == "accepted" and agent == "builder" and not witness:
+        raise SystemExit("--witness (фактический вывод прогона) обязателен для accepted по builder (D-0052)")
+    if event == "defect_found" and not ref:
+        raise SystemExit("--ref (task_id исходного accepted) обязателен для 'defect_found' (D-0052/D-0053)")
+    record: dict[str, object] = {"ts": _now_iso(), "event": event, "agent": agent}
     if model:
         record["model"] = model
+    if task_id:
+        record["task_id"] = task_id
+    if attempt:
+        record["attempt"] = attempt
+    if failure_class:
+        record["failure_class"] = failure_class
+    if witness:
+        record["witness"] = witness
+    if ref:
+        record["ref"] = ref
     if category:
         record["category"] = category
     if notes:
@@ -81,6 +112,11 @@ def main(argv: list[str] | None = None) -> int:
     p_rt.add_argument("--event", required=True)
     p_rt.add_argument("--agent", required=True)
     p_rt.add_argument("--model", default="")
+    p_rt.add_argument("--task-id", dest="task_id", default="")
+    p_rt.add_argument("--attempt", type=int, default=0)
+    p_rt.add_argument("--failure-class", dest="failure_class", default="")
+    p_rt.add_argument("--witness", default="")
+    p_rt.add_argument("--ref", default="")
     p_rt.add_argument("--category", default="")
     p_rt.add_argument("--notes", default="")
 
@@ -91,7 +127,10 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.target == "routing":
         line = append_routing(args.event, args.agent, model=args.model,
-                              category=args.category, notes=args.notes)
+                              category=args.category, notes=args.notes,
+                              task_id=args.task_id, attempt=args.attempt,
+                              failure_class=args.failure_class,
+                              witness=args.witness, ref=args.ref)
     else:
         line = append_orchestrator(args.cells)
     print(line)
