@@ -4,17 +4,20 @@
 # board/ этого репозитория (первый найденный project.json в дереве), поэтому
 # обновление артефактов/board НЕ требует пересборки — этот workflow нужен только
 # для установки и обновления самого приложения.
-# flutter analyze/test из оригинала опущены: ref запинен на релиз, уже
-# провалидированный CI апстрима.
+# Источник приложения — НАШ форк IstiN/trackstate (Xartaxana/trackstate-by-Dark-Factory):
+# чиним у себя баги, которые в upstream не закрыты (напр. sync-виджет падает на
+# кириллице в сообщениях коммитов — ascii/latin1.encode). ref запинен на конкретный
+# SHA форка (воспроизводимость); flutter analyze/test опущены — валидируем эмпирически
+# по факту деплоя, upstream-CI на форк-ветку не распространяется.
 name: Install / Update TrackState
 
 on:
   workflow_dispatch:
     inputs:
       trackstate_ref:
-        description: "TrackState source ref: branch, tag, or commit SHA"
+        description: "TrackState source ref (fork Xartaxana/trackstate-by-Dark-Factory): branch, tag, or commit SHA"
         required: true
-        default: v2099.173.100715142411
+        default: 2b258f6
   push:
     branches: [master]
     paths:
@@ -30,7 +33,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  TRACKSTATE_DEFAULT_REF: v2099.173.100715142411
+  TRACKSTATE_DEFAULT_REF: 2b258f6
 
 jobs:
   install-update:
@@ -44,7 +47,7 @@ jobs:
       - name: Checkout TrackState source
         uses: actions/checkout@v6
         with:
-          repository: IstiN/trackstate
+          repository: Xartaxana/trackstate-by-Dark-Factory
           ref: ${{ github.event.inputs.trackstate_ref || env.TRACKSTATE_DEFAULT_REF }}
           path: trackstate-source
           submodules: true
