@@ -74,6 +74,11 @@ pre_step), но эскалируй, если шаг критичен для те
 БЕЗ активного лока и не в `Blocked`/`wip`. Уважай `max_triggered_workflows`
 (суммарно за проход). Для каждого срабатывания:
 1. Поставь лок: `lock: "<agent>:<ISO-timestamp>"` в frontmatter артефакта (Edit).
+   Затем запиши делегирование в журнал маршрутизации (правило CLAUDE.md действует
+   и на диспатчи конвейера — до 2026-07-08 проходы /qa-loop были журналу невидимы):
+   `python scripts/log_append.py routing --event delegated --agent <agent>
+   --model <model из frontmatter агента> --category qa-pipeline
+   --notes "<правило>: <артефакт>"`.
 2. Запусти воркера через Task (subagent_type = имя агента из правила) —
    **синхронно, БЕЗ run_in_background**. Передай путь к артефакту, краткий контекст
    и `args` правила: fix-verifier — `mode` (verify|recheck-rejected|still-repro);
@@ -89,7 +94,12 @@ pre_step), но эскалируй, если шаг критичен для те
    (проверка — `python scripts/agent_output.py` на сохранённом ответе при
    сомнении) → исход в логе `degraded (нет agent_output)`, текст прочтёт человек.
    Затем сними лок (`lock: ""`) и запиши строку в `state/orchestrator-log.md`
-   (время, правило, агент, артефакт, result: summary).
+   (время, правило, агент, артефакт, result: summary). Для `result: success`
+   запиши accepted-событие: `python scripts/log_append.py routing --event accepted
+   --agent <agent> --model <model> --category qa-pipeline --notes "<итог кратко>"`;
+   при повторном диспатче ярусом выше после неудачи — событие `escalated`
+   (--model = НОВАЯ модель). blocked/failed/degraded без эскалации отдельного
+   события не требуют: их держит orchestrator-log, затраты видит cc_usage.
    Любая смена `status` (твоя или воркера) обязана соответствовать переходу из
    `schemas/transitions.yaml` (актор, эффекты); перехода нет → эскалация, не правка.
 4. Воркер вернул blocked/failed — артефакт в `Blocked` не переводи сам, если воркер
@@ -114,6 +124,8 @@ pre_step), но эскалируй, если шаг критичен для те
 
 ## Чек-лист готовности (перед завершением)
 - [ ] Каждый поставленный лок снят (или причина в логе).
+- [ ] Каждый диспатч отражён в `logs/routing-log.jsonl` (delegated; accepted
+      для успешных; escalated при смене яруса).
 - [ ] Каждое решение — строкой в `state/orchestrator-log.md`.
 - [ ] Ни один артефакт не оставлен в промежуточном статусе без лога.
 - [ ] Ноль permission-окон; каждое всплывшее — зафиксировано как инцидент.
