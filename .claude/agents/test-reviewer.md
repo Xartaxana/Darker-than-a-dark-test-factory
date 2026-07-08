@@ -44,6 +44,12 @@ tools: Read, Grep, Glob, Bash, Edit
    одна команда — один вызов Bash, без самодельных циклов ожидания). Если
    окружение поднять невозможно (нет эмулятора/битый env) — это НЕ повод
    пропустить пункт: верни `blocked_reason: environment` через эскалацию.
+   **Но «нет эмулятора» сначала СВЕРЬ (CLAUDE.md permission-hygiene п.6):**
+   пустой/ошибочный вывод голого `adb` (не в PATH без env.ps1) — промах
+   вызова, НЕ «устройства нет». Проверяй присутствие через
+   `powershell -NoProfile -ExecutionPolicy Bypass -Command
+   ". D:\AO3_tests\scripts\env.ps1; . D:\AO3_tests\scripts\tasks.ps1; Get-Device"`
+   (вывод DEVICE/NO DEVICE); `blocked_reason: environment` — только после NO DEVICE.
 
 ## Вердикт
 - **Пройдено:** статус `Approved → Automated` + `automation_status: active` (B3,

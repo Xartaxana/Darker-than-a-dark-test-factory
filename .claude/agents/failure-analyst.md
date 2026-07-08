@@ -38,6 +38,11 @@ tools: Read, Grep, Glob, Bash, Write, Edit
    - `TEST_BUG` — дефект теста → test-maintainer;
    - `SITE_CHANGED` — AO3 изменил DOM → test-maintainer (первым делом recordings/селекторы);
    - `ENV_ISSUE` — эмулятор/прокси/сеть → перезапуск + фикс окружения;
+     ПЕРЕД вердиктом `ENV_ISSUE` сверь среду канонической формой (CLAUDE.md
+     permission-hygiene п.6): пустой/ошибочный вывод голого `adb` (не в PATH без
+     env.ps1) — промах вызова, НЕ «устройства/эмулятора нет». Присутствие —
+     `. D:\AO3_tests\scripts\tasks.ps1; Get-Device` (DEVICE/NO DEVICE); env-негатив
+     без такой сверки в вердикт не выноси;
    - `FLAKY` — нестабильность → карантин + задача на стабилизацию.
 6. Для `FLAKY` карантин оформляешь ТЫ (переход `active → quarantined` машины
    `automation` в `schemas/transitions.yaml` — твой): в тест-кейсе

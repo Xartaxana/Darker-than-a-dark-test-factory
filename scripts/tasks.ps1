@@ -83,4 +83,19 @@ function Show-Report {
     Pop-Location
 }
 
-Write-Host "Tasks loaded: Start-Emulator, Start-Appium, Stop-NodeProcesses, Install-App, Invoke-Smoke, Invoke-Suite, Invoke-Pytest, Show-Report" -ForegroundColor Green
+function Get-Device {
+    # Однозначная проверка присутствия устройства. Полный путь к adb.exe — НЕ зависит
+    # от PATH, поэтому работает даже там, где голый `adb` не резолвится. Печатает по
+    # строке "DEVICE: <serial>" на каждое устройство в состоянии `device`, либо ровно
+    # "NO DEVICE". ВАЖНО (CLAUDE.md permission-hygiene п.6): пустой/ошибочный вывод
+    # голого `adb` вне PATH НЕЛЬЗЯ принимать за «устройства нет» — эта функция даёт
+    # однозначный сигнал, используй её для любого вывода о присутствии устройства.
+    $lines = & "$env:ANDROID_HOME\platform-tools\adb.exe" devices
+    $serials = @($lines | Select-Object -Skip 1 |
+        Where-Object { $_ -match '\sdevice$' } |
+        ForEach-Object { ($_ -split '\s+')[0] })
+    if ($serials.Count -gt 0) { foreach ($s in $serials) { Write-Host "DEVICE: $s" } }
+    else { Write-Host "NO DEVICE" }
+}
+
+Write-Host "Tasks loaded: Start-Emulator, Start-Appium, Stop-NodeProcesses, Install-App, Invoke-Smoke, Invoke-Suite, Invoke-Pytest, Show-Report, Get-Device" -ForegroundColor Green

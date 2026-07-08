@@ -70,6 +70,11 @@ tools: Read, Glob, Grep, Write, Edit, Bash
    каждый вызов снова требует подтверждения. Канонический вид:
    `powershell -NoProfile -ExecutionPolicy Bypass -Command ". D:\AO3_tests\scripts\env.ps1; . D:\AO3_tests\scripts\tasks.ps1; Start-Emulator"`
    (аналогично для `Start-Appium`, `Install-App`, `Invoke-Smoke`, `Stop-NodeProcesses`).
+   **Env-негатив требует сверки (CLAUDE.md permission-hygiene п.6):** пустой/ошибочный
+   вывод голого `adb`/`emulator` (не в PATH без env.ps1) — промах вызова, НЕ
+   «устройства/эмулятора нет». Присутствие устройства проверяй
+   `. D:\AO3_tests\scripts\tasks.ps1; Get-Device` (DEVICE/NO DEVICE); не делай вывод
+   «эмулятор не поднят»/«нет устройства» по пустому выводу голого вызова.
    **Для прогона pytest с ПРОИЗВОЛЬНЫМИ аргументами** (`-k`, конкретный файл/узел,
    `-m`, `-v`) НЕ собирай свою строку `". env.ps1; <venv-python> -m pytest ..."` —
    каждый `-k`-фильтр даёт новую несовпадающую строку и новый запрос. Канонический вид:

@@ -35,6 +35,12 @@ tools: Read, Bash, Write, Edit
    **ОДНА команда — ОДИН вызов Bash:** не склеивай несколько statement'ов в один
    многострочный вызов — он гарантированно уйдёт на ручное подтверждение, даже если
    каждая часть по отдельности разрешена.
+   **Env-негатив требует сверки (CLAUDE.md permission-hygiene п.6):** пустой/
+   ошибочный вывод голого `adb`/`emulator` (не в PATH без env.ps1) — промах вызова,
+   НЕ «устройства/эмулятора нет». Присутствие устройства проверяй
+   `. D:\AO3_tests\scripts\tasks.ps1; Get-Device` (DEVICE/NO DEVICE); `status: Blocked`
+   «окружение не поднимается» ставь только после NO DEVICE/реального сбоя функции, а
+   не по пустому выводу голого вызова.
 2. Запусти нужный suite: `pytest -m <p0|p1|...>` в нужном `AO3_MODE` (live/replay).
 3. Собери итоги: passed/failed/skipped/quarantined, длительность, каталог Allure.
 4. Создай `runs/RUN-<timestamp>.md` по шаблону `docs/templates/run-report.md`.

@@ -60,6 +60,11 @@ tools: Read, Bash, Write, Edit
   ". D:\AO3_tests\scripts\tasks.ps1; Invoke-Pytest <аргументы pytest>"` — НЕ собирай свою
   `". env.ps1; <venv-python> -m pytest ..."`: каждая новая строка требует подтверждения.
 - Правки frontmatter/таблиц — тулами Edit/Write, не `python -c`/heredoc.
+- **Env-негатив требует сверки (CLAUDE.md permission-hygiene п.6):** пустой/
+  ошибочный вывод голого `adb`/`emulator` (не в PATH без env.ps1) — промах
+  вызова, НЕ «устройства/эмулятора нет». Присутствие устройства проверяй
+  `. D:\AO3_tests\scripts\tasks.ps1; Get-Device` (DEVICE/NO DEVICE); не выноси в
+  таблицу/эскалацию вывод «окружение недоступно» без такой сверки.
 
 ## Evidence contract (C2)
 Запись в таблице «Верификация» без минимального пакета невалидна — не дублируем
