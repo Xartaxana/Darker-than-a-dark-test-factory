@@ -27,7 +27,7 @@ ROUTING_LOG = REPO / "logs" / "routing-log.jsonl"
 ORCH_LOG = REPO / "state" / "orchestrator-log.md"
 
 ROUTING_EVENTS = {"delegated", "accepted", "escalated", "decomposable",
-                  "lead_degraded", "lead_restored"}
+                  "dispatch_skipped", "lead_degraded", "lead_restored"}
 MODEL_REQUIRED_EVENTS = {"delegated", "escalated", "accepted"}
 
 
