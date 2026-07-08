@@ -1213,30 +1213,8 @@
     "archived": false
   },
   {
-    "key": "BUG-001",
-    "path": "board/BUG-001/main.md",
-    "parent": null,
-    "epic": null,
-    "parentPath": null,
-    "epicPath": null,
-    "summary": "Подписи вкладок Library и меню рейтинга расходятся с PROJECT.md",
-    "issueType": "bug",
-    "status": "bug-open",
-    "priority": "p2",
-    "assignee": "qa-agents",
-    "labels": [
-      "bug",
-      "test_case:TC-006",
-      "sev:minor"
-    ],
-    "updated": "2026-07-02T04:30:00Z",
-    "resolution": null,
-    "children": [],
-    "archived": false
-  },
-  {
-    "key": "BUG-002",
-    "path": "board/BUG-002/main.md",
+    "key": "AT-BUG-002",
+    "path": "board/AT-BUG-002/main.md",
     "parent": null,
     "epic": null,
     "parentPath": null,
@@ -1261,8 +1239,8 @@
     "archived": false
   },
   {
-    "key": "BUG-003",
-    "path": "board/BUG-003/main.md",
+    "key": "AT-BUG-003",
+    "path": "board/AT-BUG-003/main.md",
     "parent": null,
     "epic": null,
     "parentPath": null,
@@ -1286,8 +1264,8 @@
     "archived": false
   },
   {
-    "key": "BUG-004",
-    "path": "board/BUG-004/main.md",
+    "key": "AT-BUG-004",
+    "path": "board/AT-BUG-004/main.md",
     "parent": null,
     "epic": null,
     "parentPath": null,
@@ -1312,6 +1290,28 @@
       "sev:major"
     ],
     "updated": "2026-07-08T19:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-001",
+    "path": "board/BUG-001/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Подписи вкладок Library и меню рейтинга расходятся с PROJECT.md",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-006",
+      "sev:minor"
+    ],
+    "updated": "2026-07-02T04:30:00Z",
     "resolution": null,
     "children": [],
     "archived": false

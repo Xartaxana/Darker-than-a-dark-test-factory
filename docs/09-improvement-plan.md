@@ -92,7 +92,7 @@
    test-automator (только test_debt; app_bug Fixed — по-прежнему человек),
    Fixed не ждёт сборку, severity-SLA молчит, отдельная секция digest; правила
    «Починить автотест в карантине» (выше новой автоматизации) и «Устранить test
-   debt» в rules.yaml. Первый клиент: BUG-002 (test_debt на нарушения arch_check
+   debt» в rules.yaml. Первый клиент: AT-BUG-002 (test_debt на нарушения arch_check
    в test_smoke.py). Подробности — docs/06 «B3/B4».
 4. **C2 — evidence contract.** ✅ 2026-07-07 (Sonnet-сессия): `schemas/evidence.yaml`
    (6 вердиктов, 21 элемент; FLAKY включает quarantine_decision по B3/B4) +
@@ -118,7 +118,7 @@
    `scripts/arch_check.py` (AST-чек: запрет импортов screens/web/локаторов и
    `.find_element`/`.by_text` в tests/, обязательные `@allure.id` + suite-маркер
    из pytest.ini) + 23 теста; преflight-шаг 3 в /qa-loop. Найденные реальные
-   нарушения test_smoke.py — в ALLOWLIST скрипта + BUG-002 (test_debt).
+   нарушения test_smoke.py — в ALLOWLIST скрипта + AT-BUG-002 (test_debt).
 
 ## Этап 3 — Возврат к Фазе 3 (автоматизация)
 

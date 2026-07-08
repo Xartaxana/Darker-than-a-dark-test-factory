@@ -145,8 +145,40 @@ def test_automation_status_on_non_automated_warns(repo, schemas):
 
 def test_test_debt_without_kind_warns(repo, schemas):
     """B4: категория долга нужна для digest."""
-    repo.bug("BUG-054", "Open", extra="type: test_debt\n")
+    repo.bug("AT-BUG-054", "Open", extra="type: test_debt\n")
 
     errors, warns = vf.validate()
     assert errors == []
     assert any("debt_kind" in w for w in warns)
+
+
+def test_test_debt_without_at_prefix_is_error(repo, schemas):
+    """Конвенция 2026-07-08: type: test_debt требует префикс AT-BUG-, иначе баг
+    ошибочно уйдёт внешней команде разработки вместо фабрики."""
+    repo.bug("BUG-070", "Open", extra="type: test_debt\ndebt_kind: flaky_test\n")
+
+    errors, _warns = vf.validate()
+    assert any("BUG-070" in e and "AT-BUG-" in e for e in errors)
+
+
+def test_at_prefix_without_test_debt_is_error(repo, schemas):
+    """Обратное направление: префикс AT-BUG- без type: test_debt — тоже ошибка."""
+    repo.bug("AT-BUG-071", "Open")
+
+    errors, _warns = vf.validate()
+    assert any("AT-BUG-071" in e and "test_debt" in e for e in errors)
+
+
+def test_valid_test_debt_prefix_pair_is_clean(repo, schemas):
+    repo.bug("AT-BUG-072", "Open", extra="type: test_debt\ndebt_kind: flaky_test\n")
+
+    errors, _warns = vf.validate()
+    assert errors == []
+
+
+def test_valid_app_bug_prefix_pair_is_clean(repo, schemas):
+    """app_bug (или отсутствие type — обратная совместимость) с обычным BUG- — ок."""
+    repo.bug("BUG-073", "Open")
+
+    errors, _warns = vf.validate()
+    assert errors == []

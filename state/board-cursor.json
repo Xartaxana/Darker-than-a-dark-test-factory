@@ -274,22 +274,22 @@
     "artifact_status": "Review",
     "board_status": "Review"
   },
-  "BUG-001": {
-    "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
-  },
-  "BUG-002": {
+  "AT-BUG-002": {
     "itype": "bug",
     "artifact_status": "Verified",
     "board_status": "Verified"
   },
-  "BUG-003": {
+  "AT-BUG-003": {
     "itype": "bug",
     "artifact_status": "Open",
     "board_status": "Open"
   },
-  "BUG-004": {
+  "AT-BUG-004": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "BUG-001": {
     "itype": "bug",
     "artifact_status": "Open",
     "board_status": "Open"

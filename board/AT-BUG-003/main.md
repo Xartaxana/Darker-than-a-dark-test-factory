@@ -1,26 +1,30 @@
 ---
-id: BUG-003
-title: "Кейсы, автоматизированные до гейта F1 (TC-007/008/016/017), не несут полей жизненного цикла B3 (automation_status/reviewed_by/reviewed_at)"
-type: test_debt
-debt_kind: missing_evidence
-severity: minor
-status: Open
-found_in: "F1-ревью батча browser TC-050..055, 2026-07-08 (test-reviewer, аналог по D-0037)"
-fixed_in: ""
-last_seen_in: ""
-test_cases: ["TC-007", "TC-008", "TC-016", "TC-017"]
-runs: []
-duplicates: []
-regression_of: ""
-status_since: "2026-07-08T15:25:00Z"
+key: "AT-BUG-003"
+project: "AO3"
+issueType: "bug"
+status: "bug-open"
+priority: "p2"
+summary: "Кейсы, автоматизированные до гейта F1 (TC-007/008/016/017), не несут полей жизненного цикла B3 (automation_status/reviewed_by/reviewed_at)"
+assignee: "qa-agents"
+reporter: "qa-agents"
+labels: ["bug", "test_case:TC-007", "test_case:TC-008", "test_case:TC-016", "test_case:TC-017", "sev:minor"]
+components: []
+fixVersions: []
+watchers: []
+parent: null
+epic: null
+created: "2026-07-08T15:25:00Z"
 updated: "2026-07-08T15:25:00Z"
-reopen_count: 0
-dispute_count: 0
-awaiting: none
-lock: ""
+archived: false
+resolution: null
 ---
 
-# BUG-003 — Automated-кейсы до гейта F1 без полей жизненного цикла B3
+# Кейсы, автоматизированные до гейта F1 (TC-007/008/016/017), не несут полей жизненного цикла B3 (automation_status/reviewed_by/reviewed_at)
+
+_Спроецировано из `bugs/AT-BUG-003.md` (источник правды).
+Статус в нашей машине: **Open**._
+
+# AT-BUG-003 — Automated-кейсы до гейта F1 без полей жизненного цикла B3
 
 ## Окружение
 - Не зависит от сборки приложения: долг метаданных тестовой системы
@@ -39,7 +43,7 @@ lock: ""
 2. `reviewed_by` / `reviewed_at` — нет свидетельства ревью автотеста.
 
 Смоук-кейсы TC-001..005 при проверке тоже сверить: тот же класс «Automated до
-гейта» (их тесты чинились по BUG-002 и верифицированы, но поля B3 могли не
+гейта» (их тесты чинились по AT-BUG-002 и верифицированы, но поля B3 могли не
 проставляться).
 
 ## Критерий готовности (Fixed)
@@ -56,7 +60,7 @@ lock: ""
 ## Анализ
 
 Не регрессия, а легализация кейсов, созданных до машины B3 (тот же паттерн,
-что BUG-002 для arch_check/C1). Чинит test-maintainer по правилу «Устранить
+что AT-BUG-002 для arch_check/C1). Чинит test-maintainer по правилу «Устранить
 test debt» (B4); Fixed не ждёт сборку приложения. Решение «бэкфилл пометкой
 vs фактическое F1-ревью задним числом» — за исполнителем с докладом Lead.
 

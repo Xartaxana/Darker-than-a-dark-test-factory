@@ -1,7 +1,13 @@
-# Схема frontmatter бага (G3, docs/09). Поля матрицы D1–D12 (docs/06 §2) опциональны —
+# Схема frontmatter бага (G3, docs/09). Поля матрицы D1–D12 (докс/06 §2) опциональны —
 # вставляются агентами/board_inbound по мере переходов.
+#
+# Конвенция ID (решение оператора 2026-07-08): `BUG-xxx` — баг ПРИЛОЖЕНИЯ
+# (type: app_bug или поле type отсутствует — уходит внешней команде разработки);
+# `AT-BUG-xxx` — баг/долг ТЕСТОВОЙ СИСТЕМЫ (type: test_debt, чинит сама фабрика).
+# Нумерация сквозная для обоих префиксов (общий счётчик, не два раздельных).
+# Кросс-чек префикс<->type — scripts/validate_frontmatter.py (check_cross_field).
 type: bug
-id_pattern: "^BUG-\\d{3,}$"
+id_pattern: "^(AT-)?BUG-\\d{3,}$"
 required: [id, title, severity, status, updated]
 fields:
   severity: { enum: [blocker, critical, major, minor] }
@@ -12,7 +18,7 @@ fields:
   awaiting: { enum: [dev, qa, none] }
   reopen_count:  { pattern: "^\\d+$" }
   dispute_count: { pattern: "^\\d+$" }
-  regression_of: { pattern: "^BUG-\\d{3,}$" }
+  regression_of: { pattern: "^(AT-)?BUG-\\d{3,}$" }
   last_seen_in: {}
   found_in: {}
   fixed_in: {}

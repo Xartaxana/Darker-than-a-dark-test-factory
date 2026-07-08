@@ -1,5 +1,10 @@
 ---
-id: BUG-000
+id: BUG-000            # Конвенция ID (2026-07-08): BUG-xxx = app_bug (внешняя команда
+                       # разработки); AT-BUG-xxx = test_debt (чинит фабрика). Префикс
+                       # должен совпадать с `type` (validate_frontmatter.py — ERROR
+                       # в обе стороны). Нумерация СКВОЗНАЯ для обоих префиксов —
+                       # общий счётчик, не два раздельных (для test_debt id будет
+                       # выглядеть как AT-BUG-000).
 title: Краткая формулировка дефекта (что сломано, где)
 type: app_bug          # app_bug | test_debt (B4: долг тестовой системы — flaky/slow/фикстуры/локаторы; чинит фабрика, Fixed не ждёт сборку)
 debt_kind: ""          # только для test_debt: flaky_test | slow_test | missing_fixture | weak_locator | obsolete_test_case | missing_evidence | broken_environment

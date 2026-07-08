@@ -1,5 +1,5 @@
 ---
-key: "BUG-002"
+key: "AT-BUG-002"
 project: "AO3"
 issueType: "bug"
 status: "bug-verified"
@@ -21,10 +21,10 @@ resolution: "done"
 
 # test_smoke.py нарушает архитектуру фреймворка: локаторы/импорты screens в tests/, 5 тестов без @allure.id
 
-_Спроецировано из `bugs/BUG-002.md` (источник правды).
+_Спроецировано из `bugs/AT-BUG-002.md` (источник правды).
 Статус в нашей машине: **Verified**._
 
-# BUG-002 — test_smoke.py нарушает архитектуру фреймворка (C1)
+# AT-BUG-002 — test_smoke.py нарушает архитектуру фреймворка (C1)
 
 ## Окружение
 - Не зависит от сборки приложения: долг тестовой системы (`type: test_debt`),

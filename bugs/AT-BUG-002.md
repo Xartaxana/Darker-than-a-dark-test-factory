@@ -1,5 +1,5 @@
 ---
-id: BUG-002
+id: AT-BUG-002
 title: "test_smoke.py нарушает архитектуру фреймворка: локаторы/импорты screens в tests/, 5 тестов без @allure.id"
 type: test_debt
 debt_kind: weak_locator
@@ -20,7 +20,7 @@ awaiting: none
 lock: ""
 ---
 
-# BUG-002 — test_smoke.py нарушает архитектуру фреймворка (C1)
+# AT-BUG-002 — test_smoke.py нарушает архитектуру фреймворка (C1)
 
 ## Окружение
 - Не зависит от сборки приложения: долг тестовой системы (`type: test_debt`),

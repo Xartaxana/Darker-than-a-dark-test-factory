@@ -104,6 +104,21 @@ def check_cross_field(meta: dict, schema: dict, rel: str) -> list[str]:
                 errors.append(
                     f"{rel}: automation_status quarantined без `{f}` "
                     f"(B3: карантин не бывает бесконечным и безымянным)")
+    # Конвенция ID (2026-07-08): AT-BUG-xxx <-> type: test_debt — префикс и тип
+    # должны совпадать в обе стороны, иначе баг попадает не в ту очередь
+    # (внешняя команда разработки vs фабрика).
+    if schema.get("type") == "bug":
+        bug_id = _s(meta.get("id"))
+        is_test_debt = _s(meta.get("type")) == "test_debt"
+        is_at_prefixed = bug_id.startswith("AT-BUG-")
+        if is_test_debt and not is_at_prefixed:
+            errors.append(
+                f"{rel}: `type: test_debt` требует id с префиксом `AT-BUG-` "
+                f"(получено `{bug_id}`) — иначе баг ошибочно уйдёт внешней команде")
+        if is_at_prefixed and not is_test_debt:
+            errors.append(
+                f"{rel}: id `{bug_id}` с префиксом `AT-BUG-` требует "
+                f"`type: test_debt` (получено `{_s(meta.get('type')) or '(нет)'}`)")
     return errors
 
 

@@ -1,6 +1,6 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-08T16:15:26Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-07-08T16:43:31Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Сборка под тестом
@@ -38,8 +38,8 @@ generated_at: 2026-07-08T16:15:26Z · генератор: `scripts/queue_snapsho
 
 ## Test debt (2)
 
-- BUG-003 [missing_evidence] Open — Кейсы, автоматизированные до гейта F1 (TC-007/008/016/017), не несут полей жизненного цикла B3 (automation_status/reviewed_by/reviewed_at)
-- BUG-004 [missing_fixture] Open — Replay-инфраструктура не доведена: нет записей work/листинг-страниц и mitm-фикстуры в conftest — блокирует автоматизацию 10 P0/P1 кейсов
+- AT-BUG-003 [missing_evidence] Open — Кейсы, автоматизированные до гейта F1 (TC-007/008/016/017), не несут полей жизненного цикла B3 (automation_status/reviewed_by/reviewed_at)
+- AT-BUG-004 [missing_fixture] Open — Replay-инфраструктура не доведена: нет записей work/листинг-страниц и mitm-фикстуры в conftest — блокирует автоматизацию 10 P0/P1 кейсов
 
 ## Прогоны (1)
 

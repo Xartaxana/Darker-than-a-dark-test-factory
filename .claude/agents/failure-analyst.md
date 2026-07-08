@@ -44,7 +44,9 @@ tools: Read, Grep, Glob, Bash, Write, Edit
    `automation_status: quarantined` + ОБЯЗАТЕЛЬНО `quarantine_reason`,
    `quarantine_since` (сейчас, ISO), `quarantine_owner: test-maintainer`;
    `quarantine_expiry` можно не ставить (сработает `sla.quarantine_max`).
-   Затем заведи долг: `bugs/BUG-xxx.md` по шаблону bug-report с `type: test_debt`,
+   Затем заведи долг: `bugs/AT-BUG-xxx.md` по шаблону bug-report (конвенция ID
+   2026-07-08: `AT-BUG-` — долг тестовой системы, чинит фабрика; нумерация
+   сквозная с `BUG-`, не отдельный счётчик) с `type: test_debt`,
    `debt_kind: flaky_test`, ссылкой на TC и прогоны с наблюдениями (B3/B4) —
    его подхватит правило «Устранить test debt» (test-maintainer).
 7. Впиши вердикты в таблицу отчёта, переведи прогон в `status: Triaged`.
