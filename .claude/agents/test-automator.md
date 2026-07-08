@@ -26,7 +26,11 @@ tools: Read, Glob, Grep, Write, Edit, Bash
    именно МЕСТО РЕНДЕРА, а не только определение строки (ищи `.uppercase()`,
    `AnimatedVisibility`/условия видимости, `contentDescription`, на каком узле висит
    клик); затем верификация по живому дереву (page_source). Скриншот — последнее
-   средство. Помни особенности Compose: клик часто на родителе текстового узла,
+   средство. Живое дерево смотри через `python scripts/ui_snapshot.py` (компактная
+   ref-проекция: только значимые узлы вместо полного XML-дампа на десятки КБ) —
+   сырой page_source/uiautomator-дамп в контекст не тяни без причины; `--ref eN`
+   сразу даёт готовые локаторы-кандидаты (content-desc/text/XPath + tap-фолбэк).
+   Помни особенности Compose: клик часто на родителе текстового узла,
    `UiScrollable` может не видеть Compose-контейнер (используй `swipe_to_text`).
 3. Напиши тест в `framework/tests/`, пометь `@allure.id("TC-xxx")` и `@pytest.mark.pN`
    (+ `live`/`replay` при необходимости).

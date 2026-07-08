@@ -6,3 +6,5 @@
 {"ts":"2026-07-08T00:15:48","event":"delegated","agent":"builder","category":"implementation","notes":"board_view/board_server: бейдж assignee/wip на карточке живой доски (решение владельца)"}
 {"ts":"2026-07-08T00:39:05","event":"delegated","agent":"builder","category":"implementation","notes":"борда: производная колонка 'Ждёт ревью' (Approved+automated_by) в board_sync/board_view (решение владельца, не лейблами)"}
 {"ts":"2026-07-08T09:42:53","event":"accepted","agent":"builder","category":"implementation","notes":"колонка Awaiting Review принята: 200 passed, TC-050..055 в новой колонке на живой доске и в board/, STATUS_MAP не тронут (проекция)"}
+{"ts":"2026-07-08T09:49:19","event":"delegated","agent":"builder","category":"implementation","notes":"scripts/ui_snapshot.py: компактная ref-проекция UI-дерева (идея agent-browser) + правило в промпты automator/maintainer + self-tests"}
+{"ts":"2026-07-08T09:58:05","event":"accepted","agent":"builder","category":"implementation","notes":"ui_snapshot принят: 226 passed (+26), демо на фикстуре корректно (7/11 узлов, by_desc/XPath/tap кандидаты); правило добавлено в промпты automator/maintainer"}
