@@ -7,14 +7,14 @@ priority: "p0"
 summary: "Comment-only запись (rating=null) не появляется ни в одной рейтинговой вкладке Library"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:library", "risk:R-04"]
+labels: ["test-case", "area:library", "risk:R-04", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-03T00:55:00Z"
-updated: "2026-07-03T00:55:00Z"
+created: "2026-07-08T23:15:00Z"
+updated: "2026-07-08T23:15:00Z"
 archived: false
 resolution: "done"
 ---
@@ -69,3 +69,7 @@ DISLIKED экрана Library
 `seed_db.seed_with_comment` — `rating=None`, `comment="test note"`). Не требует
 живого AO3 (нет навигации на страницу работы). 3/3 стабильных зелёных прогона
 подряд (плюс полный P0 smoke 17/17 без регрессий).
+
+## B3-поля (test-maintainer, 2026-07-08, AT-BUG-003)
+Автоматизирован до гейта F1 (B3-поля бэкфилл, ревью задним числом не проводилось).
+`automation_status: active` проставлен по факту (тест живёт в suite и зелёный).

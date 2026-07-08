@@ -459,9 +459,10 @@
     "labels": [
       "test-case",
       "area:library",
-      "risk:R-04"
+      "risk:R-04",
+      "automation:active"
     ],
-    "updated": "2026-07-02T21:20:00Z",
+    "updated": "2026-07-08T23:15:00Z",
     "resolution": "done",
     "children": [],
     "archived": false
@@ -481,9 +482,10 @@
     "labels": [
       "test-case",
       "area:library",
-      "risk:R-04"
+      "risk:R-04",
+      "automation:active"
     ],
-    "updated": "2026-07-03T00:55:00Z",
+    "updated": "2026-07-08T23:15:00Z",
     "resolution": "done",
     "children": [],
     "archived": false
@@ -613,9 +615,10 @@
     "labels": [
       "test-case",
       "area:rating",
-      "risk:R-04"
+      "risk:R-04",
+      "automation:active"
     ],
-    "updated": "2026-07-03T00:55:00Z",
+    "updated": "2026-07-08T23:15:00Z",
     "resolution": "done",
     "children": [],
     "archived": false
@@ -635,9 +638,10 @@
     "labels": [
       "test-case",
       "area:rating",
-      "risk:R-04"
+      "risk:R-04",
+      "automation:active"
     ],
-    "updated": "2026-07-03T00:55:00Z",
+    "updated": "2026-07-08T23:15:00Z",
     "resolution": "done",
     "children": [],
     "archived": false
@@ -943,9 +947,10 @@
     "labels": [
       "test-case",
       "area:smoke",
-      "risk:R-03"
+      "risk:R-03",
+      "automation:active"
     ],
-    "updated": "2026-07-02T03:00:00Z",
+    "updated": "2026-07-08T23:15:00Z",
     "resolution": "done",
     "children": [],
     "archived": false
@@ -964,9 +969,10 @@
     "assignee": "qa-agents",
     "labels": [
       "test-case",
-      "area:smoke"
+      "area:smoke",
+      "automation:active"
     ],
-    "updated": "2026-07-02T03:00:00Z",
+    "updated": "2026-07-08T23:15:00Z",
     "resolution": "done",
     "children": [],
     "archived": false
@@ -986,9 +992,10 @@
     "labels": [
       "test-case",
       "area:library",
-      "risk:R-04"
+      "risk:R-04",
+      "automation:active"
     ],
-    "updated": "2026-07-02T03:00:00Z",
+    "updated": "2026-07-08T23:15:00Z",
     "resolution": "done",
     "children": [],
     "archived": false
@@ -1008,9 +1015,10 @@
     "labels": [
       "test-case",
       "area:settings",
-      "risk:R-01"
+      "risk:R-01",
+      "automation:active"
     ],
-    "updated": "2026-07-02T03:00:00Z",
+    "updated": "2026-07-08T23:15:00Z",
     "resolution": "done",
     "children": [],
     "archived": false
@@ -1029,9 +1037,10 @@
     "assignee": "qa-agents",
     "labels": [
       "test-case",
-      "area:settings"
+      "area:settings",
+      "automation:active"
     ],
-    "updated": "2026-07-02T03:00:00Z",
+    "updated": "2026-07-08T23:15:00Z",
     "resolution": "done",
     "children": [],
     "archived": false
@@ -1247,18 +1256,23 @@
     "epicPath": null,
     "summary": "Кейсы, автоматизированные до гейта F1 (TC-007/008/016/017), не несут полей жизненного цикла B3 (automation_status/reviewed_by/reviewed_at)",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
+      "test_case:TC-001",
+      "test_case:TC-002",
+      "test_case:TC-003",
+      "test_case:TC-004",
+      "test_case:TC-005",
       "test_case:TC-007",
       "test_case:TC-008",
       "test_case:TC-016",
       "test_case:TC-017",
       "sev:minor"
     ],
-    "updated": "2026-07-08T15:25:00Z",
+    "updated": "2026-07-08T23:20:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1289,7 +1303,7 @@
       "test_case:TC-045",
       "sev:major"
     ],
-    "updated": "2026-07-08T19:00:00Z",
+    "updated": "2026-07-08T23:55:00Z",
     "resolution": null,
     "children": [],
     "archived": false

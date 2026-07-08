@@ -7,14 +7,14 @@ priority: "p0"
 summary: "Повторный тап по выбранному рейтингу снимает его (deselect) на панели работы"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:rating", "risk:R-04"]
+labels: ["test-case", "area:rating", "risk:R-04", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-03T00:55:00Z"
-updated: "2026-07-03T00:55:00Z"
+created: "2026-07-08T23:15:00Z"
+updated: "2026-07-08T23:15:00Z"
 archived: false
 resolution: "done"
 ---
@@ -79,3 +79,7 @@ comment-only (не исчезает полностью из Library/Downloads т
 вкладку Browse после проверки Library и перед повторным тапом — `RatingMenu`
 (`WorkRatingPanel`) рендерится только когда `selectedTab == AppTab.BROWSE` (см.
 `BottomBar.kt`), тот же приём, что уже применялся в TC-016.
+
+## B3-поля (test-maintainer, 2026-07-08, AT-BUG-003)
+Автоматизирован до гейта F1 (B3-поля бэкфилл, ревью задним числом не проводилось).
+`automation_status: active` проставлен по факту (тест живёт в suite и зелёный).

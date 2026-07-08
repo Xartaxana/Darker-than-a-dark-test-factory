@@ -7,14 +7,14 @@ priority: "p0"
 summary: "Запуск приложения и загрузка AO3 в WebView"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:smoke", "risk:R-03"]
+labels: ["test-case", "area:smoke", "risk:R-03", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T03:00:00Z"
-updated: "2026-07-02T03:00:00Z"
+created: "2026-07-08T23:15:00Z"
+updated: "2026-07-08T23:15:00Z"
 archived: false
 resolution: "done"
 ---
@@ -33,3 +33,7 @@ _Спроецировано из `test-cases/smoke/TC-001.md` (источник 
 
 ## Заметки
 Live-режим. Cloudflare bot-check не влияет — проверяется домен активной страницы.
+
+## B3-поля (test-maintainer, 2026-07-08, AT-BUG-003)
+Автоматизирован до гейта F1 (B3-поля бэкфилл, ревью задним числом не проводилось).
+`automation_status: active` проставлен по факту (тест живёт в suite и зелёный).
