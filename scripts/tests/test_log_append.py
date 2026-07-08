@@ -32,9 +32,9 @@ def test_routing_appends_json_line_with_ts(logs):
     assert rec["ts"].startswith("20") and "T" in rec["ts"]
 
 
-def test_routing_model_required_for_delegated_escalated_accepted(logs):
+def test_routing_model_required_for_delegated_escalated_accepted_rejected(logs):
     routing, _ = logs
-    for event in ("delegated", "escalated", "accepted"):
+    for event in ("delegated", "escalated", "accepted", "rejected"):
         with pytest.raises(SystemExit):
             la.append_routing(event, "builder")
     assert not routing.exists()
@@ -53,7 +53,7 @@ def test_routing_events_match_claude_md_policy(logs):
     # Расхождение = скрипт молча отклоняет легитимное событие (прецедент:
     # dispatch_skipped, 2026-07-08).
     assert la.ROUTING_EVENTS == {
-        "delegated", "accepted", "escalated", "decomposable",
+        "delegated", "accepted", "rejected", "escalated", "decomposable",
         "dispatch_skipped", "lead_degraded", "lead_restored",
     }
 
