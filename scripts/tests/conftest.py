@@ -20,6 +20,7 @@ if str(SCRIPTS_DIR) not in sys.path:
 
 import board_sync as bs          # noqa: E402
 import board_inbound as bi       # noqa: E402
+import board_view as bv          # noqa: E402
 import stale_locks as sl         # noqa: E402
 import sla_sweep as ss           # noqa: E402
 import build_watch as bw         # noqa: E402
@@ -131,6 +132,12 @@ def repo(tmp_path, monkeypatch) -> Repo:
     monkeypatch.setattr(bi, "BOARD", root / "board", raising=True)
     monkeypatch.setattr(bi, "CURSOR_PATH", root / "state" / "board-cursor.json", raising=True)
     monkeypatch.setattr(bi, "ESCALATIONS_PATH", root / "state" / "escalations.md", raising=True)
+    # board_view импортирует REPO из board_sync через `from board_sync import REPO` —
+    # это копия значения на момент импорта, а не ссылка на bs.REPO, поэтому патчим
+    # отдельно (иначе collect() ищет артефакты в tmp_path, но src.relative_to(REPO)
+    # сверяет их с реальным REPO и падает).
+    monkeypatch.setattr(bv, "REPO", root, raising=True)
+    monkeypatch.setattr(bv, "OUT", root / "board-view.html", raising=True)
     monkeypatch.setattr(sl, "REPO", root, raising=True)
     monkeypatch.setattr(sl, "SLA_PATH", root / "state" / "sla.yaml", raising=True)
     monkeypatch.setattr(sl, "ORCH_LOG", root / "state" / "orchestrator-log.md", raising=True)

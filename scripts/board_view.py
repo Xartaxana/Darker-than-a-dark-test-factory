@@ -15,7 +15,7 @@ import json
 from pathlib import Path
 
 from board_sync import (  # переиспользуем парсер и метаданные статусов — один источник
-    REPO, STATUSES, STATUS_MAP, _iter_artifacts, _labels_for, _priority_for,
+    REPO, STATUSES, STATUS_MAP, _assignee_for, _iter_artifacts, _labels_for, _priority_for,
 )
 
 OUT = REPO / "board-view.html"
@@ -36,6 +36,7 @@ def collect():
     by_type: dict[str, list[dict]] = {"test-case": [], "bug": [], "run": []}
     for itype, meta, body, src in _iter_artifacts():
         status_id = STATUS_MAP[itype].get(str(meta.get("status", "")))
+        lock = str(meta.get("lock") or "").strip()
         by_type[itype].append({
             "key": str(meta["id"]),
             "itype": itype,
@@ -44,6 +45,9 @@ def collect():
             "status_name": STATUS_NAME.get(status_id, str(meta.get("status"))),
             "priority": _priority_for(itype, meta).upper(),
             "labels": _labels_for(itype, meta),
+            # Пустой lock -> None: бейдж "кто работает" на карточке рисуем ТОЛЬКО
+            # при непустом lock (qa-agents по умолчанию не шумит, см. board_sync).
+            "assignee": _assignee_for(meta) if lock else None,
             "src": src.relative_to(REPO).as_posix(),
             "body": body.strip(),
         })
@@ -82,11 +86,19 @@ def render(by_type, live: bool = False) -> str:
                     "summary": t["summary"], "body": t["body"], "src": t["src"],
                     "status": t["status_name"], "priority": t["priority"],
                 }
+
+            def agent_badge(t):
+                if not t["assignee"]:
+                    return ""
+                return (f'<div class="agentrow"><span class="agent" '
+                        f'title="в работе: {esc(t["assignee"])}">⚙ {esc(t["assignee"])}</span></div>')
+
             card_html = "".join(
                 f'<div class="card" data-pri="{esc(t["priority"])}" data-key="{esc(t["key"])}" '
                 f'title="{esc(t["src"])}" onclick="openDetail(event, \'{esc(t["key"])}\')">'
                 f'<div class="k">{esc(t["key"])} {pri_widget(t)}</div>'
                 f'<div class="s">{esc(t["summary"])}</div>'
+                f'{agent_badge(t)}'
                 f'<div class="lbls">{"".join(f"<span>{esc(l)}</span>" for l in t["labels"][:4])}</div>'
                 + (f'<button class="approve" onclick="event.stopPropagation(); approveCard(\'{esc(t["key"])}\', this)">✓ Approve</button>'
                    if live and t["itype"] == "test-case" and t["status_name"] == "Review" else "")
@@ -131,6 +143,8 @@ h2{{margin:26px 0 10px;font-size:16px}} .cnt{{color:#888;font-weight:normal}}
 .pP0{{background:#c0392b;color:#fff}}.pP1{{background:#e08600;color:#fff}}.pP2{{background:#dfd8cf;color:#333}}.pP3{{background:#eee;color:#777}}
 .pri-select{{border:none;font:700 10px system-ui;cursor:pointer;appearance:none;-webkit-appearance:none}}
 .lbls span{{display:inline-block;font-size:10px;color:#777;background:#f1ece7;border-radius:6px;padding:0 5px;margin:2px 3px 0 0}}
+.agentrow{{margin-top:3px}}
+.agent{{display:inline-block;font-size:10px;font-weight:600;color:#fff;background:#5b3fa0;border-radius:8px;padding:1px 6px}}
 .empty{{color:#bbb;text-align:center;padding:6px}}
 .refresh{{font:600 13px system-ui;cursor:pointer;border:1px solid #c94;background:#c0392b;color:#fff;border-radius:6px;padding:7px 14px;margin-left:12px}}
 .refresh:hover{{background:#a93226}} .refresh:active{{transform:translateY(1px)}}

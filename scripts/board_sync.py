@@ -19,6 +19,8 @@ import shutil
 import sys
 from pathlib import Path
 
+import yaml
+
 # Windows-консоль (cp1251) искажает кириллицу в print — форсируем UTF-8.
 try:
     sys.stdout.reconfigure(encoding="utf-8")
@@ -28,6 +30,11 @@ except (AttributeError, ValueError):
 REPO = Path(__file__).resolve().parents[1]
 BOARD = REPO / "board"
 PROJECT_KEY = "AO3"
+
+# Матрица переходов (единый источник правды, schemas/transitions.yaml) — путь
+# считается ОДИН раз при импорте и НЕ следует за монкипатчем bs.REPO в тестах:
+# схема — часть кода/спеки, а не артефакт, который тесты подменяют на tmp_path.
+TRANSITIONS_PATH = REPO / "schemas" / "transitions.yaml"
 
 # --- Конфиг борды (отражает НАШИ статусные машины) ---
 
@@ -44,6 +51,7 @@ STATUSES = [
     ("tc-review", "Review", "indeterminate"),
     ("tc-approved", "Approved", "indeterminate"),
     ("tc-automated", "Automated", "done"),
+    ("tc-blocked", "Blocked", "indeterminate"),
     # bug
     ("bug-open", "Open", "new"),
     ("bug-reopened", "Reopened", "new"),
@@ -56,44 +64,38 @@ STATUSES = [
     ("run-needstriage", "NeedsTriage", "new"),
     ("run-triaged", "Triaged", "indeterminate"),
     ("run-closed", "Closed", "done"),
+    ("run-blocked", "Blocked", "indeterminate"),
 ]
 
+# Статические поля воркфлоу (name/statuses) — колонки. Кнопки-переходы больше
+# НЕ хардкодятся: build() генерирует их из schemas/transitions.yaml (via_board),
+# см. _board_transitions_for_machine/_workflows_config — единый источник правды.
 WORKFLOWS = {
     "test-workflow": {
         "name": "Test Case Workflow",
-        "statuses": ["tc-draft", "tc-review", "tc-approved", "tc-automated"],
-        "transitions": [
-            {"id": "tc-submit", "name": "Submit for review", "from": "tc-draft", "to": "tc-review"},
-            {"id": "tc-approve", "name": "Approve", "from": "tc-review", "to": "tc-approved"},
-            {"id": "tc-automate", "name": "Automated", "from": "tc-approved", "to": "tc-automated"},
-        ],
+        "statuses": ["tc-draft", "tc-review", "tc-approved", "tc-automated", "tc-blocked"],
+        "machine": "test-case",
     },
     "bug-workflow": {
         "name": "Bug Workflow",
         "statuses": ["bug-open", "bug-fixed", "bug-verified", "bug-reopened", "bug-blocked", "bug-rejected", "bug-intended"],
-        "transitions": [
-            {"id": "bug-fix", "name": "Mark fixed (человек)", "from": "bug-open", "to": "bug-fixed"},
-            {"id": "bug-verify", "name": "Verify fix", "from": "bug-fixed", "to": "bug-verified"},
-            {"id": "bug-reopen", "name": "Reopen", "from": "bug-fixed", "to": "bug-reopened"},
-            {"id": "bug-reject", "name": "Reject / Intended", "from": "bug-open", "to": "bug-rejected"},
-        ],
+        "machine": "bug",
     },
     "run-workflow": {
         "name": "Test Run Workflow",
-        "statuses": ["run-needstriage", "run-triaged", "run-closed"],
-        "transitions": [
-            {"id": "run-triage", "name": "Triaged", "from": "run-needstriage", "to": "run-triaged"},
-            {"id": "run-close", "name": "Close", "from": "run-triaged", "to": "run-closed"},
-        ],
+        "statuses": ["run-needstriage", "run-triaged", "run-closed", "run-blocked"],
+        "machine": "run",
     },
 }
 
 # Наш статус (в YAML артефакта) -> id статуса TrackState, по типу артефакта
 STATUS_MAP = {
-    "test-case": {"Draft": "tc-draft", "Review": "tc-review", "Approved": "tc-approved", "Automated": "tc-automated"},
+    "test-case": {"Draft": "tc-draft", "Review": "tc-review", "Approved": "tc-approved",
+                  "Automated": "tc-automated", "Blocked": "tc-blocked"},
     "bug": {"Open": "bug-open", "Reopened": "bug-reopened", "Blocked": "bug-blocked", "Fixed": "bug-fixed",
             "Verified": "bug-verified", "Rejected": "bug-rejected", "Intended": "bug-intended"},
-    "run": {"NeedsTriage": "run-needstriage", "Triaged": "run-triaged", "Closed": "run-closed"},
+    "run": {"NeedsTriage": "run-needstriage", "Triaged": "run-triaged", "Closed": "run-closed",
+            "Blocked": "run-blocked"},
 }
 
 PRIORITIES = [{"id": "p0", "name": "P0"}, {"id": "p1", "name": "P1"},
@@ -166,7 +168,34 @@ def _labels_for(itype: str, meta: dict) -> list[str]:
             labels += [f"{k[:-1] if k.endswith('s') else k}:{x}" for x in v]
     if itype == "bug" and meta.get("severity"):
         labels.append(f"sev:{meta['severity']}")
+    if itype == "test-case":
+        # B3/F1 (docs/09): вторые машины на артефакте test-case (automation_status,
+        # review) невидимы в основном статусе борды — проецируем их в labels.
+        if meta.get("automation_status"):
+            labels.append(f"automation:{meta['automation_status']}")
+        if meta.get("review"):
+            labels.append(f"review:{meta['review']}")
     return labels
+
+
+def _assignee_for(meta: dict) -> str:
+    """Проекция frontmatter `lock` на assignee борды (без изменения частоты сборки).
+
+    - lock пуст/отсутствует -> "qa-agents" (как раньше).
+    - lock содержит ":" (агентский лок "<agent>:<ISO-timestamp>") -> часть до первого ":".
+    - lock без ":" (ручной лок человека, напр. "wip") -> значение целиком.
+    """
+    lock = str(meta.get("lock") or "").strip()
+    if not lock:
+        return "qa-agents"
+    return lock.split(":", 1)[0]
+
+
+def _wip_label_for(meta: dict) -> str | None:
+    lock = str(meta.get("lock") or "").strip()
+    if not lock:
+        return None
+    return f"wip:{_assignee_for(meta)}"
 
 
 def approve_test_case(key: str) -> tuple[bool, str]:
@@ -210,6 +239,49 @@ def set_priority(key: str, priority: str) -> tuple[bool, str]:
     return False, f"{key}: не найден среди test-case"
 
 
+def _load_transitions_matrix() -> dict:
+    return yaml.safe_load(TRANSITIONS_PATH.read_text(encoding="utf-8")) or {}
+
+
+def _board_transitions_for_machine(matrix: dict, machine_key: str) -> list[dict]:
+    """Кнопки-переходы борды для машины `machine_key` (schemas/transitions.yaml).
+
+    Берём ТОЛЬКО правила с via_board: true; from: "*" разворачиваем в конкретные
+    статусы машины (кроме to-статуса — переход в себя не нужен). id/name
+    детерминированы, чтобы вывод был воспроизводим и сравним в self-test'ах."""
+    machine = (matrix.get("machines") or {}).get(machine_key) or {}
+    statuses = list(machine.get("statuses") or [])
+    out: list[dict] = []
+    for t in machine.get("transitions") or []:
+        if not t.get("via_board"):
+            continue
+        to = str(t["to"])
+        frm = str(t["from"])
+        froms = [s for s in statuses if s != to] if frm == "*" else [frm]
+        for f in froms:
+            out.append({
+                "id": f"{machine_key}-{f}-{to}".lower(),
+                "name": f"{f} → {to}",
+                "from": f,
+                "to": to,
+            })
+    return out
+
+
+def _workflows_config() -> dict:
+    """WORKFLOWS (name/statuses — колонки) + transitions (кнопки), сгенерированные
+    из schemas/transitions.yaml. Не мутирует модульный WORKFLOWS."""
+    matrix = _load_transitions_matrix()
+    cfg = {}
+    for wf_id, wf in WORKFLOWS.items():
+        cfg[wf_id] = {
+            "name": wf["name"],
+            "statuses": wf["statuses"],
+            "transitions": _board_transitions_for_machine(matrix, wf["machine"]),
+        }
+    return cfg
+
+
 def build():
     if BOARD.exists():
         shutil.rmtree(BOARD)
@@ -233,7 +305,7 @@ def build():
     (cfg / "issue-types.json").write_text(json.dumps(ISSUE_TYPES, indent=2), encoding="utf-8")
     (cfg / "statuses.json").write_text(json.dumps(
         [{"id": i, "name": n, "category": c} for i, n, c in STATUSES], indent=2), encoding="utf-8")
-    (cfg / "workflows.json").write_text(json.dumps(WORKFLOWS, indent=2), encoding="utf-8")
+    (cfg / "workflows.json").write_text(json.dumps(_workflows_config(), indent=2), encoding="utf-8")
     (cfg / "priorities.json").write_text(json.dumps(PRIORITIES, indent=2), encoding="utf-8")
     (cfg / "fields.json").write_text(json.dumps(FIELDS, indent=2), encoding="utf-8")
     (cfg / "components.json").write_text("[]", encoding="utf-8")
@@ -249,19 +321,32 @@ def build():
     # issues
     index = []
     count = 0
+    unmapped = []
     for itype, meta, body, src in _iter_artifacts():
         key = str(meta["id"])
-        status_id = STATUS_MAP[itype].get(str(meta.get("status", "")), STATUS_MAP[itype][next(iter(STATUS_MAP[itype]))])
+        status_str = str(meta.get("status", ""))
+        if status_str in STATUS_MAP[itype]:
+            status_id = STATUS_MAP[itype][status_str]
+        else:
+            fallback_status = next(iter(STATUS_MAP[itype]))
+            status_id = STATUS_MAP[itype][fallback_status]
+            unmapped.append((key, itype, status_str))
+            print(f"  [WARN] {key} ({itype}): статус «{status_str}» не в STATUS_MAP, "
+                  f"фолбэк на «{fallback_status}» ({status_id})")
         priority = _priority_for(itype, meta)
         summary = str(meta.get("title", key))
         updated = str(meta.get("updated") or meta.get("timestamp") or "2026-07-02T00:00:00Z")
         labels = _labels_for(itype, meta)
+        assignee = _assignee_for(meta)
+        wip_label = _wip_label_for(meta)
+        if wip_label:
+            labels.append(wip_label)
 
         issue_dir = BOARD / key
         issue_dir.mkdir(parents=True, exist_ok=True)
         fm = {
             "key": key, "project": PROJECT_KEY, "issueType": itype, "status": status_id,
-            "priority": priority, "summary": summary, "assignee": "qa-agents",
+            "priority": priority, "summary": summary, "assignee": assignee,
             "reporter": "qa-agents", "labels": labels, "components": [], "fixVersions": [],
             "watchers": [], "parent": None, "epic": None,
             "created": updated, "updated": updated, "archived": False,
@@ -274,7 +359,7 @@ def build():
         index.append({
             "key": key, "path": f"board/{key}/main.md", "parent": None, "epic": None,
             "parentPath": None, "epicPath": None, "summary": summary, "issueType": itype,
-            "status": status_id, "priority": priority, "assignee": "qa-agents",
+            "status": status_id, "priority": priority, "assignee": assignee,
             "labels": labels, "updated": updated,
             "resolution": fm["resolution"], "children": [], "archived": False,
         })
@@ -288,6 +373,9 @@ def build():
     # точка отсчёта, по которой обратный канал отличает правку человека от рассинхрона.
     _write_inbound_cursor()
 
+    if unmapped:
+        print(f"board_sync: {len(unmapped)} артефакт(ов) с немаппящимся статусом (см. [WARN] выше; "
+              f"валидация схем — не наша задача, см. validate_frontmatter.py)")
     print(f"board/ собрана: {count} тикетов ({sum(1 for i in index if i['issueType']=='test-case')} TC, "
           f"{sum(1 for i in index if i['issueType']=='bug')} bug, {sum(1 for i in index if i['issueType']=='run')} run)")
 

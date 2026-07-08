@@ -1,1 +1,6 @@
 {"ts":"2026-07-07T00:00:00","event":"journal_created","notes":"routing MVP deployed; assignments estimated (D-0028); weekly calibration reads this file + cc_usage"}
+{"ts":"2026-07-07T23:50:33","event":"delegated","agent":"builder","category":"implementation","notes":"board_sync.py: проекция lock -> assignee + label wip:<agent> (решение владельца, вариант 1); фон по D-0040"}
+{"ts":"2026-07-07T23:54:19","event":"accepted","agent":"builder","category":"implementation","notes":"board_sync lock->assignee+wip-label принят: 169 passed (было 165), спот-чек TC-050/TC-001/BUG-002 корректен"}
+{"ts":"2026-07-07T23:58:17","event":"delegated","agent":"builder","category":"implementation","notes":"board_sync: Blocked-колонки TC/run, генерация кнопок из via_board матрицы, явный warning вместо молчаливого фолбэка, labels automation/review + self-test паритета"}
+{"ts":"2026-07-08T00:04:52","event":"accepted","agent":"builder","category":"implementation","notes":"board_sync выравнивание с матрицей принято: 180 passed, кнопки=via_board (tc:6, bug:14, run:0), Blocked-колонки на месте, 0 warning на реальных артефактах"}
+{"ts":"2026-07-08T00:15:48","event":"delegated","agent":"builder","category":"implementation","notes":"board_view/board_server: бейдж assignee/wip на карточке живой доски (решение владельца)"}
