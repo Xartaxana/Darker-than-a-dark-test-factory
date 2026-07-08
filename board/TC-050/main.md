@@ -2,7 +2,7 @@
 key: "TC-050"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Contrast-иконка в side panel переключает тему мгновенно во всём UI (WebView + нативный)"
 assignee: "qa-agents"

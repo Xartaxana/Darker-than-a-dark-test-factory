@@ -2,7 +2,7 @@
 key: "TC-051"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "A+/A- в side panel меняют размер шрифта в WebView мгновенно и переживают рестарт"
 assignee: "qa-agents"

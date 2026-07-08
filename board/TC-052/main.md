@@ -2,7 +2,7 @@
 key: "TC-052"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Кнопки шрифта в side panel отключаются на границах диапазона (шаг 0 и 6)"
 assignee: "qa-agents"

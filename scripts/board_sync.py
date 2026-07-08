@@ -50,6 +50,9 @@ STATUSES = [
     ("tc-draft", "Draft", "new"),
     ("tc-review", "Review", "indeterminate"),
     ("tc-approved", "Approved", "indeterminate"),
+    # Производная колонка борды (НЕ статус схемы, НЕ в STATUS_MAP): Approved +
+    # заполненный automated_by = F1-гейт, ждёт test-reviewer. См. _board_status_for.
+    ("tc-awaiting-review", "Awaiting Review", "indeterminate"),
     ("tc-automated", "Automated", "done"),
     ("tc-blocked", "Blocked", "indeterminate"),
     # bug
@@ -73,7 +76,7 @@ STATUSES = [
 WORKFLOWS = {
     "test-workflow": {
         "name": "Test Case Workflow",
-        "statuses": ["tc-draft", "tc-review", "tc-approved", "tc-automated", "tc-blocked"],
+        "statuses": ["tc-draft", "tc-review", "tc-approved", "tc-awaiting-review", "tc-automated", "tc-blocked"],
         "machine": "test-case",
     },
     "bug-workflow": {
@@ -196,6 +199,30 @@ def _wip_label_for(meta: dict) -> str | None:
     if not lock:
         return None
     return f"wip:{_assignee_for(meta)}"
+
+
+def _board_status_for(itype: str, meta: dict) -> str | None:
+    """Производная колонка борды СВЕРХ обычного STATUS_MAP-маппинга — только
+    проекция отображения. Статусная машина test-case (schemas/transitions.yaml,
+    schemas/test-case.schema.yaml) НЕ меняется, "tc-awaiting-review" НЕ входит
+    в STATUS_MAP (иначе self-test «каждый enum схемы имеет маппинг» и смысл
+    STATUS_MAP как маппинга схемных статусов сломались бы).
+
+    F1 (docs/09): test-case со status=Approved и заполненным automated_by ждёт
+    ревью test-reviewer (гейт до Automated) — на борде это отдельная колонка
+    "Awaiting Review", хотя статусная машина всё ещё считает его Approved.
+    Кейс с review: changes_requested (доработка после ревью) остаётся в ЭТОЙ
+    ЖЕ колонке — он всё ещё в цикле ревью; label review:changes_requested
+    (см. _labels_for) различает подслучай, отдельной колонки не нужно.
+
+    Возвращает id новой колонки или None (= обычный STATUS_MAP-маппинг)."""
+    if itype != "test-case":
+        return None
+    if str(meta.get("status", "")) != "Approved":
+        return None
+    if not str(meta.get("automated_by") or "").strip():
+        return None
+    return "tc-awaiting-review"
 
 
 def approve_test_case(key: str) -> tuple[bool, str]:
@@ -333,6 +360,9 @@ def build():
             unmapped.append((key, itype, status_str))
             print(f"  [WARN] {key} ({itype}): статус «{status_str}» не в STATUS_MAP, "
                   f"фолбэк на «{fallback_status}» ({status_id})")
+        derived_status = _board_status_for(itype, meta)
+        if derived_status:
+            status_id = derived_status
         priority = _priority_for(itype, meta)
         summary = str(meta.get("title", key))
         updated = str(meta.get("updated") or meta.get("timestamp") or "2026-07-02T00:00:00Z")

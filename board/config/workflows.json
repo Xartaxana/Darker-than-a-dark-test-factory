@@ -5,6 +5,7 @@
       "tc-draft",
       "tc-review",
       "tc-approved",
+      "tc-awaiting-review",
       "tc-automated",
       "tc-blocked"
     ],

@@ -2,7 +2,7 @@
 key: "TC-054"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Тема и шрифт из side panel и из Settings — один общий стейт (эквивалентность входов)"
 assignee: "qa-agents"

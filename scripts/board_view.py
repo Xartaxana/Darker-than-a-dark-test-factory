@@ -15,7 +15,8 @@ import json
 from pathlib import Path
 
 from board_sync import (  # переиспользуем парсер и метаданные статусов — один источник
-    REPO, STATUSES, STATUS_MAP, _assignee_for, _iter_artifacts, _labels_for, _priority_for,
+    REPO, STATUSES, STATUS_MAP, _assignee_for, _board_status_for, _iter_artifacts,
+    _labels_for, _priority_for,
 )
 
 OUT = REPO / "board-view.html"
@@ -26,7 +27,7 @@ CAT_COLOR = {"new": "#b23", "indeterminate": "#b70", "done": "#264"}
 TYPE_TITLE = {"test-case": "Test Cases", "bug": "Bugs", "run": "Test Runs"}
 # Порядок колонок по типам (наши статусные машины)
 COLUMNS = {
-    "test-case": ["tc-draft", "tc-review", "tc-approved", "tc-automated"],
+    "test-case": ["tc-draft", "tc-review", "tc-approved", "tc-awaiting-review", "tc-automated"],
     "bug": ["bug-open", "bug-reopened", "bug-blocked", "bug-fixed", "bug-verified", "bug-rejected", "bug-intended"],
     "run": ["run-needstriage", "run-triaged", "run-closed"],
 }
@@ -36,6 +37,9 @@ def collect():
     by_type: dict[str, list[dict]] = {"test-case": [], "bug": [], "run": []}
     for itype, meta, body, src in _iter_artifacts():
         status_id = STATUS_MAP[itype].get(str(meta.get("status", "")))
+        derived_status = _board_status_for(itype, meta)
+        if derived_status:
+            status_id = derived_status
         lock = str(meta.get("lock") or "").strip()
         by_type[itype].append({
             "key": str(meta["id"]),

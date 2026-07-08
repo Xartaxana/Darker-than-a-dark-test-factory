@@ -8,6 +8,7 @@
     "tc-draft": "Draft",
     "tc-review": "Review",
     "tc-approved": "Approved",
+    "tc-awaiting-review": "Awaiting Review",
     "tc-automated": "Automated",
     "tc-blocked": "Blocked",
     "bug-open": "Open",

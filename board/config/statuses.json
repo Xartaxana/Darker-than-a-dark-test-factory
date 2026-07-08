@@ -15,6 +15,11 @@
     "category": "indeterminate"
   },
   {
+    "id": "tc-awaiting-review",
+    "name": "Awaiting Review",
+    "category": "indeterminate"
+  },
+  {
     "id": "tc-automated",
     "name": "Automated",
     "category": "done"

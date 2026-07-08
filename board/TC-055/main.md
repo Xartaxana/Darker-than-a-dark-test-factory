@@ -2,7 +2,7 @@
 key: "TC-055"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Двухпальцевый вертикальный драг меняет яркость; ниже минимума включается чёрный overlay"
 assignee: "qa-agents"

@@ -2,7 +2,7 @@
 key: "TC-053"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Двухпальцевый pinch/spread на Browse меняет размер шрифта (тот же fontSizeStep)"
 assignee: "qa-agents"

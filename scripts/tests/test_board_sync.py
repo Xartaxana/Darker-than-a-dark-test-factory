@@ -224,3 +224,79 @@ def test_no_automation_or_review_fields_no_extra_labels(repo):
     labels = _issue_index("TC-403")["labels"]
     assert not any(lbl.startswith("automation:") for lbl in labels)
     assert not any(lbl.startswith("review:") for lbl in labels)
+
+
+# --- производная колонка "Awaiting Review" (F1: Approved + automated_by) -----
+#
+# Чисто проекция борды: статусная машина test-case (schemas/) не меняется,
+# "tc-awaiting-review" НЕ входит в STATUS_MAP — вот это и проверяем ниже.
+
+def test_board_status_for_approved_with_automated_by():
+    meta = {"status": "Approved", "automated_by": "framework/tests/test_x.py::test_y"}
+    assert bs._board_status_for("test-case", meta) == "tc-awaiting-review"
+
+
+def test_board_status_for_approved_without_automated_by():
+    meta = {"status": "Approved"}
+    assert bs._board_status_for("test-case", meta) is None
+    meta_blank = {"status": "Approved", "automated_by": ""}
+    assert bs._board_status_for("test-case", meta_blank) is None
+
+
+def test_board_status_for_ignores_non_test_case():
+    meta = {"status": "Approved", "automated_by": "x"}
+    assert bs._board_status_for("bug", meta) is None
+    assert bs._board_status_for("run", meta) is None
+
+
+def test_awaiting_review_not_in_status_map():
+    """Не добавлено в STATUS_MAP — чисто проекция, статусная машина не менялась."""
+    assert "tc-awaiting-review" not in bs.STATUS_MAP["test-case"].values()
+    assert "Awaiting Review" not in bs.STATUS_MAP["test-case"]
+
+
+def test_approved_with_automated_by_lands_in_awaiting_review_column(repo):
+    """(5a) Approved + automated_by -> колонка tc-awaiting-review в build()."""
+    repo.test_case("TC-410", "Approved", extra='automated_by: "framework/tests/test_x.py::test_y"\n')
+    bs.build()
+    assert _issue_index("TC-410")["status"] == "tc-awaiting-review"
+
+
+def test_approved_without_automated_by_stays_in_approved_column(repo):
+    """(5b) Approved без automated_by -> обычная колонка tc-approved."""
+    repo.test_case("TC-411", "Approved")
+    bs.build()
+    assert _issue_index("TC-411")["status"] == "tc-approved"
+
+
+def test_automated_status_unaffected_by_derived_column(repo):
+    """(5c) status: Automated -> tc-automated как раньше (даже если automated_by заполнен)."""
+    repo.test_case("TC-412", "Automated", extra='automated_by: "framework/tests/test_x.py::test_y"\n')
+    bs.build()
+    assert _issue_index("TC-412")["status"] == "tc-automated"
+
+
+def test_changes_requested_stays_in_awaiting_review_column(repo):
+    """Approved + automated_by + review: changes_requested — тот же F1-цикл ревью,
+    остаётся в Awaiting Review (не отдельная колонка); label различает подслучай."""
+    repo.test_case("TC-413", "Approved",
+                    extra='automated_by: "framework/tests/test_x.py::test_y"\nreview: changes_requested\n')
+    bs.build()
+    entry = _issue_index("TC-413")
+    assert entry["status"] == "tc-awaiting-review"
+    assert "review:changes_requested" in entry["labels"]
+
+
+def test_awaiting_review_in_statuses_and_workflow_columns():
+    assert any(sid == "tc-awaiting-review" for sid, _, _ in bs.STATUSES)
+    cols = bs.WORKFLOWS["test-workflow"]["statuses"]
+    assert cols.index("tc-approved") < cols.index("tc-awaiting-review") < cols.index("tc-automated")
+
+
+def test_awaiting_review_has_no_board_transitions():
+    """Кнопок переходов к ней не генерируется — её нет в матрице (не в schemas/)."""
+    cfg = bs._workflows_config()
+    targets = {t["to"] for t in cfg["test-workflow"]["transitions"]}
+    sources = {t["from"] for t in cfg["test-workflow"]["transitions"]}
+    assert "tc-awaiting-review" not in targets
+    assert "tc-awaiting-review" not in sources

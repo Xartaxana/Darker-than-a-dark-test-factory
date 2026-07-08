@@ -30,7 +30,7 @@
     "epicPath": null,
     "summary": "Contrast-иконка в side panel переключает тему мгновенно во всём UI (WebView + нативный)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -52,7 +52,7 @@
     "epicPath": null,
     "summary": "A+/A- в side panel меняют размер шрифта в WebView мгновенно и переживают рестарт",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -74,7 +74,7 @@
     "epicPath": null,
     "summary": "Кнопки шрифта в side panel отключаются на границах диапазона (шаг 0 и 6)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -96,7 +96,7 @@
     "epicPath": null,
     "summary": "Двухпальцевый pinch/spread на Browse меняет размер шрифта (тот же fontSizeStep)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -118,7 +118,7 @@
     "epicPath": null,
     "summary": "Тема и шрифт из side panel и из Settings — один общий стейт (эквивалентность входов)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -140,7 +140,7 @@
     "epicPath": null,
     "summary": "Двухпальцевый вертикальный драг меняет яркость; ниже минимума включается чёрный overlay",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [

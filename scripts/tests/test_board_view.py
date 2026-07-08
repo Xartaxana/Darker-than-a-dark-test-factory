@@ -16,6 +16,8 @@ test-cases/bugs/runs не затрагиваются. Запуск:
 """
 from __future__ import annotations
 
+import re
+
 import board_view as bv
 
 
@@ -27,6 +29,17 @@ def _card_chunk(html_str: str, key: str) -> str:
         if f'data-key="{key}"' in p:
             return p
     raise AssertionError(f"карточка {key} не найдена в HTML")
+
+
+def _column_for_card(html_str: str, key: str) -> str:
+    """Текст заголовка колонки (colhead), в которой лежит карточка `key` —
+    определяем по ближайшему предшествующему в документе colhead (карточки
+    рендерятся ПОСЛЕ заголовка своей колонки)."""
+    idx = html_str.index(f'data-key="{key}"')
+    colheads = list(re.finditer(r'<div class="colhead"[^>]*>([^<]+)<b>', html_str))
+    preceding = [m for m in colheads if m.start() < idx]
+    assert preceding, f"колонка для {key} не найдена"
+    return preceding[-1].group(1).strip()
 
 
 def test_collect_sets_assignee_only_when_lock_present(repo):
@@ -89,3 +102,54 @@ def test_empty_lock_renders_no_badge_for_run(repo):
 
     chunk = _card_chunk(html_str, "RUN-500")
     assert 'class="agent"' not in chunk
+
+
+# --- производная колонка "Awaiting Review" (F1) — общая с board_sync функция ---
+#
+# board_view импортирует _board_status_for из board_sync (не дублирует логику),
+# поэтому оба рендера (static/live) должны согласованно показать новую колонку.
+
+def test_approved_with_automated_by_in_awaiting_review_column_static(repo):
+    """(5a) Approved + automated_by -> колонка "Awaiting Review" в статическом рендере."""
+    repo.test_case("TC-510", "Approved", extra='automated_by: "framework/tests/test_x.py::test_y"\n')
+
+    html_str = bv.render(bv.collect())
+
+    assert _column_for_card(html_str, "TC-510") == "Awaiting Review"
+
+
+def test_approved_without_automated_by_in_approved_column(repo):
+    """(5b) Approved без automated_by -> обычная колонка "Approved"."""
+    repo.test_case("TC-511", "Approved")
+
+    html_str = bv.render(bv.collect())
+
+    assert _column_for_card(html_str, "TC-511") == "Approved"
+
+
+def test_automated_status_in_automated_column_even_with_automated_by(repo):
+    """(5c) status: Automated -> колонка "Automated" как раньше."""
+    repo.test_case("TC-512", "Automated", extra='automated_by: "framework/tests/test_x.py::test_y"\n')
+
+    html_str = bv.render(bv.collect())
+
+    assert _column_for_card(html_str, "TC-512") == "Automated"
+
+
+def test_approved_with_automated_by_in_awaiting_review_column_live(repo):
+    """Живой режим (board_server.py: render(collect(), live=True)) — тот же результат,
+    потому что оба рендера используют board_sync._board_status_for."""
+    repo.test_case("TC-513", "Approved", extra='automated_by: "framework/tests/test_x.py::test_y"\n')
+
+    html_str = bv.render(bv.collect(), live=True)
+
+    assert _column_for_card(html_str, "TC-513") == "Awaiting Review"
+
+
+def test_changes_requested_stays_in_awaiting_review_column(repo):
+    repo.test_case("TC-514", "Approved",
+                    extra='automated_by: "framework/tests/test_x.py::test_y"\nreview: changes_requested\n')
+
+    html_str = bv.render(bv.collect())
+
+    assert _column_for_card(html_str, "TC-514") == "Awaiting Review"
