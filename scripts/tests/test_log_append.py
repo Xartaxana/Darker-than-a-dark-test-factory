@@ -54,8 +54,19 @@ def test_routing_events_match_claude_md_policy(logs):
     # dispatch_skipped, 2026-07-08).
     assert la.ROUTING_EVENTS == {
         "delegated", "accepted", "rejected", "escalated", "decomposable",
-        "dispatch_skipped", "lead_degraded", "lead_restored",
+        "dispatch_skipped", "defect_found", "lead_degraded", "lead_restored",
     }
+
+
+def test_routing_accepts_defect_found_without_model(logs):
+    # D-0052 OS-репо: defect_found ссылается на исходный accepted;
+    # model не требуется — её несёт исходное событие диспатча.
+    routing, _ = logs
+    la.append_routing("defect_found", "builder", category="implementation",
+                      notes="что сломалось + ссылка на accepted <ts>")
+    rec = json.loads(routing.read_text(encoding="utf-8"))
+    assert rec["event"] == "defect_found"
+    assert "model" not in rec
 
 
 def test_routing_accepts_dispatch_skipped_without_model(logs):

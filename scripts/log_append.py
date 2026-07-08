@@ -11,7 +11,8 @@
 
 routing      -> logs/routing-log.jsonl (одна JSON-строка; ts подставляется сам;
                 model ОБЯЗАТЕЛЬНА для delegated/escalated/accepted/rejected —
-                CLAUDE.md)
+                CLAUDE.md; defect_found ссылается в notes на исходный
+                accepted, model не требуется — она в исходном событии)
 orchestrator -> state/orchestrator-log.md (строка таблицы `| ts | ... |`,
                 ровно 4 ячейки после времени; ts подставляется сам)
 """
@@ -28,8 +29,8 @@ ROUTING_LOG = REPO / "logs" / "routing-log.jsonl"
 ORCH_LOG = REPO / "state" / "orchestrator-log.md"
 
 ROUTING_EVENTS = {"delegated", "accepted", "rejected", "escalated",
-                  "decomposable", "dispatch_skipped", "lead_degraded",
-                  "lead_restored"}
+                  "decomposable", "dispatch_skipped", "defect_found",
+                  "lead_degraded", "lead_restored"}
 MODEL_REQUIRED_EVENTS = {"delegated", "escalated", "accepted", "rejected"}
 
 
