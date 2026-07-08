@@ -9,6 +9,7 @@
     "tc-review": "Review",
     "tc-approved": "Approved",
     "tc-automated": "Automated",
+    "tc-blocked": "Blocked",
     "bug-open": "Open",
     "bug-reopened": "Reopened",
     "bug-blocked": "Blocked",
@@ -18,7 +19,8 @@
     "bug-intended": "Intended",
     "run-needstriage": "NeedsTriage",
     "run-triaged": "Triaged",
-    "run-closed": "Closed"
+    "run-closed": "Closed",
+    "run-blocked": "Blocked"
   },
   "priorities": {
     "p0": "P0",

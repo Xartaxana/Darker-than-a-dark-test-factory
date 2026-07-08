@@ -1237,15 +1237,20 @@
     "epicPath": null,
     "summary": "test_smoke.py нарушает архитектуру фреймворка: локаторы/импорты screens в tests/, 5 тестов без @allure.id",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
+      "test_case:TC-001",
+      "test_case:TC-002",
+      "test_case:TC-003",
+      "test_case:TC-004",
+      "test_case:TC-005",
       "sev:minor"
     ],
-    "updated": "2026-07-07T14:30:00Z",
-    "resolution": null,
+    "updated": "2026-07-07T20:05:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },

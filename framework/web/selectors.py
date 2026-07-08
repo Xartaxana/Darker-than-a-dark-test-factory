@@ -13,6 +13,13 @@
 """
 
 # AO3 native
+# Заголовок h1 присутствует и на живых страницах AO3, и на промежуточной странице
+# Cloudflare-проверки (R-03) — используется как стабильный элемент для
+# ОТНОСИТЕЛЬНОГО измерения размера текста (textZoom/fontSizeStep, TC-051/052/053:
+# WebView масштабирует рендеринг текста, это не выражается через getComputedStyle,
+# но меняет geometry — getBoundingClientRect), а не для проверки контента AO3.
+PAGE_HEADING = "h1"
+
 WORK_BLURB = "li[id^='work_'].work.blurb"
 BLURB_TITLE = "h4.heading a"
 BLURB_AUTHOR = "h4.heading a[rel='author']"

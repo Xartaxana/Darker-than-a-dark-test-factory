@@ -47,6 +47,11 @@ class BaseScreen:
         except Exception:  # noqa: BLE001
             return False
 
+    def is_enabled(self, locator, timeout: int = 5) -> bool:
+        """Читает accessibility-атрибут `enabled` найденного элемента (не требует
+        видимости/кликабельности — сам факт enabled=false и есть проверяемое состояние)."""
+        return self.find(locator, timeout).get_attribute("enabled") == "true"
+
     def text_of(self, locator, timeout: int | None = None) -> str:
         return self.find(locator, timeout).text
 

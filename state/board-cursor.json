@@ -281,8 +281,8 @@
   },
   "BUG-002": {
     "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
+    "artifact_status": "Verified",
+    "board_status": "Verified"
   },
   "RUN-20260702-0300": {
     "itype": "run",

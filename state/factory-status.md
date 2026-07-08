@@ -1,6 +1,6 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-07T14:16:00Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-07-08T00:21:46Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Сборка под тестом
@@ -36,9 +36,9 @@ generated_at: 2026-07-07T14:16:00Z · генератор: `scripts/queue_snapsho
 
 - нет
 
-## Test debt (1)
+## Test debt (0)
 
-- BUG-002 [weak_locator] Open — test_smoke.py нарушает архитектуру фреймворка: локаторы/импорты screens в tests/, 5 тестов без @allure.id
+- нет
 
 ## Прогоны (1)
 

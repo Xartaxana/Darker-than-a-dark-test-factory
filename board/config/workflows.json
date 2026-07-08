@@ -5,26 +5,45 @@
       "tc-draft",
       "tc-review",
       "tc-approved",
-      "tc-automated"
+      "tc-automated",
+      "tc-blocked"
     ],
     "transitions": [
       {
-        "id": "tc-submit",
-        "name": "Submit for review",
-        "from": "tc-draft",
-        "to": "tc-review"
+        "id": "test-case-draft-approved",
+        "name": "Draft \u2192 Approved",
+        "from": "Draft",
+        "to": "Approved"
       },
       {
-        "id": "tc-approve",
-        "name": "Approve",
-        "from": "tc-review",
-        "to": "tc-approved"
+        "id": "test-case-review-approved",
+        "name": "Review \u2192 Approved",
+        "from": "Review",
+        "to": "Approved"
       },
       {
-        "id": "tc-automate",
-        "name": "Automated",
-        "from": "tc-approved",
-        "to": "tc-automated"
+        "id": "test-case-draft-review",
+        "name": "Draft \u2192 Review",
+        "from": "Draft",
+        "to": "Review"
+      },
+      {
+        "id": "test-case-approved-review",
+        "name": "Approved \u2192 Review",
+        "from": "Approved",
+        "to": "Review"
+      },
+      {
+        "id": "test-case-automated-review",
+        "name": "Automated \u2192 Review",
+        "from": "Automated",
+        "to": "Review"
+      },
+      {
+        "id": "test-case-blocked-review",
+        "name": "Blocked \u2192 Review",
+        "from": "Blocked",
+        "to": "Review"
       }
     ]
   },
@@ -41,28 +60,88 @@
     ],
     "transitions": [
       {
-        "id": "bug-fix",
-        "name": "Mark fixed (\u0447\u0435\u043b\u043e\u0432\u0435\u043a)",
-        "from": "bug-open",
-        "to": "bug-fixed"
+        "id": "bug-open-fixed",
+        "name": "Open \u2192 Fixed",
+        "from": "Open",
+        "to": "Fixed"
       },
       {
-        "id": "bug-verify",
-        "name": "Verify fix",
-        "from": "bug-fixed",
-        "to": "bug-verified"
+        "id": "bug-open-rejected",
+        "name": "Open \u2192 Rejected",
+        "from": "Open",
+        "to": "Rejected"
       },
       {
-        "id": "bug-reopen",
-        "name": "Reopen",
-        "from": "bug-fixed",
-        "to": "bug-reopened"
+        "id": "bug-open-intended",
+        "name": "Open \u2192 Intended",
+        "from": "Open",
+        "to": "Intended"
       },
       {
-        "id": "bug-reject",
-        "name": "Reject / Intended",
-        "from": "bug-open",
-        "to": "bug-rejected"
+        "id": "bug-reopened-fixed",
+        "name": "Reopened \u2192 Fixed",
+        "from": "Reopened",
+        "to": "Fixed"
+      },
+      {
+        "id": "bug-reopened-rejected",
+        "name": "Reopened \u2192 Rejected",
+        "from": "Reopened",
+        "to": "Rejected"
+      },
+      {
+        "id": "bug-reopened-intended",
+        "name": "Reopened \u2192 Intended",
+        "from": "Reopened",
+        "to": "Intended"
+      },
+      {
+        "id": "bug-reopened-open",
+        "name": "Reopened \u2192 Open",
+        "from": "Reopened",
+        "to": "Open"
+      },
+      {
+        "id": "bug-fixed-open",
+        "name": "Fixed \u2192 Open",
+        "from": "Fixed",
+        "to": "Open"
+      },
+      {
+        "id": "bug-verified-open",
+        "name": "Verified \u2192 Open",
+        "from": "Verified",
+        "to": "Open"
+      },
+      {
+        "id": "bug-rejected-open",
+        "name": "Rejected \u2192 Open",
+        "from": "Rejected",
+        "to": "Open"
+      },
+      {
+        "id": "bug-intended-open",
+        "name": "Intended \u2192 Open",
+        "from": "Intended",
+        "to": "Open"
+      },
+      {
+        "id": "bug-blocked-open",
+        "name": "Blocked \u2192 Open",
+        "from": "Blocked",
+        "to": "Open"
+      },
+      {
+        "id": "bug-open-blocked",
+        "name": "Open \u2192 Blocked",
+        "from": "Open",
+        "to": "Blocked"
+      },
+      {
+        "id": "bug-reopened-blocked",
+        "name": "Reopened \u2192 Blocked",
+        "from": "Reopened",
+        "to": "Blocked"
       }
     ]
   },
@@ -71,21 +150,9 @@
     "statuses": [
       "run-needstriage",
       "run-triaged",
-      "run-closed"
+      "run-closed",
+      "run-blocked"
     ],
-    "transitions": [
-      {
-        "id": "run-triage",
-        "name": "Triaged",
-        "from": "run-needstriage",
-        "to": "run-triaged"
-      },
-      {
-        "id": "run-close",
-        "name": "Close",
-        "from": "run-triaged",
-        "to": "run-closed"
-      }
-    ]
+    "transitions": []
   }
 }

@@ -20,6 +20,11 @@
     "category": "done"
   },
   {
+    "id": "tc-blocked",
+    "name": "Blocked",
+    "category": "indeterminate"
+  },
+  {
     "id": "bug-open",
     "name": "Open",
     "category": "new"
@@ -68,5 +73,10 @@
     "id": "run-closed",
     "name": "Closed",
     "category": "done"
+  },
+  {
+    "id": "run-blocked",
+    "name": "Blocked",
+    "category": "indeterminate"
   }
 ]

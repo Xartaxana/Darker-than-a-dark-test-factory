@@ -11,6 +11,13 @@ def open_library_tab_for(driver, rating: str):
     LibraryScreen(driver).open_tab_for_rating(rating)
 
 
+@allure.step("Then виден таб Favorite (Library загрузился)")
+def assert_library_loaded(driver):
+    assert LibraryScreen(driver).has_work("FAVORITE", timeout=8), (
+        "экран Library не отрисовался (не видна вкладка FAVORITE)"
+    )
+
+
 @allure.step("Then во вкладке {rating} присутствует работа «{title}»")
 def assert_work_in_tab(driver, rating: str, title: str):
     lib = LibraryScreen(driver).open_tab_for_rating(rating)
