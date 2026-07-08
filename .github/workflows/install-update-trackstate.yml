@@ -15,9 +15,9 @@ on:
   workflow_dispatch:
     inputs:
       trackstate_ref:
-        description: "TrackState source ref (fork Xartaxana/trackstate-by-Dark-Factory): branch, tag, or commit SHA"
+        description: "TrackState source ref (fork Xartaxana/trackstate-by-Dark-Factory): branch, tag, or FULL 40-char commit SHA (actions/checkout не принимает короткий SHA)"
         required: true
-        default: 2b258f6
+        default: 2b258f686208ebc20080cf2df36daabebac0c250
   push:
     branches: [master]
     paths:
@@ -33,7 +33,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  TRACKSTATE_DEFAULT_REF: 2b258f6
+  # ПОЛНЫЙ 40-символьный SHA обязателен: actions/checkout трактует короткий SHA
+  # как имя ветки/тега (+refs/heads/<ref>*) и падает на fetch (exit 1).
+  TRACKSTATE_DEFAULT_REF: 2b258f686208ebc20080cf2df36daabebac0c250
 
 jobs:
   install-update:
