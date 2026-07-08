@@ -153,6 +153,36 @@
    владельца 2026-07-07): bug-reporter при severity выше major создаёт Issue в
    репозитории приложения; ссылка — в frontmatter бага. Нужен GitLab-токен
    (запросить при реализации). Делать вместе с Telegram-ботом.
+9. **Фикс sync-виджета TrackState-борды (кириллица в коммитах)** — низкий
+   приоритет, отложено сюда решением владельца 2026-07-08 (внешний канал = борда,
+   рядом с Telegram/GitLab). НЕ блокер: контент борды (тикеты, колонки) рендерится
+   штатно — падает только виджет статуса синхронизации с git («Repository» →
+   `Attention needed`, `Invalid argument (string): Contains invalid characters.`).
+   - **Причина (класс):** Dart `ascii/latin1.encode` на не-Latin1 строке
+     (`_UnicodeSubsetEncoder` → `ArgumentError` "Contains invalid characters.",
+     кладёт саму строку в значение — оттого в ошибке виден весь JSON коммита).
+     Кириллица в commit message косвенно попадает в энкодер на шаге `checkSync`.
+   - **Уже сделано (2026-07-08):** `install-update-trackstate.yml` перепинен с
+     upstream `IstiN/trackstate@v2099.173.100715142411` на наш форк
+     `Xartaxana/trackstate-by-Dark-Factory@2b258f68…` (полный 40-символьный SHA —
+     короткий checkout не принимает). Путь A (расчёт, что свежий код форка уже без
+     бага) проверен эмпирически и **не сработал** — баг есть и в `main` форка.
+     Прямого `ascii/latin1.encode` в исходниках `main` нет → вызов косвенный.
+   - **План (путь B), при реализации:**
+     1. Собрать Flutter web из форка локально (`flutter 3.35.3`, те же
+        `--dart-define`, что в workflow), воспроизвести sync на репозитории с
+        кириллицей в сообщениях коммитов.
+     2. Поймать точный стек-трейс энкодера — сейчас он проглатывается
+        (`workspace_sync_service.dart` `on Object catch` показывает только
+        `'$error'`); временно пробросить/залогировать `stackTrace`, найти
+        файл:строку косвенного `ascii/latin1.encode` (кандидат — путь
+        `github_trackstate_provider` `checkSync`/`_readHostedRepositoryDelta`).
+     3. Патч в форке: `utf8` вместо `ascii/latin1` в найденном месте; пуш в форк,
+        обновить SHA-пин в workflow, передеплой, убедиться что виджет зелёный.
+     4. Опционально — PR/issue в upstream `IstiN/trackstate`.
+   - **Детектор (F-11в):** сам виджет борды («Attention needed» пропадает при
+     успехе) — визуальная приёмка после передеплоя. См. память
+     `trackstate-board-sync-cyrillic-defect`, docs/05-board.md.
 
 ## Отклонено / вне скоупа (решения владельца)
 
