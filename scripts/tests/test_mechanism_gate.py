@@ -20,6 +20,11 @@ def test_mechanism_paths_filters_ao3_prefixes_with_boundary():
         "schemas/agent-output.json", "state/rules.yaml"]
     # F-D: файловые префиксы матчатся точно.
     assert mg.mechanism_paths(["CLAUDE.md.bak", "state/rules.yaml.orig"]) == []
+    # D-0065 OS-репо: самозащита цепочки; прочие scripts/ вне (D-0055).
+    assert mg.mechanism_paths(["scripts/mechanism_gate.py",
+                               ".githooks/commit-msg"]) == [
+        "scripts/mechanism_gate.py", ".githooks/commit-msg"]
+    assert mg.mechanism_paths(["scripts/board_sync.py"]) == []
 
 
 def test_decide_skip_and_block_only_from_commit_message():

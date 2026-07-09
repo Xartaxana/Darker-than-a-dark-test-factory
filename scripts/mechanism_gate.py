@@ -12,6 +12,8 @@ OS-репо (D-0043), путь абсолютный, недоступна → fa
 (schemas/, state/rules.yaml — ось 6). scripts/ сознательно вне
 триггера: правки кода обвязки покрываются тестами и ревью, а ложные
 срабатывания гейта приучают к --no-verify (решение D-0055).
+Исключение — самозащита цепочки (D-0065 OS-репо, F-25): сам гейт и
+.githooks/ в неводе — правка гейта не должна обходить гейт (F-15).
 """
 from __future__ import annotations
 
@@ -28,6 +30,9 @@ MECHANISM_PREFIXES = (
     ".claude/skills/",
     "schemas/",
     "state/rules.yaml",
+    # D-0065 OS-репо: самозащита enforcement-цепочки
+    "scripts/mechanism_gate.py",
+    ".githooks/",
 )
 
 AXIS_HEADING_RE = re.compile(r"^##\s+Ось\s+(\d+)", re.MULTILINE)
