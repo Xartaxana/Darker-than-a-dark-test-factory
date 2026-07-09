@@ -140,3 +140,21 @@ class BrowserScreen(BaseScreen):
         hist = img.histogram()
         total = sum(hist)
         return sum(i * c for i, c in enumerate(hist)) / total
+
+    def webview_avg_luma(self) -> float:
+        """Средняя яркость (0..255) области экрана, занятой именно нативным WebView-
+        элементом — изолирует WebView-контент (страница AO3) от Compose-хрома вокруг
+        (top bar/bottom nav), который красится отдельно и мгновенно (см. TC-047).
+        Прокси для алгоритмического затемнения страницы (ALGORITHMIC_DARKENING/
+        FORCE_DARK, см. TC-048 — только наблюдаемый визуальный результат, не internal
+        API applyDarkMode())."""
+        contexts.to_native(self.driver)
+        el = self.driver.find_element(AppiumBy.CLASS_NAME, "android.webkit.WebView")
+        rect = el.rect
+        png = self.driver.get_screenshot_as_png()
+        img = Image.open(io.BytesIO(png)).convert("L")
+        box = (rect["x"], rect["y"], rect["x"] + rect["width"], rect["y"] + rect["height"])
+        cropped = img.crop(box)
+        hist = cropped.histogram()
+        total = sum(hist)
+        return sum(i * c for i, c in enumerate(hist)) / total

@@ -45,6 +45,26 @@ def measure_screen_luma(driver) -> float:
     return BrowserScreen(driver).screenshot_avg_luma()
 
 
+@allure.step("Then измерена средняя яркость (luma) области WebView")
+def measure_webview_luma(driver) -> float:
+    return BrowserScreen(driver).webview_avg_luma()
+
+
+@allure.step("Then содержимое WebView заметно потемнело относительно baseline")
+def assert_webview_darkened(driver, baseline: float, ratio: float = 0.7, timeout: int = 20):
+    """Опрашивает luma области WebView, пока страница не перерисуется тёмной — смена
+    темы триггерит программный `reload()` (BrowserScreen.kt LaunchedEffect(darkTheme)),
+    поэтому одноразовое чтение сразу после переключения было бы гонкой с перерисовкой
+    (см. TC-048 заметки)."""
+    def _darker(d):
+        luma = BrowserScreen(d).webview_avg_luma()
+        return luma < baseline * ratio
+    wait_until(
+        driver, _darker, timeout=timeout,
+        message=f"WebView не потемнел относительно baseline={baseline:.1f} за {timeout}с",
+    )
+
+
 @allure.step("When лишние вкладки WebView закрыты (оставлена только активная)")
 def close_other_tabs(driver):
     BrowserScreen(driver).close_leftmost_tab()

@@ -64,3 +64,10 @@ def open_tab(driver, tab: str):
 def restart_app(driver):
     driver.terminate_app("com.example.ao3_wrapper")
     driver.activate_app("com.example.ao3_wrapper")
+
+
+@allure.step("When системная тема ОС переключена: dark={dark}")
+def set_system_dark_mode(dark: bool):
+    """Переключение системной темы (`adb shell cmd uimode night yes/no`), не действие
+    внутри приложения — см. TC-049 (тема System следует за ОС)."""
+    adb.set_night_mode(dark)

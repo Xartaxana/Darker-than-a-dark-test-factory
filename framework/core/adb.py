@@ -46,6 +46,12 @@ def install(apk: str = settings.APK_PATH, reinstall: bool = True) -> None:
         raise RuntimeError(f"APK install failed: {cp.stdout}{cp.stderr}")
 
 
+def set_night_mode(dark: bool) -> None:
+    """Переключает системную тёмную тему ОС (`cmd uimode night yes/no`) — стандартный
+    способ на эмуляторе/устройстве без захода в системные настройки UI (см. TC-049)."""
+    shell(f"cmd uimode night {'yes' if dark else 'no'}")
+
+
 def logcat_dump(dest: Path, lines: int = 400) -> None:
     out = shell(f"logcat -d -t {lines}")
     dest.write_text(out, encoding="utf-8", errors="replace")

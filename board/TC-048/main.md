@@ -2,27 +2,27 @@
 key: "TC-048"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p1"
 summary: "WebView dark mode применяется мгновенно вместе с остальным UI (без холодного рестарта)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:settings", "risk:R-11 (proposed, не утверждён в §5)"]
+labels: ["test-case", "area:settings", "risk:R-11 (proposed, не утверждён в §5)", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T20:02:34Z"
-updated: "2026-07-02T20:02:34Z"
+created: "2026-07-09T11:45:00Z"
+updated: "2026-07-09T11:45:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # WebView dark mode применяется мгновенно вместе с остальным UI (без холодного рестарта)
 
 _Спроецировано из `test-cases/settings/TC-048.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-048 — WebView dark mode применяется мгновенно, без холодного рестарта
 
@@ -75,3 +75,22 @@ Browse **без** перезапуска приложения
 - [x] Then проверяет наблюдаемое поведение, а не реализацию
 - [x] Указаны приоритет, область и источник требования
 - [x] Кейс независим от порядка выполнения других кейсов
+
+## Ревью автотеста
+test-reviewer, 2026-07-09 — **пройдено** (Approved → Automated).
+- C1/arch_check: 0 ошибок; локаторы/измерение luma — в screens/ (BrowserScreen),
+  шаги — в steps/browser_steps, sleep нет (поллинг через core/waits).
+- Traceability: `@allure.id("TC-048")` == id; `@pytest.mark.p1` == P1;
+  `automated_by` → существующая функция; state/traceability.md обновлён.
+- Соответствие GWT и «Заметкам»: проверяется ИМЕННО WebView-контент, косвенно —
+  через наблюдаемую визуальную яркость (`webview_avg_luma`), НЕ через
+  `applyDarkMode()`/`AppCompatDelegate`/`textZoom`. `assert_webview_darkened`
+  поллит luma до перерисовки после программного `reload()` (LaunchedEffect(darkTheme)),
+  а не читает пиксель в тот же кадр — ровно требование заметки по таймингу.
+  Ожидаемый исход PASS соблюдён фактическим прогоном, не допущением.
+- Фикстуры/данные: `clean_app` до `driver`; baseline снимается после реальной
+  загрузки AO3 (`wait_app_ready`). Зависимость от живого AO3 объявлена (тест
+  `@live`, не `@replay`) — обращения к живому сайту при заявленном replay нет.
+- Flake: явные ожидания (поллинг 20s), порог ratio 0.7 c большим запасом
+  (светлая AO3 luma → тёмная).
+- Независимый прогон: 3/3 PASS (2026-07-09, emulator-5554).

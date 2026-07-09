@@ -2,27 +2,27 @@
 key: "TC-049"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p1"
 summary: "Тема System следует за настройками ОС"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:settings", "risk:R-11 (proposed, не утверждён в §5)"]
+labels: ["test-case", "area:settings", "risk:R-11 (proposed, не утверждён в §5)", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T17:31:01Z"
-updated: "2026-07-02T17:31:01Z"
+created: "2026-07-09T11:45:00Z"
+updated: "2026-07-09T11:45:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Тема System следует за настройками ОС
 
 _Спроецировано из `test-cases/settings/TC-049.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-049 — Тема System переключается вместе с системной темой ОС
 
@@ -65,3 +65,22 @@ _Спроецировано из `test-cases/settings/TC-049.md` (источни
 - [x] Then проверяет наблюдаемое поведение, а не реализацию
 - [x] Указаны приоритет, область и источник требования
 - [x] Кейс независим от порядка выполнения других кейсов
+
+## Ревью автотеста
+test-reviewer, 2026-07-09 — **пройдено** (Approved → Automated).
+- C1/arch_check: 0 ошибок; adb-обёртка `set_night_mode` — в core/adb (без знания
+  об экранах), шаг `set_system_dark_mode` — в steps/app_steps, sleep нет.
+- Traceability: `@allure.id("TC-049")` == id; `@pytest.mark.p1` == P1;
+  `automated_by` → существующая функция; state/traceability.md обновлён.
+- Соответствие GWT: тема приложения = System и не меняется внутри приложения;
+  переключается ИМЕННО системная тема ОС через `adb shell cmd uimode night
+  yes/no` (не in-app toggle). Реакция наблюдается на нативном Compose UI (side
+  panel Contrast). Соответствует §Заметок (отличие от TC-047/048).
+- Фикстуры/данные и чистота: системная тема — общий ресурс эмулятора; тест
+  приводит её к Light на входе И возвращает в `finally` — не протекает в соседние
+  тесты. Независим от порядка.
+- Flake: `assert_theme_is_*` через `is_present` поллит 5s — покрывает асинхронную
+  пропагацию config-change (uiMode) до рекомпозиции; `isSystemInDarkTheme()`
+  реактивен при `configChanges="uiMode"` (сверено по MainActivity.kt) — Activity
+  не пересоздаётся.
+- Независимый прогон: 3/3 PASS (2026-07-09, emulator-5554).

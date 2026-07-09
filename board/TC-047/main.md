@@ -2,27 +2,27 @@
 key: "TC-047"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p1"
 summary: "Переключение темы Dark в Settings применяется мгновенно без пересоздания Activity"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:settings", "risk:R-11 (proposed, не утверждён в §5)"]
+labels: ["test-case", "area:settings", "risk:R-11 (proposed, не утверждён в §5)", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T17:19:47Z"
-updated: "2026-07-02T17:19:47Z"
+created: "2026-07-09T11:45:00Z"
+updated: "2026-07-09T11:45:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Переключение темы Dark в Settings применяется мгновенно без пересоздания Activity
 
 _Спроецировано из `test-cases/settings/TC-047.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-047 — Переключение Dark применяется мгновенно, Activity не пересоздаётся
 
@@ -66,3 +66,24 @@ _Спроецировано из `test-cases/settings/TC-047.md` (источни
 - [x] Then проверяет наблюдаемое поведение, а не реализацию
 - [x] Указаны приоритет, область и источник требования
 - [x] Кейс независим от порядка выполнения других кейсов
+
+## Ревью автотеста
+test-reviewer, 2026-07-09 — **пройдено** (Approved → Automated).
+- C1/arch_check: 0 ошибок, 0 предупреждений; ALLOWLIST пуст (файл теста не
+  внесён «под себя»). Локаторы — в screens/, шагов sleep нет.
+- Traceability: `@allure.id("TC-047")` == id; `@pytest.mark.p1` соответствует
+  P1; `automated_by` указывает на существующую функцию; state/traceability.md
+  обновлён.
+- Соответствие GWT: тест про нативный Compose UI, НЕ WebView (side panel Contrast —
+  нативный элемент, его content-desc «Switch to light mode» = проксисигнал
+  применённой Dark-темы); отсутствие recreation проверено сохранением URL вкладки
+  Browse — ровно тот прокси, что предписан «Заметками для автоматизации» (прямая
+  проверка PID/instance не UI-наблюдаема). Два разных тайминга (Compose vs WebView)
+  не смешаны.
+- Фикстуры/данные: `clean_app` (pm clear) инстанцируется до `driver` (порядок
+  параметров сигнатуры) — сброс до Appium-сессии. Тест самодостаточен.
+- Flake: `assert_theme_is_dark` через `is_present` с поллингом (timeout 5s), не
+  мгновенное чтение; смена темы разнесена навигацией по вкладкам — гонки с
+  анимацией нет.
+- Независимый прогон: 3/3 PASS (Invoke-Pytest tests/test_settings.py, эмулятор
+  emulator-5554, 2026-07-09).

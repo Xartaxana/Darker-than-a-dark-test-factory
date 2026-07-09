@@ -196,18 +196,18 @@
   },
   "TC-047": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-048": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-049": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-001": {
     "itype": "test-case",

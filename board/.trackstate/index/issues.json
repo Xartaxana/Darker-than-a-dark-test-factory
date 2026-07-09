@@ -878,16 +878,17 @@
     "epicPath": null,
     "summary": "Переключение темы Dark в Settings применяется мгновенно без пересоздания Activity",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:settings",
-      "risk:R-11 (proposed, не утверждён в §5)"
+      "risk:R-11 (proposed, не утверждён в §5)",
+      "automation:active"
     ],
-    "updated": "2026-07-02T17:19:47Z",
-    "resolution": null,
+    "updated": "2026-07-09T11:45:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -900,16 +901,17 @@
     "epicPath": null,
     "summary": "WebView dark mode применяется мгновенно вместе с остальным UI (без холодного рестарта)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:settings",
-      "risk:R-11 (proposed, не утверждён в §5)"
+      "risk:R-11 (proposed, не утверждён в §5)",
+      "automation:active"
     ],
-    "updated": "2026-07-02T20:02:34Z",
-    "resolution": null,
+    "updated": "2026-07-09T11:45:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -922,16 +924,17 @@
     "epicPath": null,
     "summary": "Тема System следует за настройками ОС",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:settings",
-      "risk:R-11 (proposed, не утверждён в §5)"
+      "risk:R-11 (proposed, не утверждён в §5)",
+      "automation:active"
     ],
-    "updated": "2026-07-02T17:31:01Z",
-    "resolution": null,
+    "updated": "2026-07-09T11:45:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },

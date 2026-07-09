@@ -1,6 +1,6 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-09T11:00:16Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-07-09T11:21:28Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Сборка под тестом
@@ -10,8 +10,8 @@ generated_at: 2026-07-09T11:00:16Z · генератор: `scripts/queue_snapsho
 
 ## Тест-кейсы (55)
 
-- Draft: **1** · Review: **14** · Approved: **22** · Automated: **18**
-- автотесты (B3): active: **18**
+- Draft: **1** · Review: **14** · Approved: **19** · Automated: **21**
+- автотесты (B3): active: **21**
 
 | Область | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
@@ -22,7 +22,7 @@ generated_at: 2026-07-09T11:00:16Z · генератор: `scripts/queue_snapsho
 | filter-profiles |  |  | 3 |  |  |
 | library | 1 | 1 | 4 | 2 |  |
 | rating |  | 5 | 2 | 2 |  |
-| settings |  | 1 | 5 |  |  |
+| settings |  | 1 | 2 | 3 |  |
 | smoke |  |  |  | 5 |  |
 | tabs |  | 1 | 4 |  |  |
 | visibility |  | 3 |  |  |  |
