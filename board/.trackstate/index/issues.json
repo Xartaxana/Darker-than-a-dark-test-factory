@@ -1292,7 +1292,7 @@
     "epicPath": null,
     "summary": "Replay-инфраструктура не доведена: нет записей work/листинг-страниц и mitm-фикстуры в conftest — блокирует автоматизацию 10 P0/P1 кейсов",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1309,7 +1309,7 @@
       "test_case:TC-045",
       "sev:major"
     ],
-    "updated": "2026-07-08T23:55:00Z",
+    "updated": "2026-07-09T13:30:00Z",
     "resolution": null,
     "children": [],
     "archived": false

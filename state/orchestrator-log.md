@@ -37,3 +37,8 @@ qa-orchestrator. Скрипты pre_steps (stale_locks и др.) тоже пиш
 | 2026-07-09T10:49:08Z | Ревью нового автотеста (R13) | test-reviewer | TC-034 | success: Approved->Automated, automation_status active |
 | 2026-07-09T10:56:34Z | Ревью нового автотеста (R13) | test-reviewer | TC-035 | success: Approved->Automated, automation_status active |
 | 2026-07-09T11:00:08Z | Ревью нового автотеста (R13) | test-reviewer | TC-036 | success: Approved->Automated, automation_status active |
+| 2026-07-09T12:51:56Z | Устранить test debt (R11, инкремент 3) | test-maintainer | AT-BUG-004 | success: download-flow+dup-листинг записи, TC-009-проба зелёная, Open->Fixed (критерий полон) |
+| 2026-07-09T12:51:56Z | Приёмка инкремента 3 (правило 3а) | critic | AT-BUG-004 | ACCEPT: контракт/детерминизм/переход/class-fix badge верифицированы независимо; 2 некритичных в очередь |
+| 2026-07-09T12:51:56Z | Разведка под AT-BUG-005 (правило 1) | scout | AT-BUG-005 | success: ActivityResultContracts x3 в SettingsScreen.kt, обходов/хелперов в репо нет (след сверен) |
+| 2026-07-09T15:02:41Z | ИНЦИДЕНТ среды | host | — | BSOD SYSTEM_SERVICE_EXCEPTION 0x3B в aehd.sys (гипервизор эмулятора); хост перезагружен, сессия Lead умерла с грязным деревом (4 файла — закоммичены при восстановлении) |
+| 2026-07-09T15:40:00Z | Верифицировать исправленный баг (D1) | fix-verifier | AT-BUG-004 | void: delegated 12:52:46 записан, воркер НЕ стартовал (краш хоста до запуска); лок снят, переделегирование тем же task_id при свободном эмуляторе |

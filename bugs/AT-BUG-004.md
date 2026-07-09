@@ -17,7 +17,7 @@ updated: "2026-07-09T13:30:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
-lock: "test-maintainer:2026-07-09T12:15:00"
+lock: ""
 ---
 
 # AT-BUG-004 — Replay-инфраструктура (mitm) не подключена к тестам
@@ -420,3 +420,17 @@ Witness:
 (`logs/routing-log.jsonl`, `state/board-cursor.json`) не тронуты и не
 закоммичены. Верификация (`Fixed → Verified`) — за fix-verifier, новая сборка
 приложения не нужна (фикс целиком во фреймворке).
+
+**2026-07-09T12:52:00Z — critic (приёмка инкремента 3, правило 3а): ACCEPT;
+Lead: приёмка оформлена, Fixed подтверждён.** Проверено независимо: контракт
+download-flow построчно против `DownloadRepository.fetchDownloadUrl` (regex
+берёт первое `/downloads/...*.html`; порядок pdf->html в записи это учитывает),
+детерминизм перегенерацией (нулевой git-diff), проба TC-009 зелёная (22.06s),
+переход Open->Fixed легален (transitions.yaml guard test_debt). Незапрошенный
+class-fix мёртвого `[data-ao3-badge]`-локатора верифицирован по ao3_bridge.js.
+Некритичное, В ОЧЕРЕДЬ (не блокирует Verified): (1) докстринг
+`framework/steps/browser_steps.py::assert_rating_badge_visible` устарел —
+упоминает `[data-ao3-badge]`, фактическая проверка по background-color
+Rate-кнопки; (2) `ListingPage.badge_for` смотрит только первое вхождение —
+будущей автоматизации TC-012 (двойной блёрб, `listing_duplicate_work.mitm`)
+понадобится вариант по ВСЕМ вхождениям. Дальше по конвейеру: D1 fix-verifier.
