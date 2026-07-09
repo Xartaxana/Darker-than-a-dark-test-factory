@@ -171,9 +171,12 @@ def test_routing_rejects_unknown_event(logs):
 
 
 def test_routing_appends_not_overwrites(logs):
+    # task_id t-001, не t-006: с D-0060/F-23 fresh task_id для delegated
+    # обязан быть max(t-NNN)+1, а журнал в этом тесте пуст (см. отчёт
+    # builder'а, t-009 — существующий тест скорректирован).
     routing, _ = logs
-    la.append_routing("delegated", "builder", model="sonnet", task_id="t-006")
-    la.append_routing("accepted", "builder", model="sonnet", task_id="t-006",
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
+    la.append_routing("accepted", "builder", model="sonnet", task_id="t-001",
                       witness="pytest -q -> passed")
     assert len(routing.read_text(encoding="utf-8").splitlines()) == 2
 
@@ -199,3 +202,128 @@ def test_orchestrator_escapes_pipes_and_newlines(logs):
 def test_orchestrator_requires_exactly_four_cells(logs):
     with pytest.raises(SystemExit):
         la.append_orchestrator(["только", "три", "ячейки"])
+
+
+# D-0060/F-23: две параллельные сессии выдали один task_id (t-008) двум
+# разным задачам в append-only журнале. Новый task_id обязан быть
+# max(существующих t-NNN)+1; повторный delegated на уже accepted task_id —
+# коллизия, требует осознанного --reopen-task.
+
+def test_delegated_fresh_sequential_id_passes(logs):
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-002")
+    lines = routing.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 2
+    assert json.loads(lines[1])["task_id"] == "t-002"
+
+
+def test_delegated_fresh_id_gap_or_lower_rejected_names_expected_id(logs):
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
+    with pytest.raises(SystemExit, match="t-002"):  # разрыв
+        la.append_routing("delegated", "builder", model="sonnet", task_id="t-005")
+    with pytest.raises(SystemExit, match="t-002"):  # ниже ожидаемого, ранее не встречался
+        la.append_routing("delegated", "builder", model="sonnet", task_id="t-000")
+    # ни один из отклонённых вызовов не дописался в журнал
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 1
+
+
+def test_delegated_continuation_after_rejected_or_escalated_passes(logs):
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
+    la.append_routing("rejected", "builder", model="sonnet", task_id="t-001",
+                      attempt=1, failure_class="capability")
+    # ретрай на тот же task_id — легальное продолжение, не коллизия
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
+    la.append_routing("escalated", "critic", model="opus", task_id="t-001")
+    la.append_routing("delegated", "critic", model="opus", task_id="t-001")
+    lines = routing.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 5
+    # следующий свежий id всё ещё считается от t-001 (единственный t-NNN)
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-002")
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 6
+
+
+def test_delegated_on_accepted_task_id_rejected_without_reopen_flag(logs):
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
+    la.append_routing("accepted", "builder", model="sonnet", task_id="t-001",
+                      witness="pytest -q -> passed")
+    with pytest.raises(SystemExit, match="t-001"):
+        la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 2
+
+
+def test_delegated_on_accepted_task_id_passes_with_reopen_flag(logs):
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
+    la.append_routing("accepted", "builder", model="sonnet", task_id="t-001",
+                      witness="pytest -q -> passed")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      reopen_task="F-23: коллизия, повторное открытие осознанно")
+    lines = routing.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 3
+    rec = json.loads(lines[-1])
+    assert rec["task_id"] == "t-001"
+    assert "reopen" in rec["notes"] and "F-23" in rec["notes"]
+
+
+def test_delegated_empty_journal_expects_t001(logs):
+    routing, _ = logs
+    assert not routing.exists()
+    with pytest.raises(SystemExit, match="t-001"):
+        la.append_routing("delegated", "builder", model="sonnet", task_id="t-999")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
+    assert json.loads(routing.read_text(encoding="utf-8").splitlines()[0])["task_id"] == "t-001"
+
+
+def test_delegated_new_descriptive_task_id_passes_on_nonempty_journal(logs):
+    # t-009, попытка 2: исправление п.1 спеки (была ошибка в первой версии,
+    # см. отчёт попытки 1 — там это фиксировалось как расхождение). Порядок
+    # t-NNN обязателен ТОЛЬКО для id, чей формат полностью (full-match)
+    # совпадает с последовательностью t-(\d+). Описательный id (например,
+    # новый баг at-bug-005) — не такой формат, поэтому проходит как новый
+    # без проверки последовательности, даже если журнал уже непуст и в нём
+    # есть t-NNN записи.
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
+    la.append_routing("delegated", "test-maintainer", model="sonnet",
+                      task_id="at-bug-005")
+    lines = routing.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 2
+    assert json.loads(lines[1])["task_id"] == "at-bug-005"
+
+
+def test_delegated_substring_t_nn_inside_descriptive_id_treated_as_descriptive(logs):
+    # Спека п.3 (t-009, попытка 2): id вроде "fix-t-12-encoding" содержит
+    # substring "t-12", но НЕ full-match с ^t-(\d+)$ — значит трактуется как
+    # описательный и проходит свободно как новый, без применения проверки
+    # последовательности (и без влияния на последующий max(t-NNN)).
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
+    la.append_routing("delegated", "test-maintainer", model="sonnet",
+                      task_id="fix-t-12-encoding")
+    lines = routing.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 2
+    assert json.loads(lines[1])["task_id"] == "fix-t-12-encoding"
+    # substring "t-12" не должен был войти в подсчёт max(t-NNN): следующий
+    # свежий последовательный id всё ещё t-002, а не t-013.
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-002")
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 3
+
+
+def test_delegated_preexisting_descriptive_task_id_continues_freely(logs):
+    # Id формата t-NNN обязателен только для СВЕЖИХ task_id (спека п.1).
+    # Если task_id уже встречался в журнале (в т.ч. описательный, из истории
+    # ДО этой правки) — это продолжение (п.2), формат id при этом не
+    # проверяется, легальность определяется только последним lifecycle-
+    # событием этого id.
+    routing, _ = logs
+    # Симулируем предсуществующую историю: at-bug-003 уже упоминался в
+    # журнале (rejected), прежде чем эта проверка появилась.
+    la.append_routing("rejected", "test-maintainer", model="sonnet",
+                      task_id="at-bug-003", attempt=1, failure_class="capability")
+    la.append_routing("delegated", "test-maintainer", model="sonnet",
+                      task_id="at-bug-003")
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 2
