@@ -289,6 +289,16 @@
     "artifact_status": "Open",
     "board_status": "Open"
   },
+  "AT-BUG-005": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "AT-BUG-006": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
   "BUG-001": {
     "itype": "bug",
     "artifact_status": "Open",

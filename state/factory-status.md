@@ -1,6 +1,6 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-09T11:21:28Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-07-09T11:27:32Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Сборка под тестом
@@ -36,9 +36,11 @@ generated_at: 2026-07-09T11:21:28Z · генератор: `scripts/queue_snapsho
 
 - нет
 
-## Test debt (1)
+## Test debt (3)
 
 - AT-BUG-004 [missing_fixture] Open — Replay-инфраструктура не доведена: нет записей work/листинг-страниц и mitm-фикстуры в conftest — блокирует автоматизацию 10 P0/P1 кейсов
+- AT-BUG-005 [missing_fixture] Open — SAF file/folder picker не автоматизируется штатными Appium-локаторами — блокирует TC-021 (P0, backup/restore) и часть download/backup-кейсов
+- AT-BUG-006 [missing_fixture] Open — Таблица filter_profiles не поддержана в seed_db.py и нет replay-записи формы AO3 Sort&Filter — блокирует автоматизацию батча filter-profiles (TC-040/041/042, P1)
 
 ## Прогоны (1)
 
