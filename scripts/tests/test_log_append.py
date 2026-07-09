@@ -1,6 +1,7 @@
 """Тесты scripts/log_append.py — каноничное добавление строк в журналы."""
 from __future__ import annotations
 
+import io
 import json
 
 import pytest
@@ -31,6 +32,45 @@ def test_routing_appends_json_line_with_ts(logs):
     assert rec["task_id"] == "t-001"
     assert rec["notes"] == "тест"
     assert rec["ts"].startswith("20") and "T" in rec["ts"]
+
+
+def test_main_returns_0_when_stdout_console_codepage_cannot_encode_notes(logs, monkeypatch):
+    # Прецедент (docs/HANDOFF.md, chip task_305afa14): scripts/log_append.py
+    # успешно дописывает строку в файл (_append_line, encoding="utf-8"), но
+    # затем падал с exit 1 на финальном print(line) в stdout, если консоль
+    # Windows была в узкой кодовой странице (напр. cp1251), а --notes
+    # содержала символ вне неё (напр. "≠"). Ложный exit 1 мог заставить
+    # вызывающего ретраить и задублировать запись в журнале. Симулируем
+    # именно такую консоль: TextIOWrapper с encoding="cp1251", errors="strict"
+    # поверх BytesIO — как реальный узкий поток stdout, до правки
+    # (sys.stdout.reconfigure в main()) print() на нём бросал
+    # UnicodeEncodeError на символ "≠".
+    routing, _ = logs
+    buf = io.BytesIO()
+    narrow_stdout = io.TextIOWrapper(buf, encoding="cp1251", errors="strict",
+                                      newline="\n")
+    monkeypatch.setattr("sys.stdout", narrow_stdout)
+
+    # Убедиться, что сценарий воспроизводит исходный баг: без reconfigure
+    # запись символа "≠" в этот поток действительно бросает UnicodeEncodeError.
+    with pytest.raises(UnicodeEncodeError):
+        narrow_stdout.write("≠")
+    # write() выше мог продвинуть внутренний буфер TextIOWrapper в неполное
+    # состояние — пересоздаём поток для чистого прогона main().
+    buf = io.BytesIO()
+    narrow_stdout = io.TextIOWrapper(buf, encoding="cp1251", errors="strict",
+                                      newline="\n")
+    monkeypatch.setattr("sys.stdout", narrow_stdout)
+
+    exit_code = la.main(["routing", "--event", "dispatch_skipped",
+                          "--agent", "scout", "--category", "recon",
+                          "--notes", "тест ≠ дефект"])
+    assert exit_code == 0
+
+    lines = routing.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 1
+    rec = json.loads(lines[0])
+    assert rec["notes"] == "тест ≠ дефект"
 
 
 def test_routing_model_required_for_delegated_escalated_accepted_rejected(logs):

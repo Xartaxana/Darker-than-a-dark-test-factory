@@ -133,6 +133,19 @@ def main(argv: list[str] | None = None) -> int:
                               witness=args.witness, ref=args.ref)
     else:
         line = append_orchestrator(args.cells)
+    # Запись в файл (_append_line, encoding="utf-8") уже совершена выше —
+    # успех функции не должен зависеть от того, что происходит дальше.
+    # Эхо строки на экран может упасть с UnicodeEncodeError, если кодовая
+    # страница консоли (напр. cp1251) не может представить символ строки
+    # (напр. "≠"); без этой правки такой сбой давал ложный exit 1, из-за
+    # которого вызывающий может решить, что запись не прошла, и ретраить —
+    # создавая дубли в журнале. Делаем stdout устойчивым к любым символам
+    # заранее, а не глушим исключение вокруг print постфактум.
+    if hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        except (ValueError, OSError):
+            pass
     print(line)
     return 0
 
