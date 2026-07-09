@@ -13,7 +13,7 @@ runs: []
 duplicates: []
 regression_of: ""
 status_since: "2026-07-09T11:30:00Z"
-updated: "2026-07-09T11:30:00Z"
+updated: "2026-07-09T12:00:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -86,3 +86,32 @@ settings — область пропущена именно из-за этого
 только заметками в кейсах. Заведён test_debt-багом по аналогии с
 AT-BUG-004/AT-BUG-005. Диспатч по B4 — отдельным проходом, после
 приоритетных P0-хвостов (AT-BUG-004 остаток, AT-BUG-005).
+
+**2026-07-09T12:00:00Z — test-maintainer (инкремент 1, грань 1 критерия готовности):**
+Добавлена поддержка прямой вставки записей `filter_profiles` в
+`framework/data/seed_db.py`: внутренняя `_insert_rows_filter_profiles(db, rows)`
+(`INSERT OR REPLACE`, схема — точная копия MIGRATION_3_4 в `AppDatabase.kt` /
+`FilterProfile.kt`: `id` TEXT PK, `name`/`queryString` TEXT NOT NULL, `timestamp`
+INTEGER NOT NULL) и публичная `seed_filter_profiles(profiles: list[tuple[name,
+queryString]])` по каркасу `seed()` (force_stop → ensure_db_initialized → pull →
+insert → push); `id`/`timestamp` генерируются автоматически (uuid4/now-ms) — ни
+TC-041, ни TC-042 не завязаны на конкретный id.
+
+Витнес — device-free юнит-проба `framework/tests/test_seed_filter_profiles_unit.py`
+(2 теста: вставка ожидаемых строк + `INSERT OR REPLACE` на дубликате PK) на
+временной sqlite-БД с таблицей, созданной по схеме приложения в самом тесте.
+Эмулятор в этом инкременте не трогался (был занят параллельным fix-verifier) —
+проба переопределяет session-scoped autouse-фикстуру `_ensure_app_installed` из
+`conftest.py` локально в модуле (стандартный механизм pytest: fixture в
+тестовом файле перекрывает одноимённую из conftest.py), чтобы прогон не дёргал
+`adb`. Прогон трижды подряд зелёный (0.08–0.15s, без device-фикстур):
+`Invoke-Pytest tests/test_seed_filter_profiles_unit.py` → `2 passed`,
+`PYTEST_EXIT=0`. `arch_check`: 0 ошибок/0 предупреждений.
+
+Остаток (грани 2 и 3 критерия готовности не закрыты этим инкрементом): (2)
+replay-запись страницы AO3 с формой Sort & Filter в исходной разметке (TC-040) —
+отдельный диспатч, recordings/recording_builder не трогались; (3) зелёный
+прогон TC-041/TC-042 на устройстве — требует ещё `seed_filter_profiles` в
+`app_steps.py`/фикстуру conftest.py по образцу `seeded_library` и сам прогон с
+Appium, не входило в скоуп этого инкремента (device не трогался вовсе). Статус
+бага остаётся `Open`.

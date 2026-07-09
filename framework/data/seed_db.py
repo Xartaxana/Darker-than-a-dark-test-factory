@@ -12,6 +12,7 @@ import shutil
 import sqlite3
 import tempfile
 import time
+import uuid
 from pathlib import Path
 
 from framework.config import settings
@@ -139,6 +140,57 @@ def seed_with_comment(
     try:
         db = _pull_baseline(tmp)
         _insert_rows_full(db, rows)
+        adb.run_as(f"rm -f {_WAL} {_SHM}")
+        adb.push_app_file(db, _DB_REL)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+# --- Сидинг фильтр-профилей (`filter_profiles`) — AT-BUG-006, инкремент 1 ---
+# Схема таблицы: `app-under-test/.../data/model/FilterProfile.kt` (Entity) +
+# `AppDatabase.kt` MIGRATION_3_4 (CREATE TABLE) —
+#   id TEXT NOT NULL PRIMARY KEY, name TEXT NOT NULL, queryString TEXT NOT NULL,
+#   timestamp INTEGER NOT NULL
+# Нужна для TC-041 (применение сохранённого профиля) и TC-042 (удаление профиля из
+# Settings) — оба сидят профиль(и) напрямую в Room, минуя UI (см. заметки в телах
+# кейсов и `bugs/AT-BUG-006.md`).
+
+
+def _insert_rows_filter_profiles(db: Path, rows: list[tuple[str, str, str, int]]) -> None:
+    """rows: (id, name, queryString, timestamp). INSERT OR REPLACE — тот же паттерн,
+    что `_insert_rows` для `work_ratings`: повторный вызов с тем же `id` заменяет
+    строку (не дублирует и не падает на конфликте PK)."""
+    con = sqlite3.connect(db)
+    cur = con.cursor()
+    for profile_id, name, query_string, timestamp in rows:
+        cur.execute(
+            """INSERT OR REPLACE INTO filter_profiles
+               (id, name, queryString, timestamp)
+               VALUES (?,?,?,?)""",
+            (profile_id, name, query_string, timestamp),
+        )
+    con.commit()
+    con.close()
+
+
+def seed_filter_profiles(profiles: list[tuple[str, str]]) -> None:
+    """Заливает список `(name, queryString)` в таблицу `filter_profiles` — аналог
+    `seed()` для `work_ratings`, но для сохранённых фильтр-профилей (TC-041/TC-042).
+    `id` (PK, TEXT) и `timestamp` генерируются автоматически (uuid4 / now-ms):
+    вызывающему коду (кейсам) они не нужны — сверка идёт по URL query-параметрам и
+    видимости профиля по имени в списке, не по внутреннему id. Если понадобится
+    детерминированный `id` (например, для точечного теста INSERT OR REPLACE),
+    используйте `_insert_rows_filter_profiles` напрямую.
+    Приложение должно быть остановлено; после вызова стартуйте его заново (Room
+    прочитает свежий файл) — тот же контракт, что у `seed()`."""
+    adb.force_stop()
+    ensure_db_initialized()
+    tmp = Path(tempfile.mkdtemp(prefix="ao3seed_"))
+    try:
+        db = _pull_baseline(tmp)
+        now = int(time.time() * 1000)
+        rows = [(str(uuid.uuid4()), name, query_string, now) for name, query_string in profiles]
+        _insert_rows_filter_profiles(db, rows)
         adb.run_as(f"rm -f {_WAL} {_SHM}")
         adb.push_app_file(db, _DB_REL)
     finally:
