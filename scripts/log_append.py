@@ -72,6 +72,7 @@ FAILURE_CLASSES = {"spec", "capability", "recon", "tooling"}
 # последовательности, иначе описательный id с цифрами внутри ложно считается
 # сорвавшим порядок).
 TASK_ID_FULL_RE = re.compile(r"^t-(\d+)$")
+SEQ_LIKE_RE = re.compile(r"^t-(\d+)$", re.IGNORECASE)
 
 
 def _read_routing_records(path: Path) -> list[dict]:
@@ -129,6 +130,7 @@ def append_routing(event: str, agent: str, *, model: str = "",
                    attempt: int = 0, failure_class: str = "",
                    witness: str = "", ref: str = "",
                    reopen_task: str = "") -> str:
+    task_id = task_id.strip()  # F-C: пробелы в id недопустимы
     if event not in ROUTING_EVENTS:
         raise SystemExit(f"неизвестное событие '{event}'; допустимы: "
                          + ", ".join(sorted(ROUTING_EVENTS)))
@@ -155,6 +157,9 @@ def append_routing(event: str, agent: str, *, model: str = "",
             # Описательный id (at-bug-005, fix-t-12-encoding...) новизна уже
             # гарантирована условием "не встречался" — последовательность к
             # нему не применяется (t-009, попытка 2: исправление п.1 спеки).
+            if SEQ_LIKE_RE.match(task_id) and not TASK_ID_FULL_RE.match(task_id):
+                raise SystemExit(
+                    f"task_id '{task_id}' должен быть в канонической форме 't-NNN'")
             if TASK_ID_FULL_RE.match(task_id):
                 expected = _expected_task_id(records)
                 if task_id != expected:

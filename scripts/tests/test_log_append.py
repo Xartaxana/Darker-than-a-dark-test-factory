@@ -327,3 +327,40 @@ def test_delegated_preexisting_descriptive_task_id_continues_freely(logs):
     la.append_routing("delegated", "test-maintainer", model="sonnet",
                       task_id="at-bug-003")
     assert len(routing.read_text(encoding="utf-8").splitlines()) == 2
+
+
+def test_delegated_id_with_spaces_stripped(logs):
+    # t-010 (критик F-C по t-009): " t-002 " раньше молча уходил в
+    # описательную ветку; теперь id нормализуется strip'ом и проходит
+    # проверку последовательности, в журнал пишется очищенным.
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
+    la.append_routing("delegated", "builder", model="sonnet", task_id=" t-002 ")
+    lines = routing.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 2
+    assert json.loads(lines[1])["task_id"] == "t-002"
+
+
+def test_delegated_fresh_sequential_id_fails_on_wrong_case(logs):
+    # t-010 (критик F-C): "T-002" похож на последовательность, но не в
+    # канонической форме — явный отказ вместо тихой описательной трактовки.
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
+    with pytest.raises(SystemExit, match="канонической форме"):
+        la.append_routing("delegated", "builder", model="sonnet", task_id="T-002")
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 1
+
+
+def test_non_delegated_fresh_t_nnn_skips_sequence_check_and_jumps_max(logs):
+    # t-010 (критик F-D по t-009): фиксируем ИНВАРИАНТ, а не желаемое —
+    # гард последовательности бьёт только по delegated; accepted со свежим
+    # t-NNN проходит без проверки и сдвигает max для последующих свежих id.
+    routing, _ = logs
+    la.append_routing("accepted", "builder", model="sonnet", task_id="t-050",
+                      witness="pytest -q -> passed")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-051")
+    lines = routing.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 2
+    assert json.loads(lines[1])["task_id"] == "t-051"
+    with pytest.raises(SystemExit, match="t-052"):
+        la.append_routing("delegated", "builder", model="sonnet", task_id="t-002")
