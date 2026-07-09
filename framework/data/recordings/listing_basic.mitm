@@ -1,0 +1,147 @@
+8961:9:websocket;0:~8:response;7559:6:reason;2:OK,11:status_code;3:200#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;7332:<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Test Fixture Listing | Archive of Our Own</title></head>
+<body>
+<div id="main" class="works-index dashboard region" role="main">
+  <h2 class="heading">Test Fixture Listing</h2>
+  <ol class="work index group">
+    
+    <li id="work_900000001" class="work blurb group work-900000001" role="article">
+      <h4 class="heading">
+        <a href="/works/900000001">A Loved Test Work</a>
+        <a rel="author" href="/users/seed_author_a/pseuds/seed_author_a">seed_author_a</a>
+      </h4>
+      <h5 class="fandoms heading">
+        <a class="tag" href="/tags/Fandom Alpha/works">Fandom Alpha</a>
+      </h5>
+      <p class="datetime">01 Jul 2026</p>
+      <h6 class="landmark heading">Summary</h6>
+      <blockquote class="userstuff summary">
+        <p>Test fixture summary for A Loved Test Work.</p>
+      </blockquote>
+      <ul class="tags commas">
+        <li class="warnings"><a class="tag" href="/tags/Creator%20Chose%20Not%20To%20Use%20Archive%20Warnings/works">Creator Chose Not To Use Archive Warnings</a></li>
+        <li class="relationships"><a class="tag" href="/tags/Test%20Ship*s*Other%20Ship/works">Test Ship/Other Ship</a></li>
+        <li class="freeforms"><a class="tag" href="/tags/Fluff/works">Fluff</a></li>
+      </ul>
+      <dl class="stats">
+        <dt class="words">Words:</dt><dd class="words">4200</dd>
+        <dt class="chapters">Chapters:</dt><dd class="chapters">1/1</dd>
+        <dt class="comments">Comments:</dt><dd class="comments">0</dd>
+        <dt class="kudos">Kudos:</dt><dd class="kudos">0</dd>
+        <dt class="hits">Hits:</dt><dd class="hits">1</dd>
+      </dl>
+    </li>
+
+    <li id="work_900000002" class="work blurb group work-900000002" role="article">
+      <h4 class="heading">
+        <a href="/works/900000002">A Kudosed Test Work</a>
+        <a rel="author" href="/users/seed_author_b/pseuds/seed_author_b">seed_author_b</a>
+      </h4>
+      <h5 class="fandoms heading">
+        <a class="tag" href="/tags/Fandom Beta/works">Fandom Beta</a>
+      </h5>
+      <p class="datetime">01 Jul 2026</p>
+      <h6 class="landmark heading">Summary</h6>
+      <blockquote class="userstuff summary">
+        <p>Test fixture summary for A Kudosed Test Work.</p>
+      </blockquote>
+      <ul class="tags commas">
+        <li class="warnings"><a class="tag" href="/tags/Creator%20Chose%20Not%20To%20Use%20Archive%20Warnings/works">Creator Chose Not To Use Archive Warnings</a></li>
+        <li class="relationships"><a class="tag" href="/tags/Test%20Ship*s*Other%20Ship/works">Test Ship/Other Ship</a></li>
+        <li class="freeforms"><a class="tag" href="/tags/Fluff/works">Fluff</a></li>
+      </ul>
+      <dl class="stats">
+        <dt class="words">Words:</dt><dd class="words">1500</dd>
+        <dt class="chapters">Chapters:</dt><dd class="chapters">1/1</dd>
+        <dt class="comments">Comments:</dt><dd class="comments">0</dd>
+        <dt class="kudos">Kudos:</dt><dd class="kudos">0</dd>
+        <dt class="hits">Hits:</dt><dd class="hits">1</dd>
+      </dl>
+    </li>
+
+    <li id="work_900000003" class="work blurb group work-900000003" role="article">
+      <h4 class="heading">
+        <a href="/works/900000003">A Read Test Work</a>
+        <a rel="author" href="/users/seed_author_c/pseuds/seed_author_c">seed_author_c</a>
+      </h4>
+      <h5 class="fandoms heading">
+        <a class="tag" href="/tags/Fandom Gamma/works">Fandom Gamma</a>
+      </h5>
+      <p class="datetime">01 Jul 2026</p>
+      <h6 class="landmark heading">Summary</h6>
+      <blockquote class="userstuff summary">
+        <p>Test fixture summary for A Read Test Work.</p>
+      </blockquote>
+      <ul class="tags commas">
+        <li class="warnings"><a class="tag" href="/tags/Creator%20Chose%20Not%20To%20Use%20Archive%20Warnings/works">Creator Chose Not To Use Archive Warnings</a></li>
+        <li class="relationships"><a class="tag" href="/tags/Test%20Ship*s*Other%20Ship/works">Test Ship/Other Ship</a></li>
+        <li class="freeforms"><a class="tag" href="/tags/Fluff/works">Fluff</a></li>
+      </ul>
+      <dl class="stats">
+        <dt class="words">Words:</dt><dd class="words">800</dd>
+        <dt class="chapters">Chapters:</dt><dd class="chapters">1/1</dd>
+        <dt class="comments">Comments:</dt><dd class="comments">0</dd>
+        <dt class="kudos">Kudos:</dt><dd class="kudos">0</dd>
+        <dt class="hits">Hits:</dt><dd class="hits">1</dd>
+      </dl>
+    </li>
+
+    <li id="work_900000004" class="work blurb group work-900000004" role="article">
+      <h4 class="heading">
+        <a href="/works/900000004">A Pending Test Work</a>
+        <a rel="author" href="/users/seed_author_d/pseuds/seed_author_d">seed_author_d</a>
+      </h4>
+      <h5 class="fandoms heading">
+        <a class="tag" href="/tags/Fandom Delta/works">Fandom Delta</a>
+      </h5>
+      <p class="datetime">01 Jul 2026</p>
+      <h6 class="landmark heading">Summary</h6>
+      <blockquote class="userstuff summary">
+        <p>Test fixture summary for A Pending Test Work.</p>
+      </blockquote>
+      <ul class="tags commas">
+        <li class="warnings"><a class="tag" href="/tags/Creator%20Chose%20Not%20To%20Use%20Archive%20Warnings/works">Creator Chose Not To Use Archive Warnings</a></li>
+        <li class="relationships"><a class="tag" href="/tags/Test%20Ship*s*Other%20Ship/works">Test Ship/Other Ship</a></li>
+        <li class="freeforms"><a class="tag" href="/tags/Fluff/works">Fluff</a></li>
+      </ul>
+      <dl class="stats">
+        <dt class="words">Words:</dt><dd class="words">12000</dd>
+        <dt class="chapters">Chapters:</dt><dd class="chapters">1/1</dd>
+        <dt class="comments">Comments:</dt><dd class="comments">0</dd>
+        <dt class="kudos">Kudos:</dt><dd class="kudos">0</dd>
+        <dt class="hits">Hits:</dt><dd class="hits">1</dd>
+      </dl>
+    </li>
+
+    <li id="work_900000005" class="work blurb group work-900000005" role="article">
+      <h4 class="heading">
+        <a href="/works/900000005">A Disliked Test Work</a>
+        <a rel="author" href="/users/seed_author_e/pseuds/seed_author_e">seed_author_e</a>
+      </h4>
+      <h5 class="fandoms heading">
+        <a class="tag" href="/tags/Fandom Eps/works">Fandom Eps</a>
+      </h5>
+      <p class="datetime">01 Jul 2026</p>
+      <h6 class="landmark heading">Summary</h6>
+      <blockquote class="userstuff summary">
+        <p>Test fixture summary for A Disliked Test Work.</p>
+      </blockquote>
+      <ul class="tags commas">
+        <li class="warnings"><a class="tag" href="/tags/Creator%20Chose%20Not%20To%20Use%20Archive%20Warnings/works">Creator Chose Not To Use Archive Warnings</a></li>
+        <li class="relationships"><a class="tag" href="/tags/Test%20Ship*s*Other%20Ship/works">Test Ship/Other Ship</a></li>
+        <li class="freeforms"><a class="tag" href="/tags/Fluff/works">Fluff</a></li>
+      </ul>
+      <dl class="stats">
+        <dt class="words">Words:</dt><dd class="words">300</dd>
+        <dt class="chapters">Chapters:</dt><dd class="chapters">1/1</dd>
+        <dt class="comments">Comments:</dt><dd class="comments">0</dd>
+        <dt class="kudos">Kudos:</dt><dd class="kudos">0</dd>
+        <dt class="hits">Hits:</dt><dd class="hits">1</dd>
+      </dl>
+    </li>
+  </ol>
+</div>
+</body>
+</html>
+,7:headers;77:44:12:Content-Type,24:text/html; charset=utf-8,]25:14:content-length,4:7332,]]12:http_version;8:HTTP/1.1,}7:request;281:4:path;42:/works?ao3_companion_fixture=listing_basic,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:2b337013-7eb1-a720-fb50-0f26cc63fe81;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:b5f6d55e-850c-4c81-4516-5f1ec2b03a1a;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:47df4f0c-801b-d2d1-1bc6-cab1183c90a9;4:type;4:http;7:version;2:21#}

@@ -2,11 +2,15 @@
 from __future__ import annotations
 
 import allure
+from appium.webdriver.common.appiumby import AppiumBy
 
+from framework.config import settings
 from framework.core import contexts
 from framework.core.waits import wait_until
 from framework.screens.browser_screen import BrowserScreen
+from framework.web import selectors
 from framework.web.downloaded_work_page import DownloadedWorkPage
+from framework.web.listing_page import ListingPage
 from framework.web.reader_page import ReaderPage
 
 
@@ -62,3 +66,46 @@ def assert_downloaded_page_styled(driver):
         page = DownloadedWorkPage(driver)
         page.wait_viewport_meta()
         page.wait_reader_css()
+
+
+@allure.step("When открыта листинговая страница (replay-фикстура) {url}")
+def open_listing(driver, url: str):
+    """Навигация WebView на URL листинга AO3 (replay-запись — см. `conftest.replay`,
+    `framework/data/recording_builder.py`). Ждёт появления хотя бы одного блёрба
+    работы — сигнал, что bridge (`ao3_bridge.js`) уже прошёлся по DOM и вставил
+    Rate-кнопки (`onWorksFound` → `applyRatings`), а не просто что страница ответила
+    200."""
+    with contexts.in_webview(driver):
+        driver.get(url)
+        wait_until(
+            driver,
+            lambda d: len(d.find_elements(AppiumBy.CSS_SELECTOR, selectors.WORK_BLURB)) > 0,
+            timeout=settings.WEBVIEW_LOAD_TIMEOUT,
+            message="листинговая replay-страница не загрузилась (нет блёрбов работ)",
+        )
+
+
+@allure.step("Then блёрб работы {work_id} скрыт фильтрацией на листинге")
+def assert_blurb_hidden(driver, work_id: str):
+    """Опрашивает `display:none` блёрба, а не читает его один раз: скрытие — следствие
+    нативного round-trip (`applyRatings` -> `applyAllFilters` в `ao3_bridge.js`),
+    который может ещё не завершиться к моменту первого чтения DOM — одноразовая
+    проверка была бы гонкой, проходящей на латентности переключения в WEBVIEW, а не
+    на факте синхронизации (см. AT-BUG-004, приёмка critic)."""
+    with contexts.in_webview(driver):
+        wait_until(
+            driver,
+            lambda d: ListingPage(d).is_hidden(work_id),
+            message=f"работа {work_id} должна быть скрыта фильтрацией (applyAllFilters), но видна",
+        )
+
+
+@allure.step("Then блёрб работы {work_id} виден на листинге")
+def assert_blurb_visible(driver, work_id: str):
+    """См. `assert_blurb_hidden` — тот же опрос вместо одноразового чтения."""
+    with contexts.in_webview(driver):
+        wait_until(
+            driver,
+            lambda d: not ListingPage(d).is_hidden(work_id),
+            message=f"работа {work_id} должна быть видна, но скрыта фильтрацией",
+        )

@@ -60,6 +60,20 @@ cd D:\AO3_tests\tools\appium; npx appium
 | B: mitmproxy + системный CA (для replay) | ✅ РЕШЁН (2026-07-03) | Доказан полный цикл **record→replay** HTTPS-трафика WebView. 48 флоу записано (22 к archiveofourown.org, расшифрованы html/css/json), затем те же страницы отданы приложению из записи (`[replay] << 200 OK` на `GET https://archiveofourown.org/`). Ноль ошибок доверия. См. подробный разбор ниже (§Спайк B — как решён). Recording-фикстура: `framework/data/recordings/ao3_home_smoke.mitm`. Разблокирует TC-009/013/014/015 |
 | C: сидинг Room через run-as | ✅ | На debug-сборке `run-as com.example.ao3_wrapper` даёт чтение и запись `databases/` (`ao3_ratings.db`), `shared_prefs/` (`ao3_settings.xml`), `files/`. Снятие/заливка состояния — `scripts/seed-room-db.sh`. **Нюанс:** Room в WAL — тянуть/класть `*.db` + `*.db-wal` + `*.db-shm` вместе |
 
+**Доведение спайка B до продукта (AT-BUG-004, инкремент 1, 2026-07-08):** механизм
+record→replay подключён к `framework/tests/conftest.py::replay` (fixture, маркер
+`replay`, teardown возвращает прокси и глушит mitmdump). Записи с блёрбами
+синтетических `ao3_id` (`framework/data/works.py`) физически невозможно снять живым
+`mitmdump`-прогоном (таких работ не существует на archiveofourown.org) — они
+собираются программно: `framework/data/recording_builder.py` (тот же `.mitm`-формат,
+HTML 1:1 повторяет проверенную разметку AO3) + генератор
+`python scripts/build_replay_recordings.py`. Базовая листинговая запись —
+`framework/data/recordings/listing_basic.mitm` (5 блёрбов, разблокирует
+TC-013/014/015/043/045). Остаток батча (TC-032/033 — запись download-flow;
+TC-012 — вариация с дублированным `ao3_id`) — в очереди, см. `bugs/AT-BUG-004.md`.
+Каждый прогон с `-writable-system` требует свежего `bash scripts/install-mitm-ca.sh`
+(mount не переживает reboot эмулятора, см. ниже).
+
 ### Приёмы, зафиксированные в спайках (для фреймворка)
 - **Git Bash + adb-пути:** экспортировать `MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL="*"`, иначе `/system/...` → `C:/Program Files/Git/system/...`.
 - **Фоновые процессы (mitmdump, эмулятор):** запускать через фоновые задачи/`nohup`, а не `Start-Process` из разовой PowerShell-команды — иначе процесс умирает по завершении вызова.

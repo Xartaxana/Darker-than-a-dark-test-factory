@@ -1,30 +1,40 @@
 {
+  "TC-054": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-013": {
+    "itype": "test-case",
+    "artifact_status": "Review",
+    "board_status": "Review"
+  },
   "TC-021": {
     "itype": "test-case",
     "artifact_status": "Approved",
     "board_status": "Approved"
   },
-  "TC-050": {
+  "TC-033": {
     "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
+    "artifact_status": "Review",
+    "board_status": "Review"
   },
-  "TC-051": {
+  "TC-040": {
     "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
-  "TC-052": {
+  "TC-048": {
     "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
-  "TC-053": {
+  "TC-022": {
     "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
-  "TC-054": {
+  "TC-016": {
     "itype": "test-case",
     "artifact_status": "Automated",
     "board_status": "Automated"
@@ -34,27 +44,87 @@
     "artifact_status": "Automated",
     "board_status": "Automated"
   },
-  "TC-032": {
+  "TC-012": {
     "itype": "test-case",
     "artifact_status": "Review",
     "board_status": "Review"
   },
-  "TC-033": {
+  "TC-031": {
     "itype": "test-case",
     "artifact_status": "Review",
     "board_status": "Review"
+  },
+  "TC-025": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-050": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-036": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": null
+  },
+  "TC-015": {
+    "itype": "test-case",
+    "artifact_status": "Review",
+    "board_status": "Review"
+  },
+  "TC-006": {
+    "itype": "test-case",
+    "artifact_status": "Draft",
+    "board_status": "Draft"
+  },
+  "TC-003": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-018": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-047": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "RUN-20260702-0300": {
+    "itype": "run",
+    "artifact_status": "Closed",
+    "board_status": "Closed"
+  },
+  "TC-042": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-053": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-034": {
     "itype": "test-case",
     "artifact_status": "Approved",
-    "board_status": "Approved"
+    "board_status": null
   },
-  "TC-035": {
+  "TC-026": {
     "itype": "test-case",
     "artifact_status": "Approved",
     "board_status": "Approved"
   },
-  "TC-036": {
+  "TC-044": {
+    "itype": "test-case",
+    "artifact_status": "Review",
+    "board_status": "Review"
+  },
+  "TC-029": {
     "itype": "test-case",
     "artifact_status": "Approved",
     "board_status": "Approved"
@@ -63,6 +133,66 @@
     "itype": "test-case",
     "artifact_status": "Review",
     "board_status": "Review"
+  },
+  "TC-024": {
+    "itype": "test-case",
+    "artifact_status": "Review",
+    "board_status": "Review"
+  },
+  "TC-045": {
+    "itype": "test-case",
+    "artifact_status": "Review",
+    "board_status": "Review"
+  },
+  "BUG-001": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "TC-007": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-019": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-052": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-028": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-004": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-011": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-010": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-049": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-005": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-038": {
     "itype": "test-case",
@@ -74,192 +204,7 @@
     "artifact_status": "Approved",
     "board_status": "Approved"
   },
-  "TC-046": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-040": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-041": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-042": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-006": {
-    "itype": "test-case",
-    "artifact_status": "Draft",
-    "board_status": "Draft"
-  },
-  "TC-016": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-017": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-027": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-028": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-029": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-030": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-031": {
-    "itype": "test-case",
-    "artifact_status": "Review",
-    "board_status": "Review"
-  },
-  "TC-007": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-008": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-009": {
-    "itype": "test-case",
-    "artifact_status": "Review",
-    "board_status": "Review"
-  },
-  "TC-010": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-011": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-012": {
-    "itype": "test-case",
-    "artifact_status": "Review",
-    "board_status": "Review"
-  },
-  "TC-043": {
-    "itype": "test-case",
-    "artifact_status": "Review",
-    "board_status": "Review"
-  },
-  "TC-044": {
-    "itype": "test-case",
-    "artifact_status": "Review",
-    "board_status": "Review"
-  },
-  "TC-045": {
-    "itype": "test-case",
-    "artifact_status": "Review",
-    "board_status": "Review"
-  },
-  "TC-018": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-019": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
   "TC-020": {
-    "itype": "test-case",
-    "artifact_status": "Review",
-    "board_status": "Review"
-  },
-  "TC-047": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-048": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-049": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-001": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-002": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-003": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-004": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-005": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-022": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-023": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-024": {
-    "itype": "test-case",
-    "artifact_status": "Review",
-    "board_status": "Review"
-  },
-  "TC-025": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-026": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-013": {
     "itype": "test-case",
     "artifact_status": "Review",
     "board_status": "Review"
@@ -269,34 +214,89 @@
     "artifact_status": "Review",
     "board_status": "Review"
   },
-  "TC-015": {
-    "itype": "test-case",
-    "artifact_status": "Review",
-    "board_status": "Review"
-  },
   "AT-BUG-002": {
     "itype": "bug",
     "artifact_status": "Verified",
     "board_status": "Verified"
   },
-  "AT-BUG-003": {
-    "itype": "bug",
-    "artifact_status": "Fixed",
-    "board_status": "Fixed"
+  "TC-041": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-027": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-030": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-046": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-001": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-017": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-002": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-023": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-032": {
+    "itype": "test-case",
+    "artifact_status": "Review",
+    "board_status": "Review"
+  },
+  "TC-051": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-009": {
+    "itype": "test-case",
+    "artifact_status": "Review",
+    "board_status": "Review"
+  },
+  "TC-035": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": null
   },
   "AT-BUG-004": {
     "itype": "bug",
     "artifact_status": "Open",
     "board_status": "Open"
   },
-  "BUG-001": {
-    "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
+  "TC-008": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
-  "RUN-20260702-0300": {
-    "itype": "run",
-    "artifact_status": "Closed",
-    "board_status": "Closed"
+  "AT-BUG-003": {
+    "itype": "bug",
+    "artifact_status": "Fixed",
+    "board_status": "Fixed"
+  },
+  "TC-043": {
+    "itype": "test-case",
+    "artifact_status": "Review",
+    "board_status": "Review"
   }
 }

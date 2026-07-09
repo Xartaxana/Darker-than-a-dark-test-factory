@@ -9,7 +9,7 @@ from __future__ import annotations
 import pytest
 
 from framework.config import settings
-from framework.core import adb, driver_factory, reporting
+from framework.core import adb, driver_factory, mitm, reporting
 from framework.data import works as W
 from framework.steps import app_steps
 
@@ -108,6 +108,38 @@ def comment_only_work():
     app_steps.clean_state()
     app_steps.seed_with_comment([(W.KUDOSED, None, "test note", None)])
     yield W.KUDOSED
+
+
+@pytest.fixture()
+def replay(request):
+    """Поднимает mitmdump в режиме server-replay на записи `request.param` (имя файла
+    в `framework/data/recordings/`) и направляет прокси устройства на него на время
+    теста; гарантированный teardown возвращает прокси и глушит mitmdump независимо от
+    исхода теста. Параметризуется indirect'ом (см. `test_visibility.py`) —
+    `@pytest.mark.parametrize("replay", [<filename>], indirect=True)`.
+
+    Требует `@pytest.mark.replay` на тесте (см. `pytest_configure`) и окружение,
+    доведённое до Спайка B: эмулятор запущен с `-writable-system`
+    (`Start-Emulator -WritableSystem`) и CA mitmproxy установлен
+    (`bash scripts/install-mitm-ca.sh`) — см. `docs/environment-setup.md`.
+    Подключение к conftest — часть AT-BUG-004, инкремент 1 (сам механизм record→replay
+    доказан спайком B, до этой фикстуры не был подключён ни к одному тесту)."""
+    flow_name = request.param
+    flows_file = settings.RECORDINGS_DIR / flow_name
+    assert flows_file.exists(), (
+        f"replay-запись не найдена: {flows_file} "
+        f"(сгенерировать: python scripts/build_replay_recordings.py)"
+    )
+    try:
+        mitm.set_device_proxy()
+        mitm.start_replay(flows_file)
+        yield flows_file
+    finally:
+        # clear_device_proxy идемпотентен (check=False, ставит ":0" безусловно) —
+        # безопасно звать даже если set_device_proxy выше не выполнился/упал:
+        # teardown должен покрывать ЛЮБую точку отказа setup'а, не только yield.
+        mitm.stop()
+        mitm.clear_device_proxy()
 
 
 # --- Артефакты падений ---
