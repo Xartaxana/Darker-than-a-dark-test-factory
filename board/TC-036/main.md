@@ -2,27 +2,27 @@
 key: "TC-036"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Delete work удаляет и файл, и строку рейтинга целиком"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:downloads", "risk:R-05"]
+labels: ["test-case", "area:downloads", "risk:R-05", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-08T17:26:00Z"
-updated: "2026-07-08T17:26:00Z"
+created: "2026-07-09T11:20:00Z"
+updated: "2026-07-09T11:20:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Delete work удаляет и файл, и строку рейтинга целиком
 
 _Спроецировано из `test-cases/downloads/TC-036.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-036 — Delete work удаляет файл и запись целиком
 
@@ -53,6 +53,43 @@ FAVORITE, ни на вкладке FILES
 - Проверка "исчезла из Library" — по обеим вкладкам, т.к. это единственный способ
   косвенно убедиться, что строка `WorkRating` удалена целиком (нет прямого доступа к
   БД из UI-теста).
+
+## Ревью автотеста (test-reviewer, 2026-07-09)
+
+Вердикт: **Пройдено** — `Approved → Automated`, `automation_status: active`.
+
+1. **Архитектура (C1):** `python scripts/arch_check.py` — ошибок 0, предупреждений 0.
+   Файл теста не в ALLOWLIST (ALLOWLIST пуст, arch_check.py:80); локаторы в
+   `framework/screens/library_screen.py`, бизнес-шаги в `framework/steps/`, ожидания
+   через `core/waits`, `sleep` нет.
+2. **Traceability:** `@allure.id("TC-036")` == id кейса; `@pytest.mark.p1` == priority P1;
+   `automated_by` указывает на реально существующую и проходящую функцию
+   `test_delete_work_removes_row_and_file` (test_downloads.py:72);
+   `state/traceability.md` строка R-05/TC-036 обновлена.
+3. **Соответствие по смыслу (R-05, пара к TC-035):** шаг
+   `delete_via_overlay(..., "Delete work")` кликает по локатору
+   `by_text("Delete work")` (library_screen.py:62-64) — БУКВАЛЬНО текст «Delete work»
+   (полное удаление), НЕ «Delete downloaded file». Сверено с исходником приложения:
+   «Delete work» (`LibraryScreen.kt:354`) → `onDelete` → `viewModel.deleteWork` →
+   `deleteDownload(..., hasOtherState=false)`, т.е. hard-delete строки `WorkRating`
+   вместе с файлом (LibraryViewModel.kt:109-118). Assert'ы проверяют суть ожидаемого
+   результата, а не «элемент существует»: работа отсутствует и во вкладке FAVORITE
+   (`assert_work_not_in_tab("SAVE", ...)`), и во вкладке FILES
+   (`assert_work_not_in_files_tab`) — проверка по ОБЕИМ вкладкам, как требуют «Заметки
+   для автоматизации» (косвенное подтверждение удаления всей строки при отсутствии
+   прямого доступа к БД из UI-теста).
+4. **Фикстуры/данные:** `downloaded_work_seeded` (conftest.py:90-99) сидит работу LOVED
+   с rating=SAVE и реальным файлом на диске ДО создания Appium-сессии (порядок
+   параметров `(downloaded_work_seeded, driver)` — сидинг раньше сессии, как требует
+   HANDOFF; `clean_state()` до сессии); `clean_state()` (pm clear) изолирует от других
+   тестов и порядка прогона.
+5. **Flake-риск:** ожидания явные (waits в BaseScreen), `sleep` нет; тест офлайн — без
+   сети/replay, гонок с живым AO3 нет. Long-press реализован тем же
+   `mobile: longClickGesture` по элементу текста, что в уже принятом TC-035; клик по
+   `Text`-узлу попадает в границы кликабельного `Row` — подтверждено зелёным
+   независимым прогоном.
+6. **Независимое воспроизведение:** `Get-Device` → `DEVICE: emulator-5554`;
+   `Invoke-Pytest -k test_delete_work_removes_row_and_file` → `1 passed`, PYTEST_EXIT=0.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»

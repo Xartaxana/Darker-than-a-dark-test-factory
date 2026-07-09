@@ -235,16 +235,17 @@
     "epicPath": null,
     "summary": "Delete downloaded file удаляет только файл, сохраняя строку рейтинга",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:downloads",
-      "risk:R-05"
+      "risk:R-05",
+      "automation:active"
     ],
-    "updated": "2026-07-08T17:26:00Z",
-    "resolution": null,
+    "updated": "2026-07-09T11:15:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -257,16 +258,17 @@
     "epicPath": null,
     "summary": "Delete work удаляет и файл, и строку рейтинга целиком",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:downloads",
-      "risk:R-05"
+      "risk:R-05",
+      "automation:active"
     ],
-    "updated": "2026-07-08T17:26:00Z",
-    "resolution": null,
+    "updated": "2026-07-09T11:20:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },

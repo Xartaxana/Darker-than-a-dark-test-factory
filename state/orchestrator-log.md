@@ -35,3 +35,5 @@ qa-orchestrator. Скрипты pre_steps (stale_locks и др.) тоже пиш
 | 2026-07-09T10:45:02Z | Устранить test debt (R11, attempt 2) | test-maintainer | AT-BUG-004 | success: teardown-блокер+гонка+детерминизм исправлены; status Open (критерий Fixed не закрыт) |
 | 2026-07-09T10:45:02Z | Приёмка инкремента 2 (правило 3а) | critic | AT-BUG-004 | ACCEPT: дифф принят, Fixed не ставить (download-flow остаток) |
 | 2026-07-09T10:49:08Z | Ревью нового автотеста (R13) | test-reviewer | TC-034 | success: Approved->Automated, automation_status active |
+| 2026-07-09T10:56:34Z | Ревью нового автотеста (R13) | test-reviewer | TC-035 | success: Approved->Automated, automation_status active |
+| 2026-07-09T11:00:08Z | Ревью нового автотеста (R13) | test-reviewer | TC-036 | success: Approved->Automated, automation_status active |
