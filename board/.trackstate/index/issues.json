@@ -212,16 +212,17 @@
     "epicPath": null,
     "summary": "Открытие скачанного файла применяет мобильный viewport и reader.css",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:downloads",
-      "risk:R-05"
+      "risk:R-05",
+      "automation:active"
     ],
-    "updated": "2026-07-08T17:26:00Z",
-    "resolution": null,
+    "updated": "2026-07-09T11:05:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1256,7 +1257,7 @@
     "epicPath": null,
     "summary": "Кейсы, автоматизированные до гейта F1 (TC-007/008/016/017), не несут полей жизненного цикла B3 (automation_status/reviewed_by/reviewed_at)",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -1272,8 +1273,8 @@
       "test_case:TC-017",
       "sev:minor"
     ],
-    "updated": "2026-07-08T23:20:00Z",
-    "resolution": null,
+    "updated": "2026-07-09T10:35:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
