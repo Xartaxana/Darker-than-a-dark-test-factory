@@ -32,7 +32,14 @@ BTN_WRAP = "[data-ao3-btn-wrap]"
 RATE_BUTTON = "[data-ao3-rate-btn]"
 NOTE_BUTTON = "[data-ao3-note-btn]"
 TAG_BUTTON = "[data-ao3-tag-btn]"
-RATING_BADGE = "[data-ao3-badge]"
+# `[data-ao3-badge]` (прежний RATING_BADGE) УДАЛЁН (AT-BUG-004 инкремент 3): в
+# ao3_bridge.js этот атрибут встречается ТОЛЬКО в defensive-очистке
+# (`applyRatings`: `li.querySelectorAll('[data-ao3-badge]').forEach(remove)`) —
+# элемент с ним НИКОГДА не создаётся; проверка по нему всегда возвращала False
+# (латентный TEST_BUG с инкремента 1, пойман при отладке TC-009-пробы, сверено
+# живым DOM). Проставленный рейтинг наблюдаем как непрозрачный `background-color`
+# самой Rate-кнопки (`updateRateButton` красит `RATE_BUTTON` цветом `BADGE[rating]`,
+# не создаёт отдельный элемент) — см. `ListingPage.badge_for`.
 TAG_HIGHLIGHT = "[data-ao3-tag-hl]"
 HIDDEN_NOTICE_ID = "ao3-companion-hidden-notice"
 SAVE_PROFILE_BTN = "[data-ao3-save-profile]"

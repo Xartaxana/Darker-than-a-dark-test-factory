@@ -1,0 +1,10 @@
+# Записи mitmproxy (framework/data/recordings/*.mitm) — бинарный формат
+# (mitmproxy.io.FlowWriter/FlowReader). Без явной пометки `git add`/`git status`
+# печатают ложное "LF will be replaced by CRLF" (core.autocrlf=true, файл не
+# помечен как binary) — на практике git's binary-детектор при конвертации это
+# перепроверяет и пока не путает (сверено побайтово: `git show :path` ==
+# содержимое на диске, AT-BUG-004 инкремент 3), но полагаться на неявную
+# эвристику для бинарного формата воспроизводимости — риск: другая версия git/
+# другой контент recording может дать иной результат детекции. `binary`
+# (= `-diff -merge -text`) убирает риск целиком, не полагаясь на эвристику.
+*.mitm binary

@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import hashlib
 import html
+import re
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -40,6 +41,24 @@ LISTING_BASIC_FILENAME = "listing_basic.mitm"
 # а не как защита от live-режима: реальную защиту даёт requires-фикстуры маркер
 # `@pytest.mark.replay` и явный teardown прокси в `replay`-фикстуре conftest.py.
 LISTING_BASIC_URL = "https://archiveofourown.org/works?ao3_companion_fixture=listing_basic"
+
+# --- Идентификаторы дубль-листинговой фикстуры (TC-012, AT-BUG-004 инкремент 3) ---
+# Один и тот же ao3_id встречается в ДВУХ разных `<li id="work_{id}">` на одной
+# странице (не покрывается listing_basic.mitm, где каждая работа встречается один
+# раз) — нужно доказать, что `applyRatings` (ao3_bridge.js) обновляет бейдж у ВСЕХ
+# вхождений на странице, а не только у первого найденного querySelector'ом.
+LISTING_DUPLICATE_FILENAME = "listing_duplicate_work.mitm"
+LISTING_DUPLICATE_URL = "https://archiveofourown.org/works?ao3_companion_fixture=listing_duplicate_work"
+
+# --- Идентификаторы фикстуры download-flow (TC-032/033, AT-BUG-004 инкремент 3) ---
+# `DownloadRepository.downloadWork` (не WebView!) идёт по ДВУМ HTTP-транзакциям через
+# `OkHttpClient`: сначала GET work-страницы, чтобы regex'ом (`fetchDownloadUrl`)
+# вытащить download-ссылку из `li.download a[href*=".html"]` (см. PROJECT.md §Download
+# flow, TC-032.md/TC-033.md «Причина»), затем GET самого `.html`-файла по найденному
+# URL. Обе транзакции нужно записать в ОДИН `.mitm` — оба пути через один и тот же
+# `replay`-прокси (`conftest.py`), см. `build_work_with_download` в
+# `scripts/build_replay_recordings.py`.
+WORK_WITH_DOWNLOAD_FILENAME = "work_with_download.mitm"
 
 
 def _deterministic_id(*parts: str) -> str:
@@ -146,7 +165,14 @@ def render_listing_html(works: list[Work], heading: str = "Test Fixture Listing"
     """Минимальная, но структурно-валидная страница листинга AO3: `ol.work.index.group`
     с одним `li[id^="work_"].work.blurb` на каждую `Work`. Никаких внешних
     `<script src>`/`<link rel=stylesheet>` — самодостаточна, не требует
-    `server_replay_extra=forward` на ассеты (детерминизм без сети)."""
+    `server_replay_extra=forward` на ассеты (детерминизм без сети).
+
+    Принимает `works` как есть, БЕЗ дедупликации по `ao3_id` — намеренно: TC-012
+    (AT-BUG-004 инкремент 3) требует листинг с ДВУМЯ `<li id="work_{id}">` одного и
+    того же `ao3_id` (см. `build_listing_duplicate_work` в
+    `scripts/build_replay_recordings.py`, вызывающий `render_listing_html([work, work])`).
+    Дублирующиеся `id` невалидны по спеке HTML, но реальные браузеры/`querySelectorAll`
+    это допускают — соответствует тому, что должен пережить `applyRatings`."""
     blurbs = "\n".join(_blurb_html(w) for w in works)
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -157,6 +183,109 @@ def render_listing_html(works: list[Work], heading: str = "Test Fixture Listing"
   <ol class="work index group">
     {blurbs}
   </ol>
+</div>
+</body>
+</html>
+"""
+
+
+# --- Разметка work-страницы с download-ссылкой (TC-032/033, AT-BUG-004 инкремент 3) ---
+# `DownloadRepository.fetchDownloadUrl` (не bridge/JS) ищет ПЕРВОЕ вхождение
+# `href="(/downloads/[^"]*\.html[^"]*)"` в сыром HTML любым regex'ом — не обязательно
+# внутри `li.download`, но реальная разметка AO3 кладёт download-ссылки именно там
+# (PROJECT.md §Download flow, «li.download a[href*=".html"]») — воспроизводим 1:1.
+def _download_slug(title: str) -> str:
+    """Приближение AO3-слага download-ссылки (пробелы/спецсимволы -> `_`). Точный
+    алгоритм AO3 не документирован публично и здесь не важен: `server-replay`
+    матчит по URL (см. модульный докстринг), важна только внутренняя согласованность
+    между `download_href` (используется и в атрибуте `href` work-страницы, и как URL
+    самой `.html`-записи) — не человекочитаемость."""
+    safe = re.sub(r"[^A-Za-z0-9]+", "_", title).strip("_")
+    return safe or "work"
+
+
+def download_href(work: Work, ext: str = "html") -> str:
+    """Host-relative href, как отдаёт реальный AO3 markup."""
+    return f"/downloads/{work.ao3_id}/{_download_slug(work.title)}.{ext}?updated_at=0"
+
+
+def download_url(work: Work, ext: str = "html") -> str:
+    """Абсолютный URL — так `DownloadRepository.fetchDownloadUrl` строит итоговый адрес
+    для второго GET (`"https://archiveofourown.org" + href`, см. `DownloadRepository.kt`)."""
+    return f"https://archiveofourown.org{download_href(work, ext)}"
+
+
+def _download_list_html(work: Work) -> str:
+    """`li.download` с вложенным `ul.download-list` (PDF/HTML/MOBI/EPUB) — тот же
+    контейнер, что реальный AO3 кладёт в `ul.work.navigation.actions` work-страницы.
+    `document.querySelector`/regex не требуют, чтобы `a[href*=".html"]` был прямым
+    потомком `li.download` — вложенность допустима."""
+    exts = ("pdf", "html", "mobi", "epub")
+    items = "\n".join(
+        f'        <li><a href="{download_href(work, ext)}" title="{ext.upper()}">{ext.upper()}</a></li>'
+        for ext in exts
+    )
+    return f"""
+    <li class="download" title="Download">
+      <a>Download</a>
+      <ul class="download-list expandable" title="Download">
+{items}
+      </ul>
+    </li>"""
+
+
+def render_work_page_html(work: Work) -> str:
+    """Минимальная, но структурно-валидная work-страница AO3 (`#workskin`,
+    `h2.title.heading`, `h3.byline.heading a[rel=author]` — сверено с Fragility note
+    `PROJECT.md`) с валидной download-ссылкой (`li.download a[href*=".html"]`,
+    `_download_list_html`). Самодостаточна — без внешних `<script src>`/`<link>`."""
+    title = html.escape(work.title)
+    author = html.escape(work.author)
+    fandom = html.escape(work.fandom)
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>{title} | Archive of Our Own</title></head>
+<body>
+<div id="main" class="works-show region" role="main">
+  <div id="workskin">
+    <div class="preface group">
+      <h2 class="title heading">{title}</h2>
+      <h3 class="byline heading"><a rel="author" href="/users/{author}/pseuds/{author}">{author}</a></h3>
+      <h5 class="fandom tags"><a class="tag" href="/tags/{fandom}/works">{fandom}</a></h5>
+    </div>
+    <ul class="work navigation actions" role="navigation">
+      {_download_list_html(work)}
+    </ul>
+    <div class="wrapper">
+      <p>Test fixture body for download-flow recording ({work.word_count} words).</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>
+"""
+
+
+def render_downloaded_work_html(work: Work) -> str:
+    """Содержимое самого скачиваемого `.html`-файла — минимальный self-contained AO3
+    download export (`#preface`/`#chapters .userstuff`). Приложение само инжектирует
+    mobile viewport/reader CSS при открытии локального файла (`BrowserScreen.kt
+    injectReaderCss/loadTabContent`, см. `framework/web/downloaded_work_page.py`) —
+    фикстуре не нужно приносить свою стилизацию."""
+    title = html.escape(work.title)
+    author = html.escape(work.author)
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>{title}</title></head>
+<body>
+<div id="preface">
+  <h1>{title}</h1>
+  <h3 class="byline">{author}</h3>
+</div>
+<div id="chapters">
+  <div class="userstuff">
+    <p>Downloaded fixture body for {title}.</p>
+  </div>
 </div>
 </body>
 </html>

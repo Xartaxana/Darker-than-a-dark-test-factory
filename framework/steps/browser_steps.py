@@ -129,3 +129,30 @@ def assert_blurb_visible(driver, work_id: str):
             lambda d: not ListingPage(d).is_hidden(work_id),
             message=f"работа {work_id} должна быть видна, но скрыта фильтрацией",
         )
+
+
+@allure.step("When нажата Rate-кнопка работы {work_id} на листинге")
+def tap_rate_button(driver, work_id: str):
+    """Клик по инжектированной bridge Rate-кнопке (`ao3_bridge.js::makeRateButton`) —
+    обработчик клика добавлен синхронно при её создании (в момент первого прохода
+    bridge по `li[id^="work_"]`, уже пройденного к моменту, когда `open_listing`
+    дождался блёрбов), доп. ожидание готовности хендлера не нужно. Клик открывает
+    нативный `RatingOverlay` (bottom-sheet) поверх WebView — ожидание его появления
+    делает вызывающий шаг (`rating_steps.rate_via_listing_overlay`), не этот."""
+    with contexts.in_webview(driver):
+        ListingPage(driver).rate_button(work_id).click()
+
+
+@allure.step("Then на карточке работы {work_id} на листинге появился бейдж рейтинга")
+def assert_rating_badge_visible(driver, work_id: str):
+    """Опрашивает появление `[data-ao3-badge]` в блёрбе, а не читает один раз: бейдж —
+    следствие нативного round-trip (`applyRating` -> `broadcastRatingChange` ->
+    `window.applyRatings` в `BrowserViewModel.kt`), выполняемого через фоновый
+    `evalJs` на WebView-вкладке — одноразовая проверка сразу после выбора рейтинга
+    была бы гонкой (тот же класс, что и `assert_blurb_hidden`, см. AT-BUG-004)."""
+    with contexts.in_webview(driver):
+        wait_until(
+            driver,
+            lambda d: ListingPage(d).badge_for(work_id),
+            message=f"бейдж рейтинга работы {work_id} не появился на листинге после простановки",
+        )

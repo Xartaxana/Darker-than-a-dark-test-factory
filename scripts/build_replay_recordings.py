@@ -32,9 +32,39 @@ def build_listing_basic() -> Path:
     return path
 
 
+def build_listing_duplicate_work() -> Path:
+    """Листинг с ОДНОЙ и той же работой в ДВУХ разных `<li id="work_{id}">` на одной
+    странице — нужен TC-012 (`applyRatings` должен обновить бейдж у ВСЕХ вхождений,
+    не только у первого querySelector-совпадения). Не покрывается `listing_basic.mitm`
+    (там каждая работа встречается один раз). Работа выбрана произвольно из
+    `ALL_WORKS` (`LOVED`) — сценарий TC-012 не завязан на конкретный рейтинг
+    (см. `bugs/AT-BUG-004.md` §Обсуждение, оценка объёма test-automator)."""
+    work = ALL_WORKS[0]
+    html = rb.render_listing_html([work, work], heading="Test Fixture Duplicate Listing")
+    flow = rb.make_html_get_flow(rb.LISTING_DUPLICATE_URL, html)
+    path = settings.RECORDINGS_DIR / rb.LISTING_DUPLICATE_FILENAME
+    rb.write_flows(path, [flow])
+    return path
+
+
+def build_work_with_download() -> Path:
+    """Work-страница с валидной download-ссылкой (`li.download a[href*=".html"]`)
+    + сам скачиваемый `.html`-файл — ДВЕ HTTP-транзакции в ОДНОМ `.mitm`, т.к.
+    `DownloadRepository.downloadWork` (не WebView) идёт по обеим через один и тот же
+    `replay`-прокси (см. `recording_builder.py` докстринг у `WORK_WITH_DOWNLOAD_FILENAME`).
+    Работа — `LOVED` (та же, что `build_listing_duplicate_work`; произвольный выбор,
+    сценарий TC-032/033 не завязан на конкретную работу набора `ALL_WORKS`)."""
+    work = ALL_WORKS[0]
+    work_page_flow = rb.make_html_get_flow(work.url, rb.render_work_page_html(work))
+    download_flow = rb.make_html_get_flow(rb.download_url(work), rb.render_downloaded_work_html(work))
+    path = settings.RECORDINGS_DIR / rb.WORK_WITH_DOWNLOAD_FILENAME
+    rb.write_flows(path, [work_page_flow, download_flow])
+    return path
+
+
 def main() -> None:
-    path = build_listing_basic()
-    print(f"written: {path}")
+    for path in (build_listing_basic(), build_listing_duplicate_work(), build_work_with_download()):
+        print(f"written: {path}")
 
 
 if __name__ == "__main__":

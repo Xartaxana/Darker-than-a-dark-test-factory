@@ -28,3 +28,15 @@ def rate_current_work(driver, rating: str):
     overlay = RatingOverlay(driver)
     assert overlay.is_visible(), "меню рейтинга не появилось на странице работы"
     overlay.choose(rating)
+
+
+@allure.step("When в открывшемся с листинга bottom-sheet выбран рейтинг {rating}")
+def rate_via_listing_overlay(driver, rating: str):
+    """Нативный `RatingOverlay` (bottom-sheet, ui/components/RatingOverlay.kt),
+    открытый Rate-кнопкой листинга (`browser_steps.tap_rate_button`) — в отличие от
+    встроенной панели (`rate_current_work`) НЕ спрятан за `AnimatedVisibility` нижней
+    навигации (рендерится в `BrowserScreen.kt` безусловно при `showRatingOverlay=true`,
+    поверх WebView), поэтому `BottomNav.ensure_visible()` здесь не нужен."""
+    overlay = RatingOverlay(driver)
+    assert overlay.is_visible(), "нативный bottom-sheet рейтинга не появился после Rate-кнопки листинга"
+    overlay.choose(rating)
