@@ -13,7 +13,7 @@ runs: []
 duplicates: []
 regression_of: ""
 status_since: "2026-07-09T11:30:00Z"
-updated: "2026-07-09T17:05:00Z"
+updated: "2026-07-09T20:39:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -151,3 +151,91 @@ test-maintainer/test-automator.
 отвергнута (потребовала бы правок app-under-test). Диспатч test-maintainer
 по спеке — как только эмулятор освободится от текущих device-работ
 (fix-verifier at-bug-004-verify).
+
+**2026-07-09T20:23:00Z — test-maintainer (инкремент 1 инфраструктуры SAF):**
+Реализовано по спеке выше. Локаторы DocumentsUI выведены с живого дерева
+(`python scripts/ui_snapshot.py` на открытом пикере, emulator-5554) на всех
+трёх поверхностях — по `resource-id` (`com.android.documentsui:id/*` /
+`android:id/*`), без координат/индексов, за одним документированным
+исключением (`DocumentsUIScreen._root_breadcrumb_segment` — первый сегмент
+breadcrumb'а, обоснование см. докстринг: имя root'а на OpenDocumentTree —
+имя устройства/AVD, недетерминировано между хостами, drawer там отсутствует
+вовсе на single-root устройстве).
+
+Находки при разведке (важны для test-automator при сборке TC-021):
+- САМ каталог "Download" (и другие стандартные top-level директории верхнего
+  уровня — DCIM/Pictures/...) через `OpenDocumentTree` выбрать НЕЛЬЗЯ:
+  системная защита приватности блокирует кнопку USE THIS FOLDER («Can't use
+  this folder, to protect your privacy, choose another folder») — нужна
+  ВЛОЖЕННАЯ подпапка.
+- Экспериментально подтверждено: `pm clear <pkg>` (уже используется в
+  `clean_app`) сбрасывает persisted URI permission grant на стороне ОС
+  (`adb shell dumpsys activity permissions` — грант исчезает сразу после
+  `pm clear`, до него был виден). Отдельный отзыв гранта в teardown не нужен.
+- Возврат из внешней Activity (DocumentsUI) сбрасывает scroll-позицию экрана
+  Settings на верх — `assert_download_folder_label` докручивает заново.
+
+Классовая полнота (правило 9 CLAUDE.md): блокер AT-BUG-005 — не только TC-021.
+`saf_steps.saf_pick_folder` (OpenDocumentTree-поверхность) устроен по
+`subpath`, не завязан на конкретный кейс — он ЗАКРЫВАЕТ и блокер TC-038 (тот
+же класс, «выбор папки загрузок через системный picker», см. «Анализ» выше)
+БЕЗ отдельной доработки: test-automator может переиспользовать её напрямую
+при автоматизации TC-038, как и TC-021.
+
+Состав: `framework/screens/documents_ui.py`, `framework/steps/saf_steps.py`,
+`framework/tests/test_saf_infra_probe.py` (три пробы: CreateDocument-экспорт,
+GetContent-импорт, OpenDocumentTree-выбор папки) — все новые файлы,
+`app-under-test/` не тронут. Witness: `python -m pytest tests/test_saf_infra_probe.py -v`
+(framework/.venv, `AO3_MODE=live`) — 2 прогона подряд, `3 passed` в обоих
+(106–107s), `PYTEST_EXIT=0`; `python scripts/arch_check.py` — `ошибок 0,
+предупреждений 0`. Smoke (`Invoke-Pytest -m p0`) — НЕ прогнан до конца:
+дважды подряд зависал на `tests/test_rating.py::test_rate_work_from_work_page_panel[READ-...]`
+(живой AO3), процесс приложения не находился (`pidof` пуст) при
+`ResumedActivity` всё ещё указывающей на него, фокус WM — на launcher; оба
+раза дерево процессов убито вручную (первый раз — Lead, второй — я, по его
+явному указанию не крутить цикл третий раз). Это симптом другого класса
+(нестабильность `test_rating.py`/эмулятора на живом AO3, файл не тронут этим
+инкрементом, пересечения с SAF-путями нет) — не блокирует Fixed этого
+инкремента, но требует отдельного разбора (кандидат на новый test_debt/
+quarantine, не на этот баг). Полный критерий Fixed (зелёный TC-021) —
+следующий инкремент, статус осознанно оставлен Open.
+
+**2026-07-09T20:44:00Z — test-maintainer (инкремент 1, attempt 2, после
+ДОРАБОТАТЬ critic):** Блокер устранён. `saf_probe_workspace`
+(`test_saf_infra_probe.py`) держал `mkdir` подпапки ДО общего try/finally, а
+`_adb_push` — в собственном отдельном try/finally, который чистил только
+локальный temp-файл; если `mkdir` отрабатывал, а push падал ДО yield,
+device-уборка (`finally` на :98-101 в старой версии) не выполнялась вовсе —
+тот же класс, что AT-BUG-004 инкремент 2 (teardown обязан покрывать ЛЮБУЮ
+точку отказа setup, не только yield). Исправлено по образцу `replay`
+(`conftest.py`): единственный `try` оборачивает mkdir + push + yield,
+единственный `finally` безусловно чистит temp-файл и все три device-цели.
+Докстрин фикстуры больше не только ссылается на паттерн `replay`, а
+воспроизводит его структуру дословно.
+
+Доказательство закрытия блокера: временная (не закоммиченная) инъекция
+отказа в `_adb_push` — `raise RuntimeError(...)` перед вызовом `adb push`,
+`mkdir` подпапки успевал отработать до неё. Прогон
+`test_saf_export_via_create_document` упал на setup с этим исключением
+(`ERROR at setup ... RuntimeError: TEMP FAULT INJECTION`), после чего
+`adb shell ls -la /sdcard/Download/` — `total 0` (подпапка НЕ утекла). Инъекция
+сразу же убрана (`git diff` подтверждает отсутствие следов).
+
+Дополнительно (некритичные замечания critic):
+- Добавлена строка о классовой полноте выше («Классовая полнота»):
+  `saf_pick_folder` без доработки закрывает и блокер TC-038.
+- Докстринг `DocumentsUIScreen._root_breadcrumb_segment` уточнён: тап
+  срабатывает не «несмотря на clickable=false», а потому что
+  `BaseScreen.tap` ждёт `EC.element_to_be_clickable`, которое в Selenium
+  проверяет `is_displayed()`/`is_enabled()`, а не атрибут `clickable`
+  accessibility-дерева (сверено по исходнику
+  `selenium/webdriver/support/expected_conditions.py`); Android-сторона —
+  отдельный факт (обработчик клика на itemView реагирует на touch
+  независимо от значения атрибута).
+
+Witness (attempt 2): `Invoke-Pytest tests/test_saf_infra_probe.py -v` — 2
+прогона подряд, `3 passed in 114.38s` и `3 passed in 112.12s`, `PYTEST_EXIT=0`
+в обоих; `/sdcard/Download` пуст после каждого. `python scripts/arch_check.py`
+— `ошибок 0, предупреждений 0`. Smoke не гонялся по указанию Lead (зависание
+диагностировано critic'ом как непричастное этому диффу). Статус бага остаётся
+Open (без изменений критерия).
