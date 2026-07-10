@@ -34,6 +34,34 @@ IMPLICIT_WAIT = 0            # используем только явные ож
 DEFAULT_TIMEOUT = int(os.environ.get("AO3_TIMEOUT", "20"))
 WEBVIEW_LOAD_TIMEOUT = int(os.environ.get("AO3_WEBVIEW_TIMEOUT", "40"))
 NEW_COMMAND_TIMEOUT = 300
+# Client-side read-timeout на КАЖДЫЙ HTTP-вызов к Appium (AT-BUG-007): без него
+# WebDriverWait (waits.py) проверяет дедлайн только МЕЖДУ поллами — единичный
+# блокирующий вызов (классика: driver.contexts из contexts.to_native) при мёртвом
+# процессе приложения виснет на серверной стороне навсегда, NEW_COMMAND_TIMEOUT
+# тут не помогает (это idle-таймаут МЕЖДУ командами, не таймаут одной команды).
+#
+# Честная граница (critic, ревью attempt 1, измерено на этом venv/urllib3 2.7.0):
+# по умолчанию urllib3 ретраит GET (в т.ч. сам driver.contexts) при read-timeout
+# до 3 раз (падает MaxRetryError за ~4x timeout), а POST — без ретраев (падает
+# ReadTimeoutError за ~1x timeout). driver_factory.create_driver отключает эти
+# урллиб3-ретраи (client_config.init_args_for_pool_manager -> retries=False,
+# штатный параметр ClientConfig, не монки-патч) — И GET, И POST теперь падают
+# ReadTimeoutError ровно за 1x APPIUM_HTTP_TIMEOUT. Компенсирующий ретрай — на
+# уровне теста (framework/pytest.ini: --reruns 1 --only-rerun
+# ReadTimeoutError|MaxRetryError), не на уровне HTTP; поэтому итоговый худший
+# случай зависшего вызова — до (1 + reruns) x APPIUM_HTTP_TIMEOUT = 2x120=240с
+# (4 мин) — на порядок меньше наблюдавшихся реальных зависаний (19+ минут,
+# AT-BUG-005 инкремент 1, 2026-07-09), а не 8x/16x, как было бы без retries=False.
+#
+# 120с по умолчанию — запас на самый долгий легитимный ОДИНОЧНЫЙ вызов: создание
+# сессии (POST) — запуск uiautomator2-сервера, по дефолтам Appium укладывается в
+# 60-90с. ИЗВЕСТНЫЙ РИСК (не устранён, N2 ревью critic): холодная докачка
+# chromedriver может происходить на SET_CONTEXT при первом переключении в WebView
+# (тоже одиночный POST, без ретрая после этого фикса) и потенциально превысить
+# 120с на медленной сети/первом прогоне на чистой машине — тогда легитимный вызов
+# ошибочно словит таймаут. Смягчение: `AO3_APPIUM_HTTP_TIMEOUT` увеличивается без
+# правки кода; отдельный количественный замер докачки — вне скоупа этого фикса.
+APPIUM_HTTP_TIMEOUT = int(os.environ.get("AO3_APPIUM_HTTP_TIMEOUT", "120"))
 
 # --- Артефакты ---
 RUNS_DIR = REPO_ROOT / "runs"
