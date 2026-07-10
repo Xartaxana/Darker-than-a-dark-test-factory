@@ -7,7 +7,7 @@ priority: "p1"
 summary: "WebView dark mode применяется мгновенно вместе с остальным UI (без холодного рестарта)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:settings", "risk:R-11 (proposed, не утверждён в §5)", "automation:active"]
+labels: ["test-case", "area:settings", "risk:R-11", "automation:active"]
 components: []
 fixVersions: []
 watchers: []

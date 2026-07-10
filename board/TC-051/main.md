@@ -7,7 +7,7 @@ priority: "p1"
 summary: "A+/A- в side panel меняют размер шрифта в WebView мгновенно и переживают рестарт"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:browser", "risk:R-11 (proposed, не утверждён в §5)", "automation:active"]
+labels: ["test-case", "area:browser", "risk:R-11", "automation:active"]
 components: []
 fixVersions: []
 watchers: []

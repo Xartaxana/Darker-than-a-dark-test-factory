@@ -7,7 +7,7 @@ priority: "p1"
 summary: "Двухпальцевый pinch/spread на Browse меняет размер шрифта (тот же fontSizeStep)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:browser", "risk:R-11 (proposed, не утверждён в §5)", "automation:active"]
+labels: ["test-case", "area:browser", "risk:R-11", "automation:active"]
 components: []
 fixVersions: []
 watchers: []

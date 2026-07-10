@@ -7,7 +7,7 @@ priority: "p1"
 summary: "Тема и шрифт из side panel и из Settings — один общий стейт (эквивалентность входов)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:browser", "risk:R-11 (proposed, не утверждён в §5)", "automation:active"]
+labels: ["test-case", "area:browser", "risk:R-11", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
