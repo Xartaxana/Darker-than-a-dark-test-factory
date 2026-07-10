@@ -34,5 +34,9 @@
 | R-11 (proposed) | TC-048 (WebView dark mode — мгновенно, без холодного рестарта) | P1 | framework/tests/test_settings.py::test_webview_dark_mode_applies_instantly | Automated (active) | 3/3 зелёные 2026-07-09 (test-automator; прокси: luma области WebView, опрос до перерисовки после reload(), не internal API); F1-ревью пройдено test-reviewer 2026-07-09 (3/3 воспроизведено) |
 | R-11 (proposed) | TC-049 (тема System следует за системной темой ОС) | P1 | framework/tests/test_settings.py::test_system_theme_follows_os_dark_mode | Automated (active) | 3/3 зелёные 2026-07-09 (test-automator; `adb shell cmd uimode night yes/no` через framework/core/adb.py, без действий внутри приложения); F1-ревью пройдено test-reviewer 2026-07-09 (3/3 воспроизведено) |
 
+| R-10 (proposed) | TC-056 (совпадающий личный тег подсвечивается на карточке листинга) | P3 | — | Review | не прогонялся — новый кейс 2026-07-10, дозакрывает отложенный минорный остаток R-10; не блокирован (фикстура `listing_basic.mitm` + `seed_with_comment` уже рабочие, AT-BUG-004 Verified) |
+| R-11 | TC-057 (кнопка Home в side panel переводит активную вкладку на главную AO3) | P3 | — | Review | не прогонялся — новый кейс 2026-07-10, дозакрывает отложенный минорный остаток R-11; не блокирован |
+| R-11 | TC-058 (Fullscreen toggle скрывает TabStrip и переключает подпись, вход/выход) | P3 | — | Review | не прогонялся — новый кейс 2026-07-10, дозакрывает отложенный минорный остаток R-11; не блокирован (требует второй открытой вкладки — существующий механизм, см. заметки TC-058.md) |
+
 > Примечание: smoke Фазы 1 написан напрямую (до формального тест-дизайна). В Фазе 2
 > test-designer оформит соответствующие TC-xxx и свяжет их обратными ссылками.
