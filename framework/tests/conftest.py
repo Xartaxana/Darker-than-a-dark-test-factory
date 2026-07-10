@@ -100,6 +100,52 @@ def downloaded_work_seeded():
 
 
 @pytest.fixture()
+def library_all_one_rating_seeded():
+    """5 работ `works.ALL` засеяны с ОДНИМ рейтингом (PENDING) — все пять оказываются
+    на одной вкладке Library, что нужно для TC-027 (фильтр word count)/TC-029
+    (фильтр по фандому): фильтр сравнивает работы в пределах одной вкладки, а не
+    вперемешку с рейтинговой раскладкой по вкладкам (см. заметки в телах кейсов).
+    Порядок (clean_state до сессии Appium) — тот же контракт, что и seeded_library."""
+    app_steps.clean_state()
+    app_steps.seed_library([(w, "PENDING") for w in W.ALL])
+    yield W.ALL
+
+
+@pytest.fixture()
+def library_wordcount_scroll_seeded():
+    """`works.ALL` + `works.SCROLL_FILLERS` (10 доп. работ с малым word_count), все с
+    ОДНИМ рейтингом (PENDING) на одной вкладке — список выше высоты экрана, нужен
+    для TC-030 (проверка сброса скролла при смене сортировки на Word count high-to-low:
+    филлеры с малым word_count гарантированно уходят в конец после сортировки, не
+    мешая проверке относительного порядка пяти эталонных работ)."""
+    app_steps.clean_state()
+    rows = [(w, "PENDING") for w in W.ALL] + [(w, "PENDING") for w in W.SCROLL_FILLERS]
+    app_steps.seed_library(rows)
+    yield W.ALL
+
+
+@pytest.fixture()
+def library_downloaded_only_seeded():
+    """3 работы с одним рейтингом (SAVE/Favorite): 2 без файла (downloadPath=null), 1 —
+    с уже «скачанным» локальным файлом (downloadPath заполнен, файл реально существует
+    на устройстве) — без сетевого скачивания, тот же приём, что и downloaded_work_seeded
+    (TC-034/035/036). Нужна для TC-028 (фильтр downloaded-only).
+
+    Сидинг в ДВА последовательных вызова: сначала обе без-файловые строки через
+    `seed_library` (seed_db.seed), затем файловая — через `seed_downloaded_work`
+    (seed_db.seed_with_download). Второй вызов пуллит уже записанную первым вызовом
+    БД с устройства и ДОБАВЛЯЕТ свою строку (INSERT OR REPLACE по ao3Id, см.
+    seed_db._insert_rows_with_download) — прежние две строки не затираются, это тот
+    же паттерн, каким уже сосуществуют последовательные сидинг-вызовы в этом файле.
+    Порядок (clean_state до сессии Appium) — тот же контракт, что и остальные
+    фикстуры данных."""
+    app_steps.clean_state()
+    app_steps.seed_library([(W.KUDOSED, "SAVE"), (W.READ, "SAVE")])
+    app_steps.seed_downloaded_work(W.LOVED, "SAVE", _DOWNLOADED_WORK_FIXTURE)
+    yield {"downloaded": W.LOVED, "no_file": [W.KUDOSED, W.READ]}
+
+
+@pytest.fixture()
 def comment_only_work():
     """Одна работа засеяна как comment-only (rating=NULL, непустой comment) —
     без обращения к AO3. Сидинг делается до создания сессии Appium (см.
