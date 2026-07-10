@@ -1,4 +1,4 @@
-# Раннеры тестового фреймворка. Использование:
+﻿# Раннеры тестового фреймворка. Использование:
 #   . D:\AO3_tests\scripts\tasks.ps1
 #   Start-Emulator ; Start-Appium ; Invoke-Smoke
 # Требует предварительно: . D:\AO3_tests\scripts\env.ps1 (для JAVA_HOME/ANDROID_HOME/PATH)
@@ -20,6 +20,32 @@ function Start-Emulator {
     & "$env:ANDROID_HOME\platform-tools\adb.exe" wait-for-device
     do { Start-Sleep 2; $b = (& "$env:ANDROID_HOME\platform-tools\adb.exe" shell getprop sys.boot_completed).Trim() } while ($b -ne "1")
     Write-Host "Emulator booted." -ForegroundColor Green
+    if ($WritableSystem) {
+        # Автовызов сразу после boot_completed этого же старта — гарантированно
+        # чистая загрузка (install-mitm-ca.sh рассчитан именно на неё: повторный
+        # прогон без перезагрузки эмулятора копит tmpfs-mount'ы, см. шапку скрипта).
+        # Поэтому идемпотентность обеспечивается местом вызова, а не самим скриптом:
+        # Install-MitmCA здесь вызывается ровно один раз за один буд эмулятора.
+        Write-Host "Installing mitmproxy CA (writable-system boot)..." -ForegroundColor Cyan
+        Install-MitmCA
+    }
+}
+
+function Install-MitmCA {
+    # Ставит CA mitmproxy в системное хранилище доверия Android (scripts/install-mitm-ca.sh,
+    # docs/environment-setup.md, раздел replay). Требует чистую загрузку -writable-system
+    # эмулятора (см. Start-Emulator) — сам скрипт рассчитан ровно на неё.
+    $caPem = "$env:USERPROFILE\.mitmproxy\mitmproxy-ca-cert.pem"
+    if (-not (Test-Path $caPem)) {
+        throw "CA PEM не найден: $caPem - сначала запусти mitmdump (он генерирует CA при первом старте), затем повтори Install-MitmCA."
+    }
+    $env:ADB = "$env:ANDROID_HOME\platform-tools\adb.exe"
+    $bash = (Get-Command bash -ErrorAction SilentlyContinue).Source
+    if (-not $bash) { $bash = "C:\Program Files\Git\bin\bash.exe" }
+    if (-not (Test-Path $bash)) { throw "bash.exe не найден (ни в PATH, ни по фоллбэку C:\Program Files\Git\bin\bash.exe), Install-MitmCA требует git-bash." }
+    & $bash "$root\scripts\install-mitm-ca.sh"
+    $code = $LASTEXITCODE
+    if ($code -ne 0) { throw "install-mitm-ca.sh завершился с кодом $code" }
 }
 
 function Start-Appium {
@@ -98,4 +124,4 @@ function Get-Device {
     else { Write-Host "NO DEVICE" }
 }
 
-Write-Host "Tasks loaded: Start-Emulator, Start-Appium, Stop-NodeProcesses, Install-App, Invoke-Smoke, Invoke-Suite, Invoke-Pytest, Show-Report, Get-Device" -ForegroundColor Green
+Write-Host "Tasks loaded: Start-Emulator, Install-MitmCA, Start-Appium, Stop-NodeProcesses, Install-App, Invoke-Smoke, Invoke-Suite, Invoke-Pytest, Show-Report, Get-Device" -ForegroundColor Green

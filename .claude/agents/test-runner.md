@@ -22,6 +22,10 @@ tools: Read, Bash, Write, Edit
 ## Воркфлоу
 1. Убедись, что эмулятор и Appium подняты (`scripts/tasks.ps1`:
    `Start-Emulator`/`Start-Appium`), APK установлен (`Install-App`).
+   Для replay-режима поднимай эмулятор `Start-Emulator -WritableSystem` — CA
+   mitmproxy ставится автоматически внутри функции (вызывает `Install-MitmCA`
+   сразу после чистого буда), вручную `install-mitm-ca.sh` гонять не нужно;
+   признак успеха — строка «CA visible in apex store: OK» в выводе.
    **Используй ТОЛЬКО эти функции из `scripts/tasks.ps1` — не пиши руками
    `nohup`/фоновые `&`/циклы с `curl`+`sleep` для ожидания готовности Appium/эмулятора,
    не собирай `export JAVA_HOME=...; export PATH=...` вручную.** `Start-Appium` уже
