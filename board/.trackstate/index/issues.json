@@ -546,7 +546,7 @@
     "epicPath": null,
     "summary": "Фильтр по word count (min/max) скрывает работы вне диапазона на вкладке Library",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -568,7 +568,7 @@
     "epicPath": null,
     "summary": "Фильтр downloaded-only показывает только работы с локальным файлом",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -590,7 +590,7 @@
     "epicPath": null,
     "summary": "Фильтр по фандому сужает список до совпадающих работ",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -612,7 +612,7 @@
     "epicPath": null,
     "summary": "Сортировка Word count (high to low) упорядочивает список и сбрасывает скролл",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [

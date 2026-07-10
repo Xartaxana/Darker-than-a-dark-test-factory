@@ -2,7 +2,7 @@
 key: "TC-027"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Фильтр по word count (min/max) скрывает работы вне диапазона на вкладке Library"
 assignee: "qa-agents"

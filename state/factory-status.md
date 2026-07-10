@@ -1,6 +1,6 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-10T16:52:34Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-07-10T17:10:52Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Сборка под тестом
@@ -30,7 +30,7 @@ generated_at: 2026-07-10T16:52:34Z · генератор: `scripts/queue_snapsho
 ## Баги (1)
 
 - Open: **1**
-- BUG-001 [minor] Open — Подписи вкладок Library и меню рейтинга расходятся с PROJECT.md
+- BUG-001 [minor] Open — PROJECT.md расходится с кодом: подписи вкладок Library/меню рейтинга; несуществующий глобальный «Enable filtering»
 
 ## Известные проблемы, known_issue (0)
 

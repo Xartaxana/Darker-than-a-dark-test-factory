@@ -2,7 +2,7 @@
 key: "TC-028"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Фильтр downloaded-only показывает только работы с локальным файлом"
 assignee: "qa-agents"
