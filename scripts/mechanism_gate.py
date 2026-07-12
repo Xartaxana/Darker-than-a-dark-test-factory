@@ -1,19 +1,56 @@
-"""Гейт правила 10(б) — D-0055 OS-репо: механизмный коммит несёт осевой блок.
+"""Гейт правила 10(б) — D-0055 OS-репо + tier-декларация D-0072 (t-071).
 
-Твин tools/mechanism_gate.py OS-репо (парная строка оси 1 SIBLING_MAP;
-правки — синхронно в обоих). Отличия твина: карта осей ОДНА и живёт в
-OS-репо (D-0043), путь абсолютный, недоступна → fail-closed (F-7);
-решений (DECISIONS_FULL) здесь нет, поэтому осевой блок ищется ТОЛЬКО
-в сообщении коммита. Строка отказа «оси: не-механизм (<причина>)» —
-тоже только из сообщения (F-A ревью critic: цитата синтаксиса в диффе
-не должна обходить гейт). Merge-коммиты пропускаются (F-C).
+НЕ живой файл: порт tier-требования из tools/mechanism_gate.py (OS-репо,
+decide_full/resolve_lead_binding/lead_family/find_tier_declaration/
+tier_declared_ok — принято с critic-ревью, t-068) поверх нетронутого
+scripts/mechanism_gate.py этого репо. Сдан соседним файлом по инструкции
+координатора (t-071): самоактивирующийся enforcement-файл на путь
+кладёт Lead при приёмке (D-0069) — эта копия сама по себе ничего не
+гейтит, пока её кто-то не поставит на scripts/mechanism_gate.py и не
+перепривяжет .githooks/commit-msg (сейчас он вызывает старый файл
+напрямую, см. .githooks/commit-msg этого репо).
 
-Префиксы: политика, роли, скиллы + протокольные артефакты конвейера
-(schemas/, state/rules.yaml — ось 6). scripts/ сознательно вне
-триггера: правки кода обвязки покрываются тестами и ревью, а ложные
-срабатывания гейта приучают к --no-verify (решение D-0055).
-Исключение — самозащита цепочки (D-0065 OS-репо, F-25): сам гейт и
-.githooks/ в неводе — правка гейта не должна обходить гейт (F-15).
+Унаследованное от твина (не менялось): карта осей ОДНА и живёт в
+OS-репо, путь абсолютный, недоступна → fail-closed (F-7); решений
+(DECISIONS_FULL) в этом репо нет, поэтому осевой блок и строка отказа
+«оси: не-механизм (<причина>)» ищутся ТОЛЬКО в сообщении коммита (F-A);
+merge-коммиты пропускаются (F-C); scripts/ вне триггера кроме
+самозащиты гейта и .githooks/ (D-0065 OS-репо, F-25).
+
+Новое — tier-требование (D-0072, порт правила 7 tools/mechanism_gate.py
+OS-репо): на ветке «механизм» (осевой блок уже пройден, не skip, не
+merge) сообщение коммита обязано нести ОТДЕЛЬНУЮ строку
+«tier: <значение>» — самодекларация фактического яруса коммиттера,
+аналог dispatch_skipped. В OS-репо ожидаемое значение читается из
+roles.lead в delegation.config.yaml; в этом (AO3) репо такого конфига
+нет и заводить сюда yaml-зависимость ради одного дефолта незачем —
+resolve_lead_binding() ниже упрощена до константы: ожидаемая привязка
+— дефолт семейства "fable" (субскрипционный дефолт Lead, тот же смысл,
+что и дефолт OS-версии при отсутствующем/непарсящемся конфиге).
+Функция оставлена (не заменена россыпью литералов), чтобы будущий
+конфиг пилота подключился без правки вызывающего кода.
+
+Декларация принимается точным совпадением с привязкой ИЛИ вхождением
+её ярусного семейства (fable/opus/sonnet/haiku, по подстроке) — та же
+семантика, что в OS-версии. Отсутствие строки tier и декларация ниже
+lead — РАЗНЫЕ тексты отказа, оба несут инструкцию: Lead-класс работы
+в этом репо — в очередь Lead явной строкой в docs/HANDOFF.md или
+журнале сессии (носитель очереди пилота — HANDOFF, НЕ CURRENT_CONTEXT
+— это принадлежность OS-репо). Skip-ветка («оси: не-механизм») и
+merge-коммиты строку tier не требуют — тот же невод исключений, что и
+у осевого блока.
+
+Самодекларативность (D-0063, двухслойный enforcement): этот гейт
+гарантирует только ФОРМУ — присутствие и совпадение строки tier с
+ожидаемой привязкой; ИСТИННОСТЬ декларации (соврал ли коммиттер про
+свой фактический ярус) код не проверяет и проверить не может — это
+судит калибровка ярусом выше, по транскриптам (cc_usage), тем же
+детектором, что D-0042/D-0056: чек 8 PROCESS/WEEKLY_CALIBRATION_PROTOCOL.md
+(OS-репо) явно сверяет tier-строки механизменных коммитов периода с
+фактической моделью сессии и относит расхождение к нарушению класса
+F-36/F-29; та же чек-8 проверка заодно аудирует строки «оси:
+не-механизм» как потенциальный обход tier-требования (переименование
+механизменной правки в «не-механизм», чтобы не декларировать ярус).
 """
 from __future__ import annotations
 
@@ -34,6 +71,15 @@ MECHANISM_PREFIXES = (
     "scripts/mechanism_gate.py",
     ".githooks/",
 )
+
+LEAD_FAMILIES = ("fable", "opus", "sonnet", "haiku")
+
+# AO3 пилот: нет delegation.config.yaml → дефолт семейства "fable"
+# (субскрипционный дефолт Lead, D-0072). Константа вместо парсинга
+# yaml — заводить сюда зависимость не от чего резолвить.
+DEFAULT_LEAD_BINDING = "fable"
+
+TIER_LINE_RE = re.compile(r"^\s*tier\s*:\s*(\S.*?)\s*$", re.IGNORECASE | re.MULTILINE)
 
 AXIS_HEADING_RE = re.compile(r"^##\s+Ось\s+(\d+)", re.MULTILINE)
 SKIP_RE = re.compile(r"оси\s*:\s*не-механизм\s*\(", re.IGNORECASE)
@@ -59,9 +105,56 @@ def find_missing(text: str, axes: list[int]) -> list[int]:
             if not re.search(rf"ось\s+{n}\s*:", text, re.IGNORECASE)]
 
 
+def resolve_lead_binding() -> str:
+    """Ожидаемая tier-привязка для этого репо. AO3 не имеет
+    delegation.config.yaml (в отличие от OS-репо) — возвращает дефолт
+    семейства "fable" безусловно. Выделена в функцию, а не разбросана
+    константой по вызывающему коду, чтобы будущий конфиг пилота
+    подключился без правки decide_full()."""
+    return DEFAULT_LEAD_BINDING
+
+
+def lead_family(binding: str) -> str | None:
+    """Ярусное семейство привязанной модели по подстроке (fable/opus/
+    sonnet/haiku); None — семейство не распознано (не-Claude привязка),
+    тогда годится только точное совпадение model id."""
+    low = binding.lower()
+    for fam in LEAD_FAMILIES:
+        if fam in low:
+            return fam
+    return None
+
+
+def find_tier_declaration(msg: str) -> str | None:
+    """Значение строки «tier: <значение>» — только из СООБЩЕНИЯ коммита
+    (не из диффа), та же самодекларативная форма, что и skip-строка."""
+    m = TIER_LINE_RE.search(msg)
+    return m.group(1).strip() if m else None
+
+
+def tier_declared_ok(declared: str, binding: str) -> bool:
+    if declared == binding:
+        return True
+    fam = lead_family(binding)
+    if fam is None:
+        return False
+    return fam in declared.lower()
+
+
+def _tier_queue_note() -> str:
+    return ("механизменный коммит — Lead-tier работа: сессия на ярусе "
+            "ниже привязки lead НЕ коммитит механизм сама, а кладёт его "
+            "в очередь явной строкой в docs/HANDOFF.md или журнале "
+            "сессии (носитель очереди в этом репо — HANDOFF, не "
+            "CURRENT_CONTEXT); сессия lead-яруса добавляет строку "
+            "«tier: <своя модель>» (D-0072).")
+
+
 def decide(msg: str, staged: list[str], map_text: str | None,
            merging: bool = False) -> tuple[int, str]:
-    """Чистое решение гейта: блок и отказ — только из сообщения коммита."""
+    """Чистое решение гейта: блок и отказ — только из сообщения коммита.
+    Не изменена относительно живого scripts/mechanism_gate.py — этот
+    порт трогает только tier-слой (decide_full ниже)."""
     hits = mechanism_paths(staged)
     if not hits:
         return 0, ""
@@ -87,6 +180,32 @@ def decide(msg: str, staged: list[str], map_text: str | None,
     return 0, ""
 
 
+def decide_full(msg: str, staged: list[str], map_text: str | None,
+                 merging: bool = False) -> tuple[int, str]:
+    """decide() плюс tier-требование (D-0072, t-071 порт): строка tier
+    на ветке «механизм» (осевой блок уже пройден, не skip, не merge).
+    Гейт проверяет только форму декларации — истинность судит калибровка
+    (см. docstring модуля, D-0063)."""
+    code, reason = decide(msg, staged, map_text, merging)
+    if code:
+        return code, reason
+    hits = mechanism_paths(staged)
+    if not hits or merging or SKIP_RE.search(msg):
+        return 0, ""
+    binding = resolve_lead_binding()
+    declared = find_tier_declaration(msg)
+    if declared is None:
+        return 1, ("коммит трогает механизмные файлы:\n  " + "\n  ".join(hits)
+                    + "\nНет строки «tier: <значение>» (привязка lead: "
+                    + binding + ") — " + _tier_queue_note())
+    if not tier_declared_ok(declared, binding):
+        return 1, ("коммит трогает механизмные файлы:\n  " + "\n  ".join(hits)
+                    + "\nЯрус не lead: «tier: " + declared
+                    + "» не совпадает с привязкой (" + binding + ") — "
+                    + _tier_queue_note())
+    return 0, ""
+
+
 def _git(*args: str) -> str:
     proc = subprocess.run(["git", *args], capture_output=True, text=True,
                           encoding="utf-8", errors="replace")
@@ -104,7 +223,7 @@ def main(argv: list[str] | None = None) -> int:
     msg = Path(argv[0]).read_text(encoding="utf-8", errors="replace")
     map_text = (MAP_PATH.read_text(encoding="utf-8", errors="replace")
                 if MAP_PATH.exists() else None)
-    code, reason = decide(msg, staged, map_text, merging)
+    code, reason = decide_full(msg, staged, map_text, merging)
     if code:
         print("mechanism_gate: " + reason, file=sys.stderr)
     return code
