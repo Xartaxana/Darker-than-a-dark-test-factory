@@ -37,6 +37,9 @@ TC_ORDER = ["Draft", "Review", "Approved", "Automated", "Blocked"]
 BUG_ORDER = ["Open", "Reopened", "Fixed", "Verified", "Rejected", "Intended", "Blocked"]
 RUN_ORDER = ["NeedsTriage", "Triaged", "Closed", "Blocked"]
 AUTOMATION_ORDER = ["active", "quarantined", "needs_maintenance", "deprecated", "retired"]
+# E4 (exploratory-charters): статусная машина charter'а (docs/templates/charter.md,
+# exploratory-charters/README.md) — Planned -> InProgress -> Done.
+CHARTER_ORDER = ["Planned", "InProgress", "Done"]
 
 # r10-release-readiness (docs/10 D2+P1): suites, для которых считаем свежесть
 # последнего прогона. Только эти три названы спекой — "verification" (есть в
@@ -73,6 +76,51 @@ def _escalation_lines() -> list[str]:
         return []
     return [l for l in ESCALATIONS_PATH.read_text(encoding="utf-8").splitlines()
             if l.startswith("- [")]
+
+
+def _iter_charters() -> list[dict]:
+    """Frontmatter каждого charter'а exploratory-charters/ (E4 pipeline wiring).
+
+    bs._iter_artifacts() не знает про этот каталог (AREAS там захардкожен на
+    test-cases/bugs/runs — правка вне owns этой задачи), поэтому сканируем
+    отдельно, тем же парсером (bs._parse_frontmatter). Каталога может не быть
+    или быть пустым — это НЕ ошибка, просто пустой список (нули в отчёте).
+    Читает REPO как модульную переменную (не константу, зафиксированную при
+    импорте) — так же, как тесты monkeypatch'ят `qs.REPO` для остальных секций.
+
+    ТОЛЬКО верхний уровень (не-рекурсивный glob "*.md", не rglob) —
+    attachments/*.md (скриншоты/.xml дампы UI-дерева сессий
+    exploratory-tester'а) не артефакты и не должны попадать в
+    счётчики/статусы (находка critic N3, расхождение охватов со SKILL; тот
+    же класс сужения, что у validate_frontmatter.py и
+    stale_locks.py._iter_charter_locks для этого каталога). Фильтр по
+    имени файла "CH-*.md" НЕ используется — он исключил бы charter с
+    некорректным id/именем из обхода (эмпирически ловится тестом
+    validate_frontmatter на заведомо плохой id, см. e4-charter-lock-reaper).
+    """
+    base = REPO / "exploratory-charters"
+    if not base.exists():
+        return []
+    out: list[dict] = []
+    for md in sorted(base.glob("*.md")):
+        if md.name.upper() == "README.MD":
+            continue
+        meta, _body = bs._parse_frontmatter(md.read_text(encoding="utf-8", errors="replace"))
+        if meta.get("id"):
+            out.append(meta)
+    return out
+
+
+def _charter_stats() -> dict:
+    charters = _iter_charters()
+    status_counts: Counter = Counter(str(c.get("status") or "?") for c in charters)
+    done = [c for c in charters if str(c.get("status")) == "Done"]
+    return {
+        "status_counts": status_counts,
+        "charters_executed": len(done),
+        "bugs_from_charters": sum(len(c.get("found_bugs") or []) for c in done),
+        "tc_from_charters": sum(len(c.get("followup_tc") or []) for c in done),
+    }
 
 
 def collect() -> dict:
@@ -164,7 +212,8 @@ def collect() -> dict:
             "runs_latest": runs_latest, "untriaged": untriaged,
             "tc_priority_total": tc_priority_total, "tc_priority_automated": tc_priority_automated,
             "p0_uncovered": p0_uncovered, "quarantine_ids": quarantine_ids,
-            "blocker_critical_open": blocker_critical_open, "test_debt_open": test_debt_open}
+            "blocker_critical_open": blocker_critical_open, "test_debt_open": test_debt_open,
+            "charter_stats": _charter_stats()}
 
 
 def _fmt_counter(c: Counter, order: list[str]) -> str:
@@ -246,6 +295,22 @@ def _render_release_readiness(data: dict, generated_at: str) -> list[str]:
     return lines
 
 
+def _render_exploratory(data: dict) -> list[str]:
+    """E4 pipeline wiring: секция «Exploratory» — charter'ы из
+    exploratory-charters/ (docs/templates/charter.md). Каталог может
+    отсутствовать/быть пустым — нули, не падение (см. _iter_charters)."""
+    cs = data["charter_stats"]
+    return [
+        "## Exploratory",
+        "",
+        f"- {_fmt_counter(cs['status_counts'], CHARTER_ORDER)}",
+        f"- charters_executed: **{cs['charters_executed']}**",
+        f"- bugs_from_charters: **{cs['bugs_from_charters']}**",
+        f"- tc_from_charters: **{cs['tc_from_charters']}**",
+        "",
+    ]
+
+
 def render(data: dict, generated_at: str) -> str:
     aut = data["aut"]
     lines = [
@@ -301,6 +366,9 @@ def render(data: dict, generated_at: str) -> str:
         "",
         f"- {_fmt_counter(data['run_status'], RUN_ORDER)}",
         "",
+    ]
+    lines += _render_exploratory(data)
+    lines += [
         f"## Активные локи ({len(data['locks'])})",
         "",
     ]

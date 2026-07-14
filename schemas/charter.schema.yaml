@@ -1,0 +1,32 @@
+# Схема frontmatter exploratory charter (E4 pipeline wiring, задача
+# e4-pipeline-wiring). Проверяется scripts/validate_frontmatter.py в preflight,
+# как test-case/bug/run. Поля — по docs/templates/charter.md; конвенции
+# статусов и ссылок на found_bugs/followup_tc/new_risks —
+# exploratory-charters/README.md.
+type: charter
+id_pattern: "^CH-\\d+$"
+required: [id, title, status]
+fields:
+  status: { enum: [Planned, InProgress, Done] }
+  # Пусто допустимо (шаблон CH-000 несёт "" по умолчанию, заполняется при
+  # заведении сессии) — валидатор пропускает enum-проверку на пустой строке:
+  # check_meta делает `if "enum" in spec and sval and sval not in [...]`, а
+  # пустой sval уже ложен, так что отдельная альтернатива `|^$` в pattern не
+  # нужна (проверено тестом test_charter_empty_trigger_is_clean).
+  trigger: { enum: [new-feature, app-changed, pre-release, bug-cluster] }
+  timebox_min: {}
+  area: {}
+  risk: {}
+  executed_at: { pattern: "^\\d{4}-\\d{2}-\\d{2}[T ][\\d:.+]+Z?$" }
+  executed_by: {}
+  found_bugs: {}
+  followup_tc: {}
+  new_risks: {}
+  # lock: ДВА формата. Канонический `agent:ISO-timestamp` (как у test-case/
+  # bug/run) — обязателен для новых локов (промпт exploratory-tester, шаг 2).
+  # Легаси `agent@YYYY-MM-DD` наблюдался ОДНАЖДЫ — у CH-001 во время исполнения
+  # 2026-07-14 (до фикса промпта); CH-001 закрыт, лок снят, в живых файлах
+  # @-формы нет (сверка critic на приёмке e4-pipeline-wiring). Паттерн-
+  # супермножество оставлен защитно от незакрытых копий формата; ужесточение
+  # до канонического — кандидат мелкой очереди, блокером не является.
+  lock: { pattern: "^$|^wip$|^[A-Za-z0-9_-]+:\\d{4}-\\d{2}-\\d{2}T[\\d:.]+Z?$|^[A-Za-z0-9_-]+@\\d{4}-\\d{2}-\\d{2}$" }

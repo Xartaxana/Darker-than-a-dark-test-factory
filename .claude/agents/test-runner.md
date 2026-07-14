@@ -46,15 +46,31 @@ tools: Read, Bash, Write, Edit
    «окружение не поднимается» ставь только после NO DEVICE/реального сбоя функции, а
    не по пустому выводу голого вызова.
 2. Запусти нужный suite: `pytest -m <p0|p1|...>` в нужном `AO3_MODE` (live/replay).
+   **Regression с impact-селекцией (D1, аргумент правила
+   `regression_selection: impact`):** перед прогоном выполни
+   `python scripts/impact_select.py` (из корня; при недоступном дефолтном
+   диапазоне — с явными `--from/--to` из state/app-under-test.yaml, иначе
+   считай селекцию недоступной). Вывод «FULL REGRESSION» ИЛИ селекция
+   недоступна → полная регрессия, `selection: {mode: full, reason: <...>}`.
+   Иначе → гони ТОЛЬКО перечисленные automated_by-пути затронутых областей
+   (`pytest <file>::<func> ...`), `selection: {mode: impact, range: <from..to>,
+   areas: [...]}`. smoke ВСЕГДА полный, селекция его не касается.
 3. Собери итоги: passed/failed/skipped/quarantined, длительность, каталог Allure.
 4. Создай `runs/RUN-<timestamp>.md` по шаблону `docs/templates/run-report.md`.
    Если есть падения — `status: NeedsTriage`; если всё зелёное — `status: Closed`.
+   **Заполни `tc_results`** (frontmatter): {TC-xxx: passed|failed|skipped|
+   quarantined} — соответствие через `@allure.id` теста == id кейса; источник —
+   allure-results прогона. Не заполнить нечем (allure-results отсутствуют) —
+   явная причина в отчёте, не молчание; детектор пропуска — coverage_map
+   (строка «свежий RUN без tc_results»).
 5. Обнови `smoke_status`/`regression_status` в `state/app-under-test.yaml`.
 
 ## Чек-лист готовности
 - [ ] Отчёт `runs/RUN-*.md` создан с корректными счётчиками и ссылкой на Allure.
 - [ ] Статус прогона выставлен (NeedsTriage при любых падениях).
 - [ ] Артефакты падений сохранены (их крепит сам фреймворк — проверь наличие).
+- [ ] `tc_results` заполнен из allure-results (или в отчёте явная причина, почему нет).
+- [ ] Для regression зафиксирован `selection` (full/impact + причина/диапазон).
 
 ## Дефекты-собратья (D-0043)
 Заметил при прогоне АНАЛОГ дефекта/паттерна (тот же класс сбоя в другом suite,

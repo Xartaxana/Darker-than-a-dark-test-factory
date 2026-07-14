@@ -263,11 +263,21 @@
     APP_CHANGED, перед релизом. Метрики: `bugs_per_charter`,
     `new_tc_from_charters`.
     *Шаг 1 внедрён 2026-07-14: каталог + README, docs/templates/charter.md,
-    роль .claude/agents/exploratory-tester.md (opus). До шага 2 диспатч —
-    только вручную Lead'ом с записью в routing-log (детектор — чеки 5/15
-    калибровки OS-репо). Шаг 2 (в очереди, окно без параллельного прохода):
-    charter.schema.yaml + AREAS в validate_frontmatter, правило в
-    rules.yaml, метрики charters_* в queue_snapshot.*
+    роль .claude/agents/exploratory-tester.md (opus). Шаг 2 внедрён тем же
+    днём (окно без прогона): charter.schema.yaml + AREAS, правило rules.yaml,
+    скан SKILL.md, метрики charters_* в queue_snapshot, охват stale_locks
+    (блокер critic: reaper не видел charter-локи — класс TC-021).
+    ОСТАТОК КЛАССА «список типов артефактов живёт в N местах» (вердикт critic
+    e4-pipeline-wiring, зафиксированный риск): (а) transitions.yaml — машины
+    charter Planned→InProgress→Done нет, переходы не гейтятся (риск LOW:
+    статусы флипает один агент по промпту); (б) sla_sweep — SLA-порогов для
+    charter нет (LOW: charter не имеет дедлайнов); (в) board-проекция —
+    charter'ы не видны на борде (косметика; счётчики есть в factory-status);
+    (г) КОРЕНЬ: единый источник списка областей-типов (validate_frontmatter.
+    AREAS vs board_sync._iter_artifacts vs локальные сканеры) — следующая
+    новая область обязана добавляться в ОДНОМ месте. (а)–(г) — одна задача
+    рефакторинга, делать при следующем расширении типов или по решению
+    владельца.*
 12. **Coverage-проекция (§5.2):** генерируемый из frontmatter граф
     feature → risk → TC → automated test → last green run (расширение
     queue_snapshot или отдельный скрипт); рукописный coverage-yaml не

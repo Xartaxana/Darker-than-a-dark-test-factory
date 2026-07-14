@@ -12,5 +12,13 @@ fields:
   app_version: {}
   totals: {}     # {passed, failed, skipped} из шаблона run-report
   allure: {}     # путь к allure-results прогона
+  # Пер-TC результаты (Этап 4 п.12, находка r10-coverage-map): {TC-xxx: passed|
+  # failed|skipped|quarantined}, заполняет test-runner из allure-results
+  # (@allure.id теста == id кейса). Опционален для прогонов до 2026-07-14;
+  # отсутствие в НОВОМ прогоне ловит coverage_map (явная строка деградации).
+  tc_results: {}
+  # D1 (Этап 4 п.5, шаг 2): режим отбора regression — full | impact,
+  # + диапазон коммитов селекции; пишет test-runner. Аудит селекции — по run.
+  selection: {}
   # B5 (docs/09 Этап 2): причина простоя в Blocked; см. schemas/bug.schema.yaml.
   blocked_reason: { enum: [environment, missing_fixture, product_decision, dev_answer, permissions] }

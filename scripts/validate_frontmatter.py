@@ -32,7 +32,8 @@ import board_sync as bs
 
 REPO = bs.REPO
 SCHEMAS = REPO / "schemas"
-AREAS = (("test-cases", "test-case"), ("bugs", "bug"), ("runs", "run"))
+AREAS = (("test-cases", "test-case"), ("bugs", "bug"), ("runs", "run"),
+         ("exploratory-charters", "charter"))
 
 
 def load_schema(itype: str) -> dict:
@@ -154,7 +155,18 @@ def validate() -> tuple[list[str], list[str]]:
         if not schema:
             warns.append(f"schemas/{itype}.schema.yaml не найдена — тип {itype} не проверен")
             continue
-        for md in sorted(base.rglob("*.md")):
+        # E4 (critic N3): charter'ы — ТОЛЬКО верхний уровень (не-рекурсивный
+        # glob "*.md"), не rglob — exploratory-charters/attachments/ несёт
+        # скриншоты/.xml дампы UI-дерева сессий exploratory-tester'а, это не
+        # артефакты для валидации frontmatter. НЕ фильтр по имени "CH-*.md":
+        # это исключило бы из скана charter с некорректным id/именем файла —
+        # именно такой файл и должен долететь до id_pattern-проверки ниже
+        # (эмпирически сломало test_charter_bad_id_pattern_is_error при
+        # первой попытке). Точечное исключение для одной области — остальные
+        # типы (test-cases/bugs/runs) сканируются как раньше, rglob'ом (у
+        # них нет аналога attachments/).
+        files = sorted(base.glob("*.md")) if itype == "charter" else sorted(base.rglob("*.md"))
+        for md in files:
             if md.name.upper() == "README.MD":
                 continue
             rel = md.relative_to(REPO).as_posix()

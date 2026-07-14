@@ -74,6 +74,23 @@ def _is_green(run_meta: dict) -> bool:
         return False
 
 
+def _has_tc_results(run_meta: dict) -> bool:
+    """Run несёт поле tc_results (docs/09 Этап 4 п.12, run.schema.yaml) —
+    per-TC результаты test-runner'а. dict, включая пустой (поле присутствует,
+    хоть и без записей) — считаем «несёт», отсутствие/не-dict — нет."""
+    return isinstance(run_meta.get("tc_results"), dict)
+
+
+def _last_passed_run(tc_id: str, runs_with_tc: list[dict]) -> dict | None:
+    """Последний (по updated) run из числа несущих tc_results, где
+    tc_results[tc_id] == passed. None — ни одного такого прогона (кейс без
+    единого зелёного per-TC вхождения)."""
+    candidates = [r for r in runs_with_tc if r.get("tc_results", {}).get(tc_id) == "passed"]
+    if not candidates:
+        return None
+    return max(candidates, key=lambda r: str(r.get("updated") or ""))
+
+
 def collect() -> dict:
     by_area: dict[str, list[dict]] = defaultdict(list)
     runs: list[dict] = []
@@ -93,6 +110,24 @@ def collect() -> dict:
         max(green_runs, key=lambda r: str(r.get("updated") or "")) if green_runs else None
     )
 
+    # E4 (Этап 4 п.12 uplift): per-TC last green из tc_results. Если НИ один
+    # run в репозитории не несёт tc_results — область/last_green_run остаются
+    # прежним глобальным поведением (без per-TC секции). Детектор дисциплины
+    # («свежие прогоны без tc_results») — ОТДЕЛЬНАЯ проверка, не обусловленная
+    # наличием per-TC карты: он ловит и вырожденный случай «ВСЕ run'ы без
+    # поля» (baseline пуст — все run'ы считаются «новее» его), и обычный
+    # случай «есть свежее без поля рядом со старыми, где оно уже заполнено».
+    runs_with_tc = [r for r in runs if _has_tc_results(r)]
+    has_tc_results = bool(runs_with_tc)
+    baseline_ts = (
+        str(max(runs_with_tc, key=lambda r: str(r.get("updated") or "")).get("updated") or "")
+        if runs_with_tc else None
+    )
+    newer_without_tc = sorted(
+        str(r.get("id")) for r in runs
+        if not _has_tc_results(r) and (baseline_ts is None or str(r.get("updated") or "") > baseline_ts)
+    )
+
     risk_catalog = _load_risk_catalog()
     risk_index: dict[str, list[tuple[str, str]]] = defaultdict(list)
     for area, cases in by_area.items():
@@ -108,6 +143,9 @@ def collect() -> dict:
         "risk_index": dict(risk_index),
         "last_green_global": last_green_global,
         "has_runs": bool(runs),
+        "runs_with_tc": runs_with_tc,
+        "has_tc_results": has_tc_results,
+        "newer_without_tc": newer_without_tc,
     }
 
 
@@ -181,6 +219,21 @@ def render(data: dict, generated_at: str) -> str:
         "`state/factory-status.md`). Рукописной модели покрытия не существует — "
         "этот файл не второй источник истины, а вывод.",
         "",
+    ]
+    if data["newer_without_tc"]:
+        if data["has_tc_results"]:
+            lines.append(
+                "свежие прогоны без tc_results: " + ", ".join(data["newer_without_tc"]))
+        else:
+            # baseline-случай: НИ один run не несёт tc_results вообще — «свежий»
+            # тут неверно, все run'ы формально «новее» отсутствующего baseline'а
+            # (см. newer_without_tc выше). Отдельная формулировка, не путающая
+            # «поле ещё не внедрено» со «свежий прогон забыл заполнить поле».
+            lines.append(
+                "прогоны без tc_results (поле ещё не внедрено): "
+                + ", ".join(data["newer_without_tc"]))
+        lines.append("")
+    lines += [
         "## Сводка по областям",
         "",
         "| Область | Кейсов | Automated | coverage_status |",
@@ -247,6 +300,26 @@ def render(data: dict, generated_at: str) -> str:
               "связывают run с конкретным TC ИЛИ с областью (нет поля "
               "run↔TC/area), см. отчёт builder'а"
         )
+        # E4 uplift: пер-TC last green из tc_results, только когда хотя бы
+        # один run в репозитории несёт это поле (иначе секция вводила бы в
+        # заблуждение — «нет зелёного» неотличимо от «прогонов без поля ещё
+        # не было»). last_green_run выше остаётся сводной строкой как есть.
+        if data["has_tc_results"]:
+            automated_cases = sorted(
+                (c for c in by_area[area] if str(c.get("status")) == "Automated"),
+                key=lambda c: str(c.get("id")))
+            lines.append("- per-TC last green:")
+            if not automated_cases:
+                lines.append("  - нет Automated-кейсов")
+            else:
+                for c in automated_cases:
+                    tc_id = str(c.get("id"))
+                    run = _last_passed_run(tc_id, data["runs_with_tc"])
+                    if run:
+                        lines.append(
+                            f"  - {tc_id}: {run.get('id')} (updated: {run.get('updated')})")
+                    else:
+                        lines.append(f"  - {tc_id}: нет зелёного per-TC")
         lines.append("")
         lines.append("| Priority | " + " | ".join(TC_STATUS_ORDER) + " |")
         lines.append("|---|" + "---|" * len(TC_STATUS_ORDER))

@@ -78,6 +78,15 @@ class Repo:
         _write(p, text)
         return p
 
+    def charter(self, key: str, status: str, *, lock: str = "", extra: str = "") -> Path:
+        text = (
+            f"---\nid: {key}\ntitle: Charter {key}\nstatus: {status}\n"
+            f"{extra}lock: \"{lock}\"\n---\n\n# {key}\n\nтело\n"
+        )
+        p = self.root / "exploratory-charters" / f"{key}.md"
+        _write(p, text)
+        return p
+
     def app_under_test(self, built_at: str) -> Path:
         p = self.root / "state" / "app-under-test.yaml"
         _write(p, f"app: ao3-wrapper\nversion_code: 11\nbuilt_at: \"{built_at}\"\n")

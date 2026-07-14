@@ -182,3 +182,84 @@ def test_valid_app_bug_prefix_pair_is_clean(repo, schemas):
 
     errors, _warns = vf.validate()
     assert errors == []
+
+
+# --- E4 pipeline wiring: exploratory-charters/ в AREAS + schemas/charter.schema.yaml ---
+
+def test_charter_valid_planned_passes(repo, schemas):
+    repo.charter("CH-100", "Planned")
+
+    errors, _warns = vf.validate()
+    assert errors == []
+
+
+def test_charter_inprogress_with_legacy_at_lock_passes(repo, schemas):
+    """CH-001 живой формат лока `agent@YYYY-MM-DD` (легаси, заведён до схемы) —
+    обязан проходить (спека задачи e4-pipeline-wiring)."""
+    repo.charter("CH-101", "InProgress", lock="exploratory-tester@2026-07-14")
+
+    errors, _warns = vf.validate()
+    assert errors == []
+
+
+def test_charter_inprogress_with_canonical_lock_passes(repo, schemas):
+    """Канонический формат `agent:ISO-timestamp` (как у test-case/bug/run) —
+    тоже валиден для новых charter'ов."""
+    repo.charter("CH-102", "InProgress", lock="exploratory-tester:2026-07-14T10:00:00Z")
+
+    errors, _warns = vf.validate()
+    assert errors == []
+
+
+def test_charter_bad_status_is_error(repo, schemas):
+    repo.charter("CH-103", "Doing")   # не в enum [Planned, InProgress, Done]
+
+    errors, _warns = vf.validate()
+    assert any("CH-103" in e and "enum" in e for e in errors)
+
+
+def test_charter_bad_id_pattern_is_error(repo, schemas):
+    repo.charter("CHARTER-1", "Planned")   # не соответствует ^CH-\d+$
+
+    errors, _warns = vf.validate()
+    assert any("CHARTER-1" in e and "не соответствует" in e for e in errors)
+
+
+def test_charter_empty_trigger_is_clean(repo, schemas):
+    """Пустой trigger (шаблон docs/templates/charter.md несёт `trigger: ""`
+    по умолчанию) НЕ должен быть ошибкой enum-проверки."""
+    repo.charter("CH-104", "Planned", extra='trigger: ""\n')
+
+    errors, _warns = vf.validate()
+    assert errors == []
+
+
+def test_charter_bad_trigger_is_error(repo, schemas):
+    repo.charter("CH-105", "Planned", extra="trigger: random-nonsense\n")
+
+    errors, _warns = vf.validate()
+    assert any("CH-105" in e and "trigger" in e for e in errors)
+
+
+def test_charter_readme_skipped(repo, schemas):
+    (repo.root / "exploratory-charters").mkdir(parents=True, exist_ok=True)
+    (repo.root / "exploratory-charters" / "README.md").write_text("# справка", encoding="utf-8")
+
+    errors, _warns = vf.validate()
+    assert not any("README" in e for e in errors)
+
+
+def test_charter_attachments_md_not_scanned(repo, schemas):
+    """e4-charter-lock-reaper п.3: charter'ы валидируются ТОЛЬКО верхним
+    уровнем (glob CH-*.md, не rglob) — attachments/CH-NNN/*.md (скриншоты
+    сессий обычно .png/.xml, но если бы там оказался .md) не должен ни
+    провалить, ни засчитать валидацию (находка critic N3)."""
+    repo.charter("CH-106", "Planned")
+    broken = repo.root / "exploratory-charters" / "attachments" / "CH-106" / "note.md"
+    broken.parent.mkdir(parents=True, exist_ok=True)
+    broken.write_text("не frontmatter вовсе, просто текст вложения", encoding="utf-8")
+
+    errors, _warns = vf.validate()
+    assert errors == []  # битый "не-frontmatter" вложения не всплывает ошибкой
+    assert not any("attachments" in e for e in errors) and \
+        not any("attachments" in w for w in _warns)

@@ -76,8 +76,10 @@ pre_step), но эскалируй, если шаг критичен для те
 
 ### 3. Скан артефактов
 Собери `status`/`lock` из frontmatter **инструментом Grep** (например,
-`pattern: "^(status|lock):"` по `runs/*.md`, `bugs/*.md`, `test-cases/**/*.md`),
-НЕ bash-циклом.
+`pattern: "^(status|lock):"` по `runs/*.md`, `bugs/*.md`, `test-cases/**/*.md`,
+`exploratory-charters/CH-*.md`), НЕ bash-циклом. Charter'ы (тип charter,
+Этап 4 п.11 шаг 2) — четвёртый тип артефактов: правило «Исполнить exploratory
+charter» без их скана мертво.
 
 ### 4. Правила → диспетчеризация (сердце прохода)
 Идя по правилам `rules.yaml` сверху вниз, найди артефакты, удовлетворяющие условию,

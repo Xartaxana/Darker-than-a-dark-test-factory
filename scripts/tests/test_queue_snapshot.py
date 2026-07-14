@@ -210,6 +210,86 @@ def test_release_readiness_untriaged_zero_when_none(repo, monkeypatch):
     assert "- Untriaged: **0** · untriaged_failure_age: **0**" in section
 
 
+# --- E4 pipeline wiring: секция "Exploratory" (charter'ы из exploratory-charters/) ---
+
+def test_exploratory_section_zeros_when_dir_missing(repo, monkeypatch):
+    """Каталог exploratory-charters/ отсутствует — секция с нулями, не падение."""
+    monkeypatch.setattr(qs, "REPO", repo.root, raising=True)
+    monkeypatch.setattr(qs, "AUT_PATH", repo.root / "state" / "app-under-test.yaml", raising=True)
+    monkeypatch.setattr(qs, "ESCALATIONS_PATH", repo.root / "state" / "escalations.md", raising=True)
+
+    text = qs.render(qs.collect(), "T")
+
+    assert "## Exploratory" in text
+    section = text.split("## Exploratory")[1].split("## Активные локи")[0]
+    assert "charters_executed: **0**" in section
+    assert "bugs_from_charters: **0**" in section
+    assert "tc_from_charters: **0**" in section
+
+
+def test_exploratory_section_counts_by_status(repo, monkeypatch):
+    monkeypatch.setattr(qs, "REPO", repo.root, raising=True)
+    monkeypatch.setattr(qs, "AUT_PATH", repo.root / "state" / "app-under-test.yaml", raising=True)
+    monkeypatch.setattr(qs, "ESCALATIONS_PATH", repo.root / "state" / "escalations.md", raising=True)
+    repo.charter("CH-001", "InProgress", lock="exploratory-tester@2026-07-14")
+    repo.charter("CH-002", "Planned")
+    repo.charter("CH-003", "Done")
+
+    text = qs.render(qs.collect(), "T")
+    section = text.split("## Exploratory")[1].split("## Активные локи")[0]
+
+    assert "Planned: **1**" in section
+    assert "InProgress: **1**" in section
+    assert "Done: **1**" in section
+    assert "charters_executed: **1**" in section
+
+
+def test_exploratory_bugs_and_tc_from_done_charters(repo, monkeypatch):
+    monkeypatch.setattr(qs, "REPO", repo.root, raising=True)
+    monkeypatch.setattr(qs, "AUT_PATH", repo.root / "state" / "app-under-test.yaml", raising=True)
+    monkeypatch.setattr(qs, "ESCALATIONS_PATH", repo.root / "state" / "escalations.md", raising=True)
+    repo.charter("CH-010", "Done", extra=(
+        'found_bugs: ["AT-BUG-005", "AT-BUG-007"]\n'
+        'followup_tc: ["TC-030"]\n'))
+    repo.charter("CH-011", "Planned", extra='found_bugs: ["AT-BUG-999"]\n')  # не Done — не считается
+
+    text = qs.render(qs.collect(), "T")
+    section = text.split("## Exploratory")[1].split("## Активные локи")[0]
+
+    assert "bugs_from_charters: **2**" in section
+    assert "tc_from_charters: **1**" in section
+
+
+def test_exploratory_attachments_md_not_counted(repo, monkeypatch):
+    """e4-charter-lock-reaper п.2: _iter_charters сканирует ТОЛЬКО верхний
+    уровень (glob CH-*.md) — attachments/CH-NNN/*.md (если бы там были .md)
+    не должны попадать в счётчики (находка critic N3)."""
+    monkeypatch.setattr(qs, "REPO", repo.root, raising=True)
+    monkeypatch.setattr(qs, "AUT_PATH", repo.root / "state" / "app-under-test.yaml", raising=True)
+    monkeypatch.setattr(qs, "ESCALATIONS_PATH", repo.root / "state" / "escalations.md", raising=True)
+    repo.charter("CH-030", "Done")
+    attachment = repo.root / "exploratory-charters" / "attachments" / "CH-030" / "note.md"
+    attachment.parent.mkdir(parents=True, exist_ok=True)
+    attachment.write_text("---\nid: CH-030\nstatus: Done\n---\n\nвложение, не артефакт\n",
+                           encoding="utf-8")
+
+    text = qs.render(qs.collect(), "T")
+    section = text.split("## Exploratory")[1].split("## Активные локи")[0]
+
+    assert "Done: **1**" in section          # не **2**
+    assert "charters_executed: **1**" in section
+
+
+def test_exploratory_section_placed_before_locks(repo, monkeypatch):
+    monkeypatch.setattr(qs, "REPO", repo.root, raising=True)
+    monkeypatch.setattr(qs, "AUT_PATH", repo.root / "state" / "app-under-test.yaml", raising=True)
+    monkeypatch.setattr(qs, "ESCALATIONS_PATH", repo.root / "state" / "escalations.md", raising=True)
+
+    text = qs.render(qs.collect(), "T")
+
+    assert text.index("## Прогоны") < text.index("## Exploratory") < text.index("## Активные локи")
+
+
 def test_release_readiness_section_placed_after_header(repo, monkeypatch):
     """Оформление: секция идёт заметно — сразу после generated_at-метки, до
     остальных секций дайджеста."""

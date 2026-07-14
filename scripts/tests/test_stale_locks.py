@@ -106,3 +106,73 @@ def test_missing_sla_uses_default(repo):
     report = sl.sweep(now=NOW)
 
     assert any("[STALE]" in r and "TC-003" in r for r in report)
+
+
+# --- e4-charter-lock-reaper: exploratory-charters/CH-*.md тоже в обходе ---
+
+def test_stale_charter_lock_removed_and_logged(repo):
+    """Блокер critic-ревью: charter'ы не входят в bs._iter_artifacts(), их
+    протухший лок раньше никто не снимал (класс TC-021, теперь и для CH-*)."""
+    p = repo.charter("CH-020", "InProgress", lock=STALE)
+    repo.sla(lock_stale=2)
+
+    report = sl.sweep(now=NOW)
+
+    assert any("[STALE]" in r and "CH-020" in r for r in report)
+    assert 'lock: ""' in p.read_text(encoding="utf-8")
+    log = repo.read_artifact("state/orchestrator-log.md")
+    assert "pre_step stale_locks" in log and STALE in log
+
+
+def test_fresh_charter_lock_untouched(repo):
+    p = repo.charter("CH-021", "InProgress", lock=FRESH)
+    repo.sla(lock_stale=2)
+
+    report = sl.sweep(now=NOW)
+
+    assert any("[OK]" in r and "CH-021" in r for r in report)
+    assert f'lock: "{FRESH}"' in p.read_text(encoding="utf-8")
+
+
+def test_charter_dir_missing_is_not_an_error(repo):
+    """Каталог exploratory-charters/ отсутствует — не ошибка, просто нет charter-локов."""
+    repo.test_case("TC-030", "Approved")  # хоть один артефакт, чтобы sweep был непустым
+    repo.sla(lock_stale=2)
+
+    report = sl.sweep(now=NOW)
+
+    assert report == []  # TC-030 без лока — молчит; charter'ов нет — тоже молчит
+
+
+def test_charter_attachments_md_ignored(repo):
+    """exploratory-charters/attachments/CH-020/*.md (если бы там были .md) не
+    входит в обход — сканируем только верхний уровень CH-*.md."""
+    p = repo.charter("CH-022", "InProgress", lock=STALE)
+    attachment = repo.root / "exploratory-charters" / "attachments" / "CH-022" / "note.md"
+    attachment.parent.mkdir(parents=True, exist_ok=True)
+    attachment.write_text(
+        f'---\nid: CH-022\nlock: "{STALE}"\n---\n\nне артефакт, вложение\n', encoding="utf-8")
+    repo.sla(lock_stale=2)
+
+    report = sl.sweep(now=NOW)
+
+    # ровно одно действие по CH-022 (верхний уровень), не два (вложение молчит)
+    stale_ch022 = [r for r in report if "[STALE]" in r and "CH-022" in r]
+    assert len(stale_ch022) == 1
+    assert "attachments" not in "".join(report)
+    assert 'lock: ""' in p.read_text(encoding="utf-8")
+    # вложение не тронуто вовсе (его не сканировали)
+    assert STALE in attachment.read_text(encoding="utf-8")
+
+
+def test_charter_legacy_at_lock_is_unreadable_and_cleared_with_warn(repo):
+    """Легаси-формат `agent@YYYY-MM-DD` (CH-001, схема допускает) не матчит
+    LOCK_RE — трактуется как нечитаемый лок и снимается безусловно, тем же
+    путём, что «какая-то ерунда» у test-case/bug/run (см. докстринг модуля)."""
+    p = repo.charter("CH-023", "InProgress", lock="exploratory-tester@2026-07-14")
+    repo.sla(lock_stale=2)
+
+    report = sl.sweep(now=NOW)
+
+    assert any("[WARN]" in r and "CH-023" in r for r in report)
+    assert 'lock: ""' in p.read_text(encoding="utf-8")

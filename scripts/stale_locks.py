@@ -15,6 +15,14 @@ sla.thresholds.lock_stale часов => снять, залогировать в 
 свежесть — он снимается с [WARN]: вечный мусорный лок хуже, чем лишний проход
 правила по артефакту.
 
+Помимо test-cases/bugs/runs (bs._iter_artifacts), обходит exploratory-charters/
+верхнего уровня (CH-*.md, см. _iter_charter_locks) — задача e4-charter-lock-reaper.
+ВАЖНО: схема charter.schema.yaml допускает легаси-формат лока `agent@YYYY-MM-DD`
+(CH-001, заведён до канонического `agent:ISO`) — LOCK_RE его не матчит, поэтому
+такой лок трактуется как «нечитаемый» и снимается с [WARN] СРАЗУ, безотносительно
+возраста (тот же путь, что и «какая-то ерунда» у test-case/bug/run). Отчёт
+builder'а флагует это координатору как расхождение, не тихо.
+
 Запуск: python scripts/stale_locks.py [--dry-run] [--now <ISO>]
 Идемпотентен: повторный запуск без новых протухших локов ничего не делает.
 Код выхода: 0 — штатно (в т.ч. с действиями), 1 — ошибка выполнения.
@@ -23,6 +31,7 @@ from __future__ import annotations
 
 import argparse
 import datetime
+import itertools
 import re
 import sys
 from pathlib import Path
@@ -52,6 +61,40 @@ def _parse_ts(value: str) -> datetime.datetime | None:
         return datetime.datetime.fromisoformat(value.replace("Z", "+00:00"))
     except ValueError:
         return None
+
+
+def _iter_charter_locks():
+    """Charter'ы верхнего уровня exploratory-charters/ (*.md, НЕ attachments/).
+
+    Блокер critic-ревью механизма встройки charter'ов: exploratory-tester и
+    диспатч кладут lock на charter, но bs._iter_artifacts() обходит только
+    test-cases/bugs/runs (хардкод типов артефактов, board_sync.py:141) — лок
+    charter'а протухал и не снимался никогда. Класс «список типов артефактов
+    захардкожен в N местах» — тот же, что у queue_snapshot._iter_charters
+    (там своя копия ради AREAS/факторстатуса); единый источник правды по
+    типам артефактов — отдельная задача очереди (расширение
+    bs._iter_artifacts() трогает борду, вне owns этой задачи).
+
+    Свой локальный итератор путей, а не переиспользование
+    queue_snapshot._iter_charters: та функция отдаёт только meta (без Path
+    src) — sweep() ниже нужен src для _clear_lock/rel.
+
+    Не-рекурсивный glob("*.md") + явный skip README (тот же приём, что у
+    bs._iter_artifacts) — НЕ фильтр по имени "CH-*.md": такой фильтр по
+    ошибке исключил бы charter с некорректным id/именем файла из обхода
+    (найдено эмпирически на прогоне: он ломал validate_frontmatter-тест на
+    заведомо плохой id — та же ловушка была бы и здесь для лока такого
+    файла, а он-то и есть кандидат застрять с протухшим локом).
+    """
+    base = REPO / "exploratory-charters"
+    if not base.exists():
+        return
+    for md in sorted(base.glob("*.md")):
+        if md.name.upper() == "README.MD":
+            continue
+        meta, body = bs._parse_frontmatter(md.read_text(encoding="utf-8", errors="replace"))
+        if meta.get("id"):
+            yield "charter", meta, body, md
 
 
 def load_lock_stale_hours() -> float:
@@ -116,7 +159,7 @@ def sweep(*, now: datetime.datetime | None = None, dry: bool = False) -> list[st
     threshold_h = load_lock_stale_hours()
     report: list[str] = []
 
-    for _itype, meta, _body, src in bs._iter_artifacts():
+    for _itype, meta, _body, src in itertools.chain(bs._iter_artifacts(), _iter_charter_locks()):
         lock = str(meta.get("lock") or "").strip()
         if not lock:
             continue

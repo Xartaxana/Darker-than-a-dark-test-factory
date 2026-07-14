@@ -29,7 +29,13 @@ rules:
   - name: "Новая сборка → smoke, затем regression"
     when: "state/app-under-test.yaml изменился (versionCode/hash != последнего прогона)"
     dispatch: test-runner
-    args: { suite: [smoke, regression], mode: replay }
+    args: { suite: [smoke, regression], mode: replay, regression_selection: impact }
+    # D1 (Этап 4 п.5, шаг 2, 2026-07-14): regression — по impact-селекции.
+    # test-runner зовёт scripts/impact_select.py (карта state/impact-map.yaml);
+    # «FULL REGRESSION» (wide-impact/unknown-файл/недоступный диапазон) → полный
+    # набор; иначе — automated_by затронутых областей. smoke всегда полный.
+    # Fail-safe: любой сбой селекции = full (протухшая карта не сужает прогон
+    # молча). Аудит — поле selection в run-артефакте (schemas/run.schema.yaml).
 
   - name: "Разобрать падения прогона"
     when: "run.status == NeedsTriage"
@@ -130,6 +136,15 @@ rules:
   - name: "Обновить стратегию при изменении приложения"
     when: "app-under-test/PROJECT.md изменился с последнего анализа ИЛИ появился вердикт APP_CHANGED"
     dispatch: test-strategist
+
+  - name: "Исполнить exploratory charter"     # P7 docs/10, Этап 4 п.11 шаг 2 (2026-07-14)
+    when: "charter.status == Planned (exploratory-charters/CH-*.md)"
+    dispatch: exploratory-tester
+    # Заведение charter'а — событийное, за Lead/человеком (крупная фича,
+    # APP_CHANGED, перед релизом, кластер багов — конвенции в
+    # exploratory-charters/README.md); правило только исполняет заведённое.
+    # Ниже прочих правил намеренно: исследование не крадёт очередь у триажа
+    # и автоматизации. Таймбокс — в frontmatter charter'а.
 
   # [план] Включить, когда canary-suite реально существует (сейчас в framework/tests
   # нет canary-тестов — находка планировщика 2026-07-07; иначе ежедневный холостой

@@ -30,10 +30,14 @@ def _tc(root: Path, key: str, area: str, status: str, priority: str = "P1",
 
 
 def _run(root: Path, key: str, *, suite: str, status: str, updated: str,
-         passed: int = 1, failed: int = 0) -> Path:
+         passed: int = 1, failed: int = 0, tc_results: dict[str, str] | None = None) -> Path:
+    tc_line = ""
+    if tc_results is not None:
+        body = ", ".join(f"{k}: {v}" for k, v in tc_results.items())
+        tc_line = f"tc_results: {{ {body} }}\n"
     text = (
         f"---\nid: {key}\ntitle: Прогон {key}\nsuite: {suite}\nstatus: {status}\n"
-        f"totals: {{ passed: {passed}, failed: {failed} }}\n"
+        f"totals: {{ passed: {passed}, failed: {failed} }}\n{tc_line}"
         f"updated: \"{updated}\"\nlock: \"\"\n---\n\n# {key}\n\nтело\n"
     )
     p = root / "runs" / f"{key}.md"
@@ -193,3 +197,98 @@ def test_multi_risk_field_indexed_for_each_id(repo, monkeypatch):
     risk_section = text.split("## Риски")[1].split("## Области")[0]
     assert "| R-01 | DATA | backup:TC-151 |" in risk_section
     assert "| R-02 | TECH | backup:TC-151 |" in risk_section
+
+
+# --- E4 (Этап 4 п.12 uplift): last_green_run per-TC из tc_results ---
+
+def test_no_run_carries_tc_results_flags_detector_but_keeps_fallback(repo, monkeypatch):
+    """Ни один run не несёт tc_results — область/last_green_run остаются
+    прежним глобальным поведением (без per-TC секции), НО детекторная строка
+    всё равно ловит этот вырожденный случай (спека п.4: «или все без поля»,
+    подтверждено DoD координатора для боевых run'ов без tc_results).
+
+    Baseline-случай (ни один run не несёт tc_results вообще) — отдельная
+    формулировка «поле ещё не внедрено», не «свежие» (e4-charter-lock-reaper
+    п.4: «свежий» вводит в заблуждение, когда baseline отсутствует у ВСЕХ)."""
+    _patch(repo, monkeypatch)
+    _tc(repo.root, "TC-160", "backup", "Automated", priority="P0", risk="R-01")
+    _run(repo.root, "RUN-500", suite="smoke", status="Closed", updated="2026-07-01T00:00:00Z")
+
+    text = cm.render(cm.collect(), "T")
+
+    assert "прогоны без tc_results (поле ещё не внедрено): RUN-500" in text
+    assert "свежие прогоны без tc_results" not in text
+    section = text.split("### backup")[1]
+    assert "per-TC last green" not in section
+    assert "деградировано до ГЛОБАЛЬНОГО прогона" in section
+
+
+def test_per_tc_last_green_picked_for_automated_case(repo, monkeypatch):
+    """Хотя бы один run несёт tc_results — для Automated-кейса берём последний
+    (по updated) run, где tc_results[<TC-id>] == passed."""
+    _patch(repo, monkeypatch)
+    _tc(repo.root, "TC-200", "backup", "Automated", priority="P0", risk="R-01")
+    _run(repo.root, "RUN-600", suite="smoke", status="Closed", updated="2026-07-01T00:00:00Z",
+         tc_results={"TC-200": "passed"})
+    _run(repo.root, "RUN-601", suite="regression", status="Closed", updated="2026-07-05T00:00:00Z",
+         tc_results={"TC-200": "passed"})
+
+    text = cm.render(cm.collect(), "T")
+    section = text.split("### backup")[1]
+
+    assert "per-TC last green:" in section
+    assert "TC-200: RUN-601 (updated: 2026-07-05T00:00:00Z)" in section
+    assert "RUN-600" not in section.split("per-TC last green:")[1].split("\n")[1]
+
+
+def test_per_tc_no_passed_entry_is_explicit(repo, monkeypatch):
+    """Automated-кейс без единого passed-вхождения в tc_results — явная строка
+    «нет зелёного per-TC», не молчаливый пропуск."""
+    _patch(repo, monkeypatch)
+    _tc(repo.root, "TC-201", "backup", "Automated", priority="P0", risk="R-01")
+    _run(repo.root, "RUN-610", suite="smoke", status="Closed", updated="2026-07-01T00:00:00Z",
+         tc_results={"TC-201": "failed"})
+
+    text = cm.render(cm.collect(), "T")
+    section = text.split("### backup")[1]
+
+    assert "TC-201: нет зелёного per-TC" in section
+
+
+def test_non_automated_case_excluded_from_per_tc_section(repo, monkeypatch):
+    _patch(repo, monkeypatch)
+    _tc(repo.root, "TC-202", "backup", "Approved", priority="P1", risk="R-01")
+    _run(repo.root, "RUN-620", suite="smoke", status="Closed", updated="2026-07-01T00:00:00Z",
+         tc_results={"TC-202": "passed"})
+
+    text = cm.render(cm.collect(), "T")
+    section = text.split("### backup")[1]
+
+    assert "per-TC last green:" in section
+    assert "нет Automated-кейсов" in section
+    assert "TC-202" not in section.split("per-TC last green:")[1]
+
+
+def test_newer_runs_without_tc_results_flagged_by_detector(repo, monkeypatch):
+    """Дисциплина: если существует run НОВЕЕ самого свежего run-с-tc_results —
+    строка «свежие прогоны без tc_results: RUN-...» в файле."""
+    _patch(repo, monkeypatch)
+    _tc(repo.root, "TC-210", "backup", "Automated", priority="P0", risk="R-01")
+    _run(repo.root, "RUN-700", suite="smoke", status="Closed", updated="2026-07-01T00:00:00Z",
+         tc_results={"TC-210": "passed"})
+    _run(repo.root, "RUN-701", suite="regression", status="Closed", updated="2026-07-10T00:00:00Z")
+
+    text = cm.render(cm.collect(), "T")
+
+    assert "свежие прогоны без tc_results: RUN-701" in text
+
+
+def test_no_newer_runs_without_tc_results_no_detector_line(repo, monkeypatch):
+    _patch(repo, monkeypatch)
+    _tc(repo.root, "TC-211", "backup", "Automated", priority="P0", risk="R-01")
+    _run(repo.root, "RUN-710", suite="smoke", status="Closed", updated="2026-07-01T00:00:00Z",
+         tc_results={"TC-211": "passed"})
+
+    text = cm.render(cm.collect(), "T")
+
+    assert "свежие прогоны без tc_results" not in text
