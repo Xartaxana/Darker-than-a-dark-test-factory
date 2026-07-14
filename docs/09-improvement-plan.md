@@ -212,6 +212,18 @@
   test-case.schema.yaml через 4 вопроса F-11). Доложено builder'ом
   r10-coverage-map 2026-07-14; сами кейсы — домен конвейера, править
   согласованно с параллельной сессией.
+- `scripts/mechanism_gate.py` печатает кириллицу в stdout/stderr без
+  `reconfigure(encoding="utf-8")` (эталон — ui_snapshot.py, оба потока) —
+  на Windows-консоли сообщения гейта искажаются. Класс лежит на оси 1
+  SIBLING_MAP: проверить OS-парника `tools/mechanism_gate.py` тем же фиксом
+  (явная строка для Lead OS-репо). Доложено builder'ом e4-impact-selection
+  2026-07-14.
+- Боевой `app-under-test/` — shallow-клон глубины 1: дефолтный режим
+  `impact_select.py` (диапазон из app-under-test.yaml) упирается в
+  нерезолвящийся `~1` и честно отказывает с подсказкой `--from/--to`.
+  При встраивании D1 в конвейер решить: `git fetch --unshallow` в
+  build_watch/doctor либо диапазон без родителя (rev-list current..tip
+  уже есть у build_watch). Найдено эмпирически builder'ом 2026-07-14.
 
 ## 5. Сверка внешнего ревью docs/10 с фактическим состоянием (2026-07-14)
 

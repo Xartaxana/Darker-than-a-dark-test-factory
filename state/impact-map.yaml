@@ -1,0 +1,56 @@
+# Карта impact: изменённые файлы app-under-test -> области test-cases (D1).
+# Владелец — Lead; правится при изменении структуры приложения.
+# Детектор протухания встроен в impact_select.py: исходник вне карты =>
+# область unknown => fallback full regression (безопасно по умолчанию)
+# и явная строка в отчёте скрипта.
+# Семантика глобов (транслятор impact_select.py): * не пересекает «/»;
+# ** — любой хвост. Известное ограничение: ** В СЕРЕДИНЕ пути не матчит
+# ноль сегментов (foo/**/bar не матчит foo/bar) — в карте использовать
+# ** только хвостовым (ревью e4-impact-selection, N2).
+version: 1
+ignore:            # не влияют на тесты
+  - "*.md"        # markdown в корне
+  - "**/*.md"     # markdown на любой вложенности (ревью N1)
+  - ".github/**"
+  - "gradle/**"
+  - "gradlew*"
+wide_impact:       # любое изменение => полная регрессия
+  - "app/src/main/java/com/example/ao3_wrapper/MainActivity.kt"
+  - "app/src/main/java/com/example/ao3_wrapper/Ao3App.kt"
+  - "app/src/main/java/com/example/ao3_wrapper/data/db/**"
+  - "app/src/main/java/com/example/ao3_wrapper/data/model/**"
+  - "app/src/main/assets/ao3_bridge.js"
+  - "app/src/main/AndroidManifest.xml"
+  - "app/build.gradle*"
+  - "build.gradle*"
+rules:             # путь/глоб -> список областей
+  - path: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserScreen.kt"
+    areas: [browser, tabs, rating, downloads]
+  - path: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt"
+    areas: [browser, tabs, rating, visibility, filter-profiles, downloads, library]
+  - path: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BottomBar.kt"
+    areas: [browser, rating, settings]
+  - path: "app/src/main/java/com/example/ao3_wrapper/ui/browser/TabStrip.kt"
+    areas: [tabs, browser]
+  - path: "app/src/main/java/com/example/ao3_wrapper/ui/browser/TabInfo.kt"
+    areas: [tabs, browser, rating]
+  - path: "app/src/main/java/com/example/ao3_wrapper/ui/browser/HistoryEntry.kt"
+    areas: [tabs, browser]
+  - path: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowseSidePanel.kt"
+    areas: [browser, settings]
+  - path: "app/src/main/java/com/example/ao3_wrapper/ui/library/**"
+    areas: [library, rating, visibility, downloads, filter-profiles]
+  - path: "app/src/main/java/com/example/ao3_wrapper/ui/settings/**"
+    areas: [settings, backup, downloads, browser, library]
+  - path: "app/src/main/java/com/example/ao3_wrapper/ui/theme/**"
+    areas: [settings, browser, library]
+  - path: "app/src/main/java/com/example/ao3_wrapper/ui/components/RatingOverlay.kt"
+    areas: [rating, library, browser]
+  - path: "app/src/main/java/com/example/ao3_wrapper/ui/components/**"
+    areas: [rating, library, browser]
+  - path: "app/src/main/java/com/example/ao3_wrapper/data/repository/RatingRepository.kt"
+    areas: [rating, library, visibility, backup, downloads]
+  - path: "app/src/main/java/com/example/ao3_wrapper/data/repository/DownloadRepository.kt"
+    areas: [downloads, library, browser]
+  - path: "app/src/main/assets/reader.css"
+    areas: [downloads, browser]
