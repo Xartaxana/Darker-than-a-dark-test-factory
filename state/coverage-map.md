@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-14T10:15:25Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-14T11:40:45Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 ## Сводка по областям
@@ -34,6 +34,10 @@ generated_at: 2026-07-14T10:15:25Z · генератор: `scripts/coverage_map.
 | R-11 | TECH | browser:TC-050, browser:TC-051, browser:TC-052, browser:TC-053, browser:TC-054, browser:TC-055, browser:TC-057, browser:TC-058, settings:TC-047, settings:TC-048, settings:TC-049 |
 | R-09 | BUS | filter-profiles:TC-040, filter-profiles:TC-041, filter-profiles:TC-042 |
 | R-10 | DATA | rating:TC-043, rating:TC-044, rating:TC-045, rating:TC-056 |
+| R-12 | PERF | риск не покрыт дизайном |
+| R-13 | A11Y | риск не покрыт дизайном |
+| R-14 | COMPAT | риск не покрыт дизайном |
+| R-15 | SEC | риск не покрыт дизайном |
 
 ## Области
 
@@ -43,7 +47,7 @@ generated_at: 2026-07-14T10:15:25Z · генератор: `scripts/coverage_map.
 - риски: R-01
 - кейсы без risk: нет
 - P0/P1 не в Automated: TC-021 [P0, Approved]
-- автотесты (automated_by): —
+- автотесты (automated_by): framework/tests/test_backup_restore.py::test_backup_clear_restore_returns_original_data
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
