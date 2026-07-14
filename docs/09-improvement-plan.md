@@ -195,3 +195,50 @@
 - Убрать из корня `scratch_screen*.png` (3 × ~1.3 МБ) — в .gitignore/удалить.
 - Закоммитить накопившееся: README.md, docs/08, docs/09, `.agents/`.
 - Bypass ExecutionPolicy зашить в функции `tasks.ps1` (находка репетиции, не блокер).
+
+## 5. Сверка внешнего ревью docs/10 с фактическим состоянием (2026-07-14)
+
+Основание: [10-external-quality-review.md](10-external-quality-review.md)
+(2026-07-13). Фактура сверена разведкой r10-adoption-recon (routing-log
+2026-07-14): canary-пакет пуст, coverage-model/exploratory-charters нет,
+неавтоматизированные P0 и статусы R-09/R-10 подтверждены пофайлово.
+
+| Пункт ревью | Сверка | Решение |
+|---|---|---|
+| P1 regression не регулярный | **Подтверждено** (factory-status 2026-07-10: smoke passed, regression not_run) | Release-readiness секция вытягивается вперёд из Этапа 4 п.6 — задача r10-release-readiness (builder), в работе 2026-07-14. Регулярный regression-gate — остаётся в Этапе 4 п.6 (расписание) |
+| P2 P0-гэпы | **Подтверждено дословно**: TC-009/013/014/015 (блокер AT-BUG-004), TC-021 (AT-BUG-005, инфраструктура готова) | Уже пункты 2–3 Этапа 3; ревью подтверждает приоритет «P0 раньше P2/P3». Нового не заводим |
+| P3 canary отсутствует | **Подтверждено** (`framework/tests/canary/` — пустой пакет, правило в rules.yaml в статусе [план]) | Уже Этап 3/rules.yaml. Контракт bridge из ревью (work blurb, work id, rating/note buttons, badge, filter/save controls; live+replay раздельно) принять как DoD диспатча при реализации |
+| P4 project intake | Новое; для качества AO3-тестирования не требуется | Стратегическая развилка владельца (отдельный слой «фабрика для нового проекта»), не пункт очереди |
+| P5 инварианты | Частично уже C4 Этапа 4 | C4 дополняется списком инвариантов из ревью P5; при реализации — чек-лист в шаблон/промпт test-designer (механизм — через 4 вопроса F-11) |
+| P6 seeded defects | Новое | Этап 4 п.10 (ниже); после закрытия P0 и canary |
+| P7 exploratory charters | Новое (каталога нет — сверено) | Этап 4 п.11 (ниже) |
+| P8 non-func раньше | E1/E2/E3 уже в Этапе 4 (решение владельца 2026-07-07) | Изменение приоритета — вопрос владельцу; до решения порядок прежний |
+| P9 security/privacy smoke | Конфликт с решением владельца 2026-07-07 (E4 отклонён) | Вопрос владельцу: подтвердить отказ или принять урезанный скоуп (WebView settings, cleartext, sensitive data in logs). До решения — отклонено |
+| P10 R-09/R-10 proposed | **Подтверждено** (proposed с 2026-07-02; AT-BUG-006 уже блокирует автоматизацию filter-profiles) | Вопрос владельцу: утвердить в матрице §5 или снять |
+| D1 historical-снимки в стратегии | **Подтверждено расхождение** (§9: 55/9 Automated против factory-status 2026-07-10: 58/21) | ✅ Исправлено 2026-07-14: числа статусов из docs/01 §9 убраны, раскладка по областям помечена HISTORICAL |
+| D2 release-readiness summary | Частично уже Этап 4 п.6 («release-readiness сводка (D3)») | Вытянуто вперёд: секция в `queue_snapshot.py` → `state/factory-status.md`, задача r10-release-readiness. Стартовые метрики — только считаемые из существующих артефактов (`regression_freshness_hours`, `p0_automation_coverage`, `untriaged_failure_age`, quarantine/test-debt счётчики). Метрики escape rate — после появления release gate (данных пока нет) |
+| D3 gate-driven roadmap | Принято как форма | Для НОВЫХ крупных пунктов плана — owner agent / input / output / exit criteria; ретроспективно выполненные этапы не переписываем |
+| §6 метрики (~35 шт.) | — | Оптом не берём; стартовый набор — в составе release-readiness (см. D2). Остальные — по мере появления данных |
+| §5.2 coverage graph | coverage-model.yaml нет (сверено) | Этап 4 п.12 (ниже) — но ГЕНЕРИРУЕМАЯ проекция из frontmatter (принцип «проекция, не второй источник истины»), не рукописный yaml |
+
+**Дополнения к Этапу 4 (по ревью docs/10):**
+
+10. **Seeded defects / test effectiveness loop (P6, §5.3):** регулярная
+    controlled-defect репетиция для black-box — испорченный replay DOM,
+    corrupted backup, stale DB schema, сломанный селектор, wrong rating
+    mapping; непойманный дефект → test gap (test_debt); метрика
+    `seeded_defect_kill_rate`. Делать после закрытия P0-гэпов и canary.
+11. **Exploratory charters (P7):** каталог `exploratory-charters/` + шаблон
+    (mission, scope, risks, heuristics, observations, found bugs, follow-up
+    TC) + агент exploratory-tester; триггеры — новая крупная функция,
+    APP_CHANGED, перед релизом. Метрики: `bugs_per_charter`,
+    `new_tc_from_charters`.
+12. **Coverage-проекция (§5.2):** генерируемый из frontmatter граф
+    feature → risk → TC → automated test → last green run (расширение
+    queue_snapshot или отдельный скрипт); рукописный coverage-yaml не
+    заводим.
+
+**Развилки владельца (открыты 2026-07-14):** (а) R-09/R-10 — утвердить или
+снять; (б) security/privacy smoke — подтвердить отказ E4 или принять
+минимальный скоуп P9; (в) поднимать ли минимальные non-func smoke-чеки раньше
+Этапа 4.
