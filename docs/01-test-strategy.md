@@ -55,7 +55,7 @@ CLAUDE.md + фактическое наблюдаемое поведение; PR
 | E2E UI (нативный + WebView) | Основные пользовательские сценарии | Appium + UiAutomator2 | ~70% |
 | Web-слой (bridge-канарейки) | Живой DOM AO3 всё ещё соответствует селекторам `ao3_bridge.js` | Отдельный canary-suite (live) | ~10% |
 | Данные | Целостность Room после операций: backup/restore, clear, scan for downloads | E2E + проверка экспортированного JSON | ~15% |
-| Нефункциональные | Холодный старт, восстановление после kill, поворот экрана, offline | E2E-сценарии | ~5% |
+| Нефункциональные | Четыре области §9 «Нефункциональные»: performance/stability smoke (E2), accessibility smoke (E1), compatibility (E3), security/privacy smoke (E4-min); плюс восстановление после kill, offline | E2E-сценарии + инспекция манифеста/logcat | ~10% |
 
 ## 4. Режимы прогона
 
@@ -125,8 +125,8 @@ CLAUDE.md + фактическое наблюдаемое поведение; PR
 |---|---|---|
 | Функциональность самого сайта AO3 | Не наш продукт | Canary проверяет только контракт селекторов bridge |
 | Unit/integration-тесты внутри приложения | Запрет на изменения кода | Логика покрывается через UI-наблюдаемое поведение |
-| Публикация/совместимость с парком устройств | Личное sideload-приложение | Один эталонный AVD (API 34) + опционально реальное устройство |
-| Нагрузочное/security | Локальное личное приложение без бэкенда | — |
+| Публикация/совместимость с ПАРКОМ устройств | Личное sideload-приложение | Эталонный AVD (API 34); минимальная compatibility-матрица (второй API level, dark/light, orientation) — В СКОУПЕ, см. §9 E3 (решение владельца 2026-07-07/14) |
+| Нагрузочное тестирование и полный security-АУДИТ | Локальное личное приложение без бэкенда | Минимальные performance/stability и security/privacy SMOKE — В СКОУПЕ, см. §9 E2 и E4-min (решения владельца 2026-07-07 и 2026-07-14); строка исключает только нагрузку и аудит |
 
 ## 9. Области, требующие тест-дизайна (`needs-design`)
 
@@ -274,6 +274,95 @@ toggle, вход и выход) — все три `status: Review`, приори
   тема/шрифт/яркость). Бывший отложенный минорный остаток (контролы Home и
   Fullscreen toggle) закрыт этими кейсами.
 
+### Нефункциональные области (Этап 4; ниже закрытия P0-гэпов и canary)
+
+**Происхождение и приоритет.** Четыре области ниже введены решениями владельца
+(E1/E2/E3 — 2026-07-07, docs/09 Этап 4 п.1-3; security/privacy smoke
+минимального скоупа — 2026-07-14, docs/09 Этап 4 п.13; сверка внешнего ревью
+docs/10 P8/P9). Все — `needs-design`: кейсов пока нет. **Приоритет области —
+ниже закрытия P0-automation-гэпов и baseline canary (Этап 3);** внутри четвёрки
+порядок дизайна — **E2 → E1 → E3 → security** (порядок docs/09). Каждый пункт
+сформулирован проверяемым штатным стеком (Appium/UiAutomator2 UI + `adb` на
+эмуляторе, replay-режим для детерминизма); пункт, не наблюдаемый через этот
+стек, помечен **testability gap** — инструменты под него не выдумываются.
+Рисковый якорь каждой области — proposed-риск §10 (R-12..R-15, ждут утверждения
+человека) либо существующий риск §5, где он подходит; вес release-gating до
+утверждения — временный.
+
+- **performance/stability smoke (E2)** (proposed **R-12** PERF) —
+  **needs-design**:
+  - cold start threshold: замеряется `adb shell am start -W`
+    (TotalTime/WaitTime) или таймингом старта Appium-сессии; критерий —
+    щедрый относительный бюджет, не абсолютный SLA (разброс таймингов
+    эмулятора — caveat дизайна, не gap).
+  - WebView first load threshold: время от навигации до первого наблюдаемого
+    bridge-сигнала (появление бейджа/инъекции); детерминизм — только в
+    replay-режиме (live варьируется сетью/Cloudflare).
+  - отсутствие crash/ANR/fatal в logcat при smoke: скан `adb logcat` на
+    `FATAL EXCEPTION` / `ANR in` во время P0-smoke; ANR-детект — best-effort
+    (может не эмитироваться на коротком прогоне) — **testability gap** на
+    полноту детекции ANR.
+  - memory sanity длинной WebView-сессии: `adb shell dumpsys meminfo <pkg>`
+    до/после длинной сессии (много переходов, до 10 табов); критерий —
+    отсутствие безоткатного роста (тренд), не абсолютный порог.
+- **accessibility smoke (E1)** (labels/font → proposed **R-13** A11Y; contrast
+  dark/light → существующий **R-11**) — **needs-design**:
+  - contentDescription/лейблы ключевых контролов: accessibility tree читается
+    UiAutomator2 напрямую — точная black-box проверка наличия content-desc/text
+    на Rate/Note/тема/шрифт/таб-контролах.
+  - font scaling основных экранов: `adb shell settings put system font_scale
+    1.3` → экраны без крашей и без обрезки; assert = присутствие контролов +
+    отсутствие crash (+ опц. скриншот); программная детекция клиппинга —
+    **testability gap** (штатный Appium не измеряет overflow вёрстки).
+  - contrast sanity dark/light: точный WCAG-ratio требует пиксельной выборки со
+    скриншота + кастомного расчёта — вне штатного Appium-assert, **testability
+    gap**; штатно доступна только sanity (различимость bg/fg на скрине).
+    Привязка к R-11 — та же хрупкая тема-зона (CLAUDE.md «Dark mode fragile»).
+- **compatibility (E3)** (proposed **R-14** COMPAT; dark/light matrix ∩ R-11;
+  orientation ∩ R-08/R-11) — **needs-design**:
+  - второй (нижний) API level: P0-smoke на втором AVD с нижним API (нижняя
+    граница — minSdk 26 по §1/манифесту); инфраструктурная предпосылка — тот же
+    rootable образ без Google Play для mitm-CA, что в §4 (replay).
+  - системная dark/light матрица: P0-smoke в обоих системных режимах
+    (`adb shell "cmd uimode night yes|no"`); пересечение с R-11.
+  - portrait/landscape: **поддерживается приложением — подтверждено по коду, не
+    по памяти** (след: `AndroidManifest.xml`, `<activity .MainActivity>` несёт
+    `configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize"`
+    и НЕ содержит `screenOrientation`-лока ⇒ поворот обрабатывается приложением;
+    `MainActivity.kt` ~стр. 563 — явная landscape-логика side panel). Драйв —
+    rotate через Appium/`adb`; критерий — сохранение активной вкладки/URL/скролла
+    и отсутствие пересоздания WebView при повороте (∩ R-08 персистентность
+    табов, R-11 WebView/яркость).
+- **security/privacy smoke (E4→минимальный, решение 2026-07-14)** (proposed
+  **R-15** SEC) — **needs-design**. **Явно НЕ security-аудит** (полный аудит —
+  вне скоупа, §8); минимальный smoke-скоуп docs/09 Этап 4 п.13. Замечание по
+  режиму проверки: часть пунктов — статические факты собранного APK, НЕ
+  UI-драйвимы через UiAutomator2; они проверяются инспекцией манифеста /`adb`,
+  а не Appium-кейсом (помечено ниже):
+  - exported components sanity: `MainActivity exported=true` с VIEW/BROWSABLE
+    intent-filter (archiveofourown.org) — факт манифеста; верификация =
+    статическая инспекция манифеста APK (`aapt`/`adb shell dumpsys package`),
+    **не Appium-UI** (build-level чек).
+  - cleartext traffic policy: манифест/network-security-config (intent-filter
+    содержит `http://archiveofourown.org` — фактическую cleartext-политику
+    стоит проверить) — статический build-level факт, **не UI**.
+  - опасные настройки WebView (JS enabled, `addJavascriptInterface`
+    `window.Android`, file access): внутренние `WebSettings`/JS-interface НЕ
+    читаются black-box через UiAutomator2 — **testability gap**; штатно
+    доступны только поведенческие пробы (bridge доступен только на доверенном
+    origin; попытка `file://`-доступа за пределы разрешённого пути). Именно
+    экспонированный `@JavascriptInterface` на удалённой странице — причина, по
+    которой область не отклоняется как E4.
+  - пути file access/download: `file://`-открытие скачанного (∩ TC-034) +
+    недоступность выхода за SAF-выбранную папку — частично поведенчески
+    drivable.
+  - privacy backup-файла: `allowBackup="true"` + `fullBackupContent`/
+    `dataExtractionRules` — статический манифест-факт + поведенческая проверка,
+    что SAF-экспорт JSON не пишется в мир-читаемое место (часть static, часть
+    adb).
+  - sensitive data в logcat: скан `adb logcat` при smoke на утечки
+    (cookie/session/токены/локальные пути) — drivable через adb.
+
 ## 10. Открыто для утверждения человеком
 
 Раздел §9 добавляет два риска, не входивших в матрицу §5 (filter-profiles,
@@ -385,6 +474,58 @@ PROJECT.md; (г) добавить в §9 side panel как второй вход
 выше, needs-design) — согласны ли с P1 или это должно быть P0, учитывая, что
 это, по словам владельца продукта, более частый путь использования, чем сам
 экран Settings.
+
+**Предложенные риски нефункциональных областей (2026-07-14, вход для §9
+non-func; НЕ внесены в §5 — ждут утверждения, прецедент R-09/R-10/R-11):**
+
+Четыре новые needs-design области §9 введены по решениям владельца (E1/E2/E3 —
+2026-07-07, docs/09 Этап 4 п.1-3; security/privacy smoke минимального скоупа —
+2026-07-14, docs/09 Этап 4 п.13). Каждой нужен рисковый якорь для
+release-gating; по прецеденту R-11 предлагаю их как proposed, не переопределяя
+матрицу §5 без утверждения. Счёт P×I (1–3) — оценка Lead при формализации,
+уточняется по фактам первых прогонов:
+
+- **R-12 (PERF)** — деградация производительности/стабильности: холодный старт
+  и первая загрузка WebView за пределами приемлемого бюджета, ANR/crash/fatal
+  при обычном smoke, безоткатный рост памяти в длинной WebView-сессии (до 10
+  табов). **P2 × I2 = 4.** WebView-обёртка с несколькими табами и длинными
+  сессиями — реальный класс перф-проблем, но smoke ловит лишь грубые; влияние —
+  удобство/зависания, не потеря данных. Якорь области E2.
+- **R-13 (A11Y)** — регресс доступности: пропавшие content-description/лейблы
+  ключевых контролов, поломка вёрстки при системном font scaling. **P2 × I1 =
+  2.** Личное sideload-приложение, узкая аудитория ⇒ низкое влияние; вероятность
+  регресса умеренная (Compose-контролы без testTag). Contrast dark/light сюда НЕ
+  выносится — привязан к существующему R-11 (та же хрупкая тема-зона). Якорь E1
+  (labels/font).
+- **R-14 (COMPAT/TECH)** — расхождение поведения между API-уровнями и
+  конфигурациями: нижний API (minSdk 26) ломает WebView/рендер; поворот экрана
+  теряет состояние табов/скролл или пересоздаёт WebView. **P2 × I2 = 4.**
+  WebView-поведение варьируется по API; config-change обрабатывается
+  (`configChanges` в манифесте), но `app-under-test/CLAUDE.md` прямо помечает
+  эту зону хрупкой. Пересечения: dark/light matrix ∩ R-11; orientation ∩ R-08
+  (персистентность табов) и R-11 (яркость/WebView). Якорь E3.
+- **R-15 (SEC)** — приватность/безопасность конфигурации: небезопасные
+  настройки WebView (JS-bridge `window.Android` на удалённой странице, file
+  access), cleartext, world-readable backup, sensitive data в logcat. **P2 × I2
+  = 4.** Приложение грузит удалённый контент и вешает `@JavascriptInterface` —
+  именно это отличает минимальный smoke от полностью отклонённого E4
+  (2026-07-07); влияние ограничено single-user личным устройством, поэтому I2, а
+  не I3. Полный security-аудит остаётся вне скоупа (§8). Якорь E4-min.
+
+Прошу владельца: (д) утвердить R-12..R-15 в §5 (или снять / переоценить счёт);
+(е) подтвердить, что security-область — именно минимальный smoke, и что часть её
+пунктов (exported/cleartext/allowBackup) проверяется статической инспекцией
+манифеста собранного APK + `adb`, а не Appium-UI (см. пометки testability в §9),
+и это приемлемо в рамках стека.
+
+**Поддержка portrait/landscape — подтверждено по коду (не по памяти):**
+`app-under-test/app/src/main/AndroidManifest.xml`, `<activity
+android:name=".MainActivity">` несёт
+`android:configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize"`
+и НЕ содержит `android:screenOrientation`-лока ⇒ приложение обрабатывает поворот
+само, обе ориентации поддержаны; `MainActivity.kt` (~стр. 563) содержит явную
+landscape-логику side panel («shifts right in landscape for side nav bars»).
+Поэтому portrait/landscape включён в E3, а не отброшен.
 
 ---
 
