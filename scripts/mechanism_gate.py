@@ -1,14 +1,12 @@
 """Гейт правила 10(б) — D-0055 OS-репо + tier-декларация D-0072 (t-071).
 
-НЕ живой файл: порт tier-требования из tools/mechanism_gate.py (OS-репо,
-decide_full/resolve_lead_binding/lead_family/find_tier_declaration/
-tier_declared_ok — принято с critic-ревью, t-068) поверх нетронутого
-scripts/mechanism_gate.py этого репо. Сдан соседним файлом по инструкции
-координатора (t-071): самоактивирующийся enforcement-файл на путь
-кладёт Lead при приёмке (D-0069) — эта копия сама по себе ничего не
-гейтит, пока её кто-то не поставит на scripts/mechanism_gate.py и не
-перепривяжет .githooks/commit-msg (сейчас он вызывает старый файл
-напрямую, см. .githooks/commit-msg этого репо).
+ЖИВОЙ файл: .githooks/commit-msg вызывает его напрямую. (Историческая
+заметка «НЕ живой файл» снята 2026-07-14: порт tier-требования из
+tools/mechanism_gate.py OS-репо — decide_full/resolve_lead_binding/
+lead_family/find_tier_declaration/tier_declared_ok, принят с critic-ревью
+t-068 — сдавался соседним файлом по D-0069 и был установлен на этот путь
+при приёмке; заметка о неактивности пережила установку — класс
+«док лжёт о живости enforcement'а», сверено чтением .githooks/commit-msg.)
 
 Унаследованное от твина (не менялось): карта осей ОДНА и живёт в
 OS-репо, путь абсолютный, недоступна → fail-closed (F-7); решений
@@ -58,6 +56,14 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+
+# Оба потока: тексты отказа гейта — кириллица и в stdout, и в stderr
+# (эталон — ui_snapshot.py; класс доложен builder'ом e4-impact-selection).
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8")
+    except (AttributeError, ValueError):
+        pass
 
 MAP_PATH = Path(r"D:\Improving_AI\Operating-System-for-LLMs\docs\SIBLING_MAP.md")
 
