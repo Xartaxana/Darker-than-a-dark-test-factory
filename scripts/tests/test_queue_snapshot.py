@@ -79,3 +79,145 @@ def test_stable_output_same_state(repo, monkeypatch):
     a = qs.render(qs.collect(), "T")
     b = qs.render(qs.collect(), "T")
     assert a == b
+
+
+# --- r10-release-readiness (docs/10 D2+P1): секция "Release readiness" ---
+
+def test_release_readiness_build_na_without_aut(repo, monkeypatch):
+    """Item 1: state/app-under-test.yaml отсутствует -> явное n/a, не падение."""
+    monkeypatch.setattr(qs, "REPO", repo.root, raising=True)
+    monkeypatch.setattr(qs, "AUT_PATH", repo.root / "state" / "app-under-test.yaml", raising=True)
+    monkeypatch.setattr(qs, "ESCALATIONS_PATH", repo.root / "state" / "escalations.md", raising=True)
+
+    text = qs.render(qs.collect(), "2026-07-08T00:00:00Z")
+
+    assert "## Release readiness" in text
+    section = text.split("## Release readiness")[1].split("## Сборка под тестом")[0]
+    assert "- Сборка: n/a (state/app-under-test.yaml не найден)" in section
+
+
+def test_release_readiness_build_from_aut(repo, monkeypatch):
+    """Item 1: сборка читается из app-under-test.yaml; отсутствующие поля -> n/a."""
+    monkeypatch.setattr(qs, "REPO", repo.root, raising=True)
+    monkeypatch.setattr(qs, "AUT_PATH", repo.root / "state" / "app-under-test.yaml", raising=True)
+    monkeypatch.setattr(qs, "ESCALATIONS_PATH", repo.root / "state" / "escalations.md", raising=True)
+    repo.app_under_test(built_at="2026-07-06T00:00:00")
+
+    text = qs.render(qs.collect(), "2026-07-08T00:00:00Z")
+    section = text.split("## Release readiness")[1].split("## Сборка под тестом")[0]
+
+    assert "versionCode 11" in section
+    assert "built_at 2026-07-06T00:00:00" in section
+    # version_name не задан фикстурой app_under_test -> n/a, не "?" и не падение
+    assert "n/a (versionCode" in section
+
+
+def test_release_readiness_suite_freshness_and_not_run(repo, monkeypatch):
+    """Item 2: последний run по suite -> статус + возраст в часах; suite без
+    прогонов -> not_run."""
+    monkeypatch.setattr(qs, "REPO", repo.root, raising=True)
+    monkeypatch.setattr(qs, "AUT_PATH", repo.root / "state" / "app-under-test.yaml", raising=True)
+    monkeypatch.setattr(qs, "ESCALATIONS_PATH", repo.root / "state" / "escalations.md", raising=True)
+    # updated фикстуры run() зафиксирован на "2026-07-01T00:00:00Z"
+    repo.run("RUN-100", "Closed", extra="suite: smoke\n")
+
+    text = qs.render(qs.collect(), "2026-07-08T00:00:00Z")
+    section = text.split("## Release readiness")[1].split("## Сборка под тестом")[0]
+
+    assert "smoke: Closed · smoke_freshness_hours: **168.0** (RUN-100)" in section
+    assert "- regression: not_run" in section
+    assert "- canary: not_run" in section
+
+
+def test_release_readiness_blocker_critical_and_known_issues(repo, monkeypatch):
+    """Item 3/4: открытые blocker/critical app_bug (не test_debt) + счётчик known_issue."""
+    monkeypatch.setattr(qs, "REPO", repo.root, raising=True)
+    monkeypatch.setattr(qs, "AUT_PATH", repo.root / "state" / "app-under-test.yaml", raising=True)
+    monkeypatch.setattr(qs, "ESCALATIONS_PATH", repo.root / "state" / "escalations.md", raising=True)
+    repo.bug("BUG-200", "Open", extra="severity: critical\n")           # считается
+    repo.bug("BUG-201", "Fixed", extra="severity: blocker\n")           # не Open/Reopened
+    repo.bug("BUG-202", "Open")                                        # severity: major — не считается
+    repo.bug("BUG-203", "Open", extra="severity: blocker\nknown_issue: true\n")
+
+    text = qs.render(qs.collect(), "2026-07-08T00:00:00Z")
+    section = text.split("## Release readiness")[1].split("## Сборка под тестом")[0]
+
+    assert "- Открытые blocker/critical: **2**" in section
+    assert "BUG-200" in section and "BUG-203" in section
+    assert "BUG-201" not in section.split("Открытые blocker/critical")[1].split("\n")[0]
+    assert "- Известные проблемы (known_issue): **1**" in section
+
+
+def test_release_readiness_p0_p1_coverage_and_uncovered(repo, monkeypatch):
+    """Item 5: доля Automated по priority P0/P1 + явный список непокрытых P0."""
+    monkeypatch.setattr(qs, "REPO", repo.root, raising=True)
+    monkeypatch.setattr(qs, "AUT_PATH", repo.root / "state" / "app-under-test.yaml", raising=True)
+    monkeypatch.setattr(qs, "ESCALATIONS_PATH", repo.root / "state" / "escalations.md", raising=True)
+    repo.test_case("TC-100", "Automated", extra="priority: P0\n")
+    repo.test_case("TC-101", "Approved", extra="priority: P0\n")   # непокрытый P0
+    repo.test_case("TC-102", "Review", extra="priority: P1\n")     # непокрытый P1 (список не требуется)
+
+    text = qs.render(qs.collect(), "2026-07-08T00:00:00Z")
+    section = text.split("## Release readiness")[1].split("## Сборка под тестом")[0]
+
+    assert "- p0_automation_coverage: **50%** (1/2)" in section
+    assert "- p1_automation_coverage: **0%** (0/1)" in section
+    assert "непокрытые P0: TC-101" in section
+
+
+def test_release_readiness_test_debt_open_and_quarantine(repo, monkeypatch):
+    """Item 6/7: test_debt Open|Reopened (Fixed исключён) + карантин автотестов."""
+    monkeypatch.setattr(qs, "REPO", repo.root, raising=True)
+    monkeypatch.setattr(qs, "AUT_PATH", repo.root / "state" / "app-under-test.yaml", raising=True)
+    monkeypatch.setattr(qs, "ESCALATIONS_PATH", repo.root / "state" / "escalations.md", raising=True)
+    repo.bug("BUG-300", "Open", extra="type: test_debt\ndebt_kind: flaky_test\n")
+    repo.bug("BUG-301", "Fixed", extra="type: test_debt\ndebt_kind: flaky_test\n")
+    repo.test_case("TC-200", "Automated", extra=(
+        "automation_status: quarantined\nquarantine_reason: flaky\n"
+        "quarantine_since: \"2026-07-01T00:00:00Z\"\n"))
+
+    text = qs.render(qs.collect(), "2026-07-08T00:00:00Z")
+    section = text.split("## Release readiness")[1].split("## Сборка под тестом")[0]
+
+    assert "- Test debt открыт: **1**" in section
+    assert "BUG-300" in section.split("Test debt открыт")[1].split("\n")[0]
+    assert "BUG-301" not in section.split("Test debt открыт")[1].split("\n")[0]
+    assert "- Карантин автотестов: **1**" in section
+    assert "TC-200" in section.split("Карантин автотестов")[1].split("\n")[0]
+
+
+def test_release_readiness_untriaged_age(repo, monkeypatch):
+    """Item 8: runs NeedsTriage — счёт + максимальный возраст (untriaged_failure_age)."""
+    monkeypatch.setattr(qs, "REPO", repo.root, raising=True)
+    monkeypatch.setattr(qs, "AUT_PATH", repo.root / "state" / "app-under-test.yaml", raising=True)
+    monkeypatch.setattr(qs, "ESCALATIONS_PATH", repo.root / "state" / "escalations.md", raising=True)
+    repo.run("RUN-400", "NeedsTriage")   # updated фикстуры: 2026-07-01T00:00:00Z
+
+    text = qs.render(qs.collect(), "2026-07-08T00:00:00Z")
+    section = text.split("## Release readiness")[1].split("## Сборка под тестом")[0]
+
+    assert "- Untriaged: **1** · untriaged_failure_age: **168.0**" in section
+
+
+def test_release_readiness_untriaged_zero_when_none(repo, monkeypatch):
+    monkeypatch.setattr(qs, "REPO", repo.root, raising=True)
+    monkeypatch.setattr(qs, "AUT_PATH", repo.root / "state" / "app-under-test.yaml", raising=True)
+    monkeypatch.setattr(qs, "ESCALATIONS_PATH", repo.root / "state" / "escalations.md", raising=True)
+
+    text = qs.render(qs.collect(), "2026-07-08T00:00:00Z")
+    section = text.split("## Release readiness")[1].split("## Сборка под тестом")[0]
+
+    assert "- Untriaged: **0** · untriaged_failure_age: **0**" in section
+
+
+def test_release_readiness_section_placed_after_header(repo, monkeypatch):
+    """Оформление: секция идёт заметно — сразу после generated_at-метки, до
+    остальных секций дайджеста."""
+    monkeypatch.setattr(qs, "REPO", repo.root, raising=True)
+    monkeypatch.setattr(qs, "AUT_PATH", repo.root / "state" / "app-under-test.yaml", raising=True)
+    monkeypatch.setattr(qs, "ESCALATIONS_PATH", repo.root / "state" / "escalations.md", raising=True)
+
+    text = qs.render(qs.collect(), "2026-07-08T00:00:00Z")
+
+    assert text.index("## Release readiness") < text.index("## Сборка под тестом")
+    assert text.index("generated_at:") < text.index("## Release readiness")
