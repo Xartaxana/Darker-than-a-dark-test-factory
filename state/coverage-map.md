@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-14T11:40:45Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-14T11:58:41Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 ## Сводка по областям
@@ -159,7 +159,7 @@ generated_at: 2026-07-14T11:40:45Z · генератор: `scripts/coverage_map.
 - риски: R-01, R-11
 - кейсы без risk: нет
 - P0/P1 не в Automated: нет
-- автотесты (automated_by): tests/test_settings.py::test_system_theme_follows_os_dark_mode, tests/test_settings.py::test_theme_dark_applies_instantly_without_recreating_activity, tests/test_settings.py::test_webview_dark_mode_applies_instantly
+- автотесты (automated_by): framework/tests/test_settings.py::test_system_theme_follows_os_dark_mode, framework/tests/test_settings.py::test_theme_dark_applies_instantly_without_recreating_activity, framework/tests/test_settings.py::test_webview_dark_mode_applies_instantly
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
