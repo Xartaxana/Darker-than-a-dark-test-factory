@@ -262,6 +262,12 @@
     TC) + агент exploratory-tester; триггеры — новая крупная функция,
     APP_CHANGED, перед релизом. Метрики: `bugs_per_charter`,
     `new_tc_from_charters`.
+    *Шаг 1 внедрён 2026-07-14: каталог + README, docs/templates/charter.md,
+    роль .claude/agents/exploratory-tester.md (opus). До шага 2 диспатч —
+    только вручную Lead'ом с записью в routing-log (детектор — чеки 5/15
+    калибровки OS-репо). Шаг 2 (в очереди, окно без параллельного прохода):
+    charter.schema.yaml + AREAS в validate_frontmatter, правило в
+    rules.yaml, метрики charters_* в queue_snapshot.*
 12. **Coverage-проекция (§5.2):** генерируемый из frontmatter граф
     feature → risk → TC → automated test → last green run (расширение
     queue_snapshot или отдельный скрипт); рукописный coverage-yaml не
