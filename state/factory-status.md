@@ -1,19 +1,19 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-14T18:35:47Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-07-14T20:19:39Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **303.0** (RUN-20260702-0300)
+- smoke: Closed · smoke_freshness_hours: **304.7** (RUN-20260702-0300)
 - regression: not_run
 - canary: not_run
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **0**
-- p0_automation_coverage: **64%** (9/14)
+- p0_automation_coverage: **71%** (10/14)
 - p1_automation_coverage: **46%** (16/35)
-  - непокрытые P0: TC-021, TC-009, TC-013, TC-014, TC-015
+  - непокрытые P0: TC-009, TC-013, TC-014, TC-015
 - Test debt открыт: **5** — AT-BUG-005, AT-BUG-006, AT-BUG-008, AT-BUG-009, AT-BUG-010
 - Карантин автотестов: **0**
 - Untriaged: **0** · untriaged_failure_age: **0**
@@ -25,12 +25,12 @@ generated_at: 2026-07-14T18:35:47Z · генератор: `scripts/queue_snapsho
 
 ## Тест-кейсы (65)
 
-- Draft: **1** · Review: **23** · Approved: **16** · Automated: **25**
-- автотесты (B3): active: **25**
+- Draft: **1** · Review: **23** · Approved: **15** · Automated: **26**
+- автотесты (B3): active: **26**
 
 | Область | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
-| backup |  |  | 1 |  |  |
+| backup |  |  |  | 1 |  |
 | browser |  | 2 |  | 6 |  |
 | downloads |  | 3 | 2 | 3 |  |
 | errors |  |  | 1 |  |  |

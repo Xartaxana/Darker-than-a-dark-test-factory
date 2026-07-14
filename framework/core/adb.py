@@ -102,6 +102,16 @@ def pull_app_file(rel_path: str, dest: Path) -> bool:
     return True
 
 
+def push_external(local_path: Path, remote_path: str) -> None:
+    """Кладёт локальный файл в ПУБЛИЧНОЕ хранилище устройства (`/sdcard/...`) прямым
+    `adb push` — в отличие от `push_app_file` (приватная песочница приложения через
+    run-as + /data/local/tmp), сюда попадают файлы, которые должен УВИДЕТЬ системный
+    SAF picker (`framework/steps/saf_steps.py`) или scanForOrphanedDownloads через
+    выбранный SAF-каталог, а не сам процесс приложения напрямую."""
+    _run(["-s", settings.DEVICE_NAME, "push", str(local_path), remote_path],
+         timeout=settings.ADB_TRANSFER_TIMEOUT)
+
+
 def push_app_file(src: Path, rel_path: str) -> None:
     """Кладёт файл в приватную песочницу приложения через /data/local/tmp + run-as cp."""
     tmp = f"/data/local/tmp/{src.name}"

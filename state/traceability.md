@@ -49,6 +49,7 @@
 | R-06 | TC-063 (сортировка Word count low-to-high + сброс скролла) | P1 | — | Review | не прогонялся — новый кейс 2026-07-14, симметричен TC-030; не блокирован |
 | R-06 | TC-064 (сортировка Author A-Z, пустой author в конце) | P1 | — | Review | не прогонялся — новый кейс 2026-07-14, аналог TC-031 для поля author; не блокирован |
 | R-06 | TC-065 (сортировка Rating только на вкладке Files/Downloads) | P1 | — | Review | не прогонялся — новый кейс 2026-07-14; не блокирован (`seed_with_download` уже поддерживает разный rating на строку) |
+| R-05 | TC-038 (смена папки загрузок → silent-скан перелинковывает orphan-файл) | P2 | framework/tests/test_downloads.py::test_change_download_folder_triggers_silent_scan_and_relinks_orphan_file | Approved (ждёт ревью) | 3/3 зелёные 2026-07-14 (test-automator; 41.59s/44.14s/41.85s, `PYTEST_EXIT=0`; SAF-блокер снят инкрементом AT-BUG-005, переиспользован без доработки; попутно найден и обойдён на уровне теста flaky-класс `reset_to_root()` на повторном subpath — уникальное имя подпапки на вызов, задокументировано в `bugs/AT-BUG-005.md`; regression `test_saf_infra_probe.py` 3/3 без изменений, `arch_check` 0/0) |
 
 > Примечание: smoke Фазы 1 написан напрямую (до формального тест-дизайна). В Фазе 2
 > test-designer оформит соответствующие TC-xxx и свяжет их обратными ссылками.

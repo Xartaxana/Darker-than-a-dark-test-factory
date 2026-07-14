@@ -4,6 +4,7 @@ from __future__ import annotations
 import allure
 
 from framework.core import adb
+from framework.screens.base_screen import BaseScreen
 from framework.screens.settings_screen import SettingsScreen
 
 
@@ -57,3 +58,26 @@ def assert_font_size_step_pref(step: int):
     out = adb.run_as("cat shared_prefs/ao3_settings.xml")
     assert f'name="font_size_step" value="{step}"' in out, \
         f"font_size_step != {step} в SharedPreferences: {out}"
+
+
+# --- Scan for downloads (silent auto-триггер после смены папки загрузок/Restore,
+# TC-037/TC-038) — общий AlertDialog "Scan complete" (SettingsScreen.kt:1215-1230),
+# без других общих полей с остальным экраном Settings, тот же паттерн, что
+# `backup_steps.assert_backup_created_dialog`/`assert_restore_result_dialog`: локатор
+# сугубо для этого одноразового диалога, отдельный screen-метод не заводим.
+
+@allure.step("Then появляется диалог «Scan complete» с текстом «{expected_text}»")
+def assert_scan_complete_dialog(driver, expected_text: str, timeout: int = 15) -> None:
+    b = BaseScreen(driver)
+    assert b.is_present(b.by_text("Scan complete"), timeout=timeout), (
+        "диалог результата скана (silent, авто-триггер после смены папки загрузок) "
+        "не появился — либо скан ничего не нашёл (Idle остался), либо не запустился"
+    )
+    assert b.is_present(b.by_text(expected_text), timeout=2), (
+        f"текст результата скана не совпал с ожидаемым «{expected_text}»"
+    )
+
+
+@allure.step("When диалог результата скана закрыт (OK)")
+def dismiss_scan_dialog(driver) -> None:
+    BaseScreen(driver).tap(BaseScreen(driver).by_text("OK"))

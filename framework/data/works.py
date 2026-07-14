@@ -39,3 +39,9 @@ SCROLL_FILLERS = [
          "Filler Fandom", 10 + i)
     for i in range(1, 11)
 ]
+
+# TC-038: работа для сценария auto-scan/relink при смене папки загрузок — засевается
+# с downloadPath=null (seed_library не заполняет это поле), затем на устройстве уже
+# лежит orphan-файл, чьё имя оканчивается на "_<ao3_id>.html".
+ORPHAN_RELINK_TARGET = Work("900000038", "TC-038 Orphan Relink Target", "seed_author_orphan",
+                            "Fandom Orphan", 750)
