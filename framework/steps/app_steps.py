@@ -32,6 +32,13 @@ def seed_with_comment(rows: list[tuple[Work, str | None, str | None, str | None]
     seed_db.seed_with_comment(rows)
 
 
+@allure.step("Given засеян(ы) filter-профиль(и): {profiles}")
+def seed_filter_profiles(profiles: list[tuple[str, str]]):
+    """profiles: список (name, queryString) — сохранённые фильтр-поиски
+    (TC-021 round-trip filterProfiles; TC-041/TC-042)."""
+    seed_db.seed_filter_profiles(profiles)
+
+
 @allure.step("Given работа {work.title} засеяна с рейтингом {rating} и скачанным файлом")
 def seed_downloaded_work(work: Work, rating: str, fixture_html: Path) -> str:
     """Кладёт `fixture_html` на устройство и заполняет `downloadPath` работы —

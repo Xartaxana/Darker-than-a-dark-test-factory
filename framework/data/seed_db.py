@@ -212,6 +212,33 @@ def _insert_rows_filter_profiles(db: Path, rows: list[tuple[str, str, str, int]]
     con.close()
 
 
+def read_filter_profiles() -> list[dict]:
+    """Пуллит ТЕКУЩУЮ БД приложения (без записи/сидинга) и читает name/queryString
+    по каждой строке `filter_profiles`, отсортированные по `name` — аналог
+    `read_work_ratings()`, но для сохранённых фильтр-профилей (TC-021: сверка
+    сохранности `filterProfiles` через round-trip Backup -> Clear -> Restore, C4).
+    Не сравнивает по `id` — он генерируется сидингом (`seed_filter_profiles`) и
+    приложением при импорте, вызывающему коду недоступен и не нужен: идентичность
+    профиля для теста — пара (name, queryString), как и для работ в UI (сверка по
+    заголовку, не по внутреннему ключу).
+
+    Не требует остановленного приложения перед вызовом (только чтение) — тот же
+    контракт, что у `read_work_ratings()`."""
+    tmp = Path(tempfile.mkdtemp(prefix="ao3read_"))
+    try:
+        db = _pull_baseline(tmp)
+        con = sqlite3.connect(db)
+        con.row_factory = sqlite3.Row
+        cur = con.execute(
+            "SELECT name, queryString FROM filter_profiles ORDER BY name"
+        )
+        rows = [{"name": row["name"], "queryString": row["queryString"]} for row in cur]
+        con.close()
+        return rows
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def seed_filter_profiles(profiles: list[tuple[str, str]]) -> None:
     """Заливает список `(name, queryString)` в таблицу `filter_profiles` — аналог
     `seed()` для `work_ratings`, но для сохранённых фильтр-профилей (TC-041/TC-042).

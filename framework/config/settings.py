@@ -63,6 +63,32 @@ NEW_COMMAND_TIMEOUT = 300
 # правки кода; отдельный количественный замер докачки — вне скоупа этого фикса.
 APPIUM_HTTP_TIMEOUT = int(os.environ.get("AO3_APPIUM_HTTP_TIMEOUT", "120"))
 
+# adb-подпроцессы без timeout (AT-BUG-009, тот же класс блокирующего вызова, что
+# AT-BUG-007 закрыл для Appium HTTP): framework/core/adb.py::_run() и
+# framework/core/mitm.py::set_device_proxy/clear_device_proxy зовут
+# subprocess.run(adb ...) без ограничения по времени — зависший/неотвечающий
+# adb-сервер (кандидат в корень AT-BUG-009, наблюдение №1: ReadTimeoutError на
+# TC-013 внутри driver.get() ПОСЛЕ переключения replay-прокси на нагруженной
+# длинной сессии) подвесит вызов навсегда, как и голый Appium HTTP-вызов до
+# фикса AT-BUG-007. Истечение таймаута — явная ошибка с контекстом (какая
+# команда, сколько ждали), не молчаливый retry.
+#
+# ADB_SHELL_TIMEOUT — обычные быстрые shell-команды (settings put http_proxy,
+# pm clear, am force-stop, logcat -d, run-as cp/rm): по наблюдениям локальных
+# прогонов укладываются в доли секунды — единицы секунд даже на нагруженном/
+# холодном эмуляторе. 30s — на порядок больше нормы, но конечный: зависший
+# `adb shell` (симптом-кандидат AT-BUG-009) падает за 30s явной ошибкой вместо
+# неопределённого клина.
+ADB_SHELL_TIMEOUT = int(os.environ.get("AO3_ADB_SHELL_TIMEOUT", "30"))
+
+# ADB_TRANSFER_TIMEOUT — операции с файлами на диске (`adb install`, `adb push`,
+# `adb exec-out ... cat` при pull_app_file): дольше обычного shell-вызова (APK
+# ~10-30MB), но не настолько долго, как удержание Appium-сессии. 120s — тот же
+# порядок запаса, что APPIUM_HTTP_TIMEOUT (самый долгий легитимный одиночный
+# блокирующий вызов в системе), явно больше типичных install/push, на порядок
+# меньше наблюдавшихся многоминутных зависаний.
+ADB_TRANSFER_TIMEOUT = int(os.environ.get("AO3_ADB_TRANSFER_TIMEOUT", "120"))
+
 # --- Артефакты ---
 RUNS_DIR = REPO_ROOT / "runs"
 ALLURE_RESULTS = Path(os.environ.get("ALLURE_RESULTS", FRAMEWORK_ROOT / "allure-results"))

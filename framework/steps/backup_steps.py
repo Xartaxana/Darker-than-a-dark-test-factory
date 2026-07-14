@@ -64,3 +64,22 @@ def assert_restored_fields_match(expected: dict[str, dict]) -> None:
         if actual[aid] != expected[aid]
     }
     assert not mismatches, f"поля отличаются от исходных после Restore: {mismatches}"
+
+
+@allure.step("Then сохранённые filter-профили совпадают с исходными (не потеряны, не задублированы)")
+def assert_filter_profiles_match(expected: list[dict]) -> None:
+    """`expected`: список {"name", "queryString"} — те же поля, что возвращает
+    `seed_db.read_filter_profiles()`. Сверяет по (name, queryString), а не по
+    внутреннему `id` (генерируется сидингом/восстановлением, вызывающему коду не
+    виден) — часть инварианта C4 «ничего не потеряно/не добавлено/не
+    задублировано» по объединению {поля работы} ∪ {filterProfiles} (TC-021)."""
+    actual = seed_db.read_filter_profiles()
+    expected_sorted = sorted(expected, key=lambda p: p["name"])
+    assert len(actual) == len(expected_sorted), (
+        f"ожидали {len(expected_sorted)} filter_profiles после Restore, реально "
+        f"{len(actual)}: {actual}"
+    )
+    assert actual == expected_sorted, (
+        f"filter_profiles после Restore не совпадают с исходными: "
+        f"expected={expected_sorted} actual={actual}"
+    )

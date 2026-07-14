@@ -12,11 +12,24 @@ from framework.config import settings
 _PKG = settings.APP_PACKAGE
 
 
-def _run(args: list[str], **kw) -> subprocess.CompletedProcess:
-    return subprocess.run(
-        [settings.ADB, *args],
-        capture_output=True, text=True, **kw,
-    )
+def _run(
+    args: list[str], timeout: float = settings.ADB_SHELL_TIMEOUT, **kw
+) -> subprocess.CompletedProcess:
+    """Обёртка над `subprocess.run` с конечным `timeout` (AT-BUG-009: зависший/
+    неотвечающий adb-сервер иначе подвешивает вызов навсегда — тот же класс,
+    что AT-BUG-007 закрыл для Appium HTTP-вызовов). Дефолт — `ADB_SHELL_TIMEOUT`
+    (быстрые shell-команды); файловые операции (`install`/`push`) передают
+    `timeout=settings.ADB_TRANSFER_TIMEOUT` явно. Истечение — `TimeoutError` с
+    контекстом (команда, сколько ждали), не молчаливый клин/retry."""
+    try:
+        return subprocess.run(
+            [settings.ADB, *args],
+            capture_output=True, text=True, timeout=timeout, **kw,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise TimeoutError(
+            f"adb {' '.join(args)} не ответил за {timeout}s (AT-BUG-009)"
+        ) from exc
 
 
 def shell(cmd: str) -> str:
@@ -41,7 +54,7 @@ def install(apk: str = settings.APK_PATH, reinstall: bool = True) -> None:
     if reinstall:
         args.append("-r")
     args.append(apk)
-    cp = _run(args)
+    cp = _run(args, timeout=settings.ADB_TRANSFER_TIMEOUT)
     if "Success" not in cp.stdout:
         raise RuntimeError(f"APK install failed: {cp.stdout}{cp.stderr}")
 
@@ -68,12 +81,21 @@ def run_as(cmd: str) -> str:
 
 
 def pull_app_file(rel_path: str, dest: Path) -> bool:
-    """Тянет файл из приватной песочницы приложения на хост через run-as cat (бинарно)."""
-    cp = subprocess.run(
-        [settings.ADB, "-s", settings.DEVICE_NAME, "exec-out",
-         "run-as", _PKG, "cat", rel_path],
-        capture_output=True,  # bytes, без text=True
-    )
+    """Тянет файл из приватной песочницы приложения на хост через run-as cat (бинарно).
+    Не идёт через `_run()` (нужны сырые байты без `text=True`) — тот же конечный
+    `ADB_TRANSFER_TIMEOUT` (AT-BUG-009) применён напрямую."""
+    try:
+        cp = subprocess.run(
+            [settings.ADB, "-s", settings.DEVICE_NAME, "exec-out",
+             "run-as", _PKG, "cat", rel_path],
+            capture_output=True,  # bytes, без text=True
+            timeout=settings.ADB_TRANSFER_TIMEOUT,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise TimeoutError(
+            f"adb exec-out run-as cat {rel_path} не ответил за "
+            f"{settings.ADB_TRANSFER_TIMEOUT}s (AT-BUG-009)"
+        ) from exc
     if cp.returncode != 0 or not cp.stdout:
         return False
     dest.write_bytes(cp.stdout)
@@ -83,6 +105,6 @@ def pull_app_file(rel_path: str, dest: Path) -> bool:
 def push_app_file(src: Path, rel_path: str) -> None:
     """Кладёт файл в приватную песочницу приложения через /data/local/tmp + run-as cp."""
     tmp = f"/data/local/tmp/{src.name}"
-    _run(["-s", settings.DEVICE_NAME, "push", str(src), tmp])
+    _run(["-s", settings.DEVICE_NAME, "push", str(src), tmp], timeout=settings.ADB_TRANSFER_TIMEOUT)
     run_as(f"cp {tmp} {rel_path}")
     shell(f"rm -f {tmp}")

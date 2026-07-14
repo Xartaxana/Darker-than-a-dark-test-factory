@@ -93,12 +93,37 @@ def stop() -> None:
 
 
 def set_device_proxy() -> None:
-    """Направляет HTTP(S) гостя на mitmdump хоста (10.0.2.2 = host loopback из qemu)."""
-    subprocess.run([settings.ADB, "shell", "settings", "put", "global",
-                    "http_proxy", settings.PROXY_HOST_ALIAS], check=True)
+    """Направляет HTTP(S) гостя на mitmdump хоста (10.0.2.2 = host loopback из qemu).
+
+    `timeout=settings.ADB_SHELL_TIMEOUT` (AT-BUG-009): зависший/неотвечающий
+    adb-shell иначе подвешивает вызов навсегда — кандидат в корень наблюдения
+    №1 AT-BUG-009 (ReadTimeoutError на TC-013 внутри driver.get() ПОСЛЕ этого
+    вызова на нагруженной длинной сессии). Истечение — явная `TimeoutError` с
+    контекстом, не молчаливый клин."""
+    cmd = [settings.ADB, "shell", "settings", "put", "global",
+           "http_proxy", settings.PROXY_HOST_ALIAS]
+    try:
+        subprocess.run(cmd, check=True, timeout=settings.ADB_SHELL_TIMEOUT)
+    except subprocess.TimeoutExpired as exc:
+        raise TimeoutError(
+            f"adb shell settings put http_proxy (set_device_proxy) не ответил "
+            f"за {settings.ADB_SHELL_TIMEOUT}s (AT-BUG-009)"
+        ) from exc
 
 
 def clear_device_proxy() -> None:
-    """Снимает прокси гостя (после прогона, чтобы live-трафик шёл напрямую)."""
-    subprocess.run([settings.ADB, "shell", "settings", "put", "global",
-                    "http_proxy", ":0"], check=False)
+    """Снимает прокси гостя (после прогона, чтобы live-трафик шёл напрямую).
+
+    Тот же конечный `timeout` (AT-BUG-009), что `set_device_proxy` — teardown
+    обязан завершаться явной ошибкой, а не висеть, даже если `check=False`
+    (истечение таймаута — не то же самое, что ненулевой returncode, и не
+    подавляется `check=False`)."""
+    cmd = [settings.ADB, "shell", "settings", "put", "global",
+           "http_proxy", ":0"]
+    try:
+        subprocess.run(cmd, check=False, timeout=settings.ADB_SHELL_TIMEOUT)
+    except subprocess.TimeoutExpired as exc:
+        raise TimeoutError(
+            f"adb shell settings put http_proxy (clear_device_proxy) не "
+            f"ответил за {settings.ADB_SHELL_TIMEOUT}s (AT-BUG-009)"
+        ) from exc

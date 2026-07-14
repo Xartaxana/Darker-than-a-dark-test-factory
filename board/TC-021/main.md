@@ -7,14 +7,14 @@ priority: "p0"
 summary: "Backup → Clear all ratings → Restore возвращает исходные данные"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:backup", "risk:R-01", "review:changes_requested"]
+labels: ["test-case", "area:backup", "risk:R-01"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-14T11:40:00Z"
-updated: "2026-07-14T11:40:00Z"
+created: "2026-07-14T21:10:00Z"
+updated: "2026-07-14T21:10:00Z"
 archived: false
 resolution: null
 ---
@@ -31,13 +31,16 @@ _Спроецировано из `test-cases/backup/TC-021.md` (источник
   (`framework/data/works.py::ALL`, по одной на каждый из 5 рейтингов, включая
   `comment`, `tags`, `fandom`, `word_count` где применимо через сидинг с
   расширенными полями — см. заметку про доработку `seed_db.py`).
+- В Room засеян ≥1 сохранённый filter-профиль (`seed_db.seed_filter_profiles`) —
+  формат бэкапа несёт `filterProfiles` наравне с `works` (см. «Проверяемые
+  данные»).
 - SAF file picker доступен (эмулятор с файловым провайдером, путь для экспорта
   подготовлен заранее).
 
 ## Сценарий (Given-When-Then)
 
 **Given** приложение запущено, в библиотеке есть засеянные работы с рейтингами,
-комментариями и тегами
+комментариями и тегами, и сохранён ≥1 filter-профиль (фильтр-поиск)
 
 **When** пользователь в Settings выполняет «Back up data», выбирает файл через SAF,
 дожидается результата
@@ -49,14 +52,44 @@ _Спроецировано из `test-cases/backup/TC-021.md` (источник
 исходным (до Clear)
 **And** для каждой восстановленной работы поля rating, comment, tags, fandom,
 word_count совпадают с исходными значениями до Backup
+**And** сохранённый filter-профиль присутствует после Restore с теми же
+name/queryString, что были до Backup — без потери и без дублирования
+
+**Инвариант:** множество восстановленных строк == множеству исходных (ничего не
+потеряно, не добавлено, не задублировано) по объединению {поля работы} ∪
+{filterProfiles} — round-trip `restore(backup(S)) == S` обязан сохранять ОБА
+множества из формата бэкапа, не только `works`.
 
 ## Проверяемые данные
 | Параметр | Значение |
 |---|---|
 | Работы | `framework/data/works.py::ALL` (5 работ), дополненные comment/tags при сидинге |
+| Filter-профиль | 1 профиль (name + queryString), засеян `seed_db.seed_filter_profiles` |
 | Формат бэкапа | `{"version":2,"works":[…],"filterProfiles":[…]}` |
 
 ## Заметки для автоматизации
+
+**2026-07-14 (доработка по ревью, замечание 1) — test-automator:** закрыт
+единственный блокирующий пункт ревью (см. «## Ревью автотеста» ниже) — строка
+`Инвариант:` добавлена в тело кейса (по формулировке ревьюера, скоуп решён
+Lead: `filterProfiles` включены, не вынесены), GWT/«Проверяемые данные»
+дополнены. Тест расширен: 1 filter-профиль засеян через
+`seed_db.seed_filter_profiles` (обёртка `app_steps.seed_filter_profiles`) ДО
+Appium-сессии, наравне с работами; после Restore — прямое чтение Room
+(`seed_db.read_filter_profiles()`, новая функция по образцу
+`read_work_ratings()`; `backup_steps.assert_filter_profiles_match`, сверка по
+(name, queryString), не по внутреннему `id`). Диалоги: «Backup created» → «...1
+filters.» (то, что было в Room на момент экспорта); «Backup restored» → «...0
+filters.» — ОЖИДАЕМО, не пробел: `confirmClearAll()` вызывает только
+`workDao.deleteAll()` (`RatingRepository.clearAllRatings`), `filter_profiles`
+этим шагом не трогается, поэтому на Restore профиль уже присутствует в Room и
+корректно пропускается как дубликат по `id` (см. докстринг
+`test_backup_restore.py` — подробный разбор). Round-trip-инвариант (множество
+профилей после == множеству до, без потери/дублирования) проверяется Room-
+сверкой, не текстом диалога. 3 зелёных прогона подряд, регресс
+`test_saf_infra_probe.py` (3/3) и `test_seed_filter_profiles_unit.py` без
+изменений, `arch_check` 0 ошибок/0 предупреждений. `review: changes_requested`
+снято — кейс уходит на повторное ревью штатно.
 
 **2026-07-14 — test-automator (кейс автоматизирован, статус остаётся Approved до
 ревью):** SAF-блокер снят (`bugs/AT-BUG-005.md`, инкремент 1 — page object

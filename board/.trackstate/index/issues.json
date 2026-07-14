@@ -14,10 +14,9 @@
     "labels": [
       "test-case",
       "area:backup",
-      "risk:R-01",
-      "review:changes_requested"
+      "risk:R-01"
     ],
-    "updated": "2026-07-14T11:40:00Z",
+    "updated": "2026-07-14T21:10:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -648,6 +647,138 @@
       "risk:R-06"
     ],
     "updated": "2026-07-02T17:19:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-060",
+    "path": "board/TC-060/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Фильтр по личным тегам сужает список по AND-семантике (все выбранные теги, не хотя бы один)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:library",
+      "risk:R-06"
+    ],
+    "updated": "2026-07-14T20:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-061",
+    "path": "board/TC-061/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Свободный текстовый поиск по Library сужает список до совпадений в любом поле",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:library",
+      "risk:R-06"
+    ],
+    "updated": "2026-07-14T20:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-062",
+    "path": "board/TC-062/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Сортировка Last read (по умолчанию) упорядочивает по недавности обновления рейтинга",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:library",
+      "risk:R-06"
+    ],
+    "updated": "2026-07-14T20:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-063",
+    "path": "board/TC-063/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Сортировка Word count (low to high) упорядочивает по возрастанию и сбрасывает скролл",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:library",
+      "risk:R-06"
+    ],
+    "updated": "2026-07-14T20:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-064",
+    "path": "board/TC-064/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Сортировка Author (A–Z) упорядочивает по автору, работы с пустым author уходят в конец",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:library",
+      "risk:R-06"
+    ],
+    "updated": "2026-07-14T20:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-065",
+    "path": "board/TC-065/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Сортировка Rating (только вкладка Files/Downloads) группирует по рангу рейтинга",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:library",
+      "risk:R-06"
+    ],
+    "updated": "2026-07-14T20:00:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1513,7 +1644,29 @@
       "test_case:TC-013",
       "sev:major"
     ],
-    "updated": "2026-07-14T14:52:00Z",
+    "updated": "2026-07-14T20:20:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-010",
+    "path": "board/AT-BUG-010/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "seed_db.py не поддерживает NULL-значения nullable-полей при сидинге (word_count) — блокирует автоматизацию TC-031 (P3, library, граница сортировки)",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-031",
+      "sev:minor"
+    ],
+    "updated": "2026-07-14T18:40:00Z",
     "resolution": null,
     "children": [],
     "archived": false

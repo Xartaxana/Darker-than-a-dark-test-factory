@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-14T14:49:03Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-14T18:35:47Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -14,7 +14,7 @@ generated_at: 2026-07-14T14:49:03Z · генератор: `scripts/coverage_map.
 | downloads | 8 | 3 | partial |
 | errors | 1 | 0 | none |
 | filter-profiles | 3 | 0 | none |
-| library | 8 | 6 | partial |
+| library | 14 | 6 | partial |
 | rating | 10 | 2 | partial |
 | settings | 7 | 3 | partial |
 | smoke | 5 | 5 | designed-full |
@@ -30,7 +30,7 @@ generated_at: 2026-07-14T14:49:03Z · генератор: `scripts/coverage_map.
 | R-03 | TECH | errors:TC-046, smoke:TC-001 |
 | R-04 | DATA | library:TC-016, library:TC-017, rating:TC-007, rating:TC-008, rating:TC-009, rating:TC-010, rating:TC-011, rating:TC-012, smoke:TC-003 |
 | R-05 | TECH | downloads:TC-032, downloads:TC-033, downloads:TC-034, downloads:TC-035, downloads:TC-036, downloads:TC-037, downloads:TC-038, downloads:TC-039 |
-| R-06 | BUS | library:TC-027, library:TC-028, library:TC-029, library:TC-030, library:TC-031, visibility:TC-013, visibility:TC-014, visibility:TC-015 |
+| R-06 | BUS | library:TC-027, library:TC-028, library:TC-029, library:TC-030, library:TC-031, library:TC-060, library:TC-061, library:TC-062, library:TC-063, library:TC-064, library:TC-065, visibility:TC-013, visibility:TC-014, visibility:TC-015 |
 | R-07 | OPS | риск не покрыт дизайном |
 | R-08 | TECH | tabs:TC-022, tabs:TC-023, tabs:TC-024, tabs:TC-025, tabs:TC-026 |
 | R-11 | TECH | browser:TC-050, browser:TC-051, browser:TC-052, browser:TC-053, browser:TC-054, browser:TC-055, browser:TC-057, browser:TC-058, settings:TC-047, settings:TC-048, settings:TC-049, settings:TC-059 |
@@ -125,17 +125,17 @@ generated_at: 2026-07-14T14:49:03Z · генератор: `scripts/coverage_map.
 
 ### library
 
-- coverage_status: **partial** (6/8 Automated)
+- coverage_status: **partial** (6/14 Automated)
 - риски: R-04, R-06
 - кейсы без risk: TC-006
-- P0/P1 не в Automated: нет
+- P0/P1 не в Automated: TC-060 [P1, Review], TC-061 [P1, Review], TC-062 [P1, Review], TC-063 [P1, Review], TC-064 [P1, Review], TC-065 [P1, Review]
 - автотесты (automated_by): framework/tests/test_library.py::test_change_rating_moves_work_between_tabs, framework/tests/test_library.py::test_comment_only_not_in_any_rating_tab, framework/tests/test_library_filters.py::test_library_filter_by_fandom, framework/tests/test_library_filters.py::test_library_filter_downloaded_only, framework/tests/test_library_filters.py::test_library_filter_word_count_range, framework/tests/test_library_filters.py::test_library_sort_wordcount_desc_resets_scroll
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  | 2 |  |
-| P1 |  |  |  | 4 |  |
+| P1 |  | 6 |  | 4 |  |
 | P2 | 1 |  |  |  |  |
 | P3 |  | 1 |  |  |  |
 
