@@ -2,12 +2,12 @@
 key: "TC-029"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Фильтр по фандому сужает список до совпадающих работ"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:library", "risk:R-06"]
+labels: ["test-case", "area:library", "risk:R-06", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
@@ -16,13 +16,13 @@ epic: null
 created: "2026-07-02T17:18:39Z"
 updated: "2026-07-02T17:18:39Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Фильтр по фандому сужает список до совпадающих работ
 
 _Спроецировано из `test-cases/library/TC-029.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-029 — Фильтр по фандому
 

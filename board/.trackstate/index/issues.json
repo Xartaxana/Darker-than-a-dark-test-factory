@@ -14,7 +14,8 @@
     "labels": [
       "test-case",
       "area:backup",
-      "risk:R-01"
+      "risk:R-01",
+      "review:changes_requested"
     ],
     "updated": "2026-07-14T11:40:00Z",
     "resolution": null,
@@ -546,16 +547,17 @@
     "epicPath": null,
     "summary": "Фильтр по word count (min/max) скрывает работы вне диапазона на вкладке Library",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:library",
-      "risk:R-06"
+      "risk:R-06",
+      "automation:active"
     ],
     "updated": "2026-07-02T17:18:32Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -568,16 +570,17 @@
     "epicPath": null,
     "summary": "Фильтр downloaded-only показывает только работы с локальным файлом",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:library",
-      "risk:R-06"
+      "risk:R-06",
+      "automation:active"
     ],
     "updated": "2026-07-02T17:18:36Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -590,16 +593,17 @@
     "epicPath": null,
     "summary": "Фильтр по фандому сужает список до совпадающих работ",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:library",
-      "risk:R-06"
+      "risk:R-06",
+      "automation:active"
     ],
     "updated": "2026-07-02T17:18:39Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -612,16 +616,17 @@
     "epicPath": null,
     "summary": "Сортировка Word count (high to low) упорядочивает список и сбрасывает скролл",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:library",
-      "risk:R-06"
+      "risk:R-06",
+      "automation:active"
     ],
     "updated": "2026-07-02T17:18:53Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1001,6 +1006,28 @@
     ],
     "updated": "2026-07-09T11:45:00Z",
     "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-059",
+    "path": "board/TC-059/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "System-тема — WebView следует за системной сменой uiMode без in-app toggle",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:settings",
+      "risk:R-11"
+    ],
+    "updated": "2026-07-14T00:00:00Z",
+    "resolution": null,
     "children": [],
     "archived": false
   },
@@ -1397,7 +1424,7 @@
       "test_case:TC-021",
       "sev:major"
     ],
-    "updated": "2026-07-14T12:10:00Z",
+    "updated": "2026-07-14T13:37:03Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1465,6 +1492,28 @@
       "sev:minor"
     ],
     "updated": "2026-07-09T18:40:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-009",
+    "path": "board/AT-BUG-009/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "FLAKY(?): test_disliked_hidden_on_listing (TC-013, replay) — ReadTimeoutError к локальному Appium внутри driver.get() при полном p0 после длинной сессии; в изоляции ранее многократно зелёный за 20-25s",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-013",
+      "sev:major"
+    ],
+    "updated": "2026-07-14T14:52:00Z",
     "resolution": null,
     "children": [],
     "archived": false

@@ -1,20 +1,20 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-14T12:39:16Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-07-14T14:49:03Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **297.1** (RUN-20260702-0300)
+- smoke: Closed · smoke_freshness_hours: **299.2** (RUN-20260702-0300)
 - regression: not_run
 - canary: not_run
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **0**
 - p0_automation_coverage: **64%** (9/14)
-- p1_automation_coverage: **41%** (12/29)
+- p1_automation_coverage: **55%** (16/29)
   - непокрытые P0: TC-021, TC-009, TC-013, TC-014, TC-015
-- Test debt открыт: **3** — AT-BUG-005, AT-BUG-006, AT-BUG-008
+- Test debt открыт: **4** — AT-BUG-005, AT-BUG-006, AT-BUG-008, AT-BUG-009
 - Карантин автотестов: **0**
 - Untriaged: **0** · untriaged_failure_age: **0**
 
@@ -25,8 +25,8 @@ generated_at: 2026-07-14T12:39:16Z · генератор: `scripts/queue_snapsho
 
 ## Тест-кейсы (59)
 
-- Draft: **1** · Review: **17** · Approved: **20** · Automated: **21**
-- автотесты (B3): active: **21**
+- Draft: **1** · Review: **17** · Approved: **16** · Automated: **25**
+- автотесты (B3): active: **25**
 
 | Область | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
@@ -35,7 +35,7 @@ generated_at: 2026-07-14T12:39:16Z · генератор: `scripts/queue_snapsho
 | downloads |  | 3 | 2 | 3 |  |
 | errors |  |  | 1 |  |  |
 | filter-profiles |  |  | 3 |  |  |
-| library | 1 | 1 | 4 | 2 |  |
+| library | 1 | 1 |  | 6 |  |
 | rating |  | 6 | 2 | 2 |  |
 | settings |  | 1 | 3 | 3 |  |
 | smoke |  |  |  | 5 |  |
@@ -51,11 +51,12 @@ generated_at: 2026-07-14T12:39:16Z · генератор: `scripts/queue_snapsho
 
 - нет
 
-## Test debt (3)
+## Test debt (4)
 
 - AT-BUG-005 [missing_fixture] Open — SAF file/folder picker не автоматизируется штатными Appium-локаторами — блокирует TC-021 (P0, backup/restore) и часть download/backup-кейсов
 - AT-BUG-006 [missing_fixture] Open — Таблица filter_profiles не поддержана в seed_db.py и нет replay-записи формы AO3 Sort&Filter — блокирует автоматизацию батча filter-profiles (TC-040/041/042, P1)
 - AT-BUG-008 [flaky_test] Open — FLAKY: test_rate_work_from_work_page_panel (live AO3) — тихая смерть процесса приложения на splash внутри полного p0-прогона; в изоляции проходит
+- AT-BUG-009 [flaky_test] Open — FLAKY(?): test_disliked_hidden_on_listing (TC-013, replay) — ReadTimeoutError к локальному Appium внутри driver.get() при полном p0 после длинной сессии; в изоляции ранее многократно зелёный за 20-25s
 
 ## Прогоны (1)
 

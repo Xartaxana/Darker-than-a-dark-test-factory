@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-14T12:39:17Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-14T14:49:03Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -14,7 +14,7 @@ generated_at: 2026-07-14T12:39:17Z · генератор: `scripts/coverage_map.
 | downloads | 8 | 3 | partial |
 | errors | 1 | 0 | none |
 | filter-profiles | 3 | 0 | none |
-| library | 8 | 2 | partial |
+| library | 8 | 6 | partial |
 | rating | 10 | 2 | partial |
 | settings | 7 | 3 | partial |
 | smoke | 5 | 5 | designed-full |
@@ -125,17 +125,17 @@ generated_at: 2026-07-14T12:39:17Z · генератор: `scripts/coverage_map.
 
 ### library
 
-- coverage_status: **partial** (2/8 Automated)
+- coverage_status: **partial** (6/8 Automated)
 - риски: R-04, R-06
 - кейсы без risk: TC-006
-- P0/P1 не в Automated: TC-027 [P1, Approved], TC-028 [P1, Approved], TC-029 [P1, Approved], TC-030 [P1, Approved]
+- P0/P1 не в Automated: нет
 - автотесты (automated_by): framework/tests/test_library.py::test_change_rating_moves_work_between_tabs, framework/tests/test_library.py::test_comment_only_not_in_any_rating_tab, framework/tests/test_library_filters.py::test_library_filter_by_fandom, framework/tests/test_library_filters.py::test_library_filter_downloaded_only, framework/tests/test_library_filters.py::test_library_filter_word_count_range, framework/tests/test_library_filters.py::test_library_sort_wordcount_desc_resets_scroll
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  | 2 |  |
-| P1 |  |  | 4 |  |  |
+| P1 |  |  |  | 4 |  |
 | P2 | 1 |  |  |  |  |
 | P3 |  | 1 |  |  |  |
 

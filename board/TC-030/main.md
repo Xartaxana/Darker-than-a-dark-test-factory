@@ -2,12 +2,12 @@
 key: "TC-030"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Сортировка Word count (high to low) упорядочивает список и сбрасывает скролл"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:library", "risk:R-06"]
+labels: ["test-case", "area:library", "risk:R-06", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
@@ -16,13 +16,13 @@ epic: null
 created: "2026-07-02T17:18:53Z"
 updated: "2026-07-02T17:18:53Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Сортировка Word count (high to low) упорядочивает список и сбрасывает скролл
 
 _Спроецировано из `test-cases/library/TC-030.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-030 — Сортировка Word count high-to-low и сброс скролла
 

@@ -121,23 +121,23 @@
   },
   "TC-027": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-028": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-029": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-030": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-031": {
     "itype": "test-case",
@@ -223,6 +223,11 @@
     "itype": "test-case",
     "artifact_status": "Automated",
     "board_status": "Automated"
+  },
+  "TC-059": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
   "TC-001": {
     "itype": "test-case",
@@ -320,6 +325,11 @@
     "board_status": "Verified"
   },
   "AT-BUG-008": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "AT-BUG-009": {
     "itype": "bug",
     "artifact_status": "Open",
     "board_status": "Open"

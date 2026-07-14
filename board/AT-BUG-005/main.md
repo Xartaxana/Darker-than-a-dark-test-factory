@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-14T12:10:00Z"
-updated: "2026-07-14T12:10:00Z"
+created: "2026-07-14T13:37:03Z"
+updated: "2026-07-14T13:37:03Z"
 archived: false
 resolution: null
 ---
@@ -289,3 +289,52 @@ Witness: `Invoke-Pytest tests/test_backup_restore.py -v` — 3 прогона п
 прогона») закрыт этим инкрементом. Статус бага НЕ меняю (Open→Fixed —
 переход test-maintainer/Lead по D-0037/матрице «Роль ≠ ярус», не входит в
 мандат test-automator) — оформляется отдельно.
+
+**2026-07-14T13:37:03Z — test-maintainer (финальный инкремент, сверка
+критерия Fixed, переход Open→Fixed НЕ выполнен):**
+
+Сверка по пунктам критерия готовности:
+1. «Найден и задокументирован способ автоматизации SAF picker ... зафиксирован
+   как переиспользуемый step/fixture во `framework/`» — ПОДТВЕРЖДЕНО.
+   `framework/screens/documents_ui.py`, `framework/steps/saf_steps.py`
+   существуют (`Test-Path` — оба `True`), приняты инкрементом 1/attempt 2 с
+   critic-входом (см. записи выше).
+2. «TC-021 доведён до зелёного прогона с использованием найденного обхода» —
+   ПОДТВЕРЖДЕНО. `framework/tests/test_backup_restore.py` существует, витнес
+   test-automator'а (3/3 зелёных, 58.60s/57.64s/59.38s, `PYTEST_EXIT=0`) принят
+   Lead'ом (журнал tc021-automation, 11:18).
+3. «Smoke без регресса» — НЕ ПОДТВЕРЖДЕНО. `test_backup_restore.py` несёт
+   `@pytest.mark.p0` (проверено чтением файла) — состав smoke ФАКТИЧЕСКИ
+   изменился после прогона fix-verifier'а 10:50 (тогда TC-021 ещё не было в
+   дереве), поэтому опереться на тот прогон нельзя (задача явно требовала
+   собственного `-m p0` в этом случае). Прогнала сама: эмулятор поднят
+   (`Start-Emulator`), Appium поднят (`Start-Appium`), `app-debug.apk`
+   переустановлен (`Install-App`), `Invoke-Pytest -m p0` — **collected 41 items
+   / 22 deselected / 19 selected** (18 прежних + TC-021, подтверждает
+   расширение состава) → **18 passed, 1 failed** (`tests/test_visibility.py::
+   test_disliked_hidden_on_listing[listing_basic.mitm]`, TC-013,
+   `1 failed, 18 passed, 22 deselected, 1 rerun in 1525.73s (0:25:25)`,
+   `PYTEST_EXIT=1`). Падение — `urllib3.exceptions.ReadTimeoutError:
+   HTTPConnectionPool(host='127.0.0.1', port=4723): Read timed out. (read
+   timeout=120)` внутри `browser_steps.open_listing` → `driver.get(url)`, ПОСЛЕ
+   отработавшего ретрая таймаут-гейта AT-BUG-007 (`R` → повтор → тот же класс).
+   `TC-021`/SAF-инфраструктура НЕ участвуют в этом падении (другой файл, другая
+   область — `test_visibility.py`, replay-фикстура); значит регресс НЕ вызван
+   изменениями этого бага, но формально критерий «smoke без регресса» этим
+   прогоном не выполнен. По прямому указанию задачи («если p0-прогон вскроет
+   регресс — не чинить: верни result: failed, статус бага не меняй») —
+   **переход Open→Fixed НЕ выполняю**, статус остаётся `Open`.
+
+Новый блокер заведён отдельным test_debt-багом `bugs/AT-BUG-009.md`
+(`debt_kind: flaky_test`, единичное наблюдение, TC-013/`test_visibility.py`,
+не пересекается с SAF/backup-областью этого бага) — без него находка не
+попадёт в очередь B4 (правило 9 CLAUDE.md). Дальнейший разбор — за Lead
+(диспетчеризация нового бага) и/или test-designer (решение о карантине TC-013,
+если флаки подтвердится системным).
+
+Прочее по DoD этого прохода: `python scripts/arch_check.py` — `ошибок 0,
+предупреждений 0`. Эмулятор, поднятый мной для этой проверки, погашен после
+завершения (`taskkill` дерева процессов эмулятора/Appium; `Get-Device` →
+`NO DEVICE` подтверждено отдельным вызовом ниже в отчёте задачи).
+`app-under-test/` не тронут; правки этого хода — только `bugs/AT-BUG-005.md` и
+новый `bugs/AT-BUG-009.md`.

@@ -2,12 +2,12 @@
 key: "TC-028"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Фильтр downloaded-only показывает только работы с локальным файлом"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:library", "risk:R-06"]
+labels: ["test-case", "area:library", "risk:R-06", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
@@ -16,13 +16,13 @@ epic: null
 created: "2026-07-02T17:18:36Z"
 updated: "2026-07-02T17:18:36Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Фильтр downloaded-only показывает только работы с локальным файлом
 
 _Спроецировано из `test-cases/library/TC-028.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-028 — Чекбокс downloaded-only фильтрует по наличию файла
 
