@@ -22,8 +22,13 @@ docs/09-improvement-plan.md). Journal: `logs/routing-log.jsonl`,
    `git log origin/master..master --oneline` пуст — иначе `git push`.
    Если сессия трогала OS-репо (`D:\Improving_AI\Operating-System-for-LLMs`)
    — та же проверка там (ветка `main`).
-2. **Журнал закрыт** (`logs/routing-log.jsonl`): нет `delegated` без
-   парного `accepted`/`rejected`; `lead_degraded` без `lead_restored`
+2. **Журнал закрыт** (`logs/routing-log.jsonl`): прогнать
+   `python scripts/log_append.py open-dispatches` — каждый показанный
+   открытый `delegated` сверить с реальностью (D-0076 OS-репо / F-44
+   ЗДЕСЬ): воркер по `worker_ref` жив или результат ждёт приёмки —
+   иначе фантом (запись без запуска); фантом закрывается пометкой в
+   notes следующего события и, если работа нужна, честным
+   ре-диспатчем. `lead_degraded` без `lead_restored`
    допустим ТОЛЬКО как ПОСЛЕДНЕЕ событие журнала (деградация,
    переживающая сессию, D-0039 OS-репо) — иначе следующая сессия
    стартует ошибочно на полном Lead. События сессии написаны

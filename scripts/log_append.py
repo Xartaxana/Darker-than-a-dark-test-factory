@@ -1,66 +1,46 @@
 """Каноничное добавление строк в журналы конвейера.
 
-Назначение — заменить ad-hoc `printf '%s\n' ... >> файл` с `$(date -u ...)`:
-такие вызовы каждый раз требуют подтверждения (командная подстановка не
-проходит статический анализ sandbox) и не проверяют формат записи.
+Несёт порт механизма D-0076 из эталонного репо
+(Operating-System-for-LLMs), заведённого по инциденту F-44 ЭТОГО репо:
+delegated (critic, e4-pipeline-wiring, 12:14:52) был записан в журнал,
+но воркер фактически не был запущен — фантомная запись, необнаружимая
+без явного скана открытых диспатчей. Сдан builder'ом соседним именем и
+размещён Lead'ом при приёмке (D-0069; critic ACCEPT t-100 эталонного
+журнала).
+
+Добавление 1 — --worker-ref для routing (обязателен для event=delegated):
+хэндл, по которому следующая сессия найдёт воркера/результат (id
+фонового таска, job id, cli:<ISO для синхронного CLI-вызова>,
+retro:<пометка для ретроактивной записи>); значение существует только
+ПОСЛЕ фактического запуска воркера — сам факт заполнения поля не
+доказывает, что воркер жив, но отсутствие поля гарантированно ловит
+случай, когда строка написана ДО или ВМЕСТО запуска.
+
+Добавление 2 — подкоманда `open-dispatches`: сканирует
+logs/routing-log.jsonl и печатает task_id, чьё ПОСЛЕДНЕЕ по порядку
+файла lifecycle-событие — delegated (т.е. задача открыта: делегирована,
+но ещё не закрыта/не эскалирована/не признана decomposable).
+
+Почему файловый порядок здесь безопасен (в отличие от эталонного
+репо, где журнал пишет Edit-тул сессии и потребовался отдельный закон
+"accepted закрывает" для устойчивости к ручной перестановке): в AO3
+журнал ПО ПОЛИТИКЕ пишется только этим скриптом (append-only, ts
+подставляется из системных часов в момент вызова _now_iso(); это
+дисциплинарная, не физическая гарантия — bootstrap-строки до политики,
+как journal_created, вне её, но и вне lifecycle-скана) — строки
+не появляются не в хронологическом порядке. Поэтому
+"последнее по порядку файла" эквивалентно "последнее по времени", и
+закон открытости проще: reopen ЛЕГАЛЕН в AO3 (--reopen-task на
+CLI-уровне уже существующего log_append.py), поэтому здесь НЕ
+действует правило "accepted закрывает навсегда" из эталонного репо —
+delegated ПОСЛЕ accepted (reopen) обязан вновь считаться открытым, и
+эта функция это делает автоматически, просто беря последнее событие.
 
 Использование:
-  python scripts/log_append.py routing --event delegated --agent builder \
-      --model sonnet --category implementation --notes "что делегировано"
-  python scripts/log_append.py orchestrator "Правило" "агент" "артефакт" "исход"
-
-routing      -> logs/routing-log.jsonl (одна JSON-строка; ts подставляется сам;
-                model ОБЯЗАТЕЛЬНА для delegated/escalated/accepted/rejected —
-                CLAUDE.md; типизированные поля D-0053 OS-репо:
-                --task-id обязателен для delegated/accepted/rejected/
-                escalated/defect_found; --attempt и --failure-class —
-                для rejected; --witness — для accepted по builder;
-                --ref (task_id исходного accepted) — для defect_found,
-                model там не требуется — она в исходном событии;
-                D-0060/F-23: delegated с НОВЫМ task_id, чей ФОРМАТ
-                полностью (full-match ^t-(\\d+)$, не substring) совпадает
-                с последовательностью t-NNN, обязан быть ровно
-                max(существующих full-match t-NNN)+1 — иначе отказ с
-                ожидаемым id; новый описательный id (at-bug-005,
-                fix-t-12-encoding — substring "t-12" не в счёт) проходит
-                свободно, его новизна уже гарантирована условием "не
-                встречался"; delegated повторно на task_id, чьё последнее
-                lifecycle-событие уже accepted, отклоняется без
-                --reopen-task <причина>; продолжение (последнее событие
-                rejected/escalated) легально без флага; id, уже
-                встречавшийся в журнале, тоже продолжается свободно —
-                новая проверка бьёт только по СВЕЖИМ task_id формата
-                t-NNN. Гард BEST-EFFORT: read-then-append без
-                файлового лока — одновременная гонка двух процессов
-                может проскочить (принято Lead 2026-07-09, t-009,
-                вердикт critic F-A); ловит последовательный класс
-                ошибок — реальную коллизию F-23 он бы заблокировал;
-                residual-дубли обоих журналов ловит чек 13(д)
-                еженедельной калибровки OS-репо;
-
-                D-0058 (порт OS-репо, task_id journal-port-by-basis):
-                --by <model> обязателен для accepted/rejected (самодекларация
-                принимающего). Для accepted дополнительно матрица: легален,
-                если tier(by) строго выше tier(agent) (haiku<sonnet<opus<fable;
-                agent=scout/builder/critic -> tier статично, как в референсе;
-                прочие агенты конвейера -> модель читается из frontmatter
-                .claude/agents/<agent>.md; agent неизвестен нигде -> предупреждение
-                в stderr, 'by' считается достаточным), либо задан --basis из
-                {critic, queued-to-lead}; agent=lead -> матрица не применяется,
-                'by' достаточно. rejected несёт 'by' без tier/basis-проверки
-                (буквальное чтение спеки OS-репо);
-
-                D-0060, ветки continuation/retry для delegated на СУЩЕСТВУЮЩИЙ
-                (не описанный выше "новый") task_id, чья задача ОТКРЫТА
-                (последнее событие по task_id — не accepted): agent новой
-                строки отличается от agent ВСЕХ предыдущих delegated этого
-                task_id -> легально без доп. флагов (continuation, напр.
-                critic-вход); agent совпадает с одним из предыдущих -> легально
-                ТОЛЬКО с --attempt >=2 И существующим выше rejected по этому
-                task_id (ретрай); иначе — отказ (дубль-паттерн t-029). Задача
-                ЗАКРЫТАЯ (есть accepted) — только --reopen-task, без изменений.
-orchestrator -> state/orchestrator-log.md (строка таблицы `| ts | ... |`,
-                ровно 4 ячейки после времени; ts подставляется сам)
+  python scripts/log_append.py routing --event delegated \
+      --agent builder --model sonnet --task-id t-042 \
+      --worker-ref "job:bg-4471" --category implementation --notes "..."
+  python scripts/log_append.py open-dispatches
 """
 from __future__ import annotations
 
@@ -82,6 +62,14 @@ MODEL_REQUIRED_EVENTS = {"delegated", "escalated", "accepted", "rejected"}
 TASK_REQUIRED_EVENTS = {"delegated", "accepted", "rejected", "escalated",
                         "defect_found"}
 FAILURE_CLASSES = {"spec", "capability", "recon", "tooling"}
+
+# D-0076: события, из которых складывается lifecycle открытости task_id
+# (пересечено с ROUTING_EVENTS ниже — если словарь событий когда-нибудь
+# лишится одного из имён, скан не должен молча падать на несуществующем
+# имени события).
+_OPEN_DISPATCH_LIFECYCLE_CANDIDATES = {
+    "delegated", "accepted", "rejected", "escalated", "decomposable",
+}
 
 # D-0060/F-23 (OS-репо): две параллельные сессии выдали один task_id двум
 # разным задачам. Порядок id обязателен только для НОВЫХ task_id, ФОРМАТ
@@ -247,8 +235,9 @@ def append_routing(event: str, agent: str, *, model: str = "",
                    attempt: int = 0, failure_class: str = "",
                    witness: str = "", ref: str = "",
                    reopen_task: str = "", by: str = "",
-                   basis: str = "") -> str:
+                   basis: str = "", worker_ref: str = "") -> str:
     task_id = task_id.strip()  # F-C: пробелы в id недопустимы
+    worker_ref = worker_ref.strip()
     if event not in ROUTING_EVENTS:
         raise SystemExit(f"неизвестное событие '{event}'; допустимы: "
                          + ", ".join(sorted(ROUTING_EVENTS)))
@@ -256,6 +245,13 @@ def append_routing(event: str, agent: str, *, model: str = "",
         raise SystemExit(f"--model обязательна для события '{event}' (CLAUDE.md, журнал маршрутизации)")
     if event in TASK_REQUIRED_EVENTS and not task_id:
         raise SystemExit(f"--task-id обязателен для события '{event}' (D-0053 OS-репо)")
+    # D-0076 (порт OS-репо, инцидент F-44): delegated без worker_ref
+    # неотличим от фантомной записи (строка есть, воркер не запущен).
+    if event == "delegated" and not worker_ref:
+        raise SystemExit(
+            "--worker-ref обязателен для события 'delegated' (D-0076): "
+            "хэндл, по которому следующая сессия найдёт воркера/результат "
+            "(id фонового таска, job id, cli:<ISO>, retro:<...>)")
     if event == "rejected":
         if failure_class not in FAILURE_CLASSES:
             raise SystemExit("--failure-class обязателен для 'rejected': "
@@ -337,6 +333,8 @@ def append_routing(event: str, agent: str, *, model: str = "",
         record["by"] = by
     if basis:
         record["basis"] = basis
+    if worker_ref:
+        record["worker_ref"] = worker_ref
     if category:
         record["category"] = category
     if notes:
@@ -353,6 +351,33 @@ def append_orchestrator(cells: list[str]) -> str:
     line = "| " + " | ".join([_now_iso(suffix_z=True)] + safe) + " |"
     _append_line(ORCH_LOG, line)
     return line
+
+
+def find_open_dispatches(records: list[dict]) -> list[dict]:
+    """D-0076: task_id ОТКРЫТ, если его последнее по порядку файла
+    lifecycle-событие (пересечение _OPEN_DISPATCH_LIFECYCLE_CANDIDATES с
+    фактическим ROUTING_EVENTS) — delegated. Файловый порядок легален
+    здесь по построению (см. docstring модуля): журнал пишет только этот
+    скрипт, ts — с системных часов на момент вызова, поэтому строки
+    физически идут хронологически. Reopen (delegated поверх accepted,
+    --reopen-task) должен вновь показывать task_id открытым — этого не
+    нужно кодировать отдельно, последнее событие после reopen снова
+    delegated. Возвращает записи (dict) открытых task_id, старейшие
+    (по позиции их ПОСЛЕДНЕГО delegated в файле — события, оставившего
+    задачу открытой; для reopen/retry-цепочек это не первый delegated
+    задачи) первыми."""
+    lifecycle = _OPEN_DISPATCH_LIFECYCLE_CANDIDATES & ROUTING_EVENTS
+    last_by_task: dict[str, tuple[int, dict]] = {}
+    for idx, rec in enumerate(records):
+        task_id = rec.get("task_id")
+        event = rec.get("event")
+        if not task_id or event not in lifecycle:
+            continue
+        last_by_task[task_id] = (idx, rec)
+    open_items = [(idx, rec) for idx, rec in last_by_task.values()
+                  if rec.get("event") == "delegated"]
+    open_items.sort(key=lambda pair: pair[0])
+    return [rec for _, rec in open_items]
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -380,12 +405,28 @@ def main(argv: list[str] | None = None) -> int:
     p_rt.add_argument("--basis", default="",
                       help="critic|queued-to-lead — обходит tier-матрицу "
                            "D-0058 для accepted")
+    p_rt.add_argument("--worker-ref", dest="worker_ref", default="",
+                      help="D-0076: хэндл, по которому следующая сессия "
+                           "найдёт воркера/результат (id фонового таска, "
+                           "job id, cli:<ISO>, retro:<...>); значение "
+                           "существует только после запуска; обязателен "
+                           "для delegated")
+
+    sub.add_parser(
+        "open-dispatches",
+        help="D-0076: список task_id, чьё последнее lifecycle-событие — "
+             "delegated (фантомная/незакрытая работа)")
 
     p_orch = sub.add_parser("orchestrator", help="строка в state/orchestrator-log.md")
     p_orch.add_argument("cells", nargs=4,
                         metavar=("ПРАВИЛО", "АГЕНТ", "АРТЕФАКТ", "ИСХОД"))
 
     args = parser.parse_args(argv)
+    if hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        except (ValueError, OSError):
+            pass
     if args.target == "routing":
         line = append_routing(args.event, args.agent, model=args.model,
                               category=args.category, notes=args.notes,
@@ -393,22 +434,26 @@ def main(argv: list[str] | None = None) -> int:
                               failure_class=args.failure_class,
                               witness=args.witness, ref=args.ref,
                               reopen_task=args.reopen_task,
-                              by=args.by, basis=args.basis)
-    else:
-        line = append_orchestrator(args.cells)
-    # Запись в файл (_append_line, encoding="utf-8") уже совершена выше —
-    # успех функции не должен зависеть от того, что происходит дальше.
-    # Эхо строки на экран может упасть с UnicodeEncodeError, если кодовая
-    # страница консоли (напр. cp1251) не может представить символ строки
-    # (напр. "≠"); без этой правки такой сбой давал ложный exit 1, из-за
-    # которого вызывающий может решить, что запись не прошла, и ретраить —
-    # создавая дубли в журнале. Делаем stdout устойчивым к любым символам
-    # заранее, а не глушим исключение вокруг print постфактум.
-    if hasattr(sys.stdout, "reconfigure"):
-        try:
-            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-        except (ValueError, OSError):
-            pass
+                              by=args.by, basis=args.basis,
+                              worker_ref=args.worker_ref)
+        # Запись в файл (_append_line, encoding="utf-8") уже совершена выше —
+        # успех функции не должен зависеть от того, что происходит дальше.
+        # Эхо строки на экран может упасть с UnicodeEncodeError, если кодовая
+        # страница консоли (напр. cp1251) не может представить символ строки
+        # (напр. "≠"); без этой правки такой сбой давал ложный exit 1, из-за
+        # которого вызывающий может решить, что запись не прошла, и ретраить —
+        # создавая дубли в журнале. stdout уже сделан устойчивым к любым
+        # символам заранее (выше), а не глушится исключение вокруг print
+        # постфактум.
+        print(line)
+        return 0
+    if args.target == "open-dispatches":
+        records = _read_routing_records(ROUTING_LOG)
+        for rec in find_open_dispatches(records):
+            print(f"OPEN DISPATCH: {rec.get('task_id')} agent={rec.get('agent')} "
+                  f"since {rec.get('ts')}")
+        return 0
+    line = append_orchestrator(args.cells)
     print(line)
     return 0
 

@@ -86,13 +86,15 @@ charter» без их скана мертво.
 БЕЗ активного лока и не в `Blocked`/`wip`. Уважай `max_triggered_workflows`
 (суммарно за проход). Для каждого срабатывания:
 1. Поставь лок: `lock: "<agent>:<ISO-timestamp>"` в frontmatter артефакта (Edit).
-   Затем запиши делегирование в журнал маршрутизации (правило CLAUDE.md действует
-   и на диспатчи конвейера — до 2026-07-08 проходы /qa-loop были журналу невидимы):
-   `python scripts/log_append.py routing --event delegated --agent <agent>
-   --model <model из frontmatter агента> --category qa-pipeline
-   --notes "<правило>: <артефакт>"`.
 2. Запусти воркера через Task (subagent_type = имя агента из правила) —
-   **синхронно, БЕЗ run_in_background**. Передай путь к артефакту, краткий контекст
+   **синхронно, БЕЗ run_in_background** — и СРАЗУ ПОСЛЕ запуска (журнал
+   записывает факты, не намерения — D-0076 OS-репо; правило CLAUDE.md действует
+   и на диспатчи конвейера) запиши делегирование:
+   `python scripts/log_append.py routing --event delegated --agent <agent>
+   --model <model из frontmatter агента> --task-id <id артефакта>
+   --worker-ref "lock:<agent>:<ISO лока из шага 1>" --category qa-pipeline
+   --notes "<правило>: <артефакт>"`.
+   Передай воркеру путь к артефакту, краткий контекст
    и `args` правила: fix-verifier — `mode` (verify|recheck-rejected|still-repro);
    bug-reporter — `role` (creator|responder); test-maintainer при `APP_CHANGED` —
    пометь «намеренное изменение: обновить тесты, не маскировать».
@@ -108,7 +110,8 @@ charter» без их скана мертво.
    Затем сними лок (`lock: ""`) и запиши строку в `state/orchestrator-log.md`
    (время, правило, агент, артефакт, result: summary). Для `result: success`
    запиши accepted-событие: `python scripts/log_append.py routing --event accepted
-   --agent <agent> --model <model> --category qa-pipeline --notes "<итог кратко>"`.
+   --agent <agent> --model <model> --task-id <id артефакта> --by <твоя модель>
+   --category qa-pipeline --notes "<итог кратко>"`.
    Приёмка только сверху (D-0058 OS-репо): если ярус воркера >= твоего
    фактического яруса, accepted легален лишь с critic-входом (вердикт в notes)
    или с пометкой «в очередь полного Lead» — иначе это самосертификация (F-22);

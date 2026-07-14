@@ -6,8 +6,11 @@
 и далее) и в «Открытых хвостах» ниже.
 
 **Session Start (детектор пропуска handoff, .claude/skills/session-handoff/):**
-первым действием новой сессии — `git status --short` и
-`git log origin/master..master --oneline`. Грязное дерево или
+первым действием новой сессии — `git status --short`,
+`git log origin/master..master --oneline` и
+`python scripts/log_append.py open-dispatches` (D-0076: показанные
+открытые delegated сверить — воркер жив / результат ждёт / фантом;
+фантом — пометкой в notes следующего события). Грязное дерево или
 неотправленные коммиты = прошлая сессия закрылась без
 handoff-проверки — зафиксировать находкой в журнале (`log_append`),
 не поглощать молча. Затем — preflight шаг 0 (сверка яруса).

@@ -6,7 +6,10 @@ import json
 
 import pytest
 
-import log_append as la
+try:
+    import log_append_d0076 as la
+except ImportError:
+    import log_append as la
 
 
 @pytest.fixture()
@@ -22,6 +25,7 @@ def test_routing_appends_json_line_with_ts(logs):
     routing, _ = logs
     la.main(["routing", "--event", "delegated", "--agent", "builder",
              "--model", "sonnet", "--task-id", "t-001",
+             "--worker-ref", "wr-cli",
              "--category", "implementation", "--notes", "тест"])
     lines = routing.read_text(encoding="utf-8").splitlines()
     assert len(lines) == 1
@@ -179,7 +183,7 @@ def test_routing_appends_not_overwrites(logs):
     # обязан быть max(t-NNN)+1, а журнал в этом тесте пуст (см. отчёт
     # builder'а, t-009 — существующий тест скорректирован).
     routing, _ = logs
-    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001", worker_ref="wr")
     la.append_routing("accepted", "builder", model="sonnet", by="opus",
                       task_id="t-001",
                       witness="pytest -q -> passed")
@@ -216,8 +220,8 @@ def test_orchestrator_requires_exactly_four_cells(logs):
 
 def test_delegated_fresh_sequential_id_passes(logs):
     routing, _ = logs
-    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
-    la.append_routing("delegated", "builder", model="sonnet", task_id="t-002")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001", worker_ref="wr")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-002", worker_ref="wr")
     lines = routing.read_text(encoding="utf-8").splitlines()
     assert len(lines) == 2
     assert json.loads(lines[1])["task_id"] == "t-002"
@@ -225,55 +229,56 @@ def test_delegated_fresh_sequential_id_passes(logs):
 
 def test_delegated_fresh_id_gap_or_lower_rejected_names_expected_id(logs):
     routing, _ = logs
-    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001", worker_ref="wr")
     with pytest.raises(SystemExit, match="t-002"):  # разрыв
-        la.append_routing("delegated", "builder", model="sonnet", task_id="t-005")
+        la.append_routing("delegated", "builder", model="sonnet", task_id="t-005", worker_ref="wr")
     with pytest.raises(SystemExit, match="t-002"):  # ниже ожидаемого, ранее не встречался
-        la.append_routing("delegated", "builder", model="sonnet", task_id="t-000")
+        la.append_routing("delegated", "builder", model="sonnet", task_id="t-000", worker_ref="wr")
     # ни один из отклонённых вызовов не дописался в журнал
     assert len(routing.read_text(encoding="utf-8").splitlines()) == 1
 
 
 def test_delegated_continuation_after_rejected_or_escalated_passes(logs):
     routing, _ = logs
-    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001", worker_ref="wr")
     la.append_routing("rejected", "builder", model="sonnet", by="opus",
                       task_id="t-001",
                       attempt=1, failure_class="capability")
     # ретрай на тот же task_id тем же agent -- легально ТОЛЬКО с
     # attempt>=2 и существующим rejected (D-0058 порт, ветка "в")
     la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
-                      attempt=2)
+                      attempt=2, worker_ref="wr")
     # continuation другим ярусом (critic) -- легально без доп. флагов
     # (ветка "б")
     la.append_routing("escalated", "critic", model="opus", task_id="t-001")
-    la.append_routing("delegated", "critic", model="opus", task_id="t-001")
+    la.append_routing("delegated", "critic", model="opus", task_id="t-001", worker_ref="wr")
     lines = routing.read_text(encoding="utf-8").splitlines()
     assert len(lines) == 5
     # следующий свежий id всё ещё считается от t-001 (единственный t-NNN)
-    la.append_routing("delegated", "builder", model="sonnet", task_id="t-002")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-002", worker_ref="wr")
     assert len(routing.read_text(encoding="utf-8").splitlines()) == 6
 
 
 def test_delegated_on_accepted_task_id_rejected_without_reopen_flag(logs):
     routing, _ = logs
-    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001", worker_ref="wr")
     la.append_routing("accepted", "builder", model="sonnet", by="opus",
                       task_id="t-001",
                       witness="pytest -q -> passed")
     with pytest.raises(SystemExit, match="t-001"):
-        la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
+        la.append_routing("delegated", "builder", model="sonnet", task_id="t-001", worker_ref="wr")
     assert len(routing.read_text(encoding="utf-8").splitlines()) == 2
 
 
 def test_delegated_on_accepted_task_id_passes_with_reopen_flag(logs):
     routing, _ = logs
-    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001", worker_ref="wr")
     la.append_routing("accepted", "builder", model="sonnet", by="opus",
                       task_id="t-001",
                       witness="pytest -q -> passed")
     la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
-                      reopen_task="F-23: коллизия, повторное открытие осознанно")
+                      reopen_task="F-23: коллизия, повторное открытие осознанно",
+                      worker_ref="wr")
     lines = routing.read_text(encoding="utf-8").splitlines()
     assert len(lines) == 3
     rec = json.loads(lines[-1])
@@ -285,8 +290,8 @@ def test_delegated_empty_journal_expects_t001(logs):
     routing, _ = logs
     assert not routing.exists()
     with pytest.raises(SystemExit, match="t-001"):
-        la.append_routing("delegated", "builder", model="sonnet", task_id="t-999")
-    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
+        la.append_routing("delegated", "builder", model="sonnet", task_id="t-999", worker_ref="wr")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001", worker_ref="wr")
     assert json.loads(routing.read_text(encoding="utf-8").splitlines()[0])["task_id"] == "t-001"
 
 
@@ -299,9 +304,9 @@ def test_delegated_new_descriptive_task_id_passes_on_nonempty_journal(logs):
     # без проверки последовательности, даже если журнал уже непуст и в нём
     # есть t-NNN записи.
     routing, _ = logs
-    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001", worker_ref="wr")
     la.append_routing("delegated", "test-maintainer", model="sonnet",
-                      task_id="at-bug-005")
+                      task_id="at-bug-005", worker_ref="wr")
     lines = routing.read_text(encoding="utf-8").splitlines()
     assert len(lines) == 2
     assert json.loads(lines[1])["task_id"] == "at-bug-005"
@@ -313,15 +318,15 @@ def test_delegated_substring_t_nn_inside_descriptive_id_treated_as_descriptive(l
     # описательный и проходит свободно как новый, без применения проверки
     # последовательности (и без влияния на последующий max(t-NNN)).
     routing, _ = logs
-    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001", worker_ref="wr")
     la.append_routing("delegated", "test-maintainer", model="sonnet",
-                      task_id="fix-t-12-encoding")
+                      task_id="fix-t-12-encoding", worker_ref="wr")
     lines = routing.read_text(encoding="utf-8").splitlines()
     assert len(lines) == 2
     assert json.loads(lines[1])["task_id"] == "fix-t-12-encoding"
     # substring "t-12" не должен был войти в подсчёт max(t-NNN): следующий
     # свежий последовательный id всё ещё t-002, а не t-013.
-    la.append_routing("delegated", "builder", model="sonnet", task_id="t-002")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-002", worker_ref="wr")
     assert len(routing.read_text(encoding="utf-8").splitlines()) == 3
 
 
@@ -337,7 +342,7 @@ def test_delegated_preexisting_descriptive_task_id_continues_freely(logs):
     la.append_routing("rejected", "test-maintainer", model="sonnet", by="opus",
                       task_id="at-bug-003", attempt=1, failure_class="capability")
     la.append_routing("delegated", "test-maintainer", model="sonnet",
-                      task_id="at-bug-003")
+                      task_id="at-bug-003", worker_ref="wr")
     assert len(routing.read_text(encoding="utf-8").splitlines()) == 2
 
 
@@ -346,8 +351,8 @@ def test_delegated_id_with_spaces_stripped(logs):
     # описательную ветку; теперь id нормализуется strip'ом и проходит
     # проверку последовательности, в журнал пишется очищенным.
     routing, _ = logs
-    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
-    la.append_routing("delegated", "builder", model="sonnet", task_id=" t-002 ")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001", worker_ref="wr")
+    la.append_routing("delegated", "builder", model="sonnet", task_id=" t-002 ", worker_ref="wr")
     lines = routing.read_text(encoding="utf-8").splitlines()
     assert len(lines) == 2
     assert json.loads(lines[1])["task_id"] == "t-002"
@@ -357,9 +362,9 @@ def test_delegated_fresh_sequential_id_fails_on_wrong_case(logs):
     # t-010 (критик F-C): "T-002" похож на последовательность, но не в
     # канонической форме — явный отказ вместо тихой описательной трактовки.
     routing, _ = logs
-    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001", worker_ref="wr")
     with pytest.raises(SystemExit, match="канонической форме"):
-        la.append_routing("delegated", "builder", model="sonnet", task_id="T-002")
+        la.append_routing("delegated", "builder", model="sonnet", task_id="T-002", worker_ref="wr")
     assert len(routing.read_text(encoding="utf-8").splitlines()) == 1
 
 
@@ -371,12 +376,12 @@ def test_non_delegated_fresh_t_nnn_skips_sequence_check_and_jumps_max(logs):
     la.append_routing("accepted", "builder", model="sonnet", by="opus",
                       task_id="t-050",
                       witness="pytest -q -> passed")
-    la.append_routing("delegated", "builder", model="sonnet", task_id="t-051")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-051", worker_ref="wr")
     lines = routing.read_text(encoding="utf-8").splitlines()
     assert len(lines) == 2
     assert json.loads(lines[1])["task_id"] == "t-051"
     with pytest.raises(SystemExit, match="t-052"):
-        la.append_routing("delegated", "builder", model="sonnet", task_id="t-002")
+        la.append_routing("delegated", "builder", model="sonnet", task_id="t-002", worker_ref="wr")
 
 
 # D-0058 (порт OS-репо, task_id journal-port-by-basis): поле 'by' и матрица
@@ -397,7 +402,7 @@ def test_by_required_for_accepted_and_rejected(logs):
 def test_by_not_required_for_delegated_or_escalated(logs):
     # 'by' -- самодекларация ПРИНИМАЮЩЕГО; delegated/escalated его не несут.
     routing, _ = logs
-    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001", worker_ref="wr")
     la.append_routing("escalated", "critic", model="opus", task_id="t-001")
     lines = routing.read_text(encoding="utf-8").splitlines()
     assert len(lines) == 2
@@ -505,20 +510,20 @@ def test_delegated_retry_same_agent_open_task_requires_attempt_and_rejected(logs
     # Ветка "в": agent совпадает с предыдущим delegated -- легально ТОЛЬКО
     # с attempt>=2 И существующим rejected по этому task_id.
     routing, _ = logs
-    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001", worker_ref="wr")
     # ни attempt, ни rejected -- дубль-паттерн (ветка "г").
     with pytest.raises(SystemExit, match="дубль"):
-        la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
+        la.append_routing("delegated", "builder", model="sonnet", task_id="t-001", worker_ref="wr")
     # attempt>=2, но rejected по-прежнему нет -- всё ещё отказ.
     with pytest.raises(SystemExit, match="дубль"):
         la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
-                          attempt=2)
+                          attempt=2, worker_ref="wr")
     assert len(routing.read_text(encoding="utf-8").splitlines()) == 1
     la.append_routing("rejected", "builder", model="sonnet", by="opus",
                       task_id="t-001", attempt=1, failure_class="capability")
     # теперь rejected есть -- attempt>=2 достаточно (ветка "в", легально).
     la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
-                      attempt=2)
+                      attempt=2, worker_ref="wr")
     assert len(routing.read_text(encoding="utf-8").splitlines()) == 3
 
 
@@ -526,8 +531,127 @@ def test_delegated_continuation_different_agent_open_task_no_flags_needed(logs):
     # Ветка "б": agent новой строки отличается от agent ВСЕХ предыдущих
     # delegated этого task_id -- легально без attempt/rejected.
     routing, _ = logs
-    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
-    la.append_routing("delegated", "critic", model="opus", task_id="t-001")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001", worker_ref="wr")
+    la.append_routing("delegated", "critic", model="opus", task_id="t-001", worker_ref="wr")
     lines = routing.read_text(encoding="utf-8").splitlines()
     assert len(lines) == 2
     assert json.loads(lines[1])["agent"] == "critic"
+
+
+# D-0076 (порт OS-репо, инцидент F-44): --worker-ref обязателен для delegated
+# (фантомная запись без запущенного воркера иначе неотличима от честной),
+# и подкоманда open-dispatches -- скан незакрытых delegated по журналу.
+
+def test_worker_ref_required_for_delegated(logs):
+    routing, _ = logs
+    with pytest.raises(SystemExit, match="worker-ref"):
+        la.append_routing("delegated", "builder", model="sonnet", task_id="t-001")
+    with pytest.raises(SystemExit, match="worker-ref"):
+        la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                          worker_ref="   ")
+    assert not routing.exists()
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="job:bg-4471")
+    rec = json.loads(routing.read_text(encoding="utf-8"))
+    assert rec["worker_ref"] == "job:bg-4471"
+
+
+def test_worker_ref_not_required_for_accepted_rejected_and_other_events(logs):
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr")
+    la.append_routing("accepted", "builder", model="sonnet", by="opus",
+                      task_id="t-001", witness="pytest -q -> passed")
+    la.append_routing("rejected", "builder", model="sonnet", by="opus",
+                      task_id="t-002", attempt=1, failure_class="capability")
+    la.append_routing("dispatch_skipped", "scout", category="recon",
+                      notes="точечная сверка известных файлов")
+    lines = routing.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 4
+    for line in lines[1:]:
+        assert "worker_ref" not in json.loads(line)
+
+
+def test_open_dispatches_empty_journal_prints_nothing(logs, capsys):
+    routing, _ = logs
+    assert not routing.exists()
+    exit_code = la.main(["open-dispatches"])
+    assert exit_code == 0
+    assert capsys.readouterr().out == ""
+
+
+def test_open_dispatches_shows_open_delegated(logs, capsys):
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr")
+    exit_code = la.main(["open-dispatches"])
+    assert exit_code == 0
+    out = capsys.readouterr().out
+    assert "OPEN DISPATCH: t-001 agent=builder since" in out
+
+
+def test_open_dispatches_closed_by_accepted_not_shown(logs, capsys):
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr")
+    la.append_routing("accepted", "builder", model="sonnet", by="opus",
+                      task_id="t-001", witness="pytest -q -> passed")
+    exit_code = la.main(["open-dispatches"])
+    assert exit_code == 0
+    out = capsys.readouterr().out
+    assert "t-001" not in out
+    assert out == ""
+
+
+def test_open_dispatches_reopen_chain_is_open(logs, capsys):
+    # delegated -> accepted (закрыт) -> delegated --reopen-task (снова открыт):
+    # AO3-специфика (reopen легален), в отличие от эталонного репо, где
+    # "accepted закрывает навсегда" -- здесь это правило НЕ действует.
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr")
+    la.append_routing("accepted", "builder", model="sonnet", by="opus",
+                      task_id="t-001", witness="pytest -q -> passed")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr-reopen",
+                      reopen_task="F-23: коллизия, повторное открытие осознанно")
+    exit_code = la.main(["open-dispatches"])
+    assert exit_code == 0
+    out = capsys.readouterr().out
+    assert "OPEN DISPATCH: t-001 agent=builder since" in out
+
+
+def test_open_dispatches_retry_chain_is_open(logs, capsys):
+    # delegated -> rejected -> delegated (attempt=2, ретрай тем же agent):
+    # задача остаётся открытой на всём протяжении, включая ретрай.
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr")
+    la.append_routing("rejected", "builder", model="sonnet", by="opus",
+                      task_id="t-001", attempt=1, failure_class="capability")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      attempt=2, worker_ref="wr-retry")
+    exit_code = la.main(["open-dispatches"])
+    assert exit_code == 0
+    out = capsys.readouterr().out
+    assert "OPEN DISPATCH: t-001 agent=builder since" in out
+
+
+def test_open_dispatches_multiple_open_ordered_oldest_first(logs, capsys):
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr-a")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-002",
+                      worker_ref="wr-b")
+    la.append_routing("accepted", "builder", model="sonnet", by="opus",
+                      task_id="t-002", witness="pytest -q -> passed")
+    la.append_routing("delegated", "critic", model="opus", task_id="t-003",
+                      worker_ref="wr-c")
+    exit_code = la.main(["open-dispatches"])
+    assert exit_code == 0
+    out = capsys.readouterr().out.splitlines()
+    # t-002 закрыт (accepted) и не должен фигурировать; t-001 и t-003 открыты,
+    # t-001 -- старейший (продолжает быть delegated дольше).
+    assert len(out) == 2
+    assert out[0].startswith("OPEN DISPATCH: t-001 ")
+    assert out[1].startswith("OPEN DISPATCH: t-003 ")

@@ -238,15 +238,27 @@ implementation→builder.)
 Lead-сессия дописывает одну JSON-строку на событие:
 
 ```json
-{"ts":"2026-07-07T15:00:00","event":"delegated","agent":"builder","model":"sonnet","task_id":"t-042","category":"implementation","notes":"кратко: что делегировано"}
+{"ts":"2026-07-07T15:00:00","event":"delegated","agent":"builder","model":"sonnet","task_id":"t-042","category":"implementation","worker_ref":"lock:builder:2026-07-07T14:59","notes":"кратко: что делегировано"}
 ```
+
+Журнал записывает СВЕРШИВШИЕСЯ ФАКТЫ, не намерения (D-0076 OS-репо;
+инцидент F-44 случился ЗДЕСЬ: delegated записан 12:14, воркер не
+запущен — фантом): `delegated`/`escalated` пишутся ПОСЛЕ фактического
+запуска воркера, тем же ходом; каждый `delegated` несёт `--worker-ref`
+— непустой хэндл, по которому следующая сессия найдёт воркера/результат
+(лок-стемп артефакта, id фонового таска, `cli:<ts>`, `retro:<...>`) —
+значение существует только после запуска. Открытые диспатчи сверяет
+`python scripts/log_append.py open-dispatches` (Session Start —
+HANDOFF.md; Session End — чек 2 session-handoff); фантом закрывается
+пометкой в notes следующего события.
 
 Типизированные поля (D-0053 OS-репо; несущие факты — полями, notes —
 человекочитаемый довесок): `task_id` обязателен для
 delegated/accepted/rejected/escalated/defect_found — сквозной на
 задачу; `attempt` (число) и `failure_class`
 (spec/capability/recon/tooling) — на rejected; `witness` (фактический
-вывод прогона) — на accepted по builder; `ref` (task_id исходного
+вывод прогона) — на accepted по builder; `worker_ref` (хэндл запуска,
+D-0076) — на delegated; `ref` (task_id исходного
 accepted) — на defect_found. Формат enforce'ит
 scripts/log_append.py; события до 2026-07-08 не переписываются.
 
