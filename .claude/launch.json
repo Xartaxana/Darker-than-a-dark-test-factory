@@ -2,6 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "board",
+      "runtimeExecutable": "D:\\AO3_tests\\framework\\.venv\\Scripts\\python.exe",
+      "runtimeArgs": ["scripts/board_server.py"],
+      "port": 8777
+    },
+    {
       "name": "board-view",
       "runtimeExecutable": "D:\\AO3_tests\\framework\\.venv\\Scripts\\python.exe",
       "runtimeArgs": ["-m", "http.server", "8099", "--bind", "127.0.0.1"],
