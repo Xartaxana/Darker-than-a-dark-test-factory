@@ -4,7 +4,7 @@ title: "Нет таймаут-гейта на висящие Appium-вызовы
 type: test_debt
 debt_kind: broken_environment
 severity: major
-status: Fixed
+status: Verified
 found_in: "critic при диагнозе двойного зависания p0 smoke (2026-07-09, задача 2 ревью инкремента 1 AT-BUG-005); симптом наблюдался оператором и Lead'ом: Invoke-Smoke висел 19+ минут, потребовалось ручное убийство дерева процессов, дважды за вечер"
 fixed_in: "тестовая система: framework/config/settings.py + framework/core/driver_factory.py + framework/pytest.ini, 2026-07-10 (test-maintainer, at-bug-007, attempt 2 после critic REJECT); коммит присвоит Lead при приёмке — сборка приложения не при чём"
 last_seen_in: ""
@@ -12,8 +12,8 @@ test_cases: []
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-07-10T00:00:00Z"
-updated: "2026-07-10T00:00:00Z"
+status_since: "2026-07-14T10:47:39Z"
+updated: "2026-07-14T10:47:39Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -70,6 +70,7 @@ bugs/AT-BUG-008.md) превращается из «один retriable fail» в
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-07-14 | test_debt — фикс во фреймворке (не привязан к сборке приложения); приложение: app-debug.apk текущего HEAD, установлено на ao3_test_api34 (API 34) | Синтетическая проба AT-BUG-007 (независимая, НЕ из репозитория, scratchpad, удалена по завершении) + `tests/test_replay_infra_probe.py` + `tests/test_seed_filter_profiles_unit.py` (×3) + `scripts/tests` + полный p0 (`-m p0`, 18 TC) | Синт. проба: hang→`ReadTimeoutError` за 2.02-2.03s (=1x `AO3_APPIUM_HTTP_TIMEOUT=2`, не 4x/8x) → `RERUN`→`FAILED` (`1 failed, 1 rerun in 5.81s`); `assert False` контроль → `FAILED` БЕЗ `RERUN` (`1 failed in 0.69s`) — семантика триажа подтверждена. Регресс: 3 прогона `test_replay_infra_probe.py`+`test_seed_filter_profiles_unit.py` подряд — все `PASSED`, `PYTEST_EXIT=0` (первая попытка поймала известный класс UI-флака bottom-sheet на холодном cold-boot эмуляторе — не таймаут-класс, не смэтчился `--only-rerun`, прошёл со второй попытки и 3/3 подряд после); `python -m pytest scripts/tests -q` — 294 passed. Полный p0 (`-m p0`, 18 отобранных) — 18 passed, 0 упавших/зависших, `575.22s` (~9.5 мин), `PYTEST_EXIT=0`; таймаут-гейт ни разу не сработал боевым образом (в т.ч. известный флаки AT-BUG-008 в этом прогоне не проявился) — suite прошёл штатно от начала до конца. | **Verified**. Все 4 пункта критерия Fixed подтверждены независимым прогоном: (1) висящий in-flight вызов падает за конечное предсказуемое время (~1x таймаут) и ретраится ровно один раз согласно `--reruns 1 --only-rerun`; (2) обычное падение не ретраится; (3) регресс отсутствует; (4) полный p0 прошёл целиком, суть долга (клин suite) устранена. |
 
 ## Обсуждение
 
@@ -248,3 +249,57 @@ Witness attempt 2 (полный, все синтетические пробы Н
    scripts/tests -q` → `262 passed` (sanity, обвязка не затронута).
 
 status: Fixed подтверждён после закрытия B1/B2 (это исправление).
+
+---
+
+**2026-07-14T10:47:39Z — fix-verifier, mode=verify, вердикт Verified:**
+
+Независимо (без опоры на цифры test-maintainer) воспроизвёл обе синтетические
+пробы attempt 2 в scratchpad-сессии (TCP-заглушка, принимает соединение и не
+отвечает; НЕ в репозитории, удалена по завершении), через реальный
+`driver_factory.create_driver()` + `AppiumClientConfig` фреймворка (не
+переизобретал таймаут-логику руками):
+
+- Hang-класс: `AO3_APPIUM_HTTP_TIMEOUT=2` → `webdriver.Remote` против
+  зависшего стаба → `urllib3.exceptions.ReadTimeoutError: ... (read
+  timeout=2)` за **2.02-2.03s** (замерено `time.monotonic()`), т.е. РОВНО 1x
+  таймаут, не 4x/8x — граница B2 подтверждена независимым измерением. С
+  `framework/pytest.ini` addopts (`--reruns 1 --only-rerun
+  ReadTimeoutError|MaxRetryError`) — `RERUN` → `FAILED`,
+  `1 failed, 1 rerun in 5.81s`.
+- Control-класс: `assert False` → `FAILED` БЕЗ `RERUN`, `1 failed in 0.69s` —
+  ретрай не сматчился, семантика триажа не задета.
+- Побочная находка тулинга (НЕ дефект фикса, отчёт для будущих fix-verifier
+  сессий): при первом прогоне пробы путь лежал на другом диске (`C:`) от
+  `rootdir` (`D:\AO3_tests\framework`) — `framework/pytest.ini` `addopts`
+  (в т.ч. `--reruns`) молча НЕ применялись без явных флагов на командной
+  строке (rootdir/inifile нашёлся, но addopts — нет; вероятно, cross-drive
+  ломает вычисление common-ancestor для discovery). Обошёл явной передачей
+  тех же флагов, что в `pytest.ini`, — цифры выше сняты именно с них, так что
+  вердикт не пострадал. Отдельно: разные пути того же требования, что чинит
+  сам AT-BUG-007 (проверка ретрая) — не сама область бага.
+
+Регресс (после подъёма эмулятора `-writable-system` и установки CA,
+`Install-App`+`Install-MitmCA`, `Start-Appium`):
+`tests/test_replay_infra_probe.py` + `tests/test_seed_filter_profiles_unit.py`
+— первая попытка поймала `AssertionError` на bottom-sheet
+(`rating_steps.rate_via_listing_overlay`) на холодном (`-no-snapshot-load`,
+после порчи снапшота предыдущими некорректными `adb emu kill`) первом
+прогоне WebView — НЕ таймаут-класс (не матчится `--only-rerun`, не
+относится к AT-BUG-007), похоже на разовый cold-start флак; 3 последующих
+прогона подряд — все `PASSED`, `PYTEST_EXIT=0`. `python -m pytest
+scripts/tests -q` — 294 passed (выросло с 262 у test-maintainer — новые
+скрипт-тесты появились со времени фикса, ожидаемо).
+
+Полный p0 (`-m p0`, 18 отобранных из 40, критерий Fixed — «по
+доступности», эмулятор поднят): **18 passed, 0 failed, 575.22s (~9.5 мин),
+PYTEST_EXIT=0**. Suite прошёл от начала до конца без единого зависания;
+известный флаки AT-BUG-008
+(`test_rate_work_from_work_page_panel`) в этом прогоне не проявился —
+косвенно ничего не доказывает про AT-BUG-008, но подтверждает главное: даже
+после нескольких дней вебсим/окружения (в т.ч. свежая порча снапшота
+эмулятора в ходе этой самой верификационной сессии, устранённая
+`-no-snapshot-load` холодной загрузкой) suite ни разу не заклинил.
+
+Критерий Fixed выполнен по всем 4 пунктам независимым прогоном. **Fixed →
+Verified.**

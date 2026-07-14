@@ -56,12 +56,50 @@ def open_settings_scrolled_to(driver, text: str) -> None:
     """Общая подготовка для всех трёх проб (docs/08 C1 — locator/driver-примитивы
     скрыты за steps/screens, тесты вызывают только это): нативная оболочка готова
     (AO3 грузить не нужно — сценарии этого модуля целиком в Settings/DocumentsUI),
-    открыт Settings, докручено до кнопки, за которой сразу последует SAF-контракт."""
+    открыт Settings, докручено до кнопки, за которой сразу последует SAF-контракт.
+
+    Пробует ОБА направления (`swipe_to_text` вниз, затем `swipe_up_to_text` вверх)
+    — для проб AT-BUG-005 (всегда стартующих сверху свежеоткрытого Settings)
+    первого достаточно и второе не вызывается; TC-021 нужен и обратный ход:
+    после «Clear all ratings» (Compose-диалог, скролл НЕ сбрасывается, в отличие
+    от возврата из внешней DocumentsUI Activity) текущая позиция ниже «Restore»,
+    и назад к нему можно вернуться только вверх."""
     app_steps.wait_ui_ready(driver)
     BottomNav(driver).go_settings()
     ss = SettingsScreen(driver)
     assert ss.is_loaded(), "экран Settings не отрисовался"
-    assert ss.swipe_to_text(text), f"не удалось проскроллить до «{text}»"
+    _scroll_settings_to(driver, text)
+
+
+def _scroll_settings_to(driver, text: str) -> None:
+    """Докручивает УЖЕ открытый Settings до `text`, пробуя оба направления. Без
+    собственной проверки `is_loaded()` (заголовок "Theme" — самая ВЕРХНЯЯ секция
+    экрана): если текущая позиция проскроллена вниз (TC-021 — повторный заход
+    после «Clear all ratings»), "Theme" временно не в дереве (см. заметки
+    Compose-дискуссии AT-BUG-005 про `verticalScroll`) — это не значит, что экран
+    не Settings, только что мы не наверху. Проверку «мы вообще на Settings»
+    делают вызывающие (`open_settings_scrolled_to` — по свежему открытию;
+    `rescroll_settings_to` полагается на уже пройденную ранее в этой сессии)."""
+    ss = SettingsScreen(driver)
+    found = ss.swipe_to_text(text) or ss.swipe_up_to_text(text)
+    assert found, f"не удалось проскроллить до «{text}» (ни вниз, ни вверх)"
+
+
+@allure.step("Given экран Settings снова докручен до «{text}» (повторный заход в той же сессии)")
+def rescroll_settings_to(driver, text: str) -> None:
+    """Как `open_settings_scrolled_to`, но БЕЗ `app_steps.wait_ui_ready` (проверка
+    наличия `android.webkit.WebView`) и без `SettingsScreen.is_loaded()`
+    (заголовок "Theme" наверху экрана — не найдётся, пока мы проскроллены вниз):
+    обе проверки валидны только сразу после холодного открытия Settings, не при
+    повторном заходе в той же сессии. `wait_ui_ready` вдобавок конкретно ищет
+    `android.webkit.WebView`, которого нет в дереве на вкладках Library/Settings
+    (см. `framework/screens/navigation.py` — WebView существует только на
+    Browse), поэтому его повторный вызов гарантированно таймаутит. TC-021:
+    между Clear all ratings и Restore нужно вернуться на Settings и докрутиться
+    заново без обеих проверок «свежего» открытия — только `go_settings`
+    (идемпотентен) и скролл."""
+    BottomNav(driver).go_settings()
+    _scroll_settings_to(driver, text)
 
 
 @allure.step("Then лейбл Download folder показывает «{label}»")
@@ -89,40 +127,48 @@ def tap_settings_action(driver, label: str) -> None:
     b.tap(b.by_text(label))
 
 
-def _dismiss_ok_dialog(driver) -> None:
+def _dismiss_ok_dialog(driver, before_dismiss=None) -> None:
     """Закрывает собственный (не DocumentsUI) диалог-результат приложения («Backup
     created» / «Backup restored», SettingsScreen.kt ExportState.Done/ImportState.Done) —
     общий "OK" на обоих, поэтому не заводим для этого отдельный локатор в
     settings_screen.py (эти диалоги не имеют других общих полей с остальным экраном
-    Settings, локатор сугубо для завершения SAF-раунд-трипа)."""
+    Settings, локатор сугубо для завершения SAF-раунд-трипа).
+
+    `before_dismiss(driver)`, если передан, вызывается ПОСЛЕ появления диалога, но ДО
+    тапа по OK — окно для проверки его содержимого (заголовок/текст с counts), нужное
+    TC-021 (`framework/steps/backup_steps.py`): сама эта функция знает только про общую
+    кнопку "OK", а не про конкретный текст результата."""
     b = BaseScreen(driver)
     if b.is_present(b.by_text("OK"), timeout=10):
+        if before_dismiss is not None:
+            before_dismiss(driver)
         b.tap(b.by_text("OK"))
 
 
 @allure.step("When в системном пикере подтверждено сохранение файла ({filename})")
-def saf_save_document(driver, filename: str | None = None) -> None:
+def saf_save_document(driver, filename: str | None = None, before_dismiss=None) -> None:
     """CreateDocument-диалог: явный root Downloads, (опционально) переименование,
     SAVE, закрытие диалога-результата приложения. `filename=None` — оставить имя,
-    предложенное приложением (`ao3_backup_$date.json`, SettingsScreen.kt:958-959)."""
+    предложенное приложением (`ao3_backup_$date.json`, SettingsScreen.kt:958-959).
+    `before_dismiss` — см. `_dismiss_ok_dialog`."""
     s = DocumentsUIScreen(driver)
     assert s.is_loaded(), "CreateDocument picker не открылся (нет toolbar DocumentsUI)"
     s.open_root(DOWNLOADS_ROOT)
     if filename is not None:
         s.set_filename(filename)
     s.tap_save()
-    _dismiss_ok_dialog(driver)
+    _dismiss_ok_dialog(driver, before_dismiss)
 
 
 @allure.step("When в системном пикере выбран файл {display_name}")
-def saf_pick_file(driver, display_name: str) -> None:
+def saf_pick_file(driver, display_name: str, before_dismiss=None) -> None:
     """GetContent-браузер: явный root Downloads, тап по файлу с именем display_name,
-    закрытие диалога-результата приложения."""
+    закрытие диалога-результата приложения. `before_dismiss` — см. `_dismiss_ok_dialog`."""
     s = DocumentsUIScreen(driver)
     assert s.is_loaded(), "GetContent picker не открылся (нет toolbar DocumentsUI)"
     s.open_root(DOWNLOADS_ROOT)
     s.tap_file(display_name)
-    _dismiss_ok_dialog(driver)
+    _dismiss_ok_dialog(driver, before_dismiss)
 
 
 @allure.step("When в системном пикере выбрана папка {subpath} и подтверждён доступ")

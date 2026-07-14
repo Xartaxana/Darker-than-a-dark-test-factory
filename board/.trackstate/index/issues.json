@@ -8,7 +8,7 @@
     "epicPath": null,
     "summary": "Backup → Clear all ratings → Restore возвращает исходные данные",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -16,7 +16,7 @@
       "area:backup",
       "risk:R-01"
     ],
-    "updated": "2026-07-02T17:02:59Z",
+    "updated": "2026-07-14T11:40:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1397,7 +1397,7 @@
       "test_case:TC-021",
       "sev:major"
     ],
-    "updated": "2026-07-09T20:39:00Z",
+    "updated": "2026-07-14T12:10:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1435,15 +1435,15 @@
     "epicPath": null,
     "summary": "Нет таймаут-гейта на висящие Appium-вызовы: зависший in-flight запрос вешает весь suite вместо падения одного теста (нет pytest-timeout / client read-timeout)",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:major"
     ],
-    "updated": "2026-07-10T00:00:00Z",
-    "resolution": null,
+    "updated": "2026-07-14T10:47:39Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },

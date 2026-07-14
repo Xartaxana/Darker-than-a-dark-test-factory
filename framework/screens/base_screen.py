@@ -69,3 +69,21 @@ class BaseScreen:
             if self.is_present(loc, timeout=1):
                 return True
         return False
+
+    def swipe_up_to_text(self, text: str, max_swipes: int = 8) -> bool:
+        """Прокручивает экран свайпами в ОБРАТНОМ направлении к `swipe_to_text` —
+        нужно, когда искомый текст находится ВЫШЕ текущей позиции скролла (например,
+        после подтверждения диалога, который сам не сбрасывает скролл, нужно
+        вернуться к разделу, расположенному выше того, где сейчас находимся —
+        см. TC-021, `framework/steps/saf_steps.py::open_settings_scrolled_to`)."""
+        loc = self.by_text(text)
+        if self.is_present(loc, timeout=2):
+            return True
+        size = self.driver.get_window_size()
+        x = size["width"] // 2
+        y1, y2 = int(size["height"] * 0.25), int(size["height"] * 0.8)
+        for _ in range(max_swipes):
+            self.driver.swipe(x, y1, x, y2, 400)
+            if self.is_present(loc, timeout=1):
+                return True
+        return False

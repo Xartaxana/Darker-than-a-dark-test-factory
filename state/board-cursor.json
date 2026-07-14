@@ -316,8 +316,8 @@
   },
   "AT-BUG-007": {
     "itype": "bug",
-    "artifact_status": "Fixed",
-    "board_status": "Fixed"
+    "artifact_status": "Verified",
+    "board_status": "Verified"
   },
   "AT-BUG-008": {
     "itype": "bug",

@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-09T20:39:00Z"
-updated: "2026-07-09T20:39:00Z"
+created: "2026-07-14T12:10:00Z"
+updated: "2026-07-14T12:10:00Z"
 archived: false
 resolution: null
 ---
@@ -243,3 +243,49 @@ Witness (attempt 2): `Invoke-Pytest tests/test_saf_infra_probe.py -v` — 2
 — `ошибок 0, предупреждений 0`. Smoke не гонялся по указанию Lead (зависание
 диагностировано critic'ом как непричастное этому диффу). Статус бага остаётся
 Open (без изменений критерия).
+
+**2026-07-14T12:10:00Z — test-automator (TC-021 автоматизирован, последний
+пункт критерия Fixed закрыт):** `framework/tests/test_backup_restore.py::
+test_backup_clear_restore_returns_original_data` реализован по инфраструктуре
+инкремента 1 (`documents_ui.py`/`saf_steps.py` без изменения контракта —
+только обратно-совместимые добавления, см. ниже) и зелёный 3/3 подряд
+(58.60s/57.64s/59.38s, `PYTEST_EXIT=0` во всех). Полное покрытие полей: 5 работ
+(по одной на рейтинг) с непустыми comment/tags через `seed_with_comment`;
+Backup → Clear all ratings → Restore из того же файла; проверка диалогов
+результата с точным текстом counts, присутствия в вкладках Library и полного
+совпадения rating/comment/tags/fandom/word_count через прямое чтение Room
+(`framework/data/seed_db.py::read_work_ratings`, новая функция — обходит
+локале-зависимое форматирование числа word_count в тексте карточки Library).
+
+Доработка инфраструктуры (обратно совместимая, найдена при сборке TC-021, не
+покрыта тремя пробами инкремента 1, т.к. пробы каждая открывают Settings ровно
+один раз с холодного старта): `saf_steps.open_settings_scrolled_to` внутри
+вызывает `app_steps.wait_ui_ready` (ищет `android.webkit.WebView`) — WebView
+существует в дереве ТОЛЬКО на вкладке Browse (`framework/screens/
+navigation.py`), поэтому повторный вызов этой функции, пока уже открыт
+Settings (TC-021: между «Clear all ratings» и «Restore» нужно вернуться в
+Settings и докрутиться заново), гарантированно таймаутит — на вкладке
+Settings/Library WebView в дереве нет. Аналогично `SettingsScreen.is_loaded()`
+(ищет заголовок "Theme" — самую верхнюю секцию экрана) не находит его, если
+текущая позиция уже проскроллена вниз. Добавлена `saf_steps.
+rescroll_settings_to` — тот же скролл до текста, но без обеих проверок
+«свежего» открытия; плюс `BaseScreen.swipe_up_to_text` (обратное направление
+свайпа) — после «Clear all ratings» (Compose-диалог, скролл НЕ сбрасывается,
+в отличие от возврата из внешней DocumentsUI Activity) нужно вернуться к
+«Restore», расположенному ВЫШЕ текущей позиции, а исходный `swipe_to_text`
+скроллит только вниз. Обе доработки не меняют поведение существующих трёх
+проб (`open_settings_scrolled_to`/`saf_save_document`/`saf_pick_file`
+сохранили старую сигнатуру с обратно совместимыми опциональными
+параметрами/новыми отдельными функциями) — regression-прогон
+`test_saf_infra_probe.py` подтверждает: 3/3 без изменений.
+
+Witness: `Invoke-Pytest tests/test_backup_restore.py -v` — 3 прогона подряд
+(`1 passed in 58.60s` / `57.64s` / `59.38s`, `PYTEST_EXIT=0` во всех);
+`Invoke-Pytest tests/test_saf_infra_probe.py -v` — `3 passed in 107.32s`,
+`PYTEST_EXIT=0` (regression без изменений); `python scripts/arch_check.py` —
+`ошибок 0, предупреждений 0`. `app-under-test/` не тронут.
+
+Последний открытый пункт критерия Fixed («TC-021 доведён до зелёного
+прогона») закрыт этим инкрементом. Статус бага НЕ меняю (Open→Fixed —
+переход test-maintainer/Lead по D-0037/матрице «Роль ≠ ярус», не входит в
+мандат test-automator) — оформляется отдельно.

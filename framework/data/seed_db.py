@@ -8,6 +8,7 @@
 """
 from __future__ import annotations
 
+import json
 import shutil
 import sqlite3
 import tempfile
@@ -142,6 +143,44 @@ def seed_with_comment(
         _insert_rows_full(db, rows)
         adb.run_as(f"rm -f {_WAL} {_SHM}")
         adb.push_app_file(db, _DB_REL)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def read_work_ratings() -> dict[str, dict]:
+    """Пуллит ТЕКУЩУЮ БД приложения (без записи/сидинга) и читает
+    rating/comment/tags/fandom/wordCount по каждой строке `work_ratings` —
+    используется для сверки round-trip Backup -> Clear -> Restore (TC-021):
+    сравнение восстановленных полей с исходными засеянными значениями напрямую
+    через Room, а не через текст UI (не зависит от локали форматирования чисел
+    на карточке Library — см. заметки `framework/steps/backup_steps.py`).
+    `tags` разбирается из JSON-массива (см. `Converters.fromTagList`/`toTagList`
+    в app-under-test) обратно в список строк, `None` если пусто.
+
+    В отличие от `seed()`/`seed_with_comment()` не требует остановленного
+    приложения перед вызовом (запись не производится, только чтение уже
+    зафиксированных Room данных) — вызывается, пока приложение открыто на
+    экране Settings после Restore."""
+    tmp = Path(tempfile.mkdtemp(prefix="ao3read_"))
+    try:
+        db = _pull_baseline(tmp)
+        con = sqlite3.connect(db)
+        con.row_factory = sqlite3.Row
+        cur = con.execute(
+            "SELECT ao3Id, rating, comment, tags, fandom, wordCount FROM work_ratings"
+        )
+        rows: dict[str, dict] = {}
+        for row in cur:
+            tags = json.loads(row["tags"]) if row["tags"] else None
+            rows[row["ao3Id"]] = {
+                "rating": row["rating"],
+                "comment": row["comment"],
+                "tags": tags,
+                "fandom": row["fandom"],
+                "word_count": row["wordCount"],
+            }
+        con.close()
+        return rows
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
