@@ -2,7 +2,7 @@
 key: "TC-037"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p3"
 summary: "Scan for downloads (ручной триггер) показывает диалог результата даже при 0 файлов"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T17:17:15Z"
-updated: "2026-07-02T17:17:15Z"
+created: "2026-07-15T14:43:21Z"
+updated: "2026-07-15T14:43:21Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Scan for downloads (ручной триггер) показывает диалог результата даже при 0 файлов
 
 _Спроецировано из `test-cases/downloads/TC-037.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-037 — Ручной Scan for downloads без файлов показывает диалог "0 файлов"
 

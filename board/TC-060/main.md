@@ -2,7 +2,7 @@
 key: "TC-060"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Фильтр по личным тегам сужает список по AND-семантике (все выбранные теги, не хотя бы один)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-14T20:00:00Z"
-updated: "2026-07-14T20:00:00Z"
+created: "2026-07-15T14:41:10Z"
+updated: "2026-07-15T14:41:10Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Фильтр по личным тегам сужает список по AND-семантике (все выбранные теги, не хотя бы один)
 
 _Спроецировано из `test-cases/library/TC-060.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-060 — Личные теги: фильтр по AND, не по OR
 

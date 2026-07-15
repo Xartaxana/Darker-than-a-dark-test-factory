@@ -2,7 +2,7 @@
 key: "TC-057"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p3"
 summary: "Кнопка Home в side panel переводит активную вкладку на главную страницу AO3"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-10T00:00:00Z"
-updated: "2026-07-10T00:00:00Z"
+created: "2026-07-15T14:42:20Z"
+updated: "2026-07-15T14:42:20Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Кнопка Home в side panel переводит активную вкладку на главную страницу AO3
 
 _Спроецировано из `test-cases/browser/TC-057.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-057 — Side panel Home переводит активную вкладку на главную AO3
 

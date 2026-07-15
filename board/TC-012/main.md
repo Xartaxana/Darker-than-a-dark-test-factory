@@ -2,8 +2,8 @@
 key: "TC-012"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
-priority: "p1"
+status: "tc-approved"
+priority: "p2"
 summary: "applyRatings синхронизирует бейдж во всех открытых вхождениях одной работы на странице"
 assignee: "qa-agents"
 reporter: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-08T19:00:00Z"
-updated: "2026-07-08T19:00:00Z"
+created: "2026-07-15T14:42:08Z"
+updated: "2026-07-15T14:42:08Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # applyRatings синхронизирует бейдж во всех открытых вхождениях одной работы на странице
 
 _Спроецировано из `test-cases/rating/TC-012.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-012 — Синхронизация бейджа при нескольких вхождениях одной работы на странице
 

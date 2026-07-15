@@ -2,7 +2,7 @@
 key: "TC-056"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p3"
 summary: "Личный тег, совпадающий с AO3-тегом карточки, подсвечивается на листинге"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-10T00:00:00Z"
-updated: "2026-07-10T00:00:00Z"
+created: "2026-07-15T14:43:00Z"
+updated: "2026-07-15T14:43:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Личный тег, совпадающий с AO3-тегом карточки, подсвечивается на листинге
 
 _Спроецировано из `test-cases/rating/TC-056.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-056 — Совпадающий личный тег подсвечивается на карточке листинга
 

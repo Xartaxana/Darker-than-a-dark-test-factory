@@ -2,7 +2,7 @@
 key: "TC-061"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Свободный текстовый поиск по Library сужает список до совпадений в любом поле"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-14T20:00:00Z"
-updated: "2026-07-14T20:00:00Z"
+created: "2026-07-15T14:41:14Z"
+updated: "2026-07-15T14:41:14Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Свободный текстовый поиск по Library сужает список до совпадений в любом поле
 
 _Спроецировано из `test-cases/library/TC-061.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-061 — Free-text search по Library ищет по title/author/fandom/tags/comment
 

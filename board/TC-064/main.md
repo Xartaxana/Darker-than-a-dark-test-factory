@@ -2,7 +2,7 @@
 key: "TC-064"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Сортировка Author (A–Z) упорядочивает по автору, работы с пустым author уходят в конец"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-14T20:00:00Z"
-updated: "2026-07-14T20:00:00Z"
+created: "2026-07-15T14:41:26Z"
+updated: "2026-07-15T14:41:26Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Сортировка Author (A–Z) упорядочивает по автору, работы с пустым author уходят в конец
 
 _Спроецировано из `test-cases/library/TC-064.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-064 — Сортировка Author (A–Z): алфавит + пустой author в конце
 

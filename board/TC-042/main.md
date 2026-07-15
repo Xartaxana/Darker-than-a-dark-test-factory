@@ -2,7 +2,7 @@
 key: "TC-042"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Удаление фильтр-профиля из Settings убирает его из списка и панели"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T17:18:24Z"
-updated: "2026-07-02T17:18:24Z"
+created: "2026-07-15T17:20:00Z"
+updated: "2026-07-15T17:20:00Z"
 archived: false
 resolution: null
 ---
@@ -52,6 +52,14 @@ A" и "Profile B"
 - Требует того же расширения сидинга, что и TC-041 (таблица `filter_profiles`).
 - Наличие второго профиля (Profile B) в Given — намеренно, чтобы отличить "удалён
   именно нужный элемент" от "весь список случайно очищен".
+- **Автоматизирован (AT-BUG-006, инкремент 2):** листинговая часть "And" использует
+  СУЩЕСТВУЮЩУЮ synthetic-фикстуру `listing_basic.mitm` (не реальную запись формы
+  Sort & Filter из TC-040) — нативная `FilterPanel` (`BottomBar.kt`) видна на любой
+  странице, чей URL проходит `BrowserViewModel.FILTERABLE_PAGE`, независимо от
+  реальности разметки формы; сама AO3-форма Sort & Filter в этой проверке не
+  участвует. Кейс выбран вместо TC-041 именно по этой причине — TC-041 требует
+  навигации с параметрами (`work_search[...]`), которая не матчится ни с одним
+  offline-recorded flow и уходит в live-сеть при server-replay.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»

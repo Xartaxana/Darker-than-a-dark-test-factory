@@ -2,7 +2,7 @@
 key: "TC-024"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p3"
 summary: "Более 5 закрытых вкладок вытесняют самый старый снапшот из Undo-истории"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T17:31:23Z"
-updated: "2026-07-02T17:31:23Z"
+created: "2026-07-15T14:43:14Z"
+updated: "2026-07-15T14:43:14Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Более 5 закрытых вкладок вытесняют самый старый снапшот из Undo-истории
 
 _Спроецировано из `test-cases/tabs/TC-024.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-024 — Эвикция самого старого снапшота при 6-м закрытии подряд
 

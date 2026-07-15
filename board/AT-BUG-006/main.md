@@ -2,7 +2,7 @@
 key: "AT-BUG-006"
 project: "AO3"
 issueType: "bug"
-status: "bug-open"
+status: "bug-fixed"
 priority: "p2"
 summary: "Таблица filter_profiles не поддержана в seed_db.py и нет replay-записи формы AO3 Sort&Filter — блокирует автоматизацию батча filter-profiles (TC-040/041/042, P1)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-10T16:20:00Z"
-updated: "2026-07-10T16:20:00Z"
+created: "2026-07-15T17:20:00Z"
+updated: "2026-07-15T17:20:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Таблица filter_profiles не поддержана в seed_db.py и нет replay-записи формы AO3 Sort&Filter — блокирует автоматизацию батча filter-profiles (TC-040/041/042, P1)
 
 _Спроецировано из `bugs/AT-BUG-006.md` (источник правды).
-Статус в нашей машине: **Open**._
+Статус в нашей машине: **Fixed**._
 
 # AT-BUG-006 — Инфраструктура filter-profiles не доведена (сидинг + replay-запись формы)
 
@@ -140,3 +140,110 @@ recording_builder», развилка из критерия готовности
    реальной страницы (а не реконструируется по памяти); факт фолбэка, причина и
    источник DOM фиксируются здесь же в Обсуждении.
 Очерёдность — по HANDOFF: после AT-BUG-007 (в работе) и R14 library-батча.
+
+**2026-07-15T17:20:00Z — test-maintainer (инкремент 2, грани 2 и 3 критерия
+готовности — ЗАКРЫВАЮТ бага, все 4 пункта критерия готовности выполнены):**
+
+Грань 2 (реальная replay-запись формы Sort & Filter) — реальная запись, фолбэк
+НЕ понадобился (стабильно с первой попытки):
+- Записана `framework/data/recordings/sort_filter_form.mitm` (184 KiB) —
+  реальная страница `https://archiveofourown.org/tags/Fluff/works` (tag-browse,
+  соответствует `BrowserViewModel.FILTERABLE_PAGE`), записана через
+  `mitmdump -w` в LIVE-режиме (реальный WebView-навигейт через Appium, прокси
+  `10.0.2.2:8080`, эмулятор `-writable-system` + `install-mitm-ca.sh`/
+  `Install-MitmCA` — по процедуре из решения Lead выше).
+- Критерий приёмки записи проверен ДВАЖДЫ, обоими путями:
+  (а) в момент самой LIVE-записи: WebView отрисовал реальную форму
+  `#work-filters` (найдена по `document.querySelector`), кнопка "Save filter"
+  инжектирована bridge-скриптом (`[data-ao3-save-profile]` найден в DOM) — это и
+  есть предмет проверки TC-040 (инжекция в РЕАЛЬНУЮ вёрстку формы);
+  (б) в REPLAY-режиме (тот же `.mitm`, тот же URL, через тот же WebView/Appium
+  round-trip, без live-сети для точного URL): форма `#work-filters` присутствует
+  в исходной разметке, кнопка "Save filter" инжектируется — round-trip
+  подтверждён `page_source`-проверкой через реальный Appium-сеанс (не только
+  offline HTTP-сверкой байтов, хотя она тоже сделана как промежуточный шаг:
+  `mitm.start_replay` + сырой HTTP-клиент с ручной brotli-декомпрессией
+  (`content-encoding: br`, ответ AO3 сжат) подтвердил `id="work-filters"` и
+  `name="commit"` в теле байт-в-байт идентичного recorded-flow).
+- Побочная находка (не блокер, для протокола): раскодировать `content-encoding:
+  br` вручную понадобилось ТОЛЬКО для offline-сверки сырым `urllib`-клиентом
+  (`brotli`-пакет уже в venv как транзитивная зависимость mitmproxy, отдельная
+  установка не понадобилась) — сам WebView/chromedriver декодирует brotli
+  прозрачно, эта деталь не влияет на тесты через `driver`.
+
+Грань 3 (хотя бы один из TC-041/TC-042 зелёный) — выбран **TC-042** (не TC-041):
+- TC-041 требует навигации С параметрами (`applyFilter` в `BrowserViewModel.kt`
+  добавляет `work_search[...]` к URL при выборе профиля) — при `server_replay`
+  результирующий URL НЕ совпадает ни с одним записанным flow (хэш матчинга —
+  scheme+method+path+query+host+port, см. докстринг `recording_builder.py`) и
+  уходит на живой AO3 (`server_replay_extra=forward`) — вносит недетерминизм/
+  сетевую зависимость в offline по духу replay-тест. TC-042 этой проблемы не
+  имеет: и переход в Settings, и раскрытие `FilterPanel` листинга (её текстовые
+  пункты выпадашки) — целиком нативные/native-UI операции, listing-URL не
+  меняется. Оставлено в очереди (не расширяю scope, D-0037) — либо принять
+  live-переход для TC-041, либо расширить `recording_builder.py` записью под
+  filtered-URL.
+- Реализовано: `framework/tests/conftest.py::two_filter_profiles_seeded`
+  (по образцу `seeded_library` — сидинг ДО сессии Appium), локаторы —
+  `framework/screens/settings_screen.py::has_filter_profile/delete_filter_profile`
+  (Compose IconButton `Rename`/`Delete` НЕ мержит content-desc с clickable-
+  родителем — оба "Delete" на экране с одинаковым content-desc, диспамбигуация
+  через XPath `following::` от текстового узла с именем профиля, сверено живым
+  деревом `scripts/ui_snapshot.py`; секция «Saved AO3 Filters» ниже fold —
+  добавлен свайп `swipe_to_text`/`swipe_up_to_text` до проверки, без него
+  узлы отсутствуют в дереве вовсе, не просто за экраном) и
+  `framework/screens/browser_screen.py::open_filter_dropdown/
+  filter_dropdown_has_option` (нативная `FilterPanel` из `BottomBar.kt` — видна
+  на ЛЮБОЙ странице, чей URL проходит `FILTERABLE_PAGE`, независимо от
+  реальности формы Sort & Filter; используется существующая synthetic-фикстура
+  `listing_basic.mitm`, отдельная реальная запись тут не нужна). Шаги — новые
+  функции в `framework/steps/settings_steps.py`/`framework/steps/browser_steps.py`.
+  Тест — `framework/tests/test_filter_profiles.py::test_delete_filter_profile`
+  (`@pytest.mark.p1 @pytest.mark.replay`, `listing_basic.mitm`).
+- Витнес: 3 прогона подряд зелёные —
+  `Invoke-Pytest tests/test_filter_profiles.py -v` → `1 passed` (84–86s каждый),
+  `PYTEST_EXIT=0` все три раза. `test-cases/filter-profiles/TC-042.md`:
+  `automated_by: TC-042` (тест), статус кейса остаётся `Approved`.
+
+Смоук без регресса: `Invoke-Pytest -m p0 -v` → **19 passed** (10м36с), включая
+`TC-013` (класс AT-BUG-009 не проявился в этом прогоне — наблюдение №4,
+позиционно-детерминированный флаки не на каждом прогоне). `arch_check.py` →
+0 ошибок/0 предупреждений. `test_seed_filter_profiles_unit.py` (грань 1, файл
+не трогался) — по-прежнему `2 passed`, регресса нет.
+
+TC-040 (сам зелёный UI-тест) — не в скоупе этого инкремента (non-goals
+диспатча: обязателен только факт успешной записи+верификации, не сам тест);
+инфраструктура (`selectors.SAVE_PROFILE_BTN` уже существовал в
+`framework/web/selectors.py` до этого инкремента) готова для будущей
+автоматизации test-automator'ом при решении о переводе TC-040 в очередь.
+
+**Итог: все 4 пункта критерия готовности закрыты** (сидинг — инкремент 1;
+реальная запись+верификация — грань 2 этого инкремента; TC-042 зелёный x3 —
+грань 3; смоук без регресса — выше). Статус переведён `Open → Fixed` (мандат
+test-maintainer по B4, тот же test_debt-долг с этим же id уже был диспетчирован
+дважды/один раз внутри одного бага двумя инкрементами — не новая задача).
+Изменения на момент записи ещё НЕ закоммичены (см. `fixed_in`) — commit
+hash добавит принимающая сторона после коммита. Таблицу «Верификация» ниже
+намеренно не трогаю — по конвенции файла её заполняет fix-verifier.
+
+Замеченный аналог вне owns (докладываю, не чиню — D-0037): в ходе диагностики
+окружения этого инкремента дважды воспроизведён крэш `qemu-system-x86_64.exe`
+(`0xc0000005`, Application-лог Windows) и серия зависаний Appium
+`driver.get()`/`driver.current_context` (120–240с `ReadTimeoutError`) —
+установлено экспериментально, что причина не в записи/replay-механике (та же
+`.mitm`-запись и обычная навигация приложения без mitm ОБЕ повисали в
+деградированном состоянии окружения), а в накопленной деградации сессии
+эмулятора+Appium ПОСЛЕ моей же ошибки (случайный параллельный запуск ВТОРОГО
+инстанса эмулятора в начале инкремента оставил стэйл-локи
+`hardware-qemu.ini.lock`/`multiinstance.lock` в `tools/avd/ao3_test_api34.avd`).
+Полный холодный ребут эмулятора (`-no-snapshot-load`, снятие стэйл-локов,
+`Stop-NodeProcesses`+`Start-Appium` заново) устранил проблему полностью —
+дальше ни одного зависания/крэша до конца инкремента. Новый test_debt-баг НЕ
+заведён: это не пре-существующий дефект инфраструктуры, а последствие моей
+собственной операционной ошибки (сам себя починил), детектор — сама попытка
+воспроизвести на чистом окружении (см. класс F-9/правило 9 CLAUDE.md: чинил
+класс — держать стэйл-локи под подозрением при следующем «висит на
+wait-for-device»/зависании Appium после незапланированного параллельного
+запуска эмулятора). Если кто-то столкнётся с ЭТИМ ЖЕ симптомом БЕЗ
+предшествующего параллельного запуска — это уже другой класс, заводить
+отдельно.

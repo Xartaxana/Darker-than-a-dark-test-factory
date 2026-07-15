@@ -2,7 +2,7 @@
 key: "TC-058"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p3"
 summary: "Fullscreen toggle в side panel скрывает верхнюю полосу вкладок и переключает подпись контрола (вход и выход)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-10T00:00:00Z"
-updated: "2026-07-10T00:00:00Z"
+created: "2026-07-15T14:42:31Z"
+updated: "2026-07-15T14:42:31Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Fullscreen toggle в side panel скрывает верхнюю полосу вкладок и переключает подпись контрола (вход и выход)
 
 _Спроецировано из `test-cases/browser/TC-058.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-058 — Side panel Fullscreen toggle скрывает TabStrip и переключает подпись (вход/выход)
 

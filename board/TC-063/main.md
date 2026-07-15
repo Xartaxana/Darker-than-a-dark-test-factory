@@ -2,7 +2,7 @@
 key: "TC-063"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Сортировка Word count (low to high) упорядочивает по возрастанию и сбрасывает скролл"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-14T20:00:00Z"
-updated: "2026-07-14T20:00:00Z"
+created: "2026-07-15T14:41:24Z"
+updated: "2026-07-15T14:41:24Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Сортировка Word count (low to high) упорядочивает по возрастанию и сбрасывает скролл
 
 _Спроецировано из `test-cases/library/TC-063.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-063 — Сортировка Word count (low to high) и сброс скролла
 

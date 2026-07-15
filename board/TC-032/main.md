@@ -2,7 +2,7 @@
 key: "TC-032"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Авто-скачивание запускается при простановке Loved с включённым Auto-download"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-08T17:26:00Z"
-updated: "2026-07-08T17:26:00Z"
+created: "2026-07-15T14:40:46Z"
+updated: "2026-07-15T14:40:46Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Авто-скачивание запускается при простановке Loved с включённым Auto-download
 
 _Спроецировано из `test-cases/downloads/TC-032.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-032 — Авто-скачивание при рейтинге Loved
 

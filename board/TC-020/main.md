@@ -2,7 +2,7 @@
 key: "TC-020"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p3"
 summary: "Clear all ratings сбрасывает бейджи на открытых страницах AO3 без перезагрузки"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T17:15:54Z"
-updated: "2026-07-02T17:15:54Z"
+created: "2026-07-15T14:43:10Z"
+updated: "2026-07-15T14:43:10Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Clear all ratings сбрасывает бейджи на открытых страницах AO3 без перезагрузки
 
 _Спроецировано из `test-cases/settings/TC-020.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-020 — Сброс бейджей на открытой странице AO3 после Clear all ratings
 
