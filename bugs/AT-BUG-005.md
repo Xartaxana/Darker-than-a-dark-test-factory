@@ -563,3 +563,11 @@ tests/test_saf_infra_probe.py -v` — `3 passed in 113.39s`, `PYTEST_EXIT=0`
 `framework/steps/settings_steps.py` (`assert_no_scan_complete_dialog`),
 `framework/data/works.py` (`RESTORE_SCAN_TARGET`),
 `test-cases/downloads/TC-039.md`, `state/traceability.md`.
+
+**2026-07-15T14:00:00Z — bug-reporter (заведение app_bug на основе находки test-automator):**
+Классовая находка async-race из записи test-automator выше (момент между `saf_pick_folder`
+и импортом из backup, когда async-скан папки успевает создать stub-запись в Room для уже
+существующего ao3Id) выписана в отдельный баг приложения `BUG-011` с severity minor.
+Это app_bug, не test_debt: поведение `SettingsViewModel.setDownloadFolderUri` + `importFromUri`
+живёт в коде приложения, не в инфраструктуре тестов (хотя находка поймана при автоматизации TC-039).
+Обратная ссылка и перекрёстная трассировка в `BUG-011.md`.

@@ -1,12 +1,12 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-15T13:16:06Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-07-15T13:30:14Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **321.7** (RUN-20260702-0300)
+- smoke: Closed · smoke_freshness_hours: **321.9** (RUN-20260702-0300)
 - regression: not_run
 - canary: not_run
 - Открытые blocker/critical: **0**
@@ -42,10 +42,11 @@ generated_at: 2026-07-15T13:16:06Z · генератор: `scripts/queue_snapsho
 | tabs |  | 1 | 4 |  |  |
 | visibility |  | 3 |  |  |  |
 
-## Баги (1)
+## Баги (2)
 
-- Open: **1**
+- Open: **2**
 - BUG-001 [minor] Open — PROJECT.md расходится с кодом: подписи вкладок Library/меню рейтинга; несуществующий глобальный «Enable filtering»
+- BUG-011 [minor] Open — Restore from backup пропускает работы молча, если файл с тем же ao3Id уже лежит в папке загрузок
 
 ## Известные проблемы, known_issue (0)
 
