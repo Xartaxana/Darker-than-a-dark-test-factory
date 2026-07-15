@@ -157,6 +157,22 @@ def comment_only_work():
 
 
 @pytest.fixture()
+def two_filter_profiles_seeded():
+    """Два фильтр-профиля ("Profile A"/"Profile B", различимые queryString) засеяны
+    в `filter_profiles` ДО старта сессии Appium — тот же порядок обязателен, что и
+    `seeded_library` (AT-BUG-006, грань 3: TC-042 требует ДВА одновременных профиля,
+    чтобы отличить «удалён именно нужный» от «весь список случайно очищен»).
+    `seed_db.seed_filter_profiles` генерирует `id`/`timestamp` сама — вызывающему
+    коду (кейсам) они не нужны, сверка по имени/queryString."""
+    app_steps.clean_state()
+    app_steps.seed_filter_profiles([
+        ("Profile A", "work_search%5Bquery%5D=profile-a-test"),
+        ("Profile B", "work_search%5Bquery%5D=profile-b-test"),
+    ])
+    yield ("Profile A", "Profile B")
+
+
+@pytest.fixture()
 def replay(request):
     """Поднимает mitmdump в режиме server-replay на записи `request.param` (имя файла
     в `framework/data/recordings/`) и направляет прокси устройства на него на время

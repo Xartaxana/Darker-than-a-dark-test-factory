@@ -83,6 +83,27 @@ def dismiss_scan_dialog(driver) -> None:
     BaseScreen(driver).tap(BaseScreen(driver).by_text("OK"))
 
 
+# --- Saved AO3 Filters (TC-042: удаление фильтр-профиля из Settings) ---
+
+@allure.step("Then в Settings в секции «Saved AO3 Filters» отображается профиль «{name}»")
+def assert_filter_profile_listed(driver, name: str, timeout: int | None = None):
+    assert SettingsScreen(driver).has_filter_profile(name, timeout=timeout), (
+        f"фильтр-профиль «{name}» не найден в списке Settings"
+    )
+
+
+@allure.step("Then в Settings в секции «Saved AO3 Filters» профиль «{name}» отсутствует")
+def assert_filter_profile_not_listed(driver, name: str, timeout: int = 3):
+    assert not SettingsScreen(driver).has_filter_profile(name, timeout=timeout), (
+        f"фильтр-профиль «{name}» всё ещё виден в списке Settings — ожидали удалённым"
+    )
+
+
+@allure.step("When в Settings удалён фильтр-профиль «{name}»")
+def delete_filter_profile(driver, name: str):
+    SettingsScreen(driver).delete_filter_profile(name)
+
+
 @allure.step("Then диалог «Scan complete» НЕ появляется (не два диалога подряд)")
 def assert_no_scan_complete_dialog(driver, timeout: int = 3) -> None:
     """TC-039: ключевой наблюдаемый факт кейса — РОВНО один диалог результата после

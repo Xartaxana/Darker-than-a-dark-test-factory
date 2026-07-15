@@ -141,6 +141,22 @@ class BrowserScreen(BaseScreen):
         total = sum(hist)
         return sum(i * c for i, c in enumerate(hist)) / total
 
+    # --- Filter panel (BottomBar.kt FilterPanel — "AO3 filter: <name>" триггер +
+    # выпадашка сохранённых FilterProfile) — TC-041/TC-042. Видна только на
+    # BROWSE + filterable-странице (BrowserViewModel.FILTERABLE_PAGE regex по
+    # URL активной вкладки), И только когда нижняя pill-ручка раскрыта
+    # (AnimatedVisibility делит секцию с Ao3BottomNav — см. navigation.py) —
+    # раскрытие ручки не входит сюда: композиция с BottomNav делается в
+    # browser_steps.py, эта панель знает только про сам триггер/пункты. ---
+    _FILTER_TRIGGER = (AppiumBy.ANDROID_UIAUTOMATOR, 'new UiSelector().textContains("AO3 filter")')
+
+    def open_filter_dropdown(self, timeout: int | None = None) -> None:
+        contexts.to_native(self.driver)
+        self.tap(self._FILTER_TRIGGER, timeout=timeout)
+
+    def filter_dropdown_has_option(self, name: str, timeout: int | None = None) -> bool:
+        return self.is_present(self.by_text(name), timeout=timeout if timeout is not None else 5)
+
     def webview_avg_luma(self) -> float:
         """Средняя яркость (0..255) области экрана, занятой нативным WebView-элементом —
         изолирует WebView-контент (страница AO3) от Compose-хрома вокруг (top bar/bottom

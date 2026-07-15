@@ -8,6 +8,7 @@ from framework.config import settings
 from framework.core import contexts
 from framework.core.waits import wait_until
 from framework.screens.browser_screen import BrowserScreen
+from framework.screens.navigation import BottomNav
 from framework.web import selectors
 from framework.web.downloaded_work_page import DownloadedWorkPage
 from framework.web.listing_page import ListingPage
@@ -156,3 +157,29 @@ def assert_rating_badge_visible(driver, work_id: str):
             lambda d: ListingPage(d).badge_for(work_id),
             message=f"бейдж рейтинга работы {work_id} не появился на листинге после простановки",
         )
+
+
+# --- Filter panel (BottomBar.kt FilterPanel, TC-041/TC-042) ---
+
+@allure.step("When раскрыта выпадашка «AO3 filter:» на листинге")
+def open_filter_dropdown(driver):
+    """Панель — часть секции, скрытой за нижней pill-ручкой на вкладке BROWSE
+    (см. `framework/screens/navigation.py`) — раскрытие ручки нужно ПЕРЕД тапом
+    по триггеру, отдельно от `BrowserScreen.open_filter_dropdown` (та знает
+    только про сам триггер, композиция с BottomNav — здесь, в steps)."""
+    BottomNav(driver).ensure_visible()
+    BrowserScreen(driver).open_filter_dropdown()
+
+
+@allure.step("Then в выпадашке фильтра предложен профиль «{name}»")
+def assert_filter_offered(driver, name: str):
+    assert BrowserScreen(driver).filter_dropdown_has_option(name), (
+        f"профиль «{name}» не предложен в выпадашке фильтра на листинге"
+    )
+
+
+@allure.step("Then в выпадашке фильтра профиль «{name}» НЕ предложен")
+def assert_filter_not_offered(driver, name: str, timeout: int = 3):
+    assert not BrowserScreen(driver).filter_dropdown_has_option(name, timeout=timeout), (
+        f"профиль «{name}» всё ещё предложен в выпадашке фильтра — ожидали удалённым"
+    )

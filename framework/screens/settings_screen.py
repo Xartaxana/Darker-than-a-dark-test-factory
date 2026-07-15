@@ -49,3 +49,42 @@ class SettingsScreen(BaseScreen):
 
     def is_loaded(self) -> bool:
         return self.is_present(self.THEME_HEADER, timeout=10)
+
+    # --- Saved AO3 Filters (секция "SAVED AO3 FILTERS", SettingsScreen.kt) — TC-042 ---
+    # `Rename`/`Delete` IconButton каждой строки делят ОДИН и тот же content-desc
+    # на весь экран (Compose IconButton не мержит семантику Icon-child со своим
+    # clickable-родителем — сверено живым деревом, scripts/ui_snapshot.py: узел
+    # content-desc="Delete" — отдельный ЛИСТ с clickable="false", кликабелен сам
+    # родительский View БЕЗ описания). При >1 засеянном профиле `by_desc("Delete")`
+    # неоднозначен — единственный надёжный способ взять "чужой" Delete: XPath
+    # `following::` от текстового узла с ИМЕНЕМ профиля до БЛИЖАЙШЕГО следующего
+    # content-desc="Delete" в document order (порядок в дереве строго
+    # name -> summary -> Rename -> Delete -> [следующий профиль] — сверено тем же
+    # снапшотом). Appium `.click()` тапает по bounds листа независимо от его
+    # собственного атрибута `clickable` — тап попадает в touch-область родительской
+    # IconButton (тот же приём, что `SettingsScreen.open_clear_all_dialog` уже
+    # использует для некликабельного текстового узла).
+    # `has_filter_profile`/`delete_filter_profile` СНАЧАЛА свайпают к тексту профиля
+    # (`swipe_to_text`, тот же приём, что `open_clear_all_dialog`) — секция
+    # «SAVED AO3 FILTERS» ниже "fold" сразу после открытия Settings (сверено живым
+    # деревом: строки профилей физически ОТСУТСТВУЮТ в дампе, пока не проскроллено —
+    # это НЕ просто bounds за экраном, узлов нет вовсе, `is_present` без свайпа
+    # детерминированно возвращает False).
+    def _swipe_to_profile(self, name: str) -> bool:
+        """Свайп вниз, а если не нашли (например, экран уже проскроллен НИЖЕ секции
+        предыдущим вызовом — свайп вверх/вниз не сбрасывает позицию сам) — фолбэк
+        свайпом вверх."""
+        return self.swipe_to_text(name) or self.swipe_up_to_text(name)
+
+    def has_filter_profile(self, name: str, timeout: int | None = None) -> bool:
+        if not self._swipe_to_profile(name):
+            return False
+        return self.is_present(self.by_text(name), timeout=timeout if timeout is not None else 8)
+
+    def _delete_button_locator(self, name: str):
+        return (AppiumBy.XPATH, f'(//*[@text="{name}"]/following::*[@content-desc="Delete"])[1]')
+
+    def delete_filter_profile(self, name: str):
+        assert self._swipe_to_profile(name), f"профиль «{name}» не найден прокруткой"
+        self.tap(self._delete_button_locator(name))
+        return self
