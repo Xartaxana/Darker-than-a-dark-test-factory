@@ -2,27 +2,27 @@
 key: "TC-039"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p2"
 summary: "Restore from backup сворачивает результат scanForOrphanedDownloads в один диалог"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:downloads", "risk:R-05"]
+labels: ["test-case", "area:downloads", "risk:R-05", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-15T13:35:00Z"
-updated: "2026-07-15T13:35:00Z"
+created: "2026-07-15T15:55:00Z"
+updated: "2026-07-15T15:55:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Restore from backup сворачивает результат scanForOrphanedDownloads в один диалог
 
 _Спроецировано из `test-cases/downloads/TC-039.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-039 — Restore + auto-scan показывают ровно один диалог
 

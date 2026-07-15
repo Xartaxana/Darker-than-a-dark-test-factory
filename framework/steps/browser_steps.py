@@ -14,6 +14,8 @@ from framework.web.downloaded_work_page import DownloadedWorkPage
 from framework.web.listing_page import ListingPage
 from framework.web.reader_page import ReaderPage
 
+HOME_URL = "https://archiveofourown.org"
+
 
 @allure.step("Then измерена высота заголовка страницы AO3 в WebView")
 def measure_heading_height(driver) -> float:
@@ -87,6 +89,24 @@ def assert_downloaded_page_styled(driver):
         page = DownloadedWorkPage(driver)
         page.wait_viewport_meta()
         page.wait_reader_css()
+
+
+@allure.step("Then активная вкладка загрузила {url}")
+def assert_active_tab_url(driver, url: str = HOME_URL, timeout: int | None = None):
+    """Опрашивает `current_url`, а не читает его один раз: `onNavigateHome`
+    (MainActivity.kt) пишет `pendingNavigationUrl` в `BrowserViewModel.uiState`
+    асинхронно, применяется отдельным `LaunchedEffect` в `BrowserScreen.kt`
+    (~212-218) через `webViews[activeId]?.loadUrl(url)` — одноразовое чтение сразу
+    после действия было бы гонкой (тот же класс, что устранён в
+    `assert_blurb_hidden`, см. AT-BUG-004). Сравнение без хвостового «/» — WebView
+    может нормализовать корневой URL добавлением слэша."""
+    with contexts.in_webview(driver):
+        wait_until(
+            driver,
+            lambda d: (d.current_url or "").rstrip("/") == url.rstrip("/"),
+            timeout=timeout or settings.WEBVIEW_LOAD_TIMEOUT,
+            message=f"URL активной вкладки не стал {url}",
+        )
 
 
 @allure.step("When открыта листинговая страница (replay-фикстура) {url}")

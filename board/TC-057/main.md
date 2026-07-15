@@ -2,7 +2,7 @@
 key: "TC-057"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p3"
 summary: "Кнопка Home в side panel переводит активную вкладку на главную страницу AO3"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-15T14:42:20Z"
-updated: "2026-07-15T14:42:20Z"
+created: "2026-07-15T16:20:00Z"
+updated: "2026-07-15T16:20:00Z"
 archived: false
 resolution: null
 ---

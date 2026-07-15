@@ -18,6 +18,8 @@ from framework.screens.base_screen import BaseScreen
 
 TO_DARK = "Switch to dark mode"
 TO_LIGHT = "Switch to light mode"
+HOME_DESC = "AO3 home"
+EXPAND_DESC = "Expand panel"
 
 
 class SidePanel(BaseScreen):
@@ -73,3 +75,20 @@ class SidePanel(BaseScreen):
 
     def is_decrease_enabled(self) -> bool:
         return self.is_enabled(self._button_container("A-"))
+
+    # --- Home (BrowseSidePanel.kt PanelIconButton Home, TC-057) ---
+    def home_icon_visible(self, timeout: int | None = None) -> bool:
+        # contentDescription фиксирован ("AO3 home") — не переключается по стейту,
+        # в отличие от Contrast/Fullscreen (см. заметки TC-057.md).
+        return self.is_present(self.by_desc(HOME_DESC), timeout=timeout or 5)
+
+    def tap_home(self):
+        self.tap(self.by_desc(HOME_DESC))
+        return self
+
+    def is_collapsed(self, timeout: int | None = None) -> bool:
+        # Позитивная проверка ("Expand panel" появился) быстрее негативной (ждать
+        # исчезновения "Collapse panel" пришлось бы до полного timeout) — ручка
+        # переключает contentDescription синхронно с panelExpanded (см. docstring
+        # модуля и BrowseSidePanel.kt:154), поэтому проверка не гонка.
+        return self.is_present(self.by_desc(EXPAND_DESC), timeout=timeout or 5)

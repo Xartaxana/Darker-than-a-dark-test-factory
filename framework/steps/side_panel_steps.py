@@ -54,3 +54,20 @@ def assert_increase_enabled(driver, expected: bool):
 def assert_decrease_enabled(driver, expected: bool):
     actual = SidePanel(driver).is_decrease_enabled()
     assert actual == expected, f"«A-» enabled={actual}, ожидали {expected}"
+
+
+@allure.step("Then side panel показывает иконку Home («AO3 home»)")
+def assert_home_icon_visible(driver):
+    assert SidePanel(driver).home_icon_visible(), \
+        "иконка Home («AO3 home») не видна в развёрнутой side panel"
+
+
+@allure.step("When нажата иконка Home (side panel)")
+def tap_home(driver):
+    SidePanel(driver).tap_home()
+
+
+@allure.step("Then side panel свёрнута автоматически (без отдельного действия)")
+def assert_collapsed(driver):
+    assert SidePanel(driver).is_collapsed(), \
+        "side panel должна была свернуться автоматически после нажатия Home"

@@ -10,7 +10,8 @@ from __future__ import annotations
 import allure
 import pytest
 
-from framework.steps import app_steps, browser_steps, settings_steps, side_panel_steps
+from framework.data import works as W
+from framework.steps import app_steps, browser_steps, rating_steps, settings_steps, side_panel_steps
 
 
 @pytest.mark.p1
@@ -187,3 +188,27 @@ def test_two_finger_drag_changes_brightness(clean_app, driver):
     assert restored_luma > darkened_luma * 1.3, (
         f"экран не посветлел после драга вверх: {darkened_luma:.1f} -> {restored_luma:.1f}"
     )
+
+
+@pytest.mark.p3
+@pytest.mark.live
+@allure.id("TC-057")
+@allure.title("Кнопка Home в side panel переводит активную вкладку на главную страницу AO3")
+def test_side_panel_home_navigates_active_tab_to_ao3_root(clean_app, driver):
+    # Given активная вкладка Browse открыта НЕ на главной AO3 — страница работы с
+    # синтетическим ao3_id (реальный сайт отдаёт 404, но URL меняется, что и нужно
+    # для Given; тот же приём, что TC-007/TC-008 уже применяют в test_rating.py),
+    # side panel развёрнут и показывает иконку Home
+    app_steps.wait_ui_ready(driver)
+    rating_steps.open_work_page(driver, W.LOVED.ao3_id)
+    side_panel_steps.expand(driver)
+    side_panel_steps.assert_home_icon_visible(driver)
+
+    # When пользователь нажимает иконку Home в side panel
+    side_panel_steps.tap_home(driver)
+
+    # Then WebView активной вкладки загружает главную страницу AO3 (URL становится
+    # равен HOME_URL)
+    browser_steps.assert_active_tab_url(driver, browser_steps.HOME_URL)
+    # And side panel сворачивается автоматически (без отдельного действия пользователя)
+    side_panel_steps.assert_collapsed(driver)
