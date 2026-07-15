@@ -348,16 +348,17 @@
     "epicPath": null,
     "summary": "Смена папки загрузок автоматически запускает silent-скан и перелинковывает orphan-файлы",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:downloads",
-      "risk:R-05"
+      "risk:R-05",
+      "automation:active"
     ],
-    "updated": "2026-07-14T22:15:00Z",
-    "resolution": null,
+    "updated": "2026-07-15T13:20:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -370,7 +371,7 @@
     "epicPath": null,
     "summary": "Restore from backup сворачивает результат scanForOrphanedDownloads в один диалог",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -378,7 +379,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-07-02T17:31:55Z",
+    "updated": "2026-07-15T13:35:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1555,9 +1556,10 @@
       "bug",
       "test_case:TC-021",
       "test_case:TC-038",
+      "test_case:TC-039",
       "sev:major"
     ],
-    "updated": "2026-07-14T22:15:00Z",
+    "updated": "2026-07-15T13:35:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1646,7 +1648,7 @@
       "test_case:TC-013",
       "sev:major"
     ],
-    "updated": "2026-07-14T21:00:00Z",
+    "updated": "2026-07-15T13:30:00Z",
     "resolution": null,
     "children": [],
     "archived": false

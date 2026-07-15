@@ -81,3 +81,19 @@ def assert_scan_complete_dialog(driver, expected_text: str, timeout: int = 15) -
 @allure.step("When диалог результата скана закрыт (OK)")
 def dismiss_scan_dialog(driver) -> None:
     BaseScreen(driver).tap(BaseScreen(driver).by_text("OK"))
+
+
+@allure.step("Then диалог «Scan complete» НЕ появляется (не два диалога подряд)")
+def assert_no_scan_complete_dialog(driver, timeout: int = 3) -> None:
+    """TC-039: ключевой наблюдаемый факт кейса — РОВНО один диалог результата после
+    Restore. `importFromUri` сворачивает `scanForOrphanedDownloads()` в тот же
+    `ImportState.Done` (тот же диалог, что уже проверен `assert_restore_result_dialog`)
+    и НЕ трогает `scanDownloadsState` (`SettingsScreen.kt:390-400`) — поэтому
+    отдельный диалог «Scan complete» структурно не может появиться следом; assert
+    проверяет это явно (короткое ожидание + отсутствие), а не только присутствие
+    первого диалога, как того требует заметка кейса про «not just present-check»."""
+    b = BaseScreen(driver)
+    assert not b.is_present(b.by_text("Scan complete"), timeout=timeout), (
+        "диалог «Scan complete» появился ПОСЛЕ диалога Restore — ожидали ровно один "
+        "объединённый диалог результата (Restored ... Also relinked ...), не два подряд"
+    )

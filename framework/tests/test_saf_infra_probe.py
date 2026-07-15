@@ -60,11 +60,23 @@ _IMPORT_FIXTURE_CONTENT = {
 def _adb_push(local_path: Path, remote_path: str) -> None:
     """Прямой `adb push` (не `framework.core.adb.push_app_file` — тот кладёт файл в
     приватную песочницу приложения через `run-as`; здесь нужен публичный `/sdcard`,
-    видимый системному picker'у, а не самому приложению)."""
-    cp = subprocess.run(
-        [settings.ADB, "-s", settings.DEVICE_NAME, "push", str(local_path), remote_path],
-        capture_output=True, text=True,
-    )
+    видимый системному picker'у, а не самому приложению).
+
+    AT-BUG-009, инкремент 2 (остаток класса из инкремента 1, не исправлен
+    тогда — вне `owns` той задачи): тот же паттерн, что `adb.py::_run()` —
+    конечный `timeout=settings.ADB_TRANSFER_TIMEOUT` (файловая операция, тот
+    же бюджет, что `push_app_file`), `subprocess.TimeoutExpired` оборачивается
+    в явную `TimeoutError` с контекстом вместо неограниченного клина."""
+    try:
+        cp = subprocess.run(
+            [settings.ADB, "-s", settings.DEVICE_NAME, "push", str(local_path), remote_path],
+            capture_output=True, text=True, timeout=settings.ADB_TRANSFER_TIMEOUT,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise TimeoutError(
+            f"adb push {local_path} {remote_path} не ответил за "
+            f"{settings.ADB_TRANSFER_TIMEOUT}s (AT-BUG-009)"
+        ) from exc
     assert cp.returncode == 0, f"adb push не выполнился: {cp.stdout}{cp.stderr}"
 
 

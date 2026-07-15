@@ -45,3 +45,10 @@ SCROLL_FILLERS = [
 # лежит orphan-файл, чьё имя оканчивается на "_<ao3_id>.html".
 ORPHAN_RELINK_TARGET = Work("900000038", "TC-038 Orphan Relink Target", "seed_author_orphan",
                             "Fandom Orphan", 750)
+
+# TC-039: работа НЕ засевается в Room заранее (Library пуста по Given кейса) — этот
+# ao3_id участвует только в backup JSON (importFromUri вставляет строку с
+# downloadPath=null) и в имени orphan-файла, положенного в SAF-папку загрузок ПОСЛЕ
+# её выбора (см. `app_steps.place_file_in_download_folder`).
+RESTORE_SCAN_TARGET = Work("900000039", "TC-039 Restore Scan Target", "seed_author_restore_scan",
+                           "Fandom Restore Scan", 650)

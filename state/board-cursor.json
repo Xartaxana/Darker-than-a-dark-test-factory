@@ -76,8 +76,8 @@
   },
   "TC-038": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-039": {
     "itype": "test-case",

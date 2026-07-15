@@ -7,14 +7,14 @@ priority: "p1"
 summary: "SAF file/folder picker не автоматизируется штатными Appium-локаторами — блокирует TC-021 (P0, backup/restore) и часть download/backup-кейсов"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["bug", "test_case:TC-021", "test_case:TC-038", "sev:major"]
+labels: ["bug", "test_case:TC-021", "test_case:TC-038", "test_case:TC-039", "sev:major"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-14T22:15:00Z"
-updated: "2026-07-14T22:15:00Z"
+created: "2026-07-15T13:35:00Z"
+updated: "2026-07-15T13:35:00Z"
 archived: false
 resolution: null
 ---
@@ -488,3 +488,82 @@ regression без изменений файла); `python scripts/arch_check.py`
 аналог `push_app_file` для публичного `/sdcard`), `framework/data/works.py`
 (`ORPHAN_RELINK_TARGET`), `test-cases/downloads/TC-038.md`,
 `state/traceability.md`.
+
+**2026-07-15T13:35:00Z — test-automator (TC-039 автоматизирован; новая
+находка в OpenDocumentTree-поверхности — race, не flaky-таймаут как выше, но
+тот же класс «поведение `setDownloadFolderUri` за пределами задокументированного
+на момент инкремента 1»):**
+
+`framework/tests/test_downloads.py::test_restore_folds_orphan_scan_into_single_dialog`
+реализован по инфраструктуре инкремента 1 (`saf_steps.saf_pick_folder`,
+`saf_pick_file` без изменения контракта) и зелёный 3/3 подряд
+(58.88s/51.26s/56.36s, `PYTEST_EXIT=0` во всех).
+
+**Новая находка (race, не блокер для TC-039 — обойдена на уровне теста, но
+затрагивает КЛАСС «файл кладётся в SAF-папку вокруг момента её выбора»):**
+`SettingsViewModel.setDownloadFolderUri` (`SettingsScreen.kt:523-529`) САМА
+синхронна (обновляет `uiState`/prefs/`downloadRepo.customFolderUri` в теле
+функции), но запускаемый ею `scanForDownloads(silent=true)` работает
+АСИНХРОННО (`viewModelScope.launch(Dispatchers.IO)`) — тап ALLOW в SAF-пикере
+(и, соответственно, возврат `saf_steps.saf_pick_folder`) НЕ гарантирует, что
+эта корутина уже прошлась по каталогу. Если положить целевой orphan-файл в
+папку ДО её выбора и рассчитывать (как для TC-038, где это штатно и
+безопасно) на синхронность скана — для TC-039 это ломает сценарий: работа с
+тем же `ao3Id` из backup ЕЩЁ НЕ существует в Room на момент этого скана
+(Given кейса — Library пуста), поэтому скан ДОБАВЛЯЕТ пустую stub-строку
+(`existing == null -> added++`) РАНЬШЕ, чем Restore успевает импортировать
+работу из backup, — и `importFromUri` видит `ao3Id in existingIds`,
+ПРОПУСКАЯ работу как дубликат. Воспроизведено ДЕТЕРМИНИРОВАННО на первом же
+прогоне этого теста: диалог показал «Restored 0 works, 0 filters (1 works
+already existed).» вместо ожидаемого объединённого «Restored 1 works, 0
+filters. Also relinked 1 and added 0 downloaded file(s).» — не редкий флейк,
+а прямое следствие того, что тест изначально клал файл ПОСЛЕ `saf_pick_folder`
+без какой-либо синхронизации с этой асинхронной корутиной (тот же незримый
+разрыв, только в другую сторону: скан «догнал» размещение файла быстрее, чем
+ожидалось).
+
+**Обход на уровне теста (НЕ фикс инфраструктуры):** `restore_scan_workspace`
+кладёт в подпапку ЗАРАНЕЕ decoy-файл с ЧУЖИМ `ao3Id` (не участвующим ни в
+backup, ни в assert'ах). Раз decoy найден (`totalFound=1`), диалог «Scan
+complete» появляется НЕСМОТРЯ на `silent=true` (подавляется только ветка
+«ничего не найдено») — сам факт появления и закрытия этого диалога в тесте
+детерминированно доказывает, что асинхронная корутина скана уже отработала;
+ТОЛЬКО ПОСЛЕ этого в ту же папку кладётся настоящий orphan-файл
+(`app_steps.place_file_in_download_folder`), для которого гонки уже нет —
+следующий скан того же `ao3Id` запускает исключительно Restore
+(`importFromUri`, синхронно внутри своей корутины импорта, никакой
+параллельной корутины рядом). Подробности и код — докстринги
+`restore_scan_workspace`/`place_file_in_download_folder` в
+`framework/tests/test_downloads.py`/`framework/steps/app_steps.py`.
+
+**Классовая полнота (правило 9 CLAUDE.md):** находка распространяется на
+ЛЮБОЙ будущий сценарий, где тест кладёт файл в SAF-папку загрузок РЯДОМ по
+времени с самим `saf_pick_folder` И этот файл должен быть НЕ найден этим
+конкретным сканом (в отличие от TC-038, где файл ДОЛЖЕН быть найден именно
+сканом при выборе папки — там синхронности не требуется, любой исход скана
+уже корректен). Кандидат на будущий ремонт инфраструктуры: `saf_pick_folder`
+могла бы сама дожидаться завершения `setDownloadFolderUri`'s scan через
+общий наблюдаемый сигнал (например, опциональный параметр «дождаться Idle/Done
+на `scanDownloadsState` перед возвратом») — не сделано в этом проходе (D-0037,
+чужая уже принятая инфраструктура, доработка не требовалась для DoD TC-039;
+decoy-приём на уровне теста самодостаточен). Критерий готовности (Fixed) этого
+бага НЕ расширяю (SAF picker автоматизируется штатно — по-прежнему верно,
+TC-021/TC-038/TC-039 все зелёные); находка — уточнение «Анализа». Статус бага
+(`Open`, по независимой причине — smoke-регресс AT-BUG-009, см. запись
+21:00:00Z 2026-07-14) не меняю.
+
+Witness: `Invoke-Pytest tests/test_downloads.py -k
+test_restore_folds_orphan_scan_into_single_dialog -v` — 3 прогона подряд
+(`1 passed in 58.88s` / `51.26s` / `56.36s`, `PYTEST_EXIT=0` во всех);
+`Invoke-Pytest tests/test_downloads.py -v` (полный regression файла, 5/5) —
+`5 passed in 216.47s`, `PYTEST_EXIT=0`; `Invoke-Pytest
+tests/test_saf_infra_probe.py -v` — `3 passed in 113.39s`, `PYTEST_EXIT=0`
+(regression без изменений файла); `Invoke-Pytest tests/test_backup_restore.py
+-v` — `1 passed in 63.56s`, `PYTEST_EXIT=0` (regression без изменений файла);
+`python scripts/arch_check.py` — `ошибок 0, предупреждений 0`.
+`app-under-test/` не тронут. Правки этого хода вне `bugs/`:
+`framework/tests/test_downloads.py` (новый тест + фикстура),
+`framework/steps/app_steps.py` (`place_file_in_download_folder`),
+`framework/steps/settings_steps.py` (`assert_no_scan_complete_dialog`),
+`framework/data/works.py` (`RESTORE_SCAN_TARGET`),
+`test-cases/downloads/TC-039.md`, `state/traceability.md`.

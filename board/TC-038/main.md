@@ -2,27 +2,27 @@
 key: "TC-038"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p2"
 summary: "Смена папки загрузок автоматически запускает silent-скан и перелинковывает orphan-файлы"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:downloads", "risk:R-05"]
+labels: ["test-case", "area:downloads", "risk:R-05", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-14T22:15:00Z"
-updated: "2026-07-14T22:15:00Z"
+created: "2026-07-15T13:20:00Z"
+updated: "2026-07-15T13:20:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Смена папки загрузок автоматически запускает silent-скан и перелинковывает orphan-файлы
 
 _Спроецировано из `test-cases/downloads/TC-038.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-038 — Auto-scan (silent) при смене папки загрузок перелинковывает файл
 

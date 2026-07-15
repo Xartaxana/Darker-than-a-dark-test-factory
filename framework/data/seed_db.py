@@ -35,12 +35,26 @@ def _db_exists() -> bool:
 def ensure_db_initialized() -> None:
     """После pm clear файла БД ещё нет — Room создаёт его при первом запуске.
     Запускаем приложение (явный am start -W, надёжнее monkey), ждём появления БД.
-    Один ретрай на случай, если эмулятор был занят и запуск не состоялся."""
+    Один ретрай на случай, если эмулятор был занят и запуск не состоялся.
+
+    AT-BUG-009, инкремент 2 (закрытие шва инкремента 1): `adb.shell("am start
+    -W ...")` теперь сам может кинуть `TimeoutError` (обёртка `adb._run()`,
+    инкремент 1) — ЭТОТ вызов обязан быть ВНУТРИ того же `try`, что и
+    `wait_for`, иначе `TimeoutError` из первой строки итерации улетает мимо
+    ретрая наружу немедленно (наблюдение №3: 3 `ERROR at setup` на полном p0,
+    все три — `TimeoutError` из `am start -W`, не пойманы этим циклом до
+    фикса). `am start -W` — блокирующий вызов (ждёт полной прорисовки окна/
+    onResume), не «быстрая» shell-команда из обоснования `ADB_SHELL_TIMEOUT`
+    (`settings put`/`pm clear`/`force-stop`/`logcat -d`) — используем
+    отдельный `ADB_LAUNCH_TIMEOUT`, см. обоснование в `settings.py`."""
     if _db_exists():
         return
     for attempt in range(2):
-        adb.shell(f"am start -W -n {settings.APP_PACKAGE}/{settings.APP_ACTIVITY}")
         try:
+            adb.shell(
+                f"am start -W -n {settings.APP_PACKAGE}/{settings.APP_ACTIVITY}",
+                timeout=settings.ADB_LAUNCH_TIMEOUT,
+            )
             wait_for(_db_exists, timeout=40,
                      message="Room не создал ao3_ratings.db после запуска")
             break

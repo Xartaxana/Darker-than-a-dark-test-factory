@@ -12,12 +12,22 @@ replay-записи страницы работы с реальной разме
 TC-038 (auto-scan/relink при смене папки загрузок) использует SAF-инфраструктуру
 AT-BUG-005 (`framework/steps/saf_steps.py::saf_pick_folder`, блокер снят инкрементом 1,
 доказано зелёным `test_saf_infra_probe.py::test_saf_pick_download_folder`) — заметка в
-теле TC-038.md об отсутствии обходного пути устарела, см. правку кейса."""
+теле TC-038.md об отсутствии обходного пути устарела, см. правку кейса.
+
+TC-039 (Restore from backup сворачивает scanForOrphanedDownloads в один диалог)
+переиспользует тот же уникальный-subfolder приём (`_orphan_subfolder`/
+`_orphan_filename` — уже общие, не только для TC-038) и SAF-инфраструктуру
+AT-BUG-005, но требует ДРУГОГО порядка: сама папка загрузок выбирается ДО того,
+как в неё кладётся orphan-файл (`app_steps.place_file_in_download_folder`) — иначе
+silent-скан самого выбора папки поглотит orphan-файл ДО Restore (см. докстринг
+той функции)."""
 from __future__ import annotations
 
+import json
 import shutil
 import tempfile
 import uuid
+from functools import partial
 from pathlib import Path
 
 import allure
@@ -25,7 +35,14 @@ import pytest
 
 from framework.core import adb
 from framework.data import works as W
-from framework.steps import app_steps, browser_steps, library_steps, saf_steps, settings_steps
+from framework.steps import (
+    app_steps,
+    backup_steps,
+    browser_steps,
+    library_steps,
+    saf_steps,
+    settings_steps,
+)
 
 
 @pytest.mark.p1
@@ -120,6 +137,10 @@ _ORPHAN_DOWNLOAD_DIR = "/sdcard/Download"
 # ломает единственное известное условие репродукции. Сама находка не чинится
 # здесь (документирована в `bugs/AT-BUG-005.md`, эта же дата) — это обход на
 # уровне теста, а не фикс инфраструктуры.
+#
+# Переиспользуется TC-039 (`restore_scan_workspace`) — тот же класс flaky и та же
+# необходимость уникального имени на каждый вызов, не только TC-038; префикс имени
+# каталога на устройстве исторический, самой уникальности не вредит.
 def _orphan_subfolder() -> str:
     return f"tc038_orphan_relink_{uuid.uuid4().hex[:10]}"
 
@@ -197,6 +218,158 @@ def test_change_download_folder_triggers_silent_scan_and_relinks_orphan_file(
 
     # And работа в Library получает связанный файл — карточка на вкладке FAVORITE
     # (SAVE) показывает open-иконку вместо download-иконки
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_work_in_tab(driver, "SAVE", work.title)
+    library_steps.assert_open_icon_shown(driver, work.title)
+
+
+# --- TC-039: Restore from backup сворачивает scanForOrphanedDownloads в один диалог ---
+# (importFromUri вызывает downloadRepo.scanForOrphanedDownloads() НАПРЯМУЮ и
+# сворачивает счётчики в тот же ImportState.Done, не через ScanDownloadsState —
+# SettingsScreen.kt:390-400/1181-1200). Backup-файл кладётся adb-шеллом заранее в
+# Downloads root (видим для GetContent сразу, тот же приём, что и orphan-файл
+# TC-038 для OpenDocumentTree) — SAF-раунд-трип через собственный «Back up» приложения
+# (как в TC-021) здесь не нужен, кейс не про целостность экспорта.
+_RESTORE_SCAN_BACKUP_FILENAME = "tc039_restore_scan_backup.json"
+
+# Синтетический ao3Id, НЕ совпадающий ни с одним `Work` в `works.py` — используется
+# ТОЛЬКО как decoy-файл (см. докстринг `restore_scan_workspace`), сам по себе не
+# несёт продуктовой семантики и не фигурирует ни в одном assert'е.
+_DECOY_ORPHAN_ID = "900000940"
+
+
+@pytest.fixture()
+def restore_scan_workspace():
+    """TC-039: Library пуста (без сидинга работ — `app_steps.clean_state()`
+    единственная подготовка Room). Готовит ДО сессии Appium:
+    - backup JSON (`{"version":2,"works":[1 работа без downloadPath],
+      "filterProfiles":[]}`) в `/sdcard/Download` (root) — тот файл, который
+      Restore выберет через `saf_steps.saf_pick_file`;
+    - вложенную SAF-подпапку с уникальным именем (`_orphan_subfolder`, тот же
+      обход DocumentsUI-flake AT-BUG-005, что и TC-038), в которой уже лежит
+      DECOY-файл (`_DECOY_ORPHAN_ID`, НЕ совпадает с ao3_id работы из backup).
+
+    Почему decoy, а не сразу реальный orphan-файл (как в TC-038): `setDownloadFolderUri`
+    (`SettingsScreen.kt:523-529`) запускает `scanForDownloads(silent=true)` АСИНХРОННО
+    (`viewModelScope.launch`) — тап ALLOW возвращает управление раньше, чем эта
+    корутина гарантированно успевает пройтись по каталогу. Если положить РЕАЛЬНЫЙ
+    orphan-файл (тот же ao3Id, что в backup) заранее и просто выбрать папку, возможна
+    гонка: корутина видит файл ПОЗЖЕ, чем ожидалось (или наоборот раньше — оба исхода
+    небезопасны), и в любом случае `existing == null` в момент её скана (строки из
+    backup ещё нет) добавляет STUB-строку (`added++`) с этим ao3Id ДО Restore — тогда
+    `importFromUri` находит `id in existingIds` и ПРОПУСКАЕТ работу как дубликат
+    (`skippedCount++`), тест ловит «Restored 0 works ... (1 works already existed)»
+    вместо ожидаемого объединённого диалога (воспроизведено на первом прогоне этого
+    теста). Decoy с ДРУГИМ ao3Id решает это детерминированно: раз что-то найдено
+    (totalFound=1, added=1 для decoy), `scanForDownloads` показывает диалог «Scan
+    complete» НЕСМОТРЯ на silent=true (подавляется только ветка «ничего не найдено») —
+    само появление и закрытие этого диалога в тесте (см. `test_...`) СИНХРОННО
+    доказывает, что асинхронная корутина уже отработала: только ПОСЛЕ этого в ту же
+    папку кладётся уже РЕАЛЬНЫЙ orphan-файл (`app_steps.place_file_in_download_folder`),
+    и никакой гонки для него уже нет — эта повторная корутина запускается ТОЛЬКО
+    Restore (`importFromUri`, синхронно внутри одной корутины импорта).
+
+    Возвращает `(work, subfolder)`. Единственный try/finally вокруг ВСЕГО setup —
+    тот же паттерн гарантированного teardown, что у `orphan_download_relink_seeded`/
+    `backup_file_workspace`."""
+    app_steps.clean_state()
+    work = W.RESTORE_SCAN_TARGET
+    subfolder = _orphan_subfolder()
+    remote_subdir = f"{_ORPHAN_DOWNLOAD_DIR}/{subfolder}"
+    decoy_filename = f"decoy_{_DECOY_ORPHAN_ID}.html"
+    backup_path = f"{_ORPHAN_DOWNLOAD_DIR}/{_RESTORE_SCAN_BACKUP_FILENAME}"
+    payload = {
+        "version": 2,
+        "works": [
+            {
+                "ao3Id": work.ao3_id,
+                "title": work.title,
+                "author": work.author,
+                "url": work.url,
+                "rating": "SAVE",
+                "comment": None,
+                "fandom": work.fandom,
+                "wordCount": work.word_count,
+                "tags": None,
+                "timestamp": 0,
+            }
+        ],
+        "filterProfiles": [],
+    }
+    tmp_dir = Path(tempfile.mkdtemp(prefix="tc039_restore_scan_"))
+    try:
+        adb.shell(f"mkdir -p {remote_subdir}")
+        local_decoy = tmp_dir / decoy_filename
+        local_decoy.write_text(
+            "<html><body>TC-039 decoy (sync marker) fixture</body></html>", encoding="utf-8"
+        )
+        adb.push_external(local_decoy, f"{remote_subdir}/{decoy_filename}")
+        local_backup = tmp_dir / _RESTORE_SCAN_BACKUP_FILENAME
+        local_backup.write_text(json.dumps(payload), encoding="utf-8")
+        adb.push_external(local_backup, backup_path)
+        yield work, subfolder
+    finally:
+        adb.shell(f'rm -rf "{remote_subdir}"')
+        adb.shell(f'rm -f "{backup_path}"')
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+
+
+@pytest.mark.p2
+@allure.id("TC-039")
+@allure.title("Restore from backup сворачивает результат scanForOrphanedDownloads в один диалог")
+def test_restore_folds_orphan_scan_into_single_dialog(restore_scan_workspace, driver):
+    # Given Library пуста, backup-файл с 1 работой (без downloadPath) уже лежит в
+    # Downloads root, готова SAF-подпапка загрузок с decoy-файлом (см. докстринг фикстуры)
+    work, subfolder = restore_scan_workspace
+    saf_steps.open_settings_scrolled_to(driver, "Pick")
+
+    # And пользователь выбирает эту подпапку как папку загрузок — silent-скан находит
+    # decoy-файл (чужой ao3Id) и показывает «Scan complete»; закрытие этого диалога —
+    # детерминированное доказательство, что асинхронная корутина скана уже отработала
+    # (см. докстринг фикстуры), НЕ часть Then этого кейса (кейс про диалог ПОСЛЕ Restore)
+    saf_steps.tap_settings_action(driver, "Pick")
+    saf_steps.saf_pick_folder(driver, f"Download/{subfolder}")
+    settings_steps.assert_scan_complete_dialog(
+        driver, expected_text="Found 1 files — relinked 0, added 1 new."
+    )
+    settings_steps.dismiss_scan_dialog(driver)
+
+    # And ТОЛЬКО теперь (гонка исключена) в ту же папку кладётся РЕАЛЬНЫЙ orphan-файл
+    # с тем же ao3_id, что и работа в backup
+    remote_subdir = f"{_ORPHAN_DOWNLOAD_DIR}/{subfolder}"
+    app_steps.place_file_in_download_folder(
+        remote_subdir,
+        _orphan_filename(work),
+        "<html><body>TC-039 restore orphan fixture</body></html>",
+    )
+
+    # When пользователь выполняет «Restore from backup» и выбирает подготовленный файл
+    saf_steps.rescroll_settings_to(driver, "Restore")
+    saf_steps.tap_settings_action(driver, "Restore")
+
+    # Then появляется РОВНО один диалог результата (не пустая проверка присутствия —
+    # точный текст подтверждает, что restore- И scan-счётчики объединены: 1 работа
+    # восстановлена, 0 filters (backup без профилей), 1 файл релинкован силами
+    # scanForOrphanedDownloads внутри того же importFromUri, 0 добавлено новых —
+    # SettingsScreen.kt:1186-1191)
+    saf_steps.saf_pick_file(
+        driver,
+        _RESTORE_SCAN_BACKUP_FILENAME,
+        before_dismiss=partial(
+            backup_steps.assert_restore_result_dialog,
+            expected_text=(
+                "Restored 1 works, 0 filters. Also relinked 1 and added 0 downloaded file(s)."
+            ),
+        ),
+    )
+
+    # And после закрытия первого диалога ВТОРОЙ диалог («Scan complete») НЕ
+    # появляется — ключевой наблюдаемый факт кейса, явная проверка отсутствия, а
+    # не только присутствия первого
+    settings_steps.assert_no_scan_complete_dialog(driver)
+
+    # And восстановленная работа в Library имеет заполненный downloadPath —
+    # карточка на вкладке FAVORITE (SAVE) показывает open-иконку
     app_steps.open_tab(driver, "Library")
     library_steps.assert_work_in_tab(driver, "SAVE", work.title)
     library_steps.assert_open_icon_shown(driver, work.title)

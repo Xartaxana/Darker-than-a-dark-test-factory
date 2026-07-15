@@ -81,6 +81,23 @@ APPIUM_HTTP_TIMEOUT = int(os.environ.get("AO3_APPIUM_HTTP_TIMEOUT", "120"))
 # неопределённого клина.
 ADB_SHELL_TIMEOUT = int(os.environ.get("AO3_ADB_SHELL_TIMEOUT", "30"))
 
+# ADB_LAUNCH_TIMEOUT — `am start -W` (запуск Activity с ожиданием полной
+# прорисовки окна/onResume, используется `seed_db.ensure_db_initialized()`):
+# AT-BUG-009, инкремент 2 (наблюдение №3). Инкремент 1 классифицировал ВСЕ
+# `adb.shell()`-вызовы под `ADB_SHELL_TIMEOUT` (обоснование там перечисляло
+# только `settings put`/`pm clear`/`force-stop`/`logcat -d` — «быстрые»
+# команды, доли секунды) — `am start -W` семантически ДРУГОЙ класс: он ЖДЁТ
+# (флаг `-W` в самой команде), не просто отправляет запрос и возвращается;
+# 30s (`ADB_SHELL_TIMEOUT`) оказался тесен под нагрузкой длинной сессии (3
+# `ERROR at setup` на полном p0, наблюдение №3 — сам таймаут сработал корректно,
+# не молчаливый клин, но неретраемый на первой строке цикла до фикса шва).
+# Не переиспользуем `ADB_TRANSFER_TIMEOUT` (120s) — это бюджет файловых
+# операций (APK/push), другая природа задержки (I/O объёма, не отрисовка UI).
+# 60s — между `ADB_SHELL_TIMEOUT` и `ADB_TRANSFER_TIMEOUT`: вдвое больше
+# `ADB_SHELL_TIMEOUT`, запас на прорисовку под нагрузкой, но не настолько
+# щедрый, чтобы маскировать реальное зависание рендера на минуты.
+ADB_LAUNCH_TIMEOUT = int(os.environ.get("AO3_ADB_LAUNCH_TIMEOUT", "60"))
+
 # ADB_TRANSFER_TIMEOUT — операции с файлами на диске (`adb install`, `adb push`,
 # `adb exec-out ... cat` при pull_app_file): дольше обычного shell-вызова (APK
 # ~10-30MB), но не настолько долго, как удержание Appium-сессии. 120s — тот же

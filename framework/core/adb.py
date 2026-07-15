@@ -32,8 +32,12 @@ def _run(
         ) from exc
 
 
-def shell(cmd: str) -> str:
-    return _run(["-s", settings.DEVICE_NAME, "shell", cmd]).stdout
+def shell(cmd: str, timeout: float = settings.ADB_SHELL_TIMEOUT) -> str:
+    """`timeout` переопределяется вызывающим кодом для shell-команд ДРУГОГО
+    класса, чем «обычная быстрая» (AT-BUG-009, инкремент 2) — например,
+    `seed_db.ensure_db_initialized()` зовёт `am start -W` (блокирующий вызов,
+    ждёт полной прорисовки окна) с `settings.ADB_LAUNCH_TIMEOUT`, не дефолтом."""
+    return _run(["-s", settings.DEVICE_NAME, "shell", cmd], timeout=timeout).stdout
 
 
 def force_stop() -> None:
