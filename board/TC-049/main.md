@@ -71,7 +71,7 @@ test-reviewer, 2026-07-09 — **пройдено** (Approved → Automated).
 - C1/arch_check: 0 ошибок; adb-обёртка `set_night_mode` — в core/adb (без знания
   об экранах), шаг `set_system_dark_mode` — в steps/app_steps, sleep нет.
 - Traceability: `@allure.id("TC-049")` == id; `@pytest.mark.p1` == P1;
-  `automated_by` → существующая функция; state/traceability.md обновлён.
+  `automated_by` → существующая функция.
 - Соответствие GWT: тема приложения = System и не меняется внутри приложения;
   переключается ИМЕННО системная тема ОС через `adb shell cmd uimode night
   yes/no` (не in-app toggle). Реакция наблюдается на нативном Compose UI (side

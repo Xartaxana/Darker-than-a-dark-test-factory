@@ -81,7 +81,7 @@ test-reviewer, 2026-07-09 — **пройдено** (Approved → Automated).
 - C1/arch_check: 0 ошибок; локаторы/измерение luma — в screens/ (BrowserScreen),
   шаги — в steps/browser_steps, sleep нет (поллинг через core/waits).
 - Traceability: `@allure.id("TC-048")` == id; `@pytest.mark.p1` == P1;
-  `automated_by` → существующая функция; state/traceability.md обновлён.
+  `automated_by` → существующая функция.
 - Соответствие GWT и «Заметкам»: проверяется ИМЕННО WebView-контент, косвенно —
   через наблюдаемую визуальную яркость (`webview_avg_luma`), НЕ через
   `applyDarkMode()`/`AppCompatDelegate`/`textZoom`. `assert_webview_darkened`

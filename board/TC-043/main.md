@@ -7,7 +7,7 @@ priority: "p1"
 summary: "Comment-only запись (rating=null) не появляется в рейтинговых вкладках и не скрывается фильтрацией"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:rating", "risk:R-10 (proposed, не утверждён в §5)"]
+labels: ["test-case", "area:rating", "risk:R-10"]
 components: []
 fixVersions: []
 watchers: []

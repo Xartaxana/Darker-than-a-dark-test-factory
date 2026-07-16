@@ -7,7 +7,7 @@ priority: "p1"
 summary: "Note-кнопка на листинге открывает overlay с развёрнутым полем комментария"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:rating", "risk:R-10 (proposed, не утверждён в §5)"]
+labels: ["test-case", "area:rating", "risk:R-10"]
 components: []
 fixVersions: []
 watchers: []

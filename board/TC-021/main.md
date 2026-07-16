@@ -133,7 +133,7 @@ test_backup_clear_restore_returns_original_data` — полное покрыти
 Чек-лист F1:
 - **Независимое воспроизведение (п.6)**: `Invoke-Pytest tests/test_backup_restore.py -v` → `1 passed in 62.25s`, `PYTEST_EXIT=0` (эмулятор поднят и погашен ревьюером сам; без flake AT-BUG-009 в этом прогоне; `Get-Device` → `NO DEVICE` по завершении).
 - **Архитектура (п.1)**: `python scripts/arch_check.py` → `ошибок 0, предупреждений 0`; ALLOWLIST пуст (файл не добавлен «под себя»). В `tests/` нет driver/локаторов; `adb.shell` только в фикстуре-workspace; шаги в `steps/`, экраны в `screens/`; `sleep` отсутствует.
-- **Traceability (п.2)**: `@allure.id("TC-021")` == id; `@pytest.mark.p0` ↔ `priority: P0`; `automated_by` указывает на существующую функцию; строка TC-021 в `state/traceability.md` (строка 45) обновлена.
+- **Traceability (п.2)**: `@allure.id("TC-021")` == id; `@pytest.mark.p0` ↔ `priority: P0`; `automated_by` указывает на существующую функцию.
 - **Фикстуры/данные (п.4)**: сидинг ДО `driver` (порядок фикстур верный); два шага сидинга композируются корректно — `seed_filter_profiles` пуллит ТЕКУЩУЮ БД (уже с работами) через `_pull_baseline`, вставляет профиль, пушит обратно; работы не затираются. `backup_file_workspace` — try/finally вокруг ВСЕГО (включая setup), чистит SAF-файл на `/sdcard/Download`, который `pm clear` не трогает: любая точка отказа setup покрыта уборкой. `clean_state()` в начале.
 - **Flake (п.5)**: ожидания через `is_present`/`wait` с timeout; нет `sleep`; нет обращения к живому AO3.
 
@@ -146,7 +146,7 @@ test_backup_clear_restore_returns_original_data` — полное покрыти
 Что проверено и в порядке:
 - Независимое воспроизведение: `Invoke-Pytest tests/test_backup_restore.py -v` → `1 passed in 64.80s`, `PYTEST_EXIT=0` (эмулятор поднят и погашен ревьюером сам, `Get-Device` → `NO DEVICE`).
 - Архитектура (п.1): `python scripts/arch_check.py` — `ошибок 0, предупреждений 0`; ALLOWLIST пуст (файл не добавлен «под себя»). Локаторы/driver в тесте отсутствуют, `adb.shell` только в фикстуре-workspace.
-- Traceability (п.2): `@allure.id("TC-021")` == id; `@pytest.mark.p0` ↔ `priority: P0`; `automated_by` указывает на существующую функцию; строка TC-021 в `state/traceability.md` обновлена.
+- Traceability (п.2): `@allure.id("TC-021")` == id; `@pytest.mark.p0` ↔ `priority: P0`; `automated_by` указывает на существующую функцию.
 - Фикстуры/flake (п.4-5): порядок фикстур верный (`backup_restore_seeded`/`backup_file_workspace` до `driver` — сидинг до Appium-сессии); `backup_file_workspace` покрывает teardown-ом любую точку отказа setup (try/finally вокруг всего, чистит SAF-файл на `/sdcard/Download`, который `pm clear` не трогает); ожидания через `wait`/`is_present`, `sleep` нет; тест не ходит на живой AO3. Сверка полей через прямое чтение Room (`backup_steps.assert_restored_fields_match` — полный набор ao3Id + все поля) честная, не «элемент существует».
 
 ### Блокирующее замечание (единственное)

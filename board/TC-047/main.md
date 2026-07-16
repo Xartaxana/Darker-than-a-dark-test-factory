@@ -72,8 +72,7 @@ test-reviewer, 2026-07-09 — **пройдено** (Approved → Automated).
 - C1/arch_check: 0 ошибок, 0 предупреждений; ALLOWLIST пуст (файл теста не
   внесён «под себя»). Локаторы — в screens/, шагов sleep нет.
 - Traceability: `@allure.id("TC-047")` == id; `@pytest.mark.p1` соответствует
-  P1; `automated_by` указывает на существующую функцию; state/traceability.md
-  обновлён.
+  P1; `automated_by` указывает на существующую функцию.
 - Соответствие GWT: тест про нативный Compose UI, НЕ WebView (side panel Contrast —
   нативный элемент, его content-desc «Switch to light mode» = проксисигнал
   применённой Dark-темы); отсутствие recreation проверено сохранением URL вкладки

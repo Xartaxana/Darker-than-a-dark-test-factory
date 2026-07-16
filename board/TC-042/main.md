@@ -7,7 +7,7 @@ priority: "p1"
 summary: "Удаление фильтр-профиля из Settings убирает его из списка и панели"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:filter-profiles", "risk:R-09 (proposed, не утверждён в §5)"]
+labels: ["test-case", "area:filter-profiles", "risk:R-09"]
 components: []
 fixVersions: []
 watchers: []

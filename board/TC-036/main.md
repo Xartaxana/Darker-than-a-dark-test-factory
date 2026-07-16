@@ -64,8 +64,7 @@ FAVORITE, ни на вкладке FILES
    через `core/waits`, `sleep` нет.
 2. **Traceability:** `@allure.id("TC-036")` == id кейса; `@pytest.mark.p1` == priority P1;
    `automated_by` указывает на реально существующую и проходящую функцию
-   `test_delete_work_removes_row_and_file` (test_downloads.py:72);
-   `state/traceability.md` строка R-05/TC-036 обновлена.
+   `test_delete_work_removes_row_and_file` (test_downloads.py:72).
 3. **Соответствие по смыслу (R-05, пара к TC-035):** шаг
    `delete_via_overlay(..., "Delete work")` кликает по локатору
    `by_text("Delete work")` (library_screen.py:62-64) — БУКВАЛЬНО текст «Delete work»

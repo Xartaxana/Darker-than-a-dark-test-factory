@@ -7,7 +7,7 @@ priority: "p3"
 summary: "Личный тег, совпадающий с AO3-тегом карточки, подсвечивается на листинге"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:rating", "risk:R-10 (proposed, не утверждён в §5)"]
+labels: ["test-case", "area:rating", "risk:R-10"]
 components: []
 fixVersions: []
 watchers: []
