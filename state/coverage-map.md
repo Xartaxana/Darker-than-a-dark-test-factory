@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-16T22:35:46Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-16T23:13:42Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -45,145 +45,106 @@ generated_at: 2026-07-16T22:35:46Z · генератор: `scripts/coverage_map.
 
 | Фича | Экран | Кейсы |
 |---|---|---|
-| browse-tabs-lifecycle | browse | нет кейсов |
+| browse-tabs-lifecycle | browse | tabs:TC-022[Approved], tabs:TC-023[Approved], tabs:TC-024[Approved], tabs:TC-025[Approved], tabs:TC-026[Approved] |
 | browse-deep-links | browse | нет кейсов |
-| browse-scroll-restore | browse | нет кейсов |
+| browse-scroll-restore | browse | tabs:TC-025[Approved] |
 | browse-infinite-scroll | browse | нет кейсов |
 | browse-tap-to-scroll | browse | нет кейсов |
-| browse-pinch-font | browse | нет кейсов |
-| browse-two-finger-brightness | browse | нет кейсов |
+| browse-pinch-font | browse | browser:TC-053[Automated] |
+| browse-two-finger-brightness | browse | browser:TC-055[Automated] |
 | browse-bridge-injection | browse | нет кейсов |
 | browse-tabstrip-indicators | browse | нет кейсов |
-| browse-bottombar-nav | browse | нет кейсов |
-| sidepanel-home | side-panel | нет кейсов |
-| sidepanel-theme-toggle | side-panel | нет кейсов |
-| sidepanel-font-size | side-panel | нет кейсов |
-| sidepanel-fullscreen-toggle | side-panel | нет кейсов |
+| browse-bottombar-nav | browse | smoke:TC-002[Automated] |
+| sidepanel-home | side-panel | browser:TC-057[Approved] |
+| sidepanel-theme-toggle | side-panel | browser:TC-050[Automated] |
+| sidepanel-font-size | side-panel | browser:TC-051[Automated], browser:TC-052[Automated] |
+| sidepanel-fullscreen-toggle | side-panel | browser:TC-058[Approved] |
 | sidepanel-rating-filters | side-panel | нет кейсов |
-| sidepanel-settings-sync | side-panel | нет кейсов |
-| library-tabs-six | library | нет кейсов |
-| library-filter-wordcount | library | нет кейсов |
-| library-filter-fandom | library | нет кейсов |
-| library-filter-downloaded-only | library | нет кейсов |
-| library-filter-freetext | library | нет кейсов |
-| library-filter-tags-and | library | нет кейсов |
-| library-sort-last-read | library | нет кейсов |
-| library-sort-wordcount | library | нет кейсов |
-| library-sort-author | library | нет кейсов |
-| library-sort-rating-files | library | нет кейсов |
-| library-sort-scroll-reset | library | нет кейсов |
-| library-card-actions | library | нет кейсов |
+| sidepanel-settings-sync | side-panel | browser:TC-054[Automated] |
+| library-tabs-six | library | smoke:TC-003[Automated], library:TC-006[Draft], library:TC-016[Automated], library:TC-017[Automated], rating:TC-043[Approved] |
+| library-filter-wordcount | library | library:TC-027[Automated] |
+| library-filter-fandom | library | library:TC-029[Automated] |
+| library-filter-downloaded-only | library | library:TC-028[Automated] |
+| library-filter-freetext | library | library:TC-061[Approved] |
+| library-filter-tags-and | library | library:TC-060[Approved] |
+| library-sort-last-read | library | library:TC-062[Approved] |
+| library-sort-wordcount | library | library:TC-030[Automated], library:TC-031[Approved], library:TC-063[Approved] |
+| library-sort-author | library | library:TC-064[Approved] |
+| library-sort-rating-files | library | library:TC-065[Approved] |
+| library-sort-scroll-reset | library | library:TC-030[Automated], library:TC-063[Approved] |
+| library-card-actions | library | downloads:TC-033[Approved], downloads:TC-034[Automated], downloads:TC-035[Automated], downloads:TC-036[Automated] |
 | library-card-comment-tags | library | нет кейсов |
-| settings-theme-mode | settings | нет кейсов |
-| settings-webview-dark-mode | settings | нет кейсов |
+| settings-theme-mode | settings | smoke:TC-005[Automated], settings:TC-047[Automated], settings:TC-049[Automated], settings:TC-059[Approved] |
+| settings-webview-dark-mode | settings | settings:TC-048[Automated], browser:TC-050[Automated], settings:TC-059[Approved] |
 | settings-font-slider | settings | нет кейсов |
 | settings-brightness-slider | settings | нет кейсов |
-| settings-rating-visibility-filter | settings | нет кейсов |
+| settings-rating-visibility-filter | settings | visibility:TC-015[Review] |
 | settings-panel-side | settings | нет кейсов |
 | settings-tap-to-scroll-toggle | settings | нет кейсов |
 | settings-infinite-scroll-toggle | settings | нет кейсов |
 | settings-auto-download-favorite | settings | нет кейсов |
-| settings-download-folder-saf | settings | нет кейсов |
-| settings-backup-export | settings | нет кейсов |
-| settings-restore-merge | settings | нет кейсов |
-| settings-orphan-scan-silent | settings | нет кейсов |
-| settings-orphan-scan-restore-dialog | settings | нет кейсов |
-| settings-scan-downloads-manual | settings | нет кейсов |
+| settings-download-folder-saf | settings | downloads:TC-038[Automated] |
+| settings-backup-export | settings | backup:TC-021[Automated] |
+| settings-restore-merge | settings | backup:TC-021[Automated] |
+| settings-orphan-scan-silent | settings | downloads:TC-038[Automated] |
+| settings-orphan-scan-restore-dialog | settings | downloads:TC-039[Automated] |
+| settings-scan-downloads-manual | settings | downloads:TC-037[Approved] |
 | settings-filter-profiles-list | settings | нет кейсов |
-| settings-filter-profiles-delete | settings | нет кейсов |
+| settings-filter-profiles-delete | settings | filter-profiles:TC-042[Approved] |
 | settings-filter-profiles-rename | settings | нет кейсов |
-| browser-filter-profile-save | browser | нет кейсов |
-| browser-filter-profile-apply | browser | нет кейсов |
-| rating-overlay-five-options | rating-notes | нет кейсов |
-| rating-deselect-on-tap | rating-notes | нет кейсов |
+| browser-filter-profile-save | ao3-bridge | filter-profiles:TC-040[Approved] |
+| browser-filter-profile-apply | browse | filter-profiles:TC-041[Approved] |
+| browser-error-page | browse | errors:TC-046[Approved] |
+| bridge-tag-highlight | ao3-bridge | rating:TC-056[Approved] |
+| browse-initial-load | browse | smoke:TC-001[Automated] |
+| rating-overlay-five-options | rating-notes | rating:TC-007[Automated], rating:TC-009[Approved] |
+| rating-deselect-on-tap | rating-notes | rating:TC-008[Automated] |
 | rating-comment-field | rating-notes | нет кейсов |
 | rating-tags-chips | rating-notes | нет кейсов |
-| rating-entry-work-panel | rating-notes | нет кейсов |
-| rating-entry-listing-overlay | rating-notes | нет кейсов |
-| rating-note-button-listing | rating-notes | нет кейсов |
+| rating-entry-work-panel | rating-notes | rating:TC-007[Automated], rating:TC-008[Automated], rating:TC-010[Approved] |
+| rating-entry-listing-overlay | rating-notes | rating:TC-009[Approved], rating:TC-011[Approved] |
+| rating-note-button-listing | rating-notes | rating:TC-044[Approved] |
 | bridge-rate-note-tag-buttons | ao3-bridge | нет кейсов |
-| bridge-badge-sync-multi | ao3-bridge | нет кейсов |
-| bridge-hide-dim-filter | ao3-bridge | нет кейсов |
+| bridge-badge-sync-multi | ao3-bridge | rating:TC-012[Approved] |
+| bridge-hide-filter | ao3-bridge | visibility:TC-013[Approved], visibility:TC-014[Approved], visibility:TC-015[Review], rating:TC-043[Approved], rating:TC-045[Approved] |
+| bridge-dim-filter | ao3-bridge | нет кейсов |
 | bridge-main-pairing-filter | ao3-bridge | нет кейсов |
 | bridge-exclude-main-pairing-filter | ao3-bridge | нет кейсов |
 | bridge-dark-css | ao3-bridge | нет кейсов |
 | bridge-scroll-reporting | ao3-bridge | нет кейсов |
 | data-workrating-model | data | нет кейсов |
 | data-filterprofile-model | data | нет кейсов |
-| data-clear-all-ratings | data | нет кейсов |
-| background-download-repository | background | нет кейсов |
-| background-auto-download-trigger | background | нет кейсов |
+| data-clear-all-ratings | data | smoke:TC-004[Automated], settings:TC-018[Approved], settings:TC-019[Approved], settings:TC-020[Approved] |
+| background-download-repository | background | downloads:TC-032[Approved], downloads:TC-033[Approved] |
+| background-auto-download-trigger | background | downloads:TC-032[Approved] |
 
 ## Фичи без единого кейса
 
-- browse-tabs-lifecycle (browse): Вкладки: открыть/закрыть/переключить (лимит MAX_TABS=10)
 - browse-deep-links (browse): Deep link (intent data) открывает/переключает вкладку на URL
-- browse-scroll-restore (browse): Восстановление позиции скролла вкладки после рестарта приложения
 - browse-infinite-scroll (browse): Бесконечная подгрузка следующих страниц листинга при скролле
 - browse-tap-to-scroll (browse): Тап по верхней/нижней трети страницы работы скроллит вверх/вниз, средняя треть — fullscreen toggle
-- browse-pinch-font (browse): Pinch/spread двумя пальцами меняет размер шрифта (fontSizeStep)
-- browse-two-finger-brightness (browse): Вертикальный двухпальцевый драг меняет яркость
 - browse-bridge-injection (browse): Инжекция ao3_bridge.js в каждую загруженную AO3-страницу (onPageFinished)
 - browse-tabstrip-indicators (browse): TabStrip: индикация активной вкладки, закрытие свайпом вверх, кнопка New tab
-- browse-bottombar-nav (browse): BottomBar: навигация между экранами Browse/Library/Settings
-- sidepanel-home (side-panel): Кнопка Home в side panel переводит активную вкладку на AO3 root
-- sidepanel-theme-toggle (side-panel): Кнопка переключения темы Light/Dark в side panel
-- sidepanel-font-size (side-panel): Кнопки A-/A+ в side panel, disabled на границах диапазона (шаги 0..6)
-- sidepanel-fullscreen-toggle (side-panel): Кнопка fullscreen toggle в side panel
 - sidepanel-rating-filters (side-panel): Чекбоксы скрытия рейтингов (hidden ratings) в side panel
-- sidepanel-settings-sync (side-panel): Side panel отражает общий стейт темы/шрифта/скрытых рейтингов с Settings
-- library-tabs-six (library): 6 вкладок библиотеки (Favorite/Kudosed/Read/Pending/Disliked/Files)
-- library-filter-wordcount (library): Фильтр word count min/max
-- library-filter-fandom (library): Фильтр по фандому
-- library-filter-downloaded-only (library): Чекбокс downloaded-only
-- library-filter-freetext (library): Свободный текстовый поиск (title/author/fandom/tags/comment)
-- library-filter-tags-and (library): Фильтр по личным тегам, логика AND (все выбранные теги должны совпасть)
-- library-sort-last-read (library): Сортировка Last read (дефолт, по убыванию timestamp)
-- library-sort-wordcount (library): Сортировка Word count ASC/DESC
-- library-sort-author (library): Сортировка Author A-Z (пустой author в конце)
-- library-sort-rating-files (library): Сортировка Rating, доступна только на вкладке Files
-- library-sort-scroll-reset (library): Сброс скролла списка на верх при смене сортировки
-- library-card-actions (library): Действия карточки: открыть/скачать/удалить файл/удалить работу целиком
 - library-card-comment-tags (library): Индикатор комментария (note-иконка) и личных тегов на карточке
-- settings-theme-mode (settings): Тема Light/Dark/System без пересоздания Activity
-- settings-webview-dark-mode (settings): WebView dark mode (FORCE_DARK / ALGORITHMIC_DARKENING)
 - settings-font-slider (settings): Слайдер размера шрифта (7 ступеней, 100–190%)
 - settings-brightness-slider (settings): Слайдер яркости (overlay при v<0, reset-on-start)
-- settings-rating-visibility-filter (settings): Фильтр видимости рейтингов, режим отображения hide/dim
 - settings-panel-side (settings): Позиция side panel Left/Right
 - settings-tap-to-scroll-toggle (settings): Тумблер Tap to scroll (work pages)
 - settings-infinite-scroll-toggle (settings): Тумблер Infinite scroll (listing pages)
 - settings-auto-download-favorite (settings): Тумблер авто-скачивания HTML при рейтинге Favorite (SAVE)
-- settings-download-folder-saf (settings): Выбор папки загрузок через SAF (Storage Access Framework)
-- settings-backup-export (settings): Экспорт бэкапа JSON (works + filterProfiles)
-- settings-restore-merge (settings): Восстановление из бэкапа с merge (пропуск уже существующих id)
-- settings-orphan-scan-silent (settings): Тихий orphan-скан загрузок при смене папки (без диалога, если пусто)
-- settings-orphan-scan-restore-dialog (settings): Orphan-скан свёрнут в единый диалог результата при restore из бэкапа
-- settings-scan-downloads-manual (settings): Ручная кнопка Scan for downloads — relink .html-файлов, потерянных базой
 - settings-filter-profiles-list (settings): Список сохранённых AO3-фильтр-профилей
-- settings-filter-profiles-delete (settings): Удаление фильтр-профиля из списка Settings и из активной панели
 - settings-filter-profiles-rename (settings): Переименование фильтр-профиля
-- browser-filter-profile-save (browser): Кнопка Save filter в форме AO3 Sort&Filter — сохранение текущего запроса профилем (инжекция bridge)
-- browser-filter-profile-apply (browser): Применение сохранённого фильтр-профиля из FilterPanel листинга
-- rating-overlay-five-options (rating-notes): Overlay/панель с 5 рейтингами (Favorite/Kudosed/Read/Pending/Dislike)
-- rating-deselect-on-tap (rating-notes): Deselect рейтинга повторным тапом на уже выбранной кнопке
 - rating-comment-field (rating-notes): Поле комментария: добавить/изменить/очистить (Save note / Clear note)
 - rating-tags-chips (rating-notes): Chip-теги: добавление (suggested/custom) и удаление
-- rating-entry-work-panel (rating-notes): Вход в рейтинг: встроенная панель страницы работы (bottom bar)
-- rating-entry-listing-overlay (rating-notes): Вход в рейтинг: bottom-sheet-подобный overlay с Rate-кнопки листинга
-- rating-note-button-listing (rating-notes): Note-кнопка на карточке листинга открывает overlay с развёрнутым комментарием
 - bridge-rate-note-tag-buttons (ao3-bridge): Инжекция Rate/Note/Tag-индикаторов в карточки листинга AO3
-- bridge-badge-sync-multi (ao3-bridge): Синхронизация бейджа рейтинга по нескольким вхождениям работы на листинге/вкладках
-- bridge-hide-dim-filter (ao3-bridge): hide/dim-фильтрация карточек листинга по скрытым рейтингам
+- bridge-dim-filter (ao3-bridge): dim-фильтрация: карточка со скрытым рейтингом остаётся видимой, но затемнена (mode='dim', opacity 0.3)
 - bridge-main-pairing-filter (ao3-bridge): Чекбокс 'Main pairing only' в форме include-фильтра AO3 (Sort & Filter)
 - bridge-exclude-main-pairing-filter (ao3-bridge): Чекбокс исключения main pairing в форме exclude-фильтра AO3
 - bridge-dark-css (ao3-bridge): CSS-переопределения тёмной темы на AO3-страницах (window.__ao3AppDark)
 - bridge-scroll-reporting (ao3-bridge): Отчёт позиции скролла и прогресса чтения (глава/%) в Kotlin
 - data-workrating-model (data): Room-сущность WorkRating (rating/comment/tags/fandom/author/wordCount/downloadPath)
 - data-filterprofile-model (data): Room-сущность FilterProfile (name/queryString)
-- data-clear-all-ratings (data): Clear all ratings — полное необратимое удаление всех рейтингов
-- background-download-repository (background): DownloadRepository: скачивание HTML работы через OkHttp в SAF-папку или app storage
-- background-auto-download-trigger (background): Автозапуск скачивания при простановке рейтинга Favorite (SAVE), если тумблер включён
 
 ## Области
 

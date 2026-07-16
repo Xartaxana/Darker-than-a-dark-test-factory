@@ -291,15 +291,27 @@ def test_feature_id_unknown_is_error(repo, schemas):
     assert any("totally-unknown-feature" in e and "feature-registry.yaml" in e for e in errors)
 
 
-def test_feature_empty_is_warn_not_error(repo, schemas):
-    """Отсутствующее/пустое `features` — WARNING (B2 спеки: error-flip только
-    после backfill диспатча 2), не ERROR."""
+def test_feature_empty_is_error_after_flip(repo, schemas):
+    """Отсутствующее/пустое `features` — ERROR (error-flip 2026-07-17 после
+    полного backfill 65/65, B2 спеки; до флипа было WARNING)."""
     _registry(repo.root, ["browse-deep-links"])
     repo.test_case("TC-082", "Approved")  # без features вовсе
 
     errors, warns = vf.validate()
-    assert errors == []
-    assert any("features" in w and "TC-082" in w for w in warns)
+    assert any("features" in e and "TC-082" in e for e in errors)
+    assert not any("TC-082" in w and "features" in w for w in warns)
+
+
+def test_feature_not_list_is_error(repo, schemas):
+    """Замечание критика: `features` заполнено, но не списком (напр. голая строка
+    вместо `[id1, id2]`) — ERROR, не молчаливое проглатывание (check_feature_ids
+    возвращает `errors` до итерации по элементам, когда isinstance-проверка
+    проваливается)."""
+    _registry(repo.root, ["browse-deep-links"])
+    repo.test_case("TC-084", "Approved", extra="features: browse-deep-links\n")
+
+    errors, _warns = vf.validate()
+    assert any("TC-084" in e and "должен быть списком" in e for e in errors)
 
 
 def test_feature_registry_missing_is_warn_not_error(repo, schemas):

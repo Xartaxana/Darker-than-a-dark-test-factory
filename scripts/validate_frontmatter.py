@@ -159,9 +159,9 @@ def check_feature_ids(meta: dict, schema: dict, rel: str,
     """Кросс-файловая проверка (Z3/спека trace-matrix v2 §1b): test-case.features
     сверяется с docs/feature-registry.yaml. Неизвестный id — ERROR (кейс
     ссылается на фичу, которой нет в реестре — опечатка либо реестр не
-    актуализирован). Отсутствующее/пустое `features` — WARNING, не ERROR:
-    backfill 65 существующих кейсов — отдельный диспатч (2), error-flip сюда
-    переезжает только после полного backfill (B2 спеки)."""
+    актуализирован). Отсутствующее/пустое `features` — тоже ERROR: error-flip
+    выполнен 2026-07-17 после ПОЛНОГО backfill 65/65 (B2 спеки; до него было
+    WARNING). Новый кейс обязан привязываться к реестру фич."""
     errors: list[str] = []
     warns: list[str] = []
     if schema.get("type") != "test-case":
@@ -171,7 +171,7 @@ def check_feature_ids(meta: dict, schema: dict, rel: str,
         return errors, warns
     features = meta.get("features")
     if features is None or features == "" or features == []:
-        warns.append(f"{rel}: `features` отсутствует или пусто — кейс не привязан к реестру фич")
+        errors.append(f"{rel}: `features` отсутствует или пусто — кейс не привязан к реестру фич")
         return errors, warns
     if not isinstance(features, list):
         errors.append(f"{rel}: `features` должен быть списком id, получено {type(features).__name__}")

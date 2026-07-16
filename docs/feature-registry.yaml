@@ -13,6 +13,15 @@
 # заметном изменении приложения — сверить с кодом, обновить
 # inventoried_at_commit, дельту отразить здесь.
 #
+# ГРАНУЛЯРНОСТЬ (правило, введено 2026-07-17 после урока hide/dim): одна
+# запись = одно НАБЛЮДАЕМО РАЗЛИЧИМОЕ поведение. Если у механизма несколько
+# режимов/исходов с РАЗНЫМИ Then (hide удаляет карточку, dim затемняет) —
+# каждому режиму своя запись, иначе один кейс на один режим зачитывает
+# «покрытой» всю фичу и остальные режимы становятся невидимой дырой.
+# Перечисление режимов через «/» в title — маркер кандидата на дробление.
+# Детектор класса: критик-вход при приёмке переинвентаризаций реестра +
+# чек еженедельной калибровки (очередь OS-репо).
+#
 # Верификация записей (builder, диспатч 1, 2026-07-17): каждая запись сверена
 # с app-under-test/ по source — файл существует и поведение в нём читается
 # (не unit-тестами, чтением реализации). Не подтверждённые построчно записи
@@ -224,12 +233,27 @@ features:
   # FilterPanel), отсутствовали в Приложении А спеки — доклад-флаг воркера.
   - id: browser-filter-profile-save
     title: "Кнопка Save filter в форме AO3 Sort&Filter — сохранение текущего запроса профилем (инжекция bridge)"
-    screen: browser
+    screen: ao3-bridge
     source: "app/src/main/assets/ao3_bridge.js"
   - id: browser-filter-profile-apply
     title: "Применение сохранённого фильтр-профиля из FilterPanel листинга"
-    screen: browser
+    screen: browse
     source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BottomBar.kt"
+  # Три записи ниже добавлены Lead при приёмке trace-matrix-impl-2 (2026-07-17):
+  # пропуски инвентаризации scout, вскрытые бэкфилом (кейсы TC-046/056/001 не
+  # маппились); каждая заземлена в коде сверкой Lead.
+  - id: browser-error-page
+    title: "Кастомная error page с Retry-ссылкой при ошибке загрузки main-frame (onReceivedError)"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserScreen.kt"
+  - id: bridge-tag-highlight
+    title: "Подсветка AO3-тега карточки листинга, совпадающего с личным тегом (highlightWorkTags; на видимость не влияет)"
+    screen: ao3-bridge
+    source: "app/src/main/assets/ao3_bridge.js"
+  - id: browse-initial-load
+    title: "Запуск приложения: вкладка Browse открывает AO3 root (HOME_URL)"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt"
 
   # ── Rating & Notes ───────────────────────────────────────────────────────
   - id: rating-overlay-five-options
@@ -270,8 +294,14 @@ features:
     title: "Синхронизация бейджа рейтинга по нескольким вхождениям работы на листинге/вкладках"
     screen: ao3-bridge
     source: "app/src/main/assets/ao3_bridge.js"
-  - id: bridge-hide-dim-filter
-    title: "hide/dim-фильтрация карточек листинга по скрытым рейтингам"
+# Запись bridge-hide-dim-filter раздроблена Lead 2026-07-17 (правило
+  # гранулярности выше): hide и dim — разные наблюдаемые исходы.
+  - id: bridge-hide-filter
+    title: "hide-фильтрация: карточка листинга со скрытым рейтингом убирается со страницы (applyAllFilters)"
+    screen: ao3-bridge
+    source: "app/src/main/assets/ao3_bridge.js"
+  - id: bridge-dim-filter
+    title: "dim-фильтрация: карточка со скрытым рейтингом остаётся видимой, но затемнена (mode='dim', opacity 0.3)"
     screen: ao3-bridge
     source: "app/src/main/assets/ao3_bridge.js"
   - id: bridge-main-pairing-filter
