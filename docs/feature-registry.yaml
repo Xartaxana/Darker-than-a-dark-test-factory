@@ -50,8 +50,16 @@ features:
     title: "Бесконечная подгрузка следующих страниц листинга при скролле"
     screen: browse
     source: "app/src/main/assets/ao3_bridge.js"
+  # browse-tap-to-scroll раздроблена test-strategist 2026-07-17 (правило
+  # гранулярности; след: ao3_bridge.js ~стр.1149-1162 — три зоны, разные Then):
+  # edge-зоны скроллят, средняя зона — fullscreen toggle (другой Then). Кейсов
+  # ни на одну не было — дробление без ре-теггинга.
   - id: browse-tap-to-scroll
-    title: "Тап по верхней/нижней трети страницы работы скроллит вверх/вниз, средняя треть — fullscreen toggle"
+    title: "Тап по верхней/нижней трети страницы работы скроллит вверх/вниз"
+    screen: browse
+    source: "app/src/main/assets/ao3_bridge.js"
+  - id: browse-tap-fullscreen
+    title: "Тап по средней трети страницы работы переключает fullscreen (toggleFullscreen)"
     screen: browse
     source: "app/src/main/assets/ao3_bridge.js"
   - id: browse-pinch-font
@@ -172,8 +180,20 @@ features:
     title: "Слайдер яркости (overlay при v<0, reset-on-start)"
     screen: settings
     source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  # settings-rating-visibility-filter раздроблена test-strategist 2026-07-17
+  # (прямой сиблинг урока hide/dim — правило гранулярности; след: SettingsScreen.kt
+  # hiddenRatings/toggleHideRating стр.742-749 и filterDisplayMode стр.779-782 —
+  # это ДВА разных контрола). Enable-тумблер + чекбоксы «какие рейтинги скрыть»
+  # оставлены здесь (кейс TC-015 маппится сюда, id не менялся, ре-теггинга нет);
+  # селектор режима hide/dim вынесен в settings-filter-display-mode (разные Then:
+  # hide убирает карточку, dim затемняет — уже разведены на bridge как
+  # bridge-hide-filter/bridge-dim-filter).
   - id: settings-rating-visibility-filter
-    title: "Фильтр видимости рейтингов, режим отображения hide/dim"
+    title: "Фильтр видимости рейтингов: Enable-тумблер + чекбоксы скрываемых рейтингов (per-rating)"
+    screen: settings
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  - id: settings-filter-display-mode
+    title: "Режим отображения скрытых работ: hide (убрать карточку) / dim (затемнить, opacity 0.3)"
     screen: settings
     source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
   - id: settings-panel-side

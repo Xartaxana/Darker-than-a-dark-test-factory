@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-16T23:13:42Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-16T23:28:33Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -50,6 +50,7 @@ generated_at: 2026-07-16T23:13:42Z · генератор: `scripts/coverage_map.
 | browse-scroll-restore | browse | tabs:TC-025[Approved] |
 | browse-infinite-scroll | browse | нет кейсов |
 | browse-tap-to-scroll | browse | нет кейсов |
+| browse-tap-fullscreen | browse | нет кейсов |
 | browse-pinch-font | browse | browser:TC-053[Automated] |
 | browse-two-finger-brightness | browse | browser:TC-055[Automated] |
 | browse-bridge-injection | browse | нет кейсов |
@@ -79,6 +80,7 @@ generated_at: 2026-07-16T23:13:42Z · генератор: `scripts/coverage_map.
 | settings-font-slider | settings | нет кейсов |
 | settings-brightness-slider | settings | нет кейсов |
 | settings-rating-visibility-filter | settings | visibility:TC-015[Review] |
+| settings-filter-display-mode | settings | нет кейсов |
 | settings-panel-side | settings | нет кейсов |
 | settings-tap-to-scroll-toggle | settings | нет кейсов |
 | settings-infinite-scroll-toggle | settings | нет кейсов |
@@ -122,13 +124,15 @@ generated_at: 2026-07-16T23:13:42Z · генератор: `scripts/coverage_map.
 
 - browse-deep-links (browse): Deep link (intent data) открывает/переключает вкладку на URL
 - browse-infinite-scroll (browse): Бесконечная подгрузка следующих страниц листинга при скролле
-- browse-tap-to-scroll (browse): Тап по верхней/нижней трети страницы работы скроллит вверх/вниз, средняя треть — fullscreen toggle
+- browse-tap-to-scroll (browse): Тап по верхней/нижней трети страницы работы скроллит вверх/вниз
+- browse-tap-fullscreen (browse): Тап по средней трети страницы работы переключает fullscreen (toggleFullscreen)
 - browse-bridge-injection (browse): Инжекция ao3_bridge.js в каждую загруженную AO3-страницу (onPageFinished)
 - browse-tabstrip-indicators (browse): TabStrip: индикация активной вкладки, закрытие свайпом вверх, кнопка New tab
 - sidepanel-rating-filters (side-panel): Чекбоксы скрытия рейтингов (hidden ratings) в side panel
 - library-card-comment-tags (library): Индикатор комментария (note-иконка) и личных тегов на карточке
 - settings-font-slider (settings): Слайдер размера шрифта (7 ступеней, 100–190%)
 - settings-brightness-slider (settings): Слайдер яркости (overlay при v<0, reset-on-start)
+- settings-filter-display-mode (settings): Режим отображения скрытых работ: hide (убрать карточку) / dim (затемнить, opacity 0.3)
 - settings-panel-side (settings): Позиция side panel Left/Right
 - settings-tap-to-scroll-toggle (settings): Тумблер Tap to scroll (work pages)
 - settings-infinite-scroll-toggle (settings): Тумблер Infinite scroll (listing pages)
@@ -215,7 +219,7 @@ generated_at: 2026-07-16T23:13:42Z · генератор: `scripts/coverage_map.
 ### filter-profiles
 
 - coverage_status: **none** (0/3 Automated)
-- риски: R-09 (proposed, не утверждён в §5)
+- риски: R-09
 - кейсы без risk: нет
 - P0/P1 не в Automated: TC-040 [P1, Approved], TC-041 [P1, Approved], TC-042 [P1, Approved]
 - автотесты (automated_by): framework/tests/test_filter_profiles.py::test_delete_filter_profile
@@ -247,7 +251,7 @@ generated_at: 2026-07-16T23:13:42Z · генератор: `scripts/coverage_map.
 ### rating
 
 - coverage_status: **partial** (2/10 Automated)
-- риски: R-04, R-10 (proposed, не утверждён в §5)
+- риски: R-04, R-10
 - кейсы без risk: нет
 - P0/P1 не в Automated: TC-009 [P0, Approved], TC-043 [P1, Approved], TC-044 [P1, Approved], TC-045 [P1, Approved]
 - автотесты (automated_by): framework/tests/test_rating.py::test_deselect_rating_on_work_page_panel, framework/tests/test_rating.py::test_rate_work_from_work_page_panel
