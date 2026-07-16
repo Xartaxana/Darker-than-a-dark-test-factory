@@ -13,7 +13,7 @@ runs: []
 duplicates: []
 regression_of: ""
 status_since: "2026-07-14T13:37:03Z"
-updated: "2026-07-15T13:30:00Z"
+updated: "2026-07-17T00:45:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -478,3 +478,122 @@ Witness инкремента 2:
 - `app-under-test/` не тронут за весь инкремент.
 - Эмулятор/Appium погашены после верификации (`adb emu kill`,
   `Stop-NodeProcesses`, `Get-Device` → `NO DEVICE`).
+
+**2026-07-17T00:45:00Z — critic (диагностика ESC-001 / текущего симптома
+«ReadTimeoutError на driver.get ЛЮБОЙ replay-навигации с первого теста»,
+правило 3б CLAUDE.md, ДО отладки Lead'ом):**
+
+Диагностика ЭМПИРИКОЙ (A/B/A' на одном инстансе эмулятора, поднятом мной;
+не чтением кода). **Корень ТЕКУЩЕГО симптома (ESC-001) — mitm-CA
+ОТСУТСТВУЕТ в системном сторе доверия Android после ребута без
+переустановки.** Это НЕ баг framework-кода, НЕ баг приложения и НЕ тот же
+корень, что позиционная деградация набл. №1/№4 (см. ниже).
+
+Слой корня доказан прямыми измерениями (позитивные контроли — CLAUDE.md
+permission-hygiene п.6):
+- **Присутствие CA в сторе** (`su 0 ls /apex/com.android.conscrypt/cacerts/`,
+  хэш нашей CA = `c8750f0d`, PEM `~/.mitmproxy/mitmproxy-ca-cert.pem`):
+  отсутствует = `NOT_IN_APEX` + 34 сертификата (сток); присутствует =
+  видимо + 134 (`Install-MitmCA` печатает `CA visible in apex store: OK`).
+- A/B/A', всё прочее (Appium, APK, `listing_basic.mitm`, тест) — константа,
+  меняется ТОЛЬКО CA:
+
+  | Leg | Состояние CA | Probe `test_replay_infra_probe.py` | Время |
+  |---|---|---|---|
+  | A — свежий буд `-writable-system`, БЕЗ `Install-MitmCA` | отсутствует (`NOT_IN_APEX`, 34) | FAIL `ReadTimeoutError` (timeout=30) | 196.13s |
+  | B — `Install-MitmCA` на том же инстансе | присутствует (`c8750f0d`, 134) | **PASS** | 27.63s |
+  | A' — `adb reboot` (сбрасывает mount), БЕЗ переустановки = сценарий fix-verifier | отсутствует снова (`NOT_IN_APEX`, 34) | FAIL `ReadTimeoutError` (timeout=30) | 195.83s |
+
+  Leg A' пережил ПОЛНЫЙ ребут Android (более сильный рестарт, чем `stop;start`
+  внутри `Install-MitmCA`) и всё равно упал — конфаунд «фикс = рестарт
+  фреймворка, не CA» закрыт: единственный устойчивый детерминант — наличие
+  CA-mount.
+
+**Механизм (сужение до слоя (в) диспатча — mitm-CA):** прокси гостя стоит
+(`set_device_proxy` → `settings put global http_proxy 10.0.2.2:8080`),
+mitmdump слушает (иначе падение было бы на старте фикстуры, а не внутри
+`open_listing`) — слои (а)/(б) ЗДОРОВЫ (доказано passing Leg B: та же фикстура
+поднимает mitm и прокси). Но без доверенной CA WebView отвергает TLS-хендшейк
+к mitmproxy → replay-страница не грузится → мост chromedriver↔WebView
+подвисает → каждая Appium-команда через него (`driver.contexts`,
+`switch_to.context`, `driver.get`, `driver.current_context` в
+`contexts.in_webview`/`browser_steps.open_listing:119-126`) виснет до
+клиентского HTTP-таймаута → `ReadTimeoutError` на `:4723`. При проде
+(`APPIUM_HTTP_TIMEOUT=120` + `--reruns 1`) это и есть наблюдавшиеся
+627/751/1114/1782с — несколько зависаний по 120-240с.
+
+**Почему ремедиум fix-verifier (холодный ребут + снятие стейл-лока) НЕ
+помог — и УХУДШИЛ:** CA ставится ВОЛАТИЛЬНЫМ tmpfs-mount'ом
+(`scripts/install-mitm-ca.sh`, шапка строки 20-22: «Mount'ы НЕ переживают
+reboot эмулятора — запускать после каждого старта»). `Install-MitmCA`
+вызывается ТОЛЬКО из `Start-Emulator -WritableSystem` (tasks.ps1:23-31).
+Ребут `emulator -no-snapshot-load` БЕЗ `-writable-system`/`Install-MitmCA`
+(по отчёту fix-verifier и явной формулировке диспатча — переустановки CA не
+было) СТИРАЕТ CA-mount и не восстанавливает → все replay-навигации падают с
+первого теста. Стейл-лок/ребут-ремедиум лечит ДРУГОЙ класс
+(multiinstance.lock/порча снапшота), а прописанный им ребут активно стирает
+CA — оттого «не сработал». (Атрибуция к сессии fix-verifier — вывод из его
+отчёта, правило 11; сам каузальный факт «CA absent → идентичный симптом,
+CA present → pass» доказан моим A/B/A' независимо.)
+
+**Связь с набл. №1/№4 (позиционная деградация длинной сессии) — ДРУГОЙ
+корень, тот же СИМПТОМ-СИГНАТУРА.** Дискриминатор — универсальность/позиция:
+- набл. №1/№4: CA ПРИСУТСТВОВАЛА (18+ replay-тестов сюиты проходили ДО
+  падения; набл. №4 — чистые 19/19). Падение только на ПОСЛЕДНЕЙ позиции или
+  при создании сессии (набл. №2, ~44 мин). Это деградация связки
+  Appium/эмулятор/WebView в ДЛИННОЙ живой сессии — к CA не сводится, моим
+  прогоном НЕ воспроизведена (я гонял одиночные пробы, не полный 19-тестовый
+  p0) и этим корнем НЕ закрыта.
+- ESC-001 (текущий): CA ОТСУТСТВУЕТ → падение УНИВЕРСАЛЬНО с ПЕРВОГО
+  replay-теста, независимо от позиции. Диагностирован и чинится процедурой.
+- Диффотест fix-verifier (`test_replay_infra_probe` тоже падает) корректно
+  доказал «не специфично фиксу AT-BUG-006», но МИСатрибутировал причину как
+  «новый класс деградации»; истинная причина — CA стёрта его же холодным
+  ребутом.
+
+**Вердикт (вход в приёмку/решение — за Lead, D-0037; сам не меняю статус/
+политику):**
+1. **Чинится ПРОЦЕДУРОЙ СРЕДЫ, не кодом.** Поднимать эмулятор для replay
+   ТОЛЬКО через `Start-Emulator -WritableSystem` (авто-`Install-MitmCA`);
+   после ЛЮБОГО ребута — заново `Install-MitmCA`. Голый
+   `emulator -no-snapshot-load` для replay без переустановки CA —
+   гарантированный отказ. Карантин TC-013 на основании ЭТОГО корня
+   НЕЛЕГИТИМЕН: симптом — не флаки TC-013, а отсутствующая предпосылка
+   среды, бьющая по ВСЕМ replay-тестам (`test_visibility`/TC-013,
+   `test_filter_profiles`/TC-042, `test_replay_infra_probe`); TC-013 зелен
+   при наличии CA (Leg B; набл. №4 19/19). Карантин длинно-сессионного
+   корня набл. №1/№4 остаётся открытым вопросом test-designer/Lead — этим
+   диагнозом НЕ решается.
+2. **Рекомендация hardening framework (предложение, не чиню — non-goal):**
+   (а) фикстура `replay` (`conftest.py:176`) должна FAIL-FAST при
+   отсутствии CA — дешёвая проверка предпосылки в setup (наличие хэша CA в
+   apex-сторе через `adb`, либо быстрый HTTPS-через-прокси зонд) с явным
+   сообщением «mitm CA не установлена — запусти Install-MitmCA», вместо
+   120-240с `ReadTimeoutError` на каждом тесте. Это сэкономило бы всю
+   сессию fix-verifier и дало верную атрибуцию. (б) В runbook симптома
+   «`driver.get`/`current_context` ReadTimeoutError на replay» первым
+   кандидатом ставить «CA стёрта ребутом» — ДО стейл-лока/снапшота, т.к.
+   ремедиум последних (ребут) усугубляет корень CA.
+
+**Побочная находка (adjacent surface — хрупкость bringup, докладываю не
+расширяя scope):** `Start-Emulator` (tasks.ps1) грузит СНАПШОТ по умолчанию
+(без `-no-snapshot-load`) — дважды подряд эмулятор КРЭШНУЛ на загрузке
+снапшота (нет qemu-процесса к ~20с, буд-луп `adb wait-for-device` завис
+навсегда; после крэша оставался `multiinstance.lock`). Чистый буд с
+`-no-snapshot-load` поднялся штатно. Это ОТДЕЛЬНЫЙ класс от CA (мешает
+bringup, не replay-навигации), но объясняет часть «стейл-лок»-путаницы:
+крэш на снапшоте сам плодит `multiinstance.lock`. Кандидат в отдельный
+infra-долг (снапшот `default_boot` порчен/несовместим) — решение Lead.
+
+**Witness (фактические прогоны, эта сессия):**
+- CA-стор до/после: `NOT_IN_APEX` + apex=34 (Leg A/A') → `CA visible in apex
+  store: OK` + store=134 (Leg B, `Install-MitmCA`).
+- `Invoke-Pytest tests/test_replay_infra_probe.py -v --reruns 0`,
+  `AO3_APPIUM_HTTP_TIMEOUT=30`: Leg A `1 failed in 196.13s` `ReadTimeoutError`
+  (`open_listing`/`current_context`); Leg A' (после `adb reboot`)
+  `1 failed in 195.83s` идентично. `AO3_APPIUM_HTTP_TIMEOUT=120`: Leg B
+  `1 passed in 27.63s` `PYTEST_EXIT=0`.
+- Эмулятор дважды крэшнул на `Start-Emulator -WritableSystem` (снапшот);
+  поднят `emulator ... -writable-system -no-snapshot-load` вручную.
+- Среда погашена после диагностики (`adb emu kill` + `Stop-NodeProcesses`,
+  `Get-Device` → `NO DEVICE`).

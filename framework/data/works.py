@@ -13,7 +13,14 @@ class Work:
     title: str
     author: str
     fandom: str = "Test Fandom"
-    word_count: int = 1000
+    # `int | None` — AT-BUG-010: колонка `wordCount INTEGER` в `work_ratings`
+    # nullable (см. `AppDatabase.kt`, CREATE TABLE work_ratings_new), сидинг
+    # (`seed_db._insert_rows`/`seed()`) передаёт значение поля напрямую в
+    # INSERT — `None` кладёт NULL штатным поведением sqlite3-биндинга
+    # параметров, без отдельной функции. Явный `None` — сознательный выбор
+    # автора `Work`, а не забытый дефолт: используйте `word_count=None` для
+    # граничных кейсов вида TC-031 (сортировка при отсутствующем word_count).
+    word_count: int | None = 1000
 
     @property
     def url(self) -> str:
@@ -52,3 +59,11 @@ ORPHAN_RELINK_TARGET = Work("900000038", "TC-038 Orphan Relink Target", "seed_au
 # её выбора (см. `app_steps.place_file_in_download_folder`).
 RESTORE_SCAN_TARGET = Work("900000039", "TC-039 Restore Scan Target", "seed_author_restore_scan",
                            "Fandom Restore Scan", 650)
+
+# TC-031: work с `word_count=None` — сортировка по Word count должна отправлять
+# такую работу в конец списка независимо от направления (граница отсутствующего
+# значения, AT-BUG-010). `seed()`/`seed_library` кладут её через тот же `_insert_rows`,
+# что и обычные работы — None доходит до колонки `wordCount` как NULL без отдельной
+# функции сидинга (см. комментарий у поля `Work.word_count` выше).
+NULL_WORD_COUNT_TARGET = Work("900000031", "TC-031 Null Word Count Target",
+                              "seed_author_null_wc", "Fandom Null WC", None)

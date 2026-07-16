@@ -83,6 +83,12 @@ def _pull_baseline(dst_dir: Path) -> Path:
 
 
 def _insert_rows(db: Path, works: list[tuple[Work, str]]) -> None:
+    """AT-BUG-010: `wordCount` — колонка `INTEGER` nullable (см. `AppDatabase.kt`).
+    `work.word_count` идёт в INSERT как обычный bind-параметр — `Work(word_count=None)`
+    (см. `works.NULL_WORD_COUNT_TARGET`) кладёт NULL штатным поведением sqlite3, без
+    отдельной ветки/функции: не нужно расширять сигнатуру, как для `rating=None`
+    (та ветка — `_insert_rows_full`/`seed_with_comment`, отдельная зависимость, т.к.
+    `rating` там дополнительно проверяется по `_RATING_ENUM`)."""
     con = sqlite3.connect(db)
     cur = con.cursor()
     now = int(time.time() * 1000)
