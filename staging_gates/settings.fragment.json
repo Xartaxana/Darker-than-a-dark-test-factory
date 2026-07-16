@@ -1,0 +1,36 @@
+{
+  "_comment": "ШАБЛОН, НЕ активный конфиг. Не является частью .claude/settings.json — отдельный файл специально, чтобы не создать риск случайного мержа мимо ревью (см. staging_gates/README.md). Пути 'tools/...' ниже — штабная форма как есть; перед реальным подключением в AO3 требуют решения их Lead'а (README.md, п.1: staging_gates/tools/... или перенос в scripts/...). Это ДОБАВЛЯЕМЫЙ блок 'hooks' — текущий .claude/settings.json несёт только 'permissions' и ключа 'hooks' не имеет вовсе; активация не должна перезаписывать существующий permissions.allow.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Task",
+        "hooks": [
+          { "type": "command", "command": "python tools/dispatch_gate.py" },
+          { "type": "command", "command": "python tools/critic_snapshot.py" }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit|Bash",
+        "hooks": [
+          { "type": "command", "command": "python tools/dod_track.py" }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "python tools/dod_gate.py" }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "python tools/main_gate.py" }
+        ]
+      }
+    ]
+  }
+}

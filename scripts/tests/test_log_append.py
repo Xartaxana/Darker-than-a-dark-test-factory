@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import io
 import json
+import subprocess
 
 import pytest
 
@@ -18,6 +19,13 @@ def logs(tmp_path, monkeypatch):
     orch = tmp_path / "state" / "orchestrator-log.md"
     monkeypatch.setattr(la, "ROUTING_LOG", routing, raising=True)
     monkeypatch.setattr(la, "ORCH_LOG", orch, raising=True)
+    # Порт-батч штаба: защита от «тихо-успешен вне среды» (_verify_environment)
+    # требует, чтобы каталог журнала уже существовал И был частью git-репо —
+    # tmp_path ни то, ни другое. Все поведенческие тесты этого файла проверяют
+    # логику append_routing/append_orchestrator САМУ ПО СЕБЕ, не среду; стаб
+    # держит её "валидной" здесь, отдельные тесты ниже проверяют
+    # _verify_environment напрямую, без этого стаба.
+    monkeypatch.setattr(la, "_verify_environment", lambda **kw: (True, ""), raising=True)
     return routing, orch
 
 
@@ -655,3 +663,154 @@ def test_open_dispatches_multiple_open_ordered_oldest_first(logs, capsys):
     assert len(out) == 2
     assert out[0].startswith("OPEN DISPATCH: t-001 ")
     assert out[1].startswith("OPEN DISPATCH: t-003 ")
+
+
+# Порт-батч штаба (D:\Improving_AI\Operating-System-for-LLMs): CLI-флаг
+# --replaces-worker -- эталон логики: правило 9в2 tools/journal_validator.py
+# OS-репо (маркер replaces_worker:<хэндл> в notes, легализующий повторный
+# delegated по ОТКРЫТОМУ task_id тем же agent'ом БЕЗ вердикта -- замена
+# умершего воркера, не ретрай правила 6).
+
+def test_replaces_worker_valid_ref_legalizes_redelegation_without_attempt(logs):
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr-A")
+    # Тот же agent, задача открыта (нет accepted/rejected), нет --attempt --
+    # без --replaces-worker это был бы запрещённый дубль-паттерн (см.
+    # test_delegated_retry_same_agent_open_task_requires_attempt_and_rejected).
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr-B", replaces_worker="wr-A",
+                      notes="воркер завис, замена без вердикта")
+    lines = routing.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 2
+    rec = json.loads(lines[1])
+    assert rec["worker_ref"] == "wr-B"
+    assert "attempt" not in rec
+    assert "replaces_worker:wr-A" in rec["notes"]
+    assert "воркер завис" in rec["notes"]
+
+
+def test_replaces_worker_marker_not_duplicated_if_already_in_notes(logs):
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr-A")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr-B", replaces_worker="wr-A",
+                      notes="уже несу маркер replaces_worker:wr-A сама по себе")
+    rec = json.loads(routing.read_text(encoding="utf-8").splitlines()[1])
+    assert rec["notes"].count("replaces_worker:wr-A") == 1
+
+
+def test_replaces_worker_mismatched_ref_rejected(logs):
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr-A")
+    with pytest.raises(SystemExit, match="replaces-worker"):
+        la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                          worker_ref="wr-C", replaces_worker="wr-B")
+    # отклонённый вызов не дописался
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 1
+
+
+def test_replaces_worker_with_attempt_together_rejected(logs):
+    # Штабная семантика (спека порт-батча): замена умершего воркера -- НЕ
+    # ретрай, поэтому --replaces-worker и --attempt взаимоисключающие --
+    # смешение двух легальных оснований в одной строке запрещено явной
+    # ошибкой, а не тихо игнорируется.
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr-A")
+    with pytest.raises(SystemExit, match="взаимоисключающие"):
+        la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                          worker_ref="wr-B", replaces_worker="wr-A", attempt=2)
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 1
+
+
+def test_replaces_worker_finds_ref_among_any_prior_agent_delegated(logs):
+    # Эталон (journal_validator.py, task_worker_refs): прежний worker_ref
+    # ищется среди ВСЕХ delegated этого task_id, не только того же agent.
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr-A")
+    la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                      worker_ref="wr-critic")  # continuation, ветка "б"
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr-B", replaces_worker="wr-critic")
+    lines = routing.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 3
+    assert "replaces_worker:wr-critic" in json.loads(lines[2])["notes"]
+
+
+def test_replaces_worker_ignored_when_not_applicable_branch(logs):
+    # На СВЕЖЕМ task_id (новая задача) --replaces-worker просто не
+    # консультируется -- симметрично с --reopen-task, который тоже не
+    # проверяется вне своей ветки (задача закрыта accepted).
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr-A", replaces_worker="wr-nonexistent")
+    rec = json.loads(routing.read_text(encoding="utf-8"))
+    assert "replaces_worker" not in rec.get("notes", "")
+
+
+# Порт-батч штаба: защита от «тихо-успешен вне среды» (_verify_environment).
+# Тесты ниже НЕ используют стаб из фикстуры `logs` -- проверяют функцию
+# напрямую на реальной файловой структуре tmp_path.
+
+def test_verify_environment_fails_when_require_dir_missing(tmp_path):
+    missing = tmp_path / "logs"
+    ok, msg = la._verify_environment(require_dir=missing)
+    assert ok is False
+    assert "не существует" in msg
+
+
+def test_verify_environment_fails_when_dir_exists_but_not_git_repo(tmp_path):
+    logs_dir = tmp_path / "logs"
+    logs_dir.mkdir()
+    ok, msg = la._verify_environment(require_dir=logs_dir)
+    assert ok is False
+    assert "git-репозитория" in msg
+
+
+def test_verify_environment_passes_inside_real_git_repo(tmp_path):
+    logs_dir = tmp_path / "logs"
+    logs_dir.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=str(tmp_path), check=True)
+    ok, msg = la._verify_environment(require_dir=logs_dir)
+    assert ok is True
+    assert msg == ""
+
+
+def test_append_routing_refuses_outside_environment_without_stub(tmp_path, monkeypatch):
+    # Смок сквозь append_routing() целиком (не только _verify_environment):
+    # ROUTING_LOG указывает в tmp_path, который не git-репо и logs/ не
+    # существует -- отказ ДО записи, файл не создаётся вовсе (в отличие от
+    # прежнего поведения, где _append_line тихо делал mkdir(parents=True)
+    # в любом месте).
+    routing = tmp_path / "logs" / "routing-log.jsonl"
+    monkeypatch.setattr(la, "ROUTING_LOG", routing, raising=True)
+    with pytest.raises(SystemExit, match="деплой не распознан"):
+        la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                          worker_ref="wr")
+    assert not routing.exists()
+    assert not routing.parent.exists()
+
+
+def test_append_orchestrator_refuses_outside_environment_without_stub(tmp_path, monkeypatch):
+    orch = tmp_path / "state" / "orchestrator-log.md"
+    monkeypatch.setattr(la, "ORCH_LOG", orch, raising=True)
+    with pytest.raises(SystemExit, match="деплой не распознан"):
+        la.append_orchestrator(["Правило X", "test-automator", "TC-050", "OK"])
+    assert not orch.exists()
+
+
+def test_append_routing_succeeds_when_dir_exists_and_is_git_repo(tmp_path, monkeypatch):
+    logs_dir = tmp_path / "logs"
+    logs_dir.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=str(tmp_path), check=True)
+    routing = logs_dir / "routing-log.jsonl"
+    monkeypatch.setattr(la, "ROUTING_LOG", routing, raising=True)
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr")
+    assert routing.exists()
+    rec = json.loads(routing.read_text(encoding="utf-8"))
+    assert rec["task_id"] == "t-001"
