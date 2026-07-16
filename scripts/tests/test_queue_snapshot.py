@@ -186,6 +186,42 @@ def test_release_readiness_test_debt_open_and_quarantine(repo, monkeypatch):
     assert "TC-200" in section.split("Карантин автотестов")[1].split("\n")[0]
 
 
+# --- red-probe-видимость (docs/09 п.10, 2026-07-17): ретрофит-долг ---
+
+def test_release_readiness_red_probe_missing_counts_automated_active_without_field(repo, monkeypatch):
+    """Automated+active без red_probe -> считается и перечисляется; заполненный
+    red_probe, неактивный automation_status и не-Automated статус — не считаются."""
+    monkeypatch.setattr(qs, "REPO", repo.root, raising=True)
+    monkeypatch.setattr(qs, "AUT_PATH", repo.root / "state" / "app-under-test.yaml", raising=True)
+    monkeypatch.setattr(qs, "ESCALATIONS_PATH", repo.root / "state" / "escalations.md", raising=True)
+    repo.test_case("TC-500", "Automated", extra="automation_status: active\n")               # без red_probe -> считается
+    repo.test_case("TC-501", "Automated", extra=(
+        "automation_status: active\nred_probe: \"2026-07-17T00:00:00Z\"\n"))                 # есть red_probe -> нет
+    repo.test_case("TC-502", "Automated", extra="automation_status: quarantined\n")           # не active -> нет
+    repo.test_case("TC-503", "Approved")                                                      # не Automated -> нет
+
+    text = qs.render(qs.collect(), "2026-07-17T00:00:00Z")
+    section = text.split("## Release readiness")[1].split("## Сборка под тестом")[0]
+
+    assert "- Automated без red_probe: **1**" in section
+    assert "TC-500" in section.split("Automated без red_probe")[1].split("\n")[0]
+    assert "TC-501" not in section.split("Automated без red_probe")[1].split("\n")[0]
+    assert "TC-502" not in section.split("Automated без red_probe")[1].split("\n")[0]
+
+
+def test_release_readiness_red_probe_missing_zero_when_all_covered(repo, monkeypatch):
+    monkeypatch.setattr(qs, "REPO", repo.root, raising=True)
+    monkeypatch.setattr(qs, "AUT_PATH", repo.root / "state" / "app-under-test.yaml", raising=True)
+    monkeypatch.setattr(qs, "ESCALATIONS_PATH", repo.root / "state" / "escalations.md", raising=True)
+    repo.test_case("TC-510", "Automated", extra=(
+        "automation_status: active\nred_probe: \"2026-07-17T00:00:00Z\"\n"))
+
+    text = qs.render(qs.collect(), "2026-07-17T00:00:00Z")
+    section = text.split("## Release readiness")[1].split("## Сборка под тестом")[0]
+
+    assert "- Automated без red_probe: **0**" in section
+
+
 def test_release_readiness_untriaged_age(repo, monkeypatch):
     """Item 8: runs NeedsTriage — счёт + максимальный возраст (untriaged_failure_age)."""
     monkeypatch.setattr(qs, "REPO", repo.root, raising=True)

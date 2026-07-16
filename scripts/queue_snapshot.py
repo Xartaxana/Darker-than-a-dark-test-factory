@@ -145,6 +145,7 @@ def collect() -> dict:
     quarantine_ids: list[str] = []              # id кейсов с automation_status: quarantined
     blocker_critical_open: list[str] = []       # id app_bug, Open|Reopened, blocker|critical
     test_debt_open: list[str] = []              # id test_debt, Open|Reopened
+    red_probe_missing: list[str] = []           # id Automated+active кейсов без red_probe (docs/09 п.10)
 
     for itype, meta, _body, src in bs._iter_artifacts():
         status = str(meta.get("status", "?"))
@@ -162,6 +163,9 @@ def collect() -> dict:
                 automation[astatus] += 1
             if astatus == "quarantined":
                 quarantine_ids.append(key)
+            if status == "Automated" and astatus == "active" and \
+                    not str(meta.get("red_probe") or "").strip():
+                red_probe_missing.append(key)
             priority = str(meta.get("priority") or "").strip()
             if priority:
                 tc_priority_total[priority] += 1
@@ -213,6 +217,7 @@ def collect() -> dict:
             "tc_priority_total": tc_priority_total, "tc_priority_automated": tc_priority_automated,
             "p0_uncovered": p0_uncovered, "quarantine_ids": quarantine_ids,
             "blocker_critical_open": blocker_critical_open, "test_debt_open": test_debt_open,
+            "red_probe_missing": red_probe_missing,
             "charter_stats": _charter_stats()}
 
 
@@ -278,6 +283,13 @@ def _render_release_readiness(data: dict, generated_at: str) -> list[str]:
     qid = data["quarantine_ids"]
     lines.append(f"- Карантин автотестов: **{len(qid)}**" +
                  (f" — {', '.join(qid)}" if qid else ""))
+
+    # 7а. Red-probe-видимость (docs/09 п.10, 2026-07-17): Automated+active кейсы
+    # без мутационной проверки — долг, который подхватывает ретрофит-правило
+    # rules.yaml. Считается рядом с карантином — тот же класс «долг автотестов».
+    rpm = data["red_probe_missing"]
+    lines.append(f"- Automated без red_probe: **{len(rpm)}**" +
+                 (f" — {', '.join(rpm)}" if rpm else ""))
 
     # 8. Untriaged — счёт + максимальный возраст (untriaged_failure_age).
     untriaged = data["untriaged"]

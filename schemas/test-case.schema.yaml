@@ -37,3 +37,10 @@ fields:
   quarantine_since: { pattern: "^\\d{4}-\\d{2}-\\d{2}[T ][\\d:.+]+Z?$" }
   quarantine_expiry: { pattern: "^\\d{4}-\\d{2}-\\d{2}[T ][\\d:.+]+Z?$" }
   quarantine_owner: {}   # кто отвечает за вывод из карантина (обычно test-maintainer)
+  # red-probe-видимость (docs/09 п.10, введено 2026-07-17): ISO-таймстамп (полный,
+  # как reviewed_at — голая дата не пройдёт паттерн), когда автотест
+  # доказал умение падать (мутационная проверка F1 п.7 test-reviewer, либо ретрофит-
+  # режим того же агента). Отсутствие/пустота при status: Automated И
+  # automation_status: active = проба не делалась — сигнал долга для правила
+  # rules.yaml "Красная проба существующего автотеста (ретрофит red_probe)".
+  red_probe: { pattern: "^\\d{4}-\\d{2}-\\d{2}[T ][\\d:.+]+Z?$" }

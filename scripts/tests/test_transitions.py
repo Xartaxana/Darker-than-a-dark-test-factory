@@ -72,6 +72,17 @@ def test_quarantine_actors_and_effects():
     assert "quarantine_fields" in tr.effects_for("automation", "active", "quarantined")
 
 
+def test_red_probe_needs_maintenance_actors():
+    """Красная проба (red-probe-only, 2026-07-17): test-reviewer легально ставит
+    active -> needs_maintenance («тест не умеет падать»), но выводит из
+    needs_maintenance по-прежнему ТОЛЬКО test-maintainer (инвариант B3)."""
+    assert tr.is_allowed("automation", "active", "needs_maintenance", "test-reviewer")
+    assert tr.is_allowed("automation", "active", "needs_maintenance", "failure-analyst")
+    assert not tr.is_allowed("automation", "active", "needs_maintenance", "test-automator")
+    assert tr.is_allowed("automation", "needs_maintenance", "active", "test-maintainer")
+    assert not tr.is_allowed("automation", "needs_maintenance", "active", "test-reviewer")
+
+
 def test_deprecated_is_human_or_strategist_retired_is_terminal():
     assert tr.is_allowed("automation", "active", "deprecated", "human")
     assert tr.is_allowed("automation", "quarantined", "deprecated", "test-strategist")

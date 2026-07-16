@@ -119,8 +119,10 @@ machines:
       - {from: active, to: quarantined, by: [failure-analyst, test-maintainer],
          effects: [quarantine_fields],
          ref: "вердикт FLAKY: тест нестабилен, исключить из сигнала до починки; заводится test_debt (B4)"}
-      - {from: active, to: needs_maintenance, by: [failure-analyst, test-maintainer],
-         ref: "вердикт TEST_BUG/SITE_CHANGED/APP_CHANGED: тест сломан детерминированно"}
+      - {from: active, to: needs_maintenance, by: [failure-analyst, test-maintainer, test-reviewer],
+         ref: "вердикт TEST_BUG/SITE_CHANGED/APP_CHANGED: тест сломан детерминированно;
+               test-reviewer — исход красной пробы 'тест не умеет падать' (режим
+               red-probe-only, docs/06; добавлен 2026-07-17 по блокеру critic)"}
       - {from: quarantined, to: active, by: [test-maintainer], effects: [quarantine_cleared],
          ref: "починен: 3 зелёных прогона подряд (критерий как у test-automator)"}
       - {from: quarantined, to: needs_maintenance, by: [test-maintainer],
