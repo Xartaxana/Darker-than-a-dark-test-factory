@@ -1,0 +1,316 @@
+# Реестр фич приложения (docs/09 §5.2 не нарушается — это рукописные ОПРЕДЕЛЕНИЯ
+# фич, что существует в app-under-test/, не coverage-числа; покрытие остаётся
+# генерируемой проекцией scripts/coverage_map.py из frontmatter test-cases/).
+#
+# Назначение: закрывает дыру, которую §5.2-проекция физически не может
+# показать — фичу с НУЛЁМ кейсов (coverage_map.py читает только существующие
+# test-cases/**, реестр списков кейсов НЕ содержит и не ссылается на них).
+#
+# Владелец: test-strategist при переинвентаризации (полная привязка триггера —
+# state/rules.yaml when-условие на протухание — часть 5 механизма
+# trace-matrix, вне скоупа диспатча 1; пока переинвентаризация ручная/по
+# сигналу еженедельной калибровки). До части 5 обновляется вручную при
+# заметном изменении приложения — сверить с кодом, обновить
+# inventoried_at_commit, дельту отразить здесь.
+#
+# Верификация записей (builder, диспатч 1, 2026-07-17): каждая запись сверена
+# с app-under-test/ по source — файл существует и поведение в нём читается
+# (не unit-тестами, чтением реализации). Не подтверждённые построчно записи
+# помечены явно в отчёте диспатча, не выкинуты и не выдуманы.
+#
+# Гранулярность: фича = проверяемое пользовательское поведение (не файл, не
+# функция) — см. спека trace-matrix v2 §1a.
+
+inventoried_at_commit: "63f6aac3b1ea1dfad82f68b8196aa6cf56f41853"
+
+features:
+  # ── Browse/WebView ──────────────────────────────────────────────────────
+  - id: browse-tabs-lifecycle
+    title: "Вкладки: открыть/закрыть/переключить (лимит MAX_TABS=10)"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt"
+  - id: browse-deep-links
+    title: "Deep link (intent data) открывает/переключает вкладку на URL"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/MainActivity.kt"
+  - id: browse-scroll-restore
+    title: "Восстановление позиции скролла вкладки после рестарта приложения"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt"
+  - id: browse-infinite-scroll
+    title: "Бесконечная подгрузка следующих страниц листинга при скролле"
+    screen: browse
+    source: "app/src/main/assets/ao3_bridge.js"
+  - id: browse-tap-to-scroll
+    title: "Тап по верхней/нижней трети страницы работы скроллит вверх/вниз, средняя треть — fullscreen toggle"
+    screen: browse
+    source: "app/src/main/assets/ao3_bridge.js"
+  - id: browse-pinch-font
+    title: "Pinch/spread двумя пальцами меняет размер шрифта (fontSizeStep)"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserScreen.kt"
+  - id: browse-two-finger-brightness
+    title: "Вертикальный двухпальцевый драг меняет яркость"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserScreen.kt"
+  - id: browse-bridge-injection
+    title: "Инжекция ao3_bridge.js в каждую загруженную AO3-страницу (onPageFinished)"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserScreen.kt"
+  - id: browse-tabstrip-indicators
+    title: "TabStrip: индикация активной вкладки, закрытие свайпом вверх, кнопка New tab"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/TabStrip.kt"
+  - id: browse-bottombar-nav
+    title: "BottomBar: навигация между экранами Browse/Library/Settings"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BottomBar.kt"
+
+  # ── Side Panel ───────────────────────────────────────────────────────────
+  - id: sidepanel-home
+    title: "Кнопка Home в side panel переводит активную вкладку на AO3 root"
+    screen: side-panel
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowseSidePanel.kt"
+  - id: sidepanel-theme-toggle
+    title: "Кнопка переключения темы Light/Dark в side panel"
+    screen: side-panel
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowseSidePanel.kt"
+  - id: sidepanel-font-size
+    title: "Кнопки A-/A+ в side panel, disabled на границах диапазона (шаги 0..6)"
+    screen: side-panel
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowseSidePanel.kt"
+  - id: sidepanel-fullscreen-toggle
+    title: "Кнопка fullscreen toggle в side panel"
+    screen: side-panel
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowseSidePanel.kt"
+  - id: sidepanel-rating-filters
+    title: "Чекбоксы скрытия рейтингов (hidden ratings) в side panel"
+    screen: side-panel
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowseSidePanel.kt"
+  - id: sidepanel-settings-sync
+    title: "Side panel отражает общий стейт темы/шрифта/скрытых рейтингов с Settings"
+    screen: side-panel
+    source: "app/src/main/java/com/example/ao3_wrapper/MainActivity.kt"
+
+  # ── Library ──────────────────────────────────────────────────────────────
+  - id: library-tabs-six
+    title: "6 вкладок библиотеки (Favorite/Kudosed/Read/Pending/Disliked/Files)"
+    screen: library
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+  - id: library-filter-wordcount
+    title: "Фильтр word count min/max"
+    screen: library
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+  - id: library-filter-fandom
+    title: "Фильтр по фандому"
+    screen: library
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+  - id: library-filter-downloaded-only
+    title: "Чекбокс downloaded-only"
+    screen: library
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+  - id: library-filter-freetext
+    title: "Свободный текстовый поиск (title/author/fandom/tags/comment)"
+    screen: library
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+  - id: library-filter-tags-and
+    title: "Фильтр по личным тегам, логика AND (все выбранные теги должны совпасть)"
+    screen: library
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+  - id: library-sort-last-read
+    title: "Сортировка Last read (дефолт, по убыванию timestamp)"
+    screen: library
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+  - id: library-sort-wordcount
+    title: "Сортировка Word count ASC/DESC"
+    screen: library
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+  - id: library-sort-author
+    title: "Сортировка Author A-Z (пустой author в конце)"
+    screen: library
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+  - id: library-sort-rating-files
+    title: "Сортировка Rating, доступна только на вкладке Files"
+    screen: library
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+  - id: library-sort-scroll-reset
+    title: "Сброс скролла списка на верх при смене сортировки"
+    screen: library
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+  - id: library-card-actions
+    title: "Действия карточки: открыть/скачать/удалить файл/удалить работу целиком"
+    screen: library
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+  - id: library-card-comment-tags
+    title: "Индикатор комментария (note-иконка) и личных тегов на карточке"
+    screen: library
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+
+  # ── Settings ─────────────────────────────────────────────────────────────
+  - id: settings-theme-mode
+    title: "Тема Light/Dark/System без пересоздания Activity"
+    screen: settings
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  - id: settings-webview-dark-mode
+    title: "WebView dark mode (FORCE_DARK / ALGORITHMIC_DARKENING)"
+    screen: settings
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserScreen.kt"
+  - id: settings-font-slider
+    title: "Слайдер размера шрифта (7 ступеней, 100–190%)"
+    screen: settings
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  - id: settings-brightness-slider
+    title: "Слайдер яркости (overlay при v<0, reset-on-start)"
+    screen: settings
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  - id: settings-rating-visibility-filter
+    title: "Фильтр видимости рейтингов, режим отображения hide/dim"
+    screen: settings
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  - id: settings-panel-side
+    title: "Позиция side panel Left/Right"
+    screen: settings
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  - id: settings-tap-to-scroll-toggle
+    title: "Тумблер Tap to scroll (work pages)"
+    screen: settings
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  - id: settings-infinite-scroll-toggle
+    title: "Тумблер Infinite scroll (listing pages)"
+    screen: settings
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  - id: settings-auto-download-favorite
+    title: "Тумблер авто-скачивания HTML при рейтинге Favorite (SAVE)"
+    screen: settings
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  - id: settings-download-folder-saf
+    title: "Выбор папки загрузок через SAF (Storage Access Framework)"
+    screen: settings
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  - id: settings-backup-export
+    title: "Экспорт бэкапа JSON (works + filterProfiles)"
+    screen: settings
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  - id: settings-restore-merge
+    title: "Восстановление из бэкапа с merge (пропуск уже существующих id)"
+    screen: settings
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  - id: settings-orphan-scan-silent
+    title: "Тихий orphan-скан загрузок при смене папки (без диалога, если пусто)"
+    screen: settings
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  - id: settings-orphan-scan-restore-dialog
+    title: "Orphan-скан свёрнут в единый диалог результата при restore из бэкапа"
+    screen: settings
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  - id: settings-scan-downloads-manual
+    title: "Ручная кнопка Scan for downloads — relink .html-файлов, потерянных базой"
+    screen: settings
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  - id: settings-filter-profiles-list
+    title: "Список сохранённых AO3-фильтр-профилей"
+    screen: settings
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  - id: settings-filter-profiles-delete
+    title: "Удаление фильтр-профиля из списка Settings и из активной панели"
+    screen: settings
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  - id: settings-filter-profiles-rename
+    title: "Переименование фильтр-профиля"
+    screen: settings
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  # Две записи ниже добавлены Lead при приёмке trace-matrix-impl-1 (2026-07-17):
+  # подтверждены кодом builder'ом (injectSaveFilterButton/confirmSaveFilter;
+  # FilterPanel), отсутствовали в Приложении А спеки — доклад-флаг воркера.
+  - id: browser-filter-profile-save
+    title: "Кнопка Save filter в форме AO3 Sort&Filter — сохранение текущего запроса профилем (инжекция bridge)"
+    screen: browser
+    source: "app/src/main/assets/ao3_bridge.js"
+  - id: browser-filter-profile-apply
+    title: "Применение сохранённого фильтр-профиля из FilterPanel листинга"
+    screen: browser
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BottomBar.kt"
+
+  # ── Rating & Notes ───────────────────────────────────────────────────────
+  - id: rating-overlay-five-options
+    title: "Overlay/панель с 5 рейтингами (Favorite/Kudosed/Read/Pending/Dislike)"
+    screen: rating-notes
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/components/RatingOverlay.kt"
+  - id: rating-deselect-on-tap
+    title: "Deselect рейтинга повторным тапом на уже выбранной кнопке"
+    screen: rating-notes
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/components/RatingOverlay.kt"
+  - id: rating-comment-field
+    title: "Поле комментария: добавить/изменить/очистить (Save note / Clear note)"
+    screen: rating-notes
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/components/RatingOverlay.kt"
+  - id: rating-tags-chips
+    title: "Chip-теги: добавление (suggested/custom) и удаление"
+    screen: rating-notes
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/components/RatingOverlay.kt"
+  - id: rating-entry-work-panel
+    title: "Вход в рейтинг: встроенная панель страницы работы (bottom bar)"
+    screen: rating-notes
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BottomBar.kt"
+  - id: rating-entry-listing-overlay
+    title: "Вход в рейтинг: bottom-sheet-подобный overlay с Rate-кнопки листинга"
+    screen: rating-notes
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserScreen.kt"
+  - id: rating-note-button-listing
+    title: "Note-кнопка на карточке листинга открывает overlay с развёрнутым комментарием"
+    screen: rating-notes
+    source: "app/src/main/assets/ao3_bridge.js"
+
+  # ── AO3 Bridge ───────────────────────────────────────────────────────────
+  - id: bridge-rate-note-tag-buttons
+    title: "Инжекция Rate/Note/Tag-индикаторов в карточки листинга AO3"
+    screen: ao3-bridge
+    source: "app/src/main/assets/ao3_bridge.js"
+  - id: bridge-badge-sync-multi
+    title: "Синхронизация бейджа рейтинга по нескольким вхождениям работы на листинге/вкладках"
+    screen: ao3-bridge
+    source: "app/src/main/assets/ao3_bridge.js"
+  - id: bridge-hide-dim-filter
+    title: "hide/dim-фильтрация карточек листинга по скрытым рейтингам"
+    screen: ao3-bridge
+    source: "app/src/main/assets/ao3_bridge.js"
+  - id: bridge-main-pairing-filter
+    title: "Чекбокс 'Main pairing only' в форме include-фильтра AO3 (Sort & Filter)"
+    screen: ao3-bridge
+    source: "app/src/main/assets/ao3_bridge.js"
+  - id: bridge-exclude-main-pairing-filter
+    title: "Чекбокс исключения main pairing в форме exclude-фильтра AO3"
+    screen: ao3-bridge
+    source: "app/src/main/assets/ao3_bridge.js"
+  - id: bridge-dark-css
+    title: "CSS-переопределения тёмной темы на AO3-страницах (window.__ao3AppDark)"
+    screen: ao3-bridge
+    source: "app/src/main/assets/ao3_bridge.js"
+  - id: bridge-scroll-reporting
+    title: "Отчёт позиции скролла и прогресса чтения (глава/%) в Kotlin"
+    screen: ao3-bridge
+    source: "app/src/main/assets/ao3_bridge.js"
+
+  # ── Данные ───────────────────────────────────────────────────────────────
+  - id: data-workrating-model
+    title: "Room-сущность WorkRating (rating/comment/tags/fandom/author/wordCount/downloadPath)"
+    screen: data
+    source: "app/src/main/java/com/example/ao3_wrapper/data/model/WorkRating.kt"
+  - id: data-filterprofile-model
+    title: "Room-сущность FilterProfile (name/queryString)"
+    screen: data
+    source: "app/src/main/java/com/example/ao3_wrapper/data/model/FilterProfile.kt"
+  - id: data-clear-all-ratings
+    title: "Clear all ratings — полное необратимое удаление всех рейтингов"
+    screen: data
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+
+  # ── Фоновые ──────────────────────────────────────────────────────────────
+  - id: background-download-repository
+    title: "DownloadRepository: скачивание HTML работы через OkHttp в SAF-папку или app storage"
+    screen: background
+    source: "app/src/main/java/com/example/ao3_wrapper/data/repository/DownloadRepository.kt"
+  - id: background-auto-download-trigger
+    title: "Автозапуск скачивания при простановке рейтинга Favorite (SAVE), если тумблер включён"
+    screen: background
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt"

@@ -43,7 +43,7 @@ tools: Read, Glob, Grep, Write, Edit
    проверь, нет ли уже покрывающего бага в `bugs/`.
 5. Пройди чек-лист качества внутри шаблона; при успехе выстави `status: Review` (для
    P0/P1 финальный `Approved` ставит человек; для P2/P3 допустим авто-`Approved`).
-6. Сохрани в `test-cases/<area>/TC-xxx.md`. Обнови traceability при необходимости.
+6. Сохрани в `test-cases/<area>/TC-xxx.md`. Укажи `features` из `docs/feature-registry.yaml`.
 7. **Сними метку `needs-design` в `docs/01-test-strategy.md` §9 в ТОМ ЖЕ ходе**,
    которым закрыл область (пункты §9 закрыты кейсами в любом статусе
    Review/Approved/Automated): пометь пункт как designed со ссылками на TC-номера.

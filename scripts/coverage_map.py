@@ -28,6 +28,8 @@ import board_sync as bs
 REPO = bs.REPO
 OUT_PATH = REPO / "state" / "coverage-map.md"
 RISK_DOC_PATH = REPO / "docs" / "01-test-strategy.md"
+FEATURE_REGISTRY_PATH = REPO / "docs" / "feature-registry.yaml"
+AUT_PATH = REPO / "state" / "app-under-test.yaml"
 
 # Порядок из schemas/test-case.schema.yaml (enum priority/status) — не угадан.
 PRIORITY_ORDER = ["P0", "P1", "P2", "P3"]
@@ -54,6 +56,31 @@ def _load_risk_catalog() -> list[tuple[str, str, str]]:
         if rm:
             out.append((rm.group(1), rm.group(2).strip(), rm.group(3).strip()))
     return out
+
+
+def _load_feature_registry() -> dict:
+    """docs/feature-registry.yaml (trace-matrix диспатч 1, §1a/1c спеки) —
+    рукописный реестр фич приложения. Читаем как есть (inventoried_at_commit +
+    features[{id,title,screen,source}]) — этот модуль ничего в него не пишет,
+    только проецирует покрытие поверх."""
+    if not FEATURE_REGISTRY_PATH.exists():
+        return {"inventoried_at_commit": None, "features": []}
+    import yaml
+    data = yaml.safe_load(FEATURE_REGISTRY_PATH.read_text(encoding="utf-8")) or {}
+    return {
+        "inventoried_at_commit": data.get("inventoried_at_commit"),
+        "features": data.get("features") or [],
+    }
+
+
+def _current_build_commit() -> str | None:
+    """source_commit текущей сборки из state/app-under-test.yaml (build_watch.py
+    пишет его же полем) — эталон для детектора протухания реестра фич."""
+    if not AUT_PATH.exists():
+        return None
+    text = AUT_PATH.read_text(encoding="utf-8", errors="replace")
+    m = re.search(r'(?m)^source_commit:\s*"?([^"\n#]*[^"\n# ])"?\s*(#.*)?$', text)
+    return m.group(1).strip() if m else None
 
 
 def _areas() -> list[str]:
@@ -137,6 +164,20 @@ def collect() -> dict:
             for rid in _RISK_ID_RE.findall(str(c.get("risk") or "")):
                 risk_index[rid].append((area, str(c.get("id"))))
 
+    # trace-matrix диспатч 1 (§1c спеки): «Фичи → покрытие» — проекция ИЗ
+    # frontmatter кейсов (test-case.features), реестр списков кейсов не несёт.
+    feature_registry = _load_feature_registry()
+    feature_coverage: dict[str, list[tuple[str, str, str]]] = defaultdict(list)
+    for area, cases in by_area.items():
+        for c in cases:
+            case_features = c.get("features")
+            if not isinstance(case_features, list):
+                continue
+            for fid in case_features:
+                feature_coverage[str(fid)].append(
+                    (area, str(c.get("id")), str(c.get("status") or "?"))
+                )
+
     return {
         "by_area": dict(by_area),
         "risk_catalog": risk_catalog,
@@ -146,6 +187,9 @@ def collect() -> dict:
         "runs_with_tc": runs_with_tc,
         "has_tc_results": has_tc_results,
         "newer_without_tc": newer_without_tc,
+        "feature_registry": feature_registry,
+        "feature_coverage": dict(feature_coverage),
+        "current_build_commit": _current_build_commit(),
     }
 
 
@@ -220,6 +264,18 @@ def render(data: dict, generated_at: str) -> str:
         "этот файл не второй источник истины, а вывод.",
         "",
     ]
+    feature_registry = data["feature_registry"]
+    inv_commit = feature_registry.get("inventoried_at_commit")
+    current_commit = data["current_build_commit"]
+    # B3 детектор протухания (§1c спеки, правило 10в/10г CLAUDE.md): сравнение
+    # commit'ов — не полноты инвентаризации (та требует переинвентаризации по
+    # сигналу, часть 5/вне этого диспатча), а только «реестр устарел».
+    if inv_commit and current_commit and inv_commit != current_commit:
+        lines.append(
+            f"⚠ реестр фич протух: сборка {current_commit}, реестр "
+            f"инвентаризован против {inv_commit}"
+        )
+        lines.append("")
     if data["newer_without_tc"]:
         if data["has_tc_results"]:
             lines.append(
@@ -262,6 +318,47 @@ def render(data: dict, generated_at: str) -> str:
         else:
             cell = "риск не покрыт дизайном"
         lines.append(f"| {rid} | {cat} | {cell} |")
+
+    # trace-matrix диспатч 1 (§1c спеки): «Фичи → покрытие» / «Фичи без
+    # единого кейса» — та дыра, которую §5.2-проекция закрыть не может (риски
+    # индексируются ТОЛЬКО из существующих кейсов; фича без единого кейса не
+    # производит ни одной строки в §5-проекции выше). Реестр — рукописный
+    # источник фич (docs/feature-registry.yaml), покрытие — генерируемая
+    # проекция из test-case.features, как и риски выше.
+    features = feature_registry.get("features") or []
+    feature_coverage = data["feature_coverage"]
+    lines += [
+        "",
+        "## Фичи → покрытие",
+        "",
+        "| Фича | Экран | Кейсы |",
+        "|---|---|---|",
+    ]
+    if not features:
+        lines.append("| — | — | docs/feature-registry.yaml не найден/пуст |")
+    for feat in features:
+        fid = str(feat.get("id"))
+        screen = str(feat.get("screen") or "?")
+        covering = sorted(feature_coverage.get(fid, []), key=lambda t: t[1])
+        cell = (
+            ", ".join(f"{area}:{tc}[{status}]" for area, tc, status in covering)
+            if covering else "нет кейсов"
+        )
+        lines.append(f"| {fid} | {screen} | {cell} |")
+
+    lines += [
+        "",
+        "## Фичи без единого кейса",
+        "",
+    ]
+    uncovered = [f for f in features if not feature_coverage.get(str(f.get("id")))]
+    if not features:
+        lines.append("docs/feature-registry.yaml не найден/пуст.")
+    elif not uncovered:
+        lines.append("Все фичи реестра покрыты хотя бы одним кейсом.")
+    else:
+        for feat in uncovered:
+            lines.append(f"- {feat.get('id')} ({feat.get('screen')}): {feat.get('title')}")
 
     lines += [
         "",

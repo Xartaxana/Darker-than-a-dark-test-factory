@@ -136,8 +136,18 @@ rules:
     # диспатчнут на уже покрытую область — снимает метку и возвращает no-op.
 
   - name: "Обновить стратегию при изменении приложения"
-    when: "app-under-test/PROJECT.md изменился с последнего анализа ИЛИ появился вердикт APP_CHANGED"
+    when: "app-under-test/PROJECT.md изменился с последнего анализа ИЛИ появился вердикт APP_CHANGED
+      ИЛИ (docs/feature-registry.yaml существует И его inventoried_at_commit не совпадает
+      с commit сборки в state/app-under-test.yaml)"
     dispatch: test-strategist
+    # Третья ветка (часть 5 спеки трассабилити, 2026-07-17): build_watch уже
+    # ловит новые коммиты app-under-test и обновляет app-under-test.yaml;
+    # расхождение commit'а сборки с inventoried_at_commit реестра фич =
+    # реестр протух → test-strategist переинвентаризирует реестр ПО КОДУ
+    # и протаскивает дельту в риски/needs-design. Дублирующий индикатор
+    # протухания — строка-предупреждение в шапке state/coverage-map.md
+    # (генерируется шагом снимка). Guard «существует» — до приземления
+    # диспатча 1 (создание реестра) ветка заведомо no-op.
 
   - name: "Исполнить exploratory charter"     # P7 docs/10, Этап 4 п.11 шаг 2 (2026-07-14)
     when: "charter.status == Planned (exploratory-charters/CH-*.md)"

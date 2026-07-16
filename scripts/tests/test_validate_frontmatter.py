@@ -15,6 +15,11 @@ def schemas(repo, monkeypatch):
     """Реальные схемы репозитория, пути валидатора — на tmp-репо."""
     monkeypatch.setattr(vf, "REPO", repo.root, raising=True)
     monkeypatch.setattr(vf, "SCHEMAS", SCHEMAS_SRC, raising=True)
+    # trace-matrix диспатч 1: без этого патча FEATURE_REGISTRY (посчитан на
+    # импорте модуля от исходного REPO) указывал бы на боевой
+    # docs/feature-registry.yaml — тесты read-only здесь, но нужна
+    # управляемая пустота/наполнение, а не боевые 60+ записей.
+    monkeypatch.setattr(vf, "FEATURE_REGISTRY", repo.root / "docs" / "feature-registry.yaml", raising=True)
 
 
 def test_valid_artifacts_pass(repo, schemas):
@@ -247,6 +252,63 @@ def test_charter_readme_skipped(repo, schemas):
 
     errors, _warns = vf.validate()
     assert not any("README" in e for e in errors)
+
+
+# --- trace-matrix диспатч 1 (§1b спеки): test-case.features ↔ docs/feature-registry.yaml ---
+
+def _registry(root: Path, feature_ids: list[str]) -> None:
+    import yaml
+    p = root / "docs" / "feature-registry.yaml"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(
+        yaml.safe_dump(
+            {
+                "inventoried_at_commit": "x",
+                "features": [
+                    {"id": fid, "title": fid, "screen": "s", "source": "f.kt"}
+                    for fid in feature_ids
+                ],
+            },
+            allow_unicode=True,
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_feature_id_in_registry_is_clean(repo, schemas):
+    _registry(repo.root, ["browse-deep-links"])
+    repo.test_case("TC-080", "Approved", extra="features: [browse-deep-links]\n")
+
+    errors, _warns = vf.validate()
+    assert errors == []
+
+
+def test_feature_id_unknown_is_error(repo, schemas):
+    _registry(repo.root, ["browse-deep-links"])
+    repo.test_case("TC-081", "Approved", extra="features: [totally-unknown-feature]\n")
+
+    errors, _warns = vf.validate()
+    assert any("totally-unknown-feature" in e and "feature-registry.yaml" in e for e in errors)
+
+
+def test_feature_empty_is_warn_not_error(repo, schemas):
+    """Отсутствующее/пустое `features` — WARNING (B2 спеки: error-flip только
+    после backfill диспатча 2), не ERROR."""
+    _registry(repo.root, ["browse-deep-links"])
+    repo.test_case("TC-082", "Approved")  # без features вовсе
+
+    errors, warns = vf.validate()
+    assert errors == []
+    assert any("features" in w and "TC-082" in w for w in warns)
+
+
+def test_feature_registry_missing_is_warn_not_error(repo, schemas):
+    # docs/feature-registry.yaml намеренно не создаётся
+    repo.test_case("TC-083", "Approved", extra="features: [anything]\n")
+
+    errors, warns = vf.validate()
+    assert errors == []
+    assert any("feature-registry.yaml не найден" in w for w in warns)
 
 
 def test_charter_attachments_md_not_scanned(repo, schemas):

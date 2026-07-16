@@ -10,6 +10,11 @@ def _patch(repo, monkeypatch) -> None:
     monkeypatch.setattr(cm, "REPO", repo.root, raising=True)
     monkeypatch.setattr(cm, "OUT_PATH", repo.root / "state" / "coverage-map.md", raising=True)
     monkeypatch.setattr(cm, "RISK_DOC_PATH", repo.root / "docs" / "01-test-strategy.md", raising=True)
+    # trace-matrix диспатч 1: изоляция от реального docs/feature-registry.yaml —
+    # без этого патча тесты читали бы боевой реестр репозитория (нестабильно:
+    # реестр эволюционирует независимо от фикстур этого файла).
+    monkeypatch.setattr(cm, "FEATURE_REGISTRY_PATH", repo.root / "docs" / "feature-registry.yaml", raising=True)
+    monkeypatch.setattr(cm, "AUT_PATH", repo.root / "state" / "app-under-test.yaml", raising=True)
 
 
 def _tc(root: Path, key: str, area: str, status: str, priority: str = "P1",
@@ -292,3 +297,116 @@ def test_no_newer_runs_without_tc_results_no_detector_line(repo, monkeypatch):
     text = cm.render(cm.collect(), "T")
 
     assert "свежие прогоны без tc_results" not in text
+
+
+# --- trace-matrix диспатч 1 (§1c спеки): «Фичи → покрытие» / «без единого кейса» ---
+
+def _registry(root: Path, commit: str | None, features: list[dict]) -> Path:
+    import yaml
+    p = root / "docs" / "feature-registry.yaml"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    doc: dict = {"features": features}
+    if commit is not None:
+        doc["inventoried_at_commit"] = commit
+    p.write_text(yaml.safe_dump(doc, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    return p
+
+
+def _aut(root: Path, source_commit: str) -> Path:
+    p = root / "state" / "app-under-test.yaml"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(f"app: ao3-wrapper\nsource_commit: {source_commit}\nversion_code: 1\n",
+                 encoding="utf-8")
+    return p
+
+
+def _tc_features(root: Path, key: str, area: str, status: str, features: list[str],
+                  priority: str = "P1") -> Path:
+    feat_line = "features: [" + ", ".join(features) + "]\n" if features else ""
+    text = (
+        f"---\nid: {key}\ntitle: TC {key}\narea: {area}\npriority: {priority}\n"
+        f"status: {status}\n{feat_line}updated: \"2026-07-01T00:00:00Z\"\nlock: \"\"\n---\n\n# {key}\n\nтело\n"
+    )
+    p = root / "test-cases" / area / f"{key}.md"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(text, encoding="utf-8")
+    return p
+
+
+def test_feature_covered_by_case_listed_with_area_id_status(repo, monkeypatch):
+    _patch(repo, monkeypatch)
+    _registry(repo.root, "abc123", [
+        {"id": "browse-deep-links", "title": "Deep links", "screen": "browse", "source": "x.kt"},
+    ])
+    _tc_features(repo.root, "TC-300", "browser", "Approved", features=["browse-deep-links"])
+
+    text = cm.render(cm.collect(), "T")
+    section = text.split("## Фичи → покрытие")[1].split("## Фичи без единого кейса")[0]
+
+    assert "| browse-deep-links | browse | browser:TC-300[Approved] |" in section
+
+
+def test_feature_without_case_listed_in_uncovered_section(repo, monkeypatch):
+    _patch(repo, monkeypatch)
+    _registry(repo.root, "abc123", [
+        {"id": "browse-deep-links", "title": "Deep links", "screen": "browse", "source": "x.kt"},
+        {"id": "browse-tap-to-scroll", "title": "Tap to scroll", "screen": "browse", "source": "y.js"},
+    ])
+    _tc_features(repo.root, "TC-301", "browser", "Approved", features=["browse-deep-links"])
+
+    text = cm.render(cm.collect(), "T")
+
+    assert "| browse-deep-links | browse | browser:TC-301[Approved] |" in text
+    uncovered = text.split("## Фичи без единого кейса")[1]
+    assert "browse-tap-to-scroll" in uncovered
+    assert "Tap to scroll" in uncovered
+    assert "browse-deep-links" not in uncovered
+
+
+def test_feature_registry_missing_shows_placeholder_in_both_sections(repo, monkeypatch):
+    _patch(repo, monkeypatch)
+    # docs/feature-registry.yaml намеренно не создаётся
+    _tc(repo.root, "TC-302", "smoke", "Automated", priority="P0", risk="R-01")
+
+    text = cm.render(cm.collect(), "T")
+
+    assert "| — | — | docs/feature-registry.yaml не найден/пуст |" in text
+    assert "docs/feature-registry.yaml не найден/пуст." in text.split("## Фичи без единого кейса")[1]
+
+
+def test_stale_registry_detector_fires_on_commit_mismatch(repo, monkeypatch):
+    _patch(repo, monkeypatch)
+    _registry(repo.root, "old-commit", [
+        {"id": "browse-deep-links", "title": "Deep links", "screen": "browse", "source": "x.kt"},
+    ])
+    _aut(repo.root, "new-commit")
+
+    text = cm.render(cm.collect(), "T")
+
+    assert "⚠ реестр фич протух: сборка new-commit, реестр инвентаризован против old-commit" in text
+
+
+def test_stale_registry_detector_silent_on_commit_match(repo, monkeypatch):
+    _patch(repo, monkeypatch)
+    _registry(repo.root, "same-commit", [
+        {"id": "browse-deep-links", "title": "Deep links", "screen": "browse", "source": "x.kt"},
+    ])
+    _aut(repo.root, "same-commit")
+
+    text = cm.render(cm.collect(), "T")
+
+    assert "реестр фич протух" not in text
+
+
+def test_stale_registry_detector_silent_when_no_build_yet(repo, monkeypatch):
+    """Реестр несёт inventoried_at_commit, но state/app-under-test.yaml ещё
+    нет (свежий репо/тест-окружение) — детектор не должен падать/шуметь."""
+    _patch(repo, monkeypatch)
+    _registry(repo.root, "some-commit", [
+        {"id": "browse-deep-links", "title": "Deep links", "screen": "browse", "source": "x.kt"},
+    ])
+    # state/app-under-test.yaml намеренно не создаётся
+
+    text = cm.render(cm.collect(), "T")
+
+    assert "реестр фич протух" not in text

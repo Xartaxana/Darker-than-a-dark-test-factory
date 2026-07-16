@@ -25,7 +25,7 @@
 ```
 D:\AO3_tests\
 ├── README.md
-├── docs/                  # стратегия, план, архитектура, агенты, шаблоны
+├── docs/                  # стратегия, план, архитектура, агенты, шаблоны, feature-registry.yaml
 ├── test-cases/            # тест-кейсы в Given-When-Then (markdown + YAML frontmatter)
 ├── bugs/                  # реестр багов (markdown + YAML frontmatter со статусами)
 ├── runs/                  # отчёты о прогонах
@@ -33,7 +33,7 @@ D:\AO3_tests\
 ├── .claude/
 │   ├── agents/            # 9 определений агентов (субагенты Claude Code) — СОЗДАНЫ
 │   └── skills/            # /qa-loop, /run-suite, /triage — СОЗДАНЫ
-└── state/                 # rules.yaml, orchestrator-log.md, traceability.md, app-under-test.yaml
+└── state/                 # rules.yaml, orchestrator-log.md, coverage-map.md, app-under-test.yaml
 ```
 
 ## Как это запускать (агенты)

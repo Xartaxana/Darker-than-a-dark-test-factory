@@ -32,6 +32,7 @@ import board_sync as bs
 
 REPO = bs.REPO
 SCHEMAS = REPO / "schemas"
+FEATURE_REGISTRY = REPO / "docs" / "feature-registry.yaml"
 AREAS = (("test-cases", "test-case"), ("bugs", "bug"), ("runs", "run"),
          ("exploratory-charters", "charter"))
 
@@ -42,6 +43,17 @@ def load_schema(itype: str) -> dict:
         return {}
     import yaml
     return yaml.safe_load(p.read_text(encoding="utf-8")) or {}
+
+
+def load_feature_registry() -> set[str] | None:
+    """Id-ы docs/feature-registry.yaml. None — реестр отсутствует (WARN на
+    вызывающей стороне, не ERROR: реестр — диспатч 1 trace-matrix, его
+    отсутствие в чужом клоне/до миграции не должно ронять весь конвейер)."""
+    if not FEATURE_REGISTRY.exists():
+        return None
+    import yaml
+    data = yaml.safe_load(FEATURE_REGISTRY.read_text(encoding="utf-8")) or {}
+    return {str(f.get("id")) for f in data.get("features", []) or [] if f.get("id")}
 
 
 def _s(value) -> str:
@@ -142,10 +154,39 @@ def check_cross_field_warn(meta: dict, schema: dict, rel: str) -> list[str]:
     return warns
 
 
+def check_feature_ids(meta: dict, schema: dict, rel: str,
+                       registry_ids: set[str] | None) -> tuple[list[str], list[str]]:
+    """Кросс-файловая проверка (Z3/спека trace-matrix v2 §1b): test-case.features
+    сверяется с docs/feature-registry.yaml. Неизвестный id — ERROR (кейс
+    ссылается на фичу, которой нет в реестре — опечатка либо реестр не
+    актуализирован). Отсутствующее/пустое `features` — WARNING, не ERROR:
+    backfill 65 существующих кейсов — отдельный диспатч (2), error-flip сюда
+    переезжает только после полного backfill (B2 спеки)."""
+    errors: list[str] = []
+    warns: list[str] = []
+    if schema.get("type") != "test-case":
+        return errors, warns
+    if registry_ids is None:
+        warns.append(f"{rel}: docs/feature-registry.yaml не найден — `features` не проверены")
+        return errors, warns
+    features = meta.get("features")
+    if features is None or features == "" or features == []:
+        warns.append(f"{rel}: `features` отсутствует или пусто — кейс не привязан к реестру фич")
+        return errors, warns
+    if not isinstance(features, list):
+        errors.append(f"{rel}: `features` должен быть списком id, получено {type(features).__name__}")
+        return errors, warns
+    for fid in features:
+        if _s(fid) not in registry_ids:
+            errors.append(f"{rel}: `features` содержит id `{_s(fid)}` ∉ docs/feature-registry.yaml")
+    return errors, warns
+
+
 def validate() -> tuple[list[str], list[str]]:
     errors: list[str] = []
     warns: list[str] = []
     seen_ids: dict[str, str] = {}
+    registry_ids = load_feature_registry()
 
     for area, itype in AREAS:
         base = REPO / area
@@ -184,6 +225,9 @@ def validate() -> tuple[list[str], list[str]]:
             errors += e
             warns += w
             warns += check_cross_field_warn(meta, schema, rel)
+            fe, fw = check_feature_ids(meta, schema, rel, registry_ids)
+            errors += fe
+            warns += fw
     return errors, warns
 
 

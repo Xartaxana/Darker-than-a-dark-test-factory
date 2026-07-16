@@ -136,7 +136,11 @@ charter» без их скана мертво.
 ### 5. Снимок очереди, борда и коммит
 Если за проход менялись артефакты или `state/` — обнови генерируемый статус
 (`python scripts/queue_snapshot.py` → `state/factory-status.md`; ручные счётчики
-запрещены — A4/G1), пересобери борду (`python scripts/board_sync.py`) и закоммить
+запрещены — A4/G1), перегенерируй карту покрытия
+(`python scripts/coverage_map.py` → `state/coverage-map.md`; проекция из
+frontmatter + `docs/feature-registry.yaml`, детектор протухания реестра —
+строка в шапке файла при расхождении commit), пересобери борду (`python
+scripts/board_sync.py`) и закоммить
 **узким явным списком путей**:
 `git add board state bugs test-cases runs && git commit -m "однострочное сообщение"`.
 НИКОГДА `git add -A` / `git add .`.

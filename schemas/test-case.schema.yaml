@@ -13,6 +13,11 @@ fields:
   area: {}
   risk: {}
   requirements: {}
+  # trace-matrix диспатч 1 (2026-07-17): список id из docs/feature-registry.yaml.
+  # Кросс-файловая проверка (id ∉ реестра → ERROR) — validate_frontmatter.py
+  # check_feature_ids; отсутствующее/пустое поле — WARNING, не ERROR (backfill
+  # данных — диспатч 2, отдельная приёмка).
+  features: {}
   # B5 (docs/09 Этап 2): причина простоя в Blocked; см. schemas/bug.schema.yaml.
   blocked_reason: { enum: [environment, missing_fixture, product_decision, dev_answer, permissions] }
   # B3 (docs/09 Этап 2): lifecycle АВТОТЕСТА — вторая статусная машина на том же

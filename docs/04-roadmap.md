@@ -50,7 +50,8 @@ conftest с фикстурами, Allure, `scripts/tasks.ps1`, авто-арте
 test-strategist и test-designer (первые два агента) формируют:
 стратегию (уже заложена в docs/01), тест-кейсы GWT по всем P0/P1-областям
 (~60–80 кейсов: рейтинги, фильтрация видимости, табы, Library, downloads,
-filter profiles, backup/restore, settings, error handling), traceability-матрицу.
+filter profiles, backup/restore, settings, error handling); покрытие — из
+`scripts/coverage_map.py` (`state/coverage-map.md`) поверх `docs/feature-registry.yaml`.
 Человек утверждает P0/P1-кейсы.
 
 **Выход:** все P0/P1-области имеют Approved-кейсы; матрица показывает план покрытия.
@@ -68,7 +69,8 @@ replay. Карантин-механизм для flaky (`@pytest.mark.quarantine
 тест-дизайна, чтобы конвейер работал уже сейчас.
 
 - ✅ **Реализовано (2026-07-02):** все 9 агентов в `.claude/agents/`, оркестрация
-  `state/rules.yaml` + журнал `state/orchestrator-log.md` + `state/traceability.md`,
+  `state/rules.yaml` + журнал `state/orchestrator-log.md` + карта покрытия
+  `state/coverage-map.md` (проекция из `docs/feature-registry.yaml`),
   скиллы `.claude/skills/` (`/qa-loop`, `/run-suite`, `/triage`), каталоги артефактов
   `test-cases/`, `bugs/`, `runs/` с READMEs и статусными машинами.
 - ⏳ **Осталось:** прогон полного цикла на искусственных сценариях — подложить

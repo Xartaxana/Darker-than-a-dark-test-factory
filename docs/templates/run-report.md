@@ -30,4 +30,4 @@ test-maintainer; `SITE_CHANGED` — AO3 изменил DOM → test-maintainer;
 ## Условия закрытия прогона (Closed)
 - [ ] Каждое падение имеет вердикт и связанное действие (баг / фикс теста / карантин)
 - [ ] Для APP_BUG существует или создан BUG-файл
-- [ ] Traceability (`state/traceability.md`) обновлена статусами последнего прогона
+- [ ] Карта покрытия (`state/coverage-map.md`) перегенерирована (шаг снимка `scripts/coverage_map.py`)
