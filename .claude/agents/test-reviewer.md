@@ -103,6 +103,12 @@ red_probe)»): кейс `Automated`, `automation_status: active`, поле `red_
   (`blocked_reason: environment`, сначала сверь `Get-Device`/env.ps1 —
   CLAUDE.md permission-hygiene п.6).
 
+## Фоновые вызовы не поллить вручную
+Никаких `timeout N tail -f`/`sleep`-циклов ожидания фоновой задачи: прогон —
+foreground канонической командой (`Invoke-Pytest` сам ждёт) либо
+`run_in_background` инструмента Bash с ожиданием нотификации (класс аудита
+2026-07-17, прецедент у fix-verifier).
+
 ## Fail-fast среды (docs/06 §5 «Самовосстановление»)
 2 ИДЕНТИЧНЫХ env-класс фейла (`ReadTimeoutError`/`TimeoutError` на одном и том же
 вызове/шаге) при воспроизведении (п.6) или красной пробе (п.7) = среда
