@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-17T14:36:55Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-17T18:15:36Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -62,7 +62,7 @@ generated_at: 2026-07-17T14:36:55Z · генератор: `scripts/coverage_map.
 | sidepanel-fullscreen-toggle | side-panel | browser:TC-058[Approved] |
 | sidepanel-rating-filters | side-panel | нет кейсов |
 | sidepanel-settings-sync | side-panel | browser:TC-054[Automated] |
-| library-tabs-six | library | smoke:TC-003[Automated], library:TC-006[Draft], library:TC-016[Automated], library:TC-017[Automated], rating:TC-043[Approved] |
+| library-tabs-six | library | smoke:TC-003[Automated], library:TC-006[Approved], library:TC-016[Automated], library:TC-017[Automated], rating:TC-043[Approved] |
 | library-filter-wordcount | library | library:TC-027[Automated] |
 | library-filter-fandom | library | library:TC-029[Automated] |
 | library-filter-downloaded-only | library | library:TC-028[Automated] |
@@ -83,7 +83,7 @@ generated_at: 2026-07-17T14:36:55Z · генератор: `scripts/coverage_map.
 | settings-webview-dark-mode | settings | settings:TC-048[Automated], browser:TC-050[Automated], settings:TC-059[Approved] |
 | settings-font-slider | settings | нет кейсов |
 | settings-brightness-slider | settings | нет кейсов |
-| settings-rating-visibility-filter | settings | visibility:TC-015[Review] |
+| settings-rating-visibility-filter | settings | visibility:TC-015[Approved] |
 | settings-filter-display-mode | settings | нет кейсов |
 | settings-panel-side | settings | нет кейсов |
 | settings-tap-to-scroll-toggle | settings | нет кейсов |
@@ -112,7 +112,7 @@ generated_at: 2026-07-17T14:36:55Z · генератор: `scripts/coverage_map.
 | rating-note-button-listing | rating-notes | rating:TC-044[Approved] |
 | bridge-rate-note-tag-buttons | ao3-bridge | нет кейсов |
 | bridge-badge-sync-multi | ao3-bridge | rating:TC-012[Approved] |
-| bridge-hide-filter | ao3-bridge | visibility:TC-013[Approved], visibility:TC-014[Approved], visibility:TC-015[Review], rating:TC-043[Approved], rating:TC-045[Approved] |
+| bridge-hide-filter | ao3-bridge | visibility:TC-013[Approved], visibility:TC-014[Approved], visibility:TC-015[Approved], rating:TC-043[Approved], rating:TC-045[Approved] |
 | bridge-dim-filter | ao3-bridge | нет кейсов |
 | bridge-main-pairing-filter | ao3-bridge | нет кейсов |
 | bridge-exclude-main-pairing-filter | ao3-bridge | нет кейсов |
@@ -250,7 +250,7 @@ generated_at: 2026-07-17T14:36:55Z · генератор: `scripts/coverage_map.
 |---|---|---|---|---|---|
 | P0 |  |  |  | 2 |  |
 | P1 |  |  | 6 | 4 |  |
-| P2 | 1 |  |  |  |  |
+| P2 |  |  | 1 |  |  |
 | P3 |  |  | 1 |  |  |
 
 ### rating
@@ -322,13 +322,13 @@ generated_at: 2026-07-17T14:36:55Z · генератор: `scripts/coverage_map.
 - coverage_status: **none** (0/3 Automated)
 - риски: R-06
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-013 [P0, Approved], TC-014 [P0, Approved], TC-015 [P0, Review]
+- P0/P1 не в Automated: TC-013 [P0, Approved], TC-014 [P0, Approved], TC-015 [P0, Approved]
 - автотесты (automated_by): —
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
-| P0 |  | 1 | 2 |  |  |
+| P0 |  |  | 3 |  |  |
 | P1 |  |  |  |  |  |
 | P2 |  |  |  |  |  |
 | P3 |  |  |  |  |  |

@@ -31,3 +31,5 @@ dump.xml
 # residue стороннего агент-тулинга (копия .claude/skills с путями .Codex — внешний ревьюер)
 .agents/
 logs/heartbeat.log
+state/loop.lock
+state/loop-lock-reaps.json
