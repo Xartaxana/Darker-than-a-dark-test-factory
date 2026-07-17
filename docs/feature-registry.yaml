@@ -154,8 +154,39 @@ features:
     title: "Сброс скролла списка на верх при смене сортировки"
     screen: library
     source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
-  - id: library-card-actions
-    title: "Действия карточки: открыть/скачать/удалить файл/удалить работу целиком"
+  # library-card-actions раздроблена test-strategist 2026-07-17 (правило
+  # гранулярности; след LibraryScreen.kt): одна запись склеивала ПЯТЬ разных
+  # Then. WorkCard (стр.969-1009) + overlay DeleteWorkSheetContent (стр.352-365):
+  #   - тап по телу карточки → onOpenWork(work.url), открытие работы в браузере
+  #     (стр.878/927, комбинированный клик Column) — НИ ОДНОГО кейса не было;
+  #     «открыть» умбреллы это действие маскировал (тот же класс, что hide/dim);
+  #   - download-иконка → viewModel.downloadWork (стр.237, 986-995; гейт стр.254
+  #     Favorite/Liked/Pending + стр.881-883 downloadPath==null) — TC-033;
+  #   - Book-иконка «Open downloaded» → openDownload→onOpenFile (стр.230-236,
+  #     996-1005; гейт стр.884-886 downloadPath!=null) — TC-034;
+  #   - overlay «Delete downloaded file» → viewModel.deleteDownload (стр.319,
+  #     358-365; enabled=hasFile) — TC-035;
+  #   - overlay «Delete work» → viewModel.deleteWork (стр.315, 352-357) — TC-036.
+  # inventoried_at_commit не тронут (код не переинвентаризирован — только
+  # гранулярность существующей записи по правилу шапки).
+  - id: library-card-open-work
+    title: "Тап по телу карточки Library открывает работу (URL) в браузерной вкладке"
+    screen: library
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+  - id: library-card-download
+    title: "Download-иконка карточки запускает ручное скачивание (Favorite/Liked/Pending, файла ещё нет)"
+    screen: library
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+  - id: library-card-open-file
+    title: "Book-иконка «Open downloaded» открывает скачанный локальный файл"
+    screen: library
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+  - id: library-card-delete-file
+    title: "Overlay «Delete downloaded file» удаляет только файл, сохраняя строку рейтинга (enabled=hasFile)"
+    screen: library
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+  - id: library-card-delete-work
+    title: "Overlay «Delete work» удаляет файл и строку WorkRating целиком"
     screen: library
     source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
   - id: library-card-comment-tags

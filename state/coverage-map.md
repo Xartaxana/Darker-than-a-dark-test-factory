@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-16T23:44:02Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-17T14:25:25Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -73,7 +73,11 @@ generated_at: 2026-07-16T23:44:02Z · генератор: `scripts/coverage_map.
 | library-sort-author | library | library:TC-064[Approved] |
 | library-sort-rating-files | library | library:TC-065[Approved] |
 | library-sort-scroll-reset | library | library:TC-030[Automated], library:TC-063[Approved] |
-| library-card-actions | library | downloads:TC-033[Approved], downloads:TC-034[Automated], downloads:TC-035[Automated], downloads:TC-036[Automated] |
+| library-card-open-work | library | нет кейсов |
+| library-card-download | library | downloads:TC-033[Approved] |
+| library-card-open-file | library | downloads:TC-034[Automated] |
+| library-card-delete-file | library | downloads:TC-035[Automated] |
+| library-card-delete-work | library | downloads:TC-036[Automated] |
 | library-card-comment-tags | library | нет кейсов |
 | settings-theme-mode | settings | smoke:TC-005[Automated], settings:TC-047[Automated], settings:TC-049[Automated], settings:TC-059[Approved] |
 | settings-webview-dark-mode | settings | settings:TC-048[Automated], browser:TC-050[Automated], settings:TC-059[Approved] |
@@ -129,6 +133,7 @@ generated_at: 2026-07-16T23:44:02Z · генератор: `scripts/coverage_map.
 - browse-bridge-injection (browse): Инжекция ao3_bridge.js в каждую загруженную AO3-страницу (onPageFinished)
 - browse-tabstrip-indicators (browse): TabStrip: индикация активной вкладки, закрытие свайпом вверх, кнопка New tab
 - sidepanel-rating-filters (side-panel): Чекбоксы скрытия рейтингов (hidden ratings) в side panel
+- library-card-open-work (library): Тап по телу карточки Library открывает работу (URL) в браузерной вкладке
 - library-card-comment-tags (library): Индикатор комментария (note-иконка) и личных тегов на карточке
 - settings-font-slider (settings): Слайдер размера шрифта (7 ступеней, 100–190%)
 - settings-brightness-slider (settings): Слайдер яркости (overlay при v<0, reset-on-start)
