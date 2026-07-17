@@ -1,18 +1,18 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-17T20:55:40Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-07-17T23:04:04Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **377.3** (RUN-20260702-0300)
+- smoke: Closed · smoke_freshness_hours: **379.5** (RUN-20260702-0300)
 - regression: not_run
 - canary: not_run
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **0**
 - p0_automation_coverage: **71%** (10/14)
-- p1_automation_coverage: **47%** (16/34)
+- p1_automation_coverage: **50%** (17/34)
   - непокрытые P0: TC-009, TC-013, TC-014, TC-015
 - Test debt открыт: **0**
 - Карантин автотестов: **0**
@@ -26,8 +26,8 @@ generated_at: 2026-07-17T20:55:40Z · генератор: `scripts/queue_snapsho
 
 ## Тест-кейсы (65)
 
-- Approved: **37** · Automated: **28**
-- автотесты (B3): active: **28**
+- Approved: **36** · Automated: **29**
+- автотесты (B3): active: **29**
 
 | Область | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
@@ -35,7 +35,7 @@ generated_at: 2026-07-17T20:55:40Z · генератор: `scripts/queue_snapsho
 | browser |  |  | 2 | 6 |  |
 | downloads |  |  | 3 | 5 |  |
 | errors |  |  | 1 |  |  |
-| filter-profiles |  |  | 3 |  |  |
+| filter-profiles |  |  | 2 | 1 |  |
 | library |  |  | 8 | 6 |  |
 | rating |  |  | 8 | 2 |  |
 | settings |  |  | 4 | 3 |  |
@@ -53,15 +53,9 @@ generated_at: 2026-07-17T20:55:40Z · генератор: `scripts/queue_snapsho
 
 - нет
 
-## Test debt (7)
+## Test debt (0)
 
-- AT-BUG-005 [missing_fixture] Fixed — SAF file/folder picker не автоматизируется штатными Appium-локаторами — блокирует TC-021 (P0, backup/restore) и часть download/backup-кейсов
-- AT-BUG-006 [missing_fixture] Fixed — Таблица filter_profiles не поддержана в seed_db.py и нет replay-записи формы AO3 Sort&Filter — блокирует автоматизацию батча filter-profiles (TC-040/041/042, P1)
-- AT-BUG-009 [flaky_test] Fixed — FLAKY(?): test_disliked_hidden_on_listing (TC-013, replay) — ReadTimeoutError к локальному Appium внутри driver.get() при полном p0 после длинной сессии; в изоляции ранее многократно зелёный за 20-25s
-- AT-BUG-011 [broken_environment] Fixed — Фикстура replay не проверяет присутствие mitm-CA перед тестом — без CA каждый replay-тест умирает 120–240с ReadTimeoutError вместо мгновенной диагностики (мисдиагнозы каскадом: ESC-001, ложный Reopened AT-BUG-006)
-- AT-BUG-012 [broken_environment] Fixed — Start-Emulator: загрузка quickboot-снапшота default_boot нестабильна — qemu тихо крэшит (~20с, процесса нет), остаются стейл-локи multiinstance.lock; воспроизведено 4+ раза
-- AT-BUG-013 [broken_environment] Fixed — Install-App сразу после Start-Emulator (boot_completed=1) может словить race «cmd: Can't find service: package» — package manager ещё не готов, retry секундами позже проходит
-- AT-BUG-014 [broken_environment] Fixed — Clear-EmulatorStaleLocks (AT-BUG-012) не удаляет hardware-qemu.ini.lock, когда это НЕПУСТАЯ директория (содержит pid) — Remove-Item без -Recurse падает NullReferenceException несмотря на -ErrorAction SilentlyContinue, Start-Emulator не поднимается
+- нет
 
 ## Прогоны (1)
 

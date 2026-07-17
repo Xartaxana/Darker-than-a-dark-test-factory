@@ -4,7 +4,7 @@ title: "Start-Emulator: загрузка quickboot-снапшота default_boot
 type: test_debt
 debt_kind: broken_environment
 severity: minor
-status: Fixed
+status: Verified
 found_in: "верификация AT-BUG-007 (fix-verifier, 2026-07-14, «снапшот default_boot оказался битым»); повторно test-maintainer 2026-07-14 (инкремент 1 AT-BUG-009); дважды подряд critic 2026-07-16 (at-bug-009-env-diagnosis, побочная находка)"
 fixed_in: "scripts/tasks.ps1 (Start-Emulator: детект крэша снапшот-буда по таймауту + автофолбэк -no-snapshot-load, Clear-EmulatorStaleLocks)"
 last_seen_in: ""
@@ -12,8 +12,8 @@ test_cases: []
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-07-17T20:35:00Z"
-updated: "2026-07-17T20:35:00Z"
+status_since: "2026-07-18T00:20:00Z"
+updated: "2026-07-18T00:20:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -67,6 +67,7 @@ minor: обход известен и дёшев (`-no-snapshot-load`), вред
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-07-18 | scripts/tasks.ps1 HEAD (`fixed_in`) | Нет TC (env-фикс); `Start-Emulator -WritableSystem` живьём (не форсировано) + `test_replay_infra_probe.py`/полный p0 как smoke здорового пути | Снапшот-буд РЕАЛЬНО упёрся в таймаут за 45с (не спровоцировано искусственно) → автофолбэк `-no-snapshot-load` сработал, стейл-лок `multiinstance.lock` снят автоматически, `Emulator booted.` → `Install-App`/`Start-Appium` штатно → полный p0 `19 passed, 41 deselected in 585.00s`, `PYTEST_EXIT=0` | Verified (живое воспроизведение фолбэка в НЕЗАВИСИМОЙ сессии, не по заказу) |
 
 ## Обсуждение
 
@@ -152,3 +153,39 @@ Witness (критерий 3, эта сессия):
 пользовательский сценарий) — проход test-strategist не нужен. Готово к
 `fix-verifier` (B4 → D1, долг тестовой обвязки — сборку приложения
 ждать не нужно).
+
+**2026-07-18T00:20:00Z — fix-verifier (D1, независимая верификация,
+Fixed → Verified):**
+
+Часть консолидированной 7-багов device-сессии (тот же лок
+`fix-verifier:2026-07-17T21:02:01`). Бринг-ап `Start-Emulator
+-WritableSystem` (без форсирования таймаута) РЕАЛЬНО воспроизвёл
+основной сценарий этого бага живьём: снапшот-буд не уложился в 45с,
+код детектировал крэш/таймаут, автоматически снял стейл-лок
+`multiinstance.lock` и перезапустил с `-no-snapshot-load` — здоровый
+результат: `Emulator booted.`, дальнейший `Install-App`/`Start-Appium`
+штатно, полный `Invoke-Pytest -m p0 -v` → `19 passed, 41 deselected in
+585.00s`, `PYTEST_EXIT=0`. Это НЕЗАВИСИМОЕ (не форсированное
+искусственно) воспроизведение фолбэк-пути в отдельной от dev-сессии
+verifier-сессии — сильнее, чем просто «код на месте, здоровый путь не
+сломан»: фактически сам критерий 2 (детект крэша → автофолбэк) сработал
+вживую по требованию задачи, без необходимости провоцировать это
+дополнительно.
+
+Дополнительно форсирован ещё один цикл (`Start-Emulator
+-SnapshotBootTimeoutSec 3`) для проверки живучести здорового
+поведения при разных таймаутах — фолбэк снова сработал чисто
+(`Emulator booted.` после автозачистки), без exceptions; qemu-child
+для снапшот-попытки в этом случае не успел заспауниться за 3с (так что
+ветка явного `Killing qemu-system child process` не была задействована
+в этот раз — это не противоречит фиксу, а следствие timing: сама
+детальная проверка kill-child-ветки уже была живым witness'ом на
+приёмке этого бага, см. запись test-maintainer 23:20:00Z выше, «PID
+14580»). После обоих циклов — `adb emu kill` + поллинг процессов:
+zero `emulator.exe`/`qemu-system-x86_64.exe`, подтверждено
+`Get-CimInstance`.
+
+`python scripts/arch_check.py` → `ошибок 0, предупреждений 0`.
+`app-under-test/` не тронут. Правки этого хода — только `bugs/
+AT-BUG-012.md` (frontmatter + эта запись, снятие лока). Статус
+переведён `Fixed → Verified`.

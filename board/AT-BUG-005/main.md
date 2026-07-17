@@ -2,7 +2,7 @@
 key: "AT-BUG-005"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p1"
 summary: "SAF file/folder picker не автоматизируется штатными Appium-локаторами — блокирует TC-021 (P0, backup/restore) и часть download/backup-кейсов"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-17T18:52:00Z"
-updated: "2026-07-17T18:52:00Z"
+created: "2026-07-18T00:20:00Z"
+updated: "2026-07-18T00:20:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # SAF file/folder picker не автоматизируется штатными Appium-локаторами — блокирует TC-021 (P0, backup/restore) и часть download/backup-кейсов
 
 _Спроецировано из `bugs/AT-BUG-005.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # AT-BUG-005 — SAF picker не автоматизируется штатно
 
@@ -137,6 +137,7 @@ Appium-сессию) — диспатчить после завершения т
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-07-17/18 | framework HEAD (fixed_in commit, не переустанавливалась в этой сессии — device-инвариантный test_debt) | Полный `Invoke-Pytest -m p0 -v` (19 selected, включает TC-021 `test_backup_restore.py`) | `19 passed, 41 deselected in 585.00s (0:09:44)`, `PYTEST_EXIT=0` — TC-021 PASSED первым в списке (5%), ни одного failed/error | Verified |
 
 ## Обсуждение
 
@@ -713,3 +714,29 @@ AT-BUG-005.md` (frontmatter + эта запись, снятие лока), `fram
 Это app_bug, не test_debt: поведение `SettingsViewModel.setDownloadFolderUri` + `importFromUri`
 живёт в коде приложения, не в инфраструктуре тестов (хотя находка поймана при автоматизации TC-039).
 Обратная ссылка и перекрёстная трассировка в `BUG-011.md`.
+
+**2026-07-18T00:20:00Z — fix-verifier (D1, независимая верификация, Fixed → Verified):**
+
+Одна консолидированная device-сессия для 7 связанных D1-задач (одна и та же
+`fix-verifier:2026-07-17T21:02:01` лок-метка на всех). Бринг-ап:
+`Start-Emulator -WritableSystem` (снапшот-буд реально упёрся в таймаут и
+автофолбэк на `-no-snapshot-load` сработал живьём — независимое
+подтверждение AT-BUG-012 см. там же), `CA hash c8750f0d, store=134
+apex=134`; `Install-App` сразу после — `Success` без race (независимое
+подтверждение AT-BUG-013); `Start-Appium` — ready на :4723.
+
+Полный `Invoke-Pytest -m p0 -v`: **`19 passed, 41 deselected in 585.00s
+(0:09:44)`, `PYTEST_EXIT=0`.** `tests/test_backup_restore.py::
+test_backup_clear_restore_returns_original_data` (TC-021) — PASSED,
+первым в порядке (5%). Все три пункта критерия готовности (обход SAF
+задокументирован и на месте, TC-021 зелёный, smoke без регресса)
+подтверждены независимо этим прогоном.
+
+`python scripts/arch_check.py` → `ошибок 0, предупреждений 0`.
+`app-under-test/` не тронут. Правки этого хода — только `bugs/
+AT-BUG-005.md` (frontmatter + эта запись, снятие лока).
+
+Статус переведён `Fixed → Verified`. Среда (эмулятор+Appium), поднятая
+для консолидированной верификации всех 7 багов, погашена в конце сессии
+(`adb emu kill`, `Stop-NodeProcesses`); зомби-процессы `emulator.exe`/
+`qemu-system-x86_64.exe` отсутствуют, подтверждено `Get-CimInstance`.

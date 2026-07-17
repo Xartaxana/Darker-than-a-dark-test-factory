@@ -4,7 +4,7 @@ title: "FLAKY(?): test_disliked_hidden_on_listing (TC-013, replay) — ReadTimeo
 type: test_debt
 debt_kind: flaky_test
 severity: major
-status: Fixed
+status: Verified
 found_in: "test-maintainer (AT-BUG-005, финальный инкремент — верификация 'Smoke без регресса'), 2026-07-14, полный p0-прогон (-m p0, 19 отобранных: 18 прежних + новый TC-021) после установки app-debug.apk на свежепойманном эмуляторе"
 fixed_in: "framework HEAD 2026-07-17T19:40:00Z (subprocess-timeout класс закрыт инкрементами 1-2 2026-07-14/15; 2 чистых p0 подряд получены 2026-07-17 — AT-BUG-005 witness 618.73s + этот инкремент 609.38s, TC-013 PASSED оба раза)"
 last_seen_in: ""
@@ -12,8 +12,8 @@ test_cases: ["TC-013"]
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-07-17T19:40:00Z"
-updated: "2026-07-17T19:40:00Z"
+status_since: "2026-07-18T00:20:00Z"
+updated: "2026-07-18T00:20:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -94,6 +94,7 @@ timeout=120)` — РОВНО на границе `APPIUM_HTTP_TIMEOUT` (settings
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-07-18 | framework HEAD (`fixed_in`, device-инвариантный test_debt) | Полный `Invoke-Pytest -m p0 -v` (19 selected, включая TC-013 `test_visibility.py::test_disliked_hidden_on_listing[listing_basic.mitm]` на прежней позиции 100%/последний) | `19 passed, 41 deselected in 585.00s (0:09:44)`, `PYTEST_EXIT=0` — TC-013 PASSED, третий чистый p0 подряд после фиксов (2 предыдущих — 618.73s/609.38s инкремента 3) | Verified (3/3 чистых p0 подряд теперь, класс не проявился) |
 
 ## Обсуждение
 
@@ -691,3 +692,32 @@ Witness инкремента 3:
 - `python scripts/arch_check.py` → `ошибок 0, предупреждений 0`.
 - Среда погашена после верификации (`adb emu kill`, `Stop-NodeProcesses`,
   `Get-Device` → `NO DEVICE`).
+
+**2026-07-18T00:20:00Z — fix-verifier (D1, независимая верификация,
+Fixed → Verified):**
+
+Часть консолидированной 7-багов device-сессии (тот же лок
+`fix-verifier:2026-07-17T21:02:01`). Полный `Invoke-Pytest -m p0 -v`
+(бринг-ап `Start-Emulator -WritableSystem`, CA `c8750f0d`/`store=134
+apex=134`, `Install-App`/`Start-Appium` штатно) — **`19 passed, 41
+deselected in 585.00s (0:09:44)`, `PYTEST_EXIT=0`.** TC-013
+(`test_disliked_hidden_on_listing[listing_basic.mitm]`) — PASSED,
+100%/последний в порядке (та же позиция, что во всех предыдущих
+наблюдениях класса) — класс НЕ проявился третий раз подряд после
+инкремента 3 (независимо от предыдущих двух прогонов, свежий бринг-ап,
+своя verifier-сессия, не переиспользование чужого прогона).
+
+Соотношение теперь 2 (fail, до фиксов) : 3 (pass, после, включая эту
+независимую сессию). Природа равновесия по-прежнему не измерена до
+конца (test-maintainer сам отметил это как открытый вопрос при
+переходе Open→Fixed) — но критерий Fixed («2 чистых p0 подряд») по
+факту перевыполнен (3/3), что достаточно для `Verified` по правилам D1
+(факт зелёного прогона на актуальной сборке, TC-013 в составе).
+Рецидив в будущем — материал для нового `Reopened`, не для отказа в
+Verified сейчас.
+
+`python scripts/arch_check.py` → `ошибок 0, предупреждений 0`.
+`app-under-test/` не тронут. Правки этого хода — только `bugs/
+AT-BUG-009.md` (frontmatter + эта запись, снятие лока). Статус
+переведён `Fixed → Verified`. Среда погашена в конце консолидированной
+сессии — зомби-процессы отсутствуют, подтверждено `Get-CimInstance`.

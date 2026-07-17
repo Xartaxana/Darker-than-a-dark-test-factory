@@ -2,7 +2,7 @@
 key: "AT-BUG-009"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p1"
 summary: "FLAKY(?): test_disliked_hidden_on_listing (TC-013, replay) — ReadTimeoutError к локальному Appium внутри driver.get() при полном p0 после длинной сессии; в изоляции ранее многократно зелёный за 20-25s"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-17T19:40:00Z"
-updated: "2026-07-17T19:40:00Z"
+created: "2026-07-18T00:20:00Z"
+updated: "2026-07-18T00:20:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # FLAKY(?): test_disliked_hidden_on_listing (TC-013, replay) — ReadTimeoutError к локальному Appium внутри driver.get() при полном p0 после длинной сессии; в изоляции ранее многократно зелёный за 20-25s
 
 _Спроецировано из `bugs/AT-BUG-009.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # AT-BUG-009 — TC-013 (replay) ловит ReadTimeoutError к Appium внутри полного p0
 
@@ -98,6 +98,7 @@ timeout=120)` — РОВНО на границе `APPIUM_HTTP_TIMEOUT` (settings
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-07-18 | framework HEAD (`fixed_in`, device-инвариантный test_debt) | Полный `Invoke-Pytest -m p0 -v` (19 selected, включая TC-013 `test_visibility.py::test_disliked_hidden_on_listing[listing_basic.mitm]` на прежней позиции 100%/последний) | `19 passed, 41 deselected in 585.00s (0:09:44)`, `PYTEST_EXIT=0` — TC-013 PASSED, третий чистый p0 подряд после фиксов (2 предыдущих — 618.73s/609.38s инкремента 3) | Verified (3/3 чистых p0 подряд теперь, класс не проявился) |
 
 ## Обсуждение
 
@@ -695,3 +696,32 @@ Witness инкремента 3:
 - `python scripts/arch_check.py` → `ошибок 0, предупреждений 0`.
 - Среда погашена после верификации (`adb emu kill`, `Stop-NodeProcesses`,
   `Get-Device` → `NO DEVICE`).
+
+**2026-07-18T00:20:00Z — fix-verifier (D1, независимая верификация,
+Fixed → Verified):**
+
+Часть консолидированной 7-багов device-сессии (тот же лок
+`fix-verifier:2026-07-17T21:02:01`). Полный `Invoke-Pytest -m p0 -v`
+(бринг-ап `Start-Emulator -WritableSystem`, CA `c8750f0d`/`store=134
+apex=134`, `Install-App`/`Start-Appium` штатно) — **`19 passed, 41
+deselected in 585.00s (0:09:44)`, `PYTEST_EXIT=0`.** TC-013
+(`test_disliked_hidden_on_listing[listing_basic.mitm]`) — PASSED,
+100%/последний в порядке (та же позиция, что во всех предыдущих
+наблюдениях класса) — класс НЕ проявился третий раз подряд после
+инкремента 3 (независимо от предыдущих двух прогонов, свежий бринг-ап,
+своя verifier-сессия, не переиспользование чужого прогона).
+
+Соотношение теперь 2 (fail, до фиксов) : 3 (pass, после, включая эту
+независимую сессию). Природа равновесия по-прежнему не измерена до
+конца (test-maintainer сам отметил это как открытый вопрос при
+переходе Open→Fixed) — но критерий Fixed («2 чистых p0 подряд») по
+факту перевыполнен (3/3), что достаточно для `Verified` по правилам D1
+(факт зелёного прогона на актуальной сборке, TC-013 в составе).
+Рецидив в будущем — материал для нового `Reopened`, не для отказа в
+Verified сейчас.
+
+`python scripts/arch_check.py` → `ошибок 0, предупреждений 0`.
+`app-under-test/` не тронут. Правки этого хода — только `bugs/
+AT-BUG-009.md` (frontmatter + эта запись, снятие лока). Статус
+переведён `Fixed → Verified`. Среда погашена в конце консолидированной
+сессии — зомби-процессы отсутствуют, подтверждено `Get-CimInstance`.

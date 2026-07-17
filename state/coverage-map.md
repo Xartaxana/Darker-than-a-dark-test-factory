@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-17T20:55:45Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-17T23:04:06Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -13,7 +13,7 @@ generated_at: 2026-07-17T20:55:45Z · генератор: `scripts/coverage_map.
 | browser | 8 | 6 | partial |
 | downloads | 8 | 5 | partial |
 | errors | 1 | 0 | none |
-| filter-profiles | 3 | 0 | none |
+| filter-profiles | 3 | 1 | partial |
 | library | 14 | 6 | partial |
 | rating | 10 | 2 | partial |
 | settings | 7 | 3 | partial |
@@ -96,7 +96,7 @@ generated_at: 2026-07-17T20:55:45Z · генератор: `scripts/coverage_map.
 | settings-orphan-scan-restore-dialog | settings | downloads:TC-039[Automated] |
 | settings-scan-downloads-manual | settings | downloads:TC-037[Approved] |
 | settings-filter-profiles-list | settings | нет кейсов |
-| settings-filter-profiles-delete | settings | filter-profiles:TC-042[Approved] |
+| settings-filter-profiles-delete | settings | filter-profiles:TC-042[Automated] |
 | settings-filter-profiles-rename | settings | нет кейсов |
 | browser-filter-profile-save | ao3-bridge | filter-profiles:TC-040[Approved] |
 | browser-filter-profile-apply | browse | filter-profiles:TC-041[Approved] |
@@ -223,17 +223,17 @@ generated_at: 2026-07-17T20:55:45Z · генератор: `scripts/coverage_map.
 
 ### filter-profiles
 
-- coverage_status: **none** (0/3 Automated)
+- coverage_status: **partial** (1/3 Automated)
 - риски: R-09
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-040 [P1, Approved], TC-041 [P1, Approved], TC-042 [P1, Approved]
+- P0/P1 не в Automated: TC-040 [P1, Approved], TC-041 [P1, Approved]
 - автотесты (automated_by): framework/tests/test_filter_profiles.py::test_delete_filter_profile
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  |  |  |
-| P1 |  |  | 3 |  |  |
+| P1 |  |  | 2 | 1 |  |
 | P2 |  |  |  |  |  |
 | P3 |  |  |  |  |  |
 
