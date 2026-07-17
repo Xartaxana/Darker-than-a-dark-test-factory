@@ -2,7 +2,7 @@
 key: "AT-BUG-005"
 project: "AO3"
 issueType: "bug"
-status: "bug-open"
+status: "bug-fixed"
 priority: "p1"
 summary: "SAF file/folder picker не автоматизируется штатными Appium-локаторами — блокирует TC-021 (P0, backup/restore) и часть download/backup-кейсов"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-15T13:35:00Z"
-updated: "2026-07-15T13:35:00Z"
+created: "2026-07-17T18:52:00Z"
+updated: "2026-07-17T18:52:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # SAF file/folder picker не автоматизируется штатными Appium-локаторами — блокирует TC-021 (P0, backup/restore) и часть download/backup-кейсов
 
 _Спроецировано из `bugs/AT-BUG-005.md` (источник правды).
-Статус в нашей машине: **Open**._
+Статус в нашей машине: **Fixed**._
 
 # AT-BUG-005 — SAF picker не автоматизируется штатно
 
@@ -567,6 +567,144 @@ tests/test_saf_infra_probe.py -v` — `3 passed in 113.39s`, `PYTEST_EXIT=0`
 `framework/steps/settings_steps.py` (`assert_no_scan_complete_dialog`),
 `framework/data/works.py` (`RESTORE_SCAN_TARGET`),
 `test-cases/downloads/TC-039.md`, `state/traceability.md`.
+
+**2026-07-17T18:35:00Z — test-maintainer (повторная попытка финального
+пункта критерия «Smoke без регресса», попытка сорвана tooling-инцидентом
+этой сессии — НЕ env AO3, НЕ новое падение теста, статус НЕ меняю):**
+
+Контекст: единственный оставшийся пункт критерия Fixed — «Smoke без
+регресса» (полный `-m p0`). Известный на момент диспатча блокер (ESC-001,
+resolved) — mitm-CA стирается любым `adb reboot` без переустановки;
+`Install-MitmCA` вызывается только из `Start-Emulator -WritableSystem`.
+
+Среда поднята КАНОНИЧЕСКИ и корректно (полный порядок, каждый шаг сверен
+позитивно):
+- `Start-Emulator -WritableSystem` → буд прошёл, `Install-MitmCA` внутри
+  него отработал: `CA hash = c8750f0d`, `store=134 apex=134`, `CA visible
+  in apex store: OK` — CA подтверждена присутствующей (не как в ESC-001).
+- `Get-Device` → `emulator-5554`; `Start-Appium` → `Appium started and
+  ready on :4723`; `Install-App` → `Performing Streamed Install` /
+  `Success`.
+
+Запустила `Invoke-Pytest -m p0 -v` (`collected 55 items / 36 deselected /
+19 selected`) через Bash-тул с `run_in_background: true` (канонический
+способ ожидания долгого прогона по правилам оркестрации — foreground
+не влезает в лимит тула 600000ms, исторический хронометраж этого же
+прогона в этом баге/AT-BUG-009 — 575s..1782s). Вывод job начал писаться
+нормально (заголовок pytest, `collected...selected`, старт первого теста
+`tests/test_backup_restore.py::test_backup_clear_restore_returns_original_data`),
+затем БЕЗ дальнейшего прогресса.
+
+**Прямая проверка по требованию оператора (не по памяти о состоянии job,
+факты, не пересказ):**
+- `Get-CimInstance Win32_Process -Filter "Name='python.exe'"` (и повторно
+  расширенный поиск по ВСЕМ процессам с `CommandLine -match 'pytest'`) —
+  **ни одного процесса с pytest/venv-python в командной строке НЕ
+  найдено.** Позитивный контроль пройден: тот же вызов надёжно показывает
+  другие реальные процессы (agent-dispatch, board_server, сами
+  диагностические bash/powershell) — метод рабочий, находка не промах
+  вызова.
+- Хвост файла вывода job (`ba5r14okp.output`) — те же 12 строк, что и
+  сразу после старта: `PYTEST_EXIT` НЕ появился, дальше первого теста
+  прогон не продвинулся.
+- При этом `emulator.exe`/`qemu-system-x86_64.exe`/`node.exe` (Appium) —
+  ЖИВЫ и не имеют отношения к падению: сама среда (эмулятор, CA, Appium)
+  оставалась исправной, погибнул именно процесс pytest этой сессии.
+
+**Вывод: процесс pytest умер/исчез без exit-кода и без вывода дальше
+первого теста — попытка сорвана tooling-инцидентом Bash-оркестрации ЭТОЙ
+сессии** (фоновый процесс, запущенный `run_in_background`, не пережил
+между-вызовный сброс состояния шелла — см. известное свойство среды
+«Agent threads always have their cwd reset between bash calls»; здесь,
+похоже, было потеряно не только cwd, но и сам фоновый процесс). Это НЕ
+находка о состоянии AO3-окружения (эмулятор/Appium/CA — все живы и
+корректны, весь бринг-ап отработал штатно) и НЕ новое падение теста
+(TC-013/AT-BUG-009 из предыдущих попыток здесь ни при чём — прогон не
+дошёл даже до второго теста из 19). Витнеса по критерию «Smoke без
+регресса» НЕТ — ни PASS, ни FAIL по существу, только оборванный прогон
+без результата. Не выдаю ложного «ещё идёт» без доказательства (прямое
+указание оператора) и не переношу дело на память о предыдущем состоянии.
+
+Не завожу новый test_debt-баг: это не задокументированный класс дефекта
+`framework/`/`scripts/` AO3 (эмулятор/CA/Appium — все в порядке,
+воспроизвести на стороне тестового окружения нечем), а инцидент
+оркестрации самой этой рабочей сессии (Bash-тул харнесса, вне
+`D:\AO3_tests`) — не тот периметр, что покрывают `bugs/AT-BUG-*`
+(test-system debt данного репозитория). Докладываю как факт в отчёте
+задачи; эскалация/детектор — на усмотрение Lead/оператора вне мандата
+test-maintainer.
+
+Cleanup: `adb emu kill` (эмулятор погашен), `Stop-NodeProcesses` (Appium
+погашен), `Get-Device` → `NO DEVICE` подтверждено. `python
+scripts/arch_check.py` не гонялся в этом ходе (правки в `framework/` не
+вносились). `app-under-test/` не тронут. Правки этого хода — только
+`bugs/AT-BUG-005.md` (эта запись + снятие лока). Статус бага НЕ меняю —
+остаётся `Open`; критерий «Smoke без регресса» по-прежнему не
+подтверждён ни в одну, ни в другую сторону. Следующая попытка —
+рекомендую гнать смок foreground-частями (по файлам/маркерам) или
+надёжнее контролировать выживание фонового процесса, прежде чем снова
+полагаться на единый `-m p0` в фоне.
+
+**2026-07-17T18:52:00Z — test-maintainer (attempt 2 финального пункта критерия
+«Smoke без регресса» — ЗАКРЫТО, Open→Fixed):**
+
+Контекст: попытка 1 этого диспатча (запись 18:35:00Z выше) сорвалась
+tooling-инцидентом — фоновый pytest-процесс, запущенный `run_in_background`,
+исчез без exit-кода после старта первого теста; среда (эмулятор/CA/Appium)
+была поднята корректно и не была причиной. В этот раз — тот же канонический
+бринг-ап, тот же способ запуска (`run_in_background: true`), но с честным
+периодическим мониторингом реальным процессом (не памятью о состоянии job).
+
+Бринг-ап (каждый шаг сверен позитивно):
+- `Start-Emulator -WritableSystem` → буд прошёл, `Install-MitmCA` внутри —
+  `CA hash = c8750f0d`, `store=134 apex=134`, `CA visible in apex store: OK`.
+- `Get-Device` → `emulator-5554`; `Start-Appium` → `Appium started and ready
+  on :4723`; `Install-App` → `Performing Streamed Install` / `Success`.
+
+Запуск: `Invoke-Pytest -m p0 -v` через Bash `run_in_background: true`,
+вывод редиректился в файл scratchpad-директории этой сессии (не путать со
+служебным `.output`-файлом харнесса — при явном `>`-редиректе харнессный
+файл остаётся пустым, это не признак зависания, проверено чтением
+СВОЕГО файла редиректа). Позитивный контроль сразу после старта:
+`Get-CimInstance Win32_Process -Filter "Name='python.exe'" | Where
+CommandLine -match 'pytest'` — два процесса с `-m pytest -m p0 -v` в
+командной строке, оба живы. Через 5 минут — повторная проверка: процессы
+живы, файл вывода вырос до 9/19 тестов (42%, все PASSED) — реальный
+прогресс, не мёртвый job. Дождалась нотификации о завершении фоновой
+задачи (без ручного sleep-поллинга сверх одной контрольной точки).
+
+**Witness (полный вывод):** `collected 55 items / 36 deselected / 19
+selected` → все 19 PASSED (`test_backup_restore`, `test_library` x2,
+`test_rating` x5, `test_smoke` x7 включая
+`test_seeded_work_appears_in_correct_tab` x5, `test_visibility`
+`test_disliked_hidden_on_listing[listing_basic.mitm]`) — **`19 passed, 36
+deselected in 618.73s (0:10:18)`, `PYTEST_EXIT=0`.** Ни одного failed/error;
+TC-013 (`test_disliked_hidden_on_listing`, ранее флаковавший по
+AT-BUG-007/AT-BUG-009) — зелёный в этом прогоне. TC-021
+(`test_backup_restore.py`) — зелёный, первым в списке (5%).
+
+Сверка по всем трём пунктам критерия готовности (Fixed):
+1. Способ автоматизации SAF picker найден и задокументирован как
+   переиспользуемые step/fixture (`documents_ui.py`/`saf_steps.py`) —
+   подтверждено инкрементом 1 (2026-07-09/14).
+2. TC-021 зелёный (`test_backup_restore.py`) — подтверждено
+   test-automator'ом (2026-07-14) и повторно этим прогоном.
+3. Smoke без регресса — **подтверждено этим прогоном**: `19/19 passed`,
+   `PYTEST_EXIT=0`, ни один из известных независимых блокеров
+   (AT-BUG-009 adb-timeout, TC-013 нестабильность) не проявился.
+
+Все три пункта критерия выполнены. Перевожу `Open → Fixed`
+(guard-переход test-maintainer по `type: test_debt`,
+`schemas/transitions.yaml:65-66` — сверено перед переходом). Верификация
+(`Fixed → Verified`) — за fix-verifier; сборку приложения ждать не нужно
+(долг тестовой системы, фикс во `framework/`).
+
+Cleanup: `adb emu kill` (эмулятор погашен), `Stop-NodeProcesses` (Appium
+погашен), `Get-Device` → `NO DEVICE` подтверждено отдельным вызовом.
+`python scripts/arch_check.py` — правки этого хода ограничены `bugs/
+AT-BUG-005.md` (frontmatter + эта запись, снятие лока), `framework/` не
+трогала — прогон не требуется по существу, но выполнен контрольно:
+`ошибок 0, предупреждений 0`. `app-under-test/` не тронут.
 
 **2026-07-15T14:00:00Z — bug-reporter (заведение app_bug на основе находки test-automator):**
 Классовая находка async-race из записи test-automator выше (момент между `saf_pick_folder`

@@ -2,7 +2,7 @@
 key: "AT-BUG-011"
 project: "AO3"
 issueType: "bug"
-status: "bug-open"
+status: "bug-fixed"
 priority: "p1"
 summary: "Фикстура replay не проверяет присутствие mitm-CA перед тестом — без CA каждый replay-тест умирает 120–240с ReadTimeoutError вместо мгновенной диагностики (мисдиагнозы каскадом: ESC-001, ложный Reopened AT-BUG-006)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-16T22:50:00Z"
-updated: "2026-07-16T22:50:00Z"
+created: "2026-07-17T18:40:00Z"
+updated: "2026-07-17T18:40:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Фикстура replay не проверяет присутствие mitm-CA перед тестом — без CA каждый replay-тест умирает 120–240с ReadTimeoutError вместо мгновенной диагностики (мисдиагнозы каскадом: ESC-001, ложный Reopened AT-BUG-006)
 
 _Спроецировано из `bugs/AT-BUG-011.md` (источник правды).
-Статус в нашей машине: **Open**._
+Статус в нашей машине: **Fixed**._
 
 # AT-BUG-011 — replay-фикстура без fail-fast проверки mitm-CA
 
@@ -93,3 +93,43 @@ critic'а в Обсуждении `bugs/AT-BUG-009.md` (запись 2026-07-17)
 правило 9). Диспатч — штатным B4-правилом; приоритет высокий внутри
 очереди (major: каждая встреча с классом стоит десятки минут и порождает
 мисдиагнозы).
+
+**2026-07-17T18:40:00Z — test-maintainer, Open → Fixed:** реализован
+`mitm.is_ca_installed()` (`framework/core/mitm.py`) — ТА ЖЕ проверка, что
+`install-mitm-ca.sh` печатает как «CA visible in apex store: OK»:
+`subject_hash_old` CA-сертификата через `openssl` (тот же бинарь/флаг, что
+и install-скрипт) + `adb shell ls /apex/com.android.conscrypt/cacerts/`,
+сравнение по имени файла `<hash>.0`. Зависший adb/openssl оборачивается в
+явную `TimeoutError` (тот же класс, что AT-BUG-009) — не «второй немой
+таймаут» поверх старого.
+
+Фикстура `replay` (`framework/tests/conftest.py`) зовёт новую
+`_ensure_replay_ca()` первой строкой; при отсутствии CA — мгновенная
+`RuntimeError` с текстом «AT-BUG-011» и рецептом (`Start-Emulator
+-WritableSystem` / `Install-MitmCA`). Результат кешируется в
+module-level `_ca_checked` — проверка происходит один раз на сессию
+(первый replay-тест), не на каждом (критерий п.2).
+
+Witness:
+- Device-free юнит-проба `framework/tests/test_replay_ca_check_unit.py`
+  (5 тестов: `is_ca_installed()` true/false-ветки, `_ensure_replay_ca()`
+  проходит/падает мгновенно явной ошибкой, кеш на сессию) — 3 прогона
+  подряд `Invoke-Pytest tests/test_replay_ca_check_unit.py -v`,
+  PYTEST_EXIT=0, 5 passed каждый раз (0.09-1.00s, не таймаут).
+- Device-регресс на корректно поднятой среде (`Start-Emulator
+  -WritableSystem` → CA visible in apex store: OK → `Start-Appium` →
+  `Install-App` → `Invoke-Pytest tests/test_replay_infra_probe.py -v`):
+  `test_rate_from_listing_bottom_sheet_on_replay_fixture[listing_basic.mitm]
+  PASSED`, PYTEST_EXIT=0 (23.66s) — новая проверка не ломает здоровый путь.
+- `python scripts/arch_check.py` → «ошибок 0, предупреждений 0».
+- Регресс `test_subprocess_timeout_unit.py` (соседний AT-BUG-009-класс,
+  проверка на неслучайную поломку соседнего механизма) — 8 passed.
+- Среда погашена после device-регресса (`adb emu kill` + `Stop-NodeProcesses`,
+  `Get-Device` → `NO DEVICE`).
+
+Runbook-строка в `docs/HANDOFF.md` («Как поднять окружение», диагноз
+critic + ссылка AT-BUG-011) уже на месте с 2026-07-16 — сверено, не
+дублировалась.
+
+Пункты критерия готовности (1-5) закрыты. Готово к `fix-verifier` (B4→D1,
+долг фреймворка — сборку приложения ждать не нужно).

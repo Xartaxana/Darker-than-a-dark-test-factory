@@ -482,14 +482,14 @@
     "epicPath": null,
     "summary": "Подписи вкладок Library соответствуют фактическому UI",
     "issueType": "test-case",
-    "status": "tc-draft",
+    "status": "tc-approved",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:library"
     ],
-    "updated": "2026-07-02T04:30:00Z",
+    "updated": "2026-07-17T15:01:39Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1439,9 +1439,9 @@
     "epic": null,
     "parentPath": null,
     "epicPath": null,
-    "summary": "Выключение \"Enable filtering\" в Settings показывает все работы независимо от рейтинга",
+    "summary": "Выключение per-rating тумблера \"Hide Disliked works\" в Settings показывает работы с рейтингом Disliked на листинге",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -1449,7 +1449,7 @@
       "area:visibility",
       "risk:R-06"
     ],
-    "updated": "2026-07-10T16:56:00Z",
+    "updated": "2026-07-17T15:43:20Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1550,7 +1550,7 @@
     "epicPath": null,
     "summary": "SAF file/folder picker не автоматизируется штатными Appium-локаторами — блокирует TC-021 (P0, backup/restore) и часть download/backup-кейсов",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1560,7 +1560,7 @@
       "test_case:TC-039",
       "sev:major"
     ],
-    "updated": "2026-07-15T13:35:00Z",
+    "updated": "2026-07-17T18:52:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1574,7 +1574,7 @@
     "epicPath": null,
     "summary": "Таблица filter_profiles не поддержана в seed_db.py и нет replay-записи формы AO3 Sort&Filter — блокирует автоматизацию батча filter-profiles (TC-040/041/042, P1)",
     "issueType": "bug",
-    "status": "bug-reopened",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -1584,7 +1584,7 @@
       "test_case:TC-042",
       "sev:minor"
     ],
-    "updated": "2026-07-16T21:48:52Z",
+    "updated": "2026-07-17T19:05:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1641,7 +1641,7 @@
     "epicPath": null,
     "summary": "FLAKY(?): test_disliked_hidden_on_listing (TC-013, replay) — ReadTimeoutError к локальному Appium внутри driver.get() при полном p0 после длинной сессии; в изоляции ранее многократно зелёный за 20-25s",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1649,7 +1649,7 @@
       "test_case:TC-013",
       "sev:major"
     ],
-    "updated": "2026-07-17T00:45:00Z",
+    "updated": "2026-07-17T19:40:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1685,14 +1685,14 @@
     "epicPath": null,
     "summary": "Фикстура replay не проверяет присутствие mitm-CA перед тестом — без CA каждый replay-тест умирает 120–240с ReadTimeoutError вместо мгновенной диагностики (мисдиагнозы каскадом: ESC-001, ложный Reopened AT-BUG-006)",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:major"
     ],
-    "updated": "2026-07-16T22:50:00Z",
+    "updated": "2026-07-17T18:40:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1706,14 +1706,56 @@
     "epicPath": null,
     "summary": "Start-Emulator: загрузка quickboot-снапшота default_boot нестабильна — qemu тихо крэшит (~20с, процесса нет), остаются стейл-локи multiinstance.lock; воспроизведено 4+ раза",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-07-16T22:50:00Z",
+    "updated": "2026-07-17T20:35:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-013",
+    "path": "board/AT-BUG-013/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Install-App сразу после Start-Emulator (boot_completed=1) может словить race «cmd: Can't find service: package» — package manager ещё не готов, retry секундами позже проходит",
+    "issueType": "bug",
+    "status": "bug-fixed",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:minor"
+    ],
+    "updated": "2026-07-17T23:45:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-014",
+    "path": "board/AT-BUG-014/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Clear-EmulatorStaleLocks (AT-BUG-012) не удаляет hardware-qemu.ini.lock, когда это НЕПУСТАЯ директория (содержит pid) — Remove-Item без -Recurse падает NullReferenceException несмотря на -ErrorAction SilentlyContinue, Start-Emulator не поднимается",
+    "issueType": "bug",
+    "status": "bug-fixed",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:major"
+    ],
+    "updated": "2026-07-17T23:20:00Z",
     "resolution": null,
     "children": [],
     "archived": false

@@ -172,6 +172,28 @@ def two_filter_profiles_seeded():
     yield ("Profile A", "Profile B")
 
 
+_ca_checked = False  # AT-BUG-011: fail-fast проверка mitm-CA — один раз на сессию
+
+
+def _ensure_replay_ca() -> None:
+    """Предусловие replay-тестов (AT-BUG-011): без mitm-CA в системном APEX-сторе
+    WebView отвергает TLS к mitmproxy, и тест виснет `ReadTimeoutError` через
+    120–240с (APPIUM_HTTP_TIMEOUT x rerun-гейт AT-BUG-007) вместо мгновенной
+    понятной ошибки. Кешируется в module-level `_ca_checked` — проверяется
+    (adb + openssl вызов) один раз на первом replay-тесте сессии, не на каждом."""
+    global _ca_checked
+    if _ca_checked:
+        return
+    if not mitm.is_ca_installed():
+        raise RuntimeError(
+            "mitm-CA отсутствует в системном сторе доверия (стирается любым "
+            "ребутом эмулятора без -writable-system) — поднимите среду "
+            "`Start-Emulator -WritableSystem` или выполните "
+            "`Install-MitmCA`/`bash scripts/install-mitm-ca.sh` (AT-BUG-011)."
+        )
+    _ca_checked = True
+
+
 @pytest.fixture()
 def replay(request):
     """Поднимает mitmdump в режиме server-replay на записи `request.param` (имя файла
@@ -185,7 +207,10 @@ def replay(request):
     (`Start-Emulator -WritableSystem`) и CA mitmproxy установлен
     (`bash scripts/install-mitm-ca.sh`) — см. `docs/environment-setup.md`.
     Подключение к conftest — часть AT-BUG-004, инкремент 1 (сам механизм record→replay
-    доказан спайком B, до этой фикстуры не был подключён ни к одному тесту)."""
+    доказан спайком B, до этой фикстуры не был подключён ни к одному тесту).
+    Перед стартом проверяет присутствие CA (`_ensure_replay_ca`, AT-BUG-011) —
+    падает мгновенно и явно вместо таймаута, если среда поднята без CA."""
+    _ensure_replay_ca()
     flow_name = request.param
     flows_file = settings.RECORDINGS_DIR / flow_name
     assert flows_file.exists(), (

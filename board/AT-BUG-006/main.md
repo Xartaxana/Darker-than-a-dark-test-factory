@@ -2,7 +2,7 @@
 key: "AT-BUG-006"
 project: "AO3"
 issueType: "bug"
-status: "bug-reopened"
+status: "bug-fixed"
 priority: "p2"
 summary: "Таблица filter_profiles не поддержана в seed_db.py и нет replay-записи формы AO3 Sort&Filter — блокирует автоматизацию батча filter-profiles (TC-040/041/042, P1)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-16T21:48:52Z"
-updated: "2026-07-16T21:48:52Z"
+created: "2026-07-17T19:05:00Z"
+updated: "2026-07-17T19:05:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Таблица filter_profiles не поддержана в seed_db.py и нет replay-записи формы AO3 Sort&Filter — блокирует автоматизацию батча filter-profiles (TC-040/041/042, P1)
 
 _Спроецировано из `bugs/AT-BUG-006.md` (источник правды).
-Статус в нашей машине: **Reopened**._
+Статус в нашей машине: **Fixed**._
 
 # AT-BUG-006 — Инфраструктура filter-profiles не доведена (сидинг + replay-запись формы)
 
@@ -87,6 +87,7 @@ AT-BUG-005 (P1-кейсы против P0), severity minor. Fixed не ждёт 
 | 2026-07-16 | 1.10 | `tests/test_filter_profiles.py::test_delete_filter_profile` (TC-042), попытка 2 (чистая, Appium перезапущен, устройство не трогалось) | `1 failed, 1 rerun in 751.10s` — идентичный `ReadTimeoutError` на том же вызове `driver.get()` | Не зелёный |
 | 2026-07-16 | 1.10 | Дифференциальный прогон: `tests/test_replay_infra_probe.py` (ПРЕДсуществующий тест, НЕ часть фикса AT-BUG-006, тот же `listing_basic.mitm`) | `1 failed, 1 rerun in 627.88s` — идентичный `ReadTimeoutError` на `driver.get()`, ДО холодной перезагрузки эмулятора | Подтверждает: сбой не специфичен фиксу AT-BUG-006 |
 | 2026-07-16 | 1.10 | Холодная перезагрузка эмулятора (`emulator -no-snapshot-load`, снят стэйл-лок `multiinstance.lock` в `tools/avd/ao3_test_api34.avd` — та же находка, что test-maintainer описал в инкременте 2), переустановка APK, Appium заново → повтор `test_replay_infra_probe.py` | `1 failed, 1 rerun in 627.88s` — идентичный `ReadTimeoutError`, ремедиум из инкремента 2 НЕ помог в этот раз | Среда не восстановлена; вердикт по TC-042 недостижим в эту сессию |
+| 2026-07-17 | не переустанавливалась в этой сессии (device-инвариантный env-фикс, код не трогался) | `Start-Emulator -WritableSystem` (канонический подъём, авто-`Install-MitmCA`) → `Start-Appium` → `tests/test_filter_profiles.py::test_delete_filter_profile` (грань 3) | Подъём: `CA hash = c8750f0d`, `store=134 apex=134`, `CA visible in apex store: OK`. Прогон: `1 passed in 92.93s`, `PYTEST_EXIT=0` — первая же попытка, без реранов, ReadTimeoutError не воспроизвёлся (совпадает с диагнозом critic ESC-001: причина была в отсутствии mitm-CA после ребута без `-writable-system`, не в фиксе/новый класс среды) | Грань 3 подтверждена |
 
 **Итог верификации:** грань 1 (сидинг) и грань 2 (наличие/размер replay-записи) подтверждены. Грань 3 (зелёный TC-042) НЕ подтверждена в этой сессии — НЕ из-за дефекта в самом фиксе (дифференциальный прогон предсуществующего `test_replay_infra_probe.py` тем же `listing_basic.mitm` даёт идентичный сбой независимо от кода AT-BUG-006, и он пережил холодную перезагрузку эмулятора со снятием стэйл-лока — ремедиум, задокументированный самим test-maintainer в инкременте 2, в этот раз не сработал), а из-за отказа окружения (`driver.get()` вешается на 120с ReadTimeoutError на ЛЮБОЙ replay-навигации). `status_machine` (schemas/transitions.yaml) не даёт fix-verifier перехода `Fixed → Blocked` напрямую; при этом жёсткое правило «не закрывать баг без факта зелёного прогона» не позволяет `Verified`. Единственный оставшийся легальный переход — `Fixed → Reopened` (`reopen_count` 0→1) — используется формально, НЕ как утверждение «фикс сломан»: см. явную оговорку в «Обсуждении» ниже, чтобы следующий исполнитель не тратил цикл на переделку уже рабочего сидинга/записи.
 
@@ -316,3 +317,58 @@ bug-артефакт не завожу — вне `owns` этого диспат
 единолично); эскалация и рекомендация — в `state/escalations.md` и в сводке
 этой сессии. Среда (эмулятор/Appium), поднятая мной для верификации, погашена
 (`adb emu kill`, `Stop-NodeProcesses`).
+
+**2026-07-17T19:05:00Z — test-maintainer (B4, повторная починка долга после
+Reopened — ничего в seed_db.py/sort_filter_form.mitm/локаторах не менялось,
+по явной инструкции fix-verifier выше):**
+
+Причина формального `Reopened` к этому моменту уже диагностирована и решена
+вне этого бага (`ESC-001` в `state/escalations.md`, диагноз critic
+2026-07-17: mitm-CA стирается `adb reboot` без переустановки; canonical fix —
+`Start-Emulator -WritableSystem`, автоматически ставит и проверяет CA).
+Задача этого прохода — ровно то, что просил fix-verifier: дождаться
+стабильного окружения и повторить прогон.
+
+Подъём среды: `Start-Emulator -WritableSystem` → лог подтверждает CA
+установлен и виден приложениям (`CA hash = c8750f0d`, `store=134 apex=134`,
+`CA visible in apex store: OK`), `Get-Device` → `DEVICE: emulator-5554`,
+`Start-Appium` → `Appium started and ready on :4723`.
+
+Витнес (грань 3, повтор `Invoke-Pytest tests/test_filter_profiles.py -v`,
+фон, процесс проверен живым через `Get-Process python` до завершения):
+```
+tests/test_filter_profiles.py::test_delete_filter_profile[listing_basic.mitm] PASSED [100%]
+1 passed in 92.93s (0:01:32)
+PYTEST_EXIT=0
+```
+Прошёл с первой попытки, без рерана — `ReadTimeoutError` не воспроизвёлся ни
+разу, что согласуется с диагнозом critic (корень — отсутствие CA после
+голого ребута, не деградация нового класса). `test_filter_profiles.py` не
+входит в стандартный p0-набор, поэтому это единичный прогон грани 3, а не
+серия из трёх (историческая серия 3× зелёных для TC-042 уже зафиксирована
+инкрементом 2 от 2026-07-15 — код теста с тех пор не менялся, этот прогон
+подтверждает только восстановление окружения).
+
+Смоук без регресса (грань 4 критерия): зачтён по факту инкремента 2
+(2026-07-15) — `Invoke-Pytest -m p0 -v` → `19 passed` (10м36с), `arch_check.py`
+→ 0/0; ни `seed_db.py`, ни `sort_filter_form.mitm`, ни локаторы
+`settings_screen.py`/`browser_screen.py`, задействованные TC-042, с того
+момента не менялись (единственные изменения между инкрементом 2 и этим
+проходом — диагностика/фикс окружения в других сессиях, не код фреймворка
+данного бага) — повторный p0-прогон в этой сессии избыточен, отдельно не
+гонялся.
+
+**Итог: все 4 пункта критерия готовности подтверждены** (грани 1/2 — по
+предыдущим сессиям, не тронуты; грань 3 — зелёный прогон этой сессии; грань
+4 — зачтена по инкременту 2, код не менялся). Статус переведён
+`Reopened → Fixed` (переход `bug` из `schemas/transitions.yaml`: `{from:
+Reopened, to: Fixed, by: [test-maintainer, test-automator], guard: {type:
+test_debt}}` — легален). Лок снят. `reopen_count` не сброшен (эффект перехода
+его не трогает). Ожидает верификации fix-verifier (`awaiting: qa`).
+
+Среда (эмулятор + Appium), поднятая для этого прохода, погашена
+(`Stop-NodeProcesses`, `adb emu kill`) по завершении.
+
+Замеченный аналог/эскалация: не обнаружено — деградация ESC-001 не
+воспроизвелась ни разу при каноническом подъёме, новый test_debt-баг не
+заводится.
