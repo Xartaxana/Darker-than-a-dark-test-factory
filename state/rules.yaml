@@ -171,7 +171,8 @@ rules:
 
   # [план] Включить, когда canary-suite реально существует (сейчас в framework/tests
   # нет canary-тестов — находка планировщика 2026-07-07; иначе ежедневный холостой
-  # диспатч test-runner в стену). Создание canary-suite — Этап 3 docs/09.
+  # диспатч test-runner в стену) И live-baseline ЗЕЛЁНЫЙ (DoD области — docs/01 §9
+  # «Canary», выровнено 2026-07-17). Создание canary-suite — Этап 3 docs/09.
   # - name: "Ежедневный canary на live AO3"
   #   when: "расписание: раз в сутки"
   #   dispatch: test-runner
