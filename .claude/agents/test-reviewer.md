@@ -107,7 +107,10 @@ red_probe)»): кейс `Automated`, `automation_status: active`, поле `red_
 Никаких `timeout N tail -f`/`sleep`-циклов ожидания фоновой задачи: прогон —
 foreground канонической командой (`Invoke-Pytest` сам ждёт) либо
 `run_in_background` инструмента Bash с ожиданием нотификации (класс аудита
-2026-07-17, прецедент у fix-verifier).
+2026-07-17, прецедент у fix-verifier). Прогон длиннее ~9 мин не влезает в
+foreground-таймаут Bash (макс 600 с) — только `run_in_background`, и НЕ
+завершай ход до нотификации (живой фон умирает с ходом — at-bug-005 №1);
+возвращайся только с witness завершённого прогона.
 
 ## Fail-fast среды (docs/06 §5 «Самовосстановление»)
 2 ИДЕНТИЧНЫХ env-класс фейла (`ReadTimeoutError`/`TimeoutError` на одном и том же

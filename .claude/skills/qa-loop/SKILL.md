@@ -108,6 +108,14 @@ charter» без их скана мертво.
    ```yaml с ключом agent_output по schemas/agent-output.schema.yaml
    (agent/artifact/result: success|blocked|degraded|failed + summary/changed_files/
    evidence/next_rules/escalations)».
+   **Отчёт «прогон ещё идёт / гоняю в фоне» — НЕ результат и НЕ witness**
+   (прецедент at-bug-005 №1, 2026-07-17: координатор ждал job по пересказу
+   воркера — процесс был давно мёртв): не жди фантом — живость сверяй
+   ИЗМЕРЕНИЕМ (Get-CimInstance на pytest-процесс / рост файла вывода);
+   мёртвый job = немедленный `rejected` (failure_class: tooling), лок снять,
+   ретрай — отдельным диспатчем. Воркер обязан возвращаться только с
+   ЗАВЕРШЁННЫМ прогоном (witness с PYTEST_EXIT) — см. блоки «Фоновые
+   вызовы» в промптах device-ролей.
 3. Результат воркера читай ИЗ его agent_output-блока (не из свободного текста):
    `result` и `summary` — в строку orchestrator-log; `next_rules` — учти в этом же
    проходе; `escalations` — сверь с state/escalations.md. Блока нет или он битый

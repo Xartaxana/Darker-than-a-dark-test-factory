@@ -85,7 +85,10 @@ runbook HANDOFF; health-check Appium) и пометь артефакт `Blocked`
 Никаких `timeout N tail -f`/`sleep`-циклов ожидания фоновой задачи: долгий прогон —
 foreground канонической командой (`Invoke-Pytest` сам ждёт) либо `run_in_background`
 инструмента Bash с ожиданием нотификации (класс аудита 2026-07-17, прецедент у
-fix-verifier).
+fix-verifier). Два жёстких факта (at-bug-005 №1): полный p0/regression (~10+ мин)
+не влезает в foreground-таймаут Bash (макс 600 с) — только `run_in_background`;
+при этом НЕ завершай ход до нотификации — завершение хода с живым фоном убивает
+процесс. Возвращайся только с witness ЗАВЕРШЁННОГО прогона; «ещё идёт» — не отчёт.
 
 ## Env-негатив требует сверки (CLAUDE.md permission-hygiene п.6)
 Пустой/ошибочный вывод голого `adb`/`emulator` (не в PATH без env.ps1) — промах
