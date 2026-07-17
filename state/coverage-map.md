@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-17T23:04:06Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-17T23:17:18Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -10,7 +10,7 @@ generated_at: 2026-07-17T23:04:06Z · генератор: `scripts/coverage_map.
 | Область | Кейсов | Automated | coverage_status |
 |---|---|---|---|
 | backup | 1 | 1 | designed-full |
-| browser | 8 | 6 | partial |
+| browser | 8 | 7 | partial |
 | downloads | 8 | 5 | partial |
 | errors | 1 | 0 | none |
 | filter-profiles | 3 | 1 | partial |
@@ -56,7 +56,7 @@ generated_at: 2026-07-17T23:04:06Z · генератор: `scripts/coverage_map.
 | browse-bridge-injection | browse | нет кейсов |
 | browse-tabstrip-indicators | browse | нет кейсов |
 | browse-bottombar-nav | browse | smoke:TC-002[Automated] |
-| sidepanel-home | side-panel | browser:TC-057[Approved] |
+| sidepanel-home | side-panel | browser:TC-057[Automated] |
 | sidepanel-theme-toggle | side-panel | browser:TC-050[Automated] |
 | sidepanel-font-size | side-panel | browser:TC-051[Automated], browser:TC-052[Automated] |
 | sidepanel-fullscreen-toggle | side-panel | browser:TC-058[Approved] |
@@ -175,7 +175,7 @@ generated_at: 2026-07-17T23:04:06Z · генератор: `scripts/coverage_map.
 
 ### browser
 
-- coverage_status: **partial** (6/8 Automated)
+- coverage_status: **partial** (7/8 Automated)
 - риски: R-11
 - кейсы без risk: нет
 - P0/P1 не в Automated: нет
@@ -187,7 +187,7 @@ generated_at: 2026-07-17T23:04:06Z · генератор: `scripts/coverage_map.
 | P0 |  |  |  |  |  |
 | P1 |  |  |  | 6 |  |
 | P2 |  |  |  |  |  |
-| P3 |  |  | 2 |  |  |
+| P3 |  |  | 1 | 1 |  |
 
 ### downloads
 

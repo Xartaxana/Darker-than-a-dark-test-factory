@@ -169,16 +169,17 @@
     "epicPath": null,
     "summary": "Кнопка Home в side panel переводит активную вкладку на главную страницу AO3",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p3",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:browser",
-      "risk:R-11"
+      "risk:R-11",
+      "automation:active"
     ],
-    "updated": "2026-07-17T22:55:08Z",
-    "resolution": null,
+    "updated": "2026-07-17T23:13:57Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
