@@ -354,7 +354,7 @@ escalations: []
 Сейчас HANDOFF содержит факты, планы, итоги, счетчики, known issues. Для автономной фабрики лучше разделить:
 
 - `docs/06-dark-factory.md` — target spec;
-- `docs/04-roadmap.md` — implementation plan;
+- `docs/09-improvement-plan.md` Часть I (на момент ревью — `docs/04-roadmap.md`, слито 2026-07-17) — implementation plan;
 - `state/factory-status.md` или generated status — текущая очередь;
 - `docs/HANDOFF.md` — только resume notes and critical context.
 

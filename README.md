@@ -15,10 +15,9 @@
 | [docs/01-test-strategy.md](docs/01-test-strategy.md) | Стратегия тестирования: скоуп, уровни, риски, приоритеты P0–P3, режимы live/replay |
 | [docs/02-framework-architecture.md](docs/02-framework-architecture.md) | Архитектура тестового фреймворка: стек, слои, паттерны, структура каталогов, конвенции |
 | [docs/03-agent-system.md](docs/03-agent-system.md) | Система агентов: роли, триггеры, статусная машина артефактов, оркестрация |
-| [docs/04-roadmap.md](docs/04-roadmap.md) | Дорожная карта внедрения по фазам с критериями выхода |
 | [docs/templates/](docs/templates/) | Шаблоны артефактов: тест-кейс (GWT), баг-репорт, отчёт о прогоне |
 | [docs/08-external-architecture-review.md](docs/08-external-architecture-review.md) | Внешнее ревью архитектуры тёмной QA-фабрики: пробелы, best practices и предложения к roadmap |
-| [docs/09-improvement-plan.md](docs/09-improvement-plan.md) | План улучшений по итогам ревью 08 + решения владельца (2026-07-07): этапы, критерии выхода, отклонённое |
+| [docs/09-improvement-plan.md](docs/09-improvement-plan.md) | **План развития** (единый, слияние 2026-07-17): Часть I — фазовая карта с критериями выхода (бывший docs/04-roadmap), Часть II — этапы улучшений по ревью 08 + решения владельца |
 
 ## Целевая структура репозитория (после реализации)
 
