@@ -219,8 +219,12 @@ features:
   # селектор режима hide/dim вынесен в settings-filter-display-mode (разные Then:
   # hide убирает карточку, dim затемняет — уже разведены на bridge как
   # bridge-hide-filter/bridge-dim-filter).
+  # Поправка Lead 2026-07-17 (defect_found на part4): «Enable-тумблер» в title
+  # был фантомом из PROJECT.md §Priority rules — в SettingsScreen.kt глобального
+  # тумблера НЕТ (grep enable/filterEnabled пуст при позитивном контроле),
+  # только per-rating Switch'и (toggleHideRating). См. блокер №2 TC-015 / BUG-001.
   - id: settings-rating-visibility-filter
-    title: "Фильтр видимости рейтингов: Enable-тумблер + чекбоксы скрываемых рейтингов (per-rating)"
+    title: "Фильтр видимости рейтингов: чекбоксы скрываемых рейтингов (per-rating)"
     screen: settings
     source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
   - id: settings-filter-display-mode

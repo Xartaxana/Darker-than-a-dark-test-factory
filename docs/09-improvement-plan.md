@@ -34,7 +34,8 @@
     rating-comment-field, rating-tag-chips, browse-deep-links,
     sidepanel-settings-sync
   - [ ] выход: все P0/P1-области с Approved-кейсами (живой срез —
-    `state/coverage-map.md`; needs-design §9 ждут утверждения docs/01 Draft)
+    `state/coverage-map.md`; docs/01 УТВЕРЖДЁН 2026-07-17 — needs-design §9
+    разблокированы, приоритет canary/R-02 выше E1–E4)
 - **Фаза 3 — автоматизация P0/P1:**
   - [X] конвейер в бою: F1-гейт ревью, красная проба, lifecycle B3/B4
   - [ ] выход: P0 100%, P1 ≥ 80%, полный regression ≤ 40 мин
