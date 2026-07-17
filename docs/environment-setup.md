@@ -42,12 +42,16 @@ cd D:\AO3_tests\tools\appium; npx appium
 & D:\AO3_tests\framework\.venv\Scripts\Activate.ps1; pytest framework/tests -m p0
 ```
 
-## Аппаратное ускорение эмулятора (РЕШЕНО)
+## Аппаратное ускорение эмулятора (РЕШЕНО; текущее = WHPX)
+
+> **ТЕКУЩЕЕ СОСТОЯНИЕ (с 2026-07-09): гипервизор — WHPX; AEHD удалён
+> владельцем 2026-07-10.** Абзац ниже — история первоначальной настройки;
+> миграция и её причины — раздел «Стабильность хоста» ниже.
 
 История: 2026-07-02 SVM был выключен в BIOS (`emulator -accel-check` → exit 6).
 Владелец включил SVM → установлен драйвер **AEHD 2.2**
 (`sdkmanager "extras;google;Android_Emulator_Hypervisor_Driver"` +
-`silent_install.bat` от администратора). Сейчас: служба `aehd` RUNNING,
+`silent_install.bat` от администратора). На тот момент: служба `aehd` RUNNING,
 `emulator -accel-check` → **0, «AEHD (version 2.2) is installed and usable»**.
 Эмулятор `ao3_test_api34` загружается headless.
 
