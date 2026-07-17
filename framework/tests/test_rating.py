@@ -45,7 +45,14 @@ def test_rate_work_from_work_page_panel(placeholder_seeded_work, driver, rating)
     # docstring модуля и фикстуру `placeholder_seeded_work`), ни один из 5
     # рейтингов ещё не выбран. Сидинг выполнен фикстурой ДО старта сессии Appium.
     work = placeholder_seeded_work
-    app_steps.wait_ui_ready(driver)
+    # wait_app_ready (не wait_ui_ready) - тот же паттерн, что закрыл гонку в
+    # TC-057 (см. test_side_panel.py, critic-вход tc057-rework accepted
+    # 23:03:32, docs/HANDOFF.md queue-пункт 3): open_work_page навигирует
+    # WebView (driver.get) СРАЗУ следом - если стартовая live-загрузка Home ещё
+    # в полёте, chromedriver теряет цель ("cannot determine loading status from
+    # no such window"). wait_ui_ready проверяет только наличие нативной
+    # WebView-оболочки, не оседание стартовой загрузки.
+    app_steps.wait_app_ready(driver)
 
     # When пользователь открывает страницу работы и через панель RatingMenu
     # выставляет рейтинг R

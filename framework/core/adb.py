@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import subprocess
+import time
 from pathlib import Path
 
 from framework.config import settings
@@ -53,7 +54,61 @@ def is_installed() -> bool:
     return _PKG in shell("pm list packages")
 
 
-def install(apk: str = settings.APK_PATH, reinstall: bool = True) -> None:
+def _wait_package_service_ready(timeout: float) -> None:
+    """Ждёт готовности гостевого package-сервиса перед первой попыткой `adb
+    install` — Python-эквивалент PowerShell `tasks.ps1::Wait-PackageServiceReady`
+    (принят на приёмке AT-BUG-013). `boot_completed=1` НЕ гарантирует, что
+    package-сервис уже поднялся: install сразу после буда может словить
+    `cmd: Can't find service: package`, хотя устройство по `Get-Device`/`adb
+    devices` уже есть. Сигнал готовности — первый непустой ответ `pm path
+    android`, содержащий `package:` (пустой вывод/ошибка = сервис ещё не готов;
+    несколько подряд успехов не требуются — как и в PS-версии). Отличие от
+    PS-версии НАМЕРЕННОЕ: там fail-soft (Warning + install пробуется), здесь
+    fail-fast (RuntimeError, install не пробуется) — решение приёмки, не рассинхрон.
+    Короткий поллинг с конечным таймаутом; неудача — явная `RuntimeError` с
+    контекстом (сколько ждали, сколько попыток), не молчаливый бесконечный
+    retry. Ноль дополнительной задержки на счастливом пути: если первый же
+    опрос вернул `package:`, цикл завершается немедленно, ни одного `sleep`.
+    """
+    deadline = time.monotonic() + timeout
+    attempts = 0
+    while True:
+        attempts += 1
+        try:
+            out = shell("pm path android", timeout=settings.ADB_SHELL_TIMEOUT)
+        except TimeoutError:
+            out = ""
+        if "package:" in out:
+            return
+        if time.monotonic() >= deadline:
+            raise RuntimeError(
+                f"adb.install(): package-сервис гостя не ответил за {timeout}s "
+                f"('pm path android' пуст/ошибка после {attempts} попыток) - "
+                "AT-BUG-013: следующий 'adb install' мог бы упасть "
+                "'cmd: Can't find service: package'."
+            )
+        time.sleep(1)
+
+
+def install(
+    apk: str = settings.APK_PATH,
+    reinstall: bool = True,
+    package_service_timeout: float | None = None,
+) -> None:
+    """Устанавливает APK на устройство. AT-BUG-013 (queue-пункт 1, docs/HANDOFF.md
+    — замеченный аналог класса, закрытый ранее только для канонического пути
+    `tasks.ps1::Install-App`): перед первой попыткой `adb install` ждёт
+    готовности package-сервиса гостя (см. `_wait_package_service_ready`) — этот
+    путь вызывается из `conftest.py::_ensure_app_installed` при fresh-boot,
+    минуя tasks.ps1. `package_service_timeout=None` — дефолт
+    `settings.PACKAGE_SERVICE_WAIT_TIMEOUT`, резолвится на КАЖДЫЙ вызов (не на
+    момент импорта модуля), чтобы тесты/вызывающий код могли переопределить его
+    точечно, не трогая settings глобально."""
+    _wait_package_service_ready(
+        settings.PACKAGE_SERVICE_WAIT_TIMEOUT
+        if package_service_timeout is None
+        else package_service_timeout
+    )
     args = ["-s", settings.DEVICE_NAME, "install"]
     if reinstall:
         args.append("-r")

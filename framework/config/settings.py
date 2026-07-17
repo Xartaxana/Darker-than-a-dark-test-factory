@@ -106,6 +106,23 @@ ADB_LAUNCH_TIMEOUT = int(os.environ.get("AO3_ADB_LAUNCH_TIMEOUT", "60"))
 # меньше наблюдавшихся многоминутных зависаний.
 ADB_TRANSFER_TIMEOUT = int(os.environ.get("AO3_ADB_TRANSFER_TIMEOUT", "120"))
 
+# PACKAGE_SERVICE_WAIT_TIMEOUT — Python-эквивалент PowerShell
+# `tasks.ps1::Wait-PackageServiceReady` (принят на приёмке AT-BUG-013): гонка
+# «adb install сразу после boot_completed=1, пока гостевой package-сервис ещё не
+# поднялся» — `pm path android` пуст/`cmd: Can't find service: package`, `adb
+# install` следом ловит ту же ошибку. Закрыт для канонического пути установки
+# (`Install-App` в tasks.ps1); этот таймаут закрывает parallel-путь
+# `framework/core/adb.py::install()` (реальный вызов при fresh-boot из
+# `conftest.py::_ensure_app_installed`, минуя tasks.ps1) — замеченный, но не
+# устранённый аналог класса (queue-пункт 1, docs/HANDOFF.md, находка critic на
+# приёмке AT-BUG-013). Тот же дефолт 30s, что и PowerShell-версия — тот же
+# сигнал готовности (первый непустой `pm path android` с `package:`; «устойчивость»
+# из нескольких подряд успехов НЕ требуется — обе реализации возвращают на первом),
+# тот же порядок ожидания. НАМЕРЕННАЯ разность на пути исчерпания: PS-версия —
+# fail-soft (Write-Warning, install всё равно пробуется), Python — fail-fast
+# (RuntimeError, install не пробуется); это не рассинхрон порта, а решение приёмки.
+PACKAGE_SERVICE_WAIT_TIMEOUT = int(os.environ.get("AO3_PACKAGE_SERVICE_WAIT_TIMEOUT", "30"))
+
 # --- Артефакты ---
 RUNS_DIR = REPO_ROOT / "runs"
 ALLURE_RESULTS = Path(os.environ.get("ALLURE_RESULTS", FRAMEWORK_ROOT / "allure-results"))

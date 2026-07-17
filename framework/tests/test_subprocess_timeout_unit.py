@@ -65,22 +65,32 @@ def test_adb_run_wraps_timeout_expired(monkeypatch):
 
 @pytest.mark.p2
 @allure.id("AT-BUG-009-adb-install-transfer-timeout")
-@allure.title("Проба: adb.install() использует ADB_TRANSFER_TIMEOUT, не ADB_SHELL_TIMEOUT (device-free)")
+@allure.title("Проба: adb.install() использует ADB_TRANSFER_TIMEOUT для самого install, не ADB_SHELL_TIMEOUT (device-free)")
 def test_adb_install_uses_transfer_timeout(monkeypatch):
-    # Given subprocess.run фиксирует, с каким timeout его реально позвали
+    # Given subprocess.run фиксирует, с каким timeout его реально позвали.
+    # AT-BUG-013 (queue-пункт 1): install() теперь СНАЧАЛА опрашивает
+    # package-сервис (`pm path android`, ADB_SHELL_TIMEOUT) и только потом
+    # делает сам `adb install` (ADB_TRANSFER_TIMEOUT) — фейк различает эти два
+    # вызова по команде, чтобы pm-path-опрос сразу вернул "готов" (ноль retry)
+    # и не мешал проверке таймаута именно install-вызова.
     seen_timeouts: list = []
 
     def _fake_run(*args, **kw):
         seen_timeouts.append(kw.get("timeout"))
-        return subprocess.CompletedProcess(args=args[0], returncode=0, stdout="Success", stderr="")
+        cmd_args = args[0]
+        if "pm path android" in cmd_args:
+            return subprocess.CompletedProcess(args=cmd_args, returncode=0,
+                                                stdout="package:android\n", stderr="")
+        return subprocess.CompletedProcess(args=cmd_args, returncode=0, stdout="Success", stderr="")
 
     monkeypatch.setattr(subprocess, "run", _fake_run)
 
     # When вызывается install() — файловая операция (APK), не обычный shell-вызов
     adb.install(apk="dummy.apk")
 
-    # Then применён ADB_TRANSFER_TIMEOUT (щедрее обычного shell-таймаута), не дефолт
-    assert seen_timeouts == [settings.ADB_TRANSFER_TIMEOUT]
+    # Then первым ушёл опрос готовности (ADB_SHELL_TIMEOUT), последним — сам
+    # install с ADB_TRANSFER_TIMEOUT (щедрее обычного shell-таймаута)
+    assert seen_timeouts == [settings.ADB_SHELL_TIMEOUT, settings.ADB_TRANSFER_TIMEOUT]
 
 
 @pytest.mark.p2
