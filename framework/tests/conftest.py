@@ -6,11 +6,15 @@
 """
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from framework.config import settings
 from framework.core import adb, driver_factory, mitm, reporting
+from framework.data import recording_builder as rb
 from framework.data import works as W
+from framework.data.works import Work
 from framework.steps import app_steps
 
 _DOWNLOADED_WORK_FIXTURE = settings.DATA_DIR / "fixtures" / "downloaded_work.html"
@@ -165,6 +169,116 @@ def library_downloaded_only_seeded():
 
 
 @pytest.fixture()
+def library_null_wordcount_seeded():
+    """TC-031: 2 работы с валидным word_count (READ=800, LOVED=4200) +
+    `works.NULL_WORD_COUNT_TARGET` (word_count=None), все три с ОДНИМ рейтингом
+    (PENDING) на одной вкладке — граница отсутствующего word_count в сортировке
+    (AT-BUG-010, Fixed). `seed_library`/`seed()` уже достаточно — `Work.word_count`
+    типизирован `int | None`, `seed_with_comment` не нужен (rating не NULL, comment/
+    tags не участвуют)."""
+    app_steps.clean_state()
+    app_steps.seed_library([
+        (W.READ, "PENDING"),
+        (W.LOVED, "PENDING"),
+        (W.NULL_WORD_COUNT_TARGET, "PENDING"),
+    ])
+    yield {"with_wordcount": [W.READ, W.LOVED], "null_wordcount": W.NULL_WORD_COUNT_TARGET}
+
+
+@pytest.fixture()
+def library_tags_and_seeded():
+    """TC-060: 3 работы с ОДНИМ рейтингом (SAVE), различающиеся только `tags` —
+    W1 оба выбранных тега, W2 только один (частичное пересечение), W3 ни одного.
+    Работы не входят в `works.ALL` (специфичны для этого кейса) — созданы напрямую,
+    тот же приём, что и `NULL_WORD_COUNT_TARGET`/`WORD_COUNT_MIN_BOUNDARY`."""
+    app_steps.clean_state()
+    w1 = Work("900000601", "TC-060 Both Tags Work", "seed_author_tc060_w1", "Fandom TC060", 1000)
+    w2 = Work("900000602", "TC-060 One Tag Work", "seed_author_tc060_w2", "Fandom TC060", 1000)
+    w3 = Work("900000603", "TC-060 No Match Work", "seed_author_tc060_w3", "Fandom TC060", 1000)
+    app_steps.seed_with_comment([
+        (w1, "SAVE", None, json.dumps(["fluff", "hurt-comfort"])),
+        (w2, "SAVE", None, json.dumps(["fluff"])),
+        (w3, "SAVE", None, json.dumps(["canon-divergent"])),
+    ])
+    yield (w1, w2, w3)
+
+
+@pytest.fixture()
+def library_freetext_search_seeded():
+    """TC-061: 3 работы с ОДНИМ рейтингом (SAVE) — только W1 содержит подстроку
+    "wintersong" (в `comment`), W2/W3 не содержат её ни в одном текстовом поле
+    (title/author/fandom/tags/comment)."""
+    app_steps.clean_state()
+    w1 = Work("900000611", "TC-061 Match In Comment Work", "seed_author_tc061_w1",
+              "Fandom TC061 Alpha", 1000)
+    w2 = Work("900000612", "TC-061 No Match Work Two", "seed_author_tc061_w2",
+              "Fandom TC061 Beta", 1000)
+    w3 = Work("900000613", "TC-061 No Match Work Three", "seed_author_tc061_w3",
+              "Fandom TC061 Gamma", 1000)
+    app_steps.seed_with_comment([
+        (w1, "SAVE", "Reread this every wintersong", None),
+        (w2, "SAVE", None, None),
+        (w3, "SAVE", None, None),
+    ])
+    yield (w1, w2, w3)
+
+
+@pytest.fixture()
+def library_last_read_order_seeded():
+    """TC-062: 3 работы с ОДНИМ рейтингом (SAVE), засеянные ТРЕМЯ ПОСЛЕДОВАТЕЛЬНЫМИ
+    вызовами `seed_with_comment` (по одной работе на вызов — разные `timestamp`, см.
+    заметки TC-062 про `now`, вычисляемый один раз на батч) в хронологическом
+    порядке Mango -> Apple -> Zebra. Заголовки подобраны так, чтобы ни порядок
+    вставки, ни алфавит не совпадали с ожидаемым порядком по `timestamp`
+    (Zebra, Apple, Mango)."""
+    app_steps.clean_state()
+    mango = Work("900000621", "Mango Work", "seed_author_tc062_mango", "Fandom TC062", 1000)
+    apple = Work("900000622", "Apple Work", "seed_author_tc062_apple", "Fandom TC062", 1000)
+    zebra = Work("900000623", "Zebra Work", "seed_author_tc062_zebra", "Fandom TC062", 1000)
+    app_steps.seed_with_comment([(mango, "SAVE", None, None)])
+    app_steps.seed_with_comment([(apple, "SAVE", None, None)])
+    app_steps.seed_with_comment([(zebra, "SAVE", None, None)])
+    yield (mango, apple, zebra)
+
+
+@pytest.fixture()
+def library_author_sort_seeded():
+    """TC-064: 3 работы с ОДНИМ рейтингом (PENDING) — W1 author="Zoe Martinez",
+    W2 author="Amy Chen", W3 author="" (пустой, допустим схемой) — плюс
+    `works.SCROLL_FILLERS` (непустой author) для гарантированного скролла, тот
+    же приём, что TC-030/TC-063."""
+    app_steps.clean_state()
+    w1 = Work("900000641", "TC-064 Zoe Work", "Zoe Martinez", "Fandom TC064", 1000)
+    w2 = Work("900000642", "TC-064 Amy Work", "Amy Chen", "Fandom TC064", 1000)
+    w3 = Work("900000643", "TC-064 Empty Author Work", "", "Fandom TC064", 1000)
+    rows = [(w1, "PENDING"), (w2, "PENDING"), (w3, "PENDING")] + [
+        (w, "PENDING") for w in W.SCROLL_FILLERS
+    ]
+    app_steps.seed_library(rows)
+    yield (w1, w2, w3)
+
+
+@pytest.fixture()
+def library_files_rating_seeded():
+    """TC-065: `works.ALL`, каждая с рейтингом, соответствующим её "естественному"
+    имени (LOVED=SAVE, KUDOSED=LIKE, READ=READ, PENDING=PENDING, DISLIKED=DISLIKE —
+    тот же маппинг, что `seeded_library`), и с уже «скачанным» локальным HTML-файлом
+    (общий переиспользуемый файл `_DOWNLOADED_WORK_FIXTURE`, downloadPath заполнен) —
+    все 5 видны на вкладке Files. Засеяны ОДНИМ батчем в порядке DISLIKED, PENDING,
+    READ, KUDOSED, LOVED (обратном ожидаемому результату сортировки Rating) —
+    защита от случайного совпадения результата с порядком вставки."""
+    app_steps.clean_state()
+    app_steps.seed_downloaded_works([
+        (W.DISLIKED, "DISLIKE", _DOWNLOADED_WORK_FIXTURE),
+        (W.PENDING, "PENDING", _DOWNLOADED_WORK_FIXTURE),
+        (W.READ, "READ", _DOWNLOADED_WORK_FIXTURE),
+        (W.KUDOSED, "LIKE", _DOWNLOADED_WORK_FIXTURE),
+        (W.LOVED, "SAVE", _DOWNLOADED_WORK_FIXTURE),
+    ])
+    yield W.ALL
+
+
+@pytest.fixture()
 def comment_only_work():
     """Одна работа засеяна как comment-only (rating=NULL, непустой comment) —
     без обращения к AO3. Сидинг делается до создания сессии Appium (см.
@@ -173,6 +287,52 @@ def comment_only_work():
     app_steps.clean_state()
     app_steps.seed_with_comment([(W.KUDOSED, None, "test note", None)])
     yield W.KUDOSED
+
+
+@pytest.fixture()
+def disliked_work_with_tags_seeded():
+    """TC-045: ПАРА работ с ОДИНАКОВЫМИ личными тегами, различающихся только
+    `rating` — доказывает независимость видимости от `tags` как СВОЙСТВО, не на
+    единичном примере (test-reviewer changes_requested, 2026-07-18): `W.DISLIKED`
+    (скрывается фильтрацией по умолчанию — Disliked в hidden-set) и `W.LOVED`
+    (rating=SAVE, НЕ в hidden-set) засеяны с ОДНИМ и тем же набором тегов
+    `["spoiler", "reread-candidate"]`. Если бы `tags` хоть как-то влияли на
+    excluded/visible, одинаковые теги дали бы одинаковый исход для обеих работ —
+    вместо этого исход противоположный (DISLIKED скрыта, LOVED видна), что и
+    доказывает, что переключает видимость исключительно `rating`
+    (`applyAllFilters`, `ao3_bridge.js`, читает только `ratings[workId]`/`hidden`,
+    см. TC-045.md «Причина»)."""
+    app_steps.clean_state()
+    tags = json.dumps(["spoiler", "reread-candidate"])
+    app_steps.seed_with_comment([
+        (W.DISLIKED, "DISLIKE", None, tags),
+        (W.LOVED, "SAVE", None, tags),
+    ])
+    yield W.DISLIKED, W.LOVED
+
+
+@pytest.fixture()
+def tagged_work_seeded():
+    """TC-056: работа `works.LOVED` засеяна с рейтингом LIKE и личными тегами
+    `["Fluff", "Angst"]` — «Fluff» совпадает (без учёта регистра) с freeform-тегом
+    карточки, зашитым в КАЖДЫЙ блёрб `listing_basic.mitm`
+    (`recording_builder._blurb_html`), «Angst» не совпадает ни с одним AO3-тегом
+    фикстуры."""
+    app_steps.clean_state()
+    app_steps.seed_with_comment([
+        (W.LOVED, "LIKE", None, json.dumps(["Fluff", "Angst"])),
+    ])
+    yield W.LOVED
+
+
+@pytest.fixture()
+def note_work_seeded():
+    """TC-044: работа `works.READ` засеяна с рейтингом LIKE и непустым комментарием —
+    Note-кнопка (карандаш) на листинге инжектируется `applyRatings` только когда для
+    работы есть непустой `comment` (см. `ao3_bridge.js`)."""
+    app_steps.clean_state()
+    app_steps.seed_with_comment([(W.READ, "LIKE", "Existing note text", None)])
+    yield W.READ
 
 
 @pytest.fixture()
@@ -189,6 +349,25 @@ def two_filter_profiles_seeded():
         ("Profile B", "work_search%5Bquery%5D=profile-b-test"),
     ])
     yield ("Profile A", "Profile B")
+
+
+@pytest.fixture()
+def filter_profile_applied_seeded():
+    """Один фильтр-профиль ("My saved search") засеян ДО старта сессии Appium (тот
+    же порядок, что `two_filter_profiles_seeded`) — TC-041: применение сохранённого
+    профиля из FilterPanel листинга.
+
+    `queryString` — НЕ произвольная строка (в отличие от `two_filter_profiles_seeded`,
+    где кейс TC-042 никогда не навигирует по ней): это РОВНО
+    `recording_builder.FILTER_APPLIED_QUERY_STRING`, подобранный так, что
+    `applyFilter` (BrowserViewModel.kt) построит URL, БАЙТ-В-БАЙТ совпадающий с
+    `recording_builder.LISTING_FILTERED_URL` — вторым flow, записанным в
+    `listing_basic.mitm` (`scripts/build_replay_recordings.py::build_listing_basic`).
+    Без этого совпадения server-replay не находит flow и уходит в live-сеть
+    (`server_replay_extra=forward`) — см. докстринг `LISTING_FILTERED_URL`."""
+    app_steps.clean_state()
+    app_steps.seed_filter_profiles([("My saved search", rb.FILTER_APPLIED_QUERY_STRING)])
+    yield "My saved search"
 
 
 _ca_checked = False  # AT-BUG-011: fail-fast проверка mitm-CA — один раз на сессию
@@ -228,7 +407,14 @@ def replay(request):
     Подключение к conftest — часть AT-BUG-004, инкремент 1 (сам механизм record→replay
     доказан спайком B, до этой фикстуры не был подключён ни к одному тесту).
     Перед стартом проверяет присутствие CA (`_ensure_replay_ca`, AT-BUG-011) —
-    падает мгновенно и явно вместо таймаута, если среда поднята без CA."""
+    падает мгновенно и явно вместо таймаута, если среда поднята без CA.
+    После `set_device_proxy()`+`start_replay()` ждёт достижимости прокси СО
+    СТОРОНЫ УСТРОЙСТВА (`mitm.wait_device_proxy_reachable`, AT-BUG-017) — до
+    `yield`: `start_replay()` подтверждает готовность только хост-порта, а
+    первая навигация теста иногда ловила интермиттентный
+    `net::ERR_PROXY_CONNECTION_FAILED` (race NAT-уровня qemu / задержка
+    применения системной настройки прокси Android'ом), не покрытый
+    rerun-whitelist `pytest.ini` — тест теперь не видит этот транзиент."""
     _ensure_replay_ca()
     flow_name = request.param
     flows_file = settings.RECORDINGS_DIR / flow_name
@@ -239,6 +425,7 @@ def replay(request):
     try:
         mitm.set_device_proxy()
         mitm.start_replay(flows_file)
+        mitm.wait_device_proxy_reachable()
         yield flows_file
     finally:
         # clear_device_proxy идемпотентен (check=False, ставит ":0" безусловно) —

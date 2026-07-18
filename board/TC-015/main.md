@@ -2,12 +2,12 @@
 key: "TC-015"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p0"
 summary: "Выключение per-rating тумблера \"Hide Disliked works\" в Settings показывает работы с рейтингом Disliked на листинге"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:visibility", "risk:R-06"]
+labels: ["test-case", "area:visibility", "risk:R-06", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
@@ -16,15 +16,41 @@ epic: null
 created: "2026-07-17T15:43:20Z"
 updated: "2026-07-17T15:43:20Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Выключение per-rating тумблера "Hide Disliked works" в Settings показывает работы с рейтингом Disliked на листинге
 
 _Спроецировано из `test-cases/visibility/TC-015.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-015 — Выключение "Hide Disliked works" → Disliked снова видно
+
+## Ревью автотеста (test-reviewer, 2026-07-18)
+
+**Вердикт: пройдено** (Approved→Automated, весь чек-лист F1).
+- Архитектура (`arch_check.py`): 0 ошибок / 0 предупреждений.
+- Traceability: `@allure.id("TC-015")` == id, маркер `p0` == P0, `automated_by` →
+  существующая `test_disliked_visible_after_hide_toggle_off`.
+- Соответствие/инвариант (C4): assert проверяет обратное направление (toggle-off →
+  видимость) через реальный LIVE-PUSH (без ре-навигации) + независимость бейджа от
+  тумблера скрытия (`assert_rating_badge_visible`) — свойство, а не единичный
+  пример.
+- Фикстуры: сидинг `seeded_library` до Appium-сессии, `clean_state`, независимость.
+- Зелёный прогон: `test_disliked_visible_after_hide_toggle_off[listing_basic.mitm]`
+  PASSED (батч 3/3).
+- Красная проба: порча ШАГА — `settings_steps.set_hide_rating` форсировал тумблер в
+  `True` (toggle-off стал no-op, `DISLIKE` остался в `hiddenRatings`); тест УПАЛ на
+  финальном assert'е сути (`assert_blurb_visible` строка 102: «работа 900000005
+  должна быть видна, но скрыта фильтрацией») — первый assert (скрыт по умолчанию)
+  прошёл, упал именно assert реакции на toggle-off. Порча откачена точечным Edit,
+  дифф чист.
+
+**Некритичная заметка (не блокер, зафиксирована на будущее):** несущий факт «WebView
+живёт между табами» (`MainActivity.kt:471`, Browser всегда закомпожен), от которого
+зависит истинность «без reload», явно не процитирован ни в теле кейса, ни в
+докстринге теста — рекомендуется дописать при следующей правке, но на приёмку не
+влияет.
 
 ## Предусловия
 - Приложение запущено, в Room засеяна работа W с `rating=DISLIKE`
@@ -43,12 +69,16 @@ _Спроецировано из `test-cases/visibility/TC-015.md` (источн
 скрыта на листинге
 
 **When** пользователь в Settings выключает тумблер «Hide Disliked works»
-(`viewModel.toggleHideRating(Rating.DISLIKE)`, `SettingsScreen.kt:749`) и
-возвращается/открывает листинговую страницу, содержащую блёрб работы W
+(`viewModel.toggleHideRating(Rating.DISLIKE)`, `SettingsScreen.kt:749`), не
+покидая уже открытую листинговую страницу с блёрбом работы W (приложение
+проталкивает смену фильтра на открытую вкладку без ре-навигации —
+`MainActivity.kt:169-171` → `BrowserViewModel.kt:664-668` →
+`ao3_bridge.js:443-446` `window.setHiddenRatings`, который сразу вызывает
+`applyAllFilters()`)
 
 **Then** блёрб работы W отображается (видим) — `hiddenRatings` больше не
-содержит `DISLIKE`, JS-бридж (`applyAllFilters`, читает
-`window.__ao3HiddenRatings` на каждом page load) не исключает блёрб
+содержит `DISLIKE`, JS-бридж (`applyAllFilters`, вызванный live-push'ем сразу
+при смене `window.__ao3HiddenRatings`) не исключает блёрб
 **And** бейдж/цвет Rate-кнопки работы W по-прежнему отражает Disliked (визуальный
 бейдж не зависит от тумблера скрытия, только видимость самого блёрба)
 
@@ -83,10 +113,17 @@ _Спроецировано из `test-cases/visibility/TC-015.md` (источн
   несуществующий элемент, исправлено.
 - Требует ту же replay-фикстуру листинга, что и TC-013, для сравнимости (тот
   же блёрб работы W, тот же `ao3_id`).
-- Порядок действий важен: сначала снять тумблер в Settings, затем
-  открыть/обновить листинговую страницу — `applyAllFilters` читает
-  `window.__ao3HiddenRatings` на каждом page load (см. заметку TC-013), не
-  реагирует на изменение состояния без повторного рендера страницы.
+- Реальный путь — LIVE-PUSH, не page-load-only: приложение проталкивает смену
+  фильтра на уже открытую вкладку без ре-навигации/reload. Сверено по коду:
+  `MainActivity.kt:169-171` — `LaunchedEffect(hiddenRatings)` реагирует на
+  смену `settingsUiState.hiddenRatings`; `BrowserViewModel.kt:664-668` —
+  `setHiddenRatings` зовёт `evalJsAllTabs("window.setHiddenRatings(...)")`;
+  `ao3_bridge.js:443-446` — `window.setHiddenRatings` пишет
+  `__ao3HiddenRatings` и СРАЗУ вызывает `applyAllFilters()` на текущей
+  странице. Автотест выключает тумблер в Settings, затем только возвращает
+  фокус на уже открытую вкладку Browse (без повторной навигации листинга) и
+  проверяет видимость блёрба — это и есть проверяемый продакшн-сценарий
+  (пользователь выключил тумблер, не покидая уже открытый Browse).
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»

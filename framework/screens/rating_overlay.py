@@ -4,6 +4,10 @@
 """
 from __future__ import annotations
 
+import io
+
+from PIL import Image
+
 from framework.screens.base_screen import BaseScreen
 
 RATING_BUTTON_LABEL = {
@@ -26,3 +30,46 @@ class RatingOverlay(BaseScreen):
 
     def add_note_toggle_visible(self) -> bool:
         return self.is_present(self.by_text("Add a note"), timeout=4)
+
+    def dismiss(self):
+        """Закрывает bottom-sheet тапом по затемнённой области ВЫШЕ карточки
+        (`RatingOverlay.kt`: внешний `Box` — сплошной scrim с `clickable { onDismiss }`,
+        карточка внутри — отдельный `Column` с СОБСТВЕННЫМ пустым `clickable {}`,
+        глотающим клик, чтобы не проваливался в scrim под ней). Нужно ЯВНО тапать вне
+        карточки: выбор рейтинга (`onSave`) вызывается с `dismiss=false` (позволяет
+        добавить note/tags без переоткрытия overlay) — overlay НЕ закрывается сам
+        после выбора, см. TC-009."""
+        size = self.driver.get_window_size()
+        x, y = size["width"] // 2, int(size["height"] * 0.06)
+        self.driver.execute_script("mobile: clickGesture", {"x": x, "y": y})
+        return self
+
+    # --- TC-010: бейдж выбранного рейтинга в НАТИВНОЙ панели/overlay не имеет
+    # accessibility-состояния "selected" (Compose TextButton его не проставляет) —
+    # единственный наблюдаемый сигнал выбора — `animateColorAsState`, красящая фон
+    # кнопки в ratingAccent (см. RatingOverlay.kt/Theme.kt RatingColorSet), поэтому
+    # читаем средний luma прямоугольника кнопки по скриншоту (тот же приём, что
+    # `BrowserScreen.top_chrome_avg_luma`/`webview_avg_luma`, только по rect кнопки,
+    # не по доле экрана). Compose мёржит semantics кликабельного узла — `by_text`
+    # находит узел с bounds всей кнопки (иконка+подпись), не только текст. ---
+    def button_avg_luma(self, rating: str) -> float:
+        el = self.find(self.by_text(RATING_BUTTON_LABEL[rating]))
+        rect = el.rect
+        png = self.driver.get_screenshot_as_png()
+        img = Image.open(io.BytesIO(png)).convert("L")
+        box = (rect["x"], rect["y"], rect["x"] + rect["width"], rect["y"] + rect["height"])
+        cropped = img.crop(box)
+        hist = cropped.histogram()
+        total = sum(hist)
+        return sum(i * c for i, c in enumerate(hist)) / total
+
+    # --- TC-044: поле комментария в RatingMenu тоглится "Add a note"/"Hide note"
+    # (см. RatingOverlay.kt) — развёрнуто, когда виден именно "Hide note". ---
+    def comment_expanded(self, timeout: int = 6) -> bool:
+        return self.is_present(self.by_text("Hide note"), timeout=timeout)
+
+    def comment_text_visible(self, text: str, timeout: int = 6) -> bool:
+        """Читает текст предзаполненного поля комментария через частичное
+        совпадение (Compose `BasicTextField` мёржит своё editable-содержимое в
+        accessibility-текст узла)."""
+        return self.is_present(self.by_text_contains(text), timeout=timeout)

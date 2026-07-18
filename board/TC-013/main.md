@@ -2,12 +2,12 @@
 key: "TC-013"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p0"
 summary: "Work с рейтингом Disliked скрыт на листинге при включённой фильтрации"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:visibility", "risk:R-06"]
+labels: ["test-case", "area:visibility", "risk:R-06", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
@@ -16,15 +16,36 @@ epic: null
 created: "2026-07-15T14:39:53Z"
 updated: "2026-07-15T14:39:53Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Work с рейтингом Disliked скрыт на листинге при включённой фильтрации
 
 _Спроецировано из `test-cases/visibility/TC-013.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-013 — Disliked скрыт при включённой фильтрации
+
+## Ревью автотеста (test-reviewer, 2026-07-18)
+
+**Вердикт: пройдено** (Approved→Automated, весь чек-лист F1).
+- Архитектура (`arch_check.py`): 0 ошибок / 0 предупреждений; локаторы в
+  `web/listing_page.py`, шаги в `steps/`, ожидания через `core/waits`, `sleep` нет.
+- Traceability: `@allure.id("TC-013")` == id, маркер `@pytest.mark.p0` == priority
+  P0, `automated_by` → существующая `test_disliked_hidden_on_listing`.
+- Инвариант (C4): assert проверяет СВОЙСТВО избирательности по членству в
+  hidden-set (DISLIKED скрыт И LOVED, не в множестве, виден), а не единичный факт
+  «блёрб существует».
+- Фикстуры: сидинг `seeded_library` до создания Appium-сессии (порядок
+  `replay, seeded_library, driver`), `clean_state` за собой, независимость от
+  порядка.
+- Зелёный прогон: `test_disliked_hidden_on_listing[listing_basic.mitm]` PASSED
+  (батч 3/3, 95.07s).
+- Красная проба: порча ДАННЫХ — `seeded_library` засеял `DISLIKED` рейтингом
+  `SAVE` (вне hidden-set) вместо `DISLIKE`; тест УПАЛ на сути
+  (`assert_blurb_hidden`: «работа 900000005 должна быть скрыта фильтрацией
+  (applyAllFilters), но видна»), не таймаут-мусор. Порча откачена точечным Edit,
+  дифф файла чист (маркер порчи в дереве отсутствует).
 
 ## Предусловия
 - Приложение запущено, в Room засеяна работа W с `rating=DISLIKE`

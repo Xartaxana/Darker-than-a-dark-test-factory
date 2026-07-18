@@ -3,11 +3,24 @@
 готовый локальный `.html` и заполняет `downloadPath` в Room напрямую — без
 обращения к `DownloadRepository`/сети (см. заметки TC-034/TC-035/TC-036).
 
-TC-032/TC-033 (авто- и ручное скачивание) сюда намеренно не входят — оба требуют
-replay-записи страницы работы с реальной разметкой `li.download a[href*=".html"]`,
-которой в `framework/data/recordings/` пока нет (там только `ao3_home_smoke.mitm`,
-запись главной страницы); соответствующие кейсы возвращены в Review с этим блокером
-(см. TC-032.md/TC-033.md, тот же класс блокера, что у TC-009/013/014/015).
+TC-032 (авто-скачивание при простановке Loved) и TC-033 (ручное скачивание из
+Library) АВТОМАТИЗИРОВАНЫ (2026-07-18) — блокер AT-BUG-004 снят (Verified
+2026-07-09), инфраструктура доведена инкрементом 3: `framework/data/recordings/
+work_with_download.mitm` (генерируется `build_work_with_download` в
+`scripts/build_replay_recordings.py`) несёт ОБЕ HTTP-транзакции (GET work-страницы
+с `li.download a[href*=".html"]` + GET самого `.html`), и `replay`-фикстура
+(`conftest.py`) уже подключена к `mitm.set_device_proxy`/`start_replay`. Оба пути
+(авто — `BrowserViewModel.applyRating`/`savePanelRating` при `rating=SAVE` и
+включённом `autoDownloadSaved`; ручной — `LibraryViewModel.downloadWork`) в итоге
+идут через ОДИН И ТОТ ЖЕ `DownloadRepository.downloadWork` (OkHttp, не WebView) —
+устаревшее описание PROJECT.md §Download flow про JS `querySelector` для
+авто-пути не соответствует фактическому коду (см. `BrowserViewModel.kt:756-758,
+862-864,1057-1059` — все три места просто вызывают `downloadWork(workId)`); код
+app-under-test — источник истины при расхождении с PROJECT.md. OkHttp использует
+системный HTTP-прокси устройства
+(`ProxySelector.getDefault()`), поэтому один и тот же `mitm.set_device_proxy()`
+покрывает и WebView-навигацию, и сетевой вызов `DownloadRepository` без
+дополнительной настройки.
 
 TC-038 (auto-scan/relink при смене папки загрузок) использует SAF-инфраструктуру
 AT-BUG-005 (`framework/steps/saf_steps.py::saf_pick_folder`, блокер снят инкрементом 1,
@@ -34,12 +47,14 @@ import allure
 import pytest
 
 from framework.core import adb
+from framework.data import recording_builder as rb
 from framework.data import works as W
 from framework.steps import (
     app_steps,
     backup_steps,
     browser_steps,
     library_steps,
+    rating_steps,
     saf_steps,
     settings_steps,
 )
@@ -111,6 +126,109 @@ def test_delete_work_removes_row_and_file(downloaded_work_seeded, driver):
     # Then работа W полностью исчезает из Library — ни FAVORITE, ни FILES
     library_steps.assert_work_not_in_tab(driver, "SAVE", work.title)
     library_steps.assert_work_not_in_files_tab(driver, work.title)
+
+
+# --- TC-032: авто-скачивание при простановке Loved (Auto-download включён) ---
+# `rb.WORK_WITH_DOWNLOAD_FILENAME` несёт ДВЕ HTTP-транзакции (work-страница +
+# сам .html) для `ALL_WORKS[0]` (`W.LOVED`) — обе идут через ОДИН и тот же
+# `replay`-прокси (WebView-навигация НА work-страницу, затем OkHTTP-скачивание
+# внутри `DownloadRepository.downloadWork`, см. докстринг модуля выше).
+_DOWNLOAD_OPEN_ICON_TIMEOUT = 25  # сеть через локальный mitmdump + запись Room
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-032")
+@allure.title("Авто-скачивание запускается при простановке Loved с включённым Auto-download")
+@pytest.mark.parametrize("replay", [rb.WORK_WITH_DOWNLOAD_FILENAME], indirect=True)
+def test_auto_download_triggers_on_loved_rating(replay, clean_app, driver):
+    # Given "Auto-download saved works" включена в Settings, открыта страница
+    # работы без рейтинга (Library чистая — ни одной строки WorkRating), страница
+    # содержит валидную download-ссылку в разметке AO3 (replay-запись).
+    # wait_app_ready (не wait_ui_ready) ПЕРЕД навигацией по Settings — тот же
+    # паттерн, что закрыл гонку в TC-057/TC-007 (см. test_rating.py): даём стартовой
+    # live-загрузке Home осесть ДО того, как открытие Settings/навигация Browse
+    # начнут перекладывать активную вкладку.
+    app_steps.wait_app_ready(driver)
+    saf_steps.open_settings_scrolled_to(driver, "Auto-download favorite works")
+    settings_steps.enable_auto_download(driver)
+    app_steps.open_tab(driver, "Browse")
+    rating_steps.open_work_page(driver, W.LOVED.ao3_id)
+
+    # When пользователь через панель RatingMenu ставит рейтинг Loved
+    rating_steps.rate_current_work(driver, "SAVE")
+
+    # Then запускается скачивание файла без ручного вызова Download — по завершении
+    # работа в Library (вкладка FAVORITE) имеет заполненный downloadPath (проверяется
+    # косвенно — open-иконка на карточке); таймаут увеличен относительно дефолта:
+    # скачивание асинхронное, через сеть (OkHttp -> replay-прокси -> Room)
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_work_in_tab(driver, "SAVE", W.LOVED.title)
+    library_steps.assert_open_icon_shown(driver, W.LOVED.title, timeout=_DOWNLOAD_OPEN_ICON_TIMEOUT)
+
+    # And файл открывается через file:// и содержит стилизованный (не сырой) контент
+    # работы (мобильный viewport + reader.css, тот же наблюдаемый факт, что TC-034)
+    library_steps.open_downloaded_file(driver, W.LOVED.title)
+    browser_steps.close_other_tabs(driver)
+    browser_steps.assert_local_file_opened(driver)
+    browser_steps.assert_downloaded_page_styled(driver)
+
+
+# --- TC-033: ручное скачивание работы из Library (Auto-download выключен) ---
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-033")
+@allure.title("Ручное скачивание работы из Library добавляет локальный файл")
+@pytest.mark.parametrize("replay", [rb.WORK_WITH_DOWNLOAD_FILENAME], indirect=True)
+def test_manual_download_from_library_adds_local_file(replay, loved_work_seeded, driver):
+    # Given работа засеяна с рейтингом Loved (SAVE), downloadPath=null, Auto-download
+    # выключен (дефолт после clean_state — см. loved_work_seeded); карточка на вкладке
+    # Library показывает download-иконку (файл ещё не скачан)
+    work = loved_work_seeded
+    app_steps.wait_ui_ready(driver)
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_work_in_tab(driver, "SAVE", work.title)
+    library_steps.assert_download_icon_shown(driver, work.title)
+
+    # When пользователь нажимает download-иконку на карточке
+    library_steps.download_via_card(driver, work.title)
+
+    # Then запускается ручное скачивание (`downloadWork`: сначала regex-поиск
+    # download-ссылки на странице работы, затем сохранение файла) — по завершении
+    # download-иконка заменяется на open-иконку
+    library_steps.assert_open_icon_shown(driver, work.title, timeout=_DOWNLOAD_OPEN_ICON_TIMEOUT)
+
+    # And работа появляется на вкладке FILES (Downloads) экрана Library
+    library_steps.assert_work_in_files_tab(driver, work.title)
+
+
+# --- TC-037: ручной Scan for downloads показывает диалог даже при 0 файлов ---
+
+@pytest.mark.p3
+@allure.id("TC-037")
+@allure.title("Scan for downloads (ручной триггер) показывает диалог результата даже при 0 файлов")
+def test_manual_scan_for_downloads_shows_dialog_on_zero_files(clean_app, driver):
+    # Given приложение запущено с чистыми данными: пустая Library, пустая папка
+    # загрузок (`pm clear` в `clean_app` очищает и app-private external files dir)
+    saf_steps.open_settings_scrolled_to(driver, "Scan")
+
+    # When пользователь нажимает кнопку "Scan for downloads" в Settings
+    saf_steps.tap_settings_action(driver, "Scan")
+
+    # Then появляется диалог результата сканирования (`AlertDialog`), даже когда файлов
+    # не найдено — сообщение указывает на 0 найденных/перелинкованных файлов. Ручной
+    # триггер (`scanForDownloads(silent=false)`, дефолт параметра) ВСЕГДА показывает
+    # Done-диалог — отличие от auto-триггера (silent=true, см. TC-038), который при
+    # totalFound=0 остаётся в Idle и диалог не показывает.
+    settings_steps.assert_scan_complete_dialog(
+        driver, expected_text="No .html files found in the download folder."
+    )
+    settings_steps.dismiss_scan_dialog(driver)
+
+    # And Library остаётся пустой после закрытия диалога
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_library_empty(driver)
 
 
 # --- TC-038: смена папки загрузок автоматически запускает silent-скан ---

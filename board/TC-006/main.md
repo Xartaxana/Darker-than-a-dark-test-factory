@@ -2,12 +2,12 @@
 key: "TC-006"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p2"
 summary: "Подписи вкладок Library соответствуют фактическому UI"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:library"]
+labels: ["test-case", "area:library", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
@@ -16,13 +16,13 @@ epic: null
 created: "2026-07-17T15:01:39Z"
 updated: "2026-07-17T15:01:39Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Подписи вкладок Library соответствуют фактическому UI
 
 _Спроецировано из `test-cases/library/TC-006.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-006 — Подписи вкладок Library
 

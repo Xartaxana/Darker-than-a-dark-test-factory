@@ -42,6 +42,21 @@ LISTING_BASIC_FILENAME = "listing_basic.mitm"
 # `@pytest.mark.replay` и явный teardown прокси в `replay`-фикстуре conftest.py.
 LISTING_BASIC_URL = "https://archiveofourown.org/works?ao3_companion_fixture=listing_basic"
 
+# --- Filtered-вариант той же листинговой страницы (TC-041, применение сохранённого
+# FilterProfile из BottomBar.kt FilterPanel) — ВТОРОЙ flow в том же listing_basic.mitm
+# (см. build_listing_basic в scripts/build_replay_recordings.py), тем же HTML: синтетика
+# не фильтрует блёрбы по queryString сервер-сайд (в отличие от реального AO3), проверяемый
+# факт TC-041 — сам URL активной вкладки после applyFilter, не изменившийся контент.
+# `applyFilter` (BrowserViewModel.kt) строит URL как `filterableBaseUrl + '&' +
+# stripDisplayParams(profile.queryString)` — воспроизводим ТОЧНО эту конкатенацию, чтобы
+# server-replay (`_hash` парсит query через `parse_qsl` — порядок пар ЗНАЧИМ, кодирование
+# key/value НЕ значимо, т.к. `parse_qsl` их декодирует) нашёл совпадение вместо ухода в
+# live-сеть (`server_replay_extra=forward`) — тот же класс блокера, что AT-BUG-006
+# обсуждение задокументировало для TC-041 (несовпадение filtered-URL с записанным flow),
+# закрыт здесь расширением recording_builder, а не принятием live-перехода.
+FILTER_APPLIED_QUERY_STRING = "work_search%5Bquery%5D=applied-filter-test"
+LISTING_FILTERED_URL = f"{LISTING_BASIC_URL}&{FILTER_APPLIED_QUERY_STRING}"
+
 # --- Идентификаторы дубль-листинговой фикстуры (TC-012, AT-BUG-004 инкремент 3) ---
 # Один и тот же ao3_id встречается в ДВУХ разных `<li id="work_{id}">` на одной
 # странице (не покрывается listing_basic.mitm, где каждая работа встречается один
@@ -59,6 +74,63 @@ LISTING_DUPLICATE_URL = "https://archiveofourown.org/works?ao3_companion_fixture
 # `replay`-прокси (`conftest.py`), см. `build_work_with_download` в
 # `scripts/build_replay_recordings.py`.
 WORK_WITH_DOWNLOAD_FILENAME = "work_with_download.mitm"
+
+# --- Идентификаторы фикстуры маркерных страниц вкладок (TC-023/024/025, area=tabs) ---
+# Каждая страница — статичная, ВЫСОКАЯ (гарантированный scrollHeight выше вьюпорта
+# любого разумного эмулятора — см. AT-BUG-015 про короткие живые страницы) и с
+# УНИКАЛЬНЫМ <title> — WebChromeClient.onReceivedTitle (BrowserScreen.kt) прокидывает
+# его в TabInfo.title, рендерящийся НАТИВНО (Compose Text) в TabStrip.kt — что даёт
+# способ различать вкладки БЕЗ обращения к WEBVIEW-контексту (см. докстринг
+# `framework/screens/browser_screen.py::tab_chip_at` о недетерминизме chromedriver
+# при нескольких одновременных WebView одного пакета — обнаружено при разведке
+# TC-023/024/025/026, см. заметки автоматизации соответствующих кейсов). Полностью
+# синтетическая (не time-sensitive) — детерминизм не зависит от состояния живого AO3.
+TAB_MARKER_FILENAME = "tab_markers.mitm"
+TAB_MARKER_COUNT = 8  # с запасом под TC-024 (7 вкладок) + TC-023/025 (2-3 вкладки)
+
+
+def tab_marker_url(index: int) -> str:
+    return f"https://archiveofourown.org/works?ao3_tab_marker={index}"
+
+
+def tab_marker_title(index: int) -> str:
+    """Отдельная функция (не только внутри HTML) — тесты сверяют РОВНО ЭТУ строку
+    по нативному дереву (TabChip Text), без похода в WebView-контекст."""
+    return f"TC-Tabs Marker {index}"
+
+
+def render_tab_marker_html(index: int) -> str:
+    # 80 коротких абзацев-филлеров — эмпирически с большим запасом выше innerHeight
+    # любого разумного эмулятора (AT-BUG-015: живой Browse root дал scrollHeight=427
+    # при innerHeight=798 — здесь на порядок выше, без зависимости от живого AO3).
+    filler = "\n".join(
+        f"    <p>Filler paragraph {i} for tab marker {index} — scroll padding, not real content.</p>"
+        for i in range(80)
+    )
+    title = html.escape(tab_marker_title(index))
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title}</title>
+</head>
+<body>
+  <h1>{title}</h1>
+{filler}
+</body>
+</html>
+"""
+
+
+# --- Идентификаторы реальной записи формы AO3 Sort & Filter (TC-040, AT-BUG-006
+# инкремент 2) — НЕ построена этим модулем: реальный `mitmdump -w` LIVE-захват страницы
+# `archiveofourown.org/tags/Fluff/works` в исходной разметке (см. `bugs/AT-BUG-006.md`
+# §Обсуждение, решение Lead 2026-07-10 «реальная запись — первично»). Константы здесь —
+# только для единообразной ссылки из тестов/фикстур, тот же паттерн, что и у остальных
+# идентификаторов файла (файл САМ не перегенерируется `scripts/build_replay_recordings.py`).
+SORT_FILTER_FORM_FILENAME = "sort_filter_form.mitm"
+SORT_FILTER_FORM_URL = "https://archiveofourown.org/tags/Fluff/works"
 
 
 def _deterministic_id(*parts: str) -> str:

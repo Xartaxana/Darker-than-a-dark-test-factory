@@ -1,0 +1,78 @@
+---
+key: "TC-078"
+project: "AO3"
+issueType: "test-case"
+status: "tc-approved"
+priority: "p0"
+summary: "Чекбокс 'Main pairing only' инжектируется в include-фильтр формы Sort&Filter, доступен только при ровно одном выбранном relationship-теге (live)"
+assignee: "qa-agents"
+reporter: "qa-agents"
+labels: ["test-case", "area:canary", "risk:R-02"]
+components: []
+fixVersions: []
+watchers: []
+parent: null
+epic: null
+created: "2026-07-18T08:56:36Z"
+updated: "2026-07-18T08:56:36Z"
+archived: false
+resolution: null
+---
+
+# Чекбокс 'Main pairing only' инжектируется в include-фильтр формы Sort&Filter, доступен только при ровно одном выбранном relationship-теге (live)
+
+_Спроецировано из `test-cases/canary/TC-078.md` (источник правды).
+Статус в нашей машине: **Approved**._
+
+# TC-078 — Main-pairing include-чекбокс: инъекция + доступность (live)
+
+## Предусловия
+- Приложение запущено с чистыми данными, режим **live**.
+- Открыта форма AO3 Sort & Filter (search) с непустым списком
+  `#include_relationship_tags`.
+
+## Сценарий (Given-When-Then)
+
+**Given** приложение запущено live, открыта форма Sort & Filter AO3 с
+раскрытым списком relationship-тегов include-фильтра, ни один пункт не
+отмечен
+
+**When** пользователь отмечает РОВНО ОДИН чекбокс из
+`#include_relationship_tags` (не инжектированный)
+
+**Then** первым пунктом списка `#include_relationship_tags` присутствует
+инжектированный чекбокс `[data-ao3-main-pairing-cb]` с подписью "Main pairing
+only", и он ВКЛЮЧЁН (`disabled=false`, `label` непрозрачный)
+**And** если пользователь отмечает ВТОРОЙ relationship-чекбокс (итого 2
+отмечено) или снимает единственную отметку (0 отмечено), `[data-ao3-main-pairing-cb]`
+становится ОТКЛЮЧЁН (`disabled=true`, `label.style.opacity='0.4'`)
+
+**Инвариант:** доступность чекбокса — функция ТОЛЬКО количества отмеченных
+(не инжектированных) relationship-чекбоксов (`checkedCount === 1`), не
+зависит от того, КАКОЙ конкретно тег отмечен — верно для любого relationship-
+тега в списке формы.
+
+## Проверяемые данные
+| Параметр | Значение |
+|---|---|
+| Форма | реальная AO3 Sort & Filter (search), список `#include_relationship_tags` |
+| Селектор | `[data-ao3-main-pairing-cb]` (пока отсутствует в `framework/web/selectors.py` — добавить при автоматизации) |
+
+## Заметки для автоматизации
+- Селектор `[data-ao3-main-pairing-cb]` ещё НЕ заведён в `selectors.py` —
+  тривиальное расширение (не missing_fixture-блокер: сам DOM-контракт уже
+  существует в коде приложения, добавить константу — рутинная правка
+  test-automator'а при кодировании).
+- Маркер: `@pytest.mark.p0 @pytest.mark.live`.
+- Сиблинг-кейс TC-079 — тот же контракт в replay (`sort_filter_form.mitm`).
+  TC-080/081 — чекбокс EXCLUDE-фильтра (`#exclude_relationship_tags`) —
+  отдельный DOM-узел/селектор, другой якорь §9 (`bridge-exclude-main-pairing-filter`),
+  не дублирование.
+
+## Чек-лист качества (test-designer проходит перед `Review`)
+- [x] Один сценарий — один кейс; нет «и ещё проверить...»
+- [x] Given описывает полное состояние, воспроизводимое фикстурами
+- [x] Then проверяет наблюдаемое поведение, а не реализацию
+- [x] Указаны приоритет, область и источник требования
+- [x] Кейс независим от порядка выполнения других кейсов
+- [x] Кейс комбинаторной области называет инвариант строкой `Инвариант: …`

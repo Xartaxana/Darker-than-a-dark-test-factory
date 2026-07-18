@@ -1,6 +1,6 @@
 """Тесты side panel на Browse (app-under-test ui/browser/BrowseSidePanel.kt):
-Contrast (тема), A-/A+ (шрифт), эквивалентность их стейта с экраном Settings и
-Home-навигация активной вкладки (TC-057).
+Contrast (тема), A-/A+ (шрифт), эквивалентность их стейта с экраном Settings,
+Home-навигация активной вкладки (TC-057) и Fullscreen toggle (TC-058).
 
 Дизайн следует test_smoke.py/test_rating.py: точечная зависимость от живого AO3
 (WebView должен догрузить страницу) неизбежна для проверки textZoom/theme —
@@ -12,7 +12,14 @@ import allure
 import pytest
 
 from framework.data import works as W
-from framework.steps import app_steps, browser_steps, rating_steps, settings_steps, side_panel_steps
+from framework.steps import (
+    app_steps,
+    browser_steps,
+    library_steps,
+    rating_steps,
+    settings_steps,
+    side_panel_steps,
+)
 
 
 @pytest.mark.p1
@@ -217,3 +224,64 @@ def test_side_panel_home_navigates_active_tab_to_ao3_root(clean_app, driver):
     browser_steps.assert_active_tab_url(driver, browser_steps.HOME_URL)
     # And side panel сворачивается автоматически (без отдельного действия пользователя)
     side_panel_steps.assert_collapsed(driver)
+
+
+@pytest.mark.p3
+@allure.id("TC-058")
+@allure.title("Fullscreen toggle в side panel скрывает TabStrip и переключает подпись контрола (вход/выход)")
+def test_side_panel_fullscreen_hides_tabstrip_and_toggles_label(loved_work_seeded, driver):
+    # Given открыты 2 вкладки Browse: стартовая Home-вкладка + работа LOVED, открытая
+    # из Library. `openTab` (BrowserViewModel.kt) ВСЕГДА добавляет вкладку (никогда
+    # не заменяет стартовую) и переключает активность на новую — тот же наблюдаемый
+    # эффект «2 вкладки Browse», что long-press по ссылке (TC-026), но без
+    # зависимости от живого контента WebView; допустимая альтернатива по заметке
+    # TC-058.md «иной существующий способ открытия второй вкладки». TabStrip виден
+    # вверху экрана (проверено ДВАЖДЫ независимыми сигналами — accessibility-дерево
+    # И пиксельная яркость верхней полосы, см. ниже); side panel развёрнут, иконка
+    # Fullscreen — «Enter fullscreen»
+    work = loved_work_seeded
+    app_steps.wait_ui_ready(driver)
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_work_in_tab(driver, "SAVE", work.title)
+    library_steps.open_work_in_browser(driver, work.title)
+    browser_steps.assert_tab_strip_visible(driver)
+    baseline_luma = browser_steps.measure_top_chrome_luma(driver)
+
+    side_panel_steps.expand(driver)
+    side_panel_steps.assert_fullscreen_icon_enter(driver)
+
+    # When пользователь нажимает иконку Fullscreen в side panel
+    side_panel_steps.toggle_fullscreen(driver)
+
+    # Then TabStrip скрывается, иконка меняет contentDescription на «Exit fullscreen»
+    # (режим fullscreen включён). Скрытие/показ системных баров (WindowInsetsController,
+    # MainActivity.kt ~206-213) меняет размер WebView-вьюпорта — реальный reflow
+    # WebView эмитит onScrollChanged (BrowserScreen.kt ~557-559), который НЕ подавлен
+    # suppressScrollEvents (та обёртка стоит только вокруг font-size изменений) и
+    # коллапсирует side panel как побочный эффект (MainActivity.kt:320,
+    # `scrollEvent.collect { panelExpanded = false }`) — сверено на живом дереве
+    # (панель схлопывается сразу после входа/выхода из fullscreen). Разворачиваем
+    # панель заново перед каждой проверкой иконки/следующим тапом.
+    #
+    # Видимость TabStrip после ЭТОЙ точки проверяется ПИКСЕЛЬНЫМ прокси
+    # (`assert_top_chrome_darkened`/`assert_top_chrome_restored`), не
+    # accessibility-деревом: диагностировано на живом дереве и скриншотах
+    # (2026-07-18), что ПОЛНЫЙ цикл вход+выход fullscreen оставляет
+    # accessibility-провайдер WebView в состоянии, где TabStrip/BottomNav
+    # перестают отдаваться в UiAutomator2-дерево, хотя визуально отрисованы
+    # корректно (см. докстринг `BrowserScreen.top_chrome_avg_luma`) — похоже на
+    # известный класс WebView-accessibility-багов при resize, не связанный с
+    # логикой TabStrip как таковой и вне скоупа правки app-under-test.
+    browser_steps.assert_top_chrome_darkened(driver, baseline_luma)
+    side_panel_steps.expand(driver)
+    side_panel_steps.assert_fullscreen_icon_exit(driver)
+
+    # When пользователь нажимает ту же иконку повторно
+    side_panel_steps.toggle_fullscreen(driver)
+
+    # Then TabStrip снова отображается, иконка возвращается к contentDescription
+    # «Enter fullscreen» (режим fullscreen выключен) — toggle симметричен, повторный
+    # тап возвращает исходное наблюдаемое состояние (пиксельный прокси — см. выше)
+    browser_steps.assert_top_chrome_restored(driver, baseline_luma)
+    side_panel_steps.expand(driver)
+    side_panel_steps.assert_fullscreen_icon_enter(driver)

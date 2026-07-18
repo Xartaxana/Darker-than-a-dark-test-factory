@@ -30,12 +30,34 @@ class LibraryScreen(BaseScreen):
     def open_tab_for_rating(self, rating: str):
         return self.open_tab(TAB_BY_RATING[rating])
 
+    # --- Позиция вкладок (TC-006: порядок подписей слева направо) ---
+    def tab_label_x(self, label: str, timeout: int = 5) -> int | None:
+        if not self.is_present(self.by_text(label), timeout=timeout):
+            return None
+        return self.find(self.by_text(label)).location["x"]
+
     def has_work(self, title: str, timeout: int | None = None) -> bool:
         return self.is_present(self.by_text(title),
                                timeout=timeout or 8)
 
+    # --- Личные теги на карточке (WorkCard, LibraryScreen.kt ~960:
+    # `Text(work.tags.joinToString(" · "))`, рендерится только при непустых `tags`) ---
+    def has_tags_text(self, text: str, timeout: int | None = None) -> bool:
+        return self.is_present(self.by_text_contains(text), timeout=timeout or 6)
+
     def work_card(self, title: str, timeout: int | None = None):
         return self.find(self.by_text(title), timeout)
+
+    # --- Открытие работы в Browse (WorkCard.onClick -> onOpenWork(work.url),
+    # LibraryScreen.kt ~878; combinedClickable висит на родительском Column
+    # заголовка, не на самом Text-узле — тап по найденному текстовому узлу
+    # физически попадает в его область, тот же паттерн, что и long_press_work
+    # ниже. `openTab` (BrowserViewModel.kt) ВСЕГДА добавляет вкладку и
+    # переключает MainActivity на Browse — используется как альтернативный
+    # способ получить вторую вкладку Browse, см. TC-058.) ---
+    def open_work(self, title: str, timeout: int | None = None):
+        self.tap(self.by_text(title), timeout=timeout)
+        return self
 
     # --- Иконки download/open на карточке (WorkCard в LibraryScreen.kt:
     # Icons.Default.Download contentDescription="Download", Icons.Default.Book
@@ -49,6 +71,14 @@ class LibraryScreen(BaseScreen):
     def tap_open_icon(self, timeout: int | None = None):
         self.tap(self.by_desc("Open downloaded"), timeout=timeout)
         return self
+
+    def tap_download_icon(self, timeout: int | None = None):
+        self.tap(self.by_desc("Download"), timeout=timeout)
+        return self
+
+    # --- Пустая вкладка (LibraryScreen.kt EmptyState, TC-037) ---
+    def is_empty(self, timeout: int | None = None) -> bool:
+        return self.is_present(self.by_text("Nothing here yet"), timeout=timeout or 8)
 
     # --- Long-press overlay (DeleteWorkSheetContent в LibraryScreen.kt:
     # "Delete work" / "Delete downloaded file") ---
@@ -100,6 +130,34 @@ class LibraryScreen(BaseScreen):
         self.tap(self.by_text(fandom))
         return self
 
+    # ── Search any field (TC-061) — первый (index 0) EditText в FilterSheetContent,
+    # рендерится ДО Fandom/Min/Max (см. комментарий у `_WORD_COUNT_FIELD` выше:
+    # "порядок в дереве Search -> Min -> Max"). ──
+    _SEARCH_FIELD = (
+        AppiumBy.ANDROID_UIAUTOMATOR,
+        'new UiSelector().className("android.widget.EditText").instance(0)',
+    )
+
+    def set_search_query(self, value: str):
+        field = self.find(self._SEARCH_FIELD)
+        field.clear()
+        field.send_keys(value)
+        return self
+
+    def clear_search_query(self):
+        """Крестик очистки (`contentDescription = "Clear"`) виден только при непустом
+        значении поля — тот же content-desc, что у крестика "Search tags", но тот
+        рендерится лишь при непустом `tagQuery`, который этот метод не трогает."""
+        self.tap(self.by_desc("Clear"))
+        return self
+
+    # ── Личные теги (TC-060) — TagChip: `clickable` висит на родительском Row чипа,
+    # тап по найденному текстовому узлу тега физически попадает в его область (тот
+    # же паттерн, что WorkCard.open_work). ──
+    def select_tag(self, tag: str):
+        self.tap(self.by_text(tag))
+        return self
+
     def set_min_words(self, value: str):
         cls, sel = self._WORD_COUNT_FIELD
         field = self.find((cls, sel.format(index=1)))
@@ -137,6 +195,16 @@ class LibraryScreen(BaseScreen):
 
     def select_sort_option(self, label: str):
         self.tap(self.by_text(label))
+        return self
+
+    def close_sort_menu(self):
+        """Закрывает dropdown БЕЗ выбора опции (TC-065: проверка отсутствия опции
+        "Rating" вне вкладки Files). `AppDropdownMenu` — `Popup` с дефолтным
+        `PopupProperties(dismissOnBackPress = true)` (см. `AppDropdownMenu.kt` —
+        `focusable = true` задан явно, `dismissOnBackPress` не переопределён и
+        остаётся дефолтным true), поэтому системная кнопка Back гасит только сам
+        popup, не уводит с экрана Library."""
+        self.driver.back()
         return self
 
     def sort_trigger_label(self, timeout: int | None = None) -> str:

@@ -11,8 +11,9 @@ from pathlib import Path
 import allure
 from appium.webdriver.common.appiumby import AppiumBy
 
+from framework.config import settings
 from framework.core import adb
-from framework.core.waits import wait_until
+from framework.core.waits import wait_for, wait_until
 from framework.data import seed_db
 from framework.data.works import Work
 from framework.screens.browser_screen import BrowserScreen
@@ -47,6 +48,14 @@ def seed_downloaded_work(work: Work, rating: str, fixture_html: Path) -> str:
     без обращения к DownloadRepository/сети (TC-034/TC-035/TC-036)."""
     paths = seed_db.seed_with_download([(work, rating, fixture_html)])
     return paths[work.ao3_id]
+
+
+@allure.step("Given работы засеяны с рейтингами и общим скачанным файлом")
+def seed_downloaded_works(rows: list[tuple[Work, str, Path]]) -> dict[str, str]:
+    """Как `seed_downloaded_work`, но НЕСКОЛЬКО работ одним батчем — каждая строка
+    получает СВОЙ рейтинг, но может переиспользовать один и тот же локальный HTML-
+    фикстур (TC-065: 5 работ на вкладке Files с разными рейтингами)."""
+    return seed_db.seed_with_download(rows)
 
 
 @allure.step("Given в уже выбранной SAF-папке загрузок появляется файл {filename}")
@@ -96,6 +105,20 @@ def wait_app_ready(driver) -> str:
     return BrowserScreen(driver).wait_ao3_loaded()
 
 
+@allure.step("When приложение запущено и домашняя вкладка полностью догрузилась (onPageFinished)")
+def wait_home_ready_for_deep_link(driver) -> None:
+    """Закрывает класс гонки deep-link vs home-load (area=tabs, TC-022/023/024/025,
+    ревью 2026-07-18 п.5): используется ВМЕСТО `wait_ui_ready` перед ПЕРВЫМ
+    `open_deep_link` в тесте, когда счёт/позиции вкладок зависят от того, что
+    `openOrNavigateDeepLink` (BrowserViewModel.kt:637-644) пойдёт веткой
+    «добавить вкладку», а не «навигировать плейсхолдер-Home на месте» (это
+    происходит, только если `tabs[0].url` уже разошёлся с HOME_URL, что
+    гарантировано лишь ПОСЛЕ `onPageLoaded` для домашней страницы). Не заменяет
+    `wait_ui_ready` для остальных тестов — эта проверка сильнее и не нужна там,
+    где деталь первого deep-link не влияет на количество вкладок."""
+    BrowserScreen(driver).wait_home_page_loaded()
+
+
 @allure.step("When открыт экран {tab}")
 def open_tab(driver, tab: str):
     BottomNav(driver).open(tab)
@@ -112,3 +135,53 @@ def set_system_dark_mode(dark: bool):
     """Переключение системной темы (`adb shell cmd uimode night yes/no`), не действие
     внутри приложения — см. TC-049 (тема System следует за ОС)."""
     adb.set_night_mode(dark)
+
+
+@allure.step("When в приложение отправлен deep-link {url}")
+def open_deep_link(url: str) -> None:
+    """Реальный Android `ACTION_VIEW` intent (не `driver.get()`/`execute_script`) —
+    единственный НАДЁЖНЫЙ способ загрузить ПРОИЗВОЛЬНЫЙ URL в НЕ-нулевую вкладку
+    (area=tabs, TC-023/024/025, разведка 2026-07-18): `driver.get()`/`execute_script`
+    внутри WEBVIEW-контекста ВСЕГДА бьют по вкладке-0 (chromedriver прилипает к
+    первому когда-либо созданному WebView, см. докстринг
+    `browser_screen.py::tab_chip_locator`), тогда как deep-link обрабатывается САМИМ
+    приложением (`MainActivity.onNewIntent`->`onResume`->
+    `BrowserViewModel.handleDeepLink`->`openOrNavigateDeepLink`) через РЕАЛЬНЫЙ
+    Android `WebView.loadUrl()` — минуя chromedriver целиком, поэтому не подвержен
+    прилипанию. `MainActivity` объявлен `launchMode="singleTask"` с intent-filter на
+    `archiveofourown.org` (AndroidManifest.xml) — повторные intent'ы уже запущенному
+    процессу идут через `onNewIntent`, не перезапускают Activity."""
+    adb.shell(f'am start -a android.intent.action.VIEW -d "{url}" {settings.APP_PACKAGE}')
+
+
+@allure.step("Then вкладки сохранены в SharedPreferences (сентинел «{sentinel}» найден)")
+def wait_tabs_persisted(sentinel: str, timeout: int = 10) -> None:
+    """Опрашивает файл SharedPreferences приложения (`ao3_settings.xml`, через
+    `run-as cat` — тот же приём, что `pull_app_file`), пока в нём не появится
+    `sentinel` — TC-025: `saveTabsToPrefs` (BrowserViewModel.kt `scheduleSave`)
+    ДЕБАУНСИТ запись на 500мс после каждого скролл-события; принудительная
+    остановка процесса (`am force-stop`) ДО истечения этого окна теряет
+    несохранённое состояние безвозвратно (отменённая корутина никогда не
+    допишет файл) — одноразовое чтение/фиксированная пауза было бы гонкой с этим
+    дебаунсом, поэтому здесь именно опрос РЕАЛЬНОГО файла на диске, а не UI."""
+    path = f"/data/data/{settings.APP_PACKAGE}/shared_prefs/ao3_settings.xml"
+
+    def _check() -> bool:
+        return sentinel in adb.run_as(f"cat {path}")
+
+    wait_for(_check, timeout=timeout,
+             message=f"вкладки с сентинелом {sentinel!r} не появились в {path}")
+
+
+@allure.step("When приложение принудительно остановлено (adb) и запущено заново")
+def restart_app_via_adb(driver) -> None:
+    """`am force-stop` + `am start -W` — РЕАЛЬНАЯ смерть процесса (не
+    `driver.terminate_app`/`activate_app`, см. `restart_app` выше — тот использует
+    Appium API, здесь нужен именно `core/adb`, единообразно с остальным фреймворком,
+    см. заметки TC-025.md), проверяет персистентность через SharedPreferences, а не
+    просто пересоздание Activity в живом процессе."""
+    adb.force_stop()
+    adb.shell(
+        f"am start -W -n {settings.APP_PACKAGE}/{settings.APP_ACTIVITY}",
+        timeout=settings.ADB_LAUNCH_TIMEOUT,
+    )

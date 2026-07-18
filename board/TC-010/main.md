@@ -2,27 +2,27 @@
 key: "TC-010"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p2"
 summary: "Бейдж на карточке листинга обновляется мгновенно после рейтинга из панели работы (без перезагрузки)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:rating", "risk:R-04"]
+labels: ["test-case", "area:rating", "risk:R-04", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T17:32:04Z"
-updated: "2026-07-02T17:32:04Z"
+created: "2026-07-18T10:30:35Z"
+updated: "2026-07-18T10:30:35Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Бейдж на карточке листинга обновляется мгновенно после рейтинга из панели работы (без перезагрузки)
 
 _Спроецировано из `test-cases/rating/TC-010.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-010 — Мгновенное обновление бейджа (вход: панель работы)
 

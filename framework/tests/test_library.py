@@ -15,6 +15,23 @@ import pytest
 from framework.steps import app_steps, library_steps, rating_steps
 
 
+@pytest.mark.p2
+@allure.id("TC-006")
+@allure.title("Подписи вкладок Library соответствуют фактическому UI (порядок и текст)")
+def test_library_tab_labels(clean_app, driver):
+    # Given приложение запущено с чистыми данными (сидинг не требуется — набор
+    # вкладок статический) и открыт экран Library
+    app_steps.wait_ui_ready(driver)
+    app_steps.open_tab(driver, "Library")
+
+    # When пользователь смотрит на панель вкладок
+    # Then подписи слева направо, верхний регистр:
+    # FAVORITE, KUDOSED, READ, PENDING, DISLIKED, FILES
+    library_steps.assert_library_tabs_order(driver, [
+        "FAVORITE", "KUDOSED", "READ", "PENDING", "DISLIKED", "FILES",
+    ])
+
+
 @pytest.mark.p0
 @pytest.mark.live
 @allure.id("TC-016")

@@ -41,8 +41,18 @@ TAG_BUTTON = "[data-ao3-tag-btn]"
 # самой Rate-кнопки (`updateRateButton` красит `RATE_BUTTON` цветом `BADGE[rating]`,
 # не создаёт отдельный элемент) — см. `ListingPage.badge_for`.
 TAG_HIGHLIGHT = "[data-ao3-tag-hl]"
+# Всплывающая подсказка Note/Tag-кнопки (`ao3_bridge.js::getTooltip`) — единственный
+# экземпляр на страницу (`document.body.appendChild`), id стабилен. Клик по НЕЙ (не
+# по самой Note-кнопке) открывает нативный `RatingOverlay` с развёрнутым комментарием
+# (`signalRateWithNote`) — см. TC-044, `makeNoteButton`/`showTooltip`.
+NOTE_TOOLTIP = "#ao3-note-tooltip"
 HIDDEN_NOTICE_ID = "ao3-companion-hidden-notice"
 SAVE_PROFILE_BTN = "[data-ao3-save-profile]"
+
+# Реальный DOM-инпут формы AO3 Sort & Filter (#work-filters, не инжектируется bridge) —
+# TC-040, ao3_bridge.js::injectSaveFilterButton читает `form.elements` по имени
+# `work_search[words_from]`. Сверено с `sort_filter_form.mitm` (реальная запись).
+WORK_SEARCH_WORDS_FROM = "#work_search_words_from"
 
 
 def blurb_by_work_id(work_id: str) -> str:
@@ -54,3 +64,10 @@ def blurb_by_work_id(work_id: str) -> str:
 # если в сыром HTML его не было, id стиля стабилен ("ao3-reader-css").
 VIEWPORT_META = "meta[name='viewport']"
 READER_CSS_STYLE = "#ao3-reader-css"
+
+# Кастомная themed error page (BrowserScreen.kt buildErrorHtml) — показывается вместо
+# дефолтной страницы ошибки WebView/Chrome при onReceivedError главного фрейма
+# (TC-046). Класс `.wrap` — контейнер разметки этой конкретной страницы, не
+# пересекается с реальной разметкой AO3 (сверено с buildErrorHtml: `<div class="wrap">`).
+ERROR_PAGE_HEADING = ".wrap h1"
+ERROR_PAGE_RETRY_LINK = ".wrap a"

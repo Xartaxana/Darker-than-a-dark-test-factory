@@ -23,6 +23,18 @@ def assert_library_loaded(driver):
     )
 
 
+@allure.step("Then вкладки Library идут слева направо: {labels}")
+def assert_library_tabs_order(driver, labels: list[str]):
+    lib = LibraryScreen(driver)
+    positions = [(label, lib.tab_label_x(label)) for label in labels]
+    missing = [label for label, x in positions if x is None]
+    assert not missing, f"вкладки не найдены: {missing}"
+    xs = [x for _, x in positions]
+    assert xs == sorted(xs), (
+        f"порядок вкладок слева направо не соответствует ожидаемому: {positions}"
+    )
+
+
 @allure.step("Then во вкладке {rating} присутствует работа «{title}»")
 def assert_work_in_tab(driver, rating: str, title: str):
     lib = LibraryScreen(driver).open_tab_for_rating(rating)
@@ -36,6 +48,17 @@ def assert_work_not_in_tab(driver, rating: str, title: str):
     lib = LibraryScreen(driver).open_tab_for_rating(rating)
     assert not lib.has_work(title, timeout=4), (
         f"работа «{title}» неожиданно присутствует во вкладке {TAB_BY_RATING[rating]}"
+    )
+
+
+@allure.step("Then во вкладке {rating} работа «{title}» показывает личные теги «{tags_text}»")
+def assert_work_tags_visible(driver, rating: str, title: str, tags_text: str):
+    lib = LibraryScreen(driver).open_tab_for_rating(rating)
+    assert lib.has_work(title), (
+        f"работа «{title}» не найдена во вкладке {TAB_BY_RATING[rating]}"
+    )
+    assert lib.has_tags_text(tags_text), (
+        f"личные теги «{tags_text}» не отображены на карточке «{title}»"
     )
 
 
@@ -53,11 +76,25 @@ def assert_work_not_in_files_tab(driver, title: str):
     )
 
 
+@allure.step("When работа «{title}» открыта из Library в Browse (добавляется вкладка)")
+def open_work_in_browser(driver, title: str):
+    lib = LibraryScreen(driver)
+    assert lib.has_work(title), f"работа «{title}» не найдена в Library"
+    lib.open_work(title)
+
+
 @allure.step("When пользователь тапает open-иконку работы «{title}» (открыть скачанный файл)")
 def open_downloaded_file(driver, title: str):
     lib = LibraryScreen(driver)
     assert lib.has_work(title), f"работа «{title}» не найдена"
     lib.tap_open_icon()
+
+
+@allure.step("When пользователь тапает download-иконку работы «{title}» (ручное скачивание)")
+def download_via_card(driver, title: str):
+    lib = LibraryScreen(driver)
+    assert lib.has_work(title), f"работа «{title}» не найдена"
+    lib.tap_download_icon()
 
 
 @allure.step("When long-press по карточке «{title}», в overlay выбрано «{action}»")
@@ -82,10 +119,13 @@ def assert_download_icon_shown(driver, title: str):
 
 
 @allure.step("Then карточка «{title}» показывает open-иконку (файл скачан)")
-def assert_open_icon_shown(driver, title: str):
+def assert_open_icon_shown(driver, title: str, timeout: int | None = None):
+    """`timeout` — явный override дефолта (8с): скачивание через сеть (TC-032/033,
+    DownloadRepository.downloadWork через replay-прокси) асинхронное и медленнее,
+    чем локальная фикстура (downloaded_work_seeded), где дефолта достаточно."""
     lib = LibraryScreen(driver)
-    assert lib.has_work(title), f"работа «{title}» не найдена"
-    assert lib.has_open_icon(), f"open-иконка не появилась у «{title}»"
+    assert lib.has_work(title, timeout=timeout), f"работа «{title}» не найдена"
+    assert lib.has_open_icon(timeout=timeout), f"open-иконка не появилась у «{title}»"
 
 
 # --- Фильтр-панель (TC-027/TC-028/TC-029) ---
@@ -119,6 +159,30 @@ def apply_fandom_filter(driver, fandom: str):
 def apply_downloaded_only_filter(driver, checked: bool):
     lib = LibraryScreen(driver)
     lib.set_downloaded_only(checked)
+    lib.tap_apply_filters()
+
+
+# --- Личные теги / свободный текст (TC-060/TC-061) ---
+
+@allure.step("When пользователь выбирает теги {tags} в фильтр-панели и применяет фильтр")
+def apply_tags_filter(driver, tags: list[str]):
+    lib = LibraryScreen(driver)
+    for tag in tags:
+        lib.select_tag(tag)
+    lib.tap_apply_filters()
+
+
+@allure.step("When пользователь вводит запрос «{query}» в поле «Search any field» и применяет фильтр")
+def apply_search_filter(driver, query: str):
+    lib = LibraryScreen(driver)
+    lib.set_search_query(query)
+    lib.tap_apply_filters()
+
+
+@allure.step("When пользователь очищает поле поиска (крестик) и применяет фильтр")
+def clear_search_filter(driver):
+    lib = LibraryScreen(driver)
+    lib.clear_search_query()
     lib.tap_apply_filters()
 
 
@@ -166,6 +230,35 @@ def assert_sort_trigger_label(driver, label: str):
     assert actual == label, f"иконка-триггер сортировки не сменилась на «{label}» (сейчас: «{actual}»)"
 
 
+@allure.step("Then опция сортировки «{label}» недоступна на текущей вкладке")
+def assert_sort_option_unavailable(driver, label: str, current_label: str = "Last read"):
+    """Открывает dropdown сортировки, проверяет отсутствие опции `label` среди
+    видимых пунктов, закрывает dropdown БЕЗ выбора (TC-065: "Rating" существует
+    только на вкладке Files/Downloads, `librarySortOptionsFor(isFilesTab)`)."""
+    lib = LibraryScreen(driver)
+    lib.open_sort_menu(current_label=current_label)
+    assert not lib.is_present(lib.by_text(label), timeout=3), (
+        f"опция сортировки «{label}» неожиданно доступна вне вкладки Files"
+    )
+    lib.close_sort_menu()
+
+
+@allure.step("Then карточки видны в порядке: {titles_in_order}")
+def assert_cards_in_order(driver, titles_in_order: list[str]):
+    """Обобщение `assert_sorted_by_wordcount_desc` на произвольный порядок/поле
+    сортировки (TC-031/TC-062/TC-063/TC-064/TC-065) — сравнивает видимые
+    Y-координаты перечисленных карточек, не зависит от того, где среди них
+    оказались посторонние (не перечисленные) карточки/филлеры."""
+    lib = LibraryScreen(driver)
+    positions = [(t, lib.visible_card_y(t)) for t in titles_in_order]
+    missing = [t for t, y in positions if y is None]
+    assert not missing, f"не видны карточки: {missing}"
+    ys = [y for _, y in positions]
+    assert ys == sorted(ys), (
+        f"порядок карточек не соответствует ожидаемому: {positions}"
+    )
+
+
 @allure.step("Then список визуально сброшен к началу (карточка «{title}» на исходной Y-позиции)")
 def assert_scroll_reset_to_top(driver, title: str, baseline_y: int, tolerance: int = 60):
     lib = LibraryScreen(driver)
@@ -173,4 +266,13 @@ def assert_scroll_reset_to_top(driver, title: str, baseline_y: int, tolerance: i
     assert y is not None, f"карточка «{title}» не видна после сортировки"
     assert abs(y - baseline_y) <= tolerance, (
         f"скролл не сброшен к началу: карточка «{title}» на Y={y}, ожидалось около {baseline_y}"
+    )
+
+
+# --- Пустая вкладка (TC-037: Library остаётся пустой после диалога Scan "0 файлов") ---
+
+@allure.step("Then текущая вкладка Library пуста («Nothing here yet»)")
+def assert_library_empty(driver, timeout: int | None = None):
+    assert LibraryScreen(driver).is_empty(timeout=timeout), (
+        "Library не пуста — ожидали пустое состояние «Nothing here yet»"
     )

@@ -2,27 +2,27 @@
 key: "TC-032"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p1"
 summary: "Авто-скачивание запускается при простановке Loved с включённым Auto-download"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:downloads", "risk:R-05"]
+labels: ["test-case", "area:downloads", "risk:R-05", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-15T14:40:46Z"
-updated: "2026-07-15T14:40:46Z"
+created: "2026-07-18T05:30:00Z"
+updated: "2026-07-18T05:30:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Авто-скачивание запускается при простановке Loved с включённым Auto-download
 
 _Спроецировано из `test-cases/downloads/TC-032.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-032 — Авто-скачивание при рейтинге Loved
 
@@ -109,3 +109,39 @@ record→replay технически работает (CA в mount-namespace, mi
 
 Область помечена нуждающейся в доводке replay-инфраструктуры — не APP_BUG,
 не TEST_BUG; инфраструктурный блокер, тот же класс, что и в rating/visibility.
+
+## Ревью автотеста
+
+**Вердикт: ПРОЙДЕНО (Approved → Automated, automation_status: active).**
+test-reviewer, 2026-07-18T05:30:00Z (свежий проход всего чек-листа F1).
+
+Чек-лист:
+1. **Архитектура (C1):** `python scripts/arch_check.py` → «ошибок 0,
+   предупреждений 0». Локаторы/driver — в screens/steps, `sleep` нет
+   (ожидания через `core/waits`); replay-запись собирается генератором
+   (`recording_builder`), бинарный `.mitm` руками не правится.
+2. **Traceability:** `@allure.id("TC-032")` == id кейса; `@pytest.mark.p1`
+   соответствует `priority: P1`; `@pytest.mark.replay` соответствует режиму
+   (replay-прокси, без живого AO3); `automated_by` указывает на существующую
+   функцию `test_downloads.py::test_auto_download_triggers_on_loved_rating`.
+3. **Соответствие GWT:** Then проверяет СУТЬ (auto-download на Loved заполнил
+   `downloadPath` — косвенно через появление open-иконки, затем файл открыт
+   через `file://` и стилизован reader.css/viewport), не «элемент существует».
+4. **Фикстуры:** `replay`/`clean_app` инстанцируются ДО `driver` (сидинг/прокси
+   до Appium-сессии); teardown прокси гарантирован `finally` в `replay`.
+5. **Flake-риск:** ожидания явные, `_DOWNLOAD_OPEN_ICON_TIMEOUT=25` под async
+   сеть replay; анимации Compose закрыты `close_other_tabs`.
+
+**Witness — зелёный (п.6):** `Invoke-Pytest -k` по трём функциям батча →
+`3 passed, 68 deselected in 112.02s`, `PYTEST_EXIT=0` (emulator-5554).
+
+**Witness — красная проба (п.7, мутационная):**
+- Что портил: временно закомментировал `settings_steps.enable_auto_download(driver)`
+  (Auto-download выключен — простановка Loved НЕ должна триггерить скачивание).
+- Команда: `Invoke-Pytest -k … --reruns 0`.
+- Результат: `FAILED` за ~50с прогона —
+  `AssertionError: open-иконка не появилась у «A Loved Test Work»`
+  (`library_steps.py:105`): осмысленный assert на суть (файла нет → open-иконки
+  нет), не таймаут-мусор.
+- Откат: `git checkout -- framework/tests/test_downloads.py` (дифф теста после
+  отката = версия test-automator, порча не осталась).

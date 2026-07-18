@@ -2,12 +2,12 @@
 key: "TC-062"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p1"
 summary: "Сортировка Last read (по умолчанию) упорядочивает по недавности обновления рейтинга"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:library", "risk:R-06"]
+labels: ["test-case", "area:library", "risk:R-06", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
@@ -16,13 +16,13 @@ epic: null
 created: "2026-07-15T14:41:19Z"
 updated: "2026-07-15T14:41:19Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Сортировка Last read (по умолчанию) упорядочивает по недавности обновления рейтинга
 
 _Спроецировано из `test-cases/library/TC-062.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-062 — Сортировка Last read по умолчанию: самая недавно обновлённая работа первая
 

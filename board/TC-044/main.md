@@ -2,27 +2,27 @@
 key: "TC-044"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p1"
 summary: "Note-кнопка на листинге открывает overlay с развёрнутым полем комментария"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:rating", "risk:R-10"]
+labels: ["test-case", "area:rating", "risk:R-10", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-15T14:42:01Z"
-updated: "2026-07-15T14:42:01Z"
+created: "2026-07-18T10:30:35Z"
+updated: "2026-07-18T10:30:35Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Note-кнопка на листинге открывает overlay с развёрнутым полем комментария
 
 _Спроецировано из `test-cases/rating/TC-044.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-044 — Note-кнопка открывает overlay с раскрытым комментарием
 

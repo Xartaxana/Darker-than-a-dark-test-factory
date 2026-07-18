@@ -2,27 +2,27 @@
 key: "TC-041"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p1"
 summary: "Применение сохранённого фильтр-профиля из панели на листинговой странице"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:filter-profiles", "risk:R-09"]
+labels: ["test-case", "area:filter-profiles", "risk:R-09", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T17:18:18Z"
-updated: "2026-07-02T17:18:18Z"
+created: "2026-07-18T06:14:48Z"
+updated: "2026-07-18T06:14:48Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Применение сохранённого фильтр-профиля из панели на листинговой странице
 
 _Спроецировано из `test-cases/filter-profiles/TC-041.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-041 — Применение сохранённого фильтр-профиля
 

@@ -24,11 +24,18 @@ from framework.data.works import ALL as ALL_WORKS  # noqa: E402
 def build_listing_basic() -> Path:
     """Одна листинговая страница с блёрбами всех эталонных работ
     (`framework/data/works.py::ALL`) — покрывает TC-013/014/015/043/045
-    (см. `bugs/AT-BUG-004.md` §Обсуждение, оценка объёма test-automator)."""
+    (см. `bugs/AT-BUG-004.md` §Обсуждение, оценка объёма test-automator).
+
+    ВТОРОЙ flow (тем же HTML) под `LISTING_FILTERED_URL` — TC-041: `applyFilter`
+    (BrowserViewModel.kt) навигирует на `LISTING_BASIC_URL + '&' + <queryString
+    профиля>` при выборе сохранённого FilterProfile из FilterPanel; без записанного
+    flow под ЭТОТ URL server-replay не находит совпадения и уходит в live-сеть
+    (см. докстринг `LISTING_FILTERED_URL` в `recording_builder.py`)."""
     html = rb.render_listing_html(ALL_WORKS)
-    flow = rb.make_html_get_flow(rb.LISTING_BASIC_URL, html)
+    base_flow = rb.make_html_get_flow(rb.LISTING_BASIC_URL, html)
+    filtered_flow = rb.make_html_get_flow(rb.LISTING_FILTERED_URL, html)
     path = settings.RECORDINGS_DIR / rb.LISTING_BASIC_FILENAME
-    rb.write_flows(path, [flow])
+    rb.write_flows(path, [base_flow, filtered_flow])
     return path
 
 
@@ -62,8 +69,27 @@ def build_work_with_download() -> Path:
     return path
 
 
+def build_tab_markers() -> Path:
+    """`TAB_MARKER_COUNT` статичных высоких страниц с уникальными `<title>` — area=tabs
+    (TC-023/024/025): различение вкладок по НАТИВНО видимому заголовку чипа
+    (`TabInfo.title`), без обращения к WEBVIEW-контексту (см. докстринг
+    `recording_builder.py` у `TAB_MARKER_FILENAME`)."""
+    flows = [
+        rb.make_html_get_flow(rb.tab_marker_url(i), rb.render_tab_marker_html(i))
+        for i in range(1, rb.TAB_MARKER_COUNT + 1)
+    ]
+    path = settings.RECORDINGS_DIR / rb.TAB_MARKER_FILENAME
+    rb.write_flows(path, flows)
+    return path
+
+
 def main() -> None:
-    for path in (build_listing_basic(), build_listing_duplicate_work(), build_work_with_download()):
+    for path in (
+        build_listing_basic(),
+        build_listing_duplicate_work(),
+        build_work_with_download(),
+        build_tab_markers(),
+    ):
         print(f"written: {path}")
 
 

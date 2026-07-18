@@ -2,12 +2,12 @@
 key: "TC-018"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p2"
 summary: "Clear all ratings показывает диалог подтверждения перед очисткой"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:settings", "risk:R-01"]
+labels: ["test-case", "area:settings", "risk:R-01", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
@@ -16,13 +16,13 @@ epic: null
 created: "2026-07-02T17:32:54Z"
 updated: "2026-07-02T17:32:54Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Clear all ratings показывает диалог подтверждения перед очисткой
 
 _Спроецировано из `test-cases/settings/TC-018.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-018 — Диалог подтверждения перед Clear all ratings
 
@@ -61,3 +61,18 @@ _Спроецировано из `test-cases/settings/TC-018.md` (источни
 - [x] Then проверяет наблюдаемое поведение, а не реализацию
 - [x] Указаны приоритет, область и источник требования
 - [x] Кейс независим от порядка выполнения других кейсов
+
+## Ревью автотеста
+F1 пройдено (test-reviewer, 2026-07-18). Весь чек-лист зелёный: arch_check 0/0,
+`@allure.id`=TC-018 и `p2`-маркер соответствуют кейсу, тексты диалога сверены с
+SettingsScreen.kt:1130-1153, `seeded_library` сидит ДО сессии Appium.
+Зелёный прогон: `Invoke-Pytest -k test_clear_all_ratings_shows_confirmation_dialog`
+— passed (в батче 3 passed / 149s).
+Красная проба (2026-07-18T13:20:00Z): порча ожидаемого тела диалога в
+`clear_dialog_body_visible` («permanently delete all work ratings» -> «…ratings ZZZ»,
+уровень локатора-ожидания), прогон упал содержательно на
+`assert_clear_all_dialog_body` — «текст диалога про удаление всех рейтингов не
+найден»; порча откачена точечным Edit, дифф чист.
+Некритично (не блокер): `assert_ratings_present` вакуумен при NOSQLITE-деградации
+образа (тот же класс, что `assert_no_ratings`) — суть кейса (появление диалога
+подтверждения) проверяется телом диалога, а не этой проверкой.

@@ -18,12 +18,70 @@ def select_theme(driver, mode: str):
     SettingsScreen(driver).select_theme(mode)
 
 
+@allure.step("Given в Settings включена опция «Auto-download favorite works»")
+def enable_auto_download(driver):
+    SettingsScreen(driver).set_auto_download(True)
+
+
+@allure.step("When в Settings тумблер «Hide {rating_label} works» установлен в {enabled}")
+def set_hide_rating(driver, rating_label: str, enabled: bool):
+    SettingsScreen(driver).set_hide_rating(rating_label, enabled)
+
+
 @allure.step("When открыт диалог «Clear all ratings» и подтверждён")
 def clear_all_ratings(driver):
     s = SettingsScreen(driver)
     s.open_clear_all_dialog()
     assert s.clear_dialog_visible(), "диалог подтверждения очистки не появился"
     s.confirm_clear_all()
+
+
+# --- TC-018/TC-019: диалог подтверждения Clear all ratings отдельно от полного
+# цикла (`clear_all_ratings` выше, используется TC-004) — открытие/отмена/тексты
+# проверяются по отдельности, без побочного эффекта подтверждения. ---
+
+@allure.step("When пользователь нажимает кнопку «Clear…» (секция Data)")
+def open_clear_all_dialog(driver):
+    SettingsScreen(driver).open_clear_all_dialog()
+
+
+@allure.step("Then появляется диалог подтверждения «Clear all ratings?»")
+def assert_clear_all_dialog_visible(driver):
+    assert SettingsScreen(driver).clear_dialog_visible(), (
+        "диалог подтверждения «Clear all ratings?» не появился после нажатия «Clear…»"
+    )
+
+
+@allure.step("Then текст диалога предупреждает об удалении всех рейтингов")
+def assert_clear_all_dialog_body(driver):
+    assert SettingsScreen(driver).clear_dialog_body_visible(), (
+        "текст диалога про удаление всех рейтингов не найден"
+    )
+
+
+@allure.step("When в диалоге «Clear all ratings?» нажат Cancel")
+def cancel_clear_all_dialog(driver):
+    SettingsScreen(driver).cancel_dialog()
+
+
+@allure.step("Then диалог «Clear all ratings?» закрыт")
+def assert_clear_all_dialog_closed(driver, timeout: int = 3):
+    assert not SettingsScreen(driver).is_present(
+        SettingsScreen(driver).by_text("Clear all ratings?"), timeout=timeout
+    ), "диалог подтверждения остался открыт после Cancel"
+
+
+@allure.step("Then в БД приложения рейтинги ещё присутствуют (диалог не подтверждён)")
+def assert_ratings_present():
+    """Обратная проверка к `assert_no_ratings` — тот же деградационный приём
+    (образ без бинаря sqlite3 не блокирует Then, проверку тогда делает UI-слой
+    вызывающего теста, см. `assert_no_ratings`)."""
+    out = adb.run_as(
+        'sh -c "sqlite3 databases/ao3_ratings.db \\"SELECT COUNT(*) FROM work_ratings\\" 2>/dev/null || echo NOSQLITE"'
+    ).strip()
+    if "NOSQLITE" in out or out == "":
+        return
+    assert out not in ("0", ""), f"ожидали >0 рейтингов в БД (диалог ещё не подтверждён), получили: {out}"
 
 
 @allure.step("Then в БД приложения нет ни одного рейтинга")

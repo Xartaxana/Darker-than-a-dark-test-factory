@@ -2,12 +2,12 @@
 key: "TC-059"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p2"
 summary: "System-тема — WebView следует за системной сменой uiMode без in-app toggle"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:settings", "risk:R-11"]
+labels: ["test-case", "area:settings", "risk:R-11", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
@@ -16,13 +16,13 @@ epic: null
 created: "2026-07-14T00:00:00Z"
 updated: "2026-07-14T00:00:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # System-тема — WebView следует за системной сменой uiMode без in-app toggle
 
 _Спроецировано из `test-cases/settings/TC-059.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-059 — System-тема: WebView следует за системной сменой uiMode без in-app toggle
 
@@ -105,3 +105,20 @@ Contrast в side panel)
 - [x] Кейс независим от порядка выполнения других кейсов (системная тема
       приводится к Light на входе и восстанавливается в `finally`, как TC-049)
 - [x] Комбинаторная область (тема) — назван инвариант строкой `Инвариант: ...`
+
+## Ревью автотеста
+F1 пройдено (test-reviewer, 2026-07-18). Весь чек-лист зелёный: arch_check 0/0,
+`@allure.id`=TC-059, `p2`+`live`-маркеры соответствуют кейсу (кейс допускает
+live-smoke). Инвариант назван — assert проверяет СВОЙСТВО согласованности WebView
+с системным uiMode в ОБЕ стороны (dark->light->dark) + неизменность URL/вкладки,
+а не единичный пример. `clean_app` сидит ДО сессии Appium; системная тема ОС
+восстанавливается в `finally` (Light), не протекает в соседние тесты.
+Зелёный прогон:
+`Invoke-Pytest -k test_webview_follows_system_theme_without_in_app_toggle`
+— passed (в батче 3 passed / 149s).
+Красная проба (2026-07-18T13:20:00Z): порча — тема приложения выставлена LIGHT
+вместо SYSTEM (уровень шага/настройки приложения), при системном переключении на
+Dark WebView не обязан следовать; прогон упал содержательно на
+`assert_webview_darkened` — «WebView не потемнел относительно baseline=221.0 за
+20с» (сообщение называет наблюдаемое свойство — luma, не мусорный таймаут);
+порча откачена точечным Edit, дифф чист.

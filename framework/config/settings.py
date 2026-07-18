@@ -123,6 +123,18 @@ ADB_TRANSFER_TIMEOUT = int(os.environ.get("AO3_ADB_TRANSFER_TIMEOUT", "120"))
 # (RuntimeError, install не пробуется); это не рассинхрон порта, а решение приёмки.
 PACKAGE_SERVICE_WAIT_TIMEOUT = int(os.environ.get("AO3_PACKAGE_SERVICE_WAIT_TIMEOUT", "30"))
 
+# PROXY_DEVICE_REACHABLE_TIMEOUT — AT-BUG-017: `mitm._wait_listening` (start_replay)
+# проверяет только, что mitmdump слушает порт на ХОСТЕ — недостаточно, наблюдался
+# интермиттентный `net::ERR_PROXY_CONNECTION_FAILED` на первой навигации ПОСЛЕ
+# `set_device_proxy()`+`start_replay()`, хотя хост-порт уже подтверждённо слушал
+# (race NAT-уровня qemu / задержка применения системной настройки прокси
+# Android'ом). `mitm.wait_device_proxy_reachable()` поллит TCP-достижимость
+# `PROXY_HOST_ALIAS` СО СТОРОНЫ УСТРОЙСТВА (`adb shell nc`) — 10s с тем же
+# порядком запаса, что `PACKAGE_SERVICE_WAIT_TIMEOUT` (аналогичный класс гонки
+# «сервис технически поднят, но потребитель ещё не видит его готовность»),
+# явная `TimeoutError` при исчерпании, не молчаливый клин.
+PROXY_DEVICE_REACHABLE_TIMEOUT = int(os.environ.get("AO3_PROXY_DEVICE_REACHABLE_TIMEOUT", "10"))
+
 # --- Артефакты ---
 RUNS_DIR = REPO_ROOT / "runs"
 ALLURE_RESULTS = Path(os.environ.get("ALLURE_RESULTS", FRAMEWORK_ROOT / "allure-results"))

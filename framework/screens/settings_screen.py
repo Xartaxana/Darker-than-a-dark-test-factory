@@ -39,6 +39,11 @@ class SettingsScreen(BaseScreen):
     def clear_dialog_visible(self) -> bool:
         return self.is_present(self.by_text("Clear all ratings?"))
 
+    # TC-018: тело диалога подтверждения (SettingsScreen.kt showClearDialog
+    # AlertDialog `text`) — отдельный от заголовка узел, сверено с исходником.
+    def clear_dialog_body_visible(self) -> bool:
+        return self.is_present(self.by_text_contains("permanently delete all work ratings"))
+
     def confirm_clear_all(self):
         self.tap(self.by_text("Clear all"))
         return self
@@ -49,6 +54,55 @@ class SettingsScreen(BaseScreen):
 
     def is_loaded(self) -> bool:
         return self.is_present(self.THEME_HEADER, timeout=10)
+
+    # --- Auto-download toggle (секция "Data", SettingsScreen.kt SettingsSwitchRow —
+    # Compose Switch без text/content-desc). Тот же приём XPath `following::`, что и
+    # `_delete_button_locator` ниже: ближайший checkable-узел ПОСЛЕ подписи строки в
+    # document order (сверено живым деревом test-automator при автоматизации TC-032,
+    # 2026-07-18 — строка "DATA" -> title TextView "Auto-download favorite works" ->
+    # subtitle TextView -> сам Switch `class="android.view.View" checkable="true"`,
+    # без промежуточных checkable-узлов между title и самим Switch). ---
+    _AUTO_DOWNLOAD_SWITCH = (
+        AppiumBy.XPATH,
+        '(//*[@text="Auto-download favorite works"]/following::*[@checkable="true"])[1]',
+    )
+
+    def is_auto_download_checked(self, timeout: int | None = None) -> bool:
+        el = self.find(self._AUTO_DOWNLOAD_SWITCH, timeout)
+        return el.get_attribute("checked") == "true"
+
+    def set_auto_download(self, enabled: bool):
+        """Тумблер — таплю только если текущее состояние не совпадает с желаемым
+        (идемпотентно, тот же приём, что `LibraryScreen.set_downloaded_only`)."""
+        if self.is_auto_download_checked() != enabled:
+            self.tap(self._AUTO_DOWNLOAD_SWITCH)
+        return self
+
+    # --- Per-rating "Hide {rating} works" toggle (секция "Content Visibility",
+    # SettingsScreen.kt:718-759, TC-015) — тот же приём XPath `following::`, что и
+    # `_AUTO_DOWNLOAD_SWITCH`: Compose `Switch` без text/content-desc, ближайший
+    # checkable-узел ПОСЛЕ подписи строки в document order. `swipe_to_text` перед
+    # поиском — тот же паттерн, что `open_clear_all_dialog`/`_swipe_to_profile`:
+    # секция "Content Visibility" ниже "fold" сразу после открытия Settings.
+    def _hide_rating_switch_locator(self, rating_label: str):
+        return (
+            AppiumBy.XPATH,
+            f'(//*[@text="Hide {rating_label} works"]/following::*[@checkable="true"])[1]',
+        )
+
+    def is_rating_hidden(self, rating_label: str, timeout: int | None = None) -> bool:
+        assert self.swipe_to_text(f"Hide {rating_label} works"), (
+            f"строка «Hide {rating_label} works» не найдена прокруткой (Content Visibility)"
+        )
+        el = self.find(self._hide_rating_switch_locator(rating_label), timeout)
+        return el.get_attribute("checked") == "true"
+
+    def set_hide_rating(self, rating_label: str, enabled: bool):
+        """Тумблер — таплю только если текущее состояние не совпадает с желаемым
+        (идемпотентно, тот же приём, что `set_auto_download`)."""
+        if self.is_rating_hidden(rating_label) != enabled:
+            self.tap(self._hide_rating_switch_locator(rating_label))
+        return self
 
     # --- Saved AO3 Filters (секция "SAVED AO3 FILTERS", SettingsScreen.kt) — TC-042 ---
     # `Rename`/`Delete` IconButton каждой строки делят ОДИН и тот же content-desc

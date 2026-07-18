@@ -1,8 +1,11 @@
 """Бизнес-шаги содержимого WebView, не привязанные к конкретному нативному экрану."""
 from __future__ import annotations
 
+import uuid
+
 import allure
 from appium.webdriver.common.appiumby import AppiumBy
+from selenium.common.exceptions import StaleElementReferenceException, WebDriverException
 
 from framework.config import settings
 from framework.core import contexts
@@ -11,10 +14,19 @@ from framework.screens.browser_screen import BrowserScreen
 from framework.screens.navigation import BottomNav
 from framework.web import selectors
 from framework.web.downloaded_work_page import DownloadedWorkPage
+from framework.web.error_page import ErrorPage
 from framework.web.listing_page import ListingPage
 from framework.web.reader_page import ReaderPage
+from framework.web.sort_filter_form_page import SortFilterFormPage
 
 HOME_URL = "https://archiveofourown.org"
+# Статическая информационная страница AO3 — см. `open_stable_tall_page` docstring
+# (AT-BUG-015) за обоснованием выбора именно этого URL.
+STABLE_TALL_LIVE_URL = f"{HOME_URL}/tos"
+# `.test` — зарезервированный RFC 2606 TLD, никогда не резолвится DNS'ом — гарантирует
+# `ERR_NAME_NOT_RESOLVED` детерминированно, независимо от состояния живого AO3 (R-03) и
+# без mitmproxy/офлайн-режима сети (TC-046, значение из «Проверяемые данные» кейса).
+UNREACHABLE_URL = "https://nonexistent.invalid.test/"
 
 
 @allure.step("Then измерена высота заголовка страницы AO3 в WebView")
@@ -86,10 +98,72 @@ def assert_webview_lightened(driver, dark_baseline: float, ratio: float = 0.7, t
     )
 
 
+@allure.step("When в WebView открыта статическая информационная страница AO3 (ToS)")
+def open_stable_tall_page(driver) -> str:
+    """Навигация WebView на `STABLE_TALL_LIVE_URL` (`{HOME_URL}/tos`) — используется
+    сценариями, которым нужна ЖИВАЯ (без replay) страница AO3 с гарантированно
+    большим И СТАБИЛЬНЫМ между загрузками контентом (высота выше `innerHeight`,
+    содержимое не меняется между двумя загрузками в пределах одного прогона).
+
+    Почему именно эта страница, а не листинг работ и не Browse root (AT-BUG-015,
+    диагностика измерением на устройстве, 2026-07-18, три раунда):
+    1. Browse root (`HOME_URL` без пути) короче экрана на использованном эмуляторе
+       (`document.body.scrollHeight=427` < `window.innerHeight=798`) — `scrollTo`
+       там легитимно клампится к 0, скроллить физически нечего (не флейк и не
+       тайминг — повторный замер после 2с ожидания дал те же числа).
+    2. `{HOME_URL}/works` (листинг «последних обновлённых» работ, дефолтная
+       сортировка AO3 по `revised_at`) достаточно высок (`scrollHeight=11030`), НО
+       переключение темы триггерит программный `reload()` WebView (см. `TC-048` —
+       `BrowserScreen.kt LaunchedEffect(darkTheme)`), а сам листинг —
+       time-sensitive: между двумя загрузками (~10с, время Settings round-trip)
+       контент на реальном archiveofourown.org успевает измениться —
+       `document.body.scrollHeight` реально вырос (11030 -> 12731), из-за чего
+       пиксельный `scrollY` после `reload()` закономерно не совпал (899 -> 930).
+       Честный артефакт волатильности ВЫБРАННОЙ страницы (живой листинг), не баг
+       приложения и не флейк тестовой инфраструктуры.
+    3. `{HOME_URL}/tos` — статическая информационная страница (условия
+       использования), контент НЕ time-sensitive: `reload()` всё равно происходит
+       (`document.body.scrollHeight` еле заметно вырос: 9768 -> 9769, разница
+       <1px — сеть/шрифты, не смена контента), а `scrollY` после переключения
+       темы совпал с точностью до <1px (899.8 -> 900.6, было бы 899.8 -> 899.8
+       на идеально статичной странице). Подходящий Given для assert'а сохранности
+       scroll-позиции."""
+    with contexts.in_webview(driver):
+        driver.get(STABLE_TALL_LIVE_URL)
+        wait_until(
+            driver,
+            lambda d: (
+                d.execute_script("return document.readyState;") == "complete"
+                and d.execute_script("return document.body.scrollHeight;") > 2000
+            ),
+            timeout=settings.WEBVIEW_LOAD_TIMEOUT,
+            message="статическая страница AO3 (/tos) не загрузилась (readyState "
+                    "не complete или контент короче ожидаемого)",
+        )
+        return driver.current_url
+
+
 @allure.step("Then измерена текущая позиция прокрутки (window.scrollY) страницы AO3 в WebView")
 def get_webview_scroll_y(driver) -> int:
     with contexts.in_webview(driver):
         return int(driver.execute_script("return window.scrollY;") or 0)
+
+
+@allure.step("Then позиция скролла активной вкладки восстановлена (не с нуля)")
+def assert_scroll_restored(driver, timeout: int = 15) -> int:
+    """Опрашивает `window.scrollY`, не читает один раз: после Undo/рестарта вкладка
+    получает СВЕЖИЙ WebView (`BrowserScreen.kt` LaunchedEffect создаёт новый объект
+    для отсутствующего в `webViews` id), которому ещё нужно догрузиться и применить
+    peek-based scroll-restore (`Ao3JsBridge.peekScrollRestore`) — одноразовое чтение
+    сразу после переключения было бы гонкой (тот же класс, что и другие опросы в
+    этом модуле, см. `assert_active_tab_url`)."""
+    with contexts.in_webview(driver):
+        return wait_until(
+            driver,
+            lambda d: (v := int(d.execute_script("return window.scrollY;") or 0)) > 0 and v,
+            timeout=timeout,
+            message="scrollY восстановленной вкладки остаётся 0 — позиция скролла не восстановилась",
+        )
 
 
 @allure.step("When страница AO3 в WebView прокручена на {pixels}px вниз")
@@ -113,6 +187,57 @@ def scroll_webview_to(driver, pixels: int) -> None:
         lambda d: get_webview_scroll_y(d) > 0,
         timeout=5,
         message=f"страница AO3 не проскроллилась к {pixels}px (scrollY остаётся 0)",
+    )
+
+
+@allure.step("Then TabStrip виден вверху экрана (открыто >1 вкладки, не fullscreen)")
+def assert_tab_strip_visible(driver, timeout: int | None = None):
+    assert BrowserScreen(driver).is_tab_strip_visible(timeout=timeout), \
+        "TabStrip должен быть виден (tabs>1, не в fullscreen)"
+
+
+@allure.step("Then TabStrip скрыт (fullscreen активен)")
+def assert_tab_strip_hidden(driver, timeout: int = 3):
+    assert not BrowserScreen(driver).is_tab_strip_visible(timeout=timeout), \
+        "TabStrip должен быть скрыт в режиме fullscreen"
+
+
+@allure.step("Then измерена средняя яркость верхней полосы экрана (пиксельный прокси TabStrip, TC-058)")
+def measure_top_chrome_luma(driver) -> float:
+    return BrowserScreen(driver).top_chrome_avg_luma()
+
+
+@allure.step("Then верхняя полоса экрана заметно темнее baseline (TabStrip/статус-бар скрыты — fullscreen)")
+def assert_top_chrome_darkened(driver, baseline: float, ratio: float = 0.5, timeout: int = 10):
+    """Опрашивает luma верхней полосы, пока она не пересечёт порог потемнения — вход
+    в fullscreen (`WindowInsetsControllerCompat.hide(systemBars())`) триггерит
+    анимированный reflow (hide systemBars + resize WebView), продолжающийся некоторое
+    время после самого тапа (тот же класс гонки, что `assert_webview_darkened`).
+    Раньше settle-буфер под этот reflow обеспечивался лишь ПОБОЧНО таймаутом
+    `is_present("GOT IT", timeout=3)` в `_dismiss_fullscreen_system_hint` — при
+    выходе из fullscreen подсказка не появляется, и наблюдаемая задержка была
+    случайным следствием чужого хелпера, а не свойством этой проверки (ревью
+    test-reviewer TC-058, 2026-07-18)."""
+    def _darker(d):
+        luma = BrowserScreen(d).top_chrome_avg_luma()
+        return luma < baseline * ratio
+    wait_until(
+        driver, _darker, timeout=timeout,
+        message=f"верхняя полоса не потемнела после входа в fullscreen относительно baseline={baseline:.1f} за {timeout}с",
+    )
+
+
+@allure.step("Then верхняя полоса экрана снова светлая, как до fullscreen (TabStrip восстановлен)")
+def assert_top_chrome_restored(driver, baseline: float, ratio: float = 0.5, timeout: int = 10):
+    """Симметрично `assert_top_chrome_darkened` — обратное направление (выход из
+    fullscreen), тот же settle-поллинг вместо одноразового чтения (см. докстринг
+    выше)."""
+    def _restored(d):
+        luma = BrowserScreen(d).top_chrome_avg_luma()
+        return luma > baseline * ratio
+    wait_until(
+        driver, _restored, timeout=timeout,
+        message=f"верхняя полоса не восстановилась после выхода из fullscreen относительно baseline={baseline:.1f} за {timeout}с",
     )
 
 
@@ -227,6 +352,92 @@ def assert_rating_badge_visible(driver, work_id: str):
         )
 
 
+@allure.step("Then на ВСЕХ вхождениях работы {work_id} на листинге появился бейдж рейтинга")
+def assert_rating_badge_visible_all(driver, work_id: str, expected_count: int = 2):
+    """Как `assert_rating_badge_visible`, но требует, чтобы бейдж проставился у
+    НЕСКОЛЬКИХ вхождений блёрба на одной странице (TC-012, `listing_duplicate_work.mitm`) —
+    доказывает, что `applyRatings` обходит ВСЕ `li[id^="work_"]`, а не только первое
+    совпадение `querySelector`."""
+    with contexts.in_webview(driver):
+        wait_until(
+            driver,
+            lambda d: ListingPage(d).rated_button_count(work_id) >= expected_count,
+            message=f"бейдж рейтинга работы {work_id} не появился у всех {expected_count} "
+                    f"вхождений на листинге",
+        )
+
+
+@allure.step("When нажата Note-кнопка работы {work_id} на листинге")
+def tap_note_button(driver, work_id: str):
+    """Клик по инжектированной Note-кнопке (карандаш) — открывает лишь всплывающую
+    подсказку с текстом заметки (`ao3_bridge.js::showTooltip`), не overlay напрямую
+    (см. `tap_note_tooltip`, TC-044)."""
+    with contexts.in_webview(driver):
+        ListingPage(driver).note_button(work_id).click()
+
+
+@allure.step("When нажата всплывающая подсказка Note-кнопки")
+def tap_note_tooltip(driver):
+    """Клик по САМОЙ подсказке (не по Note-кнопке) — вызывает `signalRateWithNote`,
+    открывающий нативный `RatingOverlay` с уже развёрнутым полем комментария
+    (см. `tap_note_button`, TC-044)."""
+    with contexts.in_webview(driver):
+        ListingPage(driver).note_tooltip().click()
+
+
+@allure.step("Then AO3-тег «{tag_text}» на карточке работы {work_id} подсвечен (совпадение с личным тегом)")
+def assert_tag_highlighted(driver, work_id: str, tag_text: str):
+    """Опрашивает атрибут `data-ao3-tag-hl`, а не читает один раз: подсветка —
+    следствие нативного round-trip (`highlightWorkTags`, вызываемого из
+    `window.applyRatings`), тот же класс гонки, что `assert_blurb_hidden` (TC-056)."""
+    with contexts.in_webview(driver):
+        wait_until(
+            driver,
+            lambda d: ListingPage(d).tag_link_highlighted(work_id, tag_text),
+            message=f"AO3-тег «{tag_text}» работы {work_id} не подсвечен (data-ao3-tag-hl отсутствует)",
+        )
+
+
+@allure.step("Then AO3-тег «{tag_text}» на карточке работы {work_id} НЕ подсвечен")
+def assert_tag_not_highlighted(driver, work_id: str, tag_text: str):
+    """Проверка мгновенная (не опрос): вызывается ПОСЛЕ `assert_tag_highlighted` в
+    том же тесте — `highlightWorkTags` обрабатывает ВСЕ теги блёрба за один
+    синхронный проход, так что если один тег уже подсвечен, остальные в этом же
+    вызове уже тоже обработаны (TC-056)."""
+    with contexts.in_webview(driver):
+        assert not ListingPage(driver).tag_link_highlighted(work_id, tag_text), (
+            f"AO3-тег «{tag_text}» работы {work_id} неожиданно подсвечен"
+        )
+
+
+_NO_RELOAD_MARKER_ATTR = "__ao3TestNoReloadMarker"
+
+
+@allure.step("Given зафиксирован baseline: WebView не совершал навигацию с момента открытия страницы")
+def mark_no_reload_baseline(driver) -> str:
+    """Кладёт уникальный маркер в `window` активной WebView-страницы. JS-вызовы,
+    которыми `applyRating`/`broadcastRatingChange` (BrowserViewModel.kt) обновляют
+    бейджи — `evaluateJavascript` на уже загруженном документе, НЕ навигация —
+    маркер их переживает. Любая РЕАЛЬНАЯ навигация/reload заменяет документ и стирает
+    все `window`-глобалы, включая маркер — более надёжный сигнал, чем счётчик
+    `onPageFinished`/history index (недоступны из WebDriver JS напрямую) или
+    визуальный flash/loading indicator (у этого приложения таких нет), см. TC-010/011."""
+    marker = f"no-reload-{uuid.uuid4().hex}"
+    with contexts.in_webview(driver):
+        driver.execute_script(f"window.{_NO_RELOAD_MARKER_ATTR} = {marker!r};")
+    return marker
+
+
+@allure.step("Then WebView не выполнил навигацию/reload с момента baseline")
+def assert_no_reload_since(driver, marker: str) -> None:
+    with contexts.in_webview(driver):
+        current = driver.execute_script(f"return window.{_NO_RELOAD_MARKER_ATTR};")
+    assert current == marker, (
+        f"WebView перезагрузился/навигировал: window-маркер потерян "
+        f"(было {marker!r}, стало {current!r})"
+    )
+
+
 # --- Filter panel (BottomBar.kt FilterPanel, TC-041/TC-042) ---
 
 @allure.step("When раскрыта выпадашка «AO3 filter:» на листинге")
@@ -251,3 +462,294 @@ def assert_filter_not_offered(driver, name: str, timeout: int = 3):
     assert not BrowserScreen(driver).filter_dropdown_has_option(name, timeout=timeout), (
         f"профиль «{name}» всё ещё предложен в выпадашке фильтра — ожидали удалённым"
     )
+
+
+@allure.step("When в выпадашке фильтра выбран профиль «{name}»")
+def select_filter_option(driver, name: str):
+    BrowserScreen(driver).select_filter_option(name)
+
+
+@allure.step("Then панель фильтра показывает «{name}» как активно применённый")
+def assert_active_filter_shown(driver, name: str, timeout: int | None = None):
+    """Триггер FilterPanel (BottomBar.kt `Text(activeFilter?.name ?: "None")`)
+    перерисовывается сразу при смене `activeFilterId` — но сам выбор опции ТАКЖЕ
+    сворачивает нижнюю ручку-пилюлю (`MainActivity.kt onFilterSelected = { ...;
+    navExpanded = false }`), а панель целиком скрыта, пока пилюля свёрнута
+    (`BottomBar.kt AnimatedVisibility(visible = selectedTab != BROWSE ||
+    navExpanded)`, см. `framework/screens/navigation.py`) — без повторного
+    раскрытия ручки триггер не найти вообще, не только его новый текст."""
+    BottomNav(driver).ensure_visible()
+    assert BrowserScreen(driver).filter_dropdown_has_option(name, timeout=timeout), (
+        f"панель фильтра не показывает «{name}» как активно применённый профиль"
+    )
+
+
+# --- Форма AO3 Sort & Filter (#work-filters) + инжектированная "Save filter" —
+# TC-040, см. `framework/web/sort_filter_form_page.py` за обоснованием JS-приёмов. ---
+
+@allure.step("Given форма Sort & Filter AO3 открыта на {url}, поле word count min заполнено «{value}»")
+def open_sort_filter_form(driver, url: str, value: str) -> None:
+    open_listing(driver, url)
+    with contexts.in_webview(driver):
+        SortFilterFormPage(driver).set_word_count_min(value)
+
+
+@allure.step("When нажата инжектированная кнопка «Save filter»")
+def tap_save_filter_button(driver) -> None:
+    with contexts.in_webview(driver):
+        SortFilterFormPage(driver).click_save_filter()
+
+
+@allure.step("Then появляется диалог «Save filter»")
+def assert_save_filter_dialog_visible(driver, timeout: int | None = None) -> None:
+    assert BrowserScreen(driver).save_filter_dialog_visible(timeout=timeout), (
+        "диалог «Save filter» не появился после нажатия инжектированной кнопки"
+    )
+
+
+@allure.step("When в диалоге введено имя «{name}» и нажат Save")
+def save_filter_profile_as(driver, name: str) -> None:
+    screen = BrowserScreen(driver)
+    screen.enter_filter_profile_name(name)
+    screen.confirm_save_filter()
+
+
+# --- Кастомная error page при ошибке загрузки главного фрейма (TC-046,
+# BrowserScreen.kt WebViewClient.onReceivedError/onPageFinished, buildErrorHtml) ---
+
+def _is_stale(element) -> bool:
+    """True, если `element` больше не привязан к текущему DOM (страница
+    перезагрузилась/заменилась) — используется как доказательство РЕАЛЬНОЙ
+    навигации после клика Retry, не одноразовое чтение состояния."""
+    try:
+        element.is_enabled()
+        return False
+    except StaleElementReferenceException:
+        return True
+
+
+@allure.step("When в WebView открыт заведомо недоступный по сети URL {url}")
+def open_unreachable_url(driver, url: str = UNREACHABLE_URL) -> None:
+    """Навигация активной вкладки на несуществующий домен — main-frame запрос
+    гарантированно завершается `ERR_NAME_NOT_RESOLVED` (см. `UNREACHABLE_URL`).
+
+    chromedriver's `Page.navigate` (за которым стоит `driver.get`) ждёт
+    завершения загрузки фрейма и surfaced-ит сетевую ошибку СИНХРОННО как
+    `WebDriverException("net::ERR_...")` из самого вызова `get()` — это
+    отдельный канал от нативного `WebViewClient.onReceivedError` приложения
+    (который и рисует кастомную error page, проверяемую следующим шагом).
+    Эта ошибка chromedriver — ОЖИДАЕМЫЙ сигнал (сама фиксация сетевого сбоя,
+    без него не было бы что проверять), не флейк: гасим только `net::ERR*`,
+    любая другая причина падения `get()` (не про сеть) уходит дальше.
+    Не ждём успешной загрузки (её не будет по построению) — ожидание кастомной
+    error page делает отдельный шаг `assert_error_page_shown`."""
+    with contexts.in_webview(driver):
+        try:
+            driver.get(url)
+        except WebDriverException as exc:
+            if "net::ERR" not in str(exc):
+                raise
+
+
+@allure.step("Then показана кастомная themed error page с Retry-ссылкой на {expected_url}")
+def assert_error_page_shown(driver, expected_url: str = UNREACHABLE_URL, timeout: int | None = None):
+    """Ждёт кастомную error page приложения (`BrowserScreen.kt buildErrorHtml`),
+    загруженную через `loadDataWithBaseURL("about:blank", ...)` — НЕ дефолтную
+    страницу ошибки Chrome/WebView (у неё другие разметка/URL). Проверяет три
+    факта из Then кейса разом: (1) `current_url` == `about:blank` (страница не
+    попадает в историю навигации — заметка кейса), (2) текст кастомного заголовка
+    виден, (3) Retry-ссылка ведёт на исходный (упавший) URL, не на другой адрес."""
+    timeout = timeout or settings.WEBVIEW_LOAD_TIMEOUT
+    with contexts.in_webview(driver):
+        wait_until(
+            driver,
+            lambda d: (d.current_url or "") == "about:blank",
+            timeout=timeout,
+            message="WebView не перешёл на about:blank — кастомная error page грузится "
+                    "через loadDataWithBaseURL с base URL about:blank",
+        )
+        page = ErrorPage(driver)
+        heading = page.wait_heading(timeout=timeout)
+        assert heading.text.strip() == "Couldn't load this page", (
+            f"неожиданный текст заголовка кастомной error page: {heading.text!r} "
+            f"(похоже на дефолтную страницу ошибки WebView/Chrome, не кастомную)"
+        )
+        link = page.retry_link(timeout=timeout)
+        href = link.get_attribute("href")
+        assert href == expected_url, (
+            f"Retry-ссылка ведёт не на исходный упавший URL: {href!r} != {expected_url!r}"
+        )
+
+
+# --- TabStrip: создание/лимит/закрытие/undo/переключение вкладок (TC-022..026) ---
+
+@allure.step("When нажата кнопка «New tab» в TabStrip")
+def open_new_tab(driver) -> None:
+    BrowserScreen(driver).tap_new_tab()
+
+
+@allure.step("Then показан диалог «Tab limit reached» с упоминанием {expected_max} вкладок")
+def assert_tab_limit_dialog_shown(driver, expected_max: int = 10, timeout: int | None = None) -> None:
+    screen = BrowserScreen(driver)
+    assert screen.tab_limit_dialog_visible(timeout=timeout), (
+        "диалог «Tab limit reached» не появился при достижении MAX_TABS"
+    )
+    message = screen.tab_limit_dialog_message(timeout=timeout)
+    assert f"{expected_max} tabs open" in message, (
+        f"текст диалога лимита не упоминает «{expected_max} tabs open»: {message!r}"
+    )
+
+
+@allure.step("Then диалог «Tab limit reached» НЕ появился")
+def assert_tab_limit_dialog_not_shown(driver, timeout: int = 2) -> None:
+    assert not BrowserScreen(driver).tab_limit_dialog_visible(timeout=timeout), (
+        "диалог «Tab limit reached» появился преждевременно (до достижения MAX_TABS)"
+    )
+
+
+@allure.step("When диалог «Tab limit reached» закрыт нажатием OK")
+def dismiss_tab_limit_dialog(driver) -> None:
+    BrowserScreen(driver).dismiss_tab_limit_dialog()
+
+
+@allure.step("When свайпом вверх закрыта вкладка на позиции {position}")
+def swipe_close_tab(driver, position: int) -> None:
+    BrowserScreen(driver).swipe_close_tab(position)
+
+
+@allure.step("When пользователь переключается на вкладку на позиции {position}")
+def switch_to_tab(driver, position: int) -> None:
+    BrowserScreen(driver).tap_tab_chip(position)
+
+
+@allure.step("Then в snackbar показан Undo для закрытой вкладки")
+def assert_undo_snackbar_visible(driver, timeout: int = 5) -> None:
+    assert BrowserScreen(driver).undo_snackbar_visible(timeout=timeout), (
+        "snackbar с действием Undo не появился после закрытия вкладки"
+    )
+
+
+@allure.step("Then прочитан заголовок чипа на позиции {position}")
+def tab_chip_title_at(driver, position: int, timeout: int | None = None) -> str:
+    return BrowserScreen(driver).tab_chip_title_at(position, timeout=timeout)
+
+
+@allure.step("Then из списка кандидатов отобраны заголовки, реально видимые в TabStrip")
+def visible_titles(driver, titles: list[str], timeout: int = 3) -> list[str]:
+    return [t for t in titles if BrowserScreen(driver).tab_title_visible(t, timeout=timeout)]
+
+
+@allure.step("Then исчерпывающе перебраны доступные snackbar Undo (до {max_attempts} попыток), посчитаны успешные восстановления и подтверждённые маркеры")
+def exhaust_undo_snackbars(driver, max_attempts: int = 8, candidate_titles: list[str] | None = None) -> tuple[int, list[str]]:
+    """TC-024: сколько бы snackbar'ов Undo ни оказалось реально доступно (см. заметки
+    TC-024.md про эмпирически ограниченную интерактивность очереди
+    `SnackbarHostState.showSnackbar` под программной нагрузкой) — нажимает Undo на
+    КАЖДОМ появившемся, считая по росту числа видимых чипов «Close tab», является ли
+    попытка успешным восстановлением или молчаливым no-op (эвикнутый снапшот).
+
+    Возвращает `(restored_count, confirmed_titles)` — `confirmed_titles` из
+    `candidate_titles` считываются СРАЗУ после КАЖДОГО успешного восстановления
+    (не единым отложенным снимком в самом конце вызывающим кодом). Найдено
+    2026-07-18 (доработка по ревью, попутный прогон): единый снимок «в самом
+    конце» после того, как цикл уже потратил ДОПОЛНИТЕЛЬНЫЕ `undo_snackbar_visible(
+    timeout=10)`-ожидания на ещё один(-е) НЕсуществующий(-е) снекбар(ы) перед тем,
+    как окончательно оборвать цикл, — воспроизводимо (1 из 5 прогонов) давал
+    `restored_count > len(найденных title)`: не потому что восстановилась Home
+    (снапшот Home эвиктится синхронно ДО первого показа snackbar'а, см. докстринг
+    теста в `test_tabs.py`), а потому что снимок заголовков откладывался на
+    десятки секунд позже самого восстановления. Чтение заголовка сразу устраняет
+    временной зазор между «событием» и «измерением».
+
+    Найдено 2026-07-18 (доработка по ревью, попутный прогон TC-024, отдельный
+    класс): между проверкой `undo_snackbar_visible` и `tap_undo_snackbar` есть
+    зазор, в который снекбар может успеть авто-скрыться (`SnackbarDuration.Short`
+    ~4с) — особенно для ПЕРВОГО (Home) снекбара, который к моменту начала опроса
+    тестом уже мог провисеть заметную долю своего окна (6 swipe-закрытий занимают
+    реальное время устройства). Непойманный `TimeoutException` из-под
+    `tap_undo_snackbar` раньше падал наружу и валил тест. Тап обёрнут коротким
+    таймаутом + try/except — гонка с авто-скрытием трактуется как истёкшая
+    попытка (цикл идёт дальше проверять следующий снекбар), а не как крах
+    теста."""
+    restored_count = 0
+    confirmed_titles: list[str] = []
+    for _ in range(max_attempts):
+        if not BrowserScreen(driver).undo_snackbar_visible(timeout=10):
+            break
+        before = BrowserScreen(driver).close_tab_icon_count()
+        try:
+            BrowserScreen(driver).tap_undo_snackbar(timeout=3)
+        except Exception:  # noqa: BLE001 — снекбар авто-скрылся между проверкой и тапом
+            continue
+        try:
+            wait_until(driver, lambda d: BrowserScreen(d).close_tab_icon_count() != before,
+                       timeout=3, message="tab count unchanged after Undo tap")
+            restored_count += 1
+            if candidate_titles:
+                confirmed_titles = visible_titles(driver, candidate_titles)
+        except Exception:  # noqa: BLE001 — ожидаемый исход для вытесненного снапшота
+            pass
+    return restored_count, confirmed_titles
+
+
+@allure.step("When нажат Undo в snackbar")
+def tap_undo(driver, timeout: int | None = None) -> None:
+    BrowserScreen(driver).tap_undo_snackbar(timeout=timeout)
+
+
+@allure.step("When snackbar «Tab closed» смахнут в сторону (без нажатия Undo)")
+def dismiss_snackbar_by_swipe(driver, timeout: int | None = None) -> None:
+    BrowserScreen(driver).swipe_dismiss_snackbar(timeout=timeout)
+
+
+@allure.step("Then заголовок вкладки, содержащий «{title_substring}», виден в TabStrip")
+def assert_tab_title_visible(driver, title_substring: str, timeout: int | None = None) -> None:
+    assert BrowserScreen(driver).tab_title_visible(title_substring, timeout=timeout), (
+        f"заголовок вкладки, содержащий «{title_substring}», не найден в TabStrip"
+    )
+
+
+@allure.step("Then заголовок вкладки, содержащий «{title_substring}», НЕ виден в TabStrip")
+def assert_tab_title_not_visible(driver, title_substring: str, timeout: int = 3) -> None:
+    assert not BrowserScreen(driver).tab_title_visible(title_substring, timeout=timeout), (
+        f"заголовок вкладки, содержащий «{title_substring}», неожиданно виден в TabStrip"
+    )
+
+
+@allure.step("When активная вкладка проскроллена вниз нативным свайпом")
+def swipe_scroll_active_tab(driver, distance_px: int = 1400) -> None:
+    BrowserScreen(driver).swipe_scroll_active_tab_down(distance_px)
+
+
+@allure.step("Then заголовок чипа на позиции {position} равен «{expected_title}»")
+def assert_tab_title_at_position(driver, position: int, expected_title: str, timeout: int | None = None) -> None:
+    """Опрашивает заголовок чипа, не читает один раз: сразу после создания/
+    восстановления вкладки чип несёт плейсхолдер `TabInfo.title = "Loading…"`
+    (TabInfo.kt) до срабатывания `WebChromeClient.onReceivedTitle` — одноразовое
+    чтение сразу после появления элемента ловило бы гонку (та же гонка, что уже
+    закрыта в других опросах этого модуля, см. `assert_active_tab_url`)."""
+    actual = wait_until(
+        driver,
+        lambda d: (t := BrowserScreen(d).tab_chip_title_at(position, timeout=2)) == expected_title and t,
+        timeout=timeout or 5,
+        message=f"чип на позиции {position} не получил заголовок {expected_title!r}",
+    )
+    assert actual == expected_title
+
+
+@allure.step("When нажата Retry-ссылка на error page")
+def click_retry(driver) -> None:
+    """Клик по Retry-ссылке инициирует повторную загрузку исходного (упавшего) URL —
+    WebView без `shouldOverrideUrlLoading`-перехвата обрабатывает переход по `<a href>`
+    сама (см. BrowserScreen.kt), это полноценная новая навигация, не no-op: держим
+    ссылку на СТАРЫЙ DOM-элемент и ждём, пока обращение к нему не станет
+    `StaleElementReferenceException` — доказательство того, что документ реально
+    перезагрузился (а не просто визуально не изменился), прежде чем вызывающий шаг
+    станет проверять НОВУЮ error page."""
+    with contexts.in_webview(driver):
+        link = ErrorPage(driver).retry_link()
+        link.click()
+        wait_until(
+            driver, lambda d: _is_stale(link), timeout=10,
+            message="страница не перезагрузилась после клика Retry (старый DOM-узел "
+                    "Retry-ссылки остаётся валидным)",
+        )

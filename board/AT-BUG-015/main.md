@@ -2,7 +2,7 @@
 key: "AT-BUG-015"
 project: "AO3"
 issueType: "bug"
-status: "bug-open"
+status: "bug-fixed"
 priority: "p2"
 summary: "TC-047 scroll-preservation assert недобит — WebView scrollY на Browse root не даёт устойчивого ненулевого значения после scrollTo (нужна диагностика)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-18T02:40:00Z"
-updated: "2026-07-18T02:40:00Z"
+created: "2026-07-18T03:15:00Z"
+updated: "2026-07-18T03:15:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # TC-047 scroll-preservation assert недобит — WebView scrollY на Browse root не даёт устойчивого ненулевого значения после scrollTo (нужна диагностика)
 
 _Спроецировано из `bugs/AT-BUG-015.md` (источник правды).
-Статус в нашей машине: **Open**._
+Статус в нашей машине: **Fixed**._
 
 # AT-BUG-015 — TC-047 scroll-preservation assert не добит (нужна диагностика WebView scrollY)
 
@@ -117,3 +117,35 @@ CLAUDE.md, прецеденты AT-BUG-004/005/006/010: заметка без а
 `get_webview_scroll_y`) оставлена в дереве — переиспользуема для фикса этого
 долга, не мешает существующим тестам (не вызывается ниоткуда, кроме этого
 файла — не участвует ни в одном текущем прогоне).
+
+**2026-07-18T (позже), test-maintainer — фикс.** Диагностика измерением
+(3 раунда, `Invoke-Pytest` с ad hoc диагностическими тестами, удалены после
+хода) на устройстве (emulator-5554):
+1. Гипотеза 1 (Given-страница недостаточно высокая) — ПОДТВЕРЖДЕНА: Browse
+   root (`archiveofourown.org`) даёт `document.body.scrollHeight=427` при
+   `window.innerHeight=798` — `scrollTo` там легитимно клампится к 0,
+   стабильно (замер сразу и через 2с — идентичен). Гипотеза 3 (тайминг) тем
+   самым опровергнута для этой страницы — дело не в довёрстке.
+2. Промежуточная попытка — сменить Given на живой листинг `{HOME_URL}/works`
+   (`scrollHeight=11030`, scrollTo сработал) — вскрыла ВТОРОЙ, более глубокий
+   эффект: переключение темы реально триггерит `reload()` WebView (см.
+   TC-048), а листинг «последних обновлённых работ» time-sensitive — между
+   двумя загрузками (~10с) контент на живом archiveofourown.org успел
+   измениться (`scrollHeight` 11030 -> 12731), из-за чего `scrollY` после
+   reload честно уехал (899 -> 930). Это волатильность выбранной страницы,
+   не баг приложения.
+3. Финальный Given — статическая страница `{HOME_URL}/tos`
+   (`browser_steps.open_stable_tall_page`): `reload()` всё ещё происходит, но
+   контент практически не меняется (`scrollHeight` 9768 -> 9769), `scrollY`
+   совпадает с точностью <1px (899.8 -> 900.6).
+
+Assert добавлен в `test_theme_dark_applies_instantly_without_recreating_activity`
+(`framework/tests/test_settings.py`) с допуском 2px (компенсирует усечение
+дробной части `int(scrollY)` в `get_webview_scroll_y`). 3/3 PASS подряд
+(`Invoke-Pytest tests/test_settings.py::
+test_theme_dark_applies_instantly_without_recreating_activity`,
+emulator-5554). `test-cases/settings/TC-047.md` дополнен закрывающей
+заметкой. Гипотеза 2 (не тот WEBVIEW-контекст) не проверялась отдельно — в
+этом сценарии открыта ровно одна вкладка/один WEBVIEW-контекст (см.
+`driver.contexts` в диагностических логах: всегда `['NATIVE_APP',
+'WEBVIEW_com.example.ao3_wrapper']`), поэтому неприменима к этому кейсу.

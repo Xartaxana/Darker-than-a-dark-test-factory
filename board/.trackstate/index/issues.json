@@ -192,15 +192,412 @@
     "epicPath": null,
     "summary": "Fullscreen toggle в side panel скрывает верхнюю полосу вкладок и переключает подпись контрола (вход и выход)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p3",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:browser",
-      "risk:R-11"
+      "risk:R-11",
+      "automation:active"
     ],
-    "updated": "2026-07-15T14:42:31Z",
+    "updated": "2026-07-18T03:22:18Z",
+    "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-066",
+    "path": "board/TC-066/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "ao3_bridge.js инжектируется в живую AO3-страницу (window.__ao3Bridge marker)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:canary",
+      "risk:R-02"
+    ],
+    "updated": "2026-07-18T08:54:33Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-067",
+    "path": "board/TC-067/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "ao3_bridge.js инжектируется на replay-странице (window.__ao3Bridge marker, детерминированная регрессия)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:canary",
+      "risk:R-02"
+    ],
+    "updated": "2026-07-18T08:55:01Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-068",
+    "path": "board/TC-068/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Селектор work-блёрба и извлечение work id совпадают с живым DOM листинга AO3 (live)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:canary",
+      "risk:R-02"
+    ],
+    "updated": "2026-07-18T08:55:09Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-069",
+    "path": "board/TC-069/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Селектор work-блёрба и извлечение work id совпадают с replay-DOM листинга (replay)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:canary",
+      "risk:R-02"
+    ],
+    "updated": "2026-07-18T08:55:14Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-070",
+    "path": "board/TC-070/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Rate-кнопка инжектируется в каждый неоценённый work-блёрб живого листинга (live)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:canary",
+      "risk:R-02"
+    ],
+    "updated": "2026-07-18T08:55:22Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-071",
+    "path": "board/TC-071/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Rate-кнопка инжектируется в каждый неоценённый work-блёрб replay-листинга (replay)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:canary",
+      "risk:R-02"
+    ],
+    "updated": "2026-07-18T08:55:28Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-072",
+    "path": "board/TC-072/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Rate-кнопка отражает бейдж рейтинга непрозрачным цветом BADGE-палитры на живом листинге (live)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:canary",
+      "risk:R-02/R-04"
+    ],
+    "updated": "2026-07-18T08:55:38Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-073",
+    "path": "board/TC-073/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Rate-кнопка отражает бейдж рейтинга непрозрачным цветом BADGE-палитры на replay-листинге (replay)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:canary",
+      "risk:R-02/R-04"
+    ],
+    "updated": "2026-07-18T08:56:07Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-074",
+    "path": "board/TC-074/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Note-кнопка инжектируется в work-блёрб живого листинга тогда и только тогда, когда есть comment (live)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:canary",
+      "risk:R-02/R-04"
+    ],
+    "updated": "2026-07-18T08:56:14Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-075",
+    "path": "board/TC-075/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Note-кнопка инжектируется в work-блёрб replay-листинга тогда и только тогда, когда есть comment (replay)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:canary",
+      "risk:R-02/R-04"
+    ],
+    "updated": "2026-07-18T08:56:17Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-076",
+    "path": "board/TC-076/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Tag-кнопка инжектируется в work-блёрб живого листинга тогда и только тогда, когда есть личные теги вне AO3-тегов карточки (live)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:canary",
+      "risk:R-02/R-04"
+    ],
+    "updated": "2026-07-18T08:56:25Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-077",
+    "path": "board/TC-077/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Tag-кнопка инжектируется в work-блёрб replay-листинга тогда и только тогда, когда есть личные теги вне AO3-тегов карточки (replay)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:canary",
+      "risk:R-02/R-04"
+    ],
+    "updated": "2026-07-18T08:56:26Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-078",
+    "path": "board/TC-078/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Чекбокс 'Main pairing only' инжектируется в include-фильтр формы Sort&Filter, доступен только при ровно одном выбранном relationship-теге (live)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:canary",
+      "risk:R-02"
+    ],
+    "updated": "2026-07-18T08:56:36Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-079",
+    "path": "board/TC-079/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Чекбокс 'Main pairing only' инжектируется в include-фильтр формы Sort&Filter, доступен только при ровно одном выбранном relationship-теге (replay)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:canary",
+      "risk:R-02"
+    ],
+    "updated": "2026-07-18T08:56:39Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-080",
+    "path": "board/TC-080/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Чекбокс исключения main pairing инжектируется в exclude-фильтр формы Sort&Filter, доступен только при ровно одном выбранном relationship-теге (live)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:canary",
+      "risk:R-02"
+    ],
+    "updated": "2026-07-18T09:15:13Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-081",
+    "path": "board/TC-081/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Чекбокс исключения main pairing инжектируется в exclude-фильтр формы Sort&Filter, доступен только при ровно одном выбранном relationship-теге (replay)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:canary",
+      "risk:R-02"
+    ],
+    "updated": "2026-07-18T09:15:14Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-082",
+    "path": "board/TC-082/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Кнопка 'Save filter' инжектируется рядом с submit формы Sort&Filter и не дублируется при повторных мутациях формы (live)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:canary",
+      "risk:R-02"
+    ],
+    "updated": "2026-07-18T09:15:17Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-083",
+    "path": "board/TC-083/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Кнопка 'Save filter' инжектируется рядом с submit формы Sort&Filter и не дублируется при повторных мутациях формы (replay)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:canary",
+      "risk:R-02"
+    ],
+    "updated": "2026-07-18T09:15:18Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -214,16 +611,17 @@
     "epicPath": null,
     "summary": "Авто-скачивание запускается при простановке Loved с включённым Auto-download",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:downloads",
-      "risk:R-05"
+      "risk:R-05",
+      "automation:active"
     ],
-    "updated": "2026-07-15T14:40:46Z",
-    "resolution": null,
+    "updated": "2026-07-18T05:30:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -236,16 +634,17 @@
     "epicPath": null,
     "summary": "Ручное скачивание работы из Library добавляет локальный файл",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:downloads",
-      "risk:R-05"
+      "risk:R-05",
+      "automation:active"
     ],
-    "updated": "2026-07-15T14:40:52Z",
-    "resolution": null,
+    "updated": "2026-07-18T05:30:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -327,16 +726,17 @@
     "epicPath": null,
     "summary": "Scan for downloads (ручной триггер) показывает диалог результата даже при 0 файлов",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p3",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:downloads",
-      "risk:R-05"
+      "risk:R-05",
+      "automation:active"
     ],
-    "updated": "2026-07-15T14:43:21Z",
-    "resolution": null,
+    "updated": "2026-07-18T05:30:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -395,16 +795,17 @@
     "epicPath": null,
     "summary": "Ошибка загрузки главного фрейма показывает кастомную error page с Retry",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:errors",
-      "risk:R-03 (частично, TECH)"
+      "risk:R-03 (частично, TECH)",
+      "automation:active"
     ],
-    "updated": "2026-07-02T17:31:59Z",
-    "resolution": null,
+    "updated": "2026-07-18T04:59:05Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -439,16 +840,17 @@
     "epicPath": null,
     "summary": "Применение сохранённого фильтр-профиля из панели на листинговой странице",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:filter-profiles",
-      "risk:R-09"
+      "risk:R-09",
+      "automation:active"
     ],
-    "updated": "2026-07-02T17:18:18Z",
-    "resolution": null,
+    "updated": "2026-07-18T06:14:48Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -484,15 +886,16 @@
     "epicPath": null,
     "summary": "Подписи вкладок Library соответствуют фактическому UI",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
-      "area:library"
+      "area:library",
+      "automation:active"
     ],
     "updated": "2026-07-17T15:01:39Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -643,16 +1046,17 @@
     "epicPath": null,
     "summary": "Работы без word_count уходят в конец списка при сортировке Word count",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p3",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:library",
-      "risk:R-06"
+      "risk:R-06",
+      "automation:active"
     ],
     "updated": "2026-07-17T09:30:00Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -665,16 +1069,17 @@
     "epicPath": null,
     "summary": "Фильтр по личным тегам сужает список по AND-семантике (все выбранные теги, не хотя бы один)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:library",
-      "risk:R-06"
+      "risk:R-06",
+      "automation:active"
     ],
     "updated": "2026-07-15T14:41:10Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -687,16 +1092,17 @@
     "epicPath": null,
     "summary": "Свободный текстовый поиск по Library сужает список до совпадений в любом поле",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:library",
-      "risk:R-06"
+      "risk:R-06",
+      "automation:active"
     ],
     "updated": "2026-07-15T14:41:14Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -709,16 +1115,17 @@
     "epicPath": null,
     "summary": "Сортировка Last read (по умолчанию) упорядочивает по недавности обновления рейтинга",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:library",
-      "risk:R-06"
+      "risk:R-06",
+      "automation:active"
     ],
     "updated": "2026-07-15T14:41:19Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -731,16 +1138,17 @@
     "epicPath": null,
     "summary": "Сортировка Word count (low to high) упорядочивает по возрастанию и сбрасывает скролл",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:library",
-      "risk:R-06"
+      "risk:R-06",
+      "automation:active"
     ],
     "updated": "2026-07-15T14:41:24Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -753,16 +1161,17 @@
     "epicPath": null,
     "summary": "Сортировка Author (A–Z) упорядочивает по автору, работы с пустым author уходят в конец",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:library",
-      "risk:R-06"
+      "risk:R-06",
+      "automation:active"
     ],
     "updated": "2026-07-15T14:41:26Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -775,16 +1184,17 @@
     "epicPath": null,
     "summary": "Сортировка Rating (только вкладка Files/Downloads) группирует по рангу рейтинга",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:library",
-      "risk:R-06"
+      "risk:R-06",
+      "automation:active"
     ],
     "updated": "2026-07-15T14:41:27Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -843,16 +1253,17 @@
     "epicPath": null,
     "summary": "Простановка каждого из 5 рейтингов из листинга (Rate-кнопка → bottom-sheet)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:rating",
-      "risk:R-04"
+      "risk:R-04",
+      "automation:active"
     ],
-    "updated": "2026-07-15T14:37:00Z",
-    "resolution": null,
+    "updated": "2026-07-18T10:30:35Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -865,16 +1276,17 @@
     "epicPath": null,
     "summary": "Бейдж на карточке листинга обновляется мгновенно после рейтинга из панели работы (без перезагрузки)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:rating",
-      "risk:R-04"
+      "risk:R-04",
+      "automation:active"
     ],
-    "updated": "2026-07-02T17:32:04Z",
-    "resolution": null,
+    "updated": "2026-07-18T10:30:35Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -887,16 +1299,17 @@
     "epicPath": null,
     "summary": "Бейдж Rate-кнопки на карточке листинга обновляется мгновенно после рейтинга из bottom-sheet (без перезагрузки)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:rating",
-      "risk:R-04"
+      "risk:R-04",
+      "automation:active"
     ],
-    "updated": "2026-07-02T17:32:50Z",
-    "resolution": null,
+    "updated": "2026-07-18T10:30:35Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -909,16 +1322,17 @@
     "epicPath": null,
     "summary": "applyRatings синхронизирует бейдж во всех открытых вхождениях одной работы на странице",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:rating",
-      "risk:R-04"
+      "risk:R-04",
+      "automation:active"
     ],
-    "updated": "2026-07-15T14:42:08Z",
-    "resolution": null,
+    "updated": "2026-07-18T10:30:35Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -931,16 +1345,17 @@
     "epicPath": null,
     "summary": "Comment-only запись (rating=null) не появляется в рейтинговых вкладках и не скрывается фильтрацией",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:rating",
-      "risk:R-10"
+      "risk:R-10",
+      "automation:active"
     ],
-    "updated": "2026-07-15T14:41:46Z",
-    "resolution": null,
+    "updated": "2026-07-18T11:20:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -953,16 +1368,17 @@
     "epicPath": null,
     "summary": "Note-кнопка на листинге открывает overlay с развёрнутым полем комментария",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:rating",
-      "risk:R-10"
+      "risk:R-10",
+      "automation:active"
     ],
-    "updated": "2026-07-15T14:42:01Z",
-    "resolution": null,
+    "updated": "2026-07-18T10:30:35Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -975,16 +1391,17 @@
     "epicPath": null,
     "summary": "Личные теги не влияют на видимость работы независимо от фильтрации",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:rating",
-      "risk:R-10"
+      "risk:R-10",
+      "automation:active"
     ],
-    "updated": "2026-07-15T14:42:14Z",
-    "resolution": null,
+    "updated": "2026-07-18T11:20:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -997,16 +1414,17 @@
     "epicPath": null,
     "summary": "Личный тег, совпадающий с AO3-тегом карточки, подсвечивается на листинге",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p3",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:rating",
-      "risk:R-10"
+      "risk:R-10",
+      "automation:active"
     ],
-    "updated": "2026-07-15T14:43:00Z",
-    "resolution": null,
+    "updated": "2026-07-18T10:30:35Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1019,16 +1437,17 @@
     "epicPath": null,
     "summary": "Clear all ratings показывает диалог подтверждения перед очисткой",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:settings",
-      "risk:R-01"
+      "risk:R-01",
+      "automation:active"
     ],
     "updated": "2026-07-02T17:32:54Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1041,16 +1460,17 @@
     "epicPath": null,
     "summary": "Отмена диалога Clear all ratings не удаляет данные",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:settings",
-      "risk:R-01"
+      "risk:R-01",
+      "automation:active"
     ],
     "updated": "2026-07-02T17:32:59Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1154,16 +1574,17 @@
     "epicPath": null,
     "summary": "System-тема — WebView следует за системной сменой uiMode без in-app toggle",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:settings",
-      "risk:R-11"
+      "risk:R-11",
+      "automation:active"
     ],
     "updated": "2026-07-14T00:00:00Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1289,16 +1710,17 @@
     "epicPath": null,
     "summary": "Достижение лимита MAX_TABS=10 не создаёт 11-ю вкладку",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:tabs",
-      "risk:R-08"
+      "risk:R-08",
+      "automation:active"
     ],
     "updated": "2026-07-02T17:31:06Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1311,16 +1733,17 @@
     "epicPath": null,
     "summary": "Swipe-up закрывает вкладку, Undo из snackbar восстанавливает её на исходной позиции",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:tabs",
-      "risk:R-08"
+      "risk:R-08",
+      "automation:active"
     ],
     "updated": "2026-07-02T17:31:13Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1333,16 +1756,17 @@
     "epicPath": null,
     "summary": "Более 5 закрытых вкладок вытесняют самый старый снапшот из Undo-истории",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p3",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:tabs",
-      "risk:R-08"
+      "risk:R-08",
+      "automation:active"
     ],
     "updated": "2026-07-15T14:43:14Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1355,16 +1779,17 @@
     "epicPath": null,
     "summary": "Персистентность URL и скролла вкладок после рестарта приложения",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:tabs",
-      "risk:R-08"
+      "risk:R-08",
+      "automation:active"
     ],
     "updated": "2026-07-02T17:31:33Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1399,16 +1824,17 @@
     "epicPath": null,
     "summary": "Work с рейтингом Disliked скрыт на листинге при включённой фильтрации",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:visibility",
-      "risk:R-06"
+      "risk:R-06",
+      "automation:active"
     ],
     "updated": "2026-07-15T14:39:53Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1421,16 +1847,17 @@
     "epicPath": null,
     "summary": "Work без рейтинга (или comment-only, rating=null) никогда не скрывается фильтрацией",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:visibility",
-      "risk:R-06"
+      "risk:R-06",
+      "automation:active"
     ],
     "updated": "2026-07-15T14:39:57Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1443,16 +1870,17 @@
     "epicPath": null,
     "summary": "Выключение per-rating тумблера \"Hide Disliked works\" в Settings показывает работы с рейтингом Disliked на листинге",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:visibility",
-      "risk:R-06"
+      "risk:R-06",
+      "automation:active"
     ],
     "updated": "2026-07-17T15:43:20Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1771,7 +2199,7 @@
     "epicPath": null,
     "summary": "TC-047 scroll-preservation assert недобит — WebView scrollY на Browse root не даёт устойчивого ненулевого значения после scrollTo (нужна диагностика)",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -1779,7 +2207,72 @@
       "test_case:TC-047",
       "sev:minor"
     ],
-    "updated": "2026-07-18T02:40:00Z",
+    "updated": "2026-07-18T03:15:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-016",
+    "path": "board/AT-BUG-016/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "TC-040 (Save filter dialog) детерминированно крашит qemu-эмулятор (0xc0000005) при переходе в Settings — реальный live-рендер тяжёлой страницы + недождённая пост-save навигация",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-040",
+      "sev:major"
+    ],
+    "updated": "2026-07-18T05:35:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-017",
+    "path": "board/AT-BUG-017/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "replay-фикстура: интермиттентный net::ERR_PROXY_CONNECTION_FAILED на первой навигации после set_device_proxy — не покрыт rerun-whitelist pytest.ini",
+    "issueType": "bug",
+    "status": "bug-fixed",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:major"
+    ],
+    "updated": "2026-07-18T09:47:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-018",
+    "path": "board/AT-BUG-018/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "long-press по ссылке в WebView не триггерит нативный setOnLongClickListener надёжно через Appium/UiAutomator2 (TC-026, фоновая вкладка)",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-026",
+      "sev:major"
+    ],
+    "updated": "2026-07-18T00:00:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1824,6 +2317,28 @@
       "sev:minor"
     ],
     "updated": "2026-07-15T14:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-012",
+    "path": "board/BUG-012/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-020",
+      "sev:minor"
+    ],
+    "updated": "2026-07-18T12:00:00Z",
     "resolution": null,
     "children": [],
     "archived": false

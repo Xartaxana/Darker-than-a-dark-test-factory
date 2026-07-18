@@ -20,6 +20,8 @@ TO_DARK = "Switch to dark mode"
 TO_LIGHT = "Switch to light mode"
 HOME_DESC = "AO3 home"
 EXPAND_DESC = "Expand panel"
+ENTER_FULLSCREEN = "Enter fullscreen"
+EXIT_FULLSCREEN = "Exit fullscreen"
 
 
 class SidePanel(BaseScreen):
@@ -84,6 +86,20 @@ class SidePanel(BaseScreen):
 
     def tap_home(self):
         self.tap(self.by_desc(HOME_DESC))
+        return self
+
+    # --- Fullscreen (BrowseSidePanel.kt PanelIconButton Fullscreen/FullscreenExit,
+    # TC-058) — та же content-desc-переключаемая иконка, что Contrast: подпись
+    # зависит от isFullscreen ("Enter fullscreen" / "Exit fullscreen"). ---
+    def fullscreen_desc_visible(self, desc: str, timeout: int | None = None) -> bool:
+        return self.is_present(self.by_desc(desc), timeout=timeout or 5)
+
+    def tap_fullscreen(self):
+        # Тот же паттерн, что tap_contrast: кликаем по варианту, что сейчас в дереве.
+        if self.is_present(self.by_desc(ENTER_FULLSCREEN), timeout=2):
+            self.tap(self.by_desc(ENTER_FULLSCREEN))
+        else:
+            self.tap(self.by_desc(EXIT_FULLSCREEN))
         return self
 
     def is_collapsed(self, timeout: int | None = None) -> bool:

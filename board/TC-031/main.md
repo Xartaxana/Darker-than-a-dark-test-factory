@@ -2,12 +2,12 @@
 key: "TC-031"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p3"
 summary: "Работы без word_count уходят в конец списка при сортировке Word count"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:library", "risk:R-06"]
+labels: ["test-case", "area:library", "risk:R-06", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
@@ -16,13 +16,13 @@ epic: null
 created: "2026-07-17T09:30:00Z"
 updated: "2026-07-17T09:30:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Работы без word_count уходят в конец списка при сортировке Word count
 
 _Спроецировано из `test-cases/library/TC-031.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-031 — Граничное значение: work без word_count в сортировке по word count
 

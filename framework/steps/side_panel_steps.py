@@ -4,7 +4,14 @@ from __future__ import annotations
 
 import allure
 
-from framework.screens.side_panel import SidePanel, TO_DARK, TO_LIGHT
+from framework.screens.base_screen import BaseScreen
+from framework.screens.side_panel import (
+    TO_DARK,
+    TO_LIGHT,
+    ENTER_FULLSCREEN,
+    EXIT_FULLSCREEN,
+    SidePanel,
+)
 
 
 @allure.step("When side panel развёрнут")
@@ -71,3 +78,41 @@ def tap_home(driver):
 def assert_collapsed(driver):
     assert SidePanel(driver).is_collapsed(), \
         "side panel должна была свернуться автоматически после нажатия Home"
+
+
+# --- Fullscreen (TC-058) ---
+
+@allure.step("Then side panel показывает иконку Fullscreen «Enter fullscreen» (режим не активен)")
+def assert_fullscreen_icon_enter(driver):
+    assert SidePanel(driver).fullscreen_desc_visible(ENTER_FULLSCREEN), \
+        "ожидали иконку Fullscreen «Enter fullscreen» (fullscreen не активен)"
+
+
+@allure.step("Then side panel показывает иконку Fullscreen «Exit fullscreen» (режим активен)")
+def assert_fullscreen_icon_exit(driver):
+    assert SidePanel(driver).fullscreen_desc_visible(EXIT_FULLSCREEN), \
+        "ожидали иконку Fullscreen «Exit fullscreen» (fullscreen активен)"
+
+
+def _dismiss_fullscreen_system_hint(driver) -> None:
+    """Вход в fullscreen (`WindowInsetsControllerCompat.hide(systemBars())`,
+    MainActivity.kt ~206-213) на первый раз в сессии эмулятора показывает
+    системную образовательную подсказку ("Viewing full screen" / "To exit,
+    swipe down from the top.", кнопка "GOT IT") — НЕ элемент приложения, а
+    системный overlay Android, временно занимающий всё accessibility-дерево
+    (сверено на живом дереве, scripts/ui_snapshot.py: только 3 узла этой
+    подсказки, ни одного узла приложения). Не системный локатор для screens/ —
+    та же ситуация, что "OK"-диалог в saf_steps.py::_dismiss_ok_dialog: разовый
+    чужой (системный) экран, без связи с остальным приложением. Подсказка
+    показывается не на каждом входе (после первого подтверждения на устройстве
+    системе больше нечего показывать) — короткий таймаут, тап только если
+    появилась."""
+    b = BaseScreen(driver)
+    if b.is_present(b.by_text("GOT IT"), timeout=3):
+        b.tap(b.by_text("GOT IT"))
+
+
+@allure.step("When нажата иконка Fullscreen (side panel)")
+def toggle_fullscreen(driver):
+    SidePanel(driver).tap_fullscreen()
+    _dismiss_fullscreen_system_hint(driver)

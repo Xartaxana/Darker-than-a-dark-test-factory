@@ -2,12 +2,12 @@
 key: "TC-019"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p2"
 summary: "Отмена диалога Clear all ratings не удаляет данные"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:settings", "risk:R-01"]
+labels: ["test-case", "area:settings", "risk:R-01", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
@@ -16,13 +16,13 @@ epic: null
 created: "2026-07-02T17:32:59Z"
 updated: "2026-07-02T17:32:59Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Отмена диалога Clear all ratings не удаляет данные
 
 _Спроецировано из `test-cases/settings/TC-019.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-019 — Отмена Clear all ratings сохраняет данные
 
@@ -60,3 +60,16 @@ _Спроецировано из `test-cases/settings/TC-019.md` (источни
 - [x] Then проверяет наблюдаемое поведение, а не реализацию
 - [x] Указаны приоритет, область и источник требования
 - [x] Кейс независим от порядка выполнения других кейсов
+
+## Ревью автотеста
+F1 пройдено (test-reviewer, 2026-07-18). Весь чек-лист зелёный: arch_check 0/0,
+`@allure.id`=TC-019 и `p2`-маркер соответствуют кейсу. Assert проверяет СВОЙСТВО
+«данные сохранены» по ВСЕМ 5 рейтинговым вкладкам (не единичный пример), а не
+только факт закрытия диалога. `seeded_library` сидит ДО сессии Appium.
+Зелёный прогон: `Invoke-Pytest -k test_cancel_clear_all_dialog_keeps_data`
+— passed (в батче 3 passed / 149s).
+Красная проба (2026-07-18T13:20:00Z): порча — `cancel_dialog` временно тапал
+«Clear all» вместо «Cancel» (подтверждение вместо отмены, уровень шага), прогон
+упал содержательно на `assert_work_in_tab` — «Работа "A Loved Test Work" не
+найдена во вкладке FAVORITE» (данные реально удалены подтверждением); порча
+откачена точечным Edit, дифф чист.

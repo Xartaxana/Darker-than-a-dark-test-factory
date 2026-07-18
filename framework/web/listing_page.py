@@ -42,3 +42,45 @@ class ListingPage(BasePage):
         работы — клик по ней открывает нативный `RatingOverlay` (bottom-sheet)."""
         blurb = selectors.blurb_by_work_id(work_id)
         return self.wait_css(f"{blurb} {selectors.RATE_BUTTON}")
+
+    def note_button(self, work_id: str):
+        """Инжектированная Note-кнопка (карандаш, `ao3_bridge.js::makeNoteButton`) —
+        рендерится только при непустом `comment`. ВНИМАНИЕ: клик по НЕЙ лишь
+        показывает всплывающую подсказку с текстом заметки (`showTooltip`), не
+        открывает overlay напрямую — см. `note_tooltip` (TC-044)."""
+        blurb = selectors.blurb_by_work_id(work_id)
+        return self.wait_css(f"{blurb} {selectors.NOTE_BUTTON}")
+
+    def note_tooltip(self):
+        """Всплывающая подсказка Note-кнопки — клик по НЕЙ (не по самой кнопке)
+        вызывает `signalRateWithNote`, открывающий нативный overlay с развёрнутым
+        комментарием (см. `note_button`, TC-044)."""
+        return self.wait_css(selectors.NOTE_TOOLTIP)
+
+    def rated_button_count(self, work_id: str) -> int:
+        """Количество Rate-кнопок среди ВСЕХ вхождений блёрба `work_id` на странице
+        (может быть >1 — TC-012, `listing_duplicate_work.mitm`), у которых бейдж уже
+        проставлен (непрозрачный фон, см. `badge_for`). Доказывает, что `applyRatings`
+        обновляет ВСЕ вхождения, не только первое найденное querySelector'ом."""
+        blurb = selectors.blurb_by_work_id(work_id)
+        els = self.css_all(f"{blurb} {selectors.RATE_BUTTON}")
+        count = 0
+        for el in els:
+            bg = el.value_of_css_property("background-color")
+            if bg not in ("", "transparent", "rgba(0, 0, 0, 0)"):
+                count += 1
+        return count
+
+    def tag_link_highlighted(self, work_id: str, tag_text: str) -> bool:
+        """`a.tag` внутри блёрба работы `work_id` с точным текстом `tag_text` —
+        читает атрибут `data-ao3-tag-hl`, проставляемый `highlightWorkTags`
+        (ao3_bridge.js) только реально совпавшим личным тегам (TC-056). Возвращает
+        False и если тег с таким текстом вообще не найден на карточке (структурная
+        ошибка локатора неотличима здесь от "не подсвечен" — вызывающий код TC-056
+        сначала проверяет ПОЛОЖИТЕЛЬНЫЙ случай, что исключает эту двусмысленность
+        для отрицательных проверок в том же тесте)."""
+        blurb = selectors.blurb_by_work_id(work_id)
+        for el in self.css_all(f"{blurb} a.tag"):
+            if el.text.strip() == tag_text:
+                return el.get_attribute("data-ao3-tag-hl") is not None
+        return False

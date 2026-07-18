@@ -27,6 +27,33 @@ class BrowserScreen(BaseScreen):
             )
         return url
 
+    def wait_home_page_loaded(self, timeout: int | None = None) -> None:
+        """Ждёт, пока `onPageFinished` РЕАЛЬНО завершится для домашней страницы —
+        не просто её navigation-commit (см. `wait_ao3_loaded`/`current_url` выше,
+        который может отразить URL раньше, чем `onPageFinished` успеет выполниться:
+        current_url — свойство навигационной записи chromedriver, обновляется на
+        commit, а не на полную загрузку).
+
+        Опрашивает JS-маркер `window.__ao3AppDark` — `BrowserScreen.kt onPageFinished`
+        (app-under-test, ~594-600) вызывает `viewModel.onPageLoaded(tabId, url)`
+        СИНХРОННО (обновляет `tabs[0].url` в StateFlow) НЕПОСРЕДСТВЕННО ПЕРЕД тем,
+        как инжектит `window.__ao3AppDark = ...` тем же колбэком — появление маркера
+        в DOM детерминированно доказывает, что `onPageLoaded` уже отработал и
+        `tabs[0].url` уже разошёлся с плейсхолдером `HOME_URL`.
+
+        Закрывает класс гонки TC-022/023/024/025 (ревью 2026-07-18, п.5): без этого
+        первый `open_deep_link` после `wait_ui_ready`/`wait_ao3_loaded` мог обогнать
+        `onPageLoaded`, и `BrowserViewModel.openOrNavigateDeepLink` (kt:637-644) шёл
+        веткой navigate-in-place (`state.tabs[0].url == HOME_URL`) вместо добавления
+        вкладки, что портило счёт/позиции вкладок во всех 4 сценариях по-разному."""
+        with contexts.in_webview(self.driver, timeout) as _:
+            wait_until(
+                self.driver,
+                lambda d: d.execute_script("return typeof window.__ao3AppDark !== 'undefined'"),
+                timeout=timeout,
+                message="домашняя страница AO3 не завершила загрузку (onPageFinished/window.__ao3AppDark не появился)",
+            )
+
     def open_work(self, work_id: str) -> None:
         """Навигация WebView на страницу работы. В live — реальный переход по URL AO3.
         (Используется точечно; основной P0-smoke опирается на сидинг данных, чтобы
@@ -67,6 +94,40 @@ class BrowserScreen(BaseScreen):
             return
         leftmost = min(buttons, key=lambda e: e.rect["x"])
         leftmost.click()
+
+    # --- TabStrip (ui/browser/TabStrip.kt) — рендерится только когда
+    # !isFullscreen && tabs.size > 1 (MainActivity.kt ~406, TC-058). "New tab"
+    # content-desc иконка — стабильный признак присутствия полосы, НЕ завязанный
+    # на динамические заголовки чипов вкладок, но НАДЁЖЕН только ДО первого
+    # полного цикла вход+выход fullscreen (см. `top_chrome_avg_luma` ниже).
+    def is_tab_strip_visible(self, timeout: int | None = None) -> bool:
+        return self.is_present(self.by_desc("New tab"), timeout=timeout if timeout is not None else 5)
+
+    def top_chrome_avg_luma(self) -> float:
+        """Средняя яркость (0..255) полосы у самого верха экрана (правее side panel,
+        верхние ~12% высоты) — прокси видимости TabStrip/статус-бара через ПИКСЕЛИ,
+        не accessibility-дерево (TC-058, диагностировано 2026-07-18 на живом дереве
+        и скриншотах): `WindowInsetsControllerCompat.hide()`+`.show(systemBars())`
+        (полный цикл вход+выход fullscreen, MainActivity.kt ~206-213) оставляет
+        accessibility-провайдер WebView в состоянии, где ВСЕ соседние Compose-узлы
+        вне side panel (TabStrip, BottomNav) перестают отдаваться в UiAutomator2-
+        дерево — `is_tab_strip_visible`/поиск "Library" в BottomNav после этого
+        стабильно не находят СУЩЕСТВУЮЩИЕ (визуально отрисованные, подтверждено
+        скриншотом) элементы. Похоже на известный класс WebView-accessibility-
+        багов при resize/reflow, НЕ связанный с самим TabStrip кодом — вне скоупа
+        правки app-under-test. TabStrip.kt красит светлый Surface-фон в этой
+        полосе (mean luma ~230 на emulator-5554); в fullscreen эта же полоса —
+        чёрный статус-бар/тёмный верх WebView-контента (mean luma ~85) — разница
+        измерена эмпирически (baseline≈234, fullscreen≈86, после выхода≈174),
+        достаточна для ratio-порога относительно baseline того же прогона."""
+        size = self.driver.get_window_size()
+        png = self.driver.get_screenshot_as_png()
+        img = Image.open(io.BytesIO(png)).convert("L")
+        box = (int(size["width"] * 0.2), 0, size["width"], int(size["height"] * 0.12))
+        cropped = img.crop(box)
+        hist = cropped.histogram()
+        total = sum(hist)
+        return sum(i * c for i, c in enumerate(hist)) / total
 
     # --- Двухпальцевые жесты над контентом (BrowserScreen.kt pointerInput ~255–312) ---
     # UiAutomator2 различает "font" (span меняется, пальцы движутся врозь по диагонали
@@ -156,6 +217,148 @@ class BrowserScreen(BaseScreen):
 
     def filter_dropdown_has_option(self, name: str, timeout: int | None = None) -> bool:
         return self.is_present(self.by_text(name), timeout=timeout if timeout is not None else 5)
+
+    def select_filter_option(self, name: str, timeout: int | None = None) -> None:
+        """Тап по пункту `name` в РАСКРЫТОЙ выпадашке (`AppDropdownMenu` —
+        `.clickable { onSelect(option); onDismissRequest() }`, BottomBar.kt) — сама
+        закрывается после выбора, отдельного закрытия не требуется. TC-041."""
+        contexts.to_native(self.driver)
+        self.tap(self.by_text(name), timeout=timeout)
+
+    # --- Save filter dialog (MainActivity.kt AlertDialog "Save filter") — TC-040 ---
+    _FILTER_NAME_FIELD = (AppiumBy.ANDROID_UIAUTOMATOR,
+                          'new UiSelector().className("android.widget.EditText")')
+
+    def save_filter_dialog_visible(self, timeout: int | None = None) -> bool:
+        contexts.to_native(self.driver)
+        return self.is_present(self.by_text("Save filter"), timeout=timeout if timeout is not None else 10)
+
+    def enter_filter_profile_name(self, name: str) -> None:
+        """Поле предзаполнено авто-сгенерированным именем (`pendingSaveFilterName`,
+        `generateProfileName` в BrowserViewModel.kt) — `.clear()` обязателен перед
+        вводом своего имени, иначе оно допишется к сгенерированному."""
+        contexts.to_native(self.driver)
+        field = self.find(self._FILTER_NAME_FIELD)
+        field.clear()
+        field.send_keys(name)
+
+    def confirm_save_filter(self) -> None:
+        contexts.to_native(self.driver)
+        self.tap(self.by_text("Save"))
+
+    # --- TabStrip управление вкладками (TabStrip.kt, MainActivity.kt) — TC-022/023/
+    # 024/025/026. "New tab"/"Close tab" content-desc уже используются выше
+    # (`is_tab_strip_visible`/`_CLOSE_TAB_LOCATOR`); методы ниже добавляют навигацию
+    # по КОНКРЕТНОЙ вкладке и диалог лимита.
+    #
+    # ВАЖНО (разведка TC-023/024/025/026, 2026-07-18): при >1 одновременно живых
+    # `android.webkit.WebView` (background-вкладки НЕ уничтожаются, просто отсоединены
+    # от FrameLayout — см. BrowserScreen.kt activeContainer-свап) Appium/chromedriver
+    # экспонирует РОВНО ОДИН контекст `WEBVIEW_<pkg>` вне зависимости от числа вкладок
+    # и он ПРИЛИПАЕТ к вкладке-0 (первый когда-либо созданный WebView) — ни
+    # переключение активной вкладки в UI, ни повторный `switch_to.context()` не
+    # переключают его на другую вкладку, пока вкладка-0 жива (эмпирически проверено:
+    # `driver.current_url`/`driver.get()`/`execute_script` внутри `contexts.in_webview`
+    # ВСЕГДА бьют по вкладке-0). Единственный способ читать/писать WebView-контент
+    # НЕ-нулевой вкладки — временно свести число вкладок к одной (закрыть остальные):
+    # уничтожение текущей ПРИЛИПШЕЙ цели форсирует chromedriver переподключиться к
+    # единственной оставшейся (тоже подтверждено эмпирически). НАТИВНЫЕ жесты (тап,
+    # свайп) этому классу не подвержены — они бьют по физически видимому View
+    # (activeContainer), поэтому переключение вкладок/скролл активной вкладки надёжны
+    # нативными жестами; для контента НЕ-активной/НЕ-нулевой вкладки — только через
+    # НАТИВНО видимый заголовок чипа (`TabInfo.title`, TabStrip.kt Text) — WebChromeClient.
+    # onReceivedTitle отражается в аксессибилити-дереве без похода в WEBVIEW-контекст.
+    NEW_TAB_DESC = "New tab"
+    CLOSE_TAB_DESC = "Close tab"
+    TAB_LIMIT_TITLE = "Tab limit reached"
+
+    def tap_new_tab(self) -> None:
+        self.tap(self.by_desc(self.NEW_TAB_DESC))
+
+    def tab_chip_locator(self, position: int):
+        """Локатор родительского Row чипа по 0-based document-order позиции среди
+        ТЕКУЩЕ СКОМПОНОВАННЫХ (не виртуализированных LazyRow за пределами вьюпорта)
+        чипов — надёжно для малого числа вкладок (в этой кодовой базе — до ~7,
+        см. заметки TC-024.md); родитель через `/..` — тот же паттерн, что
+        `side_panel.py::_button_container` (клик должен попасть в тело чипа, не в
+        14dp иконку закрытия, которая сама кликабельна и переопределяет тап по себе)."""
+        return (AppiumBy.XPATH, f'(//*[@content-desc="{self.CLOSE_TAB_DESC}"])[{position + 1}]/..')
+
+    def tap_tab_chip(self, position: int, timeout: int | None = None) -> None:
+        self.tap(self.tab_chip_locator(position), timeout=timeout)
+
+    def tab_chip_title_at(self, position: int, timeout: int | None = None) -> str:
+        """Текст Text-узла чипа на 0-based document-order позиции — Compose кладёт
+        Text ПЕРЕД Icon(desc="Close tab") в том же Row (TabStrip.kt `TabChip`),
+        поэтому `preceding-sibling::*[1]` от иконки закрытия — сам заголовок этого
+        чипа. Используется для позиционной проверки (TC-023: восстановленная Undo
+        вкладка должна оказаться РОВНО на позиции 1, между исходными соседями) без
+        похода в WEBVIEW-контекст (см. докстринг класса выше)."""
+        locator = (AppiumBy.XPATH,
+                   f'(//*[@content-desc="{self.CLOSE_TAB_DESC}"])[{position + 1}]/preceding-sibling::*[1]')
+        return self.text_of(locator, timeout=timeout)
+
+    def close_tab_icon_count(self) -> int:
+        return len(self.driver.find_elements(*self.by_desc(self.CLOSE_TAB_DESC)))
+
+    def swipe_close_tab(self, position: int) -> None:
+        """Swipe-up по чипу (TabStrip.kt `TabChip` swipeModifier: `totalDrag < -60f`
+        триггерит `onClose`) — жест по конкретному элементу, амплитуда с запасом
+        над порогом."""
+        chip = self.find(self.tab_chip_locator(position))
+        rect = chip.rect
+        x = rect["x"] + rect["width"] // 2
+        y = rect["y"] + rect["height"] // 2
+        self.driver.swipe(x, y, x, max(0, y - 300), 300)
+
+    def tab_limit_dialog_visible(self, timeout: int | None = None) -> bool:
+        return self.is_present(self.by_text(self.TAB_LIMIT_TITLE), timeout=timeout if timeout is not None else 5)
+
+    def tab_limit_dialog_message(self, timeout: int | None = None) -> str:
+        return self.text_of(self.by_text_contains("tabs open"), timeout)
+
+    def dismiss_tab_limit_dialog(self) -> None:
+        self.tap(self.by_text("OK"))
+
+    TAB_CLOSED_SNACKBAR_TEXT = "Tab closed"
+
+    def undo_snackbar_visible(self, timeout: int = 5) -> bool:
+        return self.is_present(self.by_text_contains("Undo"), timeout=timeout)
+
+    def tap_undo_snackbar(self, timeout: int | None = None) -> None:
+        self.tap(self.by_text_contains("Undo"), timeout=timeout)
+
+    def swipe_dismiss_snackbar(self, timeout: int | None = None) -> None:
+        """Смахивает snackbar «Tab closed» горизонтально (Material3 `SnackbarHost`
+        поддерживает swipe-to-dismiss) — используется, когда СЛЕДУЮЩЕЕ закрытие
+        вкладки должно случиться СРАЗУ, не дожидаясь `SnackbarDuration.Short`
+        (~4с): `SnackbarHostState.showSnackbar` (MainActivity.kt `onCloseTab`)
+        сериализует показы через `Mutex` — 6 закрытий подряд БЕЗ явного
+        закрытия/смахивания snackbar'а каждого предыдущего закрытия оставляют
+        часть snackbar'ов недостижимыми в разумное время автотеста (TC-024,
+        разведка 2026-07-18)."""
+        el = self.find(self.by_text(self.TAB_CLOSED_SNACKBAR_TEXT), timeout)
+        rect = el.rect
+        y = rect["y"] + rect["height"] // 2
+        x1 = rect["x"] + rect["width"] - 20
+        x2 = rect["x"] + 5
+        self.driver.swipe(x1, y, x2, y, 250)
+
+    def tab_title_visible(self, title_substring: str, timeout: int | None = None) -> bool:
+        return self.is_present(self.by_text_contains(title_substring), timeout=timeout if timeout is not None else 5)
+
+    def swipe_scroll_active_tab_down(self, distance_px: int = 1400) -> None:
+        """Нативный свайп вверх по видимой WebView-области — реальный физический
+        скролл активной вкладки (в отличие от JS `scrollTo`, не подвержен
+        прилипанию chromedriver к вкладке-0, см. докстринг выше): бьёт по физически
+        отображаемому View, а не по WEBVIEW-контексту."""
+        contexts.to_native(self.driver)
+        wv = self.driver.find_element(AppiumBy.CLASS_NAME, "android.webkit.WebView")
+        rect = wv.rect
+        x = rect["x"] + rect["width"] // 2
+        y_start = rect["y"] + int(rect["height"] * 0.75)
+        y_end = max(rect["y"] + 50, y_start - distance_px)
+        self.driver.swipe(x, y_start, x, y_end, 400)
 
     def webview_avg_luma(self) -> float:
         """Средняя яркость (0..255) области экрана, занятой нативным WebView-элементом —

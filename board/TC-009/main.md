@@ -2,27 +2,27 @@
 key: "TC-009"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p0"
 summary: "Простановка каждого из 5 рейтингов из листинга (Rate-кнопка → bottom-sheet)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:rating", "risk:R-04"]
+labels: ["test-case", "area:rating", "risk:R-04", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-15T14:37:00Z"
-updated: "2026-07-15T14:37:00Z"
+created: "2026-07-18T10:30:35Z"
+updated: "2026-07-18T10:30:35Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Простановка каждого из 5 рейтингов из листинга (Rate-кнопка → bottom-sheet)
 
 _Спроецировано из `test-cases/rating/TC-009.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-009 — Пять рейтингов из листинга
 

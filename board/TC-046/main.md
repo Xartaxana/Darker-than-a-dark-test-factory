@@ -2,27 +2,27 @@
 key: "TC-046"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p2"
 summary: "Ошибка загрузки главного фрейма показывает кастомную error page с Retry"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:errors", "risk:R-03 (частично, TECH)"]
+labels: ["test-case", "area:errors", "risk:R-03 (частично, TECH)", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-02T17:31:59Z"
-updated: "2026-07-02T17:31:59Z"
+created: "2026-07-18T04:59:05Z"
+updated: "2026-07-18T04:59:05Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Ошибка загрузки главного фрейма показывает кастомную error page с Retry
 
 _Спроецировано из `test-cases/errors/TC-046.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-046 — Кастомная error page с Retry при ошибке загрузки
 
@@ -73,3 +73,44 @@ URL
 - [x] Then проверяет наблюдаемое поведение, а не реализацию
 - [x] Указаны приоритет, область и источник требования
 - [x] Кейс независим от порядка выполнения других кейсов
+
+## Ревью автотеста
+
+F1-ревью пройдено (Approved → Automated), 2026-07-18. Весь чек-лист:
+
+- **Архитектура (C1):** `python scripts/arch_check.py` — 0 ошибок, 0 предупреждений.
+  Локаторы в `web/selectors.py`+`web/error_page.py`, шаги в `steps/browser_steps.py`,
+  ожидания через `core/waits.wait_until`, ни одного `sleep`. Тест не в ALLOWLIST.
+- **Traceability:** `@allure.id("TC-046")` == id кейса; `@pytest.mark.p2`
+  соответствует priority P2 (маркер зарегистрирован в `framework/pytest.ini:16`);
+  `@pytest.mark.live` обоснован (зависимость только от успешной начальной загрузки
+  home); `automated_by` указывает на существующую функцию.
+- **Соответствие по смыслу:** assert'ы проверяют СУТЬ Then кейса, не «элемент
+  существует» — кастомный заголовок `"Couldn't load this page"` (сверено с
+  `BrowserScreen.kt:472` app-under-test, отличает от дефолтной страницы
+  Chrome/WebView), `current_url == about:blank` (страница вне истории навигации,
+  `loadDataWithBaseURL` base URL), Retry-`href` == исходный упавший URL, и повтор
+  error page после клика Retry. GWT реализован полностью. Строки `Инвариант:` в
+  кейсе нет; область НЕ комбинаторная (единичное поведение error page), инвариант
+  не требуется.
+- **Фикстуры/данные:** `clean_app` (pm clear) до создания Appium-сессии `driver`
+  (порядок аргументов), сидинг не нужен, зависимости от порядка/других тестов нет.
+- **Flake-риск:** ожидания явные; Retry-навигация детектируется через staleness
+  старого WebElement (`_is_stale`), не гонка с анимацией; `net::ERR*` гасится
+  прицельно (иная причина падения `get()` пробрасывается); `.test` TLD даёт
+  детерминированный `ERR_NAME_NOT_RESOLVED` (NXDOMAIN) — легитимная замена
+  mitmproxy/офлайн из заметки кейса (URL из «Проверяемых данных», fail-closed).
+- **Независимое воспроизведение (зелёный):** `Invoke-Pytest -k
+  test_main_frame_load_error_shows_custom_error_page_with_retry` → 1 passed за
+  21.74s (emulator-5554).
+- **Красная проба (п.7, 2026-07-18T04:59:05Z):** порча на уровне входных данных —
+  `open_unreachable_url` временно наведён на РАСХОДЯЩИЙСЯ URL
+  (`https://divergent.invalid.test/`) при неизменном ожидаемом `expected_url`
+  (`UNREACHABLE_URL`), чем нарушен проверяемый инвариант «Retry ведёт на ТОТ ЖЕ
+  упавший URL». Команда: `Invoke-Pytest -k
+  test_main_frame_load_error_shows_custom_error_page_with_retry`. Результат: 1
+  failed за 20.65s, осмысленный `AssertionError: Retry-ссылка ведёт не на исходный
+  упавший URL: 'https://divergent.invalid.test/' != 'https://nonexistent.invalid.test/'`
+  (`browser_steps.py:423`), не таймаут-мусор — тест УМЕЕТ падать по сути ожидаемого.
+  Порча откачена точечным Edit в том же ходе (строка 376 = `UNREACHABLE_URL`),
+  остаточных следов нет.

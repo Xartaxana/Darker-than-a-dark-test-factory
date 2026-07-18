@@ -2,12 +2,12 @@
 key: "TC-065"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p1"
 summary: "Сортировка Rating (только вкладка Files/Downloads) группирует по рангу рейтинга"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:library", "risk:R-06"]
+labels: ["test-case", "area:library", "risk:R-06", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
@@ -16,13 +16,13 @@ epic: null
 created: "2026-07-15T14:41:27Z"
 updated: "2026-07-15T14:41:27Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Сортировка Rating (только вкладка Files/Downloads) группирует по рангу рейтинга
 
 _Спроецировано из `test-cases/library/TC-065.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-065 — Сортировка Rating на вкладке Files группирует скачанные работы по рангу
 

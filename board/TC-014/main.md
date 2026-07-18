@@ -2,12 +2,12 @@
 key: "TC-014"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p0"
 summary: "Work без рейтинга (или comment-only, rating=null) никогда не скрывается фильтрацией"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:visibility", "risk:R-06"]
+labels: ["test-case", "area:visibility", "risk:R-06", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
@@ -16,15 +16,34 @@ epic: null
 created: "2026-07-15T14:39:57Z"
 updated: "2026-07-15T14:39:57Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Work без рейтинга (или comment-only, rating=null) никогда не скрывается фильтрацией
 
 _Спроецировано из `test-cases/visibility/TC-014.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-014 — Work без рейтинга / comment-only не скрывается
+
+## Ревью автотеста (test-reviewer, 2026-07-18)
+
+**Вердикт: пройдено** (Approved→Automated, весь чек-лист F1).
+- Архитектура (`arch_check.py`): 0 ошибок / 0 предупреждений.
+- Traceability: `@allure.id("TC-014")` == id, маркер `p0` == P0, `automated_by` →
+  существующая `test_no_rating_or_comment_only_never_hidden`.
+- Инвариант (C4): свойство проверено на ДВУХ представителях негатива —
+  работа A (LOVED, строки `WorkRating` нет вовсе) и работа B
+  (`comment_only_work`, `rating=NULL` + непустой comment), обе видимы; не единичный
+  пример.
+- Фикстуры: сидинг `comment_only_work` до Appium-сессии (порядок
+  `replay, comment_only_work, driver`), `clean_state`, независимость.
+- Зелёный прогон: `test_no_rating_or_comment_only_never_hidden[listing_basic.mitm]`
+  PASSED (батч 3/3).
+- Красная проба: порча ДАННЫХ — `comment_only_work` засеян `rating=DISLIKE`
+  (внутри hidden-set) вместо `NULL`; тест УПАЛ на сути (`assert_blurb_visible`:
+  «работа 900000002 должна быть видна, но скрыта фильтрацией»). Порча откачена
+  точечным Edit, дифф чист.
 
 ## Предусловия
 - Приложение запущено с чистыми данными (работа A — вообще без строки `WorkRating`).

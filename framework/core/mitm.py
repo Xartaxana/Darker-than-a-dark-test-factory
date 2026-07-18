@@ -133,6 +133,57 @@ def start_replay(flows_file: Path) -> None:
     _wait_listening(int(_PORT), _READY_TIMEOUT)
 
 
+def wait_device_proxy_reachable(timeout: float | None = None) -> None:
+    """AT-BUG-017: `_wait_listening` (см. выше) проверяет ГОТОВНОСТЬ mitmdump
+    только на ХОСТ-порту — недостаточно. `replay`-фикстура зовёт
+    `set_device_proxy()`, затем `start_replay()` (блокируется до хост-порта),
+    но первая реальная навигация теста иногда всё равно ловит
+    `net::ERR_PROXY_CONNECTION_FAILED` в `driver.get()` — похоже на race
+    NAT-уровня qemu (проброс порта/ARP) или задержку применения системной
+    настройки прокси Android'ом относительно момента, когда WebView реально
+    открывает TCP-соединение. Эта проверка закрывает шов СО СТОРОНЫ
+    УСТРОЙСТВА: поллит TCP-достижимость `settings.PROXY_HOST_ALIAS` через
+    `adb shell nc` (toybox, есть на стандартном AVD-образе — проверено вручную
+    на emulator-5554) — пустой stdin, `-w1` таймаут установления соединения,
+    `-q1` не ждать данных сверх EOF (нам важен только факт TCP-коннекта, не
+    ответ прокси). Короткий поллинг с конечным таймаутом
+    (`settings.PROXY_DEVICE_REACHABLE_TIMEOUT`, тот же паттерн, что
+    `adb._wait_package_service_ready`, AT-BUG-013) — исчерпание даёт явную
+    `TimeoutError` с контекстом, не молчаливый клин; счастливый путь обычно
+    возвращается с первой попытки (mitmdump к этому моменту уже подтверждённо
+    слушает хост-порт), ноль лишней задержки."""
+    host, _, port = settings.PROXY_HOST_ALIAS.partition(":")
+    effective_timeout = (
+        settings.PROXY_DEVICE_REACHABLE_TIMEOUT if timeout is None else timeout
+    )
+    marker = "AO3_PROXY_REACHABLE"
+    cmd = [
+        settings.ADB, "shell",
+        f"echo -n | nc -w 1 -q 1 {host} {port} && echo {marker} || echo NOPE",
+    ]
+    deadline = time.time() + effective_timeout
+    attempts = 0
+    while True:
+        attempts += 1
+        try:
+            cp = subprocess.run(
+                cmd, capture_output=True, text=True,
+                timeout=settings.ADB_SHELL_TIMEOUT,
+            )
+        except subprocess.TimeoutExpired:
+            cp = None
+        if cp is not None and marker in cp.stdout:
+            return
+        if time.time() >= deadline:
+            raise TimeoutError(
+                f"прокси {settings.PROXY_HOST_ALIAS} не достижим со стороны "
+                f"устройства за {effective_timeout}s ({attempts} попыток) — "
+                "AT-BUG-017: mitmdump слушает хост-порт, но устройство пока "
+                "не может до него достучаться (race NAT/применения настройки)."
+            )
+        time.sleep(0.3)
+
+
 def start_record(flows_file: Path) -> None:
     """Поднимает mitmdump на запись трафика в flows_file."""
     global _proc
