@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-17T23:17:18Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-18T00:50:46Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -45,8 +45,13 @@ generated_at: 2026-07-17T23:17:18Z · генератор: `scripts/coverage_map.
 
 | Фича | Экран | Кейсы |
 |---|---|---|
-| browse-tabs-lifecycle | browse | tabs:TC-022[Approved], tabs:TC-023[Approved], tabs:TC-024[Approved], tabs:TC-025[Approved], tabs:TC-026[Approved] |
-| browse-deep-links | browse | нет кейсов |
+| browse-tab-limit-max | browse | tabs:TC-022[Approved] |
+| browse-tab-close-undo | browse | tabs:TC-023[Approved] |
+| browse-tab-undo-history-limit | browse | tabs:TC-024[Approved] |
+| browse-tab-list-persistence | browse | tabs:TC-025[Approved] |
+| browse-tab-open-background-link | browse | tabs:TC-026[Approved] |
+| browse-deep-link-new-tab | browse | нет кейсов |
+| browse-deep-link-reuse-home-tab | browse | нет кейсов |
 | browse-scroll-restore | browse | tabs:TC-025[Approved] |
 | browse-infinite-scroll | browse | нет кейсов |
 | browse-tap-to-scroll | browse | нет кейсов |
@@ -61,7 +66,8 @@ generated_at: 2026-07-17T23:17:18Z · генератор: `scripts/coverage_map.
 | sidepanel-font-size | side-panel | browser:TC-051[Automated], browser:TC-052[Automated] |
 | sidepanel-fullscreen-toggle | side-panel | browser:TC-058[Approved] |
 | sidepanel-rating-filters | side-panel | нет кейсов |
-| sidepanel-settings-sync | side-panel | browser:TC-054[Automated] |
+| sidepanel-settings-sync-theme-font | side-panel | browser:TC-054[Automated] |
+| sidepanel-settings-sync-hidden-ratings | side-panel | нет кейсов |
 | library-tabs-six | library | smoke:TC-003[Automated], library:TC-006[Approved], library:TC-016[Automated], library:TC-017[Automated], rating:TC-043[Approved] |
 | library-filter-wordcount | library | library:TC-027[Automated] |
 | library-filter-fandom | library | library:TC-029[Automated] |
@@ -105,8 +111,10 @@ generated_at: 2026-07-17T23:17:18Z · генератор: `scripts/coverage_map.
 | browse-initial-load | browse | smoke:TC-001[Automated] |
 | rating-overlay-five-options | rating-notes | rating:TC-007[Automated], rating:TC-009[Approved] |
 | rating-deselect-on-tap | rating-notes | rating:TC-008[Automated] |
-| rating-comment-field | rating-notes | нет кейсов |
-| rating-tags-chips | rating-notes | нет кейсов |
+| rating-comment-save | rating-notes | нет кейсов |
+| rating-comment-clear | rating-notes | нет кейсов |
+| rating-tags-chip-add | rating-notes | нет кейсов |
+| rating-tags-chip-remove | rating-notes | нет кейсов |
 | rating-entry-work-panel | rating-notes | rating:TC-007[Automated], rating:TC-008[Automated], rating:TC-010[Approved] |
 | rating-entry-listing-overlay | rating-notes | rating:TC-009[Approved], rating:TC-011[Approved] |
 | rating-note-button-listing | rating-notes | rating:TC-044[Approved] |
@@ -126,13 +134,15 @@ generated_at: 2026-07-17T23:17:18Z · генератор: `scripts/coverage_map.
 
 ## Фичи без единого кейса
 
-- browse-deep-links (browse): Deep link (intent data) открывает/переключает вкладку на URL
+- browse-deep-link-new-tab (browse): Deep link открывает URL в НОВОЙ вкладке, если уже есть вкладки помимо одинокой AO3 root
+- browse-deep-link-reuse-home-tab (browse): Deep link переиспользует единственную вкладку на AO3 root (HOME_URL), навигируя её на URL вместо создания новой
 - browse-infinite-scroll (browse): Бесконечная подгрузка следующих страниц листинга при скролле
 - browse-tap-to-scroll (browse): Тап по верхней/нижней трети страницы работы скроллит вверх/вниз
 - browse-tap-fullscreen (browse): Тап по средней трети страницы работы переключает fullscreen (toggleFullscreen)
 - browse-bridge-injection (browse): Инжекция ao3_bridge.js в каждую загруженную AO3-страницу (onPageFinished)
 - browse-tabstrip-indicators (browse): TabStrip: индикация активной вкладки, закрытие свайпом вверх, кнопка New tab
 - sidepanel-rating-filters (side-panel): Чекбоксы скрытия рейтингов (hidden ratings) в side panel
+- sidepanel-settings-sync-hidden-ratings (side-panel): Side panel отражает состояние скрытых рейтингов (hidden ratings), синхронизированное с Settings
 - library-card-open-work (library): Тап по телу карточки Library открывает работу (URL) в браузерной вкладке
 - library-card-comment-tags (library): Индикатор комментария (note-иконка) и личных тегов на карточке
 - settings-font-slider (settings): Слайдер размера шрифта (7 ступеней, 100–190%)
@@ -144,8 +154,10 @@ generated_at: 2026-07-17T23:17:18Z · генератор: `scripts/coverage_map.
 - settings-auto-download-favorite (settings): Тумблер авто-скачивания HTML при рейтинге Favorite (SAVE)
 - settings-filter-profiles-list (settings): Список сохранённых AO3-фильтр-профилей
 - settings-filter-profiles-rename (settings): Переименование фильтр-профиля
-- rating-comment-field (rating-notes): Поле комментария: добавить/изменить/очистить (Save note / Clear note)
-- rating-tags-chips (rating-notes): Chip-теги: добавление (suggested/custom) и удаление
+- rating-comment-save (rating-notes): Поле комментария: ввод и сохранение текста кнопкой Save note (добавление или правка существующего)
+- rating-comment-clear (rating-notes): Кнопка Clear note очищает текст комментария работы
+- rating-tags-chip-add (rating-notes): Добавление тега (suggested-чип или свободный ввод) к работе
+- rating-tags-chip-remove (rating-notes): Удаление тега тапом по уже выбранному чипу
 - bridge-rate-note-tag-buttons (ao3-bridge): Инжекция Rate/Note/Tag-индикаторов в карточки листинга AO3
 - bridge-dim-filter (ao3-bridge): dim-фильтрация: карточка со скрытым рейтингом остаётся видимой, но затемнена (mode='dim', opacity 0.3)
 - bridge-main-pairing-filter (ao3-bridge): Чекбокс 'Main pairing only' в форме include-фильтра AO3 (Sort & Filter)

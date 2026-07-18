@@ -68,6 +68,54 @@ def assert_webview_darkened(driver, baseline: float, ratio: float = 0.7, timeout
     )
 
 
+@allure.step("Then содержимое WebView заметно посветлело относительно тёмного baseline")
+def assert_webview_lightened(driver, dark_baseline: float, ratio: float = 0.7, timeout: int = 20):
+    """Симметрично `assert_webview_darkened` — обратное направление Dark→Light
+    (C4-ретрофит TC-048, 2026-07-18: инвариант кейса требует СИММЕТРИИ обоих
+    направлений, до этого assert'а Dark→Light нигде не проверялся).
+    `dark_baseline` — luma, измеренная В тёмной теме (низкое значение); ждём, пока
+    после программного `reload()` в Light luma не поднимется заметно выше — то же
+    отношение `ratio`, что и `assert_webview_darkened`, только в обратную сторону
+    (порог — деление, а не умножение, симметрично «потемнению на 30%»)."""
+    def _lighter(d):
+        luma = BrowserScreen(d).webview_avg_luma()
+        return luma > dark_baseline / ratio
+    wait_until(
+        driver, _lighter, timeout=timeout,
+        message=f"WebView не посветлел относительно тёмного baseline={dark_baseline:.1f} за {timeout}с",
+    )
+
+
+@allure.step("Then измерена текущая позиция прокрутки (window.scrollY) страницы AO3 в WebView")
+def get_webview_scroll_y(driver) -> int:
+    with contexts.in_webview(driver):
+        return int(driver.execute_script("return window.scrollY;") or 0)
+
+
+@allure.step("When страница AO3 в WebView прокручена на {pixels}px вниз")
+def scroll_webview_to(driver, pixels: int) -> None:
+    """`behavior: 'instant'` обязателен — многие страницы AO3 задают CSS
+    `scroll-behavior: smooth`, из-за чего голый `window.scrollTo(x, y)` не
+    прыгает мгновенно, а анимирует переход; немедленное чтение `scrollY` сразу
+    после вызова тогда ловит 0/промежуточное значение. Тот же обход уже
+    применяется в собственном bridge приложения
+    (`app-under-test/.../assets/ao3_bridge.js`: `window.scrollBy({...,
+    behavior: 'instant'})`), здесь — то же самое для `scrollTo`. После скролла
+    опрашиваем позицию (страница может ещё довёрстываться/лениво грузить
+    контент, сразу после `scrollTo` высота могла быть не финальной) — не
+    одноразовое чтение сразу за скроллом."""
+    with contexts.in_webview(driver):
+        driver.execute_script(
+            f"window.scrollTo({{top: {pixels}, left: 0, behavior: 'instant'}});"
+        )
+    wait_until(
+        driver,
+        lambda d: get_webview_scroll_y(d) > 0,
+        timeout=5,
+        message=f"страница AO3 не проскроллилась к {pixels}px (scrollY остаётся 0)",
+    )
+
+
 @allure.step("When лишние вкладки WebView закрыты (оставлена только активная)")
 def close_other_tabs(driver):
     BrowserScreen(driver).close_leftmost_tab()

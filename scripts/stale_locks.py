@@ -37,17 +37,18 @@ import sys
 from pathlib import Path
 
 try:
-    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 except (AttributeError, ValueError):
     pass
 
 import board_sync as bs  # парсер frontmatter/обход артефактов — единое место правды
+import sla_utils
 
 REPO = bs.REPO
 SLA_PATH = REPO / "state" / "sla.yaml"
 ORCH_LOG = REPO / "state" / "orchestrator-log.md"
 
-DEFAULT_LOCK_STALE_H = 2.0
+DEFAULT_LOCK_STALE_H = sla_utils.DEFAULT_LOCK_STALE_H
 
 LOCK_RE = re.compile(r"^(?P<agent>[A-Za-z0-9_-]+):(?P<ts>\d{4}-\d{2}-\d{2}T[0-9:.]+Z?)$")
 
@@ -98,20 +99,13 @@ def _iter_charter_locks():
 
 
 def load_lock_stale_hours() -> float:
-    """thresholds.lock_stale из state/sla.yaml; при любой проблеме — дефолт."""
-    if not SLA_PATH.exists():
-        return DEFAULT_LOCK_STALE_H
-    text = SLA_PATH.read_text(encoding="utf-8", errors="replace")
-    try:
-        import yaml
-        data = yaml.safe_load(text) or {}
-        value = (data.get("thresholds") or {}).get("lock_stale")
-        if value is not None:
-            return float(value)
-    except Exception:
-        pass
-    m = re.search(r"(?m)^\s*lock_stale:\s*([\d.]+)", text)
-    return float(m.group(1)) if m else DEFAULT_LOCK_STALE_H
+    """thresholds.lock_stale из state/sla.yaml; при любой проблеме — дефолт.
+
+    Общий парсер — scripts/sla_utils.py (docs/09 «Мелкое хозяйство» п.5,
+    2026-07-18): раньше был байт-идентичной копией того же кода в
+    loop_lock.py. Обёртка сохранена (не голый импорт в вызывающем коде) —
+    здесь own module-level SLA_PATH, сигнатура без аргумента, как раньше."""
+    return sla_utils.load_lock_stale_hours(SLA_PATH, DEFAULT_LOCK_STALE_H)
 
 
 def _completion_recorded(artifact_name: str, lock_value: str) -> bool:

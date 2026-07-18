@@ -13,12 +13,13 @@ from framework.steps import app_steps, library_steps
 @pytest.mark.p1
 @allure.id("TC-027")
 @allure.title("Фильтр word count min/max сужает список работ на вкладке Library")
-def test_library_filter_word_count_range(library_all_one_rating_seeded, driver):
+def test_library_filter_word_count_range(library_word_count_boundary_seeded, driver):
     app_steps.wait_ui_ready(driver)
     app_steps.open_tab(driver, "Library")
     library_steps.open_library_tab_for(driver, "PENDING")
-    # Given на вкладке видно все 5 работ (300/800/1500/4200/12000 слов)
-    for w in library_all_one_rating_seeded:
+    # Given на вкладке видно все 7 работ (300/800/1000/1500/4200/5000/12000 слов —
+    # 5 исходных + 2 граничных, C4-ретрофит 2026-07-18)
+    for w in library_word_count_boundary_seeded:
         library_steps.assert_work_in_tab(driver, "PENDING", w.title)
 
     # When пользователь задаёт диапазон word count 1000-5000 и применяет фильтр
@@ -28,6 +29,11 @@ def test_library_filter_word_count_range(library_all_one_rating_seeded, driver):
     # Then остаются только работы с word_count в [1000, 5000] — KUDOSED (1500), LOVED (4200)
     library_steps.assert_work_in_tab(driver, "PENDING", W.KUDOSED.title)
     library_steps.assert_work_in_tab(driver, "PENDING", W.LOVED.title)
+    # And включительность границ: work'ы с word_count РОВНО 1000 и РОВНО 5000 тоже
+    # видны — фильтр в LibraryScreen.kt:164-169 сравнивает `>= min`/`<= max`, не строго
+    # (C4-ретрофит: до этого assert'а граница не была доказана ни одним значением ALL)
+    library_steps.assert_work_in_tab(driver, "PENDING", W.WORD_COUNT_MIN_BOUNDARY.title)
+    library_steps.assert_work_in_tab(driver, "PENDING", W.WORD_COUNT_MAX_BOUNDARY.title)
     # And работы с 300, 800 и 12000 не отображаются
     library_steps.assert_work_not_in_tab(driver, "PENDING", W.DISLIKED.title)
     library_steps.assert_work_not_in_tab(driver, "PENDING", W.READ.title)

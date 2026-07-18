@@ -45,10 +45,11 @@ class FakeRunner:
     """Отвечает как git/gradle; пишет журнал вызовов для ассертов."""
 
     def __init__(self, repo_root: Path, new_commits: list[str],
-                 *, fetch_rc=0, gradle_rc=0, checkout_rc=0):
+                 *, fetch_rc=0, gradle_rc=0, checkout_rc=0, rev_list_rc=0):
         self.root = repo_root
         self.new = new_commits
         self.fetch_rc, self.gradle_rc, self.checkout_rc = fetch_rc, gradle_rc, checkout_rc
+        self.rev_list_rc = rev_list_rc
         self.calls: list[str] = []
 
     def __call__(self, args, *, cwd=None, env=None, timeout=120):
@@ -59,6 +60,8 @@ class FakeRunner:
         if "rev-parse" in cmd:
             return 0, (self.new[-1] if self.new else OLD_SHA) + "\n"
         if "rev-list" in cmd:
+            if self.rev_list_rc != 0:
+                return self.rev_list_rc, "fatal: Invalid revision range"
             return 0, "\n".join(self.new) + "\n"
         if "checkout" in cmd:
             return self.checkout_rc, "" if self.checkout_rc == 0 else "error: pathspec"
@@ -122,6 +125,23 @@ def test_offline_fetch_degrades_quietly(repo, runner):
     runner(fetch_rc=128)
     assert bw.watch() == 0
     assert not (repo.root / "state" / "escalations.md").exists()
+
+
+def test_shallow_clone_rev_list_failure_degrades_to_tip_only(repo, runner, capsys):
+    """docs/09 «Мелкое хозяйство» п.3: shallow-клон app-under-test -> `git
+    rev-list current..tip` падает (родитель недоступен локально) -> сборка
+    всё равно проходит (guard, не unshallow), но деградация теперь ВИДНА в
+    выводе (WARN), а не тихо теряется в coalesced_commits: []."""
+    r = runner(rev_list_rc=128)
+
+    assert bw.watch() == 0
+
+    text = repo.read_artifact("state/app-under-test.yaml")
+    assert f"source_commit: {TIP_SHA}" in text
+    assert "coalesced_commits: []" in text          # диапазон не восстановлен -> пуст
+    out = capsys.readouterr().out
+    assert "[WARN]" in out and "shallow" in out
+    assert any("rev-list" in c for c in r.calls)
 
 
 def test_dry_run_detects_but_does_not_build(repo, runner):

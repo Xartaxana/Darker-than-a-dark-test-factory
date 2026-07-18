@@ -28,7 +28,7 @@ import sys
 from pathlib import Path
 
 try:
-    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 except (AttributeError, ValueError):
     pass
 
@@ -126,6 +126,21 @@ def run_checks() -> list[Check]:
 
     checks.append(Check("gradlew.bat (app-under-test)", "run", (APP / "gradlew.bat").exists(),
                         "на месте" if (APP / "gradlew.bat").exists() else "отсутствует"))
+
+    # docs/09 «Мелкое хозяйство» п.3 (2026-07-18): чисто информационная
+    # видимость shallow-статуса клона app-under-test для человека — ok=True
+    # ВСЕГДА (shallow — легитимное, ожидаемое состояние экономии места, не
+    # поломка окружения; build_watch.py уже устойчив к нему своим guard'ом
+    # в detect_new_commits). Не FAIL и не WARN: не эскалирует, не шумит.
+    if APP.exists():
+        rc, out = _run(["git", "-C", str(APP), "rev-parse", "--is-shallow-repository"])
+        shallow = rc == 0 and out.strip() == "true"
+        detail = ("shallow — build_watch.py деградирует диапазон коммитов "
+                   "(coalesced_commits), это ожидаемо (docs/09 п.3)"
+                   if shallow else "полный клон")
+    else:
+        detail = f"нет {APP}"
+    checks.append(Check("app-under-test git-глубина", "run", True, detail))
 
     apk_ok, apk_detail = False, "state/app-under-test.yaml не найден"
     if AUT_PATH.exists():

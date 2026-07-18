@@ -214,6 +214,59 @@ def test_acquire_reaps_unreadable_lock_file(tmp_path):
     assert any(l.startswith("ACQUIRED:") and "fresh" in l for l in lines)
 
 
+def test_n2_corrupt_lock_reap_does_not_bump_death_streak(tmp_path):
+    """N2 (docs/09 «Мелкое хозяйство» п.5): битый лок снимается (REAPED),
+    но НЕ инкрементирует death-streak — мусорный файл не свидетельствует
+    об умершем проходе. Ни строки REAP-STREAK, ни файла reaps не должно
+    появиться (счётчик остаётся на дефолте 0, ничего не записано)."""
+    p = _paths(tmp_path)
+    p["lock_file"].parent.mkdir(parents=True, exist_ok=True)
+    p["lock_file"].write_text("garbage, not json", encoding="utf-8")
+
+    code, lines = ll.acquire(holder="fresh", now=NOW, **p)
+
+    assert code == 0
+    assert not any(l.startswith("REAP-STREAK:") for l in lines)
+    assert not any(l.startswith("ESCALATION:") for l in lines)
+    assert not p["reaps_path"].exists()
+
+
+def test_n2_corrupt_lock_valid_json_missing_ts_also_not_counted(tmp_path):
+    """Тот же N2, но для другого «битого» случая: JSON валиден, но без
+    поля ts (свежесть тоже не проверить) — тоже не должен считаться."""
+    p = _paths(tmp_path)
+    p["lock_file"].parent.mkdir(parents=True, exist_ok=True)
+    p["lock_file"].write_text('{"holder": "ghost"}', encoding="utf-8")
+
+    code, lines = ll.acquire(holder="fresh", now=NOW, **p)
+
+    assert code == 0
+    assert any(l.startswith("REAPED:") and "ghost" in l for l in lines)
+    assert not any(l.startswith("REAP-STREAK:") for l in lines)
+    assert not p["reaps_path"].exists()
+
+
+def test_n2_mixed_corrupt_then_genuine_stale_streak_counts_only_genuine(tmp_path):
+    """Смешанная последовательность: битый лок не идёт в счёт, следующий
+    генуинно протухший — идёт. Порог эскалации (2 подряд) не должен
+    сработать от одного лишь битого + одного генуинного (streak=1, не 2)."""
+    p = _paths(tmp_path)
+    p["lock_file"].parent.mkdir(parents=True, exist_ok=True)
+    p["lock_file"].write_text("not json at all", encoding="utf-8")
+    t1 = NOW
+
+    code, lines = ll.acquire(holder="h1", now=t1, **p)     # REAPED битый, streak НЕ растёт
+    assert code == 0
+    assert not any(l.startswith("REAP-STREAK:") for l in lines)
+
+    t2 = t1 + datetime.timedelta(hours=3)                  # h1 сам генуинно протухнет
+    code, lines = ll.acquire(holder="h2", now=t2, **p)      # REAPED h1 (стал старым), streak=1
+
+    assert code == 0
+    assert any(l.startswith("REAP-STREAK: подряд снятых=1") for l in lines)
+    assert not any(l.startswith("ESCALATION:") for l in lines)   # порог 2 не достигнут
+
+
 def test_idempotent_release_after_release_is_noop(tmp_path):
     p = _paths(tmp_path)
     ll.acquire(holder="h0", now=NOW, **p)

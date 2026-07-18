@@ -34,14 +34,71 @@ inventoried_at_commit: "63f6aac3b1ea1dfad82f68b8196aa6cf56f41853"
 
 features:
   # ── Browse/WebView ──────────────────────────────────────────────────────
-  - id: browse-tabs-lifecycle
-    title: "Вкладки: открыть/закрыть/переключить (лимит MAX_TABS=10)"
+  # browse-tabs-lifecycle раздроблена test-designer 2026-07-18 (ручной Lead-диспатч
+  # «хозяйство-2», docs/09 п.5, дробление зонтиков реестра): title перечислял ПЯТЬ
+  # разных Then через «/» (маркер шапки файла) — открыть/закрыть/переключить/лимит,
+  # плюс персистентность, которую покрывал один из пяти привязанных кейсов (TC-025)
+  # без отдельного слова в title. Нарезка выведена из фактических Then TC-022..026 и
+  # сверена с BrowserViewModel.kt/BrowserScreen.kt:
+  #   - лимит MAX_TABS: openTab() стр.261-266 (size>=MAX_TABS → showTabLimitWarning,
+  #     return false, activeTabIndex не меняется) — TC-022;
+  #   - swipe-up закрытие + Undo из snackbar: closeTab()/restoreClosedTab()
+  #     стр.307-346 (снапшот tab+history+index, restoreClosedTab вставляет обратно
+  #     на исходную позицию) — TC-023;
+  #   - эвикция истории Undo: closeTab() стр.328-333 (`while (closedTabSnapshots.size
+  #     > 5) remove(min key)`) — ДРУГОЙ Then, чем TC-023 (невосстановимость старого
+  #     снапшота, а не успешное восстановление) — TC-024;
+  #   - персистентность списка вкладок через рестарт: init{} стр.181-229 (парсинг
+  #     TabSnapshot из SharedPreferences) + saveTabsToPrefs() стр.360-376 — Then
+  #     «URL/порядок/количество переживают процесс», отдельно от уже существующей
+  #     browse-scroll-restore (Then про точность скролла) — TC-025 тегируется В ДОПОЛНЕНИЕ
+  #     к browse-scroll-restore, не вместо;
+  #   - long-press по ссылке → фоновая вкладка: BrowserScreen.kt
+  #     setOnLongClickListener стр.640-648 (`viewModel.openTab(url, background=true)`,
+  #     без промежуточного context-меню — прямое действие) — TC-026.
+  # Переключение вкладок тапом по чипу (switchTab(), стр.289-295) осталось БЕЗ
+  # отдельной записи: ни один из 5 кейсов не ассертит его как основной Then (TC-023
+  # использует активную вкладку только как предусловие) — честно не изобретается,
+  # не переносится в дробление молча; смежная UI-запись browse-tabstrip-indicators
+  # (не в скоупе этого owns) может либо уже покрывать этот аспект как элемент
+  # TabStrip, либо это отдельная дыра — решение оставлено владельцу реестра.
+  - id: browse-tab-limit-max
+    title: "Достижение лимита MAX_TABS=10 блокирует создание новой вкладки (openTab возвращает false, activeTab не меняется)"
     screen: browse
     source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt"
-  - id: browse-deep-links
-    title: "Deep link (intent data) открывает/переключает вкладку на URL"
+  - id: browse-tab-close-undo
+    title: "Swipe-up закрывает вкладку; Undo из snackbar восстанавливает её на исходной позиции с тем же URL и скроллом"
     screen: browse
-    source: "app/src/main/java/com/example/ao3_wrapper/MainActivity.kt"
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt"
+  - id: browse-tab-undo-history-limit
+    title: "История закрытых вкладок хранит только 5 последних снапшотов — более старые вытесняются и становятся невосстановимы"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt"
+  - id: browse-tab-list-persistence
+    title: "Список вкладок (URL, порядок, количество) переживает принудительный рестарт процесса приложения (SharedPreferences)"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt"
+  - id: browse-tab-open-background-link
+    title: "Long-press по ссылке в WebView открывает её в новой фоновой вкладке без переключения активной"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserScreen.kt"
+  # browse-deep-links раздроблена test-designer 2026-07-18 (ручной Lead-диспатч
+  # «хозяйство-2», docs/09 п.5, дробление зонтиков реестра): title бундлил ДВА
+  # разных Then через «/» (маркер шапки файла). След: BrowserViewModel.kt
+  # openOrNavigateDeepLink() (~637-644) — if (единственная вкладка == HOME_URL)
+  # → navigateActiveTabTo (реюз вкладки, НЕ создаётся новая) else → openTab(url,
+  # background=false) (новая вкладка). Разные наблюдаемые исходы (число вкладок
+  # после deep link: то же vs +1). Ни один кейс не был замаппен на
+  # browse-deep-links (0 покрытия) — дробление вскрывает, что deep link вообще
+  # не покрыт кейсами ни в одной из веток.
+  - id: browse-deep-link-new-tab
+    title: "Deep link открывает URL в НОВОЙ вкладке, если уже есть вкладки помимо одинокой AO3 root"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt"
+  - id: browse-deep-link-reuse-home-tab
+    title: "Deep link переиспользует единственную вкладку на AO3 root (HOME_URL), навигируя её на URL вместо создания новой"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt"
   - id: browse-scroll-restore
     title: "Восстановление позиции скролла вкладки после рестарта приложения"
     screen: browse
@@ -104,8 +161,24 @@ features:
     title: "Чекбоксы скрытия рейтингов (hidden ratings) в side panel"
     screen: side-panel
     source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowseSidePanel.kt"
-  - id: sidepanel-settings-sync
-    title: "Side panel отражает общий стейт темы/шрифта/скрытых рейтингов с Settings"
+  # sidepanel-settings-sync раздроблена test-designer 2026-07-18 (ручной
+  # Lead-диспатч «хозяйство-2», дробление зонтиков реестра; тот же ход, что
+  # C4-ретрофит TC-054): title бундлил ДВА разных синхронизируемых куска
+  # стейта. След MainActivity.kt: тема/шрифт — через SettingsViewModel
+  # (onToggleDarkMode/A-+A+ ~стр.595-597, TC-054 это покрывает); скрытые
+  # рейтинги — ОТДЕЛЬНЫЙ провод: `hiddenRatings = settingsUiState.hiddenRatings`
+  # (стр.169), side panel checkbox `onToggleRating = { settingsViewModel.
+  # toggleHideRating(it) }` (стр.598) — тот же контрол, что
+  # settings-rating-visibility-filter, НО TC-054 (единственный кейс, ранее
+  # маппленный на родителя) проверяет только тему+шрифт, скрытые рейтинги
+  # нигде не проверены с точки зрения панель↔Settings синхронизации (0
+  # покрытия на эту часть).
+  - id: sidepanel-settings-sync-theme-font
+    title: "Side panel и Settings делят общий стейт темы и размера шрифта (изменение в одном видно в другом)"
+    screen: side-panel
+    source: "app/src/main/java/com/example/ao3_wrapper/MainActivity.kt"
+  - id: sidepanel-settings-sync-hidden-ratings
+    title: "Side panel отражает состояние скрытых рейтингов (hidden ratings), синхронизированное с Settings"
     screen: side-panel
     source: "app/src/main/java/com/example/ao3_wrapper/MainActivity.kt"
 
@@ -319,12 +392,38 @@ features:
     title: "Deselect рейтинга повторным тапом на уже выбранной кнопке"
     screen: rating-notes
     source: "app/src/main/java/com/example/ao3_wrapper/ui/components/RatingOverlay.kt"
-  - id: rating-comment-field
-    title: "Поле комментария: добавить/изменить/очистить (Save note / Clear note)"
+  # rating-comment-field раздроблена test-designer 2026-07-18 (ручной
+  # Lead-диспатч «хозяйство-2», дробление зонтиков реестра; кандидат из списка
+  # test-strategist, docs/09-improvement-plan.md стр.34): title бундлил ДВА
+  # разных Then через «/» (маркер шапки файла). След RatingOverlay.kt: кнопка
+  # «Save note» (стр.237-247) пишет `comment` = введённый текст (добавление ИЛИ
+  # правка существующего — один и тот же Then «поле сохранено с текстом»,
+  # разница только в исходном значении поля); отдельная кнопка «Clear note»
+  # (стр.224-235, видна только когда `comment.isNotBlank()`) явно пишет
+  # `comment=""` — ДРУГОЙ Then «поле очищено». Родитель имел 0 замапленных
+  # кейсов (docs/01 §10: TC-044 лишь открывает overlay, CRUD не ассертит) —
+  # честно наследуется как 0 обеим записям.
+  - id: rating-comment-save
+    title: "Поле комментария: ввод и сохранение текста кнопкой Save note (добавление или правка существующего)"
     screen: rating-notes
     source: "app/src/main/java/com/example/ao3_wrapper/ui/components/RatingOverlay.kt"
-  - id: rating-tags-chips
-    title: "Chip-теги: добавление (suggested/custom) и удаление"
+  - id: rating-comment-clear
+    title: "Кнопка Clear note очищает текст комментария работы"
+    screen: rating-notes
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/components/RatingOverlay.kt"
+  # rating-tags-chips раздроблена test-designer 2026-07-18 (ручной Lead-диспатч
+  # «хозяйство-2», дробление зонтиков реестра): title бундлил ДВА разных Then.
+  # След RatingOverlay.kt: addTag() (стр.109-117, вызывается из suggested-чипа
+  # стр.294/299 ИЛИ из текстового поля стр.339/346) — Then «чип появляется в
+  # выбранных»; removeTag() (стр.118-…, вызывается тапом по уже выбранному
+  # чипу стр.289) — Then «чип исчезает из выбранных». Родитель имел 0
+  # замапленных кейсов — честно наследуется как 0 обеим записям.
+  - id: rating-tags-chip-add
+    title: "Добавление тега (suggested-чип или свободный ввод) к работе"
+    screen: rating-notes
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/components/RatingOverlay.kt"
+  - id: rating-tags-chip-remove
+    title: "Удаление тега тапом по уже выбранному чипу"
     screen: rating-notes
     source: "app/src/main/java/com/example/ao3_wrapper/ui/components/RatingOverlay.kt"
   - id: rating-entry-work-panel

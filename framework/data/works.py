@@ -67,3 +67,17 @@ RESTORE_SCAN_TARGET = Work("900000039", "TC-039 Restore Scan Target", "seed_auth
 # функции сидинга (см. комментарий у поля `Work.word_count` выше).
 NULL_WORD_COUNT_TARGET = Work("900000031", "TC-031 Null Word Count Target",
                               "seed_author_null_wc", "Fandom Null WC", None)
+
+# TC-027 (C4-ретрофит 2026-07-18) — граничные значения фильтра word count.
+# `ALL` не содержит ни одного word_count, равного точно min/max диапазона
+# [1000, 5000], проверенного тестом — свойство «включительность границ»
+# (инлайн-фильтр в composable: `(it.wordCount ?: 0) >= min` /
+# `(it.wordCount ?: Int.MAX_VALUE) <= max`, LibraryScreen.kt:164-169 — обе
+# границы `>=`/`<=`, не строгие; подпись файла исправлена critic'ом) остаётся
+# недоказанным на самих границах. Отдельные work вместо расширения `ALL`,
+# чтобы не менять состав данных `library_all_one_rating_seeded` (используется
+# и TC-029 — фильтр по фандому, не должен получить лишние 2 работы).
+WORD_COUNT_MIN_BOUNDARY = Work("900000271", "TC-027 Word Count Min Boundary",
+                               "seed_author_wc_min", "Fandom WC Min", 1000)
+WORD_COUNT_MAX_BOUNDARY = Work("900000272", "TC-027 Word Count Max Boundary",
+                               "seed_author_wc_max", "Fandom WC Max", 5000)

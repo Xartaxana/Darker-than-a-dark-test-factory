@@ -67,6 +67,14 @@ Browse **без** перезапуска приложения
   design-note в очередь test-automator/test-designer: либо расширить этот
   тест вторым направлением, либо завести отдельный P1-кейс «WebView
   возвращается в light мгновенно»; `test_debt`-багом не заводится.
+- **2026-07-18 (C4-ретрофит закрыт, test-maintainer) — дыра закрыта.**
+  Тест расширен вторым направлением (не отдельным кейсом): после
+  подтверждённого Light→Dark замеряется тёмная luma, тема переключается
+  обратно на Light, и `browser_steps.assert_webview_lightened` (новый шаг,
+  симметричный `assert_webview_darkened` — тот же поллинг вместо
+  одноразового чтения, та же логика LaunchedEffect(darkTheme)/reload())
+  ждёт возврата luma заметно выше тёмного baseline. Witness: зелёный
+  прогон на устройстве (см. отчёт test-maintainer).
 - **Ожидаемый результат по умолчанию — PASS.** Это регрессионный кейс на известную
   хрупкую область (app-under-test/CLAUDE.md: «Dark mode has broken four times»), а не
   заготовленное обнаружение бага. Код уже применяет тему мгновенно: `LaunchedEffect(darkTheme)`

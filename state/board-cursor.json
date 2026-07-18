@@ -389,6 +389,11 @@
     "artifact_status": "Verified",
     "board_status": "Verified"
   },
+  "AT-BUG-015": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
   "BUG-001": {
     "itype": "bug",
     "artifact_status": "Open",

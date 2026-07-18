@@ -32,7 +32,7 @@ import sys
 from pathlib import Path
 
 try:
-    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 except (AttributeError, ValueError):
     pass
 
@@ -104,7 +104,21 @@ def _rewrite_field(text: str, field: str, value: str) -> str:
 
 
 def detect_new_commits() -> dict | None:
-    """fetch + сравнение с source_commit. None = проверить не удалось (офлайн)."""
+    """fetch + сравнение с source_commit. None = проверить не удалось (офлайн).
+
+    Shallow-клон app-under-test (docs/09 «Мелкое хозяйство» п.3, 2026-07-18):
+    на shallow-клоне `current` (старый source_commit) типично отсутствует в
+    локальной истории, `git rev-list current..tip` падает с ненулевым rc
+    («fatal: Invalid revision range», эмпирически проверено на реальном
+    клоне этого репо — он действительно shallow, `--is-shallow-repository`
+    -> true). Полный `git fetch --unshallow` — не минимальное решение
+    (качает всю историю ради метаданных coalesced_commits, которые нигде
+    не блокируют сборку) — вместо этого используем УЖЕ существовавший
+    fallback `rc != 0 -> new = [tip]` (собрать только tip как единственный
+    новый коммит), но раньше он был ПОЛНОСТЬЮ МОЛЧАЛИВЫМ: coalesced_commits
+    в app-under-test.yaml тихо получал "[]", даже если реально было
+    несколько пушей подряд — оператор не мог отличить «правда один пуш» от
+    «диапазон не восстановился». Guard ниже делает деградацию видимой."""
     rc, out = _run(["git", "-C", str(APP), "fetch", "origin"], timeout=180)
     if rc != 0:
         print(f"  [WARN] git fetch не прошёл (офлайн/недоступен origin): {out.strip()[:200]}")
@@ -118,7 +132,14 @@ def detect_new_commits() -> dict | None:
     if tip == current:
         return {"tip": tip, "new": []}
     rc, lst = _run(["git", "-C", str(APP), "rev-list", "--reverse", f"{current}..{tip}"])
-    new = [s for s in lst.split() if s] if rc == 0 else [tip]
+    if rc == 0:
+        new = [s for s in lst.split() if s]
+    else:
+        print(f"  [WARN] git rev-list {current[:8]}..{tip[:8]} не прошёл (вероятно, "
+              f"shallow-клон app-under-test — родитель {current[:8]} недоступен локально): "
+              f"диапазон не восстановить, собираем только tip как единственный новый "
+              f"коммит (coalesced_commits будет пуст, даже если пушей было несколько)")
+        new = [tip]
     return {"tip": tip, "new": new}
 
 

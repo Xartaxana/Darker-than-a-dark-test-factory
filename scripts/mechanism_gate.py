@@ -59,9 +59,15 @@ from pathlib import Path
 
 # Оба потока: тексты отказа гейта — кириллица и в stdout, и в stderr
 # (эталон — ui_snapshot.py; класс доложен builder'ом e4-impact-selection).
+# errors="replace" (докс/09 «Мелкое хозяйство» п.1, 2026-07-18): голый
+# reconfigure(encoding="utf-8") оставлял errors="strict" — на редкой
+# консоли, где повторная кодировка встречает суррогат, это всё ещё
+# падение; replace не теряет диагностируемость (гейт и так печатает
+# кириллицу, не бинарные данные), просто убирает последний шанс
+# ValueError вместо тихой замены символа.
 for _stream in (sys.stdout, sys.stderr):
     try:
-        _stream.reconfigure(encoding="utf-8")
+        _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
 

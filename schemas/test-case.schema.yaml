@@ -9,7 +9,12 @@ fields:
   updated:  { pattern: "^\\d{4}-\\d{2}-\\d{2}[T ][\\d:.+]+Z?$" }
   status_since: { pattern: "^\\d{4}-\\d{2}-\\d{2}[T ][\\d:.+]+Z?$" }
   lock:     { pattern: "^$|^wip$|^[A-Za-z0-9_-]+:\\d{4}-\\d{2}-\\d{2}T[\\d:.]+Z?$" }
-  automated_by: {}     # путь к тесту; обязателен содержательно только при status: Automated
+  # C4-ретрофит 2026-07-18 (test-maintainer, попутно с TC-027/047/048/049): канон —
+  # пустая строка (ещё не автоматизирован) ИЛИ `framework/tests/<файл>::<функция>`
+  # (тот же стиль альтернации `^$|...`, что у `lock` выше). Сверено по всем 65
+  # существующим кейсам (`grep automated_by test-cases/`) — уже все конформны,
+  # pattern фиксирует инвариант на будущее, не бэкфиллит.
+  automated_by: { pattern: "^$|^framework/tests/.+::.+$" }     # путь к тесту; обязателен содержательно только при status: Automated
   area: {}
   risk: {}
   requirements: {}

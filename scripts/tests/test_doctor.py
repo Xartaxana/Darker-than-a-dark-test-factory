@@ -87,6 +87,25 @@ def test_missing_apk_is_warn_not_fail(repo, env):
     assert dr.main([]) == 0            # WARN не валит doctor
 
 
+def test_shallow_clone_check_is_informational_not_fail(repo, env, monkeypatch):
+    """docs/09 «Мелкое хозяйство» п.3: shallow-клон app-under-test — видимая
+    информация для человека, но НИКОГДА не FAIL/WARN (ожидаемое состояние;
+    build_watch.py устойчив к нему своим guard'ом)."""
+    def fake_run(args, timeout=60):
+        if "--is-shallow-repository" in args:
+            return 0, "true\n"
+        return 0, "deps-ok"
+    monkeypatch.setattr(dr, "_run", fake_run, raising=True)
+
+    checks = dr.run_checks()
+    depth = next(c for c in checks if c.name == "app-under-test git-глубина")
+
+    assert depth.ok and not depth.warn                 # никогда не эскалирует
+    assert "shallow" in depth.detail
+    assert dr.main([]) == 0
+    assert not (repo.root / "state" / "escalations.md").exists()
+
+
 def test_no_escalate_flag(repo, env):
     (repo.root / "tools" / "android-sdk" / "platform-tools" / "adb.exe").unlink()
 

@@ -113,7 +113,7 @@ def _iter_charters() -> list[dict]:
 
 def _charter_stats() -> dict:
     charters = _iter_charters()
-    status_counts: Counter = Counter(str(c.get("status") or "?") for c in charters)
+    status_counts: Counter = Counter(str(c.get("status") or "n/a") for c in charters)
     done = [c for c in charters if str(c.get("status")) == "Done"]
     return {
         "status_counts": status_counts,
@@ -148,7 +148,7 @@ def collect() -> dict:
     red_probe_missing: list[str] = []           # id Automated+active кейсов без red_probe (docs/09 п.10)
 
     for itype, meta, _body, src in bs._iter_artifacts():
-        status = str(meta.get("status", "?"))
+        status = str(meta.get("status", "n/a"))
         key = str(meta.get("id"))
         total[itype] += 1
         lock = str(meta.get("lock") or "").strip()
@@ -177,9 +177,9 @@ def collect() -> dict:
             # B4: test_debt — не дефект приложения; своя секция, не пугает счётчики багов.
             if str(meta.get("type", "")).strip() == "test_debt":
                 if status not in ("Verified", "Rejected"):
-                    kind = str(meta.get("debt_kind") or "?").strip()
+                    kind = str(meta.get("debt_kind") or "n/a").strip()
                     test_debt.append(
-                        f"{key} [{kind}] {status} — {meta.get('title', '')}")
+                        f"{key} [{kind}] {status} — {meta.get('title') or 'n/a'}")
                     if status in ("Open", "Reopened"):
                         test_debt_open.append(key)
                 continue
@@ -188,14 +188,14 @@ def collect() -> dict:
                 resolution = str(meta.get("resolution") or "").strip()
                 tag = f" [{resolution}]" if resolution else ""
                 bugs_open.append(
-                    f"{key} [{meta.get('severity', '?')}] {status}{tag} — {meta.get('title', '')}")
+                    f"{key} [{meta.get('severity') or 'n/a'}] {status}{tag} — {meta.get('title') or 'n/a'}")
             if status in ("Open", "Reopened") and \
                     str(meta.get("severity", "")).strip().lower() in ("blocker", "critical"):
                 blocker_critical_open.append(key)
             # B2: known_issue — отдельная секция дайджеста, не теряется среди Open.
             if str(meta.get("known_issue") or "").strip().lower() == "true":
                 known_issues.append(
-                    f"{key} [{meta.get('severity', '?')}] {status} — {meta.get('title', '')}")
+                    f"{key} [{meta.get('severity') or 'n/a'}] {status} — {meta.get('title') or 'n/a'}")
         elif itype == "run":
             run_status[status] += 1
             suite = str(meta.get("suite") or "").strip()
@@ -229,7 +229,19 @@ def _fmt_counter(c: Counter, order: list[str]) -> str:
 
 def _render_release_readiness(data: dict, generated_at: str) -> list[str]:
     """r10-release-readiness (docs/10 D2+P1). Все данные — из существующих
-    артефактов; отсутствующий файл/поле рендерится явным «n/a», не падением."""
+    артефактов; отсутствующий файл/поле рендерится явным «n/a», не падением.
+
+    «n/a» — ЕДИНЫЙ плейсхолдер отсутствующего значения по всему выводу
+    этого модуля (docs/09 «Мелкое хозяйство» п.2, 2026-07-18): раньше
+    в один и тот же вывод попадали вперемешку «?» (секция «Сборка под
+    тестом», severity/debt_kind/status по умолчанию) и «n/a» (эта
+    секция) для одних и тех же по смыслу отсутствующих полей —
+    разнобой найден эмпирически (одни и те же поля aut рендерились тут
+    как «n/a», а строкой ниже в «Сборка под тестом» — как «?»).
+    Пустая строка (title/severity без значения) сюда же — тоже «n/a»,
+    не тихий пробел. «—» НЕ путать с «n/a»: «—» остаётся отдельной
+    семантикой «в этой категории вообще нет элементов» (_fmt_counter)
+    или «корневая область» (area fallback) — не «поле неизвестно»."""
     aut = data["aut"]
     now_dt = _parse_ts(generated_at)
     lines = ["## Release readiness", ""]
@@ -337,10 +349,11 @@ def render(data: dict, generated_at: str) -> str:
     lines += [
         "## Сборка под тестом",
         "",
-        (f"- {aut.get('version_name', '?')} (versionCode {aut.get('version_code', '?')}), "
-         f"commit `{str(aut.get('source_commit', ''))[:8]}`, built_at {aut.get('built_at', '?')}"
+        (f"- {aut.get('version_name') or 'n/a'} (versionCode {aut.get('version_code') or 'n/a'}), "
+         f"commit `{(str(aut.get('source_commit') or '')[:8]) or 'n/a'}`, "
+         f"built_at {aut.get('built_at') or 'n/a'}"
          if aut else "- state/app-under-test.yaml не найден"),
-        f"- smoke: {aut.get('smoke_status', '?')} · regression: {aut.get('regression_status', '?')}",
+        f"- smoke: {aut.get('smoke_status') or 'n/a'} · regression: {aut.get('regression_status') or 'n/a'}",
         "",
         f"## Тест-кейсы ({sum(data['tc_status'].values())})",
         "",

@@ -112,6 +112,25 @@ def library_all_one_rating_seeded():
 
 
 @pytest.fixture()
+def library_word_count_boundary_seeded():
+    """`works.ALL` + два work'а с word_count РОВНО на границах диапазона фильтра
+    ([1000, 5000] — `WORD_COUNT_MIN_BOUNDARY`/`WORD_COUNT_MAX_BOUNDARY`), все с
+    ОДНИМ рейтингом (PENDING) на одной вкладке — нужно для TC-027 (C4-ретрофит
+    2026-07-18): доказать включительность границ фильтра (`>= min`/`<= max`),
+    непроверяемую на исходной пятёрке `ALL` (ни одно её значение не совпадает
+    с 1000/5000 точно). ОТДЕЛЬНАЯ фикстура от `library_all_one_rating_seeded`
+    (не расширяет её состав) — та же пятёрка используется TC-029 (фильтр по
+    фандому), которому 2 лишние работы не нужны."""
+    app_steps.clean_state()
+    rows = [(w, "PENDING") for w in W.ALL] + [
+        (W.WORD_COUNT_MIN_BOUNDARY, "PENDING"),
+        (W.WORD_COUNT_MAX_BOUNDARY, "PENDING"),
+    ]
+    app_steps.seed_library(rows)
+    yield W.ALL + [W.WORD_COUNT_MIN_BOUNDARY, W.WORD_COUNT_MAX_BOUNDARY]
+
+
+@pytest.fixture()
 def library_wordcount_scroll_seeded():
     """`works.ALL` + `works.SCROLL_FILLERS` (10 доп. работ с малым word_count), все с
     ОДНИМ рейтингом (PENDING) на одной вкладке — список выше высоты экрана, нужен

@@ -45,6 +45,15 @@ def test_theme_dark_applies_instantly_without_recreating_activity(clean_app, dri
         f"URL вкладки Browse изменился после переключения темы (похоже на recreation): "
         f"{url_before} -> {url_after}"
     )
+    # NOTE (C4-ретрофит, test-maintainer, 2026-07-18): попытка добавить assert
+    # сохранности scroll-позиции (window.scrollY в WebView до/после переключения
+    # темы) НЕ ДОБИТА в этой сессии — см. `bugs/AT-BUG-015.md` и заметки TC-047
+    # в теле кейса. Инфраструктура (`browser_steps.scroll_webview_to`/
+    # `get_webview_scroll_y`) добавлена и доступна, но не подключена сюда:
+    # живая страница archiveofourown.org (Browse root) не давала устойчивый
+    # ненулевой scrollY на повторных прогонах — необходима диагностика
+    # (высота контента / другой scroll-контейнер / тайминг), не сделанная
+    # из-за ограничения по времени хода. Дыра осталась ОТКРЫТОЙ.
 
 
 @pytest.mark.p1
@@ -70,6 +79,19 @@ def test_webview_dark_mode_applies_instantly(clean_app, driver):
     # визуальный результат (алгоритмическое затемнение), не internal API; опрос даёт время
     # на программный reload()+перерисовку (см. заметки TC-048 по таймингу)
     browser_steps.assert_webview_darkened(driver, baseline_luma)
+    dark_luma = browser_steps.measure_webview_luma(driver)
+
+    # When пользователь переключает тему обратно на Light в Settings (C4-ретрофит
+    # 2026-07-18: инвариант кейса заявлен СИММЕТРИЧНЫМ — до этого блока проверялось
+    # только Light→Dark, требование CLAUDE.md app-under-test п.2 чек-листа Dark mode
+    # "Toggle light → pages go light immediately" оставалось недоказанным)
+    app_steps.open_tab(driver, "Settings")
+    settings_steps.select_theme(driver, "LIGHT")
+    app_steps.open_tab(driver, "Browse")
+
+    # Then содержимое WebView немедленно возвращается в светлую цветовую схему —
+    # тот же наблюдаемый визуальный результат, симметрично Then выше
+    browser_steps.assert_webview_lightened(driver, dark_luma)
 
 
 @pytest.mark.p1
@@ -96,6 +118,16 @@ def test_system_theme_follows_os_dark_mode(clean_app, driver):
         # дополнительных действий пользователя внутри приложения (следование за System,
         # configChanges="uiMode" не пересоздаёт Activity)
         side_panel_steps.assert_theme_is_dark(driver)
+
+        # When системная тема ОС переключается обратно на Light (C4-ретрофит
+        # 2026-07-18: инвариант кейса заявлен СИММЕТРИЧНЫМ "в обоих направлениях",
+        # прежде обратный переход выполнялся только в finally как уборка общего
+        # ресурса — БЕЗ assert'а, что приложение реально следует за ним обратно)
+        app_steps.set_system_dark_mode(False)
+
+        # Then нативные Compose-экраны приложения возвращаются в светлую схему —
+        # тот же прокси (side panel), симметрично Then выше
+        side_panel_steps.assert_theme_is_light(driver)
     finally:
         # Системная тема ОС — общий ресурс эмулятора, переживающий тест; возвращаем её
         # к Light, чтобы не протекало в другие тесты (не полагающиеся на System-тему).

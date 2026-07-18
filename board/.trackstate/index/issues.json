@@ -1763,6 +1763,28 @@
     "archived": false
   },
   {
+    "key": "AT-BUG-015",
+    "path": "board/AT-BUG-015/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "TC-047 scroll-preservation assert недобит — WebView scrollY на Browse root не даёт устойчивого ненулевого значения после scrollTo (нужна диагностика)",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-047",
+      "sev:minor"
+    ],
+    "updated": "2026-07-18T02:40:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "BUG-001",
     "path": "board/BUG-001/main.md",
     "parent": null,

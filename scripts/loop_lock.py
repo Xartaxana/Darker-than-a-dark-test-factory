@@ -17,9 +17,14 @@ acquire:
     лок, ACQUIRED, exit 0. Протухший лок сначала REAPED (печатается
     прежний holder/ts) и инкрементирует счётчик подряд снятых
     (state/loop-lock-reaps.json). Нечитаемый/битый лок (JSON не
-    парсится или ts не парсится) трактуется так же, как protухший —
-    свежесть не проверить, значит небезопасно ждать вечно (тот же
-    принцип, что «нечитаемый лок» у stale_locks.py).
+    парсится или ts не парсится) снимается тем же путём (REAPED,
+    свежесть не проверить, значит небезопасно ждать вечно — тот же
+    принцип, что «нечитаемый лок» у stale_locks.py), НО N2 (docs/09
+    «Мелкое хозяйство» п.5, 2026-07-18): счётчик подряд снятых он НЕ
+    инкрементирует — битый файл это мусор (никогда не был валидным
+    локом живого прохода), а не свидетельство умершего прохода;
+    death-streak считает только генуинно протухшие локи с известным
+    возрастом.
   - лок живой => BUSY, exit 1.
 release:
   - лока нет => RELEASED (noop), exit 0.
@@ -60,10 +65,12 @@ import sys
 from pathlib import Path
 
 try:
-    sys.stdout.reconfigure(encoding="utf-8")
-    sys.stderr.reconfigure(encoding="utf-8")
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 except (AttributeError, ValueError):
     pass
+
+import sla_utils
 
 REPO = Path(__file__).resolve().parent.parent
 DEFAULT_LOCK_FILE = REPO / "state" / "loop.lock"
@@ -71,7 +78,7 @@ DEFAULT_REAPS_PATH = REPO / "state" / "loop-lock-reaps.json"
 DEFAULT_ESCALATIONS_PATH = REPO / "state" / "escalations.md"
 DEFAULT_SLA_PATH = REPO / "state" / "sla.yaml"
 
-DEFAULT_LOCK_STALE_H = 2.0
+DEFAULT_LOCK_STALE_H = sla_utils.DEFAULT_LOCK_STALE_H
 REAP_ESCALATION_THRESHOLD = 2
 
 LOOP_LINE_RE = re.compile(
@@ -98,21 +105,15 @@ def _parse_ts(value: str) -> datetime.datetime | None:
 
 
 def load_lock_stale_hours(sla_path: Path) -> float:
-    """thresholds.lock_stale из sla.yaml; копия stale_locks.load_lock_stale_hours
-    (независимая — разный лок-файл, тот же источник порога и тот же fallback)."""
-    if not sla_path.exists():
-        return DEFAULT_LOCK_STALE_H
-    text = sla_path.read_text(encoding="utf-8", errors="replace")
-    try:
-        import yaml
-        data = yaml.safe_load(text) or {}
-        value = (data.get("thresholds") or {}).get("lock_stale")
-        if value is not None:
-            return float(value)
-    except Exception:
-        pass
-    m = re.search(r"(?m)^\s*lock_stale:\s*([\d.]+)", text)
-    return float(m.group(1)) if m else DEFAULT_LOCK_STALE_H
+    """thresholds.lock_stale из sla.yaml.
+
+    Общий парсер — scripts/sla_utils.py (docs/09 «Мелкое хозяйство» п.5,
+    2026-07-18): раньше был байт-идентичной копией stale_locks.py (разный
+    лок-файл, тот же источник порога и тот же fallback — сама логика
+    парсинга не отличалась ни байтом). Обёртка сохранена (сигнатура с
+    обязательным sla_path, как раньше — вызывающий код в этом модуле не
+    меняется)."""
+    return sla_utils.load_lock_stale_hours(sla_path, DEFAULT_LOCK_STALE_H)
 
 
 def _atomic_write_text(path: Path, text: str) -> None:
@@ -214,10 +215,21 @@ def acquire(*, lock_file: Path, holder: str, reaps_path: Path, escalations_path:
                 f"возраст={age_h:.2f}ч <= порога {threshold_h}ч")
             return 1, lines
 
-        reason = (f"возраст {age_h:.2f}ч > порога {threshold_h}ч" if age_h is not None
-                  else "лок нечитаем/битый — свежесть не проверить")
+        # N2 (docs/09 «Мелкое хозяйство» п.5, 2026-07-18): битый/нечитаемый
+        # лок (JSON не парсится или ts отсутствует/не парсится) — снимается
+        # так же (REAPED), но НЕ считается в death-streak. Счётчик мерит
+        # «фабрика систематически умирает» — генуинно протухшие локи с
+        # известным возрастом; мусорный файл ничего не говорит о том, умер
+        # ли предыдущий проход, инкремент по нему был ложным сигналом.
+        if age_h is None:
+            reason = "лок нечитаем/битый — свежесть не проверить"
+            countable = False
+        else:
+            reason = f"возраст {age_h:.2f}ч > порога {threshold_h}ч"
+            countable = True
         lines.append(f"REAPED: прежний holder={prev_holder} ts={prev_ts_raw} ({reason})")
-        reaped_prev_holder = prev_holder
+        if countable:
+            reaped_prev_holder = prev_holder
 
     payload = {"holder": holder, "pid": os.getpid(), "ts": now.strftime("%Y-%m-%dT%H:%M:%SZ")}
     _atomic_write_text(lock_file, json.dumps(payload, ensure_ascii=False, indent=2))
