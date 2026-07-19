@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import io
 
+from appium.webdriver.common.appiumby import AppiumBy
 from PIL import Image
 
 from framework.screens.base_screen import BaseScreen
@@ -73,3 +74,50 @@ class RatingOverlay(BaseScreen):
         совпадение (Compose `BasicTextField` мёржит своё editable-содержимое в
         accessibility-текст узла)."""
         return self.is_present(self.by_text_contains(text), timeout=timeout)
+
+    # --- TC-074/076: живой ввод комментария/личного тега через `RatingMenu`
+    # (RatingOverlay.kt) — `BasicTextField` рендерится как безымянный Compose
+    # `android.widget.EditText` (тот же паттерн, что `LibraryScreen`/`BrowserScreen`
+    # поля ввода, см. `framework/screens/library_screen.py::_WORD_COUNT_FIELD`).
+    # `instance(0)` корректен в обоих случаях: сценарии TC-074/076 раскрывают либо
+    # комментарий, либо теги, НЕ оба сразу — на экране в этот момент ровно ОДНО
+    # такое поле. ---
+    _EDIT_TEXT_FIELD = (
+        AppiumBy.ANDROID_UIAUTOMATOR,
+        'new UiSelector().className("android.widget.EditText").instance(0)',
+    )
+
+    def toggle_comment(self):
+        """Раскрывает поле комментария (тоггл "Add a note"/"Hide note")."""
+        self.tap(self.by_text("Add a note"))
+        return self
+
+    def enter_comment(self, text: str):
+        field = self.find(self._EDIT_TEXT_FIELD)
+        field.clear()
+        field.send_keys(text)
+        return self
+
+    def save_note(self):
+        """Тап "Save note" — сохраняет комментарий (`onSaveNote`), bottom-sheet
+        сам не закрывается (см. `dismiss_rating_overlay`)."""
+        self.tap(self.by_text("Save note"))
+        return self
+
+    def toggle_tags(self):
+        """Раскрывает раздел личных тегов (тоггл "Add tags"/"Hide tags") — доступен
+        только когда рейтинг уже выбран (`RatingMenu`: `enabled = selectedRating != null`)."""
+        self.tap(self.by_text("Add tags"))
+        return self
+
+    def enter_tag_input(self, text: str):
+        field = self.find(self._EDIT_TEXT_FIELD)
+        field.clear()
+        field.send_keys(text)
+        return self
+
+    def confirm_tag_input(self):
+        """Тап кнопки "Add" рядом с полем ввода личного тега — добавляет тег в
+        список (`addTag`), который сразу же уходит в `onRatingTap`/сохранение."""
+        self.tap(self.by_text("Add"))
+        return self

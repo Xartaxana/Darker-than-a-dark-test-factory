@@ -9,6 +9,35 @@ class ListingPage(BasePage):
     def blurb_count(self) -> int:
         return len(self.css_all(selectors.WORK_BLURB))
 
+    def blurb_work_ids(self) -> list[str]:
+        """Work id для каждого найденного `li[id^="work_"].work.blurb`, извлечённый
+        ТЕМ ЖЕ способом, что `ao3_bridge.js` (`li.id.replace('work_', '')`,
+        `applyAllFilters`/`applyRatings`) — прямое зеркало DOM-контракта листинга
+        (TC-068/069), не побочный продукт другого локатора."""
+        return [el.get_attribute("id").replace("work_", "", 1) for el in self.css_all(selectors.WORK_BLURB)]
+
+    def heading_count(self) -> int:
+        """Количество видимых заголовков работ (`h4.heading`) на странице —
+        независимая от `WORK_BLURB` проба, что селектор блёрба не занижает/
+        завышает набор (TC-068: рекламные/promoted блоки листинга AO3 визуально
+        похожи на карточку работы, но не `li.work.blurb`)."""
+        return len(self.css_all(selectors.WORK_HEADING))
+
+    def rate_button_state(self, work_id: str) -> dict:
+        """Структурная+визуальная проба Rate-кнопки ОДНОГО блёрба (TC-070/071):
+        сколько `[data-ao3-btn-wrap]`/`[data-ao3-rate-btn]` внутри него, к какому
+        work id привязана кнопка (`data-ao3-rate-btn`) и её текущий фон (для
+        различения оценено/не оценено — тот же признак, что `badge_for`)."""
+        blurb = selectors.blurb_by_work_id(work_id)
+        wraps = self.css_all(f"{blurb} {selectors.BTN_WRAP}")
+        buttons = self.css_all(f"{blurb} {selectors.RATE_BUTTON}")
+        return {
+            "wrap_count": len(wraps),
+            "button_count": len(buttons),
+            "attr": buttons[0].get_attribute("data-ao3-rate-btn") if buttons else None,
+            "bg": buttons[0].value_of_css_property("background-color") if buttons else None,
+        }
+
     def has_bridge_rate_buttons(self) -> bool:
         """Признак того, что bridge отработал: инжектированы Rate-кнопки."""
         return self.exists(selectors.RATE_BUTTON)
@@ -70,6 +99,38 @@ class ListingPage(BasePage):
             if bg not in ("", "transparent", "rgba(0, 0, 0, 0)"):
                 count += 1
         return count
+
+    def has_note_button(self, work_id: str) -> bool:
+        """Работа `work_id` имеет инжектированную Note-кнопку в своём
+        `[data-ao3-btn-wrap]` (TC-074/075: биусловное присутствие по факту
+        непустого `comment`, `applyRatings` стр.399-415)."""
+        blurb = selectors.blurb_by_work_id(work_id)
+        return self.exists(f"{blurb} {selectors.NOTE_BUTTON}")
+
+    def note_button_title(self, work_id: str) -> str | None:
+        """Атрибут `title` инжектированной Note-кнопки — `applyRatings` кладёт туда
+        засеянный/сохранённый `comment` дословно (см. `makeNoteButton`). `None`, если
+        кнопки нет вовсе (вызывающий код TC-074/075 сначала проверяет присутствие)."""
+        blurb = selectors.blurb_by_work_id(work_id)
+        els = self.css_all(f"{blurb} {selectors.NOTE_BUTTON}")
+        return els[0].get_attribute("title") if els else None
+
+    def has_tag_button(self, work_id: str) -> bool:
+        """Работа `work_id` имеет инжектированную Tag-кнопку в своём
+        `[data-ao3-btn-wrap]` (TC-076/077: биусловное присутствие по факту непустой
+        РАЗНОСТИ (личные теги \\ AO3-теги карточки), `getCustomTags`/`applyRatings`
+        стр.417-433)."""
+        blurb = selectors.blurb_by_work_id(work_id)
+        return self.exists(f"{blurb} {selectors.TAG_BUTTON}")
+
+    def own_tags(self, work_id: str) -> list[str]:
+        """Текст СОБСТВЕННЫХ AO3-тегов карточки `work_id` (`ul.tags.commas li a.tag`) —
+        тот же селектор, что `ao3_bridge.js::getCustomTags` использует для построения
+        `ao3Set` (TC-076/077: нужен, чтобы подобрать личный тег, заведомо
+        отсутствующий/заведомо совпадающий с набором конкретной карточки на живом
+        листинге, где состав тегов не детерминирован заранее)."""
+        blurb = selectors.blurb_by_work_id(work_id)
+        return [el.text.strip() for el in self.css_all(f"{blurb} {selectors.TAGS_CONTAINER} a.tag")]
 
     def tag_link_highlighted(self, work_id: str, tag_text: str) -> bool:
         """`a.tag` внутри блёрба работы `work_id` с точным текстом `tag_text` —

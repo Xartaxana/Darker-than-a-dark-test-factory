@@ -2,27 +2,27 @@
 key: "TC-076"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p0"
 summary: "Tag-кнопка инжектируется в work-блёрб живого листинга тогда и только тогда, когда есть личные теги вне AO3-тегов карточки (live)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:canary", "risk:R-02/R-04"]
+labels: ["test-case", "area:canary", "risk:R-02/R-04", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-18T08:56:25Z"
-updated: "2026-07-18T08:56:25Z"
+created: "2026-07-19T04:33:02Z"
+updated: "2026-07-19T04:33:02Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Tag-кнопка инжектируется в work-блёрб живого листинга тогда и только тогда, когда есть личные теги вне AO3-тегов карточки (live)
 
 _Спроецировано из `test-cases/canary/TC-076.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-076 — Tag-кнопка присутствует ⟺ есть личные теги вне AO3-набора карточки (live)
 

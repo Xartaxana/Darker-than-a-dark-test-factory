@@ -2,27 +2,27 @@
 key: "TC-067"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p0"
 summary: "ao3_bridge.js инжектируется на replay-странице (window.__ao3Bridge marker, детерминированная регрессия)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:canary", "risk:R-02"]
+labels: ["test-case", "area:canary", "risk:R-02", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-18T08:55:01Z"
-updated: "2026-07-18T08:55:01Z"
+created: "2026-07-19T04:33:02Z"
+updated: "2026-07-19T04:33:02Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # ao3_bridge.js инжектируется на replay-странице (window.__ao3Bridge marker, детерминированная регрессия)
 
 _Спроецировано из `test-cases/canary/TC-067.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-067 — Инъекция bridge на replay-странице (replay)
 

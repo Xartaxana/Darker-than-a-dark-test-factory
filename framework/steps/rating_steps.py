@@ -116,6 +116,31 @@ def assert_panel_rating_deselected(driver, rating: str, selected_baseline_luma: 
     )
 
 
+@allure.step("When в открытом bottom-sheet листинга раскрыто поле комментария и сохранён текст «{comment}»")
+def add_note_via_listing_overlay(driver, comment: str):
+    """TC-074/075 (live-ветвь): раскрывает поле комментария в уже открытом (Rate-
+    кнопкой листинга) нативном `RatingOverlay` и сохраняет текст через "Save note" —
+    живой аналог `seed_with_comment` из TC-075/077 (replay), доказывающий тот же
+    контракт `applyRatings` через реальный UI-ввод, а не сидинг."""
+    overlay = RatingOverlay(driver)
+    assert overlay.is_visible(), "нативный bottom-sheet рейтинга не открыт — нечего раскрывать"
+    overlay.toggle_comment()
+    overlay.enter_comment(comment)
+    overlay.save_note()
+
+
+@allure.step("When в открытом bottom-sheet листинга раскрыт раздел тегов и добавлен личный тег «{tag}»")
+def add_tag_via_listing_overlay(driver, tag: str):
+    """TC-076/077 (live-ветвь): раскрывает раздел личных тегов в уже открытом bottom-
+    sheet и добавляет `tag` через поле ввода + кнопку "Add" — требует уже выставленного
+    рейтинга (раздел недоступен без него, см. `RatingOverlay.toggle_tags`)."""
+    overlay = RatingOverlay(driver)
+    assert overlay.is_visible(), "нативный bottom-sheet рейтинга не открыт — нечего раскрывать"
+    overlay.toggle_tags()
+    overlay.enter_tag_input(tag)
+    overlay.confirm_tag_input()
+
+
 @allure.step("Then overlay рейтинга открыт с развёрнутым полем комментария, предзаполненным «{expected_text}»")
 def assert_note_overlay_expanded_with_text(driver, expected_text: str):
     overlay = RatingOverlay(driver)

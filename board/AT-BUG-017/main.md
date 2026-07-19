@@ -2,7 +2,7 @@
 key: "AT-BUG-017"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p1"
 summary: "replay-фикстура: интермиттентный net::ERR_PROXY_CONNECTION_FAILED на первой навигации после set_device_proxy — не покрыт rerun-whitelist pytest.ini"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-18T09:47:00Z"
-updated: "2026-07-18T09:47:00Z"
+created: "2026-07-19T02:00:00Z"
+updated: "2026-07-19T02:00:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # replay-фикстура: интермиттентный net::ERR_PROXY_CONNECTION_FAILED на первой навигации после set_device_proxy — не покрыт rerun-whitelist pytest.ini
 
 _Спроецировано из `bugs/AT-BUG-017.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # AT-BUG-017 — интермиттентный net::ERR_PROXY_CONNECTION_FAILED вне rerun-whitelist
 
@@ -75,7 +75,7 @@ TCP-соединение.
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
-| — | — | — | — | Open, ждёт фикса |
+| 2026-07-19 | source_commit 63f6aac3b1ea1dfad82f68b8196aa6cf56f41853, version_code 11 (test_debt — сборка приложения не менялась, B4) | `tests/test_mitm_proxy_reachable_unit.py` (device-free) x1 + `tests/test_rating_listing.py` целиком (12 тестов, включая TC-009[LIKE-work1]) x2 (emulator-5554) | unit: `4 passed in 0.15s`, `PYTEST_EXIT=0`; rating run1: `12 passed in 385.96s (0:06:25)`, `PYTEST_EXIT=0`; rating run2: `12 passed in 391.01s (0:06:31)`, `PYTEST_EXIT=0`. 0/24 FAIL по `test_rating_listing.py` за оба прогона, ни одного `net::ERR_PROXY_CONNECTION_FAILED` | Fixed → Verified |
 
 ## Обсуждение
 
@@ -152,3 +152,39 @@ Witness (device, emulator-5554, Appium уже поднят на :4723):
 Пересмотра стратегии/рисков не требует. Новых блокеров не обнаружено.
 `status: Open → Fixed`, лок снят. Готово к `fix-verifier` (B4 → D1, долг
 тестовой обвязки — сборку приложения ждать не нужно, guard test-maintainer).
+
+**2026-07-19T02:00:00Z — fix-verifier, Fixed → Verified.** Окружение поднято
+штатно (`Start-Emulator`/`Install-App`/`Start-Appium`, emulator-5554), сборка
+не менялась относительно момента фикса (`source_commit
+63f6aac3b1ea1dfad82f68b8196aa6cf56f41853`, `version_code 11`, test_debt — B4
+не требует новой сборки приложения). Прогнано согласно брифу:
+
+- `tests/test_mitm_proxy_reachable_unit.py` (новая device-free юнит-проба
+  guard'а `wait_device_proxy_reachable`): `4 passed in 0.15s`, `PYTEST_EXIT=0`.
+- `tests/test_rating_listing.py` целиком (12 тестов, включая исходно
+  флейкующий `TC-009[LIKE-work1]`) — дважды подряд для проверки стабильности
+  guard'а под повторными прогонами:
+  - run1: `12 passed in 385.96s (0:06:25)`, `PYTEST_EXIT=0`.
+  - run2 (синхронно, без фонового запуска): `12 passed in 391.01s (0:06:31)`,
+    `PYTEST_EXIT=0`.
+
+Суммарно 0/24 FAIL по `test_rating_listing.py` за оба прогона этой проверки —
+ни одного `net::ERR_PROXY_CONNECTION_FAILED`, что уже согласуется с
+собственным witness test-maintainer (0/36 FAIL за 3 их прогона). Фикс
+устраняет причину, а не маскирует симптом: guard `wait_device_proxy_reachable`
+опрашивает TCP-достижимость прокси СО СТОРОНЫ УСТРОЙСТВА (`adb shell nc`)
+после `set_device_proxy()`+`start_replay()` и ДО `yield` фикстуры —
+устраняется именно диагностированный race NAT-уровня qemu (`_wait_listening`
+раньше подтверждал только хост-порт, не видимость с устройства), а не
+расширяется rerun-whitelist поверх симптома (вариант 2 сознательно отклонён
+test-maintainer). `pytest.ini` не тронут — подтверждено. Класс-фикс:
+затрагивает саму фикстуру `replay`, используемую ВСЕМИ `@pytest.mark.replay`
+тестами (не только rating-batch), задокументированный явно в разделе
+«Окружение» этого бага. Вердикт: **Verified**. Лок снят.
+
+Дефекты-собратья: не замечено новых — класс (единая точка входа через
+`replay`-фикстуру) уже покрыт заявленным охватом фикса; отдельно отмечаю для
+координатора то, что уже зафиксировано test-maintainer: батч
+`rating-batch-009-010-011-012-043-044-045-056` был заблокирован именно этим
+долгом и теперь формально разблокирован для повторной приёмки — это не новая
+находка, просто явная ссылка для следующего шага очереди.

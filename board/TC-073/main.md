@@ -2,27 +2,27 @@
 key: "TC-073"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p0"
 summary: "Rate-кнопка отражает бейдж рейтинга непрозрачным цветом BADGE-палитры на replay-листинге (replay)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:canary", "risk:R-02/R-04"]
+labels: ["test-case", "area:canary", "risk:R-02/R-04", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-18T08:56:07Z"
-updated: "2026-07-18T08:56:07Z"
+created: "2026-07-19T04:33:02Z"
+updated: "2026-07-19T04:33:02Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Rate-кнопка отражает бейдж рейтинга непрозрачным цветом BADGE-палитры на replay-листинге (replay)
 
 _Спроецировано из `test-cases/canary/TC-073.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-073 — Бейдж рейтинга = цвет Rate-кнопки (replay)
 

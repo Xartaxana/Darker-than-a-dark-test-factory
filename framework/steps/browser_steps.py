@@ -1,11 +1,16 @@
 """Бизнес-шаги содержимого WebView, не привязанные к конкретному нативному экрану."""
 from __future__ import annotations
 
+import time
 import uuid
 
 import allure
 from appium.webdriver.common.appiumby import AppiumBy
-from selenium.common.exceptions import StaleElementReferenceException, WebDriverException
+from selenium.common.exceptions import (
+    StaleElementReferenceException,
+    TimeoutException,
+    WebDriverException,
+)
 
 from framework.config import settings
 from framework.core import contexts
@@ -23,6 +28,12 @@ HOME_URL = "https://archiveofourown.org"
 # Статическая информационная страница AO3 — см. `open_stable_tall_page` docstring
 # (AT-BUG-015) за обоснованием выбора именно этого URL.
 STABLE_TALL_LIVE_URL = f"{HOME_URL}/tos"
+# Реальный листинг «последних обновлённых» работ AO3 (дефолтная сортировка
+# revised_at) — используется canary-кейсами контракта селекторов (TC-068/070),
+# которым нужна ЖИВАЯ листинговая страница с ≥1 work-блёрбом, но не важен
+# конкретный состав/количество работ (в отличие от `open_stable_tall_page`,
+# см. AT-BUG-015 п.2 про time-sensitive контент этого же URL).
+LIVE_LISTING_URL = f"{HOME_URL}/works"
 # `.test` — зарезервированный RFC 2606 TLD, никогда не резолвится DNS'ом — гарантирует
 # `ERR_NAME_NOT_RESOLVED` детерминированно, независимо от состояния живого AO3 (R-03) и
 # без mitmproxy/офлайн-режима сети (TC-046, значение из «Проверяемые данные» кейса).
@@ -299,6 +310,143 @@ def open_listing(driver, url: str):
         )
 
 
+@allure.step("When в WebView открыт URL {url} (ждёт полной загрузки документа)")
+def open_url_and_wait_ready(driver, url: str, timeout: int | None = None) -> None:
+    """Навигация на произвольный URL без ожидания специфичного контента (блёрбов
+    и т.п.) — годится и для живой домашней/произвольной страницы AO3 (TC-066), и
+    для replay-фикстур без work-блёрбов (TC-067, `ao3_home_smoke.mitm`)."""
+    with contexts.in_webview(driver):
+        driver.get(url)
+        wait_until(
+            driver,
+            lambda d: d.execute_script("return document.readyState;") == "complete",
+            timeout=timeout or settings.WEBVIEW_LOAD_TIMEOUT,
+            message=f"страница {url} не завершила загрузку (readyState != complete)",
+        )
+
+
+@allure.step("Then в JS-контексте страницы присутствует маркер инъекции bridge (window.__ao3Bridge)")
+def assert_bridge_marker_present(driver, timeout: int | None = None) -> None:
+    """Опрашивает `window.__ao3Bridge`, не читает один раз: bridgeScript —
+    отдельный `evaluateJavascript`-вызов, идущий ПОСЛЕДНИМ в цепочке нескольких
+    таких вызовов внутри `onPageFinished` (BrowserScreen.kt ~594-613) — тот же
+    класс гонки, что и другие JS-маркеры этого модуля (см. `assert_active_tab_url`);
+    одноразовое чтение сразу после навигации могло бы поймать окно ДО выполнения
+    bridgeScript (TC-066/067)."""
+    with contexts.in_webview(driver):
+        wait_until(
+            driver,
+            lambda d: ListingPage(d).bridge_marker_present(),
+            timeout=timeout or settings.WEBVIEW_LOAD_TIMEOUT,
+            message="маркер window.__ao3Bridge не появился — bridge не инжектирован",
+        )
+
+
+@allure.step("Then каждый work-блёрб листинга имеет извлекаемый непустой числовой work id, их количество совпадает с количеством h4.heading")
+def assert_blurb_selector_matches_headings(driver, min_count: int = 1) -> list[str]:
+    """TC-068/069: доказывает, что `selectors.WORK_BLURB` не промахивается мимо
+    части работ и не ловит посторонние `<li>` — сверка count(WORK_BLURB) ==
+    count(h4.heading), плюс каждый извлечённый work id непустой и числовой (тот
+    же способ извлечения, что `ao3_bridge.js::applyAllFilters`). Возвращает список
+    work id — вызывающий тест (TC-069) сверяет его ТОЧНОЕ множество с эталонными
+    данными фикстуры."""
+    with contexts.in_webview(driver):
+        page = ListingPage(driver)
+        work_ids = page.blurb_work_ids()
+        heading_count = page.heading_count()
+    assert len(work_ids) >= min_count, (
+        f"на листинге найдено {len(work_ids)} work-блёрбов, ожидали >= {min_count}"
+    )
+    for wid in work_ids:
+        assert wid and wid.isdigit(), (
+            f"work id {wid!r}, извлечённый из id блёрба, не непустой числовой"
+        )
+    assert len(work_ids) == heading_count, (
+        f"количество work-блёрбов ({len(work_ids)}) не совпадает с количеством "
+        f"h4.heading ({heading_count}) — селектор промахивается мимо части работ "
+        f"или ловит посторонние <li>"
+    )
+    return work_ids
+
+
+@allure.step("Then у каждого work-блёрба листинга ровно одна Rate-кнопка внутри одного btn-wrap, привязанная к своему work id, в состоянии «неоценено»")
+def assert_every_blurb_has_unrated_rate_button(driver, timeout: int | None = None) -> list[str]:
+    """TC-070/071: инвариант «у каждого work-блёрба есть ровно одна СОБСТВЕННАЯ
+    Rate-кнопка, привязанная к ЕГО work id» — не пример на одной работе. Ждёт
+    (не читает один раз), пока количество `[data-ao3-rate-btn]` не догонит
+    количество блёрбов: initial-injection проход bridge (`ao3_bridge.js`
+    стр.851-869) синхронный внутри своего IIFE, но независимая от него навигация
+    WebView могла успеть отрисовать `li`-блёрбы (статический HTML AO3) чуть
+    раньше, чем bridge вообще начал выполняться (тот же класс гонки, что и
+    остальные опросы этого модуля)."""
+    with contexts.in_webview(driver):
+        page = ListingPage(driver)
+        work_ids = page.blurb_work_ids()
+        assert work_ids, "на листинге не найдено ни одного work-блёрба — нечего проверять"
+        wait_until(
+            driver,
+            lambda d: len(ListingPage(d).css_all(selectors.RATE_BUTTON)) >= len(work_ids),
+            timeout=timeout or settings.WEBVIEW_LOAD_TIMEOUT,
+            message="Rate-кнопки не инжектированы для всех work-блёрбов листинга",
+        )
+        for work_id in work_ids:
+            state = page.rate_button_state(work_id)
+            assert state["wrap_count"] == 1, (
+                f"work {work_id}: ожидали ровно один [data-ao3-btn-wrap], нашли {state['wrap_count']}"
+            )
+            assert state["button_count"] == 1, (
+                f"work {work_id}: ожидали ровно одну [data-ao3-rate-btn], нашли {state['button_count']}"
+            )
+            assert state["attr"] == work_id, (
+                f"work {work_id}: атрибут data-ao3-rate-btn={state['attr']!r} не совпадает с work id блёрба"
+            )
+            assert state["bg"] in ("", "transparent", "rgba(0, 0, 0, 0)"), (
+                f"work {work_id}: Rate-кнопка не в состоянии «неоценено» (bg={state['bg']!r})"
+            )
+    return work_ids
+
+
+@allure.step("When открыта живая листинговая страница {url} (устойчиво к Cloudflare bot-check, R-03)")
+def open_live_listing(driver, url: str, timeout: int | None = None) -> None:
+    """Как `open_listing`, но для ЖИВОГО archiveofourown.org, подверженного
+    Cloudflare bot-check (R-03): интерстишл-страница технически «загружается»
+    (readyState complete, тот же hostname archiveofourown.org, см. заметки
+    TC-066 про guard `ao3_bridge.js`), не содержит work-блёрбов и сама НЕ
+    перенаправляет себя внутри WebView — заголовок остаётся «Just a moment...»
+    произвольно долго (эмпирически проверено диагностикой при автоматизации
+    TC-068/070: 15с ожидания на месте не дали self-redirect). Клиентский JS-
+    челлендж всё же выполняется в фоне и оставляет clearance-cookie — ПОВТОРНАЯ
+    навигация на ТОТ ЖЕ URL после короткой паузы типично проходит уже с реальным
+    контентом (эмпирически: 1 повтор после ~4с хватило). Общий бюджет —
+    `settings.WEBVIEW_LOAD_TIMEOUT`, разбитый на короткие попытки, а не одно
+    длинное ожидание — иначе первая интерстишл-попытка съедает весь таймаут, не
+    оставляя шанса на повторную навигацию. `open_listing` (replay-фикстуры) этому
+    риску не подвержен — там нет реальной Cloudflare, повторные попытки не нужны."""
+    total_timeout = timeout or settings.WEBVIEW_LOAD_TIMEOUT
+    attempt_timeout = 8
+    deadline = time.time() + total_timeout
+    with contexts.in_webview(driver):
+        last_exc: Exception | None = None
+        while time.time() < deadline:
+            driver.get(url)
+            remaining = max(1, int(deadline - time.time()))
+            try:
+                wait_until(
+                    driver,
+                    lambda d: len(d.find_elements(AppiumBy.CSS_SELECTOR, selectors.WORK_BLURB)) > 0,
+                    timeout=min(attempt_timeout, remaining),
+                    message="живая листинговая страница не отдала work-блёрбы за эту попытку",
+                )
+                return
+            except TimeoutException as exc:
+                last_exc = exc
+        raise TimeoutException(
+            f"живая листинговая страница {url} не отдала work-блёрбы за "
+            f"{total_timeout}s несколькими попытками (устойчивый Cloudflare "
+            f"bot-check, R-03)"
+        ) from last_exc
+
+
 @allure.step("Then блёрб работы {work_id} скрыт фильтрацией на листинге")
 def assert_blurb_hidden(driver, work_id: str):
     """Опрашивает `display:none` блёрба, а не читает его один раз: скрытие — следствие
@@ -332,9 +480,22 @@ def tap_rate_button(driver, work_id: str):
     bridge по `li[id^="work_"]`, уже пройденного к моменту, когда `open_listing`
     дождался блёрбов), доп. ожидание готовности хендлера не нужно. Клик открывает
     нативный `RatingOverlay` (bottom-sheet) поверх WebView — ожидание его появления
-    делает вызывающий шаг (`rating_steps.rate_via_listing_overlay`), не этот."""
+    делает вызывающий шаг (`rating_steps.rate_via_listing_overlay`), не этот.
+
+    Клик через JS DOM API, не Selenium `.click()` (TC-072/074/076, диагностика на
+    живом archiveofourown.org): реальная страница держит в DOM `div#tos_prompt`
+    (CSS-класс `hidden`, полноэкранный оверлей) — Chromedriver's native click
+    геометрически считает его перекрывающим точку клика (`elementFromPoint`
+    возвращает именно его, а не саму Rate-кнопку) и падает
+    `ElementNotInteractableException`, хотя визуально/логически элемент скрыт.
+    Тот же класс проблемы, что уже решён для `SortFilterFormPage.click_save_filter`
+    (см. модульный докстринг `sort_filter_form_page.py`) — JS `element.click()`
+    не требует геометрической интерактивности и всё равно вызывает обработчик,
+    добавленный `addEventListener('click', ...)` в `makeRateButton`, с тем же
+    наблюдаемым эффектом, что реальный тап пользователя."""
     with contexts.in_webview(driver):
-        ListingPage(driver).rate_button(work_id).click()
+        btn = ListingPage(driver).rate_button(work_id)
+        driver.execute_script("arguments[0].scrollIntoView({block: 'center'}); arguments[0].click();", btn)
 
 
 @allure.step("Then на карточке работы {work_id} на листинге появился бейдж рейтинга")
@@ -365,6 +526,110 @@ def assert_rating_badge_visible_all(driver, work_id: str, expected_count: int = 
             message=f"бейдж рейтинга работы {work_id} не появился у всех {expected_count} "
                     f"вхождений на листинге",
         )
+
+
+@allure.step("Then Rate-кнопка работы {work_id} в состоянии «неоценено» (прозрачный фон)")
+def assert_rate_button_unrated(driver, work_id: str):
+    """TC-073: сверка НЕГАТИВНОЙ ветки бейджа per-work — вызывается СРАЗУ после
+    `assert_rating_badge_visible` другой работы того же листинга (не опрос):
+    `applyRatings` красит Rate-кнопки ВСЕХ `li[id^="work_"]` за ОДИН синхронный
+    проход `forEach`, поэтому если бейдж целевой работы уже подтверждён опросом,
+    состояние остальных в ЭТОМ ЖЕ вызове уже тоже финализировано (тот же приём,
+    что `assert_tag_not_highlighted`)."""
+    with contexts.in_webview(driver):
+        state = ListingPage(driver).rate_button_state(work_id)
+    assert state["bg"] in ("", "transparent", "rgba(0, 0, 0, 0)"), (
+        f"work {work_id}: Rate-кнопка не в состоянии «неоценено» (bg={state['bg']!r})"
+    )
+
+
+@allure.step("Then Note-кнопка работы {work_id} присутствует, title равен засеянному/сохранённому комментарию «{expected_title}»")
+def assert_note_button_present(driver, work_id: str, expected_title: str, timeout: int | None = None):
+    """TC-074/075: опрашивает появление `[data-ao3-note-btn]` — следствие нативного
+    round-trip (сохранение через UI live-кейса ИЛИ применение засеянных данных при
+    первой загрузке replay-листинга), тот же класс гонки, что `assert_rating_badge_visible`."""
+    with contexts.in_webview(driver):
+        wait_until(
+            driver,
+            lambda d: ListingPage(d).has_note_button(work_id),
+            timeout=timeout or settings.WEBVIEW_LOAD_TIMEOUT,
+            message=f"Note-кнопка работы {work_id} не появилась (comment не пуст, но кнопка не инжектирована)",
+        )
+        actual_title = ListingPage(driver).note_button_title(work_id)
+    assert actual_title == expected_title, (
+        f"title Note-кнопки работы {work_id} не совпадает с ожидаемым комментарием: "
+        f"{actual_title!r} != {expected_title!r}"
+    )
+
+
+@allure.step("Then Note-кнопка работы {work_id} отсутствует (нет comment)")
+def assert_note_button_absent(driver, work_id: str):
+    """Мгновенная проверка (не опрос) — вызывается ПОСЛЕ `assert_note_button_present`
+    другой работы того же листинга (см. докстринг `assert_rate_button_unrated` за тем
+    же обоснованием синхронного единого прохода `applyRatings`), либо как
+    предусловие Given до какого-либо действия (работа без comment остаётся такой,
+    гонки со временем нет)."""
+    with contexts.in_webview(driver):
+        assert not ListingPage(driver).has_note_button(work_id), (
+            f"Note-кнопка работы {work_id} неожиданно присутствует (comment не засеян/не сохранялся)"
+        )
+
+
+@allure.step("Then Tag-кнопка работы {work_id} присутствует")
+def assert_tag_button_present(driver, work_id: str, timeout: int | None = None):
+    """TC-076/077: опрашивает появление `[data-ao3-tag-btn]` — тот же класс гонки,
+    что `assert_note_button_present`."""
+    with contexts.in_webview(driver):
+        wait_until(
+            driver,
+            lambda d: ListingPage(d).has_tag_button(work_id),
+            timeout=timeout or settings.WEBVIEW_LOAD_TIMEOUT,
+            message=f"Tag-кнопка работы {work_id} не появилась (личный тег вне AO3-набора карточки, но кнопка не инжектирована)",
+        )
+
+
+@allure.step("Then Tag-кнопка работы {work_id} отсутствует")
+def assert_tag_button_absent(driver, work_id: str):
+    """Мгновенная проверка (не опрос) — см. докстринг `assert_note_button_absent`:
+    вызывается ПОСЛЕ подтверждённого барьера (`assert_rating_badge_visible`/
+    `assert_tag_button_present` другой работы того же листинга) либо как
+    предусловие без гонки со временем."""
+    with contexts.in_webview(driver):
+        assert not ListingPage(driver).has_tag_button(work_id), (
+            f"Tag-кнопка работы {work_id} неожиданно присутствует (личный тег отсутствует "
+            f"или полностью пересекается с AO3-тегами карточки)"
+        )
+
+
+@allure.step("Then прочитаны собственные AO3-теги карточки работы {work_id} на листинге")
+def own_ao3_tags(driver, work_id: str) -> list[str]:
+    """TC-076/077: читает `ul.tags.commas li a.tag` работы `work_id` — тот же набор,
+    что `ao3_bridge.js::getCustomTags` строит в `ao3Set`. Нужно на живом листинге,
+    где состав AO3-тегов конкретной карточки не детерминирован заранее (в отличие
+    от replay-фикстуры `listing_basic.mitm`)."""
+    with contexts.in_webview(driver):
+        return ListingPage(driver).own_tags(work_id)
+
+
+@allure.step("Then среди work id листинга (кроме {exclude_work_id}) найдена работа с хотя бы одним собственным AO3-тегом")
+def find_blurb_with_ao3_tags(driver, work_ids: list[str], exclude_work_id: str) -> tuple[str, str]:
+    """TC-076: проверка ветки биусловности «личный тег СОВПАДАЕТ с AO3-тегом
+    карточки» требует карточку, реально имеющую хотя бы один AO3-тег — на живом
+    листинге это не гарантировано для ЛЮБОЙ работы, поэтому перебираем `work_ids`
+    (кроме уже занятой `exclude_work_id`), пока не найдём подходящую. Возвращает
+    `(work_id, первый_текст_её_AO3-тега)`."""
+    with contexts.in_webview(driver):
+        page = ListingPage(driver)
+        for work_id in work_ids:
+            if work_id == exclude_work_id:
+                continue
+            tags = page.own_tags(work_id)
+            if tags:
+                return work_id, tags[0]
+    raise AssertionError(
+        f"не найдено ни одной работы листинга (кроме {exclude_work_id!r}) с собственным "
+        f"AO3-тегом — не на чем проверить ветку биусловности Tag-кнопки (TC-076)"
+    )
 
 
 @allure.step("When нажата Note-кнопка работы {work_id} на листинге")
@@ -507,11 +772,150 @@ def assert_save_filter_dialog_visible(driver, timeout: int | None = None) -> Non
     )
 
 
-@allure.step("When в диалоге введено имя «{name}» и нажат Save")
+def _wait_relationship_controls_ready(driver, timeout: int | None = None) -> None:
+    """Ждёт, пока ОБА инжектированных main-pairing чекбокса (include/exclude)
+    появятся в DOM — `injectMainPairingCheckbox`/`injectExcludeMainPairingCheckbox`
+    вызываются синхронно внутри общего IIFE вместе с инъекцией Rate-кнопок, но
+    независимая от bridge навигация WebView могла обогнать его выполнение (тот
+    же класс гонки, что `assert_every_blurb_has_unrated_rate_button`)."""
+    with contexts.in_webview(driver):
+        wait_until(
+            driver,
+            lambda d: (
+                len(d.find_elements(AppiumBy.CSS_SELECTOR, selectors.MAIN_PAIRING_CHECKBOX)) > 0
+                and len(d.find_elements(AppiumBy.CSS_SELECTOR, selectors.EXCL_MAIN_PAIRING_CHECKBOX)) > 0
+            ),
+            timeout=timeout or settings.WEBVIEW_LOAD_TIMEOUT,
+            message="инжектированные relationship-чекбоксы (main-pairing include/exclude) не появились",
+        )
+
+
+@allure.step("Given открыта форма Sort & Filter (replay) на {url}, инжектированные relationship-контролы готовы")
+def open_sort_filter_form_relationship_ready(driver, url: str) -> None:
+    open_listing(driver, url)
+    _wait_relationship_controls_ready(driver)
+
+
+@allure.step("Given открыта живая форма Sort & Filter на {url}, инжектированные relationship-контролы готовы")
+def open_live_sort_filter_form_relationship_ready(driver, url: str) -> None:
+    open_live_listing(driver, url)
+    _wait_relationship_controls_ready(driver)
+
+
+# scope: "include" (#include_relationship_tags / [data-ao3-main-pairing-cb], TC-078/079)
+# или "exclude" (#exclude_relationship_tags / [data-ao3-excl-main-pairing-cb], TC-080/081) —
+# два независимых DOM-узла с одинаковым контрактом доступности (симметрия §9).
+_RELATIONSHIP_SCOPES = {
+    "include": (selectors.INCLUDE_RELATIONSHIP_TAGS, selectors.MAIN_PAIRING_CHECKBOX),
+    "exclude": (selectors.EXCLUDE_RELATIONSHIP_TAGS, selectors.EXCL_MAIN_PAIRING_CHECKBOX),
+}
+
+
+@allure.step("When в {scope}-списке relationship-тегов переключён (клик) чекбокс на позиции {index}")
+def toggle_relationship_checkbox(driver, scope: str, index: int) -> None:
+    container_selector, _ = _RELATIONSHIP_SCOPES[scope]
+    with contexts.in_webview(driver):
+        SortFilterFormPage(driver).toggle_relationship_checkbox(container_selector, index)
+
+
+@allure.step("Then инжектированный main-pairing чекбокс {scope}-списка доступен (disabled=false, label непрозрачный)")
+def assert_relationship_checkbox_enabled(driver, scope: str, timeout: int | None = None) -> None:
+    _, checkbox_selector = _RELATIONSHIP_SCOPES[scope]
+    with contexts.in_webview(driver):
+        page = SortFilterFormPage(driver)
+        wait_until(
+            driver,
+            lambda d: bool(state := page.checkbox_availability_state(checkbox_selector)) and not state["disabled"],
+            timeout=timeout or settings.WEBVIEW_LOAD_TIMEOUT,
+            message=f"чекбокс {scope}-списка не стал доступен (disabled остаётся true)",
+        )
+        state = page.checkbox_availability_state(checkbox_selector)
+    assert state is not None and state["opacity"] == "1", (
+        f"чекбокс {scope}-списка доступен (disabled=false), но label.style.opacity "
+        f"!= '1' (opacity={state and state['opacity']!r})"
+    )
+
+
+@allure.step("Then инжектированный main-pairing чекбокс {scope}-списка НЕ доступен (disabled=true, opacity 0.4)")
+def assert_relationship_checkbox_disabled(driver, scope: str, timeout: int | None = None) -> None:
+    _, checkbox_selector = _RELATIONSHIP_SCOPES[scope]
+    with contexts.in_webview(driver):
+        page = SortFilterFormPage(driver)
+        wait_until(
+            driver,
+            lambda d: bool(state := page.checkbox_availability_state(checkbox_selector)) and state["disabled"],
+            timeout=timeout or settings.WEBVIEW_LOAD_TIMEOUT,
+            message=f"чекбокс {scope}-списка не стал недоступен (disabled остаётся false)",
+        )
+        state = page.checkbox_availability_state(checkbox_selector)
+    assert state is not None and state["opacity"] == "0.4", (
+        f"чекбокс {scope}-списка недоступен (disabled=true), но label.style.opacity "
+        f"!= '0.4' (opacity={state and state['opacity']!r})"
+    )
+
+
+@allure.step("Then инжектированная кнопка Save filter — ровно одна, сразу после submit-кнопки формы")
+def assert_save_filter_button_present_once(driver, timeout: int | None = None) -> None:
+    with contexts.in_webview(driver):
+        page = SortFilterFormPage(driver)
+        wait_until(
+            driver,
+            lambda d: page.save_profile_button_count() >= 1,
+            timeout=timeout or settings.WEBVIEW_LOAD_TIMEOUT,
+            message="инжектированная кнопка Save filter не появилась рядом с submit формы",
+        )
+        count = page.save_profile_button_count()
+        adjacent = page.save_profile_button_immediately_after_submit()
+    assert count == 1, f"ожидали ровно одну кнопку Save filter, нашли {count}"
+    assert adjacent, (
+        "кнопка Save filter не является nextElementSibling submit-кнопки формы "
+        "(#work-filters input[name=\"commit\"][type=\"submit\"])"
+    )
+
+
+@allure.step("When форма Sort & Filter мутирует (class #work-filters) {times} раз(а) — имитация повторного раскрытия/скрытия")
+def mutate_sort_filter_form(driver, times: int = 2) -> None:
+    """Каждый вызов — ОТДЕЛЬНЫЙ `execute_script` (полноценный round-trip через
+    chromedriver), а не несколько мутаций в одном синхронном скрипте — иначе
+    `MutationObserver` батчит их в ОДИН вызов callback'а вместо `times` отдельных
+    срабатываний (микротаск-очередь флашится между раздельными вызовами
+    `execute_script`, но не внутри одного). Проверяет реальную идемпотентность
+    ЧЕРЕЗ ГРАНИЦЫ обработчика, а не однократный вызов инжектора (TC-082/083)."""
+    with contexts.in_webview(driver):
+        page = SortFilterFormPage(driver)
+        for _ in range(times):
+            page.toggle_form_class()
+
+
+@allure.step("When в диалоге введено имя «{name}» и нажат Save; дожидается фоновой пост-save навигации")
 def save_filter_profile_as(driver, name: str) -> None:
+    """AT-BUG-016: `confirmSaveFilter` (`BrowserViewModel.kt`) уходит в ФОНОВУЮ
+    навигацию активной вкладки (`navigateActiveTabTo`) сразу после подтверждения
+    диалога — эта навигация форвардит на live-URL (суб-ресурсы `sort_filter_form.mitm`
+    не самодостаточны) и раньше НЕ дожидалась перед `open_tab("Settings")`, из-за чего
+    UiAutomator2 tree-dump (`_find_pill`) конкурировал с GPU-компоновкой ещё
+    рендерящейся живой страницы и детерминированно крашил qemu (0xc0000005).
+    Дожидаемся `document.readyState == 'complete'` НОВОЙ страницы (URL сменился
+    относительно того, что было открыто до Save) прежде чем возвращать управление —
+    к моменту `open_tab("Settings")` фоновый рендер уже осел."""
+    with contexts.in_webview(driver):
+        pre_save_url = driver.current_url
+
     screen = BrowserScreen(driver)
     screen.enter_filter_profile_name(name)
     screen.confirm_save_filter()
+
+    with contexts.in_webview(driver):
+        wait_until(
+            driver,
+            lambda d: (
+                (d.current_url or "") != pre_save_url
+                and d.execute_script("return document.readyState;") == "complete"
+            ),
+            timeout=settings.WEBVIEW_LOAD_TIMEOUT,
+            message="фоновая пост-save навигация (BrowserViewModel.confirmSaveFilter) "
+                    "не завершилась (URL не сменился или readyState не complete)",
+        )
 
 
 # --- Кастомная error page при ошибке загрузки главного фрейма (TC-046,

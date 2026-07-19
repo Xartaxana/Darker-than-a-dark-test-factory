@@ -2,27 +2,27 @@
 key: "TC-075"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p0"
 summary: "Note-кнопка инжектируется в work-блёрб replay-листинга тогда и только тогда, когда есть comment (replay)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:canary", "risk:R-02/R-04"]
+labels: ["test-case", "area:canary", "risk:R-02/R-04", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-18T08:56:17Z"
-updated: "2026-07-18T08:56:17Z"
+created: "2026-07-19T04:33:02Z"
+updated: "2026-07-19T04:33:02Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Note-кнопка инжектируется в work-блёрб replay-листинга тогда и только тогда, когда есть comment (replay)
 
 _Спроецировано из `test-cases/canary/TC-075.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-075 — Note-кнопка присутствует ⟺ есть comment (replay)
 

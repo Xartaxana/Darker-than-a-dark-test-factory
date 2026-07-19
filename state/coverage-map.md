@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-18T18:15:23Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-19T04:37:02Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -11,7 +11,7 @@ generated_at: 2026-07-18T18:15:23Z · генератор: `scripts/coverage_map.
 |---|---|---|---|
 | backup | 1 | 1 | designed-full |
 | browser | 8 | 8 | designed-full |
-| canary | 18 | 0 | none |
+| canary | 18 | 12 | partial |
 | downloads | 8 | 8 | designed-full |
 | errors | 1 | 1 | designed-full |
 | filter-profiles | 3 | 2 | partial |
@@ -59,7 +59,7 @@ generated_at: 2026-07-18T18:15:23Z · генератор: `scripts/coverage_map.
 | browse-tap-fullscreen | browse | нет кейсов |
 | browse-pinch-font | browse | browser:TC-053[Automated] |
 | browse-two-finger-brightness | browse | browser:TC-055[Automated] |
-| browse-bridge-injection | browse | canary:TC-066[Approved], canary:TC-067[Approved], canary:TC-068[Approved], canary:TC-069[Approved] |
+| browse-bridge-injection | browse | canary:TC-066[Automated], canary:TC-067[Automated], canary:TC-068[Automated], canary:TC-069[Automated] |
 | browse-tabstrip-indicators | browse | нет кейсов |
 | browse-bottombar-nav | browse | smoke:TC-002[Automated] |
 | sidepanel-home | side-panel | browser:TC-057[Automated] |
@@ -119,7 +119,7 @@ generated_at: 2026-07-18T18:15:23Z · генератор: `scripts/coverage_map.
 | rating-entry-work-panel | rating-notes | rating:TC-007[Automated], rating:TC-008[Automated], rating:TC-010[Automated] |
 | rating-entry-listing-overlay | rating-notes | rating:TC-009[Automated], rating:TC-011[Automated] |
 | rating-note-button-listing | rating-notes | rating:TC-044[Automated] |
-| bridge-rate-note-tag-buttons | ao3-bridge | canary:TC-068[Approved], canary:TC-069[Approved], canary:TC-070[Approved], canary:TC-071[Approved], canary:TC-072[Approved], canary:TC-073[Approved], canary:TC-074[Approved], canary:TC-075[Approved], canary:TC-076[Approved], canary:TC-077[Approved] |
+| bridge-rate-note-tag-buttons | ao3-bridge | canary:TC-068[Automated], canary:TC-069[Automated], canary:TC-070[Automated], canary:TC-071[Automated], canary:TC-072[Automated], canary:TC-073[Automated], canary:TC-074[Automated], canary:TC-075[Automated], canary:TC-076[Automated], canary:TC-077[Automated] |
 | bridge-badge-sync-multi | ao3-bridge | rating:TC-012[Automated] |
 | bridge-hide-filter | ao3-bridge | visibility:TC-013[Automated], visibility:TC-014[Automated], visibility:TC-015[Automated], rating:TC-043[Automated], rating:TC-045[Automated] |
 | bridge-dim-filter | ao3-bridge | нет кейсов |
@@ -200,16 +200,16 @@ generated_at: 2026-07-18T18:15:23Z · генератор: `scripts/coverage_map.
 
 ### canary
 
-- coverage_status: **none** (0/18 Automated)
+- coverage_status: **partial** (12/18 Automated)
 - риски: R-02, R-02/R-04
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-066 [P0, Approved], TC-067 [P0, Approved], TC-068 [P0, Approved], TC-069 [P0, Approved], TC-070 [P0, Approved], TC-071 [P0, Approved], TC-072 [P0, Approved], TC-073 [P0, Approved], TC-074 [P0, Approved], TC-075 [P0, Approved], TC-076 [P0, Approved], TC-077 [P0, Approved], TC-078 [P0, Approved], TC-079 [P0, Approved], TC-080 [P0, Approved], TC-081 [P0, Approved], TC-082 [P0, Approved], TC-083 [P0, Approved]
-- автотесты (automated_by): —
+- P0/P1 не в Automated: TC-078 [P0, Approved], TC-079 [P0, Approved], TC-080 [P0, Approved], TC-081 [P0, Approved], TC-082 [P0, Approved], TC-083 [P0, Approved]
+- автотесты (automated_by): framework/tests/canary/test_ao3_selectors.py::test_bridge_marker_present_live, framework/tests/canary/test_ao3_selectors.py::test_bridge_marker_present_replay, framework/tests/canary/test_ao3_selectors.py::test_note_button_present_iff_comment_live, framework/tests/canary/test_ao3_selectors.py::test_note_button_present_iff_comment_replay, framework/tests/canary/test_ao3_selectors.py::test_rate_button_badge_opaque_color_live, framework/tests/canary/test_ao3_selectors.py::test_rate_button_badge_opaque_color_replay, framework/tests/canary/test_ao3_selectors.py::test_rate_button_injected_on_live_listing, framework/tests/canary/test_ao3_selectors.py::test_rate_button_injected_on_replay_listing, framework/tests/canary/test_ao3_selectors.py::test_tag_button_present_iff_custom_tag_live, framework/tests/canary/test_ao3_selectors.py::test_tag_button_present_iff_custom_tag_replay, framework/tests/canary/test_ao3_selectors.py::test_work_blurb_selector_matches_live_listing, framework/tests/canary/test_ao3_selectors.py::test_work_blurb_selector_matches_replay_listing
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
-| P0 |  |  | 18 |  |  |
+| P0 |  |  | 6 | 12 |  |
 | P1 |  |  |  |  |  |
 | P2 |  |  |  |  |  |
 | P3 |  |  |  |  |  |
@@ -252,7 +252,7 @@ generated_at: 2026-07-18T18:15:23Z · генератор: `scripts/coverage_map.
 - риски: R-09
 - кейсы без risk: нет
 - P0/P1 не в Automated: TC-040 [P1, Approved]
-- автотесты (automated_by): framework/tests/test_filter_profiles.py::test_apply_filter_profile, framework/tests/test_filter_profiles.py::test_delete_filter_profile
+- автотесты (automated_by): framework/tests/test_filter_profiles.py::test_apply_filter_profile, framework/tests/test_filter_profiles.py::test_delete_filter_profile, framework/tests/test_filter_profiles.py::test_save_filter_profile
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |

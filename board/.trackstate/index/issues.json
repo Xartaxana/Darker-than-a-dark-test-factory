@@ -215,16 +215,17 @@
     "epicPath": null,
     "summary": "ao3_bridge.js инжектируется в живую AO3-страницу (window.__ao3Bridge marker)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:canary",
-      "risk:R-02"
+      "risk:R-02",
+      "automation:active"
     ],
-    "updated": "2026-07-18T08:54:33Z",
-    "resolution": null,
+    "updated": "2026-07-19T04:33:02Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -237,16 +238,17 @@
     "epicPath": null,
     "summary": "ao3_bridge.js инжектируется на replay-странице (window.__ao3Bridge marker, детерминированная регрессия)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:canary",
-      "risk:R-02"
+      "risk:R-02",
+      "automation:active"
     ],
-    "updated": "2026-07-18T08:55:01Z",
-    "resolution": null,
+    "updated": "2026-07-19T04:33:02Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -259,16 +261,17 @@
     "epicPath": null,
     "summary": "Селектор work-блёрба и извлечение work id совпадают с живым DOM листинга AO3 (live)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:canary",
-      "risk:R-02"
+      "risk:R-02",
+      "automation:active"
     ],
-    "updated": "2026-07-18T08:55:09Z",
-    "resolution": null,
+    "updated": "2026-07-19T04:33:02Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -281,16 +284,17 @@
     "epicPath": null,
     "summary": "Селектор work-блёрба и извлечение work id совпадают с replay-DOM листинга (replay)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:canary",
-      "risk:R-02"
+      "risk:R-02",
+      "automation:active"
     ],
-    "updated": "2026-07-18T08:55:14Z",
-    "resolution": null,
+    "updated": "2026-07-19T04:33:02Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -303,16 +307,17 @@
     "epicPath": null,
     "summary": "Rate-кнопка инжектируется в каждый неоценённый work-блёрб живого листинга (live)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:canary",
-      "risk:R-02"
+      "risk:R-02",
+      "automation:active"
     ],
-    "updated": "2026-07-18T08:55:22Z",
-    "resolution": null,
+    "updated": "2026-07-19T04:33:02Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -325,16 +330,17 @@
     "epicPath": null,
     "summary": "Rate-кнопка инжектируется в каждый неоценённый work-блёрб replay-листинга (replay)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:canary",
-      "risk:R-02"
+      "risk:R-02",
+      "automation:active"
     ],
-    "updated": "2026-07-18T08:55:28Z",
-    "resolution": null,
+    "updated": "2026-07-19T04:33:02Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -347,16 +353,17 @@
     "epicPath": null,
     "summary": "Rate-кнопка отражает бейдж рейтинга непрозрачным цветом BADGE-палитры на живом листинге (live)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:canary",
-      "risk:R-02/R-04"
+      "risk:R-02/R-04",
+      "automation:active"
     ],
-    "updated": "2026-07-18T08:55:38Z",
-    "resolution": null,
+    "updated": "2026-07-19T04:33:02Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -369,16 +376,17 @@
     "epicPath": null,
     "summary": "Rate-кнопка отражает бейдж рейтинга непрозрачным цветом BADGE-палитры на replay-листинге (replay)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:canary",
-      "risk:R-02/R-04"
+      "risk:R-02/R-04",
+      "automation:active"
     ],
-    "updated": "2026-07-18T08:56:07Z",
-    "resolution": null,
+    "updated": "2026-07-19T04:33:02Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -391,16 +399,17 @@
     "epicPath": null,
     "summary": "Note-кнопка инжектируется в work-блёрб живого листинга тогда и только тогда, когда есть comment (live)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:canary",
-      "risk:R-02/R-04"
+      "risk:R-02/R-04",
+      "automation:active"
     ],
-    "updated": "2026-07-18T08:56:14Z",
-    "resolution": null,
+    "updated": "2026-07-19T04:33:02Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -413,16 +422,17 @@
     "epicPath": null,
     "summary": "Note-кнопка инжектируется в work-блёрб replay-листинга тогда и только тогда, когда есть comment (replay)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:canary",
-      "risk:R-02/R-04"
+      "risk:R-02/R-04",
+      "automation:active"
     ],
-    "updated": "2026-07-18T08:56:17Z",
-    "resolution": null,
+    "updated": "2026-07-19T04:33:02Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -435,16 +445,17 @@
     "epicPath": null,
     "summary": "Tag-кнопка инжектируется в work-блёрб живого листинга тогда и только тогда, когда есть личные теги вне AO3-тегов карточки (live)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:canary",
-      "risk:R-02/R-04"
+      "risk:R-02/R-04",
+      "automation:active"
     ],
-    "updated": "2026-07-18T08:56:25Z",
-    "resolution": null,
+    "updated": "2026-07-19T04:33:02Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -457,16 +468,17 @@
     "epicPath": null,
     "summary": "Tag-кнопка инжектируется в work-блёрб replay-листинга тогда и только тогда, когда есть личные теги вне AO3-тегов карточки (replay)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:canary",
-      "risk:R-02/R-04"
+      "risk:R-02/R-04",
+      "automation:active"
     ],
-    "updated": "2026-07-18T08:56:26Z",
-    "resolution": null,
+    "updated": "2026-07-19T04:33:02Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -818,7 +830,7 @@
     "epicPath": null,
     "summary": "Save filter сохраняет текущий запрос AO3 Sort&Filter под именем",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -826,7 +838,7 @@
       "area:filter-profiles",
       "risk:R-09"
     ],
-    "updated": "2026-07-02T17:17:59Z",
+    "updated": "2026-07-19T01:52:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2199,7 +2211,7 @@
     "epicPath": null,
     "summary": "TC-047 scroll-preservation assert недобит — WebView scrollY на Browse root не даёт устойчивого ненулевого значения после scrollTo (нужна диагностика)",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -2207,8 +2219,8 @@
       "test_case:TC-047",
       "sev:minor"
     ],
-    "updated": "2026-07-18T03:15:00Z",
-    "resolution": null,
+    "updated": "2026-07-19T01:10:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -2221,7 +2233,7 @@
     "epicPath": null,
     "summary": "TC-040 (Save filter dialog) детерминированно крашит qemu-эмулятор (0xc0000005) при переходе в Settings — реальный live-рендер тяжёлой страницы + недождённая пост-save навигация",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2229,7 +2241,7 @@
       "test_case:TC-040",
       "sev:major"
     ],
-    "updated": "2026-07-18T05:35:00Z",
+    "updated": "2026-07-19T01:52:53Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2243,15 +2255,15 @@
     "epicPath": null,
     "summary": "replay-фикстура: интермиттентный net::ERR_PROXY_CONNECTION_FAILED на первой навигации после set_device_proxy — не покрыт rerun-whitelist pytest.ini",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:major"
     ],
-    "updated": "2026-07-18T09:47:00Z",
-    "resolution": null,
+    "updated": "2026-07-19T02:00:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -2272,7 +2284,78 @@
       "test_case:TC-026",
       "sev:major"
     ],
-    "updated": "2026-07-18T00:00:00Z",
+    "updated": "2026-07-19T02:09:49Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-019",
+    "path": "board/AT-BUG-019/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "navigation.py::_find_pill фильтр \"WebView\" not in class не исключает a11y-потомков WebView — риск клика по ссылке/чекбоксу СТРАНИЦЫ вместо нативной ручки-пилюли",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-040",
+      "sev:minor"
+    ],
+    "updated": "2026-07-19T01:52:53Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-020",
+    "path": "board/AT-BUG-020/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "TC-009[READ-work2] детерминированно падает на open_tab(\"Library\") после dismiss_rating_overlay — NoSuchElementError на UiSelector().text(\"Library\")",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-009",
+      "sev:major"
+    ],
+    "updated": "2026-07-19T05:21:48Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-021",
+    "path": "board/AT-BUG-021/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Эмулятор дважды отваливается mid-test на driver.get()/switch_to.context внутри open_live_listing (Sort&Filter форма) — DevTools disconnected -> adb device not found; кандидат-сиблинг AT-BUG-016",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-078",
+      "test_case:TC-079",
+      "test_case:TC-080",
+      "test_case:TC-081",
+      "test_case:TC-082",
+      "test_case:TC-083",
+      "sev:major"
+    ],
+    "updated": "2026-07-19T06:05:00Z",
     "resolution": null,
     "children": [],
     "archived": false

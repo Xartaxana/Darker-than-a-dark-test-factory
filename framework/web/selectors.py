@@ -22,6 +22,18 @@ PAGE_HEADING = "h1"
 
 WORK_BLURB = "li[id^='work_'].work.blurb"
 BLURB_TITLE = "h4.heading a"
+# Контейнер заголовка работы (не только ссылка) — TC-068/069: количество
+# `h4.heading` на странице сверяется с количеством `WORK_BLURB`, независимая проба
+# того, что селектор блёрба не занижает/завышает набор (промо-блоки листинга AO3
+# визуально похожи на work.blurb, но не совпадают с этим CSS-классом). СКОУП
+# `#main` обязателен: `h4.heading` — переиспользуемый АО3-шный класс заголовка
+# модуля, а не уникальный признак блёрба работы — сайтовый футер
+# (`div#footer.region li.module.group`, живые заголовки «About the Archive» /
+# «Contact Us» / «Development») тоже им помечен (эмпирически найдено при
+# автоматизации TC-068 на живом archiveofourown.org, 2026-07-19: 20 блёрбов vs
+# 23 h4.heading без скоупа). `#main` — контейнер основного контента страницы,
+# футер вне него на всех проверенных типах страниц AO3.
+WORK_HEADING = "#main h4.heading"
 BLURB_AUTHOR = "h4.heading a[rel='author']"
 BLURB_WORDCOUNT = ".stats .words"
 TAGS_CONTAINER = "ul.tags.commas"
@@ -53,6 +65,18 @@ SAVE_PROFILE_BTN = "[data-ao3-save-profile]"
 # TC-040, ao3_bridge.js::injectSaveFilterButton читает `form.elements` по имени
 # `work_search[words_from]`. Сверено с `sort_filter_form.mitm` (реальная запись).
 WORK_SEARCH_WORDS_FROM = "#work_search_words_from"
+
+# Реальные контейнеры relationship-чекбоксов формы AO3 Sort & Filter (не
+# инжектируются bridge; в разметке это `<dd id="...">`, не `<ul>`, несмотря на
+# имя переменной `ul` в ao3_bridge.js) — TC-078/079/080/081. Сверено с
+# `sort_filter_form.mitm`.
+INCLUDE_RELATIONSHIP_TAGS = "#include_relationship_tags"
+EXCLUDE_RELATIONSHIP_TAGS = "#exclude_relationship_tags"
+# Инжектируется bridge (`injectMainPairingCheckbox`/`injectExcludeMainPairingCheckbox`)
+# первым пунктом соответствующего контейнера — TC-078/079 (include) и TC-080/081
+# (exclude, независимый DOM-узел).
+MAIN_PAIRING_CHECKBOX = "[data-ao3-main-pairing-cb]"
+EXCL_MAIN_PAIRING_CHECKBOX = "[data-ao3-excl-main-pairing-cb]"
 
 
 def blurb_by_work_id(work_id: str) -> str:

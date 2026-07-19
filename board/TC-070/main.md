@@ -2,27 +2,27 @@
 key: "TC-070"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p0"
 summary: "Rate-кнопка инжектируется в каждый неоценённый work-блёрб живого листинга (live)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:canary", "risk:R-02"]
+labels: ["test-case", "area:canary", "risk:R-02", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-18T08:55:22Z"
-updated: "2026-07-18T08:55:22Z"
+created: "2026-07-19T04:33:02Z"
+updated: "2026-07-19T04:33:02Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Rate-кнопка инжектируется в каждый неоценённый work-блёрб живого листинга (live)
 
 _Спроецировано из `test-cases/canary/TC-070.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-070 — Rate-кнопка на неоценённом блёрбе (live)
 

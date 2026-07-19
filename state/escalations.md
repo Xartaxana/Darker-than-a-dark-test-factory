@@ -67,3 +67,150 @@ resolved при закрытии.
   предметом AT-BUG-009 (Open).
 - Статус: **resolved 2026-07-16** (корень диагностирован, остаток работ
   отслеживается артефактами AT-BUG-011/012 и очередью B4)
+
+## ESC-002 — AT-BUG-016, 2 неудачных ремедиационных захода test-maintainer подряд (qemu 0xc0000005, разные шаги)
+
+- Артефакт: `bugs/AT-BUG-016.md` (status: Open, lock снят)
+- С какого времени: 2026-07-19T01:19:51Z
+- Причина: B4-починка (test_debt, major) — два самостоятельных фикса
+  применены и прогнаны (см. `bugs/AT-BUG-016.md` «Обсуждение» за полным
+  witness): (1) `browser_steps.py::save_filter_profile_as` теперь ждёт
+  `document.readyState == 'complete'` пост-save навигации перед
+  `open_tab("Settings")` — закрывает ИМЕННО ту гонку (tree-dump поверх
+  mid-render), что диагностировал critic изначально; (2)
+  `sort_filter_form.mitm` пересобран самодостаточным для ПЕРВОЙ живой
+  страницы (`<link>/<script src>`/внешний `<img>` вырезаны из тела —
+  форма/кнопка не зависят от site-JS/CSS, проверено по коду). Прогоны:
+  1-й PASS (`PYTEST_EXIT=0`, 46.65s, только фикс 1) → 2-й FAIL (краш
+  qemu 03:04:32 local, ДРУГОЙ шаг — первая загрузка формы, не Settings)
+  → применён фикс 2 → 3-й FAIL (краш qemu 03:14:33 local, ТРЕТИЙ шаг —
+  внутри самой пост-save навигации, которая по-прежнему форвардит живьём
+  целиком, включая СВОИ `<link>/<script src>`, т.к. это ВТОРОЙ документ,
+  не покрытый фиксом 2). 1 PASS из 3 прогонов TC-040; TC-041 (регрессия,
+  не пересекается с фикстурой/шагами TC-040) зелёный все разы.
+- Что нужно от человека/critic: (а) решение — завершать ли вариант 1
+  полностью (записать/подготовить И post-save filtered-URL, детерминируем
+  статическим разбором `ao3_bridge.js`-логики сборки `qs` + дефолтов
+  формы, как второй `.mitm`-flow с тем же усечением) ИЛИ переходить к
+  варианту 3 (env: `-gpu swiftshader_indirect` в параметрах эмулятора —
+  правка `tasks.ps1`/AVD-конфига, инфраструктурный мехнизм шире мандата
+  test-maintainer по `framework/`/`test-cases/`); (б) не исключено, что
+  это НЕ специфика TC-040/`sort_filter_form.mitm`, а более общая хрупкость
+  GPU-эмуляции (WHPX) под нагрузкой рендера ЛЮБОЙ тяжёлой live AO3-страницы
+  — см. в bug-файле названную (не подтверждённую) ось `open_stable_tall_page`
+  (`/tos`, AT-BUG-015) как сиблинг для точечной проверки, если решение (а)
+  склонится к варианту 3.
+- Текущее состояние теста: `test_save_filter_profile` (TC-040) снова под
+  `@pytest.mark.skip(reason="AT-BUG-016...")` — guard от повторных крашей
+  эмулятора в regression/p1 до решения выше. Окружение оставлено здоровым
+  (`Start-Emulator -WritableSystem` → `Get-Device: DEVICE` → `Install-App:
+  Success` → `Start-Appium: ready`) для следующего агента.
+- Статус: **resolved 2026-07-19** — критик дал явную директиву (закрыть
+  последнюю live-forward точку вариантом 1 полностью + проверить глубину
+  усечения), test-maintainer выполнил буквально в 3-м заходе: записан
+  второй self-contained flow для пост-save навигации (URL выведен
+  статическим разбором формы, подтверждён диагностическим mitm-addon
+  логом — `is_replay=response`, ни одного forward), краш qemu пропал
+  полностью. Вскрылась и закрыта вторая причина (не входившая в исходный
+  диагноз): усечение `<link>` сняло CSS-скрытие `.narrow-hidden`/
+  `.dropdown .menu`, из-за чего `navigation.py::_find_pill` мискликал
+  ссылку внутри WebView — восстановлено минимальным inline `<style>`.
+  TC-040 3 зелёных подряд, TC-041 регрессия зелёная, `automated_by`
+  заполнен, skip снят. Гипотеза systemic SwiftShader-хрупкости — снята
+  (полная изоляция убрала краш без env-митигации, стоп-гейт варианта 3
+  не потребовался). Полный след — `bugs/AT-BUG-016.md` «Обсуждение»
+  запись 2026-07-19T01:52:53Z.
+
+## ESC-003 — AT-BUG-018, TC-026 long-press поверх WebView — механизм недостижим 5-м/6-м независимым способом подряд
+
+- Артефакт: `bugs/AT-BUG-018.md` (status: Open, lock снят)
+- С какого времени: 2026-07-19T02:09:49Z
+- Причина: B4-починка (test_debt, major, `debt_kind: broken_environment`).
+  Прочитан `app-under-test/.../ui/browser/BrowserScreen.kt` целиком (READ-ONLY,
+  критерий готовности п.(в)) — блокирующего `setOnTouchListener`/программного
+  запрета `longClickable` НЕ найдено; найдена анцесторная Compose
+  `pointerInput` на `Box`, оборачивающем `AndroidView(WebView)` (kt:254-312) —
+  правдоподобная, НО НЕ эмпирически подтверждённая гипотеза дополнительного
+  источника нестабильности (не consume'ит однопальцевые события, но участвует
+  в диспетчеризации). Опробованы 2 НОВЫХ направления инъекции (не входили в
+  исходные 3 механизма): (a) `mobile: longClickGesture` с `elementId`
+  нативного WebView-контейнера + офсет, (b) сырые W3C Actions с micro-jitter
+  между `pointer_down`/`pointer_up`. Координата ре-валидирована контрольным
+  коротким тапом в этом прогоне (навигация подтверждена). Результат: 0/8 на
+  обоих новых направлениях (живой прогон, witness в `bugs/AT-BUG-018.md`
+  «Обсуждение» 2026-07-19) — хуже исходных 12 попыток (1/12). Суммарно 1/20
+  (5%) по 5 независимым механизмам инъекции. Правило 6 (эскалация после 1-2
+  разумных попыток) применено — форсированное закрытие НЕ делалось.
+- Что нужно от человека (Lead/test-strategist): решение по критерию
+  готовности п.2 — рекомендация test-maintainer: TC-026 остаётся ПОСТОЯННО НЕ
+  автоматизированным (ручной/exploratory regression), заметка кейса дополняется
+  явным «ограничение инструментария, не test_debt конкретного теста».
+  Альтернатива через Library→open work (уже используется TC-058-подобно,
+  `framework/tests/test_side_panel.py:233-238`) даёт тот же наблюдаемый эффект
+  «2 вкладки, активная не переключилась», но идёт ДРУГИМ код-путём (не
+  `WebView.setOnLongClickListener`+`HitTestResult`) — НЕ покрывает риск R-08
+  как есть; принятие такой замены требует явного решения test-designer/
+  test-strategist о пересмотре скоупа TC-026, не решения test-maintainer.
+  Опционально: оценить целесообразность запроса продуктовой команде на
+  debug-хук (broadcast/instrumentation) для `openTab(background=true)` —
+  правка `app-under-test/`, вне мандата test-maintainer.
+- Статус: **open** — долг остаётся `Open`, ждёт решения Lead/test-strategist
+  по варианту 2.
+
+## ESC-004 — TC-009[READ-work2] детерминированно падает на open_tab("Library") после dismiss_rating_overlay, не связано с batch B canary
+
+- Артефакт: `framework/tests/test_rating_listing.py::test_rate_work_from_listing_overlay[listing_basic.mitm-READ-work2]` (TC-009, p0, уже Automated до этой сессии)
+- С какого времени: 2026-07-19T05:21:48Z (первый прогон полного p0-регресса после batch B)
+- Причина: полный p0-регресс (38 тестов, `Invoke-Pytest -m p0`, PYTEST_EXIT=1,
+  35 passed / 3 failed) после автоматизации batch B (TC-072..077, канарейка
+  bridge-rate-note-tag-buttons R-02/R-04) дал 3 падения: `TC-007[READ]`
+  (chromedriver `no such execution context: loader has changed while
+  resolving nodes` при создании сессии), `TC-015` (`swipe_to_text` не нашёл
+  "Hide Disliked works" в Settings), `TC-009[READ-work2]` (`TimeoutException`
+  на `BottomNav.open("Library")` после `dismiss_rating_overlay`). Повторный
+  прогон ЭТИХ ЖЕ 11 тестов (все параметризации TC-007/TC-009 + TC-015) БЕЗ
+  конкурентной нагрузки: TC-007 и TC-015 прошли ВСЕМИ вариантами (не
+  воспроизвелись — похоже на конкуренцию за хост-ресурсы во время
+  18-минутного марафона, не код), но `TC-009[READ-work2]` упал СНОВА на том
+  же месте. Изолированный прогон именно этого узла (`pytest
+  tests/test_rating_listing.py::test_rate_work_from_listing_overlay[listing_basic.mitm-READ-work2]`)
+  ЕЩЁ 3 раза подряд — 3/3 FAIL, идентичная точка и трасса
+  (`NoSuchElementError` на `UiSelector().text("Library")` сразу после
+  `dismiss_rating_overlay`). ДЕТЕРМИНИРОВАННО, не флейк.
+- Почему НЕ регрессия batch B (доказано, не предположение): `git diff`
+  против HEAD показывает `framework/screens/navigation.py` и
+  `framework/steps/app_steps.py` (весь код-путь `open_tab`/`BottomNav.open`)
+  БЕЗ единого изменения; `framework/screens/rating_overlay.py` и
+  `framework/steps/rating_steps.py` — только ДОБАВЛЕННЫЕ новые
+  методы/функции (TC-074/076 live-ввод note/tag), ни одна существующая
+  строка (`dismiss()`, `choose()`, `is_visible()`, `rate_via_listing_overlay`,
+  `assert_rating_button_selected`, `dismiss_rating_overlay`) не тронута.
+  Единственная модификация в самом коде-пути этого теста —
+  `browser_steps.tap_rate_button` (Selenium `.click()` → JS
+  `element.click()`, чинит `ElementNotInteractableException` от
+  `div#tos_prompt` на живом archiveofourown.org, TC-072/074/076) — она
+  успешно отрабатывает РАНЬШЕ падения (доказано: `assert_rating_button_
+  selected`/`assert_rating_badge_visible` дальше по тому же тесту проходят).
+  Падает код, идентичный уже закоммиченному состоянию, специфично для
+  комбинации READ/work2 — похоже на существующий test debt (test-maintainer
+  область), не связанный с batch B.
+- Что нужно от человека/test-maintainer: диагностика, почему именно
+  READ-вариант TC-009 детерминированно не находит вкладку "Library" после
+  `dismiss_rating_overlay` (гипотеза — тайминг scrim-тапа/анимации закрытия
+  bottom-sheet специфичен для этой комбинации рейтинга/работы, не
+  проверялась глубже — вне мандата test-automator). batch B (TC-072..077)
+  этой находкой НЕ блокирован — все 6 новых кейсов прошли 3/3 изолированно
+  и присутствуют/зелёные в этом же полном регрессе.
+- ПОПРАВКА critic (2026-07-19, ревью приёмки batch B): исходная формулировка
+  «доказано, не регрессия batch B» переоценена — доказано только, что
+  падающая строка не отредактирована; вклад ЕДИНСТВЕННОЙ реальной правки
+  код-пути (`tap_rate_button`: JS-клик + `scrollIntoView`) через побочный
+  эффект (сдвиг раскладки → `dismiss_rating_overlay` промахивается по scrim)
+  НЕ исключён. Согласовать с видимым противоречием: `bugs/AT-BUG-017.md`
+  несёт witness ОТ ТОГО ЖЕ ДНЯ с 12/12 passed (до правки `scrollIntoView`).
+- Статус: **resolved 2026-07-19** — регресс вынесен из этой чисто
+  информационной записи в машиночитаемый артефакт `bugs/AT-BUG-020.md`
+  (test_debt, flaky_test, major, Open; `defect_found` в routing-log,
+  ref=TC-009), т.к. B4-сканер очереди читает `bugs/*.md`, не
+  `escalations.md` — здесь долг был бы невидим конвейеру. Дальнейшее
+  ведение — в AT-BUG-020.md.

@@ -2,27 +2,27 @@
 key: "TC-068"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p0"
 summary: "Селектор work-блёрба и извлечение work id совпадают с живым DOM листинга AO3 (live)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:canary", "risk:R-02"]
+labels: ["test-case", "area:canary", "risk:R-02", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-18T08:55:09Z"
-updated: "2026-07-18T08:55:09Z"
+created: "2026-07-19T04:33:02Z"
+updated: "2026-07-19T04:33:02Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Селектор work-блёрба и извлечение work id совпадают с живым DOM листинга AO3 (live)
 
 _Спроецировано из `test-cases/canary/TC-068.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-068 — Селектор work-блёрба + work id на живом листинге (live)
 

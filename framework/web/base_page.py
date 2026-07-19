@@ -27,3 +27,10 @@ class BasePage:
             lambda d: (els := d.find_elements(AppiumBy.CSS_SELECTOR, selector)) and els[0],
             timeout=timeout, message=f"не найден DOM-элемент: {selector}",
         )
+
+    def bridge_marker_present(self) -> bool:
+        """Наблюдаемый факт того, что `ao3_bridge.js` выполнился на текущей
+        странице (`window.__ao3Bridge === true`, guard стр.5-6 ao3_bridge.js) —
+        JS-глобал, не элемент DOM-дерева, поэтому читается через execute_script,
+        не через css-локатор (TC-066/067)."""
+        return bool(self.driver.execute_script("return window.__ao3Bridge === true;"))
