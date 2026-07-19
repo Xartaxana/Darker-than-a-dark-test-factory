@@ -23,7 +23,7 @@
 | # | Событие | Как детектится | Что запускает |
 |---|---|---|---|
 | E1 | Пуш в репозиторий приложения | `[план]` build-watch: `git fetch` в `app-under-test/`, новые коммиты на default-ветке → `gradlew assembleDebug` → обновить `state/app-under-test.yaml` (versionCode/hash/commit) | Правило «новая сборка → smoke, regression» |
-| E2 | Человек перевёл карточку на борде | `[план]` board-inbound: сравнить статусы карточек `board/` (HEAD) с артефактами; принять только переходы из whitelist §3 | Соответствующее правило (fix-verifier, test-maintainer, test-automator…) |
+| E2 | Человек перевёл карточку на борде | board-inbound (pre_step, скрипт `scripts/board_inbound.py` — реализован 2026-07-04, docs/07): сравнить статусы карточек `board/` (HEAD) с артефактами; принять только переходы из whitelist §3 | Соответствующее правило (fix-verifier, test-maintainer, test-automator…) |
 | E3 | Комментарий человека на карточке/в артефакте | board-inbound переносит комментарий в раздел `## Обсуждение` артефакта с меткой `awaiting: qa` | Правило «ответить на вопрос разработчика» |
 | E4 | Расписание | Ночная регрессия, дневной canary, heartbeat-проход qa-loop каждые N часов | test-runner / полный проход |
 | E5 | Таймер SLA | sla-sweep на шаге 0: сравнение `status_since` артефактов с порогами `state/sla.yaml` | Эскалация (§4), не диспатч агента |
@@ -116,7 +116,7 @@ test-maintainer).
 Новый вердикт триажа: `APP_CHANGED` (D9) — добавить в реестр вердиктов
 failure-analyst рядом с `SITE_CHANGED`.
 
-## 3. Обратный канал борды (board-inbound) `[план]`
+## 3. Обратный канал борды (board-inbound)
 
 `board/` генерируется из артефактов, но TrackState умеет и записывать (переходы,
 комментарии — коммитами в `board/`). Правила обратного канала:
