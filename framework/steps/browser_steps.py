@@ -1140,6 +1140,15 @@ def assert_tab_title_at_position(driver, position: int, expected_title: str, tim
     assert actual == expected_title
 
 
+@allure.step("When пользователь делает long-press по ссылке работы «{title}» на листинге")
+def long_press_work_link(driver, title: str, timeout: int | None = None) -> None:
+    """Настоящий native long-press поверх WebView-ссылки (TC-026) — см.
+    `BrowserScreen.long_press_link_by_text` и `bugs/AT-BUG-018.md` за полным
+    обоснованием механизма (native a11y-узел ссылки, не координаты/офсет
+    контейнера WebView)."""
+    BrowserScreen(driver).long_press_link_by_text(title, timeout)
+
+
 @allure.step("When нажата Retry-ссылка на error page")
 def click_retry(driver) -> None:
     """Клик по Retry-ссылке инициирует повторную загрузку исходного (упавшего) URL —

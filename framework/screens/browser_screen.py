@@ -396,3 +396,52 @@ class BrowserScreen(BaseScreen):
         hist = cropped.histogram()
         total = sum(hist)
         return sum(i * c for i, c in enumerate(hist)) / total
+
+    # --- Long-press ссылки ВНУТРИ WebView (TC-026, bugs/AT-BUG-018.md, Fixed) ---
+    # 5 независимых механизмов синтетической long-press-инъекции ПО КООРДИНАТАМ
+    # (голые x/y, elementId контейнера `android.webkit.WebView` + офсет, сырые
+    # W3C Actions с/без micro-jitter, `adb shell input swipe` с идентичными
+    # start/end) дали 1/20 успехов (<10%) — системная ненадёжность touch-инъекции
+    # Appium/UiAutomator2 НАД WebView-контентом, не проблема локатора/координаты.
+    # Разбор AT-BUG-019 (латентный риск `navigation.py::_find_pill`) вскрыл ключевой
+    # факт: интерактивные элементы ВНУТРИ живого WebView (ссылки/кнопки/чекбоксы
+    # страницы) экспонируются UiAutomator2 как ОТДЕЛЬНЫЕ NATIVE a11y-узлы
+    # (`android.view.View`, `clickable=true`, `content-desc` = видимый текст
+    # элемента) — НЕ как часть самого контейнера `android.webkit.WebView`. Долгий
+    # тап через `mobile: longClickGesture` по `elementId` ИМЕННО ЭТОГО узла — тот
+    # же паттерн, что уже стабильно работает на native Compose-элементах (см.
+    # `library_screen.py::long_press_work`) — даёт устойчивую инъекцию (разведка:
+    # 5/5 успехов на ПЕРВОЙ попытке свежей сессии, ~4-5/6 при повторных попытках в
+    # одной сессии подряд — на порядок надёжнее координатных механизмов).
+    def find_link_a11y_node_by_text(self, text: str, timeout: int | None = None):
+        """Опрашивает НАТИВНОЕ a11y-дерево, а не читает один раз: проекция
+        WebView-контента DOM->a11y отстаёт от готовности самого DOM (`open_listing`
+        ждёт лишь JS/DOM-условие) — разведка наблюдала окна с всего 2-3 нативными
+        clickable-узлами (нижний scroll-индикатор/футер, без единого блёрба) сразу
+        после навигации. Сам WebView-контейнер исключается явно по className (тот
+        же класс риска, что `navigation.py::_find_pill`, AT-BUG-019) — матчинг
+        только по content-desc потомков, не по геометрии/координатам."""
+        contexts.to_native(self.driver)
+
+        def _find(d):
+            for el in d.find_elements(AppiumBy.XPATH, '//*[@clickable="true"]'):
+                cls = el.get_attribute("className") or ""
+                if "WebView" in cls:
+                    continue
+                if el.get_attribute("contentDescription") == text:
+                    return el
+            return False
+
+        return wait_until(
+            self.driver, _find, timeout=timeout,
+            message=f"native a11y-узел ссылки {text!r} не найден в дереве (проекция "
+                    f"WebView->a11y не успела или ссылка с таким текстом отсутствует)",
+        )
+
+    def long_press_link_by_text(self, text: str, timeout: int | None = None) -> None:
+        """Настоящий Android long-press по НАТИВНОМУ a11y-узлу ссылки внутри
+        WebView (не по координатам/офсету контейнера) — см. докстринг
+        `find_link_a11y_node_by_text` и `bugs/AT-BUG-018.md` за полным обоснованием."""
+        node = self.find_link_a11y_node_by_text(text, timeout)
+        self.driver.execute_script(
+            "mobile: longClickGesture", {"elementId": node.id, "duration": 1200})

@@ -10,8 +10,13 @@
   intent, минует chromedriver) для загрузки контента в конкретную вкладку и
   НАТИВНЫЙ заголовок чипа (`TabInfo.title`) для идентификации вкладок без похода
   в WEBVIEW.
-- TC-026 заблокирован тем же классом разведки (ненадёжность синтетического
-  long-press поверх WebView через Appium/UiAutomator2) — см. `bugs/AT-BUG-018.md`.
+- TC-026 (long-press по ссылке внутри WebView) автоматизирован НЕ через координаты
+  (5 механизмов инъекции по x/y дали 1/20 успехов — системная ненадёжность
+  Appium/UiAutomator2 touch-инъекции над WebView-контентом), а через `mobile:
+  longClickGesture` по `elementId` НАТИВНОГО a11y-узла самой ссылки (AT-BUG-019:
+  ссылки внутри WebView экспонируются UiAutomator2 как отдельные native-узлы, не
+  как часть контейнера WebView) — см. `BrowserScreen.long_press_link_by_text` и
+  полный разбор `bugs/AT-BUG-018.md` (Fixed).
 - Первый `open_deep_link` каждого теста этого модуля предваряется
   `app_steps.wait_home_ready_for_deep_link` (не `wait_ui_ready`) — харденинг
   гонки deep-link vs home-load (ревью 2026-07-18, п.5): без него
@@ -26,6 +31,7 @@ import allure
 import pytest
 
 from framework.data import recording_builder as rb
+from framework.data import works as W
 from framework.steps import app_steps, browser_steps
 
 
@@ -262,3 +268,48 @@ def test_tabs_persist_url_and_scroll_after_restart(replay, clean_app, driver):
     browser_steps.swipe_close_tab(driver, 0)  # закрыть вкладку 0 (маркер1), оставить маркер2
     browser_steps.assert_active_tab_url(driver, rb.tab_marker_url(2))
     browser_steps.assert_scroll_restored(driver)
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-026")
+@allure.title("Long-press ссылки открывает фоновую вкладку без переключения активной")
+@pytest.mark.parametrize("replay", [rb.LISTING_BASIC_FILENAME], indirect=True)
+def test_long_press_link_opens_background_tab_without_switching(replay, clean_app, driver):
+    # Given открыта одна вкладка на листинговой странице с видимой ссылкой на работу
+    # (активная вкладка = текущая) — `first_work` соответствует ПЕРВОЙ ссылке блёрба
+    # (`selectors.BLURB_TITLE` — `querySelector` берёт первый `h4.heading a`, тот же
+    # первый элемент `ALL_WORKS[0]`, для которого `build_replay_recordings.py::
+    # build_listing_basic` записал ТРЕТИЙ self-contained flow под её work-URL —
+    # AT-BUG-018 Fixed, механизм требует детерминированного разрешения фоновой
+    # навигации, без ухода в живую сеть на несуществующий синтетический id).
+    app_steps.wait_home_ready_for_deep_link(driver)
+    browser_steps.open_listing(driver, rb.LISTING_BASIC_URL)
+    first_work = W.LOVED
+    browser_steps.assert_active_tab_url(driver, rb.LISTING_BASIC_URL)
+
+    # When пользователь делает long-press по ссылке на работу — фоновая вкладка
+    # открывается СРАЗУ, без промежуточного context-меню (BrowserScreen.kt:640-648,
+    # setOnLongClickListener по HitTestResult зовёт viewModel.openTab(background=true)
+    # напрямую). Механизм — native a11y-узел ссылки (AT-BUG-019/AT-BUG-018 Fixed), не
+    # координаты/офсет контейнера WebView.
+    browser_steps.long_press_work_link(driver, first_work.title)
+
+    # Then появляется новая вкладка в strip (TabStrip виден только когда tabs>1)
+    browser_steps.assert_tab_strip_visible(driver, timeout=10)
+
+    # And активной остаётся исходная вкладка (листинг) — контент экрана не
+    # переключился на новую вкладку. chromedriver прилипает к вкладке-0
+    # (первый когда-либо созданный WebView, см. модульный докстринг) — вкладка-0
+    # здесь И ЕСТЬ исходная листинговая вкладка, поэтому опрос через WEBVIEW-контекст
+    # надёжно читает ИМЕННО активную (не какую-то другую) вкладку.
+    browser_steps.assert_active_tab_url(driver, rb.LISTING_BASIC_URL)
+
+    # And новая (фоновая) вкладка доступна по тапу на её чип в strip и показывает
+    # корректно загруженную страницу работы: переключаемся на неё, затем закрываем
+    # исходную вкладку-0 (см. модульный докстринг — единственный надёжный способ
+    # прочитать WEBVIEW-контент НЕ-нулевой вкладки: свести число вкладок к одной,
+    # что форсирует chromedriver переподключиться к единственной оставшейся)
+    browser_steps.switch_to_tab(driver, 1)
+    browser_steps.swipe_close_tab(driver, 0)
+    browser_steps.assert_active_tab_url(driver, first_work.url)

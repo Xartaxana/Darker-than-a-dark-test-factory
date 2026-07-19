@@ -30,12 +30,23 @@ def build_listing_basic() -> Path:
     (BrowserViewModel.kt) навигирует на `LISTING_BASIC_URL + '&' + <queryString
     профиля>` при выборе сохранённого FilterProfile из FilterPanel; без записанного
     flow под ЭТОТ URL server-replay не находит совпадения и уходит в live-сеть
-    (см. докстринг `LISTING_FILTERED_URL` в `recording_builder.py`)."""
+    (см. докстринг `LISTING_FILTERED_URL` в `recording_builder.py`).
+
+    ТРЕТИЙ flow — work-страница ПЕРВОЙ работы листинга (`ALL_WORKS[0]`, `LOVED`,
+    `href="/works/900000001"`) — TC-026 (`bugs/AT-BUG-018.md`, Fixed): long-press
+    по первой ссылке блёрба (`BLURB_TITLE` querySelector, тот же первый элемент)
+    открывает её в фоновой вкладке; без записанного flow под этим URL
+    `server_replay_extra=forward` увёл бы непокрытый TC-026 в живую сеть на
+    несуществующий синтетический id — тест перестал бы быть self-contained
+    replay-сценарием. Переиспользует `render_work_page_html`/`work.url`, тот же
+    приём, что `build_work_with_download`."""
     html = rb.render_listing_html(ALL_WORKS)
     base_flow = rb.make_html_get_flow(rb.LISTING_BASIC_URL, html)
     filtered_flow = rb.make_html_get_flow(rb.LISTING_FILTERED_URL, html)
+    first_work = ALL_WORKS[0]
+    work_page_flow = rb.make_html_get_flow(first_work.url, rb.render_work_page_html(first_work))
     path = settings.RECORDINGS_DIR / rb.LISTING_BASIC_FILENAME
-    rb.write_flows(path, [base_flow, filtered_flow])
+    rb.write_flows(path, [base_flow, filtered_flow, work_page_flow])
     return path
 
 

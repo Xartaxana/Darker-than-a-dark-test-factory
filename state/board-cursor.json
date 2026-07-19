@@ -326,8 +326,8 @@
   },
   "TC-020": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Blocked",
+    "board_status": "Blocked"
   },
   "TC-047": {
     "itype": "test-case",
@@ -496,8 +496,8 @@
   },
   "AT-BUG-018": {
     "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
+    "artifact_status": "Fixed",
+    "board_status": "Fixed"
   },
   "AT-BUG-019": {
     "itype": "bug",

@@ -4,16 +4,16 @@ title: "long-press по ссылке в WebView не триггерит нати
 type: test_debt
 debt_kind: broken_environment
 severity: major
-status: Open
+status: Fixed
 found_in: "test-automator (батч tabs-022-023-024-025-026, 2026-07-18): при автоматизации TC-026 (long-press ссылки открывает фоновую вкладку) синтетический long-press по координатам ссылки внутри WebView НЕ триггерит app-under-test/.../BrowserScreen.kt:641-652 (`webView.setOnLongClickListener` + `HitTestResult`) в подавляющем большинстве попыток."
-fixed_in: ""
+fixed_in: "framework (test-only, без сборки приложения) — framework/screens/browser_screen.py, framework/steps/browser_steps.py, framework/tests/test_tabs.py, scripts/build_replay_recordings.py"
 last_seen_in: ""
 test_cases: [TC-026]
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-07-18T00:00:00Z"
-updated: "2026-07-19T02:09:49Z"
+status_since: "2026-07-19T10:40:00Z"
+updated: "2026-07-19T10:40:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -216,3 +216,76 @@ Appium/UiAutomator2 над WebView-контентом независимо от 
 скоупа риска R-08 (иначе тест перестаёт проверять то, что заявлено в Given/When).
 Долг остаётся `Open` (не Fixed — критерий готовности не достигнут ни по одному
 варианту), решение по варианту 2 — за Lead/test-strategist.
+
+**2026-07-19T10:40:00Z — test-maintainer (финальная разведка по решению оператора,
+критерий готовности п.1 — рабочий механизм найден).** Задача: «посмотреть, есть ли
+ещё способы автоматизировать; если нет — оставить ручным кейсом». Опробованы ДВА
+НОВЫХ направления, не входивших в предыдущие 5 механизмов:
+
+1. **`mobile: longClickGesture` по `elementId` a11y-узла ссылки внутри WebView**
+   (не координат, не контейнера WebView+офсет) — использует находку
+   `bugs/AT-BUG-019.md` (латентный риск `_find_pill`): интерактивные элементы
+   ВНУТРИ живого `android.webkit.WebView` экспонируются UiAutomator2 как
+   ОТДЕЛЬНЫЕ native a11y-узлы (`android.view.View`, `clickable=true`,
+   `content-desc` = видимый текст элемента) — не как часть самого контейнера.
+   Разведочный прогон (временный `framework/tests/test_tc026_explore2.py`,
+   удалён после разведки): матчинг узла по `content-desc == title` (надёжнее
+   геометрии — первая попытка узкого XPath-фильтра `android.view.View` дала 0
+   кандидатов, широкий `[@clickable="true"]` + фильтр по className нашёл узел
+   `desc='A Loved Test Work'`, чьи bounds оказались точно под ранее вычисленной
+   и дважды подтверждённой координатой ссылки). Серия прогонов по 6 попыток в
+   ОДНОЙ сессии подряд дала 3/6, 4/6, 4/6, 3/6 успехов (наблюдавшиеся сбои —
+   `StaleElementReferenceException` ElementsCache между попытками и временные
+   окна, где WebView->a11y проекция ещё не успела отдать под-узлы, — тот же
+   класс гонки, что и другие опросы фреймворка, закрыт `wait_until`-поллингом
+   в финальной реализации). КЛЮЧЕВОЕ наблюдение: на ПЕРВОЙ попытке СВЕЖЕЙ
+   сессии (без предшествующих итераций в той же WebView) — 5/5 успехов
+   подряд по независимым разведочным прогонам, что соответствует реальному
+   профилю использования TC-026 (один long-press на свежей странице, не серия
+   попыток подряд).
+2. **`adb shell input motionevent DOWN x y` → pause ~1.2с → `adb shell input
+   motionevent UP x y`** (раздельные вызовы, не `input swipe` с идентичными
+   start/end) — направление НЕ понадобилось: направление 1 оказалось рабочим,
+   направление 2 не дозаявлено отдельным прогоном (правило 6, эскалация не
+   нужна — решение найдено раньше исчерпания бюджета).
+
+**Реализация (production, не разведочный код):**
+`framework/screens/browser_screen.py::find_link_a11y_node_by_text` (опрашивает
+нативное дерево через `wait_until`, не читает один раз — закрывает гонку
+WebView->a11y проекции, найденную в разведке) + `long_press_link_by_text`;
+`framework/steps/browser_steps.py::long_press_work_link` (Given/When/Then слой);
+`framework/tests/test_tabs.py::test_long_press_link_opens_background_tab_without_switching`
+(TC-026). Для детерминизма (без ухода в живую сеть на несуществующий синтетический
+id) `scripts/build_replay_recordings.py::build_listing_basic` расширен ТРЕТЬИМ
+self-contained flow — work-страница первой работы листинга (`ALL_WORKS[0]`,
+`render_work_page_html`, тот же приём, что `build_work_with_download`);
+`framework/data/recordings/listing_basic.mitm` перегенерирован
+(`python scripts/build_replay_recordings.py`), остальные recordings байт-в-байт
+идентичны (детерминированная генерация). `app-under-test/` не затронут.
+
+**Witness (живые прогоны, framework, синхронно):**
+```
+Invoke-Pytest tests/test_tabs.py::test_long_press_link_opens_background_tab_without_switching -v
+  run 1: PASSED, 1 passed in 31.20s, PYTEST_EXIT=0
+  run 2: PASSED, 1 passed in 32.66s, PYTEST_EXIT=0
+  run 3: PASSED, 1 passed in 30.94s, PYTEST_EXIT=0
+
+Invoke-Pytest tests/test_tabs.py -v  (полный модуль, TC-022..026)
+  5 passed in 218.24s, PYTEST_EXIT=0  (4-й зелёный прогон TC-026 подряд)
+
+Invoke-Pytest tests/test_replay_infra_probe.py tests/test_visibility.py -q
+  4 passed in 112.29s, PYTEST_EXIT=0  (регрессия: другие потребители
+  listing_basic.mitm не задеты расширением recording'а)
+```
+
+Критерий готовности п.1 достигнут: `automated_by` заполнен в `test-cases/tabs/
+TC-026.md`, 3+ зелёных прогона подряд (плюс регрессия) с выбранным механизмом.
+Статус кейса остаётся `Approved` (переход в `Automated` — только `test-reviewer`,
+F1-гейт, не входит в мандат test-maintainer) — рекомендован проход test-reviewer.
+Влияния на стратегию/риски нет — R-08 по-прежнему покрыт РОВНО тем кодовым путём,
+что требует Then кейса (`WebView.setOnLongClickListener`+`HitTestResult`), проход
+test-strategist не требуется.
+
+Долг переведён `Open → Fixed` (B4, guard `type: test_debt`, актор test-maintainer
+легален по `schemas/transitions.yaml`). ESC-003 (`state/escalations.md`) закрыта
+этим же ходом.

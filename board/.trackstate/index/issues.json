@@ -1495,7 +1495,7 @@
     "epicPath": null,
     "summary": "Clear all ratings сбрасывает бейджи на открытых страницах AO3 без перезагрузки",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-blocked",
     "priority": "p3",
     "assignee": "qa-agents",
     "labels": [
@@ -1503,7 +1503,7 @@
       "area:settings",
       "risk:R-01"
     ],
-    "updated": "2026-07-15T14:43:10Z",
+    "updated": "2026-07-19T09:55:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1814,7 +1814,7 @@
     "epicPath": null,
     "summary": "Long-press по ссылке открывает фоновую вкладку без переключения активной",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1822,7 +1822,7 @@
       "area:tabs",
       "risk:R-08"
     ],
-    "updated": "2026-07-02T17:31:37Z",
+    "updated": "2026-07-19T10:00:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2276,7 +2276,7 @@
     "epicPath": null,
     "summary": "long-press по ссылке в WebView не триггерит нативный setOnLongClickListener надёжно через Appium/UiAutomator2 (TC-026, фоновая вкладка)",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2284,7 +2284,7 @@
       "test_case:TC-026",
       "sev:major"
     ],
-    "updated": "2026-07-19T02:09:49Z",
+    "updated": "2026-07-19T10:40:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2421,7 +2421,7 @@
       "test_case:TC-020",
       "sev:minor"
     ],
-    "updated": "2026-07-18T12:00:00Z",
+    "updated": "2026-07-19T09:55:00Z",
     "resolution": null,
     "children": [],
     "archived": false

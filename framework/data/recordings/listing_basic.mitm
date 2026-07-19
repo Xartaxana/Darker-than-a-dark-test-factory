@@ -290,4 +290,34 @@
 </div>
 </body>
 </html>
-,7:headers;77:44:12:Content-Type,24:text/html; charset=utf-8,]25:14:content-length,4:7332,]]12:http_version;8:HTTP/1.1,}7:request;324:4:path;85:/works?ao3_companion_fixture=listing_basic&work_search%5Bquery%5D=applied-filter-test,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:32f07414-81bf-ab5a-4074-a726bea54837;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:562f4f2a-e14a-97f3-fb9b-e0e2564db0e3;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:cbc9b62d-32e5-e759-d878-5e26faef0d05;4:type;4:http;7:version;2:21#}
+,7:headers;77:44:12:Content-Type,24:text/html; charset=utf-8,]25:14:content-length,4:7332,]]12:http_version;8:HTTP/1.1,}7:request;324:4:path;85:/works?ao3_companion_fixture=listing_basic&work_search%5Bquery%5D=applied-filter-test,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:32f07414-81bf-ab5a-4074-a726bea54837;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:562f4f2a-e14a-97f3-fb9b-e0e2564db0e3;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:cbc9b62d-32e5-e759-d878-5e26faef0d05;4:type;4:http;7:version;2:21#}2913:9:websocket;0:~8:response;1537:6:reason;2:OK,11:status_code;3:200#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;1310:<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>A Loved Test Work | Archive of Our Own</title></head>
+<body>
+<div id="main" class="works-show region" role="main">
+  <div id="workskin">
+    <div class="preface group">
+      <h2 class="title heading">A Loved Test Work</h2>
+      <h3 class="byline heading"><a rel="author" href="/users/seed_author_a/pseuds/seed_author_a">seed_author_a</a></h3>
+      <h5 class="fandom tags"><a class="tag" href="/tags/Fandom Alpha/works">Fandom Alpha</a></h5>
+    </div>
+    <ul class="work navigation actions" role="navigation">
+      
+    <li class="download" title="Download">
+      <a>Download</a>
+      <ul class="download-list expandable" title="Download">
+        <li><a href="/downloads/900000001/A_Loved_Test_Work.pdf?updated_at=0" title="PDF">PDF</a></li>
+        <li><a href="/downloads/900000001/A_Loved_Test_Work.html?updated_at=0" title="HTML">HTML</a></li>
+        <li><a href="/downloads/900000001/A_Loved_Test_Work.mobi?updated_at=0" title="MOBI">MOBI</a></li>
+        <li><a href="/downloads/900000001/A_Loved_Test_Work.epub?updated_at=0" title="EPUB">EPUB</a></li>
+      </ul>
+    </li>
+    </ul>
+    <div class="wrapper">
+      <p>Test fixture body for download-flow recording (4200 words).</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>
+,7:headers;77:44:12:Content-Type,24:text/html; charset=utf-8,]25:14:content-length,4:1310,]]12:http_version;8:HTTP/1.1,}7:request;255:4:path;16:/works/900000001,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:c8837619-ef41-abcc-f98e-89235728c4d2;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:5f7ca42d-2366-bba3-b259-66ea62abedcd;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:74e1d1e5-c15f-1184-f4d4-fa7806f645c2;4:type;4:http;7:version;2:21#}

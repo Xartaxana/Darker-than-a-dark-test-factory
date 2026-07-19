@@ -2,7 +2,7 @@
 key: "TC-020"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-blocked"
 priority: "p3"
 summary: "Clear all ratings сбрасывает бейджи на открытых страницах AO3 без перезагрузки"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-15T14:43:10Z"
-updated: "2026-07-15T14:43:10Z"
+created: "2026-07-19T09:55:00Z"
+updated: "2026-07-19T09:55:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Clear all ratings сбрасывает бейджи на открытых страницах AO3 без перезагрузки
 
 _Спроецировано из `test-cases/settings/TC-020.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Blocked**._
 
 # TC-020 — Сброс бейджей на открытой странице AO3 после Clear all ratings
 
@@ -61,6 +61,14 @@ _Спроецировано из `test-cases/settings/TC-020.md` (источни
   от вердикта — не блокирует дизайн, т.к. поведение однозначно заявлено в §9
   тест-стратегии ("бейджи на открытых страницах AO3 сбрасываются").
 
+- **РЕШЕНИЕ ОПЕРАТОРА (2026-07-19, триаж закрыт): APP_BUG, низкий приоритет.**
+  `bugs/BUG-012.md` подтверждён как дефект приложения (`awaiting: dev`,
+  `known_issue: true`); Then этого кейса корректен и НЕ переформулируется.
+  Кейс переведён `Approved → Blocked` (`blocked_reason: product_decision`,
+  матрица `*→Blocked by factory`) — до фикса BUG-012 автоматизация
+  детерминированно красная, холостые диспатчи правила 14 исключены.
+  Возврат в `Approved` — когда BUG-012 станет `Fixed` (D1-верификация
+  включит снятие `@pytest.mark.skip` с уже написанного теста и прогон).
 - **Находка test-automator (2026-07-18, witness device emulator-5554, `bugs/BUG-012.md`):** механизм
   broadcast к открытым вкладкам ПОДТВЕРЖДЁН КОДОМ КАК ОТСУТСТВУЮЩИЙ.
   `SettingsViewModel.confirmClearAll()` (`SettingsScreen.kt:501-504`) вызывает

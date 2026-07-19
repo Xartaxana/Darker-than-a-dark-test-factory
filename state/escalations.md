@@ -154,8 +154,16 @@ resolved при закрытии.
   Опционально: оценить целесообразность запроса продуктовой команде на
   debug-хук (broadcast/instrumentation) для `openTab(background=true)` —
   правка `app-under-test/`, вне мандата test-maintainer.
-- Статус: **open** — долг остаётся `Open`, ждёт решения Lead/test-strategist
-  по варианту 2.
+- Статус: **resolved 2026-07-19T10:40:00Z** — финальная разведка (решение
+  оператора, 2 новых направления) нашла рабочий механизм: `mobile:
+  longClickGesture` по `elementId` native a11y-узла ссылки внутри WebView
+  (находка `bugs/AT-BUG-019.md` — ссылки экспонируются UiAutomator2 как
+  отдельные native-узлы, не часть контейнера WebView). TC-026 автоматизирован
+  (`framework/tests/test_tabs.py::
+  test_long_press_link_opens_background_tab_without_switching`), 3+1 зелёных
+  прогона подряд, `automated_by` заполнен, `bugs/AT-BUG-018.md` переведён
+  `Open → Fixed`. Полный след — `bugs/AT-BUG-018.md` «Обсуждение» запись
+  2026-07-19T10:40:00Z.
 
 ## ESC-004 — TC-009[READ-work2] детерминированно падает на open_tab("Library") после dismiss_rating_overlay, не связано с batch B canary
 
@@ -214,3 +222,25 @@ resolved при закрытии.
   ref=TC-009), т.к. B4-сканер очереди читает `bugs/*.md`, не
   `escalations.md` — здесь долг был бы невидим конвейеру. Дальнейшее
   ведение — в AT-BUG-020.md.
+
+## ESC-005 — TC-020 Blocked до фикса BUG-012 (эффект перехода *→Blocked, матрица transitions)
+
+- Артефакт: `test-cases/settings/TC-020.md` (status: Blocked,
+  blocked_reason: product_decision), `bugs/BUG-012.md` (Open,
+  awaiting: dev, known_issue: true)
+- С какого времени: 2026-07-19T09:55:00Z
+- Причина: РЕШЕНИЕ ОПЕРАТОРА (триаж, 2026-07-19): BUG-012 подтверждён
+  как APP_BUG с низким приоритетом — Clear all ratings обязан обновлять
+  бейджи открытых вкладок без reload (PROJECT.md §9 корректен, Then
+  TC-020 не переформулируется). До фикса приложения автоматизация TC-020
+  детерминированно красная — кейс выведен из очереди правила 14
+  переходом в Blocked (иначе холостые диспатчи test-automator каждый
+  проход). Это НЕ деградация и НЕ нерешённый вопрос — запись
+  информационная, по эффекту перехода `*→Blocked` (матрица требует
+  строку эскалации).
+- Что нужно от человека: ничего сейчас; фикс BUG-012 разработчиком в
+  своём темпе (приоритет низкий). При переводе BUG-012 в Fixed —
+  вернуть TC-020 в Approved (D1-верификация включит снятие
+  @pytest.mark.skip и прогон готового теста).
+- Статус: **open** (закрывается верификацией фикса BUG-012; контроль
+  «не ухудшился» на новых сборках держит known_issue: true → правило D3)
