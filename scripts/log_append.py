@@ -52,6 +52,26 @@ state/ для orchestrator) уже существует И это часть git
 (`_verify_environment`); вне ожидаемого деплоя — явный SystemExit, а не
 тихое создание чужой структуры директорий.
 
+Добавление 5 (порт D-0083 OS-репо, 2026-07-19, CLAUDE.md правило 4в) —
+замер факта поверх самодекларации: для событий delegated/accepted/
+rejected/escalated, несущих и worker_ref, и заявленную model, после всех
+существующих проверок (`_check_tier_measurement`) сверяет заявленный ярус
+с ФАКТИЧЕСКИМИ моделями jsonl-транскрипта воркера (scripts/
+tier_measure.py — самостоятельный порт tools/tier_echo.py эталонного
+репо, без кросс-репо импорта). worker_ref без детерминированного пути к
+транскрипту (не async:/agent:, см. tier_measure.find_worker_transcript)
+или отсутствующий/пустой транскрипт — тихий пропуск, не ошибка. Заявленное
+слово яруса не встречается ни в одной измеренной модели — предупреждение
+в stderr с меткой MISMATCH; слово встречается, но транскрипт несёт и
+другие модели (mid-worker расхождение) — предупреждение без метки
+MISMATCH, информационное. Оба предупреждения НЕ блокируют запись строки
+(не SystemExit, в отличие от `_matrix_violation`) — mid-worker
+расхождение может быть легитимным (continuation другим ярусом и т.п.),
+судит сессия/координатор, не этот скрипт (D-0063: код гарантирует
+встречу с замером, не судит расхождение). Любой сбой замера (файл не
+найден/не открылся, битый JSON, исключение любого рода) — тихий пропуск,
+запись журнала НИКОГДА не ломается замером.
+
 Использование:
   python scripts/log_append.py routing --event delegated \
       --agent builder --model sonnet --task-id t-042 \
@@ -71,6 +91,8 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+import tier_measure
 
 REPO = Path(__file__).resolve().parents[1]
 ROUTING_LOG = REPO / "logs" / "routing-log.jsonl"
@@ -114,6 +136,13 @@ TIER_ORDER = {"haiku": 0, "sonnet": 1, "opus": 2, "fable": 3}
 # scout/builder/critic не читаются из frontmatter даже если файл существует.
 AGENT_TIER = {"scout": "haiku", "builder": "sonnet", "critic": "opus"}
 BASIS_VALUES = {"critic", "queued-to-lead"}
+
+# D-0083 (порт OS-репо, tools/tier_echo.py): события, для которых замер
+# фактической модели воркера применяется поверх самодекларации 'model'.
+# Пересечение с ROUTING_EVENTS не требуется отдельно -- все четыре уже
+# входят в MODEL_REQUIRED_EVENTS выше.
+TIER_MEASURED_EVENTS = {"delegated", "accepted", "rejected", "escalated"}
+
 AGENTS_DIR = REPO / ".claude" / "agents"
 FRONTMATTER_RE = re.compile(r"^---\r?\n(.*?)\r?\n---\r?\n", re.DOTALL)
 FRONTMATTER_MODEL_RE = re.compile(r"^model:\s*(\S+)\s*$", re.MULTILINE)
@@ -247,6 +276,59 @@ def _matrix_violation(agent: str, by: str, basis: str) -> str | None:
         f"выше яруса исполнителя, и --basis не задан валидным значением "
         f"({sorted(BASIS_VALUES)})"
     )
+
+
+def _check_tier_measurement(event: str, model: str, worker_ref: str) -> None:
+    """D-0083 (порт OS-репо, tools/tier_echo.py, CLAUDE.md правило 4в):
+    сверяет заявленную 'model' с фактическими моделями jsonl-транскрипта
+    воркера, если worker_ref детерминированно указывает на транскрипт
+    (tier_measure.find_worker_transcript: только async:<id>/agent:<id>).
+
+    НИКОГДА не бросает исключение и не блокирует запись журнала (fail-open
+    -- тот же принцип, что у tier_echo.py эталона): worker_ref в другой
+    конвенции (cli:/job:/retro:/lock:/описательная строка), транскрипт не
+    найден/пуст, либо любой иной сбой замера -- тихий возврат. Печатает
+    предупреждение в stderr (через _warn_stderr, устойчивый к узкой
+    кодовой странице консоли) только если транскрипт дал хотя бы одну
+    измеренную модель:
+      - заявленное слово яруса не встречается ни в одной измеренной модели
+        (регистронезависимая проверка подстроки, тот же принцип, что
+        build_line() эталона tier_echo.py) -> предупреждение с меткой
+        MISMATCH;
+      - слово встречается, но транскрипт несёт и другие модели (частичная
+        mid-worker подмена может быть легитимной, напр. continuation
+        другим ярусом внутри одного диспатча) -> информационное
+        предупреждение без метки MISMATCH.
+    Оба предупреждения не влияют на успех записи -- вызывающая сторона
+    (append_routing) не проверяет исключений отсюда как часть контракта."""
+    if event not in TIER_MEASURED_EVENTS:
+        return
+    if not worker_ref or not model:
+        return
+    try:
+        transcript_path = tier_measure.find_worker_transcript(worker_ref)
+        if transcript_path is None:
+            return
+        counts = tier_measure.count_models(
+            tier_measure.iter_transcript_models(str(transcript_path)))
+        if not counts:
+            return
+        model_lower = model.lower()
+        measured = ", ".join(f"{m}={c}" for m, c in counts.items())
+        matched = any(model_lower in m.lower() for m in counts)
+        if not matched:
+            _warn_stderr(
+                f"TIER MEASURE: заявлено '{model}', замер {measured} "
+                "MISMATCH -- разберись до использования как слова яруса "
+                "(правило 4в)"
+            )
+        elif any(model_lower not in m.lower() for m in counts):
+            _warn_stderr(
+                f"TIER MEASURE: заявлено '{model}', замер {measured} "
+                "(другие модели тоже присутствуют в транскрипте воркера)"
+            )
+    except Exception:
+        return
 
 
 def _now_iso(*, suffix_z: bool = False) -> str:
@@ -451,6 +533,10 @@ def append_routing(event: str, agent: str, *, model: str = "",
         record["notes"] = notes
     line = json.dumps(record, ensure_ascii=False)
     _append_line(ROUTING_LOG, line)
+    # D-0083 (порт OS-репо, правило 4в): замер факта поверх самодекларации,
+    # ПОСЛЕ всех существующих проверок и записи -- не блокирует запись,
+    # см. докстринг _check_tier_measurement.
+    _check_tier_measurement(event, model, worker_ref)
     return line
 
 

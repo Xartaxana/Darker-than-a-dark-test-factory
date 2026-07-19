@@ -12,6 +12,8 @@ try:
 except ImportError:
     import log_append as la
 
+import tier_measure
+
 
 @pytest.fixture()
 def logs(tmp_path, monkeypatch):
@@ -886,3 +888,213 @@ def test_append_routing_succeeds_when_dir_exists_and_is_git_repo(tmp_path, monke
     assert routing.exists()
     rec = json.loads(routing.read_text(encoding="utf-8"))
     assert rec["task_id"] == "t-001"
+
+
+# Порт-батч штаба D-0083 (D:\Improving_AI\Operating-System-for-LLMs,
+# tools/tier_echo.py, CLAUDE.md правило 4в): замер фактической модели
+# воркера по jsonl-транскрипту поверх самодекларации 'model'. Тесты
+# monkeypatch'ат tier_measure._projects_dir на tmp_path -- log_append.py
+# импортирует тот же объект модуля tier_measure (import tier_measure),
+# поэтому патч виден и внутри append_routing.
+
+def _write_fixture_transcript(root, agent_id, models):
+    path = (root / "proj" / "sess" / "subagents" / f"agent-{agent_id}.jsonl")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as f:
+        for model in models:
+            f.write(json.dumps({"type": "assistant",
+                                 "message": {"model": model}},
+                                ensure_ascii=False) + "\n")
+    return path
+
+
+def test_tier_measure_mismatch_warns_stderr_but_still_writes(logs, tmp_path,
+                                                              monkeypatch, capsys):
+    routing, _ = logs
+    agent_id = "c03f9de7301509d98"
+    _write_fixture_transcript(tmp_path, agent_id, ["opus", "opus"])
+    monkeypatch.setattr(tier_measure, "_projects_dir", lambda: tmp_path,
+                        raising=True)
+
+    la.append_routing("delegated", "builder", model="fable", task_id="t-001",
+                      worker_ref=f"agent:{agent_id}")
+
+    captured = capsys.readouterr()
+    assert "TIER MEASURE" in captured.err
+    assert "MISMATCH" in captured.err
+    assert "opus=2" in captured.err
+    assert "fable" in captured.err
+    # запись в журнал происходит НЕЗАВИСИМО от предупреждения (warn не
+    # блокирует -- не SystemExit).
+    lines = routing.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 1
+    assert json.loads(lines[0])["model"] == "fable"
+
+
+def test_tier_measure_match_is_silent(logs, tmp_path, monkeypatch, capsys):
+    routing, _ = logs
+    agent_id = "d04a0ef8412610e09"
+    _write_fixture_transcript(tmp_path, agent_id, ["sonnet", "sonnet"])
+    monkeypatch.setattr(tier_measure, "_projects_dir", lambda: tmp_path,
+                        raising=True)
+
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref=f"agent:{agent_id}")
+
+    captured = capsys.readouterr()
+    assert "TIER MEASURE" not in captured.err
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 1
+
+
+# Критик-вход attempt 2 (Q4, обязательный пункт): фикстуры выше пишут в
+# message.model короткие ярусные слова ("opus", "sonnet"), а реальный
+# транскрипт харнесса несёт ПОЛНЫЙ id модели (напр. "claude-sonnet-5",
+# "claude-opus-4-8") при заявленном коротком слове в 'model' журнала --
+# боевой путь matched-проверки в _check_tier_measurement это
+# `model_lower in m.lower()` (substring), а тесты выше с короткими словами
+# в фикстуре прошли бы и при регрессии substring -> точное равенство,
+# что дало бы ложный MISMATCH на КАЖДОМ корректном боевом диспатче
+# (транскрипт харнесса никогда не несёт короткое слово буквально).
+
+def test_tier_measure_match_is_silent_with_realistic_full_model_id(
+        logs, tmp_path, monkeypatch, capsys):
+    routing, _ = logs
+    agent_id = "aa1b2c3d4e5f60718"
+    _write_fixture_transcript(tmp_path, agent_id, ["claude-sonnet-5"])
+    monkeypatch.setattr(tier_measure, "_projects_dir", lambda: tmp_path,
+                        raising=True)
+
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref=f"agent:{agent_id}")
+
+    captured = capsys.readouterr()
+    assert "TIER MEASURE" not in captured.err
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 1
+
+
+def test_tier_measure_mismatch_with_realistic_full_model_id(
+        logs, tmp_path, monkeypatch, capsys):
+    routing, _ = logs
+    agent_id = "bb2c3d4e5f607182a"
+    _write_fixture_transcript(tmp_path, agent_id, ["claude-opus-4-8"])
+    monkeypatch.setattr(tier_measure, "_projects_dir", lambda: tmp_path,
+                        raising=True)
+
+    la.append_routing("delegated", "builder", model="fable", task_id="t-001",
+                      worker_ref=f"agent:{agent_id}")
+
+    captured = capsys.readouterr()
+    assert "TIER MEASURE" in captured.err
+    assert "MISMATCH" in captured.err
+    assert "claude-opus-4-8" in captured.err
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 1
+
+
+def test_tier_measure_partial_mismatch_warns_informational_without_mismatch_label(
+        logs, tmp_path, monkeypatch, capsys):
+    # Слово яруса встречается (sonnet), но транскрипт несёт и другие модели
+    # (частичная mid-worker подмена) -- информационное предупреждение, БЕЗ
+    # метки MISMATCH (это может быть легитимный continuation, судит сессия).
+    routing, _ = logs
+    agent_id = "e05b1af9523721f1a"
+    _write_fixture_transcript(tmp_path, agent_id, ["sonnet", "opus"])
+    monkeypatch.setattr(tier_measure, "_projects_dir", lambda: tmp_path,
+                        raising=True)
+
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref=f"agent:{agent_id}")
+
+    captured = capsys.readouterr()
+    assert "TIER MEASURE" in captured.err
+    assert "MISMATCH" not in captured.err
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 1
+
+
+def test_tier_measure_missing_transcript_is_silent(logs, tmp_path, monkeypatch,
+                                                    capsys):
+    routing, _ = logs
+    monkeypatch.setattr(tier_measure, "_projects_dir", lambda: tmp_path,
+                        raising=True)
+
+    la.append_routing("delegated", "builder", model="fable", task_id="t-001",
+                      worker_ref="agent:doesnotexist")
+
+    captured = capsys.readouterr()
+    assert "TIER MEASURE" not in captured.err
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 1
+
+
+def test_tier_measure_non_transcript_worker_ref_forms_are_silent(logs, tmp_path,
+                                                                  monkeypatch,
+                                                                  capsys):
+    # worker_ref в конвенциях этого репо (cli:/job:/retro:/описательная
+    # строка) не несёт детерминированного пути к транскрипту -- замер
+    # тихо пропускается, точно так же, как отсутствующий транскрипт.
+    routing, _ = logs
+    monkeypatch.setattr(tier_measure, "_projects_dir", lambda: tmp_path,
+                        raising=True)
+
+    la.append_routing("delegated", "builder", model="fable", task_id="t-001",
+                      worker_ref="job:bg-4471")
+
+    captured = capsys.readouterr()
+    assert "TIER MEASURE" not in captured.err
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 1
+
+
+def test_tier_measure_not_applied_to_events_outside_the_four(logs, tmp_path,
+                                                               monkeypatch,
+                                                               capsys):
+    # dispatch_skipped не входит в TIER_MEASURED_EVENTS -- замер не
+    # запускается вовсе, даже если бы worker_ref был на него похож (само
+    # событие не несёт worker_ref в текущей CLI-схеме, но проверяем и
+    # событийный гейт отдельно от gate по worker_ref/model).
+    routing, _ = logs
+    agent_id = "f06c2bfa634832f2b"
+    _write_fixture_transcript(tmp_path, agent_id, ["opus"])
+    monkeypatch.setattr(tier_measure, "_projects_dir", lambda: tmp_path,
+                        raising=True)
+
+    la.append_routing("dispatch_skipped", "scout", category="recon",
+                      notes="точечная сверка известных файлов")
+
+    captured = capsys.readouterr()
+    assert "TIER MEASURE" not in captured.err
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 1
+
+
+def test_tier_measure_accepted_without_worker_ref_is_silent(logs, tmp_path,
+                                                             monkeypatch, capsys):
+    # accepted/rejected могут не нести worker_ref (спека п.2) -- замер
+    # тихо пропускается по отсутствию worker_ref, не по форме.
+    routing, _ = logs
+    monkeypatch.setattr(tier_measure, "_projects_dir", lambda: tmp_path,
+                        raising=True)
+
+    la.append_routing("accepted", "builder", model="fable", by="opus",
+                      task_id="t-001", witness="pytest -q -> passed")
+
+    captured = capsys.readouterr()
+    assert "TIER MEASURE" not in captured.err
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 1
+
+
+def test_tier_measure_broken_transcript_line_does_not_break_journal_write(
+        logs, tmp_path, monkeypatch, capsys):
+    # Сбой замера (здесь: транскрипт целиком из битых строк -> нет ни
+    # одной измеренной модели) не должен ронять запись журнала.
+    routing, _ = logs
+    agent_id = "a07d2cfb745943a3c"
+    path = (tmp_path / "proj" / "sess" / "subagents"
+             / f"agent-{agent_id}.jsonl")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("{not valid json at all\n", encoding="utf-8")
+    monkeypatch.setattr(tier_measure, "_projects_dir", lambda: tmp_path,
+                        raising=True)
+
+    la.append_routing("delegated", "builder", model="fable", task_id="t-001",
+                      worker_ref=f"agent:{agent_id}")
+
+    captured = capsys.readouterr()
+    assert "TIER MEASURE" not in captured.err
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 1
