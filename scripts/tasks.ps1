@@ -46,13 +46,19 @@ function Start-Emulator {
     # проверенный: чистый `-no-snapshot-load` поднимается штатно каждый раз.
     # Поэтому вместо блокирующего wait-for-device — поллинг с таймаутом:
     # не дождались устройства/процесс умер → автофолбэк на чистую загрузку.
-    param([switch]$WritableSystem, [int]$SnapshotBootTimeoutSec = 45)
+    # -Gpu / AO3_EMU_GPU: GPU-бэкенд qemu. Дефолт swiftshader_indirect —
+    # единственный стабильный на этом хосте для replay-нагрузки (AT-BUG-016).
+    # Оверрайд введён для диагностики AT-BUG-021 (краши qemu 0xc0000005 на
+    # тяжёлых live-страницах): ремедиация п.1 бага — прогон под альтернативным
+    # бэкендом (host / angle_indirect). Параметр > env > дефолт.
+    param([switch]$WritableSystem, [int]$SnapshotBootTimeoutSec = 45, [string]$Gpu = "")
+    if (-not $Gpu) { $Gpu = if ($env:AO3_EMU_GPU) { $env:AO3_EMU_GPU } else { "swiftshader_indirect" } }
     $adb = "$env:ANDROID_HOME\platform-tools\adb.exe"
     $emu = "$env:ANDROID_HOME\emulator\emulator.exe"
 
     Clear-EmulatorStaleLocks
 
-    $emuArgs = @("-avd","ao3_test_api34","-no-boot-anim","-gpu","swiftshader_indirect")
+    $emuArgs = @("-avd","ao3_test_api34","-no-boot-anim","-gpu",$Gpu)
     if ($WritableSystem) { $emuArgs += "-writable-system" }
 
     $proc = Start-Process -FilePath $emu -ArgumentList $emuArgs -WindowStyle Minimized -PassThru
