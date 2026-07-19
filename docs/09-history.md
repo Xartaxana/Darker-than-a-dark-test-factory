@@ -355,3 +355,30 @@ HANDOFF.md, чтобы не расти бут-перечень без нужды
    Корень найден, поведение исправлено, память сессий пополнена.
    Также к калибровке: at-bug-005 №1 (tooling-rejected), пропуск
    delegated-лога перед F1-диспатчем (чинён ретро-парой 22:42).
+
+## Проход /qa-loop 15 + Fable-хвост 2026-07-19, архив из HANDOFF
+
+1. **D1: AT-BUG-015 + AT-BUG-017 → Verified** (батч fix-verifier, оба
+   critic PASS; scroll-assert содержателен ~900px vs 2px; reachability
+   guard реально поллит TCP, юнит-проба).
+2. **B4: AT-BUG-016 → Fixed, 3 захода** (2 честные неудачные ремедиации
+   → эскалация critic → tier-informed заход 3: self-contained mitm-flow
+   до конца; попутно найдена вторая причина — усечение CSS сняло
+   `.narrow-hidden`, `_find_pill` мискликал → **AT-BUG-019** (Open,
+   weak_locator, class-риск `open_tab`-тестов).
+3. **B4: AT-BUG-018 → эскалирован вопросом требования** (5 механизмов
+   1/20), позже 07-19 закрыт ЛУЧШИМ исходом: `longClickGesture` по
+   elementId нативного a11y-узла (дверь открыла находка AT-BUG-019),
+   TC-026 автоматизирован, AT-BUG-018 Fixed.
+4. **Правило 14: canary batch A+B — 12 P0 Automated+active** (оба critic
+   PASS; class-fix `tap_rate_button` JS-клик поверх `tos_prompt`);
+   полный p0-регресс вскрыл **AT-BUG-020** (TC-009[READ-work2]
+   регрессия принятого теста; critic снял «доказано не регрессия»).
+5. **Batch C — env fail-fast:** 2 краха эмулятора на живой Sort&Filter
+   → **AT-BUG-021** (позже диагностирован: qemu 0xc0000005, сиблинг
+   016); код TC-078..083 в дереве, не верифицирован, кейсы Approved.
+6. **Fable-хвост:** lead_restored (13 queued-to-lead ратифицированы),
+   механизм-правка фонового канона 5 промптов (b13756f), BUG-012 =
+   APP_BUG/low + TC-020 Blocked, AT-BUG-021 диагностирован critic'ом.
+7. **Инцидент-класс к калибровке:** 7 «жду фоновый прогон» за проход —
+   закрыт механизм-правкой канона (см. п.6).

@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-19T11:43:59Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-19T13:04:32Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -51,6 +51,7 @@ generated_at: 2026-07-19T11:43:59Z · генератор: `scripts/coverage_map.
 | browse-tab-undo-history-limit | browse | tabs:TC-024[Automated] |
 | browse-tab-list-persistence | browse | tabs:TC-025[Automated] |
 | browse-tab-open-background-link | browse | tabs:TC-026[Approved] |
+| browse-tab-switch-active | browse | нет кейсов |
 | browse-deep-link-new-tab | browse | нет кейсов |
 | browse-deep-link-reuse-home-tab | browse | нет кейсов |
 | browse-scroll-restore | browse | tabs:TC-025[Automated] |
@@ -135,6 +136,7 @@ generated_at: 2026-07-19T11:43:59Z · генератор: `scripts/coverage_map.
 
 ## Фичи без единого кейса
 
+- browse-tab-switch-active (browse): Тап по чипу неактивной вкладки делает её активной: показываемый контент WebView переключается на эту вкладку, индикатор активности перемещается (switchTab)
 - browse-deep-link-new-tab (browse): Deep link открывает URL в НОВОЙ вкладке, если уже есть вкладки помимо одинокой AO3 root
 - browse-deep-link-reuse-home-tab (browse): Deep link переиспользует единственную вкладку на AO3 root (HOME_URL), навигируя её на URL вместо создания новой
 - browse-infinite-scroll (browse): Бесконечная подгрузка следующих страниц листинга при скролле
