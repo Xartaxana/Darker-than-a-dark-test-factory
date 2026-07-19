@@ -134,10 +134,18 @@ def run_checks() -> list[Check]:
     # в detect_new_commits). Не FAIL и не WARN: не эскалирует, не шумит.
     if APP.exists():
         rc, out = _run(["git", "-C", str(APP), "rev-parse", "--is-shallow-repository"])
-        shallow = rc == 0 and out.strip() == "true"
-        detail = ("shallow — build_watch.py деградирует диапазон коммитов "
-                   "(coalesced_commits), это ожидаемо (docs/09 п.3)"
-                   if shallow else "полный клон")
+        # Батч-пункт 3 (косметика, наблюдение critic 07-18): rc != 0 значит
+        # git-плюмбинг не подтвердил репозиторий (каталог не git вовсе, либо
+        # git недоступен) — это НЕ то же самое, что «полный (не-shallow)
+        # клон». Раньше оба случая молча схлопывались в detail="полный
+        # клон", что вводило в заблуждение про не-git каталог.
+        if rc != 0:
+            detail = "не git-репозиторий (git rev-parse не подтвердил репозиторий)"
+        elif out.strip() == "true":
+            detail = ("shallow — build_watch.py деградирует диапазон коммитов "
+                       "(coalesced_commits), это ожидаемо (docs/09 п.3)")
+        else:
+            detail = "полный клон"
     else:
         detail = f"нет {APP}"
     checks.append(Check("app-under-test git-глубина", "run", True, detail))

@@ -29,7 +29,7 @@ from pathlib import Path
 # Windows-консоль по умолчанию cp1251 и падает на '→'/кириллице в выводе. Фабрика
 # автономна — не полагаемся на PYTHONIOENCODING, форсируем UTF-8 сами.
 try:
-    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 except (AttributeError, ValueError):
     pass
 

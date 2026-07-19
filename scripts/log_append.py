@@ -494,6 +494,20 @@ def find_open_dispatches(records: list[dict]) -> list[dict]:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # Реконфигурация ДО argparse (батч-пункт 1в): --help и ошибки парсинга
+    # аргументов сами вызывают SystemExit ИЗНУТРИ parser.parse_args() — тогда
+    # реконфигурация, сделанная ПОСЛЕ parse_args (как было раньше, только для
+    # stdout), к этому выводу уже не применяется, и кириллица в --help
+    # оставалась mojibake на узкой кодовой странице консоли (напр. cp1251).
+    # Заодно покрываем stderr: кириллические сообщения raise SystemExit(str)
+    # (append_routing/append_orchestrator) при непойманном исключении печатает
+    # интерпретатор в sys.stderr при завершении процесса.
+    for _stream in (sys.stdout, sys.stderr):
+        if hasattr(_stream, "reconfigure"):
+            try:
+                _stream.reconfigure(encoding="utf-8", errors="replace")
+            except (ValueError, OSError):
+                pass
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="target", required=True)
 
@@ -543,11 +557,6 @@ def main(argv: list[str] | None = None) -> int:
                         metavar=("ПРАВИЛО", "АГЕНТ", "АРТЕФАКТ", "ИСХОД"))
 
     args = parser.parse_args(argv)
-    if hasattr(sys.stdout, "reconfigure"):
-        try:
-            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-        except (ValueError, OSError):
-            pass
     if args.target == "routing":
         line = append_routing(args.event, args.agent, model=args.model,
                               category=args.category, notes=args.notes,

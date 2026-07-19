@@ -23,7 +23,7 @@ import yaml
 
 # Windows-консоль (cp1251) искажает кириллицу в print — форсируем UTF-8.
 try:
-    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 except (AttributeError, ValueError):
     pass
 

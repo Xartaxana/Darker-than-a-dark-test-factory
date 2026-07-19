@@ -42,7 +42,7 @@ from pathlib import Path
 # Оба потока: SystemExit-подсказки и сводка узлов идут в stderr, не только в stdout.
 for _stream in (sys.stdout, sys.stderr):
     try:
-        _stream.reconfigure(encoding="utf-8")
+        _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
 

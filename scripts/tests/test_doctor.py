@@ -106,6 +106,29 @@ def test_shallow_clone_check_is_informational_not_fail(repo, env, monkeypatch):
     assert not (repo.root / "state" / "escalations.md").exists()
 
 
+def test_non_git_app_under_test_labeled_not_git_repo(repo, env, monkeypatch):
+    """Батч-пункт 3 (косметика, наблюдение critic 07-18): каталог
+    app-under-test существует, но git-плюмбинг не подтверждает репозиторий
+    (rc != 0, как в реальном не-git каталоге) — раньше это молча читалось
+    как "полный клон"; теперь формулировка отдельная и не путается с
+    настоящим полным (не-shallow) клоном."""
+    def fake_run(args, timeout=60):
+        if "--is-shallow-repository" in args:
+            return 128, "fatal: not a git repository\n"
+        return 0, "deps-ok"
+    monkeypatch.setattr(dr, "_run", fake_run, raising=True)
+
+    checks = dr.run_checks()
+    depth = next(c for c in checks if c.name == "app-under-test git-глубина")
+
+    assert depth.ok and not depth.warn          # по-прежнему только инфо, не FAIL/WARN
+    assert "не git-репозиторий" in depth.detail
+    assert "полный клон" not in depth.detail
+    assert "shallow" not in depth.detail
+    assert dr.main([]) == 0
+    assert not (repo.root / "state" / "escalations.md").exists()
+
+
 def test_no_escalate_flag(repo, env):
     (repo.root / "tools" / "android-sdk" / "platform-tools" / "adb.exe").unlink()
 

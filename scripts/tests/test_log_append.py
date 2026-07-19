@@ -504,6 +504,35 @@ def test_accepted_matrix_unknown_agent_warns_and_by_suffices(logs, capsys):
     assert "future-qa-agent" in captured.err
 
 
+def test_accepted_matrix_frontmatter_present_but_model_unrecognized_warns(
+        logs, capsys, tmp_path, monkeypatch):
+    # Батч-пункт 1б: "frontmatter агента с нераспознанным model" -- отдельная
+    # от уже покрытой test_accepted_matrix_unknown_agent_warns_and_by_suffices
+    # ветка. Та проверяет агента БЕЗ файла .claude/agents/<agent>.md вовсе
+    # (_read_agent_frontmatter_model возвращает None из-за OSError на
+    # чтении). Эта проверяет агента, у которого файл ЕСТЬ и frontmatter
+    # парсится, но значение поля model не входит в TIER_ORDER (ни haiku, ни
+    # sonnet, ни opus, ни fable) -- код доходит до того же предупреждения
+    # (_resolve_agent_tier: `if model in TIER_ORDER: return model` не
+    # срабатывает, обе ветки падают в один _warn_stderr) другим путём.
+    agents_dir = tmp_path / "agents"
+    agents_dir.mkdir()
+    (agents_dir / "custom-qa-agent.md").write_text(
+        "---\nname: custom-qa-agent\nmodel: gpt-4\ndescription: x\n---\n\nбody\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(la, "AGENTS_DIR", agents_dir, raising=True)
+
+    routing, _ = logs
+    la.append_routing("accepted", "custom-qa-agent", model="sonnet",
+                      by="haiku", task_id="t-001")
+    rec = json.loads(routing.read_text(encoding="utf-8"))
+    assert rec["by"] == "haiku"
+    captured = capsys.readouterr()
+    assert "WARNING" in captured.err
+    assert "custom-qa-agent" in captured.err
+
+
 def test_rejected_by_present_no_tier_check(logs):
     # Буквальное чтение спеки OS-репо: rejected несёт 'by' без tier/basis-
     # проверки -- любой by (в т.ч. ниже яруса исполнителя) легален.
@@ -533,6 +562,49 @@ def test_delegated_retry_same_agent_open_task_requires_attempt_and_rejected(logs
     la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
                       attempt=2, worker_ref="wr")
     assert len(routing.read_text(encoding="utf-8").splitlines()) == 3
+
+
+def test_rejected_after_accepted_reopens_task_without_reopen_flag(logs, capsys):
+    # Батч-пункт 1а (по признанной семантике AO3, CLAUDE.md «журнал
+    # маршрутизации»: rejected/defect_found ПОСЛЕ accepted возвращает задачу
+    # в «открыта» — следствие reopen-семантики AO3). Проверено чтением кода
+    # ДО написания теста: гейт "task_id уже закрыт, нужен --reopen-task"
+    # закодирован ТОЛЬКО внутри ветки `event == "delegated"` (append_routing);
+    # событие rejected эту ветку не проходит вовсе и пишется без всякой
+    # проверки предыдущего lifecycle-события. Фактическое поведение:
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr")
+    la.append_routing("accepted", "builder", model="sonnet", by="opus",
+                      task_id="t-001", witness="pytest -q -> passed")
+    # rejected после accepted проходит БЕЗ --reopen-task (в отличие от
+    # delegated, для которого это было бы SystemExit).
+    la.append_routing("rejected", "builder", model="sonnet", by="opus",
+                      task_id="t-001", attempt=1, failure_class="capability")
+    lines = routing.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 3
+    assert json.loads(lines[-1])["event"] == "rejected"
+
+    # open-dispatches: rejected не считается "открытым ДИСПАТЧЕМ" (никто не
+    # делегирован прямо сейчас) -- lifecycle-скан open-dispatches помечает
+    # открытым только task_id, чьё ПОСЛЕДНЕЕ событие -- delegated.
+    capsys.readouterr()
+    la.main(["open-dispatches"])
+    assert "t-001" not in capsys.readouterr().out
+
+    # Но для ГЕЙТА повторного delegated задача снова "открыта": следующий
+    # delegated по t-001 НЕ требует --reopen-task (последнее событие --
+    # rejected, не accepted) -- ветка continuation/retry применяется как к
+    # обычной открытой задаче (attempt>=2 + существующий rejected).
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      attempt=2, worker_ref="wr-2")
+    lines = routing.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 4
+    assert "reopen" not in json.loads(lines[-1]).get("notes", "")
+
+    # После повторного delegated open-dispatches снова видит t-001 открытым.
+    la.main(["open-dispatches"])
+    assert "OPEN DISPATCH: t-001 agent=builder since" in capsys.readouterr().out
 
 
 def test_delegated_continuation_different_agent_open_task_no_flags_needed(logs):
