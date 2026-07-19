@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-19T04:37:02Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-19T11:43:59Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -129,7 +129,7 @@ generated_at: 2026-07-19T04:37:02Z · генератор: `scripts/coverage_map.
 | bridge-scroll-reporting | ao3-bridge | нет кейсов |
 | data-workrating-model | data | нет кейсов |
 | data-filterprofile-model | data | нет кейсов |
-| data-clear-all-ratings | data | smoke:TC-004[Automated], settings:TC-018[Automated], settings:TC-019[Automated], settings:TC-020[Approved] |
+| data-clear-all-ratings | data | smoke:TC-004[Automated], settings:TC-018[Automated], settings:TC-019[Automated], settings:TC-020[Blocked] |
 | background-download-repository | background | downloads:TC-032[Automated], downloads:TC-033[Automated] |
 | background-auto-download-trigger | background | downloads:TC-032[Automated] |
 
@@ -308,7 +308,7 @@ generated_at: 2026-07-19T04:37:02Z · генератор: `scripts/coverage_map.
 | P0 |  |  |  |  |  |
 | P1 |  |  |  | 3 |  |
 | P2 |  |  |  | 3 |  |
-| P3 |  |  | 1 |  |  |
+| P3 |  |  |  |  | 1 |
 
 ### smoke
 
@@ -332,7 +332,7 @@ generated_at: 2026-07-19T04:37:02Z · генератор: `scripts/coverage_map.
 - риски: R-08
 - кейсы без risk: нет
 - P0/P1 не в Automated: TC-026 [P1, Approved]
-- автотесты (automated_by): framework/tests/test_tabs.py::test_max_tabs_limit_blocks_11th_tab, framework/tests/test_tabs.py::test_swipe_close_undo_restores_position, framework/tests/test_tabs.py::test_tabs_persist_url_and_scroll_after_restart, framework/tests/test_tabs.py::test_undo_history_evicts_oldest_after_six_closes
+- автотесты (automated_by): framework/tests/test_tabs.py::test_long_press_link_opens_background_tab_without_switching, framework/tests/test_tabs.py::test_max_tabs_limit_blocks_11th_tab, framework/tests/test_tabs.py::test_swipe_close_undo_restores_position, framework/tests/test_tabs.py::test_tabs_persist_url_and_scroll_after_restart, framework/tests/test_tabs.py::test_undo_history_evicts_oldest_after_six_closes
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
