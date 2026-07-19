@@ -38,10 +38,17 @@
     browse-deep-links → new-tab/reuse-home-tab, sidepanel-settings-sync →
     theme-font/hidden-ratings; попутно вскрыты дыры покрытия с нулём кейсов:
     sidepanel-settings-sync-hidden-ratings, browse-deep-link-* (обе ветки);
-    [ ] дыра switchTab (BrowserViewModel.kt:289-295 — переключение вкладок
-    тапом по чипу НЕ ассертится ни одним кейсом как основной Then и не имеет
-    записи реестра; решение test-strategist: запись+needs-design или
-    обоснованное н-п)
+    [X] дыра switchTab (BrowserViewModel.kt:289-295) — решение test-strategist
+    2026-07-19: (а) новая запись реестра `browse-tab-switch-active` + needs-design
+    P1 в docs/01 §9 (R-08); негатив «ни один кейс не ассертит» перепроверен по
+    test-cases/tabs/ (TC-026:34 ассертит ОБРАТНОЕ); отличена от визуальной
+    browse-tabstrip-indicators;
+    [ ] сиблинг того же класса (доклад strategist при приёмке switchTab,
+    D-0043): `browse-tabstrip-indicators` бандлит ТРИ поведения запятой
+    (индикация активной / закрытие свайпом / кнопка New tab), причём
+    «закрытие свайпом» дублирует browse-tab-close-undo — кандидат
+    дробления, решение strategist при следующем касании реестра (все
+    три сейчас с 0 кейсов — бандл ничего не прячет, не срочно)
   - [ ] выход: все P0/P1-области с Approved-кейсами (живой срез —
     `state/coverage-map.md`; docs/01 УТВЕРЖДЁН 2026-07-17 — needs-design §9
     разблокированы, приоритет canary/R-02 выше E1–E4)

@@ -56,12 +56,21 @@ features:
   #   - long-press по ссылке → фоновая вкладка: BrowserScreen.kt
   #     setOnLongClickListener стр.640-648 (`viewModel.openTab(url, background=true)`,
   #     без промежуточного context-меню — прямое действие) — TC-026.
-  # Переключение вкладок тапом по чипу (switchTab(), стр.289-295) осталось БЕЗ
-  # отдельной записи: ни один из 5 кейсов не ассертит его как основной Then (TC-023
-  # использует активную вкладку только как предусловие) — честно не изобретается,
-  # не переносится в дробление молча; смежная UI-запись browse-tabstrip-indicators
-  # (не в скоупе этого owns) может либо уже покрывать этот аспект как элемент
-  # TabStrip, либо это отдельная дыра — решение оставлено владельцу реестра.
+  # Переключение вкладок тапом по чипу (switchTab(), стр.289-295) выделено в
+  # ОТДЕЛЬНУЮ запись browse-tab-switch-active test-strategist'ом 2026-07-19
+  # (решение по docs/09 Фаза 2 — хвост дробления browse-tabs-lifecycle). Это
+  # отдельное наблюдаемо различимое поведение: тап по НЕактивному чипу делает эту
+  # вкладку активной, показываемый контент WebView переключается на неё, индикатор
+  # активности перемещается (switchTab также сбрасывает _activeScrollY в 0, стр.292).
+  # Обработчик тапа: TabStrip.kt clickable(onTap) стр.108 → onSelectTab(index) стр.61
+  # → MainActivity.kt:410 browserViewModel.switchTab(it). НЕ покрывается смежной
+  # browse-tabstrip-indicators (та — чисто ВИЗУАЛЬНАЯ индикация активного чипа +
+  # свайп-close + кнопка New tab, не сам акт переключения) и не покрыто ни одним из
+  # 5 кейсов lifecycle как основной Then: TC-022/TC-023 держат активную вкладку лишь
+  # предусловием, а TC-026 ассертит ОБРАТНОЕ — фоновая вкладка НЕ активируется, контент
+  # НЕ переключается (test-cases/tabs/TC-026.md:34). Взаимодействие switchTab со
+  # scroll-restore (сбрасывать ли/восстанавливать скролл вкладки-назначения) — открытый
+  # вопрос дизайна, оставлен test-designer (needs-design docs/01 §9 P1).
   - id: browse-tab-limit-max
     title: "Достижение лимита MAX_TABS=10 блокирует создание новой вкладки (openTab возвращает false, activeTab не меняется)"
     screen: browse
@@ -82,6 +91,10 @@ features:
     title: "Long-press по ссылке в WebView открывает её в новой фоновой вкладке без переключения активной"
     screen: browse
     source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserScreen.kt"
+  - id: browse-tab-switch-active
+    title: "Тап по чипу неактивной вкладки делает её активной: показываемый контент WebView переключается на эту вкладку, индикатор активности перемещается (switchTab)"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt"
   # browse-deep-links раздроблена test-designer 2026-07-18 (ручной Lead-диспатч
   # «хозяйство-2», docs/09 п.5, дробление зонтиков реестра): title бундлил ДВА
   # разных Then через «/» (маркер шапки файла). След: BrowserViewModel.kt
