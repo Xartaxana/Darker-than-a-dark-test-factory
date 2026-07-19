@@ -256,8 +256,11 @@ reachability guard в `mitm.wait_device_proxy_reachable`, тест не долж
 
 - **Восстановлено калибровкой №3 (2026-07-19; класс F-48 OS-репо —
   кросс-деплойные очередь-пункты, жившие только в notes OS-журнала,
-  испарялись):** (а) hygiene_gate-адаптация под канон AO3 —
-  ДИСПАТЧЕНА builder'у тем же днём (hygiene-gate-ao3, журнал);
+  испарялись):** (а) ~~hygiene_gate-адаптация~~ — ЗАКРЫТА 07-19:
+  v1 warn-хук scripts/hygiene_gate.py (оба журнала + PowerShell-формы
+  записи, без permissionDecision, fail-open) + PreToolUse в
+  settings.json, critic ПРИНЯТЬ, живой e2e; v2-кандидат — см. хвост
+  ниже;
   (б) ~~кодификация 4 старых AO3 defect_found~~ — ЗАКРЫТА 07-19:
   at-bug-010 → critic.md пр.7 (validate_frontmatter в механическом
   слое артефакт-диффов), at-bug-014 → critic.md пр.12 (runtime-ветки
@@ -267,9 +270,15 @@ reachability guard в `mitm.wait_device_proxy_reachable`, тест не долж
   правиле 12 (порт 3f4014b 07-16 < дефект 07-17), но формулировка
   покрывала семантику данных, не runtime процессов — дыра
   формулировки, не утечка дисциплины; закрыта расширением пр.12.
-- Журнал: 2 недостающих теста log_append (rejected-после-accepted;
-  frontmatter с нераспознанным model), кириллические SystemExit —
-  без изменений с прошлого handoff, не тронуто.
+- ~~Журнал: 2 недостающих теста log_append, кириллические
+  SystemExit~~ — ЗАКРЫТО 07-19 батчем мелочей (misc-batch-scripts-0719:
+  оба теста written, mojibake-корень — reconfigure после parse_args —
+  устранён; заодно errors=replace в 12 скриптах класса и doctor-баг
+  «rc!=0 = полный клон»).
+- hygiene_gate v2 (остаточный риск critic, не блокер): подстрочная
+  детекция «канонического вызова» гасится упоминанием log_append.py в
+  любом месте команды (комментарий-обход) — ужесточить до
+  формы-префикса при касании; для WARN-режима v1 приемлемо.
 - Некритичные замечания critic по AT-BUG-004 инкр.3 (при касании
   файлов): докстринг assert_rating_badge_visible; ListingPage.badge_for.
 - TC-028: устаревшая заметка про эскалацию seed_db — почистит reviewer.
