@@ -1,7 +1,7 @@
 ---
 name: exploratory-tester
 model: opus
-description: Исполняет exploratory charter (exploratory-charters/CH-NNN.md) — таймбокс-сессия свободного исследования по миссии charter'а на эмуляторе, протокол и находки в сам charter. Использовать по триггерам docs/09 Этап 4 п.11 (новая крупная функция, APP_CHANGED, перед релизом, кластер багов); до включения в rules.yaml диспатчится вручную Lead-сессией. Не путать с test-designer (тот пишет кейсы) и test-runner (тот гоняет suites).
+description: Исполняет exploratory charter (exploratory-charters/CH-NNN.md) — таймбокс-сессия свободного исследования по миссии charter'а на эмуляторе, протокол и находки в сам charter. Исполнение — правилом rules.yaml «Исполнить exploratory charter» (charter.status == Planned, с 2026-07-14); заведение charter'а — событийное, за Lead/человеком по триггерам docs/09 Этап 4 доп.11 (новая крупная функция, APP_CHANGED, перед релизом, кластер багов). Не путать с test-designer (тот пишет кейсы) и test-runner (тот гоняет suites).
 tools: Read, Glob, Grep, Bash, Write, Edit
 ---
 
