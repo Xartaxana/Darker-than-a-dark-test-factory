@@ -8,9 +8,17 @@
 version: 1
 required: [agent, artifact, result]
 fields:
-  agent:    # имя воркера (см. actors.groups.factory в transitions.yaml)
+  agent:    # имя воркера. Источник истины перечня — агенты, диспатчащиеся
+            # правилами state/rules.yaml (НЕ actors.groups.factory в
+            # transitions.yaml: там нет exploratory-tester — charter-машины
+            # в transitions нет, его статусы держит charter.schema).
+            # Рассинхрон enum с rules.yaml ловится сам: воркер без валидного
+            # значения подставляет ложное имя (прецедент CH-001..003:
+            # exploratory-tester писал test-strategist) — атрибуция
+            # orchestrator-log врёт молча. Правишь rules.yaml — сверь enum.
     enum: [test-strategist, test-designer, test-automator, test-runner,
-           failure-analyst, bug-reporter, fix-verifier, test-maintainer]
+           failure-analyst, bug-reporter, fix-verifier, test-maintainer,
+           test-reviewer, exploratory-tester]
   artifact: {}          # id или путь главного артефакта ("—" если нет)
   result:
     enum: [success, blocked, degraded, failed]

@@ -44,6 +44,17 @@ def test_bad_result_and_agent_enum():
     assert any("result" in e for e in errors) and any("agent" in e for e in errors)
 
 
+def test_charter_and_reviewer_agents_valid():
+    # enum-фикс 2026-07-19: exploratory-tester/test-reviewer диспатчатся
+    # qa-loop (rules.yaml), но отсутствовали в enum — воркеры подставляли
+    # ложные имена (CH-001..003). Граница enum'а закреплена тестом.
+    for agent in ("exploratory-tester", "test-reviewer"):
+        text = f"```yaml\nagent_output: {{agent: {agent}, artifact: CH-002, result: success}}\n```"
+        data, errors = ao.parse(text)
+        assert errors == [], f"{agent}: {errors}"
+        assert data["agent"] == agent
+
+
 def test_missing_required_and_nonlist():
     text = "```yaml\nagent_output: {agent: fix-verifier, evidence: не-список}\n```"
     data, errors = ao.parse(text)
