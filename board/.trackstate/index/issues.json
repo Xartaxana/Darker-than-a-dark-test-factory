@@ -491,7 +491,7 @@
     "epicPath": null,
     "summary": "Чекбокс 'Main pairing only' инжектируется в include-фильтр формы Sort&Filter, доступен только при ровно одном выбранном relationship-теге (live)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -499,7 +499,7 @@
       "area:canary",
       "risk:R-02"
     ],
-    "updated": "2026-07-18T08:56:36Z",
+    "updated": "2026-07-19T14:55:28Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -535,7 +535,7 @@
     "epicPath": null,
     "summary": "Чекбокс исключения main pairing инжектируется в exclude-фильтр формы Sort&Filter, доступен только при ровно одном выбранном relationship-теге (live)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -543,7 +543,7 @@
       "area:canary",
       "risk:R-02"
     ],
-    "updated": "2026-07-18T09:15:13Z",
+    "updated": "2026-07-19T14:55:28Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -579,7 +579,7 @@
     "epicPath": null,
     "summary": "Кнопка 'Save filter' инжектируется рядом с submit формы Sort&Filter и не дублируется при повторных мутациях формы (live)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -587,7 +587,7 @@
       "area:canary",
       "risk:R-02"
     ],
-    "updated": "2026-07-18T09:15:17Z",
+    "updated": "2026-07-19T14:55:28Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1828,6 +1828,28 @@
     "archived": false
   },
   {
+    "key": "TC-084",
+    "path": "board/TC-084/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Тап по чипу неактивной вкладки переключает активную вкладку и контент WebView",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:tabs",
+      "risk:R-08"
+    ],
+    "updated": "2026-07-19T14:10:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "TC-013",
     "path": "board/TC-013/main.md",
     "parent": null,
@@ -2233,7 +2255,7 @@
     "epicPath": null,
     "summary": "TC-040 (Save filter dialog) детерминированно крашит qemu-эмулятор (0xc0000005) при переходе в Settings — реальный live-рендер тяжёлой страницы + недождённая пост-save навигация",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2241,8 +2263,8 @@
       "test_case:TC-040",
       "sev:major"
     ],
-    "updated": "2026-07-19T01:52:53Z",
-    "resolution": null,
+    "updated": "2026-07-19T13:35:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -2276,7 +2298,7 @@
     "epicPath": null,
     "summary": "long-press по ссылке в WebView не триггерит нативный setOnLongClickListener надёжно через Appium/UiAutomator2 (TC-026, фоновая вкладка)",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2284,8 +2306,8 @@
       "test_case:TC-026",
       "sev:major"
     ],
-    "updated": "2026-07-19T10:40:00Z",
-    "resolution": null,
+    "updated": "2026-07-19T14:20:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -2298,7 +2320,7 @@
     "epicPath": null,
     "summary": "navigation.py::_find_pill фильтр \"WebView\" not in class не исключает a11y-потомков WebView — риск клика по ссылке/чекбоксу СТРАНИЦЫ вместо нативной ручки-пилюли",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -2306,7 +2328,7 @@
       "test_case:TC-040",
       "sev:minor"
     ],
-    "updated": "2026-07-19T01:52:53Z",
+    "updated": "2026-07-19T14:41:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2320,15 +2342,16 @@
     "epicPath": null,
     "summary": "TC-009[READ-work2] детерминированно падает на open_tab(\"Library\") после dismiss_rating_overlay — NoSuchElementError на UiSelector().text(\"Library\")",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "test_case:TC-009",
+      "duplicate:AT-BUG-019",
       "sev:major"
     ],
-    "updated": "2026-07-19T05:21:48Z",
+    "updated": "2026-07-19T15:20:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2342,7 +2365,7 @@
     "epicPath": null,
     "summary": "Эмулятор дважды отваливается mid-test на driver.get()/switch_to.context внутри open_live_listing (Sort&Filter форма) — DevTools disconnected -> adb device not found; кандидат-сиблинг AT-BUG-016",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2355,7 +2378,29 @@
       "test_case:TC-083",
       "sev:major"
     ],
-    "updated": "2026-07-19T12:31:54Z",
+    "updated": "2026-07-19T14:55:28Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-022",
+    "path": "board/AT-BUG-022/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Нет наблюдения, различающего рабочий switchTab от no-op, когда цель — вкладка-0: assert_active_tab_url(HOME) после reduce-to-one тривиально проходит независимо от факта переключения — блокирует TC-084",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-084",
+      "sev:major"
+    ],
+    "updated": "2026-07-19T00:00:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2422,6 +2467,27 @@
       "sev:minor"
     ],
     "updated": "2026-07-19T09:55:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-013",
+    "path": "board/BUG-013/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Смена темы, затем немедленный kill процесса (<100 мс) теряет theme_mode — выбор темы не персистится",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:minor"
+    ],
+    "updated": "2026-07-19T17:30:00Z",
     "resolution": null,
     "children": [],
     "archived": false

@@ -26,17 +26,30 @@ class BottomNav(BaseScreen):
 
     _NONE_FOUND = object()  # сентинел «список стабилен, кандидатов нет» (не ретраить)
 
+    # AT-BUG-019: исключаем не только элемент, чей СОБСТВЕННЫЙ класс содержит
+    # "WebView" (сам контейнер android.webkit.WebView), но и любой a11y-узел,
+    # у которого такой контейнер есть СРЕДИ ПРЕДКОВ — виртуальные дочерние узлы
+    # живой веб-страницы (ссылки/чекбоксы/кнопки, классы android.view.View /
+    # android.widget.*) неотличимы от нативных Compose-элементов по имени
+    # собственного класса, но всегда потомки android.webkit.WebView в дереве.
+    # ancestor-or-self — на случай, если сам контейнер WebView когда-либо
+    # окажется clickable="true" (сейчас не наблюдалось, но fail-safe дешёвый).
+    _PILL_CANDIDATES_XPATH = (
+        '//*[@clickable="true"]'
+        '[not(ancestor-or-self::*[contains(@class,"WebView")])]'
+    )
+
     def _find_pill(self):
-        """Самый нижний кликабельный не-WebView View (ручка-пилюля). Дерево может
-        меняться под рукой во время перерисовки WebView — читаем список + атрибуты
-        атомарно и ретраим через wait_until при stale/разрыве соединения, а не
-        падаем с первой попытки (см. TC-016/TC-007/TC-008: панель работы открывается
-        сразу после навигации по WebView, дерево ещё «оседает»)."""
+        """Самый нижний кликабельный не-WebView View и не-потомок WebView
+        (ручка-пилюля). Дерево может меняться под рукой во время перерисовки
+        WebView — читаем список + атрибуты атомарно и ретраим через wait_until
+        при stale/разрыве соединения, а не падаем с первой попытки (см.
+        TC-016/TC-007/TC-008: панель работы открывается сразу после навигации
+        по WebView, дерево ещё «оседает»)."""
         def _snapshot(d):
             try:
-                els = d.find_elements(AppiumBy.XPATH, '//*[@clickable="true"]')
-                cand = [e for e in els if "WebView" not in (e.get_attribute("class") or "")]
-                return max(cand, key=lambda e: e.rect["y"]) if cand else self._NONE_FOUND
+                els = d.find_elements(AppiumBy.XPATH, self._PILL_CANDIDATES_XPATH)
+                return max(els, key=lambda e: e.rect["y"]) if els else self._NONE_FOUND
             except (StaleElementReferenceException, WebDriverException):
                 return False
         result = wait_until(self.driver, _snapshot, timeout=10,

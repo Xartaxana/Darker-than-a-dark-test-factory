@@ -2,7 +2,7 @@
 key: "TC-082"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p0"
 summary: "Кнопка 'Save filter' инжектируется рядом с submit формы Sort&Filter и не дублируется при повторных мутациях формы (live)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-18T09:15:17Z"
-updated: "2026-07-18T09:15:17Z"
+created: "2026-07-19T14:55:28Z"
+updated: "2026-07-19T14:55:28Z"
 archived: false
 resolution: null
 ---

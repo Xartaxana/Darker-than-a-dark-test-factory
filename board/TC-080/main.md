@@ -2,7 +2,7 @@
 key: "TC-080"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p0"
 summary: "Чекбокс исключения main pairing инжектируется в exclude-фильтр формы Sort&Filter, доступен только при ровно одном выбранном relationship-теге (live)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-18T09:15:13Z"
-updated: "2026-07-18T09:15:13Z"
+created: "2026-07-19T14:55:28Z"
+updated: "2026-07-19T14:55:28Z"
 archived: false
 resolution: null
 ---

@@ -399,6 +399,11 @@
     "artifact_status": "Approved",
     "board_status": "Approved"
   },
+  "TC-084": {
+    "itype": "test-case",
+    "artifact_status": "Review",
+    "board_status": "Review"
+  },
   "TC-013": {
     "itype": "test-case",
     "artifact_status": "Automated",
@@ -486,8 +491,8 @@
   },
   "AT-BUG-016": {
     "itype": "bug",
-    "artifact_status": "Fixed",
-    "board_status": "Fixed"
+    "artifact_status": "Verified",
+    "board_status": "Verified"
   },
   "AT-BUG-017": {
     "itype": "bug",
@@ -496,20 +501,25 @@
   },
   "AT-BUG-018": {
     "itype": "bug",
-    "artifact_status": "Fixed",
-    "board_status": "Fixed"
+    "artifact_status": "Verified",
+    "board_status": "Verified"
   },
   "AT-BUG-019": {
     "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
+    "artifact_status": "Fixed",
+    "board_status": "Fixed"
   },
   "AT-BUG-020": {
     "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
+    "artifact_status": "Fixed",
+    "board_status": "Fixed"
   },
   "AT-BUG-021": {
+    "itype": "bug",
+    "artifact_status": "Fixed",
+    "board_status": "Fixed"
+  },
+  "AT-BUG-022": {
     "itype": "bug",
     "artifact_status": "Open",
     "board_status": "Open"
@@ -525,6 +535,11 @@
     "board_status": "Open"
   },
   "BUG-012": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "BUG-013": {
     "itype": "bug",
     "artifact_status": "Open",
     "board_status": "Open"

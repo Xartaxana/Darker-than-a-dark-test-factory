@@ -4,7 +4,7 @@ title: "long-press по ссылке в WebView не триггерит нати
 type: test_debt
 debt_kind: broken_environment
 severity: major
-status: Fixed
+status: Verified
 found_in: "test-automator (батч tabs-022-023-024-025-026, 2026-07-18): при автоматизации TC-026 (long-press ссылки открывает фоновую вкладку) синтетический long-press по координатам ссылки внутри WebView НЕ триггерит app-under-test/.../BrowserScreen.kt:641-652 (`webView.setOnLongClickListener` + `HitTestResult`) в подавляющем большинстве попыток."
 fixed_in: "framework (test-only, без сборки приложения) — framework/screens/browser_screen.py, framework/steps/browser_steps.py, framework/tests/test_tabs.py, scripts/build_replay_recordings.py"
 last_seen_in: ""
@@ -12,8 +12,8 @@ test_cases: [TC-026]
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-07-19T10:40:00Z"
-updated: "2026-07-19T10:40:00Z"
+status_since: "2026-07-19T14:20:00Z"
+updated: "2026-07-19T14:20:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -89,6 +89,7 @@ WEBVIEW-контекста УЖЕ в той же системе координа
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
 | — | — | — | — | Open, ждёт фикса |
+| 2026-07-19 | app 1.10 (debug, неизменна — test_debt в фреймворке); framework commit `93e0c5c` (2026-07-19T12:25:51+02:00) — `framework/screens/browser_screen.py`, `framework/steps/browser_steps.py`, `framework/tests/test_tabs.py`, `scripts/build_replay_recordings.py` | TC-026 (`test_long_press_link_opens_background_tab_without_switching`) x3 изолированно + весь `framework/tests/test_tabs.py` (TC-022..026, минимальный smoke области) | TC-026 изолированно: PASSED/PASSED/PASSED (27.11s/28.09s/26.76s), PYTEST_EXIT=0 каждый прогон. Полный `test_tabs.py`: 5 passed in 199.17s (TC-026 — 4-й подряд зелёный), PYTEST_EXIT=0. Get-Device до и после: `DEVICE: emulator-5554` оба раза | **Fixed → Verified** (fix-verifier) |
 
 ## Обсуждение
 
@@ -289,3 +290,28 @@ test-strategist не требуется.
 Долг переведён `Open → Fixed` (B4, guard `type: test_debt`, актор test-maintainer
 легален по `schemas/transitions.yaml`). ESC-003 (`state/escalations.md`) закрыта
 этим же ходом.
+
+**2026-07-19T14:20:00Z — fix-verifier (D1, mode=verify).** Долг `test_debt` — новая
+сборка приложения не требуется (фикс исключительно во фреймворке), поэтому
+верифицировано на актуальной установленной сборке (app 1.10, debug, неизменна) и
+framework-коммите `93e0c5c` (последний коммит по `fixed_in`-путям). Прогнано:
+- 3 изолированных прогона TC-026 подряд (`Invoke-Pytest
+  tests/test_tabs.py::test_long_press_link_opens_background_tab_without_switching -v`):
+  PASSED/PASSED/PASSED, 27.11s / 28.09s / 26.76s, PYTEST_EXIT=0 каждый — нестабильность
+  <10%, заявленная в находке test-automator/test-maintainer, не воспроизвелась ни разу
+  (0/3 фейлов).
+- Полный `framework/tests/test_tabs.py` (минимальный smoke области, TC-022..026):
+  `5 passed in 199.17s`, PYTEST_EXIT=0 — TC-026 стал 4-м подряд зелёным прогоном в
+  этой сессии, регрессий по остальным TC-022/023/024/025 нет.
+- `Get-Device` до и после серии прогонов: `DEVICE: emulator-5554` оба раза —
+  окружение не деградировало.
+
+Итого 4 зелёных прогона TC-026 подряд (порог DoD — 3) + полный файл. Критерий
+готовности п.1 (`bugs/AT-BUG-018.md`) подтверждён фактическим прогоном, не только
+записью test-maintainer. `status: Fixed → Verified`. `app-under-test/` не тронут.
+
+Дефект-собрат (D-0043): в этой же находке (2026-07-19T10:40:00Z) упоминается
+`bugs/AT-BUG-019.md` — латентный риск `_find_pill` / WebView→a11y проекция,
+использованный как основа рабочего механизма `find_link_a11y_node_by_text`.
+AT-BUG-019 в scope этой верификации не входит (другой артефакт, другой режим) —
+называю для видимости, сам не трогаю.
