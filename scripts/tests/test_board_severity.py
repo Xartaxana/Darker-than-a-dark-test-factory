@@ -6,6 +6,9 @@ test-case (board_sync.set_priority не имел юнитов до этой пр
 - board_sync.set_severity: happy-path, границы enum'а (все 4 валидных значения +
   адверсариальная батарея невалидных), смешение типов (test-case/несуществующий
   ключ), регистронезависимость входа.
+- board_sync.set_priority: no-op апдейт (целевое значение совпадает с текущим —
+  re.subn вместо сравнения new_text == text, тот же класс дефекта, что чинился
+  у set_severity), обычная смена значения, несуществующий ключ.
 - board_view.collect()/render(): сырая severity в карточке бага, live-дропдаун
   вместо статичного бейджа только для bug (не для test-case/run), P-класс цвета
   переиспользован из уже вычисленного производного приоритета.
@@ -24,6 +27,10 @@ import board_view as bv
 
 def _bug_text(repo, key: str) -> str:
     return repo.read_artifact(f"bugs/{key}.md")
+
+
+def _tc_text(repo, key: str) -> str:
+    return repo.read_artifact(f"test-cases/{key}.md")
 
 
 # --- board_sync.set_severity: happy path -------------------------------------
@@ -218,3 +225,35 @@ def test_minor_maps_to_p2_color(repo):
     html_str = bv.render(bv.collect(), live=True)
     chunk = _card_chunk(html_str, "BUG-662")
     assert 'class="pri pri-select pP2"' in chunk
+
+
+# --- board_sync.set_priority: no-op false-reject (тот же класс, что severity) --
+
+def test_priority_noop_same_value_is_ok_not_false_reject(repo):
+    """critic-находка: старый детект (new_text == text после re.sub) давал
+    ложный отказ "не нашёл строку", когда целевой приоритет совпадает с
+    текущим — легальный no-op апдейт. Фикс — re.subn с проверкой числа замен
+    (зеркалит set_severity выше)."""
+    repo.test_case("TC-610", "Approved")  # priority: P1 по умолчанию (conftest)
+
+    ok, message = bs.set_priority("TC-610", "P1")
+
+    assert ok, message
+    text = _tc_text(repo, "TC-610")
+    assert re.search(r"(?m)^priority:\s*P1\s*$", text)
+    assert "2026-07-01T00:00:00Z" not in text  # updated-штамп всё равно переписан
+    assert "TC-610" in message and "P1" in message
+
+
+def test_priority_changed_value_still_works(repo):
+    repo.test_case("TC-611", "Approved")  # priority: P1 по умолчанию (conftest)
+    ok, message = bs.set_priority("TC-611", "P2")
+    assert ok, message
+    assert re.search(r"(?m)^priority:\s*P2\s*$", _tc_text(repo, "TC-611"))
+
+
+def test_priority_nonexistent_key_still_rejected(repo):
+    ok, message = bs.set_priority("TC-999999", "P1")
+    assert not ok
+    assert "не найден" in message
+

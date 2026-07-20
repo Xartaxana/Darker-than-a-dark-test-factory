@@ -255,8 +255,8 @@ def set_priority(key: str, priority: str) -> tuple[bool, str]:
         if itype == "bug":
             return False, f"{key}: у багов приоритет выводится из severity, не редактируется напрямую"
         text = src.read_text(encoding="utf-8")
-        new_text = re.sub(r"(?m)^priority:\s*P[0-3]\s*$", f"priority: {priority}", text, count=1)
-        if new_text == text:
+        new_text, n_subs = re.subn(r"(?m)^priority:\s*P[0-3]\s*$", f"priority: {priority}", text, count=1)
+        if n_subs == 0:
             return False, f"{key}: не нашёл строку priority: PN в файле"
         import datetime
         stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -285,12 +285,9 @@ def set_severity(key: str, severity: str) -> tuple[bool, str]:
         if itype == "test-case":
             return False, f"{key}: у тест-кейсов severity нет — редактируй priority"
         text = src.read_text(encoding="utf-8")
-        # re.subn (не сравнение new_text == text, как в set_priority): ставить
-        # severity в то же значение, что уже есть, — легальный no-op апдейт, а не
-        # "не нашёл строку" (тот сравнительный подход даёт ложный отказ, когда
-        # целевое значение совпадает с текущим — тот же класс дефекта у set_priority,
-        # там не воспроизводится, т.к. PN формат не пересекается с типовым тестом,
-        # но сохраняется; вне scope этой задачи, см. отчёт).
+        # re.subn (не сравнение new_text == text): ставить значение в то же,
+        # что уже есть, — легальный no-op апдейт, а не "не нашёл строку"
+        # (класс закрыт так же в set_priority выше).
         new_text, n_subs = re.subn(r"(?m)^severity:\s*[A-Za-z]+\s*$", f"severity: {severity}", text, count=1)
         if n_subs == 0:
             return False, f"{key}: не нашёл строку severity: <значение> в файле"

@@ -1244,3 +1244,30 @@ def test_closes_phantom_duplicate_token_in_one_notes_closes_once_without_error(
     exit_code = la.main(["open-dispatches"])
     assert exit_code == 0
     assert capsys.readouterr().out == ""
+
+
+def test_closes_phantom_second_separate_record_with_same_token_is_idempotent(
+        logs, capsys):
+    # critic-находка (дивергенция сканер<->валидатор в безвредную сторону):
+    # dispatch_skipped/decomposable/etc. НЕ входят в
+    # _OPEN_DISPATCH_LIFECYCLE_CANDIDATES, поэтому _task_is_open_for_lifecycle
+    # для t-001 остаётся True (последнее lifecycle-событие всё ещё
+    # "delegated") даже ПОСЛЕ первой закрывающей записи. Валидатор поэтому
+    # пропускает ВТОРУЮ отдельную запись с тем же closes-phantom:t-001
+    # (не SystemExit, в отличие от test_closes_phantom_validator_rejects_
+    # already_closed_task_id, где фантом закрыт через accepted -- lifecycle-
+    # событие, которое validator видит). Сканер при этом всё равно не
+    # выводит t-001 как открытый -- open-dispatches остаётся пустым.
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr")
+    la.append_routing("dispatch_skipped", "scout", category="recon",
+                      notes="closes-phantom:t-001 первое закрытие")
+    # Вторая отдельная запись с тем же токеном -- не должна упасть.
+    la.append_routing("dispatch_skipped", "scout", category="recon",
+                      notes="closes-phantom:t-001 повторное закрытие, "
+                            "идемпотентно")
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 3
+    exit_code = la.main(["open-dispatches"])
+    assert exit_code == 0
+    assert capsys.readouterr().out == ""
