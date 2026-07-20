@@ -72,6 +72,30 @@ MISMATCH, информационное. Оба предупреждения НЕ
 найден/не открылся, битый JSON, исключение любого рода) — тихий пропуск,
 запись журнала НИКОГДА не ломается замером.
 
+Добавление 6 (2026-07-20, вопрос сверки трёх носителей от OS-репо:
+у них тот же класс дал 13 ложных «висяков» на буте, вылечен
+машиночитаемым closes:-токеном; здесь форма другая) — CLAUDE.md
+«Журнал маршрутизации» гласил "фантом закрывается пометкой в notes
+следующего события", но find_open_dispatches читает только
+lifecycle-события по task_id -- прозаическая пометка ему не видна,
+фантом висит в open-dispatches вечно. Токен `closes-phantom:<task_id>`
+в notes ЛЮБОЙ записи, СТРОГО ПОЗЖЕ (по файловому порядку) последнего
+delegated этого task_id, закрывает его машиночитаемо; конвенция
+строгости зеркалит `--replaces-worker` (Добавление 3): голый task_id
+сразу за двоеточием, регекс CLOSES_PHANTOM_RE (один и более
+не-пробельных символов после двоеточия) берёт первый такой токен
+целиком -- хвостовая пунктуация
+("closes-phantom:t-042.") ломает точное сравнение и не закрывает.
+Токен, записанный РАНЬШЕ последнего delegated (reopen/retry-цепочка),
+не закрывает -- новый delegated ПОСЛЕ токена вновь открывает задачу
+автоматически (сравнение идёт с индексом ПОСЛЕДНЕГО delegated, не
+первого). На запись (`append_routing`) — симметричная защита от
+опечаток/фиктивного закрытия (эталон: проверка `--replaces-worker` в
+Добавлении 3): каждый захваченный closes-phantom-токен обязан быть
+task_id, ОТКРЫТЫМ на момент записи (последнее lifecycle-событие,
+т.е. пересечение _OPEN_DISPATCH_LIFECYCLE_CANDIDATES с ROUTING_EVENTS,
+-- delegated) -- иначе SystemExit ДО записи строки.
+
 Использование:
   python scripts/log_append.py routing --event delegated \
       --agent builder --model sonnet --task-id t-042 \
@@ -80,6 +104,9 @@ MISMATCH, информационное. Оба предупреждения НЕ
       --agent builder --model sonnet --task-id t-042 \
       --replaces-worker "job:bg-4471" --worker-ref "job:bg-9001" \
       --category implementation --notes "воркер завис, замена без вердикта"
+  python scripts/log_append.py routing --event dispatch_skipped \
+      --agent scout --category recon \
+      --notes "closes-phantom:t-042 воркер не был запущен"
   python scripts/log_append.py open-dispatches
 """
 from __future__ import annotations
@@ -205,6 +232,34 @@ def _prior_worker_refs(records: list[dict], task_id: str) -> set[str]:
 def _has_rejected(records: list[dict], task_id: str) -> bool:
     return any(r.get("task_id") == task_id and r.get("event") == "rejected"
                for r in records)
+
+
+# Добавление 6: closes-phantom:<task_id> -- машиночитаемое закрытие
+# фантома (см. докстринг модуля). Конвенция строгости зеркалит
+# --replaces-worker: голый task_id сразу за двоеточием, без хвостовой
+# пунктуации/скобок -- regex берёт первый non-whitespace токен целиком,
+# "closes-phantom:t-042." захватит "t-042.", не совпадёт с "t-042".
+CLOSES_PHANTOM_RE = re.compile(r"closes-phantom:(\S+)")
+
+
+def _closes_phantom_tokens(notes: str) -> list[str]:
+    return CLOSES_PHANTOM_RE.findall(notes or "")
+
+
+def _task_is_open_for_lifecycle(records: list[dict], task_id: str) -> bool:
+    """Открыт ли task_id по ТОЙ ЖЕ семантике, что find_open_dispatches:
+    последнее событие СРЕДИ lifecycle-набора
+    (_OPEN_DISPATCH_LIFECYCLE_CANDIDATES ∩ ROUTING_EVENTS) для этого
+    task_id -- delegated. Нелайфсайкл-события с тем же task_id (напр.
+    defect_found, если когда-либо будет записан с ним же) игнорируются --
+    тот же фильтр, что использует сканер, чтобы валидатор при записи и
+    сканер при чтении всегда были согласны друг с другом."""
+    lifecycle = _OPEN_DISPATCH_LIFECYCLE_CANDIDATES & ROUTING_EVENTS
+    last: str | None = None
+    for rec in records:
+        if rec.get("task_id") == task_id and rec.get("event") in lifecycle:
+            last = rec.get("event")
+    return last == "delegated"
 
 
 def _read_agent_frontmatter_model(agent: str) -> str | None:
@@ -423,6 +478,20 @@ def append_routing(event: str, agent: str, *, model: str = "",
         raise SystemExit("--witness (фактический вывод прогона) обязателен для accepted по builder (D-0052)")
     if event == "defect_found" and not ref:
         raise SystemExit("--ref (task_id исходного accepted) обязателен для 'defect_found' (D-0052/D-0053)")
+    # Добавление 6: closes-phantom:<task_id> в notes -- защита от
+    # опечаток/фиктивного закрытия (эталон: --replaces-worker, Добавление
+    # 3). Применяется к notes ЛЮБОГО события, не только delegated: пометка
+    # закрывает фантом ДРУГОГО task_id, записанного РАНЬШЕ в журнале.
+    closes_tokens = _closes_phantom_tokens(notes)
+    if closes_tokens:
+        records_cp = _read_routing_records(ROUTING_LOG)
+        for token in closes_tokens:
+            if not _task_is_open_for_lifecycle(records_cp, token):
+                raise SystemExit(
+                    f"closes-phantom:{token!r} в notes не указывает на "
+                    "ОТКРЫТЫЙ task_id (последнее lifecycle-событие обязано "
+                    "быть delegated) -- опечатка, хвостовая пунктуация или "
+                    "фиктивное закрытие запрещены (зеркало --replaces-worker)")
     by = by.strip()
     basis = basis.strip()
     if event in BY_REQUIRED_EVENTS:
@@ -564,7 +633,16 @@ def find_open_dispatches(records: list[dict]) -> list[dict]:
     delegated. Возвращает записи (dict) открытых task_id, старейшие
     (по позиции их ПОСЛЕДНЕГО delegated в файле — события, оставившего
     задачу открытой; для reopen/retry-цепочек это не первый delegated
-    задачи) первыми."""
+    задачи) первыми.
+
+    Добавление 6: task_id дополнительно считается ЗАКРЫТЫМ, если в notes
+    какой-либо записи СТРОГО ПОЗЖЕ (по индексу файла) его последнего
+    delegated встречается токен closes-phantom:<task_id> (точное
+    совпадение захваченного токена, см. _closes_phantom_tokens). Токен
+    РАНЬШЕ последнего delegated не закрывает -- новый delegated после
+    токена (reopen/retry) сдвигает "последний delegated" вперёд токена,
+    и сравнение closes_idx > deleg_idx естественно перестаёт выполняться
+    без отдельного кейса для reopen."""
     lifecycle = _OPEN_DISPATCH_LIFECYCLE_CANDIDATES & ROUTING_EVENTS
     last_by_task: dict[str, tuple[int, dict]] = {}
     for idx, rec in enumerate(records):
@@ -575,6 +653,18 @@ def find_open_dispatches(records: list[dict]) -> list[dict]:
         last_by_task[task_id] = (idx, rec)
     open_items = [(idx, rec) for idx, rec in last_by_task.values()
                   if rec.get("event") == "delegated"]
+
+    closes: list[tuple[int, str]] = [
+        (idx, token)
+        for idx, rec in enumerate(records)
+        for token in _closes_phantom_tokens(rec.get("notes") or "")
+    ]
+    open_items = [
+        (idx, rec) for idx, rec in open_items
+        if not any(c_idx > idx and token == rec.get("task_id")
+                   for c_idx, token in closes)
+    ]
+
     open_items.sort(key=lambda pair: pair[0])
     return [rec for _, rec in open_items]
 

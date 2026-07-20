@@ -1098,3 +1098,149 @@ def test_tier_measure_broken_transcript_line_does_not_break_journal_write(
     captured = capsys.readouterr()
     assert "TIER MEASURE" not in captured.err
     assert len(routing.read_text(encoding="utf-8").splitlines()) == 1
+
+
+# Добавление 6 (task_id: open-dispatches-closes-token, 2026-07-20): токен
+# closes-phantom:<task_id> в notes -- машиночитаемое закрытие фантома
+# (CLAUDE.md «Журнал маршрутизации»: прежняя проза "фантом закрывается
+# пометкой в notes следующего события" не читалась find_open_dispatches).
+# Конвенция строгости зеркалит --replaces-worker.
+
+def test_closes_phantom_token_closes_dangling_delegated(logs, capsys):
+    routing, _ = logs
+    la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                      worker_ref="wr-dead")
+    # Воркер фактически не был запущен -- фантом закрывается токеном в
+    # notes следующего события (машиночитаемо, не прозой).
+    la.append_routing("dispatch_skipped", "scout", category="recon",
+                      notes="closes-phantom:t-001 воркер не был запущен")
+    exit_code = la.main(["open-dispatches"])
+    assert exit_code == 0
+    assert capsys.readouterr().out == ""
+
+
+def test_prose_phantom_note_does_not_close_dispatch(logs, capsys):
+    # Старая (уже неактуальная в CLAUDE.md) конвенция -- прозаическая
+    # пометка "фантом закрыт" без токена сканером НЕ читается.
+    routing, _ = logs
+    la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                      worker_ref="wr-dead")
+    la.append_routing("dispatch_skipped", "scout", category="recon",
+                      notes="фантом закрыт: воркер не был запущен")
+    exit_code = la.main(["open-dispatches"])
+    assert exit_code == 0
+    out = capsys.readouterr().out
+    assert "OPEN DISPATCH: t-001" in out
+
+
+def test_closes_phantom_token_before_later_delegated_does_not_close_reopened_task(
+        logs, capsys):
+    # Токен, записанный ДО последнего delegated (переоткрытие/ретрай),
+    # не закрывает -- новый delegated ПОСЛЕ токена вновь открывает задачу.
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr-a")
+    # Токен закрывает фантом ДО переоткрытия (на тот момент t-001 открыт --
+    # валидатор пропускает запись).
+    la.append_routing("escalated", "critic", model="opus", task_id="t-001",
+                      notes="closes-phantom:t-001 ошибочно продиктованный "
+                            "ранний фантом-статус")
+    # continuation другим agent'ом (ветка "б") -- переоткрывает задачу
+    # заново, без спецфлагов.
+    la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                      worker_ref="wr-b")
+    exit_code = la.main(["open-dispatches"])
+    assert exit_code == 0
+    out = capsys.readouterr().out
+    assert "OPEN DISPATCH: t-001" in out
+
+
+def test_closes_phantom_multiple_tokens_in_one_notes_close_both(logs, capsys):
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr-a")
+    la.append_routing("delegated", "critic", model="opus", task_id="t-002",
+                      worker_ref="wr-b")
+    la.append_routing("dispatch_skipped", "scout", category="recon",
+                      notes="closes-phantom:t-001 closes-phantom:t-002 "
+                            "оба воркера не были запущены")
+    exit_code = la.main(["open-dispatches"])
+    assert exit_code == 0
+    assert capsys.readouterr().out == ""
+
+
+def test_closes_phantom_validator_rejects_nonexistent_task_id(logs):
+    routing, _ = logs
+    with pytest.raises(SystemExit, match="closes-phantom"):
+        la.append_routing("dispatch_skipped", "scout", category="recon",
+                          notes="closes-phantom:t-999 опечатка")
+    assert not routing.exists()
+
+
+def test_closes_phantom_validator_rejects_already_closed_task_id(logs):
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr")
+    la.append_routing("accepted", "builder", model="sonnet", by="opus",
+                      task_id="t-001", witness="pytest -q -> passed")
+    with pytest.raises(SystemExit, match="closes-phantom"):
+        la.append_routing("dispatch_skipped", "scout", category="recon",
+                          notes="closes-phantom:t-001 задним числом")
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 2
+
+
+def test_closes_phantom_validator_rejects_trailing_punctuation(logs):
+    # Та же самозащита, что у --replaces-worker: "closes-phantom:t-001."
+    # захватывает "t-001." целиком, точное сравнение с "t-001" не проходит.
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr")
+    with pytest.raises(SystemExit, match="closes-phantom"):
+        la.append_routing("dispatch_skipped", "scout", category="recon",
+                          notes="closes-phantom:t-001.")
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 1
+
+
+def test_closes_phantom_happy_path_write_and_open_dispatches_empty(logs, capsys):
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr")
+    la.append_routing("dispatch_skipped", "scout", category="recon",
+                      notes="closes-phantom:t-001 воркер не был запущен, "
+                            "ре-диспатч не требуется")
+    rec = json.loads(routing.read_text(encoding="utf-8").splitlines()[-1])
+    assert "closes-phantom:t-001" in rec["notes"]
+    exit_code = la.main(["open-dispatches"])
+    assert exit_code == 0
+    assert capsys.readouterr().out == ""
+
+
+def test_closes_phantom_empty_token_is_harmless_literal_text(logs, capsys):
+    # Граница: "closes-phantom:" без id -- \S+ требует хотя бы один
+    # символ, а сразу за двоеточием конец notes -- токен не образуется,
+    # проходит как обычный текст без валидации/закрытия.
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr")
+    la.append_routing("dispatch_skipped", "scout", category="recon",
+                      notes="closes-phantom:")
+    rec = json.loads(routing.read_text(encoding="utf-8").splitlines()[-1])
+    assert rec["notes"] == "closes-phantom:"
+    exit_code = la.main(["open-dispatches"])
+    assert exit_code == 0
+    out = capsys.readouterr().out
+    assert "OPEN DISPATCH: t-001" in out
+
+
+def test_closes_phantom_duplicate_token_in_one_notes_closes_once_without_error(
+        logs, capsys):
+    # Граница: токен-дубль в одной notes -- легален, не ошибка.
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr")
+    la.append_routing("dispatch_skipped", "scout", category="recon",
+                      notes="closes-phantom:t-001 closes-phantom:t-001 "
+                            "задвоенный токен, не ошибка")
+    exit_code = la.main(["open-dispatches"])
+    assert exit_code == 0
+    assert capsys.readouterr().out == ""
