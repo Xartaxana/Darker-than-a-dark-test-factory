@@ -48,6 +48,8 @@ def collect():
             "status": status_id,
             "status_name": STATUS_NAME.get(status_id, str(meta.get("status"))),
             "priority": _priority_for(itype, meta).upper(),
+            # Сырая severity бага (для дропдауна /severity); у test-case её нет.
+            "severity": str(meta.get("severity")).lower() if itype == "bug" and meta.get("severity") else None,
             "labels": _labels_for(itype, meta),
             # Пустой lock -> None: бейдж "кто работает" на карточке рисуем ТОЛЬКО
             # при непустом lock (qa-agents по умолчанию не шумит, см. board_sync).
@@ -83,6 +85,16 @@ def render(by_type, live: bool = False) -> str:
                     return (f'<select class="pri pri-select p{esc(t["priority"])}" '
                             f'data-key="{esc(t["key"])}" onclick="event.stopPropagation()" '
                             f'onchange="setPriority(this)">{opts}</select>')
+                if live and t["itype"] == "bug":
+                    # Цвет — переиспользуем производный P-класс приоритета (t["priority"],
+                    # уже вычислен из severity через SEVERITY_TO_PRIORITY), без новой CSS.
+                    opts = "".join(
+                        f'<option value="{s}"{" selected" if s == t["severity"] else ""}>{s}</option>'
+                        for s in ("blocker", "critical", "major", "minor")
+                    )
+                    return (f'<select class="pri pri-select p{esc(t["priority"])}" '
+                            f'data-key="{esc(t["key"])}" onclick="event.stopPropagation()" '
+                            f'onchange="setSeverity(this)">{opts}</select>')
                 return f'<span class="pri p{esc(t["priority"])}">{esc(t["priority"])}</span>'
 
             for t in cards:
@@ -98,7 +110,8 @@ def render(by_type, live: bool = False) -> str:
                         f'title="в работе: {esc(t["assignee"])}">⚙ {esc(t["assignee"])}</span></div>')
 
             card_html = "".join(
-                f'<div class="card" data-pri="{esc(t["priority"])}" data-key="{esc(t["key"])}" '
+                f'<div class="card" data-pri="{esc(t["priority"])}" data-severity="{esc(t["severity"] or "")}" '
+                f'data-key="{esc(t["key"])}" '
                 f'title="{esc(t["src"])}" onclick="openDetail(event, \'{esc(t["key"])}\')">'
                 f'<div class="k">{esc(t["key"])} {pri_widget(t)}</div>'
                 f'<div class="s">{esc(t["summary"])}</div>'
@@ -306,6 +319,36 @@ async function setPriority(sel) {{
   }} catch (e) {{
     alert('Ошибка запроса: ' + e);
     sel.className = prevClass;
+  }} finally {{
+    sel.disabled = false;
+  }}
+}}
+const SEV_TO_P = {{blocker: 'P0', critical: 'P0', major: 'P1', minor: 'P2'}};
+async function setSeverity(sel) {{
+  const key = sel.dataset.key;
+  const newSev = sel.value;
+  const prevClass = sel.className;
+  const card = sel.closest('.card');
+  const prevSev = card.dataset.severity;
+  sel.disabled = true;
+  try {{
+    const resp = await fetch('/severity?key=' + encodeURIComponent(key) + '&severity=' + encodeURIComponent(newSev), {{ method: 'POST' }});
+    const data = await resp.json();
+    if (data.ok) {{
+      const newP = SEV_TO_P[newSev] || 'P2';
+      sel.className = 'pri pri-select p' + newP;
+      card.dataset.pri = newP;
+      card.dataset.severity = newSev;
+      applySort();
+    }} else {{
+      alert('Не удалось изменить severity ' + key + ': ' + data.message);
+      sel.className = prevClass;
+      sel.value = prevSev;
+    }}
+  }} catch (e) {{
+    alert('Ошибка запроса: ' + e);
+    sel.className = prevClass;
+    sel.value = prevSev;
   }} finally {{
     sel.disabled = false;
   }}

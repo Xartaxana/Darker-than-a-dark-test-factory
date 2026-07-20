@@ -17,7 +17,7 @@ import threading
 import webbrowser
 from urllib.parse import parse_qs, urlsplit
 
-from board_sync import approve_test_case, set_priority
+from board_sync import approve_test_case, set_priority, set_severity
 from board_view import collect, render
 
 HOST = "127.0.0.1"
@@ -54,6 +54,12 @@ class Handler(http.server.BaseHTTPRequestHandler):
             priority = qs.get("priority", [""])[0]
             try:
                 ok, message = set_priority(key, priority) if key and priority else (False, "не передан key/priority")
+            except Exception as e:  # noqa: BLE001
+                ok, message = False, str(e)
+        elif parts.path == "/severity":
+            severity = qs.get("severity", [""])[0]
+            try:
+                ok, message = set_severity(key, severity) if key and severity else (False, "не передан key/severity")
             except Exception as e:  # noqa: BLE001
                 ok, message = False, str(e)
         else:

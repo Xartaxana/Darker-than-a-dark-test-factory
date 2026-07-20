@@ -266,6 +266,42 @@ def set_priority(key: str, priority: str) -> tuple[bool, str]:
     return False, f"{key}: не найден среди test-case"
 
 
+SEVERITY_ENUM = {"blocker", "critical", "major", "minor"}
+
+
+def set_severity(key: str, severity: str) -> tuple[bool, str]:
+    """Меняет severity: <значение> во frontmatter bug .md файла.
+
+    Зеркалит set_priority: test-case отказывает (severity редактируется только у
+    багов, у test-case это priority), не найден — отказ. Не трогает
+    SEVERITY_TO_PRIORITY/производную колонку приоритета — та пересчитается сама
+    при следующей сборке из нового значения severity."""
+    severity = severity.lower()
+    if severity not in SEVERITY_ENUM:
+        return False, f"недопустимая severity «{severity}»"
+    for itype, meta, _body, src in _iter_artifacts():
+        if itype not in ("test-case", "bug") or str(meta.get("id")) != key:
+            continue
+        if itype == "test-case":
+            return False, f"{key}: у тест-кейсов severity нет — редактируй priority"
+        text = src.read_text(encoding="utf-8")
+        # re.subn (не сравнение new_text == text, как в set_priority): ставить
+        # severity в то же значение, что уже есть, — легальный no-op апдейт, а не
+        # "не нашёл строку" (тот сравнительный подход даёт ложный отказ, когда
+        # целевое значение совпадает с текущим — тот же класс дефекта у set_priority,
+        # там не воспроизводится, т.к. PN формат не пересекается с типовым тестом,
+        # но сохраняется; вне scope этой задачи, см. отчёт).
+        new_text, n_subs = re.subn(r"(?m)^severity:\s*[A-Za-z]+\s*$", f"severity: {severity}", text, count=1)
+        if n_subs == 0:
+            return False, f"{key}: не нашёл строку severity: <значение> в файле"
+        import datetime
+        stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        new_text = re.sub(r'(?m)^updated:.*$', f'updated: "{stamp}"', new_text, count=1)
+        src.write_text(new_text, encoding="utf-8")
+        return True, f"{key}: severity → {severity}"
+    return False, f"{key}: не найден среди test-case/bug"
+
+
 def _load_transitions_matrix() -> dict:
     return yaml.safe_load(TRANSITIONS_PATH.read_text(encoding="utf-8")) or {}
 
