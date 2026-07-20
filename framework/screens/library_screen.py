@@ -45,6 +45,12 @@ class LibraryScreen(BaseScreen):
     def has_tags_text(self, text: str, timeout: int | None = None) -> bool:
         return self.is_present(self.by_text_contains(text), timeout=timeout or 6)
 
+    # --- Note-иконка карточки (WorkCard, LibraryScreen.kt ~974-979:
+    # `if (work.comment != null) NoteIconButton(...)`, contentDescription="View note"
+    # ~1014-1038, по образцу has_download_icon/has_open_icon ниже) ---
+    def has_note_icon(self, timeout: int | None = None) -> bool:
+        return self.is_present(self.by_desc("View note"), timeout=timeout or 8)
+
     def work_card(self, title: str, timeout: int | None = None):
         return self.find(self.by_text(title), timeout)
 

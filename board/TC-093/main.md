@@ -1,0 +1,88 @@
+---
+key: "TC-093"
+project: "AO3"
+issueType: "test-case"
+status: "tc-awaiting-review"
+priority: "p1"
+summary: "Переключение Display mode Hide→Dim в Settings меняет поведение фильтрации на уже открытом листинге (live-push)"
+assignee: "qa-agents"
+reporter: "qa-agents"
+labels: ["test-case", "area:visibility", "risk:R-06"]
+components: []
+fixVersions: []
+watchers: []
+parent: null
+epic: null
+created: "2026-07-20T01:38:53Z"
+updated: "2026-07-20T01:38:53Z"
+archived: false
+resolution: null
+---
+
+# Переключение Display mode Hide→Dim в Settings меняет поведение фильтрации на уже открытом листинге (live-push)
+
+_Спроецировано из `test-cases/visibility/TC-093.md` (источник правды).
+Статус в нашей машине: **Approved**._
+
+# TC-093 — Живое переключение Display mode Hide→Dim без перезагрузки листинга
+
+## Предусловия
+- Приложение запущено, `seeded_library` (работа `DISLIKED`, `rating=DISLIKE`,
+  среди прочих).
+- Display mode = **Hide** (дефолт, `filterDisplayMode: String = "hide"`,
+  `SettingsScreen.kt:67`) — действий над этим контролом ещё не было.
+- Disliked в hidden-set (дефолт).
+- Открыта листинговая страница (replay `listing_basic.mitm`); блёрб DISLIKED
+  скрыт (`display:none`) — то же исходное состояние, что TC-013.
+
+## Сценарий (Given-When-Then)
+
+**Given** приложение запущено, работа DISLIKED засеяна с `rating=DISLIKE`,
+Display mode = Hide (дефолт), Disliked в hidden-set; открыт листинг, блёрб
+DISLIKED скрыт
+
+**When** пользователь, не покидая уже открытую листинговую страницу,
+переключается на Settings и меняет Display mode на **Dim**
+(`viewModel.setFilterDisplayMode("dim")`), затем возвращает фокус на уже
+открытую вкладку Browse БЕЗ повторной навигации/reload листинга — приложение
+проталкивает смену режима на открытую вкладку живым JS-вызовом
+(`MainActivity.kt:173-174` → `BrowserViewModel.setFilterMode` →
+`ao3_bridge.js` `window.setFilterMode`, который сразу вызывает
+`applyAllFilters()` на текущей странице)
+
+**Then** блёрб работы DISLIKED, ранее скрытый (`display:none`), теперь
+отображается, но затемнён — `display` сброшен, `opacity: 0.3` — БЕЗ
+перезагрузки страницы
+
+**Инвариант:** переключение `filterDisplayMode` между `hide`/`dim` не меняет
+МНОЖЕСТВО работ, исключённых фильтрацией (членство в `hiddenRatings`
+неизменно — Disliked остаётся в hidden-set до и после), только их визуальную
+обработку (убрать со страницы vs затемнить). Тот же набор карточек, что был
+скрыт в hide-режиме, продолжает быть отмеченным фильтром и в dim-режиме —
+просто иначе отрисован.
+
+## Проверяемые данные
+| Параметр | Значение |
+|---|---|
+| Работа | `DISLIKED` из `framework/data/works.py`, `rating=DISLIKE` |
+
+## Заметки для автоматизации
+- Тот же live-push паттерн, что TC-015 (`test_disliked_visible_after_hide_toggle_off`),
+  но для `filterDisplayMode` вместо `hiddenRatings`: выполнить действие в
+  Settings, вернуться на уже открытую вкладку Browse БЕЗ повторного
+  `browser_steps.open_listing`, затем опросить состояние блёрба.
+- Не блокер: `settings_screen.py` пока не имеет локатора кнопок «Hide»/«Dim»
+  (`SettingsScreen.kt:779-798`) — добавить `tap_display_mode(label)` по
+  образцу `set_hide_rating`/`_button_container` (`framework/screens/side_panel.py`);
+  `ListingPage` пока не читает `opacity` — нужен метод по образцу `is_hidden`
+  (см. заметку TC-092, тот же метод переиспользуется здесь). Обычная
+  page-object-доработка, не отсутствующая фикстура — не test_debt.
+- Использовать `seeded_library` (уже содержит `DISLIKED`) — отдельного сидинга
+  не требуется; фикстура листинга — та же `listing_basic.mitm`, что TC-013/015.
+
+## Чек-лист качества (test-designer проходит перед `Review`)
+- [x] Один сценарий — один кейс; нет «и ещё проверить...»
+- [x] Given описывает полное состояние, воспроизводимое фикстурами
+- [x] Then проверяет наблюдаемое поведение, а не реализацию
+- [x] Указаны приоритет, область и источник требования
+- [x] Кейс независим от порядка выполнения других кейсов

@@ -4,7 +4,7 @@ title: "TC-009[READ-work2] детерминированно падает на op
 type: test_debt
 debt_kind: weak_locator
 severity: major
-status: Fixed
+status: Verified
 found_in: "test-automator (canary batch B, 2026-07-19): полный p0-регресс (38 тестов) после автоматизации TC-072..077 дал 3 падения; 2 из них (TC-007[READ], TC-015) не воспроизвелись на изолированном повторе (конкуренция за хост-ресурсы во время 18-минутного марафона), но TC-009[READ-work2] упал СНОВА на том же месте. Отдельный соло-повтор именно этого узла (framework/tests/test_rating_listing.py::test_rate_work_from_listing_overlay[listing_basic.mitm-READ-work2]) — 3/3 FAIL, идентичная точка: TimeoutException/NoSuchElementError на UiSelector().text(\"Library\") сразу после dismiss_rating_overlay. ДЕТЕРМИНИРОВАННО, не флейк по частоте — но затрагивает только эту READ/work2 комбинацию параметризации, остальные 4 параметризации TC-009 (LOVE/LIKE/PENDING/DISLIKE или их аналоги) прошли."
 fixed_in: "(test_debt, device-free фикс — сборка приложения не при чём) framework/screens/navigation.py::_find_pill/_PILL_CANDIDATES_XPATH — ТОТ ЖЕ фикс, что bugs/AT-BUG-019.md (sibling/duplicate по D-0043, см. Обсуждение)"
 last_seen_in: ""
@@ -12,8 +12,8 @@ test_cases: ["TC-009"]
 runs: []
 duplicates: ["AT-BUG-019"]
 regression_of: ""
-status_since: "2026-07-19T15:20:00Z"
-updated: "2026-07-19T15:20:00Z"
+status_since: "2026-07-20T01:09:55Z"
+updated: "2026-07-20T01:09:55Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -92,6 +92,8 @@ scrim по смещённой точке → overlay не закрывается
 
 `Get-Device` до диагностики и после всей серии прогонов: `DEVICE: emulator-5554` оба раза — окружение не деградировало.
 
+| 2026-07-20 (fix-verifier, D1, независимый прогон) | app-under-test не менялся (test_debt, device-free фикс; сборка новее `found_in` не требуется — правило rules.yaml для `type: test_debt`) | TC-009 полностью: `framework/tests/test_rating_listing.py` целиком (12 тестов, все 5 параметризаций TC-009 + TC-010/011/012/043/044/045/056) + соло-параметризация `test_rate_work_from_listing_overlay[listing_basic.mitm-READ-work2]` отдельным прогоном | `Invoke-Pytest tests/test_rating_listing.py -v`: `12 passed in 371.76s`, `PYTEST_EXIT=0` (TC-009[READ-work2] — `PASSED`); соло-прогон `Invoke-Pytest 'tests/test_rating_listing.py::test_rate_work_from_listing_overlay[listing_basic.mitm-READ-work2]' -v`: `1 passed in 30.96s`, `PYTEST_EXIT=0`. `Get-Device: DEVICE: emulator-5554` до каждого прогона | **Verified** — TC-009[READ-work2] зелёный и в полном файле, и соло; фикс держится независимым прогоном |
+
 ## Обсуждение
 
 **2026-07-19T05:21:48Z — координатор (Lead, Sonnet, critic-вход на приёмке
@@ -168,3 +170,16 @@ TC-009 READ-work2). Фикс НЕ дублируется — `fixed_in` указ
 `status`: `Open → Fixed` (guard-переход `{type: test_debt}`, `schemas/transitions.yaml`,
 test-maintainer — легальный актор). Лок снят. `state/escalations.md#ESC-004` уже
 `resolved` (ссылается сюда) — новых правок эскалации не требуется.
+
+**2026-07-20T01:09:55Z — fix-verifier (D1, независимая верификация,
+лок `fix-verifier:2026-07-20T00:46:50Z`):** прогнан на актуальном дереве
+(app-under-test не менялся). Эмулятор поднят заново
+(`Start-Emulator -WritableSystem`), `Get-Device: DEVICE: emulator-5554`
+до каждого прогона. Полный `test_rating_listing.py` — `12 passed in
+371.76s`, `PYTEST_EXIT=0` (все 5 параметризаций TC-009, включая
+READ-work2, зелёные). Соло-параметризация
+`[listing_basic.mitm-READ-work2]` отдельным прогоном — `1 passed in
+30.96s`, `PYTEST_EXIT=0`. Фикс — тот же `_find_pill`/
+`_PILL_CANDIDATES_XPATH`, что и AT-BUG-019 (независимо проверен той же
+сессией на TC-040); duplicate-связь подтверждена: один фикс закрывает
+оба сценария экспозиции. `status: Fixed → Verified`. `lock` снят.

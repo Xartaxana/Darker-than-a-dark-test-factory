@@ -11,6 +11,7 @@ from __future__ import annotations
 import allure
 import pytest
 
+from framework.data import recording_builder as rb
 from framework.data import works as W
 from framework.steps import (
     app_steps,
@@ -285,3 +286,39 @@ def test_side_panel_fullscreen_hides_tabstrip_and_toggles_label(loved_work_seede
     browser_steps.assert_top_chrome_restored(driver, baseline_luma)
     side_panel_steps.expand(driver)
     side_panel_steps.assert_fullscreen_icon_enter(driver)
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-094")
+@allure.title("Side panel — переключение рейтинга Kudosed (не-Disliked) скрывает работу и синхронно отражается в Settings (эквивалентность входов)")
+@pytest.mark.parametrize("replay", [rb.LISTING_BASIC_FILENAME], indirect=True)
+def test_side_panel_toggle_kudosed_hides_and_syncs_settings(replay, seeded_library, driver):
+    # Given приложение запущено с seeded_library, работа KUDOSED (rating=LIKE)
+    # изначально видна на открытом листинге (LIKE не в дефолтном hidden-set
+    # {DISLIKE}), side panel развёрнут на вкладке Browse (не work-страница —
+    # ratingOptions рендерятся только при !isWorkPage)
+    app_steps.wait_ui_ready(driver)
+    browser_steps.open_listing(driver, rb.LISTING_BASIC_URL)
+    browser_steps.assert_blurb_visible(driver, W.KUDOSED.ao3_id)
+    side_panel_steps.expand(driver)
+
+    # When пользователь нажимает иконку рейтинга «Kudosed» в side panel
+    # (onToggleRating(Rating.LIKE) -> settingsViewModel.toggleHideRating(Rating.LIKE) —
+    # тот же метод ViewModel, что вызывает Switch в Settings)
+    side_panel_steps.toggle_rating(driver, "Kudosed")
+
+    # Then блёрб работы KUDOSED скрывается на уже открытом листинге (live-push,
+    # тот же путь, что TC-015)
+    browser_steps.assert_blurb_hidden(driver, W.KUDOSED.ao3_id)
+
+    # And при последующем открытии экрана Settings тумблер «Hide Kudosed works»
+    # показан включённым — то же состояние, установленное через ДРУГОЙ вход
+    # (эквивалентность входов, как темы/шрифта в TC-054, здесь — для hidden-ratings
+    # и для рейтинга, отличного от Disliked). Свернуть панель перед переключением
+    # вкладки — иначе кнопки развёрнутой панели (ниже на экране, чем ручка-пилюля)
+    # перехватывают эвристику BottomNav._find_pill (тот же приём, что TC-054).
+    side_panel_steps.collapse(driver)
+    app_steps.open_tab(driver, "Settings")
+    settings_steps.assert_settings_loaded(driver)
+    settings_steps.assert_rating_hidden(driver, "Kudosed", True)

@@ -4,6 +4,8 @@ from __future__ import annotations
 import allure
 
 from framework.core import adb
+from framework.core.waits import wait_for
+from framework.data import seed_db
 from framework.screens.base_screen import BaseScreen
 from framework.screens.settings_screen import SettingsScreen
 
@@ -26,6 +28,21 @@ def enable_auto_download(driver):
 @allure.step("When в Settings тумблер «Hide {rating_label} works» установлен в {enabled}")
 def set_hide_rating(driver, rating_label: str, enabled: bool):
     SettingsScreen(driver).set_hide_rating(rating_label, enabled)
+
+
+@allure.step("Then в Settings тумблер «Hide {rating_label} works» показывает {expected}")
+def assert_rating_hidden(driver, rating_label: str, expected: bool):
+    """TC-094: проверка состояния, установленного ДРУГИМ входом (side panel) — читает
+    то же самое `uiState.isHidden(rating)`, что и `set_hide_rating`/TC-015."""
+    actual = SettingsScreen(driver).is_rating_hidden(rating_label)
+    assert actual == expected, (
+        f"тумблер «Hide {rating_label} works» показывает {actual}, ожидали {expected}"
+    )
+
+
+@allure.step("When в Settings Display mode установлен в «{label}»")
+def set_display_mode(driver, label: str):
+    SettingsScreen(driver).tap_display_mode(label)
 
 
 @allure.step("When открыт диалог «Clear all ratings» и подтверждён")
@@ -160,6 +177,62 @@ def assert_filter_profile_not_listed(driver, name: str, timeout: int = 3):
 @allure.step("When в Settings удалён фильтр-профиль «{name}»")
 def delete_filter_profile(driver, name: str):
     SettingsScreen(driver).delete_filter_profile(name)
+
+
+# --- Saved AO3 Filters (TC-085/TC-086: переименование фильтр-профиля) ---
+
+@allure.step("When в Settings профиль «{old_name}» переименован в «{new_name}»")
+def rename_filter_profile(driver, old_name: str, new_name: str):
+    SettingsScreen(driver).rename_filter_profile(old_name, new_name)
+
+
+@allure.step("Then в Settings ровно {expected} строк(и) с именем «{name}»")
+def assert_filter_profile_count(driver, name: str, expected: int, timeout: int | None = None):
+    """`confirmRenameFilter` пишет в Room асинхронно (`viewModelScope.launch(Dispatchers.IO)`,
+    SettingsScreen.kt) — recomposed список отстаёт от тапа по "Rename" на короткое,
+    но ненулевое окно (тот же класс гонки, что `browser_steps.assert_active_tab_url`
+    описывает для `pendingNavigationUrl`). `SettingsScreen.count_filter_profile_occurrences`
+    делает разовое `find_elements` без ожидания — одноразовое чтение сразу после
+    `rename_filter_profile` было бы гонкой; здесь опрашиваем, пока счётчик не
+    совпадёт с ожидаемым или не истечёт таймаут."""
+    screen = SettingsScreen(driver)
+    last: dict[str, int | None] = {"value": None}
+
+    def _matches() -> bool:
+        last["value"] = screen.count_filter_profile_occurrences(name)
+        return last["value"] == expected
+
+    try:
+        wait_for(_matches, timeout=timeout, message=f"количество строк с именем «{name}» не сошлось")
+    except TimeoutError:
+        pass
+    assert last["value"] == expected, (
+        f"ожидали {expected} строк(и) с именем «{name}» в Settings, реально {last['value']}"
+    )
+
+
+@allure.step("Then в БД `filter_profiles` присутствуют записи с name=«{name}» и queryString {expected_query_strings}")
+def assert_filter_profiles_have_query_strings(name: str, expected_query_strings: list[str]):
+    """TC-086: после переименования в имя-дубликат обе строки таблицы `filter_profiles`
+    обязаны иметь одинаковый `name`, но РАЗЛИЧНЫЕ исходные `queryString`
+    (`confirmRenameFilter` — Upsert по `id`, меняет только `name` ОДНОЙ строки,
+    `queryString` ни своей, ни чужой строки не трогает) — host-side чтение
+    `seed_db.read_filter_profiles()`, тот же приём, что
+    `backup_steps.assert_filter_profiles_match` использует для TC-021 (НЕ
+    on-device sqlite3-бинарь — деградация `assert_no_ratings` к UI-фолбэку здесь
+    неприменима: у этого кейса нет UI-фолбэка по построению, две одноимённые
+    строки Settings не различить иначе, чем прямым чтением БД)."""
+    actual = seed_db.read_filter_profiles()
+    matching = [row for row in actual if row["name"] == name]
+    assert len(matching) == len(expected_query_strings), (
+        f"ожидали {len(expected_query_strings)} строк(и) с name=«{name}» в filter_profiles, "
+        f"реально {len(matching)}: {matching}"
+    )
+    actual_query_strings = sorted(row["queryString"] for row in matching)
+    assert actual_query_strings == sorted(expected_query_strings), (
+        f"queryString записей с name=«{name}» не совпали: ожидали "
+        f"{sorted(expected_query_strings)}, реально {actual_query_strings}"
+    )
 
 
 @allure.step("Then диалог «Scan complete» НЕ появляется (не два диалога подряд)")

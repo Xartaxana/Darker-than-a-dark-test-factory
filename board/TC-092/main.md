@@ -1,0 +1,98 @@
+---
+key: "TC-092"
+project: "AO3"
+issueType: "test-case"
+status: "tc-awaiting-review"
+priority: "p1"
+summary: "Работа со скрытым рейтингом в dim-режиме остаётся на листинге, но затемнена (opacity 0.3)"
+assignee: "qa-agents"
+reporter: "qa-agents"
+labels: ["test-case", "area:visibility", "risk:R-06"]
+components: []
+fixVersions: []
+watchers: []
+parent: null
+epic: null
+created: "2026-07-20T01:38:45Z"
+updated: "2026-07-20T01:38:45Z"
+archived: false
+resolution: null
+---
+
+# Работа со скрытым рейтингом в dim-режиме остаётся на листинге, но затемнена (opacity 0.3)
+
+_Спроецировано из `test-cases/visibility/TC-092.md` (источник правды).
+Статус в нашей машине: **Approved**._
+
+# TC-092 — dim-режим затемняет карточку вместо удаления
+
+## Предусловия
+- Приложение запущено, `seeded_library` (по одной работе на каждый рейтинг:
+  `LOVED=SAVE`, `KUDOSED=LIKE`, `READ=READ`, `PENDING=PENDING`,
+  `DISLIKED=DISLIKE` — `framework/data/works.py::ALL`).
+- В Settings → Content Visibility → Display mode выбран режим **Dim**
+  (`viewModel.setFilterDisplayMode("dim")`, `SettingsScreen.kt:782`) ДО первой
+  навигации на листинговую страницу в этой вкладке — режим должен попасть в
+  `window.__ao3FilterMode` через инъекцию при `onPageFinished`
+  (`BrowserScreen.kt:601`, ДО запуска bridge-скрипта), а не через реактивный
+  `window.setFilterMode` (это отдельный код-путь, покрыт TC-093).
+- Disliked остаётся в hidden-set (дефолт `hiddenRatings = {DISLIKE}`,
+  `SettingsScreen.kt:66`) — тумблеры per-rating не трогаем.
+- Открыта листинговая страница (replay `listing_basic.mitm`, содержит блёрбы
+  всех пяти эталонных работ).
+
+## Сценарий (Given-When-Then)
+
+**Given** приложение запущено с `seeded_library`, Display mode в Settings уже
+установлен в Dim, Disliked в hidden-set
+
+**When** пользователь открывает (впервые в этой вкладке) листинговую страницу,
+содержащую блёрбы всех пяти работ
+
+**Then** блёрб работы DISLIKED остаётся в разметке (не `display:none`) и
+визуально затемнён — `opacity: 0.3`
+**And** блёрбы работ LOVED/KUDOSED/READ/PENDING (рейтинги не в hidden-set)
+остаются полностью непрозрачными (`opacity` не выставлен/`1`, `display` не
+`none`)
+
+**Инвариант:** для любой работы, чей `rating` входит в hidden-ratings set при
+`filterDisplayMode='dim'`, карточка остаётся отрендеренной (`display != 'none'`),
+но получает `opacity: 0.3`; для любой работы вне hidden-set `opacity` не
+меняется. Селективность по членству в hidden-set — ТА ЖЕ, что у hide-режима
+(TC-013): `mode` меняет ТОЛЬКО визуальную обработку затронутых карточек, не
+то, какие карточки затронуты.
+
+## Проверяемые данные
+| Параметр | Значение |
+|---|---|
+| Работа (dim) | `DISLIKED` из `framework/data/works.py`, `rating=DISLIKE` |
+| Работы-негатив | `LOVED`, `KUDOSED`, `READ`, `PENDING` — разные рейтинги, ни один не в hidden-set |
+
+## Заметки для автоматизации
+- Не блокер: `ListingPage` (`framework/web/listing_page.py`) пока не имеет
+  метода чтения `opacity` блёрба — `is_hidden` проверяет только
+  `display == 'none'`. Нужен новый метод (по образцу `is_hidden`, тот же приём
+  `value_of_css_property`), например `opacity_of(work_id)` или
+  `is_dimmed(work_id)` (`opacity == '0.3'` при `display != 'none'`). Это
+  обычная page-object-доработка (не отсутствующая фикстура/сидинг/replay-запись
+  и не системный UI) — не test_debt.
+- Установка Display mode = Dim ДО навигации: `settings_screen.py` тоже не имеет
+  локатора для кнопок «Hide»/«Dim» (`SettingsScreen.kt:779-798`, `TextButton`
+  с текстом `label`) — добавить по образцу `_button_container` в
+  `framework/screens/side_panel.py` (`by_text("Dim")`/`by_text("Hide")`,
+  клик по кликабельному родителю `TextButton`, не по дочернему `Text`).
+- Порядок действий: `app_steps.open_tab(driver, "Settings")` →
+  `settings_screen.tap_display_mode("Dim")` (после доработки) →
+  `app_steps.open_tab(driver, "Browse")` → `browser_steps.open_listing(driver,
+  rb.LISTING_BASIC_URL)` — навигация листинга ПОСЛЕ смены режима, чтобы
+  сработала именно инъекция при `onPageFinished`, не реактивный
+  `setFilterMode` (тот код-путь — TC-093).
+- Использовать `seeded_library` (уже покрывает все 5 рейтингов, включая
+  `KUDOSED=LIKE`) — отдельного сидинга не требуется.
+
+## Чек-лист качества (test-designer проходит перед `Review`)
+- [x] Один сценарий — один кейс; нет «и ещё проверить...»
+- [x] Given описывает полное состояние, воспроизводимое фикстурами
+- [x] Then проверяет наблюдаемое поведение, а не реализацию
+- [x] Указаны приоритет, область и источник требования
+- [x] Кейс независим от порядка выполнения других кейсов

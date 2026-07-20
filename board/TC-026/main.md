@@ -2,27 +2,27 @@
 key: "TC-026"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Long-press по ссылке открывает фоновую вкладку без переключения активной"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:tabs", "risk:R-08"]
+labels: ["test-case", "area:tabs", "risk:R-08", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-19T10:00:00Z"
-updated: "2026-07-19T10:00:00Z"
+created: "2026-07-20T02:40:29Z"
+updated: "2026-07-20T02:40:29Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Long-press по ссылке открывает фоновую вкладку без переключения активной
 
 _Спроецировано из `test-cases/tabs/TC-026.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-026 — Long-press ссылки открывает фоновую вкладку
 

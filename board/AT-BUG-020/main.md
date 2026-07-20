@@ -2,7 +2,7 @@
 key: "AT-BUG-020"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p1"
 summary: "TC-009[READ-work2] детерминированно падает на open_tab(\"Library\") после dismiss_rating_overlay — NoSuchElementError на UiSelector().text(\"Library\")"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-19T15:20:00Z"
-updated: "2026-07-19T15:20:00Z"
+created: "2026-07-20T01:09:55Z"
+updated: "2026-07-20T01:09:55Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # TC-009[READ-work2] детерминированно падает на open_tab("Library") после dismiss_rating_overlay — NoSuchElementError на UiSelector().text("Library")
 
 _Спроецировано из `bugs/AT-BUG-020.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # AT-BUG-020 — TC-009[READ-work2] детерминированно не находит вкладку "Library" после dismiss_rating_overlay
 
@@ -95,6 +95,8 @@ scrim по смещённой точке → overlay не закрывается
 | 2026-07-19 (test-maintainer, B4) | app-under-test не менялся | TC-072/074/076 (живой archiveofourown.org, `@pytest.mark.live`, единственные потребители `tap_rate_button` со `scrollIntoView` вне TC-009) — `test_rate_button_badge_opaque_color_live`, `test_note_button_present_iff_comment_live`, `test_tag_button_present_iff_custom_tag_live` | `Invoke-Pytest` тремя node-id: `3 passed in 93.65s`, `PYTEST_EXIT=0` — `tap_rate_button` НЕ менялся в этой починке, регресса на live-канарейке нет (сеть проверена `Invoke-WebRequest archiveofourown.org` → `STATUS=200` до прогона) | Live-канарейка зелёная, откат `tap_rate_button` не потребовался |
 
 `Get-Device` до диагностики и после всей серии прогонов: `DEVICE: emulator-5554` оба раза — окружение не деградировало.
+
+| 2026-07-20 (fix-verifier, D1, независимый прогон) | app-under-test не менялся (test_debt, device-free фикс; сборка новее `found_in` не требуется — правило rules.yaml для `type: test_debt`) | TC-009 полностью: `framework/tests/test_rating_listing.py` целиком (12 тестов, все 5 параметризаций TC-009 + TC-010/011/012/043/044/045/056) + соло-параметризация `test_rate_work_from_listing_overlay[listing_basic.mitm-READ-work2]` отдельным прогоном | `Invoke-Pytest tests/test_rating_listing.py -v`: `12 passed in 371.76s`, `PYTEST_EXIT=0` (TC-009[READ-work2] — `PASSED`); соло-прогон `Invoke-Pytest 'tests/test_rating_listing.py::test_rate_work_from_listing_overlay[listing_basic.mitm-READ-work2]' -v`: `1 passed in 30.96s`, `PYTEST_EXIT=0`. `Get-Device: DEVICE: emulator-5554` до каждого прогона | **Verified** — TC-009[READ-work2] зелёный и в полном файле, и соло; фикс держится независимым прогоном |
 
 ## Обсуждение
 
@@ -172,3 +174,16 @@ TC-009 READ-work2). Фикс НЕ дублируется — `fixed_in` указ
 `status`: `Open → Fixed` (guard-переход `{type: test_debt}`, `schemas/transitions.yaml`,
 test-maintainer — легальный актор). Лок снят. `state/escalations.md#ESC-004` уже
 `resolved` (ссылается сюда) — новых правок эскалации не требуется.
+
+**2026-07-20T01:09:55Z — fix-verifier (D1, независимая верификация,
+лок `fix-verifier:2026-07-20T00:46:50Z`):** прогнан на актуальном дереве
+(app-under-test не менялся). Эмулятор поднят заново
+(`Start-Emulator -WritableSystem`), `Get-Device: DEVICE: emulator-5554`
+до каждого прогона. Полный `test_rating_listing.py` — `12 passed in
+371.76s`, `PYTEST_EXIT=0` (все 5 параметризаций TC-009, включая
+READ-work2, зелёные). Соло-параметризация
+`[listing_basic.mitm-READ-work2]` отдельным прогоном — `1 passed in
+30.96s`, `PYTEST_EXIT=0`. Фикс — тот же `_find_pill`/
+`_PILL_CANDIDATES_XPATH`, что и AT-BUG-019 (независимо проверен той же
+сессией на TC-040); duplicate-связь подтверждена: один фикс закрывает
+оба сценария экспозиции. `status: Fixed → Verified`. `lock` снят.

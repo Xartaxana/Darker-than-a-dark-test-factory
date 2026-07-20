@@ -104,6 +104,23 @@ class SettingsScreen(BaseScreen):
             self.tap(self._hide_rating_switch_locator(rating_label))
         return self
 
+    # --- Display mode Hide/Dim (секция "Content Visibility", SettingsScreen.kt:779-798,
+    # TC-092/093) — `TextButton` с текстом ровно "Hide"/"Dim" (label из
+    # `listOf("hide" to "Hide", "dim" to "Dim")`), клик висит на кликабельном
+    # РОДИТЕЛЕ, не на дочернем `Text` — тот же приём, что `SidePanel._button_container`
+    # (`framework/screens/side_panel.py`) использует для A-/A+. "Display mode" —
+    # отдельная строка ниже per-rating тумблеров, `swipe_to_text` перед поиском
+    # обязателен (та же ситуация "fold", что у `is_rating_hidden`/`_swipe_to_profile`).
+    def _display_mode_button_locator(self, label: str):
+        return (AppiumBy.XPATH, f'//*[@text="{label}"]/..')
+
+    def tap_display_mode(self, label: str):
+        assert self.swipe_to_text("Display mode"), (
+            "секция «Display mode» не найдена прокруткой (Content Visibility)"
+        )
+        self.tap(self._display_mode_button_locator(label))
+        return self
+
     # --- Saved AO3 Filters (секция "SAVED AO3 FILTERS", SettingsScreen.kt) — TC-042 ---
     # `Rename`/`Delete` IconButton каждой строки делят ОДИН и тот же content-desc
     # на весь экран (Compose IconButton не мержит семантику Icon-child со своим
@@ -141,4 +158,56 @@ class SettingsScreen(BaseScreen):
     def delete_filter_profile(self, name: str):
         assert self._swipe_to_profile(name), f"профиль «{name}» не найден прокруткой"
         self.tap(self._delete_button_locator(name))
+        return self
+
+    def count_filter_profile_occurrences(self, name: str) -> int:
+        """Считает узлы `by_text(name)`, а не `is_present` — нужно для TC-086, где
+        два профиля могут одновременно носить одинаковое имя (переименование в
+        имя-дубликат не проверяется на уникальность, см. `confirmRenameFilter`) и
+        обычные локаторы по имени неразличимы между строками."""
+        assert self._swipe_to_profile(name), f"профиль «{name}» не найден прокруткой"
+        return len(self.driver.find_elements(*self.by_text(name)))
+
+    # --- Rename filter profile (SettingsScreen.kt requestRenameFilter/
+    # confirmRenameFilter, диалог "Rename filter") — TC-085/TC-086. Тот же приём
+    # disambiguation, что `_delete_button_locator`: XPath `following::` от
+    # текстового узла с именем профиля до БЛИЖАЙШЕГО content-desc="Rename" в
+    # document order (порядок в дереве name -> summary -> Rename -> Delete, см.
+    # комментарий выше) — Rename стоит ПЕРЕД Delete, тот же класс неоднозначности
+    # при >1 засеянном профиле.
+    # Поле диалога — `InputField` (BasicTextField-обёртка, ui/components/InputField.kt),
+    # тот же native-рендер `android.widget.EditText`, что и `OutlinedTextField`
+    # диалога "Save filter" (`browser_screen.py::_FILTER_NAME_FIELD`) — переиспользуем
+    # тот же локатор по className (на экране активен только один диалог одновременно).
+    # Поле диалога предзаполнено ТЕКУЩИМ именем (`dialogName by remember(filter.id)
+    # { mutableStateOf(filter.name) }`) — `.clear()` обязателен перед вводом нового
+    # имени, иначе получится конкатенация (см. заметки TC-085.md).
+    _RENAME_NAME_FIELD = (AppiumBy.ANDROID_UIAUTOMATOR,
+                          'new UiSelector().className("android.widget.EditText")')
+
+    def _rename_button_locator(self, name: str):
+        return (AppiumBy.XPATH, f'(//*[@text="{name}"]/following::*[@content-desc="Rename"])[1]')
+
+    def open_rename_dialog(self, name: str):
+        assert self._swipe_to_profile(name), f"профиль «{name}» не найден прокруткой"
+        self.tap(self._rename_button_locator(name))
+        return self
+
+    def rename_dialog_visible(self, timeout: int | None = None) -> bool:
+        return self.is_present(self.by_text("Rename filter"), timeout=timeout if timeout is not None else 5)
+
+    def enter_rename_name(self, new_name: str):
+        field = self.find(self._RENAME_NAME_FIELD)
+        field.clear()
+        field.send_keys(new_name)
+        return self
+
+    def confirm_rename(self):
+        self.tap(self.by_text("Rename"))
+        return self
+
+    def rename_filter_profile(self, old_name: str, new_name: str):
+        self.open_rename_dialog(old_name)
+        self.enter_rename_name(new_name)
+        self.confirm_rename()
         return self

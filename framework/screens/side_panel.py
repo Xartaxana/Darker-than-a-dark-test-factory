@@ -102,6 +102,16 @@ class SidePanel(BaseScreen):
             self.tap(self.by_desc(EXIT_FULLSCREEN))
         return self
 
+    # --- Per-rating icon (BrowseSidePanel.kt PanelIconButton в `ratingOptions`,
+    # TC-094) — рендерится только когда `!isWorkPage` (см. модульный докстринг);
+    # contentDescription = `RatingOption.label` (RatingOverlay.kt: SAVE->"Favorite",
+    # LIKE->"Kudosed", READ->"Read", PENDING->"Pending", DISLIKE->"Dislike"),
+    # onClick -> `onToggleRating(opt.rating)` -> `settingsViewModel.toggleHideRating` —
+    # тот же метод ViewModel, что вызывает Switch в Settings (эквивалентность входов). ---
+    def tap_rating(self, label: str):
+        self.tap(self.by_desc(label))
+        return self
+
     def is_collapsed(self, timeout: int | None = None) -> bool:
         # Позитивная проверка ("Expand panel" появился) быстрее негативной (ждать
         # исчезновения "Collapse panel" пришлось бы до полного timeout) — ручка

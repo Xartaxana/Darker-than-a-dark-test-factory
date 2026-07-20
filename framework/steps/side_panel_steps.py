@@ -74,6 +74,13 @@ def tap_home(driver):
     SidePanel(driver).tap_home()
 
 
+# --- Per-rating icon (TC-094) ---
+
+@allure.step("When нажата иконка рейтинга «{label}» (side panel)")
+def toggle_rating(driver, label: str):
+    SidePanel(driver).tap_rating(label)
+
+
 @allure.step("Then side panel свёрнута автоматически (без отдельного действия)")
 def assert_collapsed(driver):
     assert SidePanel(driver).is_collapsed(), \

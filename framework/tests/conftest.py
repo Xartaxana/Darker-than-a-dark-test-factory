@@ -336,6 +336,22 @@ def note_work_seeded():
 
 
 @pytest.fixture()
+def note_and_tags_work_seeded():
+    """TC-089: работа `works.PENDING` засеяна ОДНИМ вызовом `seed_with_comment` с
+    рейтингом Pending, непустым комментарием "Library indicator note" и непустым
+    JSON-списком личных тегов `["indicator-tag"]` — комбинация полей, которую ни
+    одна существующая фикстура не покрывает целиком (`note_work_seeded` не сидит
+    `tags`, `tagged_work_seeded`/`disliked_work_with_tags_seeded` не сидят
+    `comment`), нужная для проверки, что ОБА индикатора карточки Library
+    (note-иконка и строка тегов) читаются из одной и той же строки `WorkRating`."""
+    app_steps.clean_state()
+    app_steps.seed_with_comment([
+        (W.PENDING, "PENDING", "Library indicator note", json.dumps(["indicator-tag"])),
+    ])
+    yield W.PENDING
+
+
+@pytest.fixture()
 def two_filter_profiles_seeded():
     """Два фильтр-профиля ("Profile A"/"Profile B", различимые queryString) засеяны
     в `filter_profiles` ДО старта сессии Appium — тот же порядок обязателен, что и

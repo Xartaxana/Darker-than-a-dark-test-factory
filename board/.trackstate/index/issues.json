@@ -207,6 +207,28 @@
     "archived": false
   },
   {
+    "key": "TC-094",
+    "path": "board/TC-094/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Side panel — переключение рейтинга Kudosed (не-Disliked) скрывает работу и синхронно отражается в Settings (эквивалентность входов)",
+    "issueType": "test-case",
+    "status": "tc-awaiting-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-06"
+    ],
+    "updated": "2026-07-20T01:38:17Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "TC-066",
     "path": "board/TC-066/main.md",
     "parent": null,
@@ -491,16 +513,17 @@
     "epicPath": null,
     "summary": "Чекбокс 'Main pairing only' инжектируется в include-фильтр формы Sort&Filter, доступен только при ровно одном выбранном relationship-теге (live)",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:canary",
-      "risk:R-02"
+      "risk:R-02",
+      "automation:active"
     ],
-    "updated": "2026-07-19T14:55:28Z",
-    "resolution": null,
+    "updated": "2026-07-20T02:40:29Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -535,16 +558,17 @@
     "epicPath": null,
     "summary": "Чекбокс исключения main pairing инжектируется в exclude-фильтр формы Sort&Filter, доступен только при ровно одном выбранном relationship-теге (live)",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:canary",
-      "risk:R-02"
+      "risk:R-02",
+      "automation:active"
     ],
-    "updated": "2026-07-19T14:55:28Z",
-    "resolution": null,
+    "updated": "2026-07-20T02:40:29Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -557,7 +581,7 @@
     "epicPath": null,
     "summary": "Чекбокс исключения main pairing инжектируется в exclude-фильтр формы Sort&Filter, доступен только при ровно одном выбранном relationship-теге (replay)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -579,16 +603,17 @@
     "epicPath": null,
     "summary": "Кнопка 'Save filter' инжектируется рядом с submit формы Sort&Filter и не дублируется при повторных мутациях формы (live)",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:canary",
-      "risk:R-02"
+      "risk:R-02",
+      "automation:active"
     ],
-    "updated": "2026-07-19T14:55:28Z",
-    "resolution": null,
+    "updated": "2026-07-20T02:40:29Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -601,7 +626,7 @@
     "epicPath": null,
     "summary": "Кнопка 'Save filter' инжектируется рядом с submit формы Sort&Filter и не дублируется при повторных мутациях формы (replay)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -830,16 +855,17 @@
     "epicPath": null,
     "summary": "Save filter сохраняет текущий запрос AO3 Sort&Filter под именем",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:filter-profiles",
-      "risk:R-09"
+      "risk:R-09",
+      "automation:active"
     ],
-    "updated": "2026-07-19T01:52:00Z",
-    "resolution": null,
+    "updated": "2026-07-20T02:40:29Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -886,6 +912,50 @@
     ],
     "updated": "2026-07-17T22:39:06Z",
     "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-085",
+    "path": "board/TC-085/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Переименование фильтр-профиля обновляет отображаемое имя и не меняет queryString",
+    "issueType": "test-case",
+    "status": "tc-awaiting-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:filter-profiles",
+      "risk:R-09"
+    ],
+    "updated": "2026-07-20T01:07:01Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-086",
+    "path": "board/TC-086/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Переименование в имя, совпадающее с другим сохранённым профилем, — разрешено, оба queryString сохраняются раздельно",
+    "issueType": "test-case",
+    "status": "tc-awaiting-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:filter-profiles",
+      "risk:R-09"
+    ],
+    "updated": "2026-07-20T01:07:11Z",
+    "resolution": null,
     "children": [],
     "archived": false
   },
@@ -1211,6 +1281,28 @@
     "archived": false
   },
   {
+    "key": "TC-089",
+    "path": "board/TC-089/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Карточка Library показывает индикатор комментария и личных тегов сохранённой работы",
+    "issueType": "test-case",
+    "status": "tc-awaiting-review",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:library",
+      "risk:R-10"
+    ],
+    "updated": "2026-07-20T01:39:12Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "TC-007",
     "path": "board/TC-007/main.md",
     "parent": null,
@@ -1437,6 +1529,94 @@
     ],
     "updated": "2026-07-18T10:30:35Z",
     "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-087",
+    "path": "board/TC-087/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Save note сохраняет введённый текст комментария работы",
+    "issueType": "test-case",
+    "status": "tc-awaiting-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:rating",
+      "risk:R-10"
+    ],
+    "updated": "2026-07-20T01:38:23Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-088",
+    "path": "board/TC-088/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Clear note очищает сохранённый комментарий работы",
+    "issueType": "test-case",
+    "status": "tc-awaiting-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:rating",
+      "risk:R-10"
+    ],
+    "updated": "2026-07-20T01:38:26Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-090",
+    "path": "board/TC-090/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Добавление личного тега через текстовое поле и кнопку Add сохраняет его среди выбранных",
+    "issueType": "test-case",
+    "status": "tc-awaiting-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:rating",
+      "risk:R-10"
+    ],
+    "updated": "2026-07-20T01:38:32Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-091",
+    "path": "board/TC-091/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Тап по выбранному чипу удаляет личный тег работы",
+    "issueType": "test-case",
+    "status": "tc-awaiting-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:rating",
+      "risk:R-10"
+    ],
+    "updated": "2026-07-20T01:41:26Z",
+    "resolution": null,
     "children": [],
     "archived": false
   },
@@ -1814,16 +1994,17 @@
     "epicPath": null,
     "summary": "Long-press по ссылке открывает фоновую вкладку без переключения активной",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:tabs",
-      "risk:R-08"
+      "risk:R-08",
+      "automation:active"
     ],
-    "updated": "2026-07-19T10:00:00Z",
-    "resolution": null,
+    "updated": "2026-07-20T02:40:29Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1836,16 +2017,17 @@
     "epicPath": null,
     "summary": "Тап по чипу неактивной вкладки переключает активную вкладку и контент WebView",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:tabs",
-      "risk:R-08"
+      "risk:R-08",
+      "automation:active"
     ],
-    "updated": "2026-07-19T14:10:00Z",
-    "resolution": null,
+    "updated": "2026-07-20T02:40:29Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1915,6 +2097,72 @@
     ],
     "updated": "2026-07-17T15:43:20Z",
     "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-092",
+    "path": "board/TC-092/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Работа со скрытым рейтингом в dim-режиме остаётся на листинге, но затемнена (opacity 0.3)",
+    "issueType": "test-case",
+    "status": "tc-awaiting-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:visibility",
+      "risk:R-06"
+    ],
+    "updated": "2026-07-20T01:38:45Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-093",
+    "path": "board/TC-093/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Переключение Display mode Hide→Dim в Settings меняет поведение фильтрации на уже открытом листинге (live-push)",
+    "issueType": "test-case",
+    "status": "tc-awaiting-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:visibility",
+      "risk:R-06"
+    ],
+    "updated": "2026-07-20T01:38:53Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-095",
+    "path": "board/TC-095/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Скрытие рейтинга Kudosed (не-Disliked) в Settings исключает только работы с этим рейтингом, остальные видны",
+    "issueType": "test-case",
+    "status": "tc-awaiting-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:visibility",
+      "risk:R-06"
+    ],
+    "updated": "2026-07-20T01:39:00Z",
+    "resolution": null,
     "children": [],
     "archived": false
   },
@@ -2320,7 +2568,7 @@
     "epicPath": null,
     "summary": "navigation.py::_find_pill фильтр \"WebView\" not in class не исключает a11y-потомков WebView — риск клика по ссылке/чекбоксу СТРАНИЦЫ вместо нативной ручки-пилюли",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -2328,8 +2576,8 @@
       "test_case:TC-040",
       "sev:minor"
     ],
-    "updated": "2026-07-19T14:41:00Z",
-    "resolution": null,
+    "updated": "2026-07-20T01:09:55Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -2342,7 +2590,7 @@
     "epicPath": null,
     "summary": "TC-009[READ-work2] детерминированно падает на open_tab(\"Library\") после dismiss_rating_overlay — NoSuchElementError на UiSelector().text(\"Library\")",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2351,8 +2599,8 @@
       "duplicate:AT-BUG-019",
       "sev:major"
     ],
-    "updated": "2026-07-19T15:20:00Z",
-    "resolution": null,
+    "updated": "2026-07-20T01:09:55Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -2365,7 +2613,7 @@
     "epicPath": null,
     "summary": "Эмулятор дважды отваливается mid-test на driver.get()/switch_to.context внутри open_live_listing (Sort&Filter форма) — DevTools disconnected -> adb device not found; кандидат-сиблинг AT-BUG-016",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2378,8 +2626,8 @@
       "test_case:TC-083",
       "sev:major"
     ],
-    "updated": "2026-07-19T14:55:28Z",
-    "resolution": null,
+    "updated": "2026-07-20T01:09:55Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -2392,7 +2640,7 @@
     "epicPath": null,
     "summary": "Нет наблюдения, различающего рабочий switchTab от no-op, когда цель — вкладка-0: assert_active_tab_url(HOME) после reduce-to-one тривиально проходит независимо от факта переключения — блокирует TC-084",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2400,7 +2648,30 @@
       "test_case:TC-084",
       "sev:major"
     ],
-    "updated": "2026-07-19T00:00:00Z",
+    "updated": "2026-07-20T02:15:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-023",
+    "path": "board/AT-BUG-023/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "2 P0 canary tests не запускаются: отсутствуют фикстуры disliked_work_with_comment_seeded и disliked_work_with_custom_tag_seeded в conftest.py",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-075",
+      "test_case:TC-077",
+      "sev:critical"
+    ],
+    "updated": "2026-07-20T00:00:00Z",
     "resolution": null,
     "children": [],
     "archived": false

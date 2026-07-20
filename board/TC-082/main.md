@@ -2,27 +2,27 @@
 key: "TC-082"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p0"
 summary: "Кнопка 'Save filter' инжектируется рядом с submit формы Sort&Filter и не дублируется при повторных мутациях формы (live)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:canary", "risk:R-02"]
+labels: ["test-case", "area:canary", "risk:R-02", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-19T14:55:28Z"
-updated: "2026-07-19T14:55:28Z"
+created: "2026-07-20T02:40:29Z"
+updated: "2026-07-20T02:40:29Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Кнопка 'Save filter' инжектируется рядом с submit формы Sort&Filter и не дублируется при повторных мутациях формы (live)
 
 _Спроецировано из `test-cases/canary/TC-082.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-082 — Save filter button: инъекция + идемпотентность (live)
 

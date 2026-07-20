@@ -1,6 +1,21 @@
 """Тесты области filter-profiles (test-cases/filter-profiles/): управление
 сохранёнными AO3-фильтрами (`FilterProfile`) — сохранение из формы Sort & Filter
-(TC-040), применение сохранённого профиля (TC-041), удаление профиля (TC-042).
+(TC-040), применение сохранённого профиля (TC-041), удаление профиля (TC-042),
+переименование профиля (TC-085/TC-086, test-automator, 2026-07-20).
+
+TC-085/TC-086 переиспользуют существующую инфраструктуру без новой фикстуры/
+сидинга (`filter_profile_applied_seeded`/`two_filter_profiles_seeded`, см. TC-041/
+TC-042 выше). Новый локатор `SettingsScreen._rename_button_locator` — тот же
+приём disambiguation `following::` от текстового узла с именем профиля, что и
+`_delete_button_locator`; диалог "Rename filter" переиспользует то же
+`className("android.widget.EditText")`, что диалог "Save filter"
+(`browser_screen.py::_FILTER_NAME_FIELD`) — оба рендерятся BasicTextField-based
+компонентами Compose. TC-086 не различает две одноимённые строки Settings по
+UI (см. заметки TC-086.md) — Then читает `filter_profiles` напрямую через
+`seed_db.read_filter_profiles()` (host-side, тот же приём, что
+`backup_steps.assert_filter_profiles_match` использует для TC-021), не через
+on-device sqlite3-бинарь (`settings_steps.assert_no_ratings`-деградация здесь
+дала бы молчаливый false-green — у этого кейса нет UI-фолбэка по построению).
 
 AT-BUG-006, инкремент 2 (грань 3 критерия готовности): TC-042 доведён до
 автоматизации в этом инкременте — кейс, наименее зависящий от реальной формы
@@ -68,6 +83,70 @@ import pytest
 
 from framework.data import recording_builder as rb
 from framework.steps import app_steps, browser_steps, settings_steps
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-085")
+@allure.title("Переименование фильтр-профиля обновляет отображаемое имя и не меняет queryString")
+@pytest.mark.parametrize("replay", [rb.LISTING_BASIC_FILENAME], indirect=True)
+def test_rename_filter_profile_keeps_query_string(replay, filter_profile_applied_seeded, driver):
+    old_name = filter_profile_applied_seeded
+    new_name = "My renamed search"
+
+    # Given в Settings в секции "Saved AO3 Filters" отображается сохранённый профиль
+    app_steps.wait_ui_ready(driver)
+    app_steps.open_tab(driver, "Settings")
+    settings_steps.assert_filter_profile_listed(driver, old_name)
+
+    # When пользователь нажимает "Rename", очищает предзаполненное поле и вводит
+    # новое имя, подтверждает
+    settings_steps.rename_filter_profile(driver, old_name, new_name)
+
+    # Then профиль отображается под новым именем, прежнее имя отсутствует
+    settings_steps.assert_filter_profile_listed(driver, new_name)
+    settings_steps.assert_filter_profile_not_listed(driver, old_name)
+
+    # And при переходе на листинговую страницу и выборе профиля под новым именем
+    # страница обновляется тем же URL, что и до переименования — queryString
+    # переименование не затронуло
+    app_steps.open_tab(driver, "Browse")
+    browser_steps.open_listing(driver, rb.LISTING_BASIC_URL)
+    browser_steps.open_filter_dropdown(driver)
+    browser_steps.select_filter_option(driver, new_name)
+    browser_steps.assert_active_tab_url(driver, rb.LISTING_FILTERED_URL)
+
+
+@pytest.mark.p1
+@allure.id("TC-086")
+@allure.title("Переименование в имя-дубликат допускается: обе записи с queryString сохраняются раздельно")
+def test_rename_filter_profile_to_duplicate_name(two_filter_profiles_seeded, driver):
+    name_a, name_b = two_filter_profiles_seeded
+
+    # Given в Settings отображаются 2 сохранённых профиля с разными именами
+    app_steps.wait_ui_ready(driver)
+    app_steps.open_tab(driver, "Settings")
+    settings_steps.assert_filter_profile_listed(driver, name_a)
+    settings_steps.assert_filter_profile_listed(driver, name_b)
+
+    # When пользователь переименовывает "Profile B" в имя, совпадающее с "Profile A"
+    # (нет диалога ошибки/конфликта — операция просто завершается)
+    settings_steps.rename_filter_profile(driver, name_b, name_a)
+
+    # Then в Settings отображаются ДВЕ отдельные строки с именем "Profile A" —
+    # список не схлопнулся в одну запись
+    settings_steps.assert_filter_profile_count(driver, name_a, 2)
+
+    # And в БД filter_profiles присутствуют ДВЕ записи с name="Profile A": одна с
+    # исходным queryString первого профиля, другая — с queryString бывшего
+    # "Profile B", неизменившимся при переименовании
+    settings_steps.assert_filter_profiles_have_query_strings(
+        name_a,
+        [
+            "work_search%5Bquery%5D=profile-a-test",
+            "work_search%5Bquery%5D=profile-b-test",
+        ],
+    )
 
 
 @pytest.mark.p1

@@ -242,3 +242,139 @@ def test_matching_personal_tag_highlighted_on_listing(replay, tagged_work_seeded
         driver, work.ao3_id, "Creator Chose Not To Use Archive Warnings",
     )
     browser_steps.assert_tag_not_highlighted(driver, work.ao3_id, "Test Ship/Other Ship")
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-087")
+@allure.title("Save note сохраняет введённый комментарий работы (bottom-sheet листинга)")
+@pytest.mark.parametrize("replay", [rb.LISTING_BASIC_FILENAME], indirect=True)
+def test_save_note_persists_comment(clean_app, replay, driver):
+    # Given приложение с чистыми данными, открыта replay-листинговая страница с
+    # работой W (KUDOSED) без рейтинга и комментария; Rate-кнопкой открыт нативный
+    # bottom-sheet
+    work = W.KUDOSED
+    comment = "New saved note"
+    app_steps.wait_ui_ready(driver)
+    browser_steps.open_listing(driver, rb.LISTING_BASIC_URL)
+    browser_steps.tap_rate_button(driver, work.ao3_id)
+
+    # When пользователь раскрывает поле комментария, вводит «New saved note» и
+    # нажимает «Save note»
+    rating_steps.add_note_via_listing_overlay(driver, comment)
+
+    # Then bottom-sheet не закрывается сам, поле комментария сворачивается в
+    # компактный превью-режим с введённым текстом
+    rating_steps.assert_overlay_still_open(driver)
+    rating_steps.assert_comment_collapsed_with_text(driver, comment)
+
+    # And после закрытия bottom-sheet тапом по scrim и повторного открытия
+    # Rate-кнопкой той же работы комментарий по-прежнему предзаполнен —
+    # доказательство персистентности в Room
+    rating_steps.reopen_listing_overlay(driver, work.ao3_id)
+    rating_steps.assert_comment_persisted(driver, comment)
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-088")
+@allure.title("Clear note очищает сохранённый комментарий работы (bottom-sheet листинга)")
+@pytest.mark.parametrize("replay", [rb.LISTING_BASIC_FILENAME], indirect=True)
+def test_clear_note_removes_comment(replay, note_work_seeded, driver):
+    # Given работа W (READ) имеет рейтинг Kudosed и сохранённый комментарий
+    # «Existing note text»; Rate-кнопкой открыт bottom-sheet — комментарий показан
+    # в свёрнутом превью-режиме
+    work = note_work_seeded
+    existing_text = "Existing note text"
+    app_steps.wait_ui_ready(driver)
+    browser_steps.open_listing(driver, rb.LISTING_BASIC_URL)
+    browser_steps.tap_rate_button(driver, work.ao3_id)
+    rating_steps.assert_comment_collapsed_with_text(driver, existing_text)
+
+    # When пользователь тапает по свёрнутому превью (раскрывает поле комментария)
+    # и нажимает «Clear note»
+    rating_steps.tap_comment_preview(driver, existing_text)
+    rating_steps.clear_note(driver)
+
+    # Then поле комментария немедленно пустеет, область комментария возвращается
+    # к тогглу «Add a note»
+    rating_steps.assert_comment_cleared(driver)
+
+    # And после закрытия bottom-sheet тапом по scrim и повторного открытия
+    # Rate-кнопкой работы W комментарий остаётся пустым — доказательство
+    # персистентности очистки в Room
+    rating_steps.reopen_listing_overlay(driver, work.ao3_id)
+    rating_steps.assert_comment_cleared(driver, timeout=8)
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-090")
+@allure.title("Добавление личного тега через текстовое поле и кнопку Add сохраняет его среди выбранных")
+@pytest.mark.parametrize("replay", [rb.LISTING_BASIC_FILENAME], indirect=True)
+def test_add_freeform_tag_persists(clean_app, replay, driver):
+    # Given приложение с чистыми данными, открыта replay-листинговая страница с
+    # работой W (KUDOSED), у которой нет ни рейтинга, ни личных тегов; Rate-кнопкой
+    # открыт нативный bottom-sheet; тег «spoiler-test» ещё не встречается на экране
+    work = W.KUDOSED
+    tag = "spoiler-test"
+    app_steps.wait_ui_ready(driver)
+    browser_steps.open_listing(driver, rb.LISTING_BASIC_URL)
+    browser_steps.tap_rate_button(driver, work.ao3_id)
+    rating_steps.assert_chip_absent(driver, tag)
+
+    # When пользователь выбирает рейтинг «Kudosed» (разблокирует раздел тегов),
+    # раскрывает раздел тегов, вводит свободный тег «spoiler-test» и нажимает «Add»
+    rating_steps.rate_via_listing_overlay(driver, "LIKE")
+    rating_steps.add_tag_via_listing_overlay(driver, tag)
+
+    # Then тег «spoiler-test» появляется как выбранный чип; после сворачивания
+    # раздела лейбл показывает счётчик «Saved tags (1)»
+    rating_steps.assert_chip_visible(driver, tag)
+    rating_steps.collapse_tags_section(driver)
+    rating_steps.assert_tags_count_label_visible(driver, 1)
+
+    # And после закрытия bottom-sheet тапом по scrim, повторного открытия
+    # Rate-кнопкой работы W и раскрытия раздела тегов чип «spoiler-test»
+    # по-прежнему присутствует — доказательство персистентности в Room
+    rating_steps.reopen_listing_overlay(driver, work.ao3_id)
+    rating_steps.open_tags_section(driver)
+    rating_steps.assert_chip_visible(driver, tag)
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-091")
+@allure.title("Тап по выбранному чипу удаляет личный тег работы (bottom-sheet листинга)")
+@pytest.mark.parametrize("replay", [rb.LISTING_BASIC_FILENAME], indirect=True)
+def test_tap_selected_chip_removes_tag(replay, tagged_work_seeded, driver):
+    # Given работа W (LOVED) засеяна с рейтингом Kudosed и личными тегами
+    # ["Fluff", "Angst"]; Rate-кнопкой открыт bottom-sheet, раздел тегов раскрыт —
+    # «Fluff» и «Angst» видны как выбранные чипы
+    work = tagged_work_seeded
+    app_steps.wait_ui_ready(driver)
+    browser_steps.open_listing(driver, rb.LISTING_BASIC_URL)
+    browser_steps.tap_rate_button(driver, work.ao3_id)
+    rating_steps.open_tags_section(driver)
+    rating_steps.assert_chip_visible(driver, "Fluff")
+    rating_steps.assert_chip_visible(driver, "Angst")
+
+    # When пользователь тапает по чипу «Angst»
+    rating_steps.tap_selected_chip(driver, "Angst")
+
+    # Then чип «Angst» немедленно исчезает целиком, чип «Fluff» остаётся видимым
+    rating_steps.assert_chip_absent(driver, "Angst")
+    rating_steps.assert_chip_visible(driver, "Fluff")
+
+    # And после сворачивания раздела лейбл показывает «Saved tags (1)»
+    rating_steps.collapse_tags_section(driver)
+    rating_steps.assert_tags_count_label_visible(driver, 1)
+
+    # And после закрытия bottom-sheet тапом по scrim, повторного открытия
+    # Rate-кнопкой работы W и раскрытия раздела тегов «Angst» по-прежнему
+    # отсутствует, «Fluff» по-прежнему присутствует — доказательство
+    # персистентности удаления в Room
+    rating_steps.reopen_listing_overlay(driver, work.ao3_id)
+    rating_steps.open_tags_section(driver)
+    rating_steps.assert_chip_absent(driver, "Angst")
+    rating_steps.assert_chip_visible(driver, "Fluff")

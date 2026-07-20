@@ -29,8 +29,8 @@ class RatingOverlay(BaseScreen):
         self.tap(self.by_text(RATING_BUTTON_LABEL[rating]))
         return self
 
-    def add_note_toggle_visible(self) -> bool:
-        return self.is_present(self.by_text("Add a note"), timeout=4)
+    def add_note_toggle_visible(self, timeout: int = 4) -> bool:
+        return self.is_present(self.by_text("Add a note"), timeout=timeout)
 
     def dismiss(self):
         """Закрывает bottom-sheet тапом по затемнённой области ВЫШЕ карточки
@@ -106,8 +106,20 @@ class RatingOverlay(BaseScreen):
 
     def toggle_tags(self):
         """Раскрывает раздел личных тегов (тоггл "Add tags"/"Hide tags") — доступен
-        только когда рейтинг уже выбран (`RatingMenu`: `enabled = selectedRating != null`)."""
-        self.tap(self.by_text("Add tags"))
+        только когда рейтинг уже выбран (`RatingMenu`: `enabled = selectedRating != null`).
+        Лейбл тоггла в свёрнутом состоянии зависит от того, есть ли уже сохранённые
+        теги: "Add tags" при нуле, "Saved tags (N)" при N>0 (TC-090/091) — оба ведут
+        к одному и тому же тогглу, поэтому проверяем оба варианта."""
+        if self.is_present(self.by_text("Add tags"), timeout=2):
+            self.tap(self.by_text("Add tags"))
+        else:
+            self.tap(self.by_text_contains("Saved tags"))
+        return self
+
+    def hide_tags(self):
+        """Сворачивает уже раскрытый раздел личных тегов (тоггл "Hide tags") — после
+        сворачивания лейбл возвращается к "Add tags"/"Saved tags (N)" (TC-090/091)."""
+        self.tap(self.by_text("Hide tags"))
         return self
 
     def enter_tag_input(self, text: str):
@@ -121,3 +133,34 @@ class RatingOverlay(BaseScreen):
         список (`addTag`), который сразу же уходит в `onRatingTap`/сохранение."""
         self.tap(self.by_text("Add"))
         return self
+
+    # --- TC-087/088: свёрнутое превью комментария и его очистка ---
+    def tap_comment_preview(self, text: str):
+        """Тап по свёрнутому превью комментария (иконка + текст, `RatingOverlay.kt`
+        ~182: `Modifier...clickable { showComment = true }`) — раскрывает поле для
+        редактирования. Тот же локатор, что читает `comment_text_visible`, только
+        здесь по нему тапают, а не читают."""
+        self.tap(self.by_text_contains(text))
+        return self
+
+    def clear_note(self):
+        """Тап "Clear note" — очищает комментарий (`onSaveNote(rating, "", tags)`),
+        видна только когда `comment.isNotBlank()` (`RatingOverlay.kt` ~224-235)."""
+        self.tap(self.by_text("Clear note"))
+        return self
+
+    # --- TC-090/091: счётчик сохранённых тегов и работа с уже выбранными чипами ---
+    def tags_count_label_visible(self, n: int, timeout: int = 6) -> bool:
+        return self.is_present(self.by_text(f"Saved tags ({n})"), timeout=timeout)
+
+    def tap_selected_chip(self, tag: str):
+        """Тап по уже выбранному чипу тега — удаляет его (`removeTag`, `TagChip`
+        `clickable` висит на родительском Row чипа, тот же паттерн, что
+        `LibraryScreen.select_tag`)."""
+        self.tap(self.by_text(tag))
+        return self
+
+    def chip_visible(self, tag: str, timeout: int = 6) -> bool:
+        """Читает наличие/отсутствие текста чипа тега (частичное совпадение, тот же
+        generic приём, что `comment_text_visible`)."""
+        return self.is_present(self.by_text_contains(tag), timeout=timeout)

@@ -12,6 +12,7 @@ from framework.core.waits import wait_until
 from framework.screens.browser_screen import BrowserScreen
 from framework.screens.navigation import BottomNav
 from framework.screens.rating_overlay import RatingOverlay
+from framework.steps import browser_steps
 
 
 @allure.step("When открыта страница работы {work_id}")
@@ -151,4 +152,104 @@ def assert_note_overlay_expanded_with_text(driver, expected_text: str):
     )
     assert overlay.comment_text_visible(expected_text), (
         f"поле комментария не предзаполнено текстом «{expected_text}»"
+    )
+
+
+# --- TC-087/088: свёрнутое превью комментария (Save note/Clear note) ---
+
+@allure.step("Then bottom-sheet рейтинга остаётся открытым")
+def assert_overlay_still_open(driver):
+    assert RatingOverlay(driver).is_visible(), (
+        "bottom-sheet рейтинга неожиданно закрылся"
+    )
+
+
+@allure.step("Then после сохранения поле комментария свёрнуто в превью с текстом «{text}»")
+def assert_comment_collapsed_with_text(driver, text: str):
+    overlay = RatingOverlay(driver)
+    assert not overlay.comment_expanded(), (
+        "поле комментария должно свернуться в компактное превью, а не остаться развёрнутым"
+    )
+    assert overlay.comment_text_visible(text), (
+        f"свёрнутое превью комментария не показывает текст «{text}»"
+    )
+
+
+@allure.step("When bottom-sheet рейтинга закрыт и снова открыт Rate-кнопкой работы {work_id}")
+def reopen_listing_overlay(driver, work_id: str):
+    """Закрывает bottom-sheet тапом по scrim и открывает его заново той же Rate-
+    кнопкой листинга — доказательство персистентности в Room (TC-087/088/090/091),
+    не только локального Compose-состояния overlay, которое было бы потеряно при
+    пересоздании composable."""
+    dismiss_rating_overlay(driver)
+    browser_steps.tap_rate_button(driver, work_id)
+    assert RatingOverlay(driver).is_visible(), (
+        f"нативный bottom-sheet рейтинга не открылся повторно для работы {work_id}"
+    )
+
+
+@allure.step("Then после переоткрытия overlay комментарий по-прежнему предзаполнен «{text}»")
+def assert_comment_persisted(driver, text: str, timeout: int = 8):
+    overlay = RatingOverlay(driver)
+    assert overlay.is_visible(), "overlay рейтинга не открылся при повторном открытии"
+    assert overlay.comment_text_visible(text, timeout=timeout), (
+        f"комментарий «{text}» не сохранился после переоткрытия overlay — "
+        "потеряна персистентность в Room"
+    )
+
+
+@allure.step("When тап по свёрнутому превью комментария «{text}» — поле раскрывается")
+def tap_comment_preview(driver, text: str):
+    RatingOverlay(driver).tap_comment_preview(text)
+
+
+@allure.step("When нажата «Clear note»")
+def clear_note(driver):
+    RatingOverlay(driver).clear_note()
+
+
+@allure.step("Then поле комментария пусто, виден тоггл «Add a note»")
+def assert_comment_cleared(driver, timeout: int | None = None):
+    assert RatingOverlay(driver).add_note_toggle_visible(timeout=timeout or 4), (
+        "после Clear note ожидали тоггл «Add a note» вместо превью со старым текстом"
+    )
+
+
+# --- TC-090/091: добавление/удаление личного тега через bottom-sheet листинга ---
+
+@allure.step("When раздел личных тегов overlay раскрыт")
+def open_tags_section(driver):
+    overlay = RatingOverlay(driver)
+    assert overlay.is_visible(), "нативный bottom-sheet рейтинга не открыт — нечего раскрывать"
+    overlay.toggle_tags()
+
+
+@allure.step("When раздел личных тегов overlay свёрнут")
+def collapse_tags_section(driver):
+    RatingOverlay(driver).hide_tags()
+
+
+@allure.step("When тап по выбранному чипу «{tag}»")
+def tap_selected_chip(driver, tag: str):
+    RatingOverlay(driver).tap_selected_chip(tag)
+
+
+@allure.step("Then лейбл раздела тегов показывает «Saved tags ({n})»")
+def assert_tags_count_label_visible(driver, n: int, timeout: int | None = None):
+    assert RatingOverlay(driver).tags_count_label_visible(n, timeout=timeout or 6), (
+        f"лейбл «Saved tags ({n})» не появился"
+    )
+
+
+@allure.step("Then чип «{tag}» присутствует среди выбранных тегов overlay")
+def assert_chip_visible(driver, tag: str, timeout: int = 6):
+    assert RatingOverlay(driver).chip_visible(tag, timeout=timeout), (
+        f"чип «{tag}» не найден среди тегов overlay"
+    )
+
+
+@allure.step("Then чип «{tag}» отсутствует среди тегов overlay")
+def assert_chip_absent(driver, tag: str, timeout: int = 3):
+    assert not RatingOverlay(driver).chip_visible(tag, timeout=timeout), (
+        f"чип «{tag}» неожиданно присутствует среди тегов overlay"
     )

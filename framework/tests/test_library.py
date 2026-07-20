@@ -68,3 +68,22 @@ def test_comment_only_not_in_any_rating_tab(comment_only_work, driver):
     # Then ни в одной из пяти рейтинговых вкладок работа W не отображается
     for rating in ("SAVE", "LIKE", "READ", "PENDING", "DISLIKE"):
         library_steps.assert_work_not_in_tab(driver, rating, work.title)
+
+
+@pytest.mark.p2
+@allure.id("TC-089")
+@allure.title("Карточка Library показывает note-иконку и строку личных тегов из одной сохранённой записи")
+def test_library_card_shows_note_icon_and_tags(note_and_tags_work_seeded, driver):
+    # Given работа W (PENDING) засеяна с рейтингом Pending, комментарием
+    # «Library indicator note» и личными тегами ["indicator-tag"]
+    work = note_and_tags_work_seeded
+    app_steps.wait_ui_ready(driver)
+
+    # When пользователь открывает экран Library, вкладку PENDING
+    app_steps.open_tab(driver, "Library")
+
+    # Then карточка работы W показывает note-иконку (индикатор комментария)
+    library_steps.assert_work_note_icon_visible(driver, "PENDING", work.title)
+    # And та же карточка работы W показывает строку личных тегов «indicator-tag»
+    # (оба индикатора наблюдаются одновременно на одной и той же карточке)
+    library_steps.assert_work_tags_visible(driver, "PENDING", work.title, "indicator-tag")

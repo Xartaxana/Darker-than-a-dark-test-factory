@@ -44,6 +44,11 @@
     "artifact_status": "Automated",
     "board_status": "Automated"
   },
+  "TC-094": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
   "TC-066": {
     "itype": "test-case",
     "artifact_status": "Automated",
@@ -106,8 +111,8 @@
   },
   "TC-078": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-079": {
     "itype": "test-case",
@@ -116,8 +121,8 @@
   },
   "TC-080": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-081": {
     "itype": "test-case",
@@ -126,8 +131,8 @@
   },
   "TC-082": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-083": {
     "itype": "test-case",
@@ -181,8 +186,8 @@
   },
   "TC-040": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-041": {
     "itype": "test-case",
@@ -193,6 +198,16 @@
     "itype": "test-case",
     "artifact_status": "Automated",
     "board_status": "Automated"
+  },
+  "TC-085": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-086": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
   "TC-006": {
     "itype": "test-case",
@@ -264,6 +279,11 @@
     "artifact_status": "Automated",
     "board_status": "Automated"
   },
+  "TC-089": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
   "TC-007": {
     "itype": "test-case",
     "artifact_status": "Automated",
@@ -313,6 +333,26 @@
     "itype": "test-case",
     "artifact_status": "Automated",
     "board_status": "Automated"
+  },
+  "TC-087": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-088": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-090": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-091": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
   "TC-018": {
     "itype": "test-case",
@@ -396,13 +436,13 @@
   },
   "TC-026": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-084": {
     "itype": "test-case",
-    "artifact_status": "Review",
-    "board_status": "Review"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-013": {
     "itype": "test-case",
@@ -418,6 +458,21 @@
     "itype": "test-case",
     "artifact_status": "Automated",
     "board_status": "Automated"
+  },
+  "TC-092": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-093": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-095": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
   "AT-BUG-002": {
     "itype": "bug",
@@ -506,20 +561,25 @@
   },
   "AT-BUG-019": {
     "itype": "bug",
-    "artifact_status": "Fixed",
-    "board_status": "Fixed"
+    "artifact_status": "Verified",
+    "board_status": "Verified"
   },
   "AT-BUG-020": {
     "itype": "bug",
-    "artifact_status": "Fixed",
-    "board_status": "Fixed"
+    "artifact_status": "Verified",
+    "board_status": "Verified"
   },
   "AT-BUG-021": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "AT-BUG-022": {
     "itype": "bug",
     "artifact_status": "Fixed",
     "board_status": "Fixed"
   },
-  "AT-BUG-022": {
+  "AT-BUG-023": {
     "itype": "bug",
     "artifact_status": "Open",
     "board_status": "Open"

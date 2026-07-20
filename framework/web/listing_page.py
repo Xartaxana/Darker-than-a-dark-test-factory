@@ -66,6 +66,29 @@ class ListingPage(BasePage):
             return True
         return els[0].value_of_css_property("display") == "none"
 
+    def opacity_of(self, work_id: str) -> str:
+        """CSS `opacity` вычисленный для блёрба `work_id` (TC-092/093) — dim-режим
+        (`ao3_bridge.js::applyAllFilters`, стр.110-113) выставляет `li.style.opacity
+        = '0.3'` для работ, исключённых фильтром, вместо `display:none` у hide-режима.
+        Пустая строка, если блёрб вообще не найден в DOM."""
+        blurb = selectors.blurb_by_work_id(work_id)
+        els = self.css_all(blurb)
+        if not els:
+            return ""
+        return els[0].value_of_css_property("opacity")
+
+    def is_dimmed(self, work_id: str) -> bool:
+        """Работа исключена фильтром в dim-режиме: блёрб ОСТАЁТСЯ отрендеренным
+        (`display != 'none'`), но затемнён (`opacity == '0.3'`) — визуальный аналог
+        `is_hidden` для `filterDisplayMode == 'dim'` (см. `opacity_of` за источником)."""
+        blurb = selectors.blurb_by_work_id(work_id)
+        els = self.css_all(blurb)
+        if not els:
+            return False
+        display = els[0].value_of_css_property("display")
+        opacity = els[0].value_of_css_property("opacity")
+        return display != "none" and opacity == "0.3"
+
     def rate_button(self, work_id: str):
         """Инжектированная Rate-кнопка (`ao3_bridge.js::makeRateButton`) в блёрбе
         работы — клик по ней открывает нативный `RatingOverlay` (bottom-sheet)."""

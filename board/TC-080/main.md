@@ -2,27 +2,27 @@
 key: "TC-080"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p0"
 summary: "Чекбокс исключения main pairing инжектируется в exclude-фильтр формы Sort&Filter, доступен только при ровно одном выбранном relationship-теге (live)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:canary", "risk:R-02"]
+labels: ["test-case", "area:canary", "risk:R-02", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-19T14:55:28Z"
-updated: "2026-07-19T14:55:28Z"
+created: "2026-07-20T02:40:29Z"
+updated: "2026-07-20T02:40:29Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Чекбокс исключения main pairing инжектируется в exclude-фильтр формы Sort&Filter, доступен только при ровно одном выбранном relationship-теге (live)
 
 _Спроецировано из `test-cases/canary/TC-080.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-080 — Exclude-main-pairing чекбокс: инъекция + доступность (live)
 

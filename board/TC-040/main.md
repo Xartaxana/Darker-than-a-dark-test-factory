@@ -2,27 +2,27 @@
 key: "TC-040"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Save filter сохраняет текущий запрос AO3 Sort&Filter под именем"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:filter-profiles", "risk:R-09"]
+labels: ["test-case", "area:filter-profiles", "risk:R-09", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-19T01:52:00Z"
-updated: "2026-07-19T01:52:00Z"
+created: "2026-07-20T02:40:29Z"
+updated: "2026-07-20T02:40:29Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Save filter сохраняет текущий запрос AO3 Sort&Filter под именем
 
 _Спроецировано из `test-cases/filter-profiles/TC-040.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-040 — Сохранение фильтр-профиля из формы AO3 Sort&Filter
 

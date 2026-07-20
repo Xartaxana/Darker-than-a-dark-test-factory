@@ -62,6 +62,17 @@ def assert_work_tags_visible(driver, rating: str, title: str, tags_text: str):
     )
 
 
+@allure.step("Then во вкладке {rating} работа «{title}» показывает note-иконку (сохранённый комментарий)")
+def assert_work_note_icon_visible(driver, rating: str, title: str):
+    lib = LibraryScreen(driver).open_tab_for_rating(rating)
+    assert lib.has_work(title), (
+        f"работа «{title}» не найдена во вкладке {TAB_BY_RATING[rating]}"
+    )
+    assert lib.has_note_icon(), (
+        f"note-иконка не отображена на карточке «{title}»"
+    )
+
+
 @allure.step("Then во вкладке FILES присутствует работа «{title}»")
 def assert_work_in_files_tab(driver, title: str):
     lib = LibraryScreen(driver).open_tab(FILES_TAB)

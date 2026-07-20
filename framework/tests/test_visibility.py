@@ -103,3 +103,89 @@ def test_disliked_visible_after_hide_toggle_off(replay, seeded_library, driver):
     # And бейдж/цвет Rate-кнопки работы W по-прежнему отражает Disliked — визуальный
     # бейдж не зависит от тумблера скрытия, только видимость самого блёрба
     browser_steps.assert_rating_badge_visible(driver, W.DISLIKED.ao3_id)
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-092")
+@allure.title("Работа со скрытым рейтингом в dim-режиме остаётся на листинге, но затемнена (opacity 0.3)")
+@pytest.mark.parametrize("replay", [rb.LISTING_BASIC_FILENAME], indirect=True)
+def test_dim_mode_dims_hidden_rating_blurb(replay, seeded_library, driver):
+    # Given приложение запущено с seeded_library (по одной работе на каждый рейтинг),
+    # Display mode установлен в Dim В SETTINGS ДО первой навигации листинга в этой
+    # вкладке — режим попадёт в window.__ao3FilterMode инъекцией при onPageFinished
+    # (BrowserScreen.kt:601), а не реактивным window.setFilterMode (TC-093).
+    # Disliked остаётся в hidden-set (дефолт)
+    app_steps.wait_ui_ready(driver)
+    app_steps.open_tab(driver, "Settings")
+    settings_steps.set_display_mode(driver, "Dim")
+    app_steps.open_tab(driver, "Browse")
+
+    # When пользователь впервые в этой вкладке открывает листинг, содержащий блёрбы
+    # всех пяти эталонных работ
+    browser_steps.open_listing(driver, rb.LISTING_BASIC_URL)
+
+    # Then блёрб работы DISLIKED остаётся в разметке и затемнён (opacity 0.3) — не удалён
+    browser_steps.assert_blurb_dimmed(driver, W.DISLIKED.ao3_id)
+    # And блёрбы работ, чей рейтинг не в hidden-set, остаются полностью непрозрачными
+    for work in (W.LOVED, W.KUDOSED, W.READ, W.PENDING):
+        browser_steps.assert_blurb_visible(driver, work.ao3_id)
+        browser_steps.assert_blurb_not_dimmed(driver, work.ao3_id)
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-093")
+@allure.title("Переключение Display mode Hide→Dim в Settings меняет поведение фильтрации на уже открытом листинге (live-push)")
+@pytest.mark.parametrize("replay", [rb.LISTING_BASIC_FILENAME], indirect=True)
+def test_display_mode_hide_to_dim_live_push(replay, seeded_library, driver):
+    # Given приложение запущено, работа DISLIKED засеяна с rating=DISLIKE, Display
+    # mode = Hide (дефолт, действий над контролом ещё не было), Disliked в
+    # hidden-set; открыт листинг, блёрб DISLIKED скрыт (то же исходное состояние,
+    # что TC-013)
+    app_steps.wait_ui_ready(driver)
+    browser_steps.open_listing(driver, rb.LISTING_BASIC_URL)
+    browser_steps.assert_blurb_hidden(driver, W.DISLIKED.ao3_id)
+
+    # When пользователь, не покидая уже открытую листинговую страницу, переключается
+    # на Settings и меняет Display mode на Dim, затем возвращается на уже открытую
+    # вкладку Browse БЕЗ повторной навигации/reload листинга — приложение
+    # проталкивает смену режима живым JS-вызовом (MainActivity.kt:173-174 ->
+    # BrowserViewModel.setFilterMode -> ao3_bridge.js window.setFilterMode ->
+    # applyAllFilters() на текущей странице)
+    app_steps.open_tab(driver, "Settings")
+    settings_steps.set_display_mode(driver, "Dim")
+    app_steps.open_tab(driver, "Browse")
+
+    # Then блёрб работы DISLIKED, ранее скрытый, теперь отображается, но затемнён —
+    # display сброшен, opacity 0.3 — без перезагрузки страницы
+    browser_steps.assert_blurb_dimmed(driver, W.DISLIKED.ao3_id)
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-095")
+@allure.title("Скрытие рейтинга Kudosed (не-Disliked) в Settings исключает только работы с этим рейтингом, остальные видны")
+@pytest.mark.parametrize("replay", [rb.LISTING_BASIC_FILENAME], indirect=True)
+def test_hide_kudosed_only_excludes_kudosed(replay, seeded_library, driver):
+    # Given приложение запущено с seeded_library, открыт листинг: DISLIKED скрыт
+    # (дефолт), LOVED/KUDOSED/READ/PENDING видны
+    app_steps.wait_ui_ready(driver)
+    browser_steps.open_listing(driver, rb.LISTING_BASIC_URL)
+    browser_steps.assert_blurb_hidden(driver, W.DISLIKED.ao3_id)
+    browser_steps.assert_blurb_visible(driver, W.KUDOSED.ao3_id)
+
+    # When пользователь в Settings включает тумблер «Hide Kudosed works», не трогая
+    # остальные тумблеры, и возвращается на уже открытую вкладку Browse без
+    # повторной навигации листинга (тот же live-push путь, что TC-015)
+    app_steps.open_tab(driver, "Settings")
+    settings_steps.set_hide_rating(driver, "Kudosed", True)
+    app_steps.open_tab(driver, "Browse")
+
+    # Then блёрб работы KUDOSED теперь тоже скрыт
+    browser_steps.assert_blurb_hidden(driver, W.KUDOSED.ao3_id)
+    # And блёрб работы DISLIKED остаётся скрытым (не изменился)
+    browser_steps.assert_blurb_hidden(driver, W.DISLIKED.ao3_id)
+    # And блёрбы работ LOVED/READ/PENDING остаются видны — их рейтинги не входят в hidden-set
+    for work in (W.LOVED, W.READ, W.PENDING):
+        browser_steps.assert_blurb_visible(driver, work.ao3_id)

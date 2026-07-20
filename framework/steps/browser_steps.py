@@ -293,6 +293,64 @@ def assert_active_tab_url(driver, url: str = HOME_URL, timeout: int | None = Non
         )
 
 
+@allure.step("Then вкладка {target_position} стала физически активной (scrollY-асимметрия нативного скролла, AT-BUG-022)")
+def assert_tab_became_active_via_scroll(
+    driver,
+    target_position: int,
+    scroll_baseline: int | None = None,
+    distance_px: int = 1400,
+    timeout: int | None = None,
+) -> int:
+    """Различает «switchTab(target_position) реально сделал вкладку активной»
+    от «switchTab — no-op» БЕЗ сведения числа вкладок к одной (`swipe_close_tab`
+    reduce-to-one) — тот приём структурно не может различить эти два состояния,
+    когда цель — вкладка 0 (см. полный разбор конфаунда в `bugs/AT-BUG-022.md`).
+
+    Механизм (эмпирически подтверждён на эмуляторе, живой прогон 2026-07-20,
+    сценарий буквально TC-084: 3 вкладки, активна 2, тап по чипу 0):
+    НАТИВНЫЕ жесты (тап/свайп) бьют по физически видимому View
+    (`activeContainer`, см. докстринг `browser_screen.py:255-270`), НЕ подвержены
+    sticky-прилипанию chromedriver к вкладке-0, тогда как WEBVIEW-контекст
+    (`execute_script`/`get_webview_scroll_y`) ВСЕГДА читает именно вкладку-0.
+    Поэтому нативный скролл ПОСЛЕ тапа детерминированно меняет `scrollY`
+    вкладки 0, только если тап РЕАЛЬНО сделал её физически отображаемой:
+
+    - контрольный прогон (активна вкладка 2, тап на 0 ЕЩЁ не сделан): свайп не
+      меняет scrollY вкладки 0 (0 -> 0 — свайп бьёт по вкладке 2, не по 0);
+    - после тапа на чип 0 + тот же свайп: scrollY вкладки 0 меняется (0 -> 720
+      на контрольном прогоне) — свайп теперь бьёт именно по вкладке 0.
+
+    ТОЛЬКО `target_position == 0` покрыт этой эмпирической проверкой — сама
+    вкладка 0 является единственной, чей `scrollY` вообще читаем через
+    WEBVIEW-контекст при >1 живых вкладках. Симметричный приём для
+    `target_position != 0` (проверка, что scrollY вкладки 0 ПЕРЕСТАЁТ меняться
+    после переключения на другую цель) технически аналогичен, но НЕ проверен
+    отдельным живым прогоном в этой сессии — вызывающий код обязан подтвердить
+    его эмпирически на своём сценарии, прежде чем полагаться на него.
+
+    Возвращает измеренный scrollY вкладки 0 после свайпа."""
+    if scroll_baseline is None:
+        scroll_baseline = get_webview_scroll_y(driver)
+    BrowserScreen(driver).swipe_scroll_active_tab_down(distance_px)
+    if target_position == 0:
+        return wait_until(
+            driver,
+            lambda d: (v := get_webview_scroll_y(d)) > scroll_baseline and v,
+            timeout=timeout or 5,
+            message=(
+                f"после переключения на вкладку 0 нативный свайп не изменил её scrollY "
+                f"(осталось {scroll_baseline}) — switchTab(0), похоже, НЕ сделал вкладку 0 "
+                f"физически активной (no-op), см. bugs/AT-BUG-022.md"
+            ),
+        )
+    raise NotImplementedError(
+        f"assert_tab_became_active_via_scroll для target_position={target_position} "
+        "(!= 0) не покрыт эмпирической проверкой AT-BUG-022 в этой сессии — не "
+        "использовать без отдельного живого прогона, подтверждающего симметрию "
+        "приёма для не-нулевой цели"
+    )
+
+
 @allure.step("When открыта листинговая страница (replay-фикстура) {url}")
 def open_listing(driver, url: str):
     """Навигация WebView на URL листинга AO3 (replay-запись — см. `conftest.replay`,
@@ -471,6 +529,31 @@ def assert_blurb_visible(driver, work_id: str):
             lambda d: not ListingPage(d).is_hidden(work_id),
             message=f"работа {work_id} должна быть видна, но скрыта фильтрацией",
         )
+
+
+@allure.step("Then блёрб работы {work_id} затемнён фильтрацией (dim-режим, opacity 0.3), но остаётся в разметке")
+def assert_blurb_dimmed(driver, work_id: str):
+    """TC-092/093: опрашивает `display`+`opacity` блёрба, а не читает один раз — тот же
+    класс гонки нативного round-trip (`applyAllFilters`), что `assert_blurb_hidden`."""
+    with contexts.in_webview(driver):
+        wait_until(
+            driver,
+            lambda d: ListingPage(d).is_dimmed(work_id),
+            message=f"работа {work_id} должна быть затемнена фильтрацией (dim, opacity 0.3), но не затемнена",
+        )
+
+
+@allure.step("Then блёрб работы {work_id} НЕ затемнён (рейтинг вне hidden-set)")
+def assert_blurb_not_dimmed(driver, work_id: str):
+    """TC-092: негативная сверка для работ вне hidden-set — вызывается ПОСЛЕ
+    `assert_blurb_dimmed`/`assert_blurb_visible` целевой работы того же листинга
+    (applyAllFilters красит opacity ВСЕХ блёрбов за один синхронный проход, тот же
+    приём, что `assert_rate_button_unrated`), поэтому мгновенное чтение здесь не гонка."""
+    with contexts.in_webview(driver):
+        opacity = ListingPage(driver).opacity_of(work_id)
+    assert opacity != "0.3", (
+        f"работа {work_id} неожиданно затемнена (opacity=0.3), хотя её рейтинг вне hidden-set"
+    )
 
 
 @allure.step("When нажата Rate-кнопка работы {work_id} на листинге")
