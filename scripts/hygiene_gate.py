@@ -38,7 +38,38 @@ NON-GOALS этой задачи (спека: "расширение на друг
   (б) индикатор записи: `>` (покрывает и `>>`, т.к. `>>` содержит `>`)
       ИЛИ токен printf/echo/Add-Content/Set-Content/Out-File
       (word-boundary regex, case-insensitive);
-  (в) НЕ канонический вызов -- подстроки "log_append.py" НЕТ в команде.
+  (в) НЕ канонический вызов.
+
+v2 (2026-07-20, task_id hygiene-gate-v2) -- два фикса на живых
+false-positive и один на известный обход v1:
+
+  (в), ужесточено: канон -- ФОРМА ПРЕФИКСА вызова log_append.py
+  (`python[3][.exe] [путь/]log_append.py` в начале statement'а: начало
+  команды либо сразу после разделителя цепочки `;`/`&&`/`||`/`|`/
+  перевода строки), а НЕ голая подстрока "log_append.py" где угодно в
+  команде. v1 гасился комментарием/аргументом, упоминающим
+  log_append.py (`echo x > logs/routing-log.jsonl  # log_append.py`)
+  -- v2 такой обход больше НЕ гасит срабатывание.
+
+  (a)/(б), предвычисление: ПЕРЕД проверкой (а) и (б) из команды
+  вырезается содержимое -m/--message аргументов git commit (см.
+  _strip_commit_messages) -- текст сообщения коммита (в т.ч. `>` в
+  ASCII-стрелках, упоминания "routing-log"/"orchestrator-log" в
+  прозе) не должен триггерить детект; пути git add/commit не
+  вырезаются -- вырезается только САМО сообщение. Условие (в)
+  проверяется на ИСХОДНОЙ (невырезанной) команде.
+
+Известные остаточные отверстия v2 (вердикт critic 2026-07-20, приняты
+координатором как цена warn-режима, НЕ security-границы):
+  HoleA: канон-вызов в любой statement-start позиции гасит warn для
+  ВСЕЙ команды, включая соседний грязный редирект в той же цепочке
+  (`python scripts/log_append.py ...; echo x > logs/routing-log.jsonl`
+  -- silent). v1 гасился ещё шире (подстрокой), v2 строго уже.
+  HoleB: запись, спрятанная в command substitution ВНУТРИ -m-сообщения
+  (`git commit -m "$(echo x > logs/routing-log.jsonl)"`), не детектится
+  -- неустранимая цена вырезания сообщений (тот же механизм, что гасит
+  FP на легитимных сообщениях). Ужесточение любого из двух -- только
+  по evidence реальной утечки (правило 10г), не превентивно.
 
 Формат вывода -- ДОСЛОВНО тот же контракт, что у референса (уже
 эмпирически сверен ТАМ по бинарнику харнесса claude.exe: Zod-схема
@@ -68,10 +99,42 @@ import re
 import sys
 
 JOURNAL_SUBSTRINGS = ("routing-log", "orchestrator-log")
-CANONICAL_SUBSTRING = "log_append.py"
 
 WRITE_TOKEN_RE = re.compile(
     r"\b(printf|echo|Add-Content|Set-Content|Out-File)\b", re.IGNORECASE
+)
+
+# (в) v2 -- канон = форма ПРЕФИКСА вызова, не голая подстрока где
+# угодно в команде: `python`/`python3`/`python.exe`/`python3.exe`,
+# затем опциональный путь (слеши обоих видов), затем `log_append.py`
+# как отдельное слово -- на начале команды либо сразу после
+# разделителя цепочки (`;`, `&&`, `||`, `|`, перевод строки).
+CANONICAL_PREFIX_RE = re.compile(
+    r"(?:^|[;&|\n]\s*)python(?:3)?(?:\.exe)?\s+"
+    r"(?:[\w./\\-]*[/\\])?log_append\.py\b",
+    re.IGNORECASE,
+)
+
+# git commit -- детект команды, к которой применимо вырезание
+# сообщения (см. _strip_commit_messages).
+GIT_COMMIT_RE = re.compile(r"\bgit\s+commit\b", re.IGNORECASE)
+
+# -m/--message аргумент git commit, все поддерживаемые формы: -m
+# "..." (двойные кавычки с экранированием \" внутри), -m '...'
+# (одинарные, без экранирования -- как в bash), --message="..."/
+# --message='...' (форма с "="), -m @'...'@ / -m @"..."@
+# (PowerShell here-string как значение -m). Каждая альтернатива
+# требует ЗАКРЫТОЙ кавычки/here-string -- незакрытая кавычка НЕ
+# матчится ни одной веткой и остаётся в команде как есть (fail-safe
+# в сторону детекта: сомнительный случай не вырезаем).
+COMMIT_MESSAGE_ARG_RE = re.compile(
+    r"-m\s+\"(?:[^\"\\]|\\.)*\""
+    r"|-m\s+'[^']*'"
+    r"|--message=\"(?:[^\"\\]|\\.)*\""
+    r"|--message='[^']*'"
+    r"|-m\s+@'.*?'@"
+    r"|-m\s+@\".*?\"@",
+    re.DOTALL,
 )
 
 MSG_JOURNAL_BYPASS = (
@@ -88,17 +151,31 @@ def _has_write_indicator(command: str) -> bool:
     return ">" in command or bool(WRITE_TOKEN_RE.search(command))
 
 
-def _is_canonical_call(command_lower: str) -> bool:
-    return CANONICAL_SUBSTRING in command_lower
+def _is_canonical_call(command: str) -> bool:
+    return bool(CANONICAL_PREFIX_RE.search(command))
+
+
+def _strip_commit_messages(command: str) -> str:
+    """Вырезает -m/--message аргументы git commit ПЕРЕД проверками
+    (а)/(б) -- гасит FP-1/FP-2: текст сообщения коммита (стрелки,
+    упоминания журналов в прозе) не должен триггерить детект записи.
+    Применяется, только если команда содержит `git commit`; пути
+    git add/commit НЕ трогаются -- вырезается только сам аргумент
+    сообщения. Незакрытая кавычка не матчится regex'ом и остаётся
+    невырезанной (см. COMMIT_MESSAGE_ARG_RE)."""
+    if not GIT_COMMIT_RE.search(command):
+        return command
+    return COMMIT_MESSAGE_ARG_RE.sub(" ", command)
 
 
 def _is_journal_bypass(command: str) -> bool:
-    lower = command.lower()
+    scrubbed = _strip_commit_messages(command)
+    lower = scrubbed.lower()
     if not _has_journal_substring(lower):
         return False
-    if not _has_write_indicator(command):
+    if not _has_write_indicator(scrubbed):
         return False
-    if _is_canonical_call(lower):
+    if _is_canonical_call(command):
         return False
     return True
 
