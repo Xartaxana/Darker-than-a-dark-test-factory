@@ -22,9 +22,10 @@ fields:
   # Кросс-файловая проверка (id ∉ реестра → ERROR) — validate_frontmatter.py
   # check_feature_ids; отсутствующее/пустое поле — ERROR с 2026-07-17
   # (error-flip; было WARNING на момент написания этого комментария —
-  # комментарий догоняет фактическое поведение validate_frontmatter.py,
-  # см. правило «пустой features для нефункциональных областей» — решение
-  # политики в очереди Lead, не меняется этой правкой).
+  # комментарий догоняет фактическое поведение validate_frontmatter.py).
+  # Решение 2026-07-21: пустой features не допускается и для нефункциональных
+  # областей — они получают собственные nf-записи реестра (см.
+  # docs/feature-registry.yaml, блок нефункциональных).
   features: {}
   # B5 (docs/09 Этап 2): причина простоя в Blocked; см. schemas/bug.schema.yaml.
   blocked_reason: { enum: [environment, missing_fixture, product_decision, dev_answer, permissions] }
