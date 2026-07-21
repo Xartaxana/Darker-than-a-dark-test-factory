@@ -3,18 +3,18 @@ key: "BUG-011"
 project: "AO3"
 issueType: "bug"
 status: "bug-open"
-priority: "p2"
+priority: "p1"
 summary: "Restore from backup пропускает работы молча, если файл с тем же ao3Id уже лежит в папке загрузок"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["bug", "sev:minor"]
+labels: ["bug", "sev:major"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-15T14:00:00Z"
-updated: "2026-07-15T14:00:00Z"
+created: "2026-07-20T11:33:56Z"
+updated: "2026-07-20T11:33:56Z"
 archived: false
 resolution: null
 ---

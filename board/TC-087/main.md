@@ -2,27 +2,27 @@
 key: "TC-087"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Save note сохраняет введённый текст комментария работы"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:rating", "risk:R-10"]
+labels: ["test-case", "area:rating", "risk:R-10", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-20T01:38:23Z"
-updated: "2026-07-20T01:38:23Z"
+created: "2026-07-21T10:31:08Z"
+updated: "2026-07-21T10:31:08Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Save note сохраняет введённый текст комментария работы
 
 _Спроецировано из `test-cases/rating/TC-087.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-087 — Save note сохраняет введённый комментарий
 
@@ -76,6 +76,26 @@ overlay, которое было бы потеряно при пересозда
   предмет — сама операция сохранения (комментария на входе не было).
 - Реплей-инфраструктура и сидинг уже верифицированы (`bugs/AT-BUG-004.md`,
   статус Verified) — блокеров нет.
+
+## Ревью автотеста
+
+- **F1 пройдено** (test-reviewer, 2026-07-21). Архитектура: `arch_check.py` без
+  [ERROR]; ввод/сохранение — в `rating_overlay.py`, шаги в `rating_steps`,
+  sleep нет. Traceability: `@allure.id("TC-087")` == id, `@pytest.mark.p1`/
+  `replay` соответствуют, `automated_by` существует. Соответствие кейсу:
+  единичная CRUD-операция; Then проверяет СУТЬ — после dismiss+reopen комментарий
+  предзаполнен из Room (`getWorkRating`), а не локальным Compose-состоянием
+  (которое пересоздание composable потеряло бы). Фикстура: `clean_app`+replay,
+  сидинг не нужен (строка создаётся самим сохранением). Flake:
+  `comment_text_visible` — частичное совпадение с wait.
+- **Зелёный прогон:** `Invoke-Pytest -k test_save_note_persists_comment`
+  → 1 passed (PYTEST_EXIT=0).
+- **Красная проба (2026-07-21T10:31:08Z):** временно испортил ожидаемый текст
+  проверки персистентности (`assert_comment_persisted(driver, comment)` →
+  `"WRONG persisted probe"`). Прогон УПАЛ осмысленно: переоткрытый overlay нёс
+  реально сохранённый «New saved note», assert не совпал — AssertionError
+  «комментарий «WRONG persisted probe» не сохранился … потеряна персистентность
+  в Room». Откачено (`git checkout`), дифф framework/ чист.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»

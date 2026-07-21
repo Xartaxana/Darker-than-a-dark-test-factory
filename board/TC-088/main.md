@@ -2,27 +2,27 @@
 key: "TC-088"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Clear note очищает сохранённый комментарий работы"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:rating", "risk:R-10"]
+labels: ["test-case", "area:rating", "risk:R-10", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-20T01:38:26Z"
-updated: "2026-07-20T01:38:26Z"
+created: "2026-07-21T10:31:08Z"
+updated: "2026-07-21T10:31:08Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Clear note очищает сохранённый комментарий работы
 
 _Спроецировано из `test-cases/rating/TC-088.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-088 — Clear note очищает комментарий
 
@@ -74,6 +74,26 @@ _Спроецировано из `test-cases/rating/TC-088.md` (источник
   `browser_steps.tap_rate_button`, как в TC-087.
 - Фикстура `note_work_seeded` и replay-инфраструктура уже верифицированы
   (`bugs/AT-BUG-004.md`, Verified) — блокеров нет.
+
+## Ревью автотеста
+
+- **F1 пройдено** (test-reviewer, 2026-07-21). Архитектура: `arch_check.py` без
+  [ERROR]; `tap_comment_preview`/`clear_note` — в `rating_overlay.py`, шаги в
+  `rating_steps`, sleep нет. Traceability: `@allure.id("TC-088")` == id,
+  `@pytest.mark.p1`/`replay`, `automated_by` существует. Соответствие кейсу:
+  единичная CRUD-операция; Then проверяет СУТЬ — после dismiss+reopen комментарий
+  остаётся пустым (виден тоггл «Add a note», а не превью старого текста) —
+  персистентность очистки в Room (`comment=""` → `null`), не локальное
+  состояние. Фикстура `note_work_seeded` сидит ДО Appium-сессии. Flake:
+  `add_note_toggle_visible` с wait; повторная проверка после reopen с timeout=8.
+- **Зелёный прогон:** `Invoke-Pytest -k test_clear_note_removes_comment`
+  → 1 passed (PYTEST_EXIT=0).
+- **Красная проба (2026-07-21T10:31:08Z):** временно пропустил вызов
+  `rating_steps.clear_note(driver)` (комментарий не очищается). Прогон УПАЛ
+  осмысленно: поле осталось развёрнутым со старым текстом, тоггл «Add a note»
+  не появился — AssertionError «после Clear note ожидали тоггл «Add a note»
+  вместо превью со старым текстом». Откачено (`git checkout`), дифф framework/
+  чист.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»

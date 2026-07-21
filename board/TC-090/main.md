@@ -2,27 +2,27 @@
 key: "TC-090"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Добавление личного тега через текстовое поле и кнопку Add сохраняет его среди выбранных"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:rating", "risk:R-10"]
+labels: ["test-case", "area:rating", "risk:R-10", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-20T01:38:32Z"
-updated: "2026-07-20T01:38:32Z"
+created: "2026-07-21T10:31:08Z"
+updated: "2026-07-21T10:31:08Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Добавление личного тега через текстовое поле и кнопку Add сохраняет его среди выбранных
 
 _Спроецировано из `test-cases/rating/TC-090.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-090 — Добавление личного тега сохраняет его среди выбранных
 
@@ -87,6 +87,26 @@ suggested-набор карточки, поэтому его появление 
   `comment_text_visible`) — новый локатор для самого чипа не нужен.
 - Реплей-инфраструктура и сидинг уже верифицированы (`bugs/AT-BUG-004.md`,
   Verified) — блокеров нет.
+
+## Ревью автотеста
+
+- **F1 пройдено** (test-reviewer, 2026-07-21). Архитектура: `arch_check.py` без
+  [ERROR]; ввод/подтверждение тега — в `rating_overlay.py`, шаги в
+  `rating_steps`, sleep нет. Traceability: `@allure.id("TC-090")` == id,
+  `@pytest.mark.p1`/`replay`, `automated_by` существует. Соответствие кейсу:
+  единичная CRUD-операция; Then проверяет СУТЬ — свободный тег «spoiler-test»
+  (заведомо вне suggested-набора карточки) появляется как выбранный чип, лейбл
+  считает «Saved tags (1)», и после dismiss+reopen чип по-прежнему присутствует
+  (персистентность в Room). Фикстура: `clean_app`+replay, сидинг не нужен.
+  Flake: `chip_visible`/`tags_count_label_visible` — ожидания с wait.
+- **Зелёный прогон:** `Invoke-Pytest -k test_add_freeform_tag_persists`
+  → 1 passed (PYTEST_EXIT=0).
+- **Красная проба (2026-07-21T10:31:08Z):** временно испортил проверку
+  персистентности после reopen (`assert_chip_visible(driver, tag)` →
+  `"wrong-probe-tag"`). Прогон УПАЛ осмысленно: переоткрытый overlay нёс реально
+  сохранённый «spoiler-test», assert не совпал — AssertionError «чип
+  «wrong-probe-tag» не найден среди тегов overlay». Откачено (`git checkout`),
+  дифф framework/ чист.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»

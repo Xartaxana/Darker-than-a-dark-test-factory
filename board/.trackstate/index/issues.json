@@ -215,16 +215,17 @@
     "epicPath": null,
     "summary": "Side panel — переключение рейтинга Kudosed (не-Disliked) скрывает работу и синхронно отражается в Settings (эквивалентность входов)",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:browser",
-      "risk:R-06"
+      "risk:R-06",
+      "automation:active"
     ],
-    "updated": "2026-07-20T01:38:17Z",
-    "resolution": null,
+    "updated": "2026-07-21T10:31:08Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -924,16 +925,17 @@
     "epicPath": null,
     "summary": "Переименование фильтр-профиля обновляет отображаемое имя и не меняет queryString",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:filter-profiles",
-      "risk:R-09"
+      "risk:R-09",
+      "automation:active"
     ],
-    "updated": "2026-07-20T01:07:01Z",
-    "resolution": null,
+    "updated": "2026-07-21T10:31:08Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -946,16 +948,17 @@
     "epicPath": null,
     "summary": "Переименование в имя, совпадающее с другим сохранённым профилем, — разрешено, оба queryString сохраняются раздельно",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:filter-profiles",
-      "risk:R-09"
+      "risk:R-09",
+      "automation:active"
     ],
-    "updated": "2026-07-20T01:07:11Z",
-    "resolution": null,
+    "updated": "2026-07-21T10:31:08Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1289,16 +1292,17 @@
     "epicPath": null,
     "summary": "Карточка Library показывает индикатор комментария и личных тегов сохранённой работы",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:library",
-      "risk:R-10"
+      "risk:R-10",
+      "automation:active"
     ],
-    "updated": "2026-07-20T01:39:12Z",
-    "resolution": null,
+    "updated": "2026-07-21T10:31:08Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1541,16 +1545,17 @@
     "epicPath": null,
     "summary": "Save note сохраняет введённый текст комментария работы",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:rating",
-      "risk:R-10"
+      "risk:R-10",
+      "automation:active"
     ],
-    "updated": "2026-07-20T01:38:23Z",
-    "resolution": null,
+    "updated": "2026-07-21T10:31:08Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1563,16 +1568,17 @@
     "epicPath": null,
     "summary": "Clear note очищает сохранённый комментарий работы",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:rating",
-      "risk:R-10"
+      "risk:R-10",
+      "automation:active"
     ],
-    "updated": "2026-07-20T01:38:26Z",
-    "resolution": null,
+    "updated": "2026-07-21T10:31:08Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1585,16 +1591,17 @@
     "epicPath": null,
     "summary": "Добавление личного тега через текстовое поле и кнопку Add сохраняет его среди выбранных",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:rating",
-      "risk:R-10"
+      "risk:R-10",
+      "automation:active"
     ],
-    "updated": "2026-07-20T01:38:32Z",
-    "resolution": null,
+    "updated": "2026-07-21T10:31:08Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -2648,7 +2655,7 @@
       "test_case:TC-084",
       "sev:major"
     ],
-    "updated": "2026-07-20T02:15:00Z",
+    "updated": "2026-07-21T12:01:54Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2662,7 +2669,7 @@
     "epicPath": null,
     "summary": "2 P0 canary tests не запускаются: отсутствуют фикстуры disliked_work_with_comment_seeded и disliked_work_with_custom_tag_seeded в conftest.py",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -2671,7 +2678,7 @@
       "test_case:TC-077",
       "sev:critical"
     ],
-    "updated": "2026-07-20T00:00:00Z",
+    "updated": "2026-07-21T09:30:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2709,13 +2716,13 @@
     "summary": "Restore from backup пропускает работы молча, если файл с тем же ao3Id уже лежит в папке загрузок",
     "issueType": "bug",
     "status": "bug-open",
-    "priority": "p2",
+    "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "bug",
-      "sev:minor"
+      "sev:major"
     ],
-    "updated": "2026-07-15T14:00:00Z",
+    "updated": "2026-07-20T11:33:56Z",
     "resolution": null,
     "children": [],
     "archived": false
