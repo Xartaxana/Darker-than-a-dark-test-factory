@@ -61,6 +61,69 @@ def test_automation_machine_matches_tc_schema_enum():
     assert set(schema["fields"]["automation_status"]["enum"]) == set(tr.statuses("automation"))
 
 
+# --- E5: машина charter (автозаведение exploratory-чартеров) ----------------
+
+def test_charter_statuses_match_schema_enum():
+    """Статусы машины charter == enum поля status в charter.schema.yaml.
+
+    Не добавлена в test_statuses_match_schema_enums (bug/test-case/run) —
+    та функция ЗАОДНО требует совпадающий enum blocked_reason
+    (test_blocked_reason_field_on_every_machine_with_blocked), а charter.schema.yaml
+    его не несёт (не входит в эту спеку); паритет статусов проверяем отдельно,
+    по образцу test_automation_machine_matches_tc_schema_enum."""
+    schema = yaml.safe_load((SCHEMAS / "charter.schema.yaml").read_text(encoding="utf-8"))
+    assert set(schema["fields"]["status"]["enum"]) == set(tr.statuses("charter"))
+
+
+def test_charter_actors_in_factory_group():
+    """exploratory-tester (пробел, закрыт заодно) и charter-designer — в
+    группе factory: оба фигурируют акторами переходов машины charter."""
+    assert tr.is_allowed("charter", "Planned", "InProgress", "exploratory-tester")
+    assert tr.is_allowed("charter", "InProgress", "Done", "exploratory-tester")
+
+
+def test_charter_proposed_to_planned_gate():
+    """Proposed→Planned — критик-на-план: только human/qa-loop, эффект
+    plan_review_required."""
+    assert tr.is_allowed("charter", "Proposed", "Planned", "human")
+    assert tr.is_allowed("charter", "Proposed", "Planned", "qa-loop")
+    assert not tr.is_allowed("charter", "Proposed", "Planned", "exploratory-tester")
+    assert not tr.is_allowed("charter", "Proposed", "Planned", "charter-designer")
+    assert "plan_review_required" in tr.effects_for("charter", "Proposed", "Planned")
+
+
+def test_charter_initial_has_both_entry_points():
+    """Прежний прямой путь (Planned) остаётся легальным рядом с новым (Proposed)."""
+    assert set((yaml.safe_load(
+        (SCHEMAS / "transitions.yaml").read_text(encoding="utf-8"))
+        ["machines"]["charter"]["initial"])) == {"Proposed", "Planned"}
+
+
+def test_charter_blocked_from_anywhere_by_factory_with_escalation():
+    for frm in ("Proposed", "Planned", "InProgress"):
+        assert tr.is_allowed("charter", frm, "Blocked", "sla_sweep"), frm
+    assert not tr.is_allowed("charter", "Planned", "Blocked", "mallory")
+    assert "escalation" in tr.effects_for("charter", "Planned", "Blocked")
+
+
+def test_charter_blocked_to_planned_only_human():
+    assert tr.is_allowed("charter", "Blocked", "Planned", "human")
+    assert not tr.is_allowed("charter", "Blocked", "Planned", "exploratory-tester")
+    assert not tr.is_allowed("charter", "Blocked", "Planned", "charter-designer")
+
+
+def test_charter_done_is_terminal_no_factory_exit():
+    """Из терминального Done фабрика не выводит форвард-переходами (те же
+    границы, что и у машин bug/test-case/run: validate() проверяет это только
+    для явных `from: <term>`, а не для `from: "*"` — эскалационный `"*" ->
+    Blocked` намеренно легален из ЛЮБОГО статуса, включая терминальный, во
+    всех машинах этой матрицы; здесь не переизобретаем это, проверяем только
+    forward-переходы)."""
+    for actor in ("exploratory-tester", "charter-designer", "sla_sweep", "qa-loop"):
+        for to in ("Proposed", "Planned", "InProgress"):
+            assert not tr.is_allowed("charter", "Done", to, actor), (actor, to)
+
+
 def test_quarantine_actors_and_effects():
     """Карантинит триаж/маинтейнер; выводит из карантина ТОЛЬКО test-maintainer."""
     assert tr.is_allowed("automation", "active", "quarantined", "failure-analyst")
@@ -141,6 +204,9 @@ LEGACY_WHITELIST = {
     # B3: у машины автотеста переходов с борды нет — судьбой автотеста управляет
     # фабрика (человек решает только deprecated, и это правка frontmatter, не борда).
     "automation": {},
+    # E5: у машины charter переходов с борды тоже нет — charter'ами борда не
+    # управляет (exploratory-charters/ не в bs._iter_artifacts()/board_inbound).
+    "charter": {},
 }
 
 

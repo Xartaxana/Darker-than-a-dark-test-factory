@@ -7,13 +7,20 @@ type: charter
 id_pattern: "^CH-\\d+$"
 required: [id, title, status]
 fields:
-  status: { enum: [Planned, InProgress, Done] }
+  # E5 (автозаведение exploratory-чартеров): Proposed — заводит charter-designer
+  # (авто, каденция rules.yaml); Blocked — критик FAIL по плану / деградация
+  # сессии (schemas/transitions.yaml, машина charter). CH-001..004 несут
+  # только Planned/InProgress/Done — расширение enum обратно совместимо.
+  status: { enum: [Proposed, Planned, InProgress, Done, Blocked] }
   # Пусто допустимо (шаблон CH-000 несёт "" по умолчанию, заполняется при
   # заведении сессии) — валидатор пропускает enum-проверку на пустой строке:
   # check_meta делает `if "enum" in spec and sval and sval not in [...]`, а
   # пустой sval уже ложен, так что отдельная альтернатива `|^$` в pattern не
   # нужна (проверено тестом test_charter_empty_trigger_is_clean).
-  trigger: { enum: [new-feature, app-changed, pre-release, bug-cluster] }
+  # cadence (E5) — charter-designer заводит Proposed по каденции правила
+  # rules.yaml, не по разовому событию (new-feature/app-changed/pre-release/
+  # bug-cluster остаются событийными триггерами прямого пути Lead/человека).
+  trigger: { enum: [new-feature, app-changed, pre-release, bug-cluster, cadence] }
   timebox_min: {}
   area: {}
   risk: {}
@@ -22,6 +29,15 @@ fields:
   found_bugs: {}
   followup_tc: {}
   new_risks: {}
+  # E5: гейт Proposed→Planned (CLAUDE.md пр.3, критик-на-план). Формат
+  # `critic:PASS|FAIL:<ISO ts>`; пусто допустимо тем же приёмом, что у
+  # trigger выше (sval пуст → enum/pattern-проверки в check_meta пропускаются,
+  # отдельная альтернатива `^$` в pattern не нужна) — заполняется координатором
+  # qa-loop/человеком по итогам критик-входа, пока переход не случился.
+  plan_review: { pattern: "^critic:(PASS|FAIL):\\d{4}-\\d{2}-\\d{2}[T ][\\d:.+]+Z?$" }
+  # E5: что осталось от миссии на момент Done/Blocked — свободный список строк,
+  # без валидации формата (как found_bugs/followup_tc/new_risks выше).
+  mission_leftover: {}
   # lock: ДВА формата. Канонический `agent:ISO-timestamp` (как у test-case/
   # bug/run) — обязателен для новых локов (промпт exploratory-tester, шаг 2).
   # Легаси `agent@YYYY-MM-DD` наблюдался ОДНАЖДЫ — у CH-001 во время исполнения

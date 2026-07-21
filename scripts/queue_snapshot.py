@@ -37,9 +37,9 @@ TC_ORDER = ["Draft", "Review", "Approved", "Automated", "Blocked"]
 BUG_ORDER = ["Open", "Reopened", "Fixed", "Verified", "Rejected", "Intended", "Blocked"]
 RUN_ORDER = ["NeedsTriage", "Triaged", "Closed", "Blocked"]
 AUTOMATION_ORDER = ["active", "quarantined", "needs_maintenance", "deprecated", "retired"]
-# E4 (exploratory-charters): статусная машина charter'а (docs/templates/charter.md,
-# exploratory-charters/README.md) — Planned -> InProgress -> Done.
-CHARTER_ORDER = ["Planned", "InProgress", "Done"]
+# E4/E5 (exploratory-charters): статусная машина charter'а (schemas/transitions.yaml,
+# машина charter) — Proposed -> Planned -> InProgress -> Done, "*" -> Blocked.
+CHARTER_ORDER = ["Proposed", "Planned", "InProgress", "Done", "Blocked"]
 
 # r10-release-readiness (docs/10 D2+P1): suites, для которых считаем свежесть
 # последнего прогона. Только эти три названы спекой — "verification" (есть в
@@ -112,14 +112,22 @@ def _iter_charters() -> list[dict]:
 
 
 def _charter_stats() -> dict:
+    """E5 (шаг 2 метрик автозаведения): charters_executed — число Done;
+    bugs_per_charter — среднее found_bugs на Done-чартер (0 при нуле Done,
+    без деления на ноль — round(), НЕ int-деление); new_tc_from_charters —
+    суммарно followup_tc по Done (сумма, не среднее, как раньше tc_from_charters)."""
     charters = _iter_charters()
     status_counts: Counter = Counter(str(c.get("status") or "n/a") for c in charters)
     done = [c for c in charters if str(c.get("status")) == "Done"]
+    charters_executed = len(done)
+    bugs_sum = sum(len(c.get("found_bugs") or []) for c in done)
+    tc_sum = sum(len(c.get("followup_tc") or []) for c in done)
+    bugs_per_charter = round(bugs_sum / charters_executed, 2) if charters_executed else 0
     return {
         "status_counts": status_counts,
-        "charters_executed": len(done),
-        "bugs_from_charters": sum(len(c.get("found_bugs") or []) for c in done),
-        "tc_from_charters": sum(len(c.get("followup_tc") or []) for c in done),
+        "charters_executed": charters_executed,
+        "bugs_per_charter": bugs_per_charter,
+        "new_tc_from_charters": tc_sum,
     }
 
 
@@ -329,8 +337,8 @@ def _render_exploratory(data: dict) -> list[str]:
         "",
         f"- {_fmt_counter(cs['status_counts'], CHARTER_ORDER)}",
         f"- charters_executed: **{cs['charters_executed']}**",
-        f"- bugs_from_charters: **{cs['bugs_from_charters']}**",
-        f"- tc_from_charters: **{cs['tc_from_charters']}**",
+        f"- bugs_per_charter: **{cs['bugs_per_charter']}**",
+        f"- new_tc_from_charters: **{cs['new_tc_from_charters']}**",
         "",
     ]
 

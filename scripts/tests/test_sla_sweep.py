@@ -37,6 +37,9 @@ def test_open_major_over_threshold_escalates(repo):
 
 def test_open_major_fresh_is_quiet(repo):
     repo.bug("BUG-011", "Open", extra=f"status_since: {FRESH}\n")
+    # E5: charter_queue_empty — отдельное правило, не то, что здесь проверяем;
+    # активный charter держит его тихим, чтобы sweep() остался пуст.
+    repo.charter("CH-900", "Planned")
     _sla(repo)
 
     assert ss.sweep(now=NOW) == []
@@ -216,6 +219,86 @@ def test_test_debt_skips_severity_and_build_rules(repo):
     text = _esc(repo)
     assert "BUG-070" not in text
     assert "BUG-071" not in text
+
+
+# --- E5: charter_queue_empty (fail-safe надзор за очередью exploratory-чартеров) ---
+
+AT_THRESH = '"2026-07-05T10:00:00Z"'    # ровно 50ч до NOW
+OVER_THRESH = '"2026-07-05T09:00:00Z"'  # 51ч до NOW — за порогом 50ч
+
+
+def test_charter_queue_empty_dir_missing_escalates(repo):
+    """Каталог exploratory-charters/ не создан вовсе — fail-safe эскалация."""
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    assert "[sla:charter_queue_empty]" in _esc(repo) and "CHARTER-QUEUE" in _esc(repo)
+
+
+def test_charter_queue_empty_active_charter_is_quiet(repo):
+    repo.charter("CH-100", "Planned")
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    assert "charter_queue_empty" not in _esc(repo)
+
+
+def test_charter_queue_empty_no_done_at_all_escalates(repo):
+    """Чартеры есть, но ни один не Proposed/Planned/InProgress и ни один не Done."""
+    repo.charter("CH-101", "Blocked")
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    assert "[sla:charter_queue_empty]" in _esc(repo)
+
+
+def test_charter_queue_empty_executed_at_malformed_escalates(repo):
+    repo.charter("CH-102", "Done", extra='executed_at: "not-a-date"\n')
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    assert "[sla:charter_queue_empty]" in _esc(repo)
+
+
+def test_charter_queue_empty_executed_at_missing_escalates(repo):
+    repo.charter("CH-103", "Done")   # executed_at пуст (фикстура по умолчанию)
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    assert "[sla:charter_queue_empty]" in _esc(repo)
+
+
+def test_charter_queue_empty_over_threshold_escalates(repo):
+    repo.charter("CH-104", "Done", extra=f"executed_at: {OVER_THRESH}\n")
+    _sla(repo, charter_queue_empty=50)
+
+    ss.sweep(now=NOW)
+
+    assert "[sla:charter_queue_empty]" in _esc(repo)
+
+
+def test_charter_queue_empty_exactly_at_threshold_is_quiet(repo):
+    """Граница (класс M6): ровно на пороге — ещё НЕ эскалация (<=, не <)."""
+    repo.charter("CH-105", "Done", extra=f"executed_at: {AT_THRESH}\n")
+    _sla(repo, charter_queue_empty=50)
+
+    ss.sweep(now=NOW)
+
+    assert "charter_queue_empty" not in _esc(repo)
+
+
+def test_charter_queue_empty_fresh_done_is_quiet(repo):
+    repo.charter("CH-106", "Done", extra=f"executed_at: {FRESH}\n")
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    assert "charter_queue_empty" not in _esc(repo)
 
 
 def test_dedup_and_timestamp_preserved(repo):

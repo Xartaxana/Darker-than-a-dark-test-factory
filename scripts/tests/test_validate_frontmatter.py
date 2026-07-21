@@ -254,6 +254,17 @@ def test_charter_readme_skipped(repo, schemas):
     assert not any("README" in e for e in errors)
 
 
+def test_charter_perturbations_skipped(repo, schemas):
+    # PERTURBATIONS.md — служебная библиотека возмущений (charter-designer,
+    # 2026-07-21), намеренно без frontmatter — не артефакт-чартер.
+    (repo.root / "exploratory-charters").mkdir(parents=True, exist_ok=True)
+    (repo.root / "exploratory-charters" / "PERTURBATIONS.md").write_text(
+        "# матрица возмущений", encoding="utf-8")
+
+    errors, _warns = vf.validate()
+    assert not any("PERTURBATIONS" in e for e in errors)
+
+
 # --- trace-matrix диспатч 1 (§1b спеки): test-case.features ↔ docs/feature-registry.yaml ---
 
 def _registry(root: Path, feature_ids: list[str]) -> None:

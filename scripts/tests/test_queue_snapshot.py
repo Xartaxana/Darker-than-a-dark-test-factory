@@ -259,8 +259,8 @@ def test_exploratory_section_zeros_when_dir_missing(repo, monkeypatch):
     assert "## Exploratory" in text
     section = text.split("## Exploratory")[1].split("## Активные локи")[0]
     assert "charters_executed: **0**" in section
-    assert "bugs_from_charters: **0**" in section
-    assert "tc_from_charters: **0**" in section
+    assert "bugs_per_charter: **0**" in section
+    assert "new_tc_from_charters: **0**" in section
 
 
 def test_exploratory_section_counts_by_status(repo, monkeypatch):
@@ -292,8 +292,47 @@ def test_exploratory_bugs_and_tc_from_done_charters(repo, monkeypatch):
     text = qs.render(qs.collect(), "T")
     section = text.split("## Exploratory")[1].split("## Активные локи")[0]
 
-    assert "bugs_from_charters: **2**" in section
-    assert "tc_from_charters: **1**" in section
+    # charters_executed=1 (только CH-010 Done) -> bugs_per_charter = 2/1 = 2.0
+    assert "bugs_per_charter: **2.0**" in section
+    assert "new_tc_from_charters: **1**" in section
+
+
+def test_exploratory_bugs_per_charter_is_average_not_sum(repo, monkeypatch):
+    """E5 (шаг 2 метрик): bugs_per_charter — среднее на Done-чартер, не сумма
+    (в отличие от new_tc_from_charters, который остаётся суммой)."""
+    monkeypatch.setattr(qs, "REPO", repo.root, raising=True)
+    monkeypatch.setattr(qs, "AUT_PATH", repo.root / "state" / "app-under-test.yaml", raising=True)
+    monkeypatch.setattr(qs, "ESCALATIONS_PATH", repo.root / "state" / "escalations.md", raising=True)
+    repo.charter("CH-040", "Done", extra='found_bugs: ["AT-BUG-001", "AT-BUG-002"]\n')
+    repo.charter("CH-041", "Done", extra='found_bugs: []\n')
+
+    text = qs.render(qs.collect(), "T")
+    section = text.split("## Exploratory")[1].split("## Активные локи")[0]
+
+    assert "charters_executed: **2**" in section
+    # (2 + 0) / 2 = 1.0, не 2 (сумма)
+    assert "bugs_per_charter: **1.0**" in section
+
+
+def test_exploratory_zero_done_charters_no_division_error(repo, monkeypatch):
+    """Активные чартеры есть, но ни одного Done — bugs_per_charter обязан
+    остаться 0, без ZeroDivisionError (DoD: граница «0 Done»)."""
+    monkeypatch.setattr(qs, "REPO", repo.root, raising=True)
+    monkeypatch.setattr(qs, "AUT_PATH", repo.root / "state" / "app-under-test.yaml", raising=True)
+    monkeypatch.setattr(qs, "ESCALATIONS_PATH", repo.root / "state" / "escalations.md", raising=True)
+    repo.charter("CH-050", "Proposed")
+    repo.charter("CH-051", "Planned")
+    repo.charter("CH-052", "Blocked")
+
+    text = qs.render(qs.collect(), "T")
+    section = text.split("## Exploratory")[1].split("## Активные локи")[0]
+
+    assert "Proposed: **1**" in section
+    assert "Planned: **1**" in section
+    assert "Blocked: **1**" in section
+    assert "charters_executed: **0**" in section
+    assert "bugs_per_charter: **0**" in section
+    assert "new_tc_from_charters: **0**" in section
 
 
 def test_exploratory_attachments_md_not_counted(repo, monkeypatch):

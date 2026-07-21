@@ -3,14 +3,21 @@ id: CH-000              # уникальный, max+1, не переисполь
 title: Краткая миссия сессии
 area: rating            # область test-cases/ ИЛИ cross-area
 risk: R-04              # рисковый якорь из docs/01 §5 (или пусто + причина в Mission)
-status: Planned         # Planned | InProgress | Done
+status: Planned         # Proposed | Planned | InProgress | Done | Blocked
+                        # Proposed — автозаведение charter-designer ДО гейта
+                        # критик-на-план; машина — schemas/transitions.yaml
+plan_review: ""         # заполняет координатор по вердикту гейта:
+                        # critic:PASS:<ISO ts> (обязателен для Proposed→Planned)
 timebox_min: 60         # таймбокс сессии, минут
-trigger: ""             # new-feature | app-changed | pre-release | bug-cluster
+trigger: ""             # new-feature | app-changed | pre-release | bug-cluster | cadence
 executed_at: ""         # ISO-время фактического исполнения (заполняет exploratory-tester)
 executed_by: ""         # агент/модель исполнителя
 found_bugs: []          # [AT-BUG-...] — заведённые по находкам (через bug-reporter)
 followup_tc: []         # [TC-...] — кейсы, заведённые по находкам (через test-designer)
 new_risks: []           # [R-...] — предложенные в docs/01 §10 риски
+mission_leftover: []    # заполняет exploratory-tester при Done: машиночитаемый
+                        # остаток миссии (список строк) — первый вход
+                        # следующего чартера (читает charter-designer)
 lock: ""                # агент:timestamp
 ---
 

@@ -15,6 +15,13 @@ state/sla.yaml и ведёт реестр state/escalations.md:
   question_unanswered   — awaiting: dev без движения дольше порога
   pingpong              — reopen_count/dispute_count ≥ reopened_pingpong →
                           баг переводится в Blocked + эскалация (docs/06 D8)
+  charter_queue_empty   — E5: очередь exploratory charter'ов протухла — нет
+                          НИ ОДНОГО CH-*.md в Proposed|Planned|InProgress, и
+                          либо Done-чартеров нет вовсе, либо у ВСЕХ Done
+                          executed_at отсутствует/битый, либо новейший валидный
+                          executed_at старше sla.thresholds.charter_queue_empty
+                          часов (fail-safe: протухание не молчит; пустой/
+                          отсутствующий exploratory-charters/ — тоже эскалация)
 
 Дедупликация: одна строка на (артефакт, правило); повторные проходы не плодят
 дублей и сохраняют исходное время обнаружения. Строки [sla:*], чья причина
@@ -61,7 +68,14 @@ DEFAULTS = {
     "run_needs_triage": 12, "question_unanswered": 48, "reopened_pingpong": 2,
     # B3: потолок карантина автотеста, когда quarantine_expiry не задан (часы; 14 дней).
     "quarantine_max": 336,
+    # E5: детектор отказа автозаведения exploratory charter'ов — заведомо позже
+    # штатной каденции правила rules.yaml (72ч), иначе шумит на каждом цикле.
+    "charter_queue_empty": 96,
 }
+
+# E5: активные статусы машины charter (schemas/transitions.yaml) — очередь
+# считается непротухшей, пока хотя бы один CH-*.md в одном из них.
+CHARTER_ACTIVE_STATUSES = ("Proposed", "Planned", "InProgress")
 
 
 def _utcnow() -> datetime.datetime:
@@ -128,6 +142,51 @@ def _s_bool(value) -> bool:
 def _severity_rule(meta: dict) -> str:
     sev = str(meta.get("severity", "major")).lower()
     return f"bug_open_{sev}" if f"bug_open_{sev}" in DEFAULTS else "bug_open_major"
+
+
+def _iter_charters() -> list[dict]:
+    """Frontmatter каждого charter'а exploratory-charters/, только верхний
+    уровень (не rglob — attachments/ не артефакты). Дублирует
+    queue_snapshot._iter_charters/stale_locks._iter_charter_locks — тот же
+    класс «список областей захардкожен в N местах», уже отмеченный в этих
+    двух модулях; здесь третий экземпляр намеренно НЕ вынесен в общий
+    модуль (вне owns этой задачи), REPO патчится per-module (ss.REPO), как
+    и остальные pre_step-скрипты (см. conftest.py fixture `repo`)."""
+    base = REPO / "exploratory-charters"
+    if not base.exists():
+        return []
+    out: list[dict] = []
+    for md in sorted(base.glob("*.md")):
+        if md.name.upper() == "README.MD":
+            continue
+        meta, _body = bs._parse_frontmatter(md.read_text(encoding="utf-8", errors="replace"))
+        if meta.get("id"):
+            out.append(meta)
+    return out
+
+
+def _charter_queue_wanted(now: datetime.datetime, thr: dict) -> dict[tuple[str, str], str]:
+    """E5: fail-safe надзор за очередью exploratory charter'ов (см. докстринг
+    модуля, правило charter_queue_empty). Возвращает {} (тихо) либо один
+    (key, rule) -> сообщение с искусственным key "CHARTER-QUEUE" (проверка
+    не привязана к одному артефакту, как остальные правила этого файла)."""
+    charters = _iter_charters()
+    if not charters:
+        return {("CHARTER-QUEUE", "charter_queue_empty"):
+                "exploratory-charters/ пуст или отсутствует "
+                "| нужно: завести charter (charter-designer / вручную)"}
+    if any(str(c.get("status")) in CHARTER_ACTIVE_STATUSES for c in charters):
+        return {}
+    done = [c for c in charters if str(c.get("status")) == "Done"]
+    thresh = thr["charter_queue_empty"]
+    for c in done:
+        ts = _parse_ts(c.get("executed_at"))
+        if ts is not None and (now - ts).total_seconds() / 3600.0 <= thresh:
+            return {}
+    return {("CHARTER-QUEUE", "charter_queue_empty"):
+            f"нет активных charter'ов (Proposed/Planned/InProgress), последний Done "
+            f"старше {thresh:.0f}ч или executed_at отсутствует/битый у Done-чартеров "
+            f"| нужно: завести charter (charter-designer / вручную)"}
 
 
 def collect_wanted(now: datetime.datetime, thr: dict) -> tuple[dict, list]:
@@ -216,6 +275,7 @@ def collect_wanted(now: datetime.datetime, thr: dict) -> tuple[dict, list]:
                 f"| нужно: живое обсуждение с разработчиком; баг переведён в Blocked")
             mutations.append((src, key))
 
+    wanted.update(_charter_queue_wanted(now, thr))
     return wanted, mutations
 
 

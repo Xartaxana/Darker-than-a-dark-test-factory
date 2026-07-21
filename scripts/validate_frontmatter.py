@@ -208,7 +208,10 @@ def validate() -> tuple[list[str], list[str]]:
         # них нет аналога attachments/).
         files = sorted(base.glob("*.md")) if itype == "charter" else sorted(base.rglob("*.md"))
         for md in files:
-            if md.name.upper() == "README.MD":
+            # Служебные файлы области, не артефакты: README (все области),
+            # PERTURBATIONS (библиотека возмущений charter-designer,
+            # 2026-07-21) — без frontmatter намеренно.
+            if md.name.upper() in ("README.MD", "PERTURBATIONS.MD"):
                 continue
             rel = md.relative_to(REPO).as_posix()
             meta, _body = bs._parse_frontmatter(md.read_text(encoding="utf-8", errors="replace"))

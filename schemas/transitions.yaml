@@ -24,9 +24,14 @@ version: 2
 
 actors:
   groups:
+    # exploratory-tester и charter-designer добавлены вместе с машиной charter
+    # (E5, автозаведение exploratory-чартеров) — exploratory-tester уже был
+    # актором переходов test-case/bug (Follow-up) и машины charter, но
+    # отсутствовал в самой группе factory: существующий пробел, закрыт заодно.
     factory: [qa-loop, test-runner, failure-analyst, bug-reporter, fix-verifier,
               test-automator, test-designer, test-maintainer, test-strategist,
-              test-reviewer, sla_sweep, board_inbound, stale_locks, build_watch]
+              test-reviewer, sla_sweep, board_inbound, stale_locks, build_watch,
+              exploratory-tester, charter-designer]
 
 # Эффекты ЛЮБОГО перехода: оба поля обновляются меткой момента перехода.
 always_effects: [status_since, updated]
@@ -133,3 +138,28 @@ machines:
          ref: "кейс/область устарели — решение человека или стратегии, не воркера"}
       - {from: deprecated, to: retired, by: [human, test-maintainer],
          ref: "код теста удалён из suite, allure.id снят; терминал"}
+
+  # E5 (автозаведение exploratory-чартеров): вторая точка входа в машину
+  # charter'а — charter-designer (Opus) заводит чартер в Proposed (авто,
+  # каденция — правило rules.yaml, не эта матрица); прежний прямой путь
+  # человека/Lead сразу в Planned остаётся легальным (initial несёт оба
+  # статуса). Гейт Proposed→Planned — критик-на-план (CLAUDE.md пр.3):
+  # переход легален только когда frontmatter-поле plan_review заполнено
+  # PASS-вердиктом, зафиксированным в routing-журнале; сама проверка
+  # заполненности — не дело матрицы (она про актора/эффект), это делает
+  # координатор qa-loop/человек перед переходом.
+  charter:
+    initial: [Proposed, Planned]  # Proposed — charter-designer (авто); Planned — прежний прямой путь
+    terminal: [Done]
+    statuses: [Proposed, Planned, InProgress, Done, Blocked]
+    transitions:
+      - {from: Proposed, to: Planned, by: [human, qa-loop], effects: [plan_review_required],
+         ref: "гейт критик-на-план (CLAUDE.md пр.3): только при заполненном plan_review — вердикт PASS критик-входа, зафиксированный в routing-журнале"}
+      - {from: Planned, to: InProgress, by: [exploratory-tester],
+         ref: "лок взят, сессия идёт"}
+      - {from: InProgress, to: Done, by: [exploratory-tester],
+         ref: "протокол и follow-up заполнены"}
+      - {from: "*", to: Blocked, by: [factory], effects: [escalation],
+         ref: "критик FAIL по плану / деградация сессии"}
+      - {from: Blocked, to: Planned, by: [human],
+         ref: "человек/Lead разобрал причину блока"}
