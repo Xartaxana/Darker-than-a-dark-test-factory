@@ -4,16 +4,16 @@ title: "2 P0 canary tests не запускаются: отсутствуют ф
 type: test_debt
 debt_kind: missing_fixture
 severity: critical
-status: Open
+status: Fixed
 found_in: "регрессионный прогон canary suite (framework/tests/canary/test_ao3_selectors.py) — оба теста падают на setup с ошибкой fixture not found"
-fixed_in: ""
+fixed_in: "(test_debt, framework/tests/conftest.py — не сборка приложения) добавлены disliked_work_with_comment_seeded/disliked_work_with_custom_tag_seeded, по образцу disliked_work_with_tags_seeded/note_work_seeded"
 last_seen_in: ""
 test_cases: ["TC-075", "TC-077"]
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-07-20T00:00:00Z"
-updated: "2026-07-20T00:00:00Z"
+status_since: "2026-07-21T09:30:00Z"
+updated: "2026-07-21T09:30:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -82,12 +82,31 @@ fixture 'disliked_work_with_custom_tag_seeded' not found
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-07-21 (test-maintainer, реализация + само-верификация до D1) | app-under-test не менялся (test_debt, фикстуры добавлены в `framework/tests/conftest.py`) | TC-075 (`test_note_button_present_iff_comment_replay`), TC-077 (`test_tag_button_present_iff_custom_tag_replay`) — целевые; полный `test_ao3_selectors.py` (18 тестов) — регресс-контроль | Прогон 1 (целевые 2 теста, `Invoke-Pytest tests/canary/test_ao3_selectors.py::test_note_button_present_iff_comment_replay tests/canary/test_ao3_selectors.py::test_tag_button_present_iff_custom_tag_replay -v`): `2 passed in 56.62s`, `PYTEST_EXIT=0`. Прогон 2 (полный файл, тем же эмулятором): первые 12 тестов (включая TC-075/077 live+replay) `PASSED`, затем batch C (TC-078..083) упал на известном env-классе AT-BUG-021 (qemu-краш/device-not-found под `swiftshader_indirect` на тяжёлой Sort&Filter live-странице) — подтверждено `Get-Device: NO DEVICE`; TC-075/077 сама фикстура тут не при чём (падение до них не долетело). Прогон 3 (после `Start-Emulator -WritableSystem -Gpu host` + `Install-MitmCA` + `Install-App`, документированная в AT-BUG-021 config-митигация, БЕЗ правок кода): полный `test_ao3_selectors.py` — `18 passed in 409.50s`, `PYTEST_EXIT=0`, включая TC-075/077. Итого TC-075/TC-077 зелёные в 3 независимых прогонах подряд (целевой + 2× полный файл), регресса по остальным 16 тестам нет | **Fixed** (ждёт D1-верификацию fix-verifier — test_debt, сборку приложения ждать не нужно) |
 
 ## Обсуждение
 
 **[qa @ 2026-07-20T00:00:00Z]** Заведена очередь на две отсутствующие фикстуры, найденные при регрессионном прогоне canary suite (test-automator). Оба теста падают на setup-фазе с ошибкой fixture not found. Фикстуры должны быть реализованы по образцу `disliked_work_with_tags_seeded` и аналогичных в `conftest.py`, используя `seed_with_comment()` для сидинга `W.DISLIKED` с соответствующим комментарием и тегом.
 
 Awaiting dev.
+
+**[test-maintainer @ 2026-07-21T09:30:00Z]** Долг устранён. Добавлены две
+фикстуры в `framework/tests/conftest.py` (после `disliked_work_with_tags_seeded`,
+строка ~314): `disliked_work_with_comment_seeded()` — `W.DISLIKED` с рейтингом
+DISLIKE и комментарием "TC-075 seeded comment" через `seed_with_comment()`;
+`disliked_work_with_custom_tag_seeded()` — `W.DISLIKED` с рейтингом DISLIKE и
+личным тегом `["tc077-custom-tag"]`, заведомо отсутствующим среди AO3-тегов
+карточки `listing_basic.mitm`. Обе минимальны (~5 строк тела каждая),
+переиспользуют существующий `seed_with_comment()`/`W.DISLIKED`, без изменений
+в `app-under-test/`. TC-075/TC-077 зелёные (см. таблицу «Верификация»); попутно
+обнаружен НЕ вызванный этой правкой env-сбой batch C (device died mid-run под
+дефолтным `-gpu swiftshader_indirect`) — это уже задокументированный
+AT-BUG-021 (Verified, config-mitigation `-gpu host`), не новый долг; регресс-
+прогон после применения этой известной митигации показал полный `18 passed`.
+`status: Open → Fixed` (guard `{type: test_debt}`, B4, `test-maintainer`
+разрешён по `schemas/transitions.yaml`). Lock снят. TC-075.md/TC-077.md статус
+не менялся (вне скоупа — automated_by уже проставлен ранее тест-дизайнером/
+ревьюером, см. test-cases).
 
 ## Чек-лист качества (bug-reporter)
 - [x] Проверены дубликаты: фикстуры не упоминаются в других открытых багах

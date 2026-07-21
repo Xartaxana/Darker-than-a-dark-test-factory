@@ -312,6 +312,31 @@ def disliked_work_with_tags_seeded():
 
 
 @pytest.fixture()
+def disliked_work_with_comment_seeded():
+    """TC-075: работа `works.DISLIKED` засеяна с рейтингом DISLIKE и непустым
+    комментарием "TC-075 seeded comment" — Note-кнопка на replay-листинге
+    инжектируется тогда и только тогда, когда есть comment (тот же контракт, что
+    `note_work_seeded`/TC-044, на работе DISLIKED вместо READ, см. AT-BUG-023)."""
+    app_steps.clean_state()
+    app_steps.seed_with_comment([(W.DISLIKED, "DISLIKE", "TC-075 seeded comment", None)])
+    yield W.DISLIKED
+
+
+@pytest.fixture()
+def disliked_work_with_custom_tag_seeded():
+    """TC-077: работа `works.DISLIKED` засеяна с рейтингом DISLIKE и личным тегом
+    "tc077-custom-tag", заведомо отсутствующим среди AO3-тегов карточки в
+    `listing_basic.mitm` — Tag-кнопка на replay-листинге инжектируется тогда и
+    только тогда, когда есть личный тег вне AO3-тегов (тот же контракт, что
+    `tagged_work_seeded`/TC-056, на работе DISLIKED, см. AT-BUG-023)."""
+    app_steps.clean_state()
+    app_steps.seed_with_comment([
+        (W.DISLIKED, "DISLIKE", None, json.dumps(["tc077-custom-tag"])),
+    ])
+    yield W.DISLIKED
+
+
+@pytest.fixture()
 def tagged_work_seeded():
     """TC-056: работа `works.LOVED` засеяна с рейтингом LIKE и личными тегами
     `["Fluff", "Angst"]` — «Fluff» совпадает (без учёта регистра) с freeform-тегом
