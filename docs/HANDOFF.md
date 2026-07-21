@@ -238,6 +238,19 @@ reachability guard в `mitm.wait_device_proxy_reachable`, тест не долж
   `mission_leftover` CH-004, но сама причина (жест-классификатор) стоит
   зафиксировать здесь для следующего чартера/test-automator.
   (Нумерация (1)/(2) — бывшие (6)/(7) списка до свипа 2026-07-21.)
+- **Швы automated_by-семейства — named-not-covered (решение Lead
+  2026-07-21, правило 10г):** названы critic'ом при приёмке
+  automated-by-audit-0721; shadowing уже закрыт кодом (5b3fc0e),
+  осознанно НЕ заводятся: collectability (текстовый `def` ≠ реально
+  собирается pytest'ом — тот же корень, что низкий false-OK на def в
+  докстринге), automated_by↔allure.id-связка, red_probe-поле↔
+  существование пробы. Детектор утечки: первый живой инцидент любого
+  из них (триаж/приёмка) = прецедент заведения кода; превентивно не
+  заводить.
+- Прозаический status-лаг §9 designed-областей docs/01 (проза
+  «Review», факт Automated) — свип при следующем ревью §9 (находка
+  strategist nf-registry-0721; не load-bearing для needs-design
+  триггера).
 - **CH-004 Done (2026-07-21T18:40:00Z, /qa-loop 10 Sonnet):** 5 находок
   все `ok` (флагманская гипотеза «theme-reload теряет scroll» НЕ
   подтвердилась — scrollY/dim-состояние переживают reload), 0
