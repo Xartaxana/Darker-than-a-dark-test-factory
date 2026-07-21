@@ -46,6 +46,7 @@ except (AttributeError, ValueError):
 
 import board_sync as bs      # обход артефактов/парсер frontmatter
 import board_inbound as bi   # _rewrite_field/_set_field — правка frontmatter как в inbound
+import charter_utils         # обход exploratory-charters/ (дедуп D-0081, задача B)
 
 REPO = bs.REPO
 SLA_PATH = REPO / "state" / "sla.yaml"
@@ -144,33 +145,17 @@ def _severity_rule(meta: dict) -> str:
     return f"bug_open_{sev}" if f"bug_open_{sev}" in DEFAULTS else "bug_open_major"
 
 
-def _iter_charters() -> list[dict]:
-    """Frontmatter каждого charter'а exploratory-charters/, только верхний
-    уровень (не rglob — attachments/ не артефакты). Дублирует
-    queue_snapshot._iter_charters/stale_locks._iter_charter_locks — тот же
-    класс «список областей захардкожен в N местах», уже отмеченный в этих
-    двух модулях; здесь третий экземпляр намеренно НЕ вынесен в общий
-    модуль (вне owns этой задачи), REPO патчится per-module (ss.REPO), как
-    и остальные pre_step-скрипты (см. conftest.py fixture `repo`)."""
-    base = REPO / "exploratory-charters"
-    if not base.exists():
-        return []
-    out: list[dict] = []
-    for md in sorted(base.glob("*.md")):
-        if md.name.upper() == "README.MD":
-            continue
-        meta, _body = bs._parse_frontmatter(md.read_text(encoding="utf-8", errors="replace"))
-        if meta.get("id"):
-            out.append(meta)
-    return out
-
-
 def _charter_queue_wanted(now: datetime.datetime, thr: dict) -> dict[tuple[str, str], str]:
     """E5: fail-safe надзор за очередью exploratory charter'ов (см. докстринг
     модуля, правило charter_queue_empty). Возвращает {} (тихо) либо один
     (key, rule) -> сообщение с искусственным key "CHARTER-QUEUE" (проверка
-    не привязана к одному артефакту, как остальные правила этого файла)."""
-    charters = _iter_charters()
+    не привязана к одному артефакту, как остальные правила этого файла).
+
+    Обход charter'ов — charter_utils._iter_charters (дедуп D-0081 задача B);
+    REPO читается как модульная переменная ЭТОГО модуля (патчится
+    per-module в тестах, см. conftest.py fixture `repo` —
+    monkeypatch.setattr(ss, "REPO", ...))."""
+    charters = charter_utils._iter_charters(REPO)
     if not charters:
         return {("CHARTER-QUEUE", "charter_queue_empty"):
                 "exploratory-charters/ пуст или отсутствует "

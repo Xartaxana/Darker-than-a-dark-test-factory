@@ -42,6 +42,7 @@ except (AttributeError, ValueError):
     pass
 
 import board_sync as bs  # парсер frontmatter/обход артефактов — единое место правды
+import charter_utils     # обход exploratory-charters/ (дедуп D-0081, задача B)
 import sla_utils
 
 REPO = bs.REPO
@@ -65,37 +66,24 @@ def _parse_ts(value: str) -> datetime.datetime | None:
 
 
 def _iter_charter_locks():
-    """Charter'ы верхнего уровня exploratory-charters/ (*.md, НЕ attachments/).
+    """Charter'ы верхнего уровня exploratory-charters/ (*.md, НЕ attachments/),
+    как (type, meta, body, path) — форма, совместимая с bs._iter_artifacts()
+    для itertools.chain в sweep() ниже.
 
     Блокер critic-ревью механизма встройки charter'ов: exploratory-tester и
     диспатч кладут lock на charter, но bs._iter_artifacts() обходит только
     test-cases/bugs/runs (хардкод типов артефактов, board_sync.py:141) — лок
     charter'а протухал и не снимался никогда. Класс «список типов артефактов
-    захардкожен в N местах» — тот же, что у queue_snapshot._iter_charters
-    (там своя копия ради AREAS/факторстатуса); единый источник правды по
-    типам артефактов — отдельная задача очереди (расширение
-    bs._iter_artifacts() трогает борду, вне owns этой задачи).
+    захардкожен в N местах»; единый источник правды по типам артефактов —
+    отдельная задача очереди (расширение bs._iter_artifacts() трогает борду,
+    вне owns этой задачи).
 
-    Свой локальный итератор путей, а не переиспользование
-    queue_snapshot._iter_charters: та функция отдаёт только meta (без Path
-    src) — sweep() ниже нужен src для _clear_lock/rel.
-
-    Не-рекурсивный glob("*.md") + явный skip README (тот же приём, что у
-    bs._iter_artifacts) — НЕ фильтр по имени "CH-*.md": такой фильтр по
-    ошибке исключил бы charter с некорректным id/именем файла из обхода
-    (найдено эмпирически на прогоне: он ломал validate_frontmatter-тест на
-    заведомо плохой id — та же ловушка была бы и здесь для лока такого
-    файла, а он-то и есть кандидат застрять с протухшим локом).
-    """
-    base = REPO / "exploratory-charters"
-    if not base.exists():
-        return
-    for md in sorted(base.glob("*.md")):
-        if md.name.upper() == "README.MD":
-            continue
-        meta, body = bs._parse_frontmatter(md.read_text(encoding="utf-8", errors="replace"))
-        if meta.get("id"):
-            yield "charter", meta, body, md
+    Обход каталога — charter_utils._iter_charter_files (дедуп D-0081 задача B):
+    та функция отдаёт (meta, body, path) без типа-метки "charter" — этот
+    генератор добавляет её сверху, т.к. sweep() ниже нужен src (Path) для
+    _clear_lock/rel, а не просто список meta, как у sla_sweep/queue_snapshot."""
+    for meta, body, md in charter_utils._iter_charter_files(REPO):
+        yield "charter", meta, body, md
 
 
 def load_lock_stale_hours() -> float:

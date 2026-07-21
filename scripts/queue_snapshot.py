@@ -26,6 +26,7 @@ except (AttributeError, ValueError):
     pass
 
 import board_sync as bs
+import charter_utils   # обход exploratory-charters/ (дедуп D-0081, задача B)
 
 REPO = bs.REPO
 OUT_PATH = REPO / "state" / "factory-status.md"
@@ -78,45 +79,20 @@ def _escalation_lines() -> list[str]:
             if l.startswith("- [")]
 
 
-def _iter_charters() -> list[dict]:
-    """Frontmatter каждого charter'а exploratory-charters/ (E4 pipeline wiring).
-
-    bs._iter_artifacts() не знает про этот каталог (AREAS там захардкожен на
-    test-cases/bugs/runs — правка вне owns этой задачи), поэтому сканируем
-    отдельно, тем же парсером (bs._parse_frontmatter). Каталога может не быть
-    или быть пустым — это НЕ ошибка, просто пустой список (нули в отчёте).
-    Читает REPO как модульную переменную (не константу, зафиксированную при
-    импорте) — так же, как тесты monkeypatch'ят `qs.REPO` для остальных секций.
-
-    ТОЛЬКО верхний уровень (не-рекурсивный glob "*.md", не rglob) —
-    attachments/*.md (скриншоты/.xml дампы UI-дерева сессий
-    exploratory-tester'а) не артефакты и не должны попадать в
-    счётчики/статусы (находка critic N3, расхождение охватов со SKILL; тот
-    же класс сужения, что у validate_frontmatter.py и
-    stale_locks.py._iter_charter_locks для этого каталога). Фильтр по
-    имени файла "CH-*.md" НЕ используется — он исключил бы charter с
-    некорректным id/именем из обхода (эмпирически ловится тестом
-    validate_frontmatter на заведомо плохой id, см. e4-charter-lock-reaper).
-    """
-    base = REPO / "exploratory-charters"
-    if not base.exists():
-        return []
-    out: list[dict] = []
-    for md in sorted(base.glob("*.md")):
-        if md.name.upper() == "README.MD":
-            continue
-        meta, _body = bs._parse_frontmatter(md.read_text(encoding="utf-8", errors="replace"))
-        if meta.get("id"):
-            out.append(meta)
-    return out
-
-
 def _charter_stats() -> dict:
     """E5 (шаг 2 метрик автозаведения): charters_executed — число Done;
     bugs_per_charter — среднее found_bugs на Done-чартер (0 при нуле Done,
     без деления на ноль — round(), НЕ int-деление); new_tc_from_charters —
-    суммарно followup_tc по Done (сумма, не среднее, как раньше tc_from_charters)."""
-    charters = _iter_charters()
+    суммарно followup_tc по Done (сумма, не среднее, как раньше tc_from_charters).
+
+    bs._iter_artifacts() не знает про exploratory-charters/ (AREAS там
+    захардкожен на test-cases/bugs/runs — правка вне owns этой задачи) —
+    обход общий, charter_utils._iter_charters (дедуп D-0081 задача B; см.
+    модуль для деталей: только верхний уровень, skip README, только записи
+    с id). REPO читается как модульная переменная (не константа,
+    зафиксированная при импорте) — так же, как тесты monkeypatch'ят
+    `qs.REPO` для остальных секций."""
+    charters = charter_utils._iter_charters(REPO)
     status_counts: Counter = Counter(str(c.get("status") or "n/a") for c in charters)
     done = [c for c in charters if str(c.get("status")) == "Done"]
     charters_executed = len(done)
