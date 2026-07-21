@@ -65,7 +65,17 @@ def resolve_automated_by(automated_by: str, repo: Path) -> tuple[bool, str]:
     """(ok, reason). reason пуст при ok=True. Статический regex-поиск
     `def <func>(` (учитывает `async def`, отступ — методы классов) —
     не импорт: framework/tests/*.py тянет фикстуры appium/adb, которые
-    здесь недоступны и не нужны для проверки самого факта резолюции."""
+    здесь недоступны и не нужны для проверки самого факта резолюции.
+
+    Shadowing (2026-07-21, батч мелочей №3): ДВА+ определения `def
+    <func_name>` с одним именем в одном файле — MISMATCH, не тихий OK.
+    Раньше `re.search` брал первое совпадение и молча резолвил успех,
+    даже если второе (или третье) определение того же имени ниже по
+    файлу — реальная тихая подмена (shadowing): непонятно, какое из
+    определений реально исполняется при импорте pytest-модуля (в
+    Python побеждает ПОСЛЕДНЕЕ, а не первое — расхождение с прежним
+    `re.search`-поведением этой функции само по себе было тихой
+    ошибкой независимо от automated_by)."""
     parts = automated_by.split("::")
     if len(parts) < 2:
         return False, f"нет разделителя `::` в `{automated_by}`"
@@ -75,8 +85,14 @@ def resolve_automated_by(automated_by: str, repo: Path) -> tuple[bool, str]:
         return False, f"файл не существует: {rel_path}"
     text = file_path.read_text(encoding="utf-8", errors="replace")
     pattern = rf"^\s*(?:async\s+)?def\s+{re.escape(func_name)}\s*\("
-    if not re.search(pattern, text, re.MULTILINE):
+    matches = re.findall(pattern, text, re.MULTILINE)
+    if not matches:
         return False, f"`def {func_name}` не найдено в {rel_path}"
+    if len(matches) > 1:
+        return False, (
+            f"{len(matches)} определений `def {func_name}` в {rel_path} "
+            "(shadowing — резолвится первое, тихая подмена)"
+        )
     return True, ""
 
 
@@ -155,6 +171,26 @@ def test_resolve_automated_by_finds_async_and_indented_def(tmp_path):
     ok_async, _ = resolve_automated_by("test_fake2.py::test_async_thing", tmp_path)
     assert ok_method
     assert ok_async
+
+
+def test_resolve_automated_by_shadowed_duplicate_def_is_mismatch(tmp_path):
+    """Красная проба (батч мелочей №3, 2026-07-21): файл с ДВУМЯ def одного
+    имени — MISMATCH-класс shadowing, не тихий OK на первом совпадении.
+    Пруф-конструкция: без shadowing-детекта старое поведение (`re.search`)
+    молча резолвило бы `ok=True` по первому def, хотя реально исполняется
+    ВТОРОЙ (Python resolves last def at import) — то же расхождение, что
+    класс AT-BUG-022 «деливерабл-дрейф», но внутри одного файла, не между
+    frontmatter и деревом."""
+    fake_file = tmp_path / "test_shadow.py"
+    fake_file.write_text(
+        "def test_thing():\n    return 1\n\n"
+        "def test_thing():\n    return 2\n",
+        encoding="utf-8",
+    )
+    ok, reason = resolve_automated_by("test_shadow.py::test_thing", tmp_path)
+    assert not ok
+    assert "shadowing" in reason
+    assert "2" in reason
 
 
 def test_collect_mismatches_red_probe_on_synthetic_test_case(tmp_path):
