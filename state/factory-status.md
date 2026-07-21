@@ -1,12 +1,12 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-21T10:35:04Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-07-21T13:24:59Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **463.0** (RUN-20260702-0300)
+- smoke: Closed · smoke_freshness_hours: **465.8** (RUN-20260702-0300)
 - regression: not_run
 - canary: not_run
 - Открытые blocker/critical: **0**
@@ -16,7 +16,7 @@ generated_at: 2026-07-21T10:35:04Z · генератор: `scripts/queue_snapsho
   - непокрытые P0: TC-079, TC-081, TC-083
 - Test debt открыт: **0**
 - Карантин автотестов: **0**
-- Automated без red_probe: **28** — TC-021, TC-050, TC-051, TC-052, TC-053, TC-054, TC-055, TC-034, TC-035, TC-036, TC-038, TC-039, TC-016, TC-017, TC-027, TC-028, TC-029, TC-030, TC-007, TC-008, TC-047, TC-048, TC-049, TC-001, TC-002, TC-003, TC-004, TC-005
+- Automated без red_probe: **29** — TC-021, TC-050, TC-051, TC-052, TC-053, TC-054, TC-055, TC-034, TC-035, TC-036, TC-038, TC-039, TC-016, TC-017, TC-027, TC-028, TC-029, TC-030, TC-007, TC-008, TC-047, TC-048, TC-049, TC-001, TC-002, TC-003, TC-004, TC-005, TC-084
 - Untriaged: **0** · untriaged_failure_age: **0**
 
 ## Сборка под тестом
