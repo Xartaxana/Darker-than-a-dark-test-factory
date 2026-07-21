@@ -329,3 +329,9 @@ reachability guard в `mitm.wait_device_proxy_reachable`, тест не долж
   применим к любому деплою с хуками. К решению Lead AO3: примерить на
   свою hook-инфраструктуру (порт/адаптация/н-п с основанием). Референс:
   OS tools/session_context.py (блок wiring) + tools/test_session_context_wiring.py.
+- ВХОДЯЩЕЕ ОТ OS (07-21, ось 1, t-259 OS): машиночитаемый вердикт
+  критика — схема (verdict/blockers/class_completeness/trail) +
+  fail-closed чекер последнего fenced json-блока; ваш critic.md сдаёт
+  свободный текст — класс применим. К решению Lead AO3
+  (порт/адаптация/н-п). Референс: OS tools/critic_verdict.schema.json +
+  tools/critic_verdict_check.py + правило 16 в .claude/agents/critic_staged.md.
