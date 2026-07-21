@@ -2,27 +2,27 @@
 key: "TC-092"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Работа со скрытым рейтингом в dim-режиме остаётся на листинге, но затемнена (opacity 0.3)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:visibility", "risk:R-06"]
+labels: ["test-case", "area:visibility", "risk:R-06", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-20T01:38:45Z"
-updated: "2026-07-20T01:38:45Z"
+created: "2026-07-21T15:54:38Z"
+updated: "2026-07-21T15:54:38Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Работа со скрытым рейтингом в dim-режиме остаётся на листинге, но затемнена (opacity 0.3)
 
 _Спроецировано из `test-cases/visibility/TC-092.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-092 — dim-режим затемняет карточку вместо удаления
 

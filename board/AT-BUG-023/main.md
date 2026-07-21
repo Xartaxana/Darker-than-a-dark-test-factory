@@ -2,7 +2,7 @@
 key: "AT-BUG-023"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p0"
 summary: "2 P0 canary tests не запускаются: отсутствуют фикстуры disliked_work_with_comment_seeded и disliked_work_with_custom_tag_seeded в conftest.py"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-21T09:30:00Z"
-updated: "2026-07-21T09:30:00Z"
+created: "2026-07-21T16:20:00Z"
+updated: "2026-07-21T16:20:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # 2 P0 canary tests не запускаются: отсутствуют фикстуры disliked_work_with_comment_seeded и disliked_work_with_custom_tag_seeded в conftest.py
 
 _Спроецировано из `bugs/AT-BUG-023.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # AT-BUG-023 — Отсутствуют фикстуры для replay-тестов Note и Tag кнопок
 
@@ -87,8 +87,66 @@ fixture 'disliked_work_with_custom_tag_seeded' not found
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
 | 2026-07-21 (test-maintainer, реализация + само-верификация до D1) | app-under-test не менялся (test_debt, фикстуры добавлены в `framework/tests/conftest.py`) | TC-075 (`test_note_button_present_iff_comment_replay`), TC-077 (`test_tag_button_present_iff_custom_tag_replay`) — целевые; полный `test_ao3_selectors.py` (18 тестов) — регресс-контроль | Прогон 1 (целевые 2 теста, `Invoke-Pytest tests/canary/test_ao3_selectors.py::test_note_button_present_iff_comment_replay tests/canary/test_ao3_selectors.py::test_tag_button_present_iff_custom_tag_replay -v`): `2 passed in 56.62s`, `PYTEST_EXIT=0`. Прогон 2 (полный файл, тем же эмулятором): первые 12 тестов (включая TC-075/077 live+replay) `PASSED`, затем batch C (TC-078..083) упал на известном env-классе AT-BUG-021 (qemu-краш/device-not-found под `swiftshader_indirect` на тяжёлой Sort&Filter live-странице) — подтверждено `Get-Device: NO DEVICE`; TC-075/077 сама фикстура тут не при чём (падение до них не долетело). Прогон 3 (после `Start-Emulator -WritableSystem -Gpu host` + `Install-MitmCA` + `Install-App`, документированная в AT-BUG-021 config-митигация, БЕЗ правок кода): полный `test_ao3_selectors.py` — `18 passed in 409.50s`, `PYTEST_EXIT=0`, включая TC-075/077. Итого TC-075/TC-077 зелёные в 3 независимых прогонах подряд (целевой + 2× полный файл), регресса по остальным 16 тестам нет | **Fixed** (ждёт D1-верификацию fix-verifier — test_debt, сборку приложения ждать не нужно) |
+| 2026-07-21T16:20:00Z (fix-verifier, mode=verify, независимая верификация) | framework @ `1666078` (коммит `f2cc7a7` содержит фикстуры в `framework/tests/conftest.py`, независимо подтверждено `git log` + `grep` строк 315/326 ДО прогонов) | TC-075/TC-077 (целевые, изолированно); полный `test_ao3_selectors.py` (18 тестов) — регресс-контроль, дважды (дефолтный GPU и с `-Gpu host`) | Прогон 1 (целевые): `2 passed in 53.53s`, `PYTEST_EXIT=0`. Прогон 2 (полный файл, дефолтный `swiftshader_indirect`, БЕЗ `-Gpu host`): TC-066..079 (14 тестов, включая TC-075/077) все PASSED, затем эмулятор упал mid-run на TC-080 (тот же класс AT-BUG-021, `Get-Device` → `NO DEVICE` подтверждено) — `1 failed, 14 passed, 3 errors in 401.55s`, `PYTEST_EXIT=1`; падение НЕ связано с фикстурами этого бага (TC-080..083 их не используют). Прогон 3 (перезапуск `Start-Emulator -WritableSystem -Gpu host` + `Install-MitmCA` + `Install-App` + `Start-Appium`, config-митигация AT-BUG-021, без правок кода): полный `test_ao3_selectors.py` — `18 passed in 356.77s`, `PYTEST_EXIT=0`, включая весь batch C (TC-078..083). Оба целевых теста зелёные в 2 независимых прогонах (изолированный + полный), регресс TC-067..083 чист под известной config-митигацией | **Verified** |
 
 ## Обсуждение
+
+**[fix-verifier @ 2026-07-21T16:20:00Z] mode=verify, Fixed → Verified.**
+Независимо подтверждено ДО прогонов: `grep -n "disliked_work_with_comment_seeded\|
+disliked_work_with_custom_tag_seeded" framework/tests/conftest.py` — обе фикстуры
+реально в файле (строки 315 и 326), `git log --oneline -- framework/tests/
+conftest.py` показывает коммит `f2cc7a7 AT-BUG-023: добавлены фикстуры
+conftest.py для TC-075/TC-077` — фактически закоммичено, не unstaged.
+Прочитано тело обеих фикстур: `disliked_work_with_comment_seeded` сидит
+`W.DISLIKED`/DISLIKE с комментарием "TC-075 seeded comment";
+`disliked_work_with_custom_tag_seeded` сидит `W.DISLIKED`/DISLIKE с тегом
+`["tc077-custom-tag"]` — соответствует заявленному в «Критерии готовности».
+
+Окружение: `Start-Emulator -WritableSystem -Gpu host` (CA переустановлен) →
+`Install-App` → `Start-Appium`.
+
+Прогон 1 (целевые тесты): `Invoke-Pytest tests/canary/test_ao3_selectors.py::
+test_note_button_present_iff_comment_replay tests/canary/test_ao3_selectors.py::
+test_tag_button_present_iff_custom_tag_replay -v` — **2 passed in 53.53s**,
+`PYTEST_EXIT=0`.
+
+Прогон 2 (полный `test_ao3_selectors.py`, 18 тестов, дефолтный GPU-бэкенд
+`swiftshader_indirect`, без `-Gpu host`): TC-066..079 (14 тестов) все PASSED
+(включая TC-075/077), затем эмулятор упал mid-run на TC-080
+(`test_exclude_main_pairing_checkbox_availability_live`, тяжёлая live-страница
+Sort&Filter) с сигнатурой `WebDriverException: disconnected: not connected to
+DevTools` → `adb: device 'emulator-5554' not found` для всех дальнейших
+действий — подтверждено `Get-Device` → `NO DEVICE`. Это ТОТ ЖЕ уже
+задокументированный класс `bugs/AT-BUG-021.md` (Verified, `debt_kind:
+broken_environment`, config-митигация `-Gpu host`) — не новый долг этого бага
+и не относится к фикстурам TC-075/077 (упавшие TC-080/081/082/083 их не
+используют). Итог прогона 2: `1 failed, 14 passed, 3 errors in 401.55s`,
+`PYTEST_EXIT=1` — зафиксировано честно, не скрыто.
+
+Прогон 3 (перезапуск `Start-Emulator -WritableSystem -Gpu host` +
+`Install-MitmCA` + `Install-App` + `Start-Appium`, документированная
+config-митигация AT-BUG-021, БЕЗ правок кода): полный `test_ao3_selectors.py`
+— **18 passed in 356.77s**, `PYTEST_EXIT=0`, включая TC-075/077 и весь batch C
+(TC-078..083). Критерий готовности «smoke-регрессия на TC-067..083 (batch C
+p0) без отказа» подтверждён под задокументированной config-митигацией
+известного env-долга (не под дефолтным GPU-бэкендом, который сам является
+отдельным, уже верифицированным долгом AT-BUG-021 — смешивать их в вердикт
+этого бага не нужно).
+
+Оба целевых теста PASSED в 2 независимых прогонах (изолированный + полный
+регресс), обе фикстуры реально в `conftest.py` и закоммичены, регресс TC-067..
+083 чист под известной митигацией. **Вердикт: Fixed → Verified.**
+
+**Дефект-собрат (не новый баг, для внимания):** тот же класс, что фиксировал
+test-maintainer в этом же баге — smoke-регрессия batch C систематически
+зависит от применения `-Gpu host`; если это не задокументировано как
+обязательный шаг канонического прогона `test_ao3_selectors.py` (а не только
+как факт в AT-BUG-021), стоит явно пометить в `docs/environment-setup.md`/
+README фреймворка, что регресс canary-suite ПОЛНОСТЬЮ (включая batch C)
+требует `-Gpu host` — иначе каждый следующий прогонщик наткнётся на тот же
+env-класс заново и потратит цикл на диагностику уже решённой проблемы.
+
+Lock снят.
 
 **[qa @ 2026-07-20T00:00:00Z]** Заведена очередь на две отсутствующие фикстуры, найденные при регрессионном прогоне canary suite (test-automator). Оба теста падают на setup-фазе с ошибкой fixture not found. Фикстуры должны быть реализованы по образцу `disliked_work_with_tags_seeded` и аналогичных в `conftest.py`, используя `seed_with_comment()` для сидинга `W.DISLIKED` с соответствующим комментарием и тегом.
 

@@ -2,27 +2,27 @@
 key: "TC-093"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Переключение Display mode Hide→Dim в Settings меняет поведение фильтрации на уже открытом листинге (live-push)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:visibility", "risk:R-06"]
+labels: ["test-case", "area:visibility", "risk:R-06", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-20T01:38:53Z"
-updated: "2026-07-20T01:38:53Z"
+created: "2026-07-21T15:54:38Z"
+updated: "2026-07-21T15:54:38Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Переключение Display mode Hide→Dim в Settings меняет поведение фильтрации на уже открытом листинге (live-push)
 
 _Спроецировано из `test-cases/visibility/TC-093.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-093 — Живое переключение Display mode Hide→Dim без перезагрузки листинга
 

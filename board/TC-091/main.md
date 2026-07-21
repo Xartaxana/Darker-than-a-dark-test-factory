@@ -2,27 +2,27 @@
 key: "TC-091"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Тап по выбранному чипу удаляет личный тег работы"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:rating", "risk:R-10"]
+labels: ["test-case", "area:rating", "risk:R-10", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-20T01:41:26Z"
-updated: "2026-07-20T01:41:26Z"
+created: "2026-07-21T15:54:38Z"
+updated: "2026-07-21T15:54:38Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Тап по выбранному чипу удаляет личный тег работы
 
 _Спроецировано из `test-cases/rating/TC-091.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-091 — Тап по чипу удаляет личный тег
 

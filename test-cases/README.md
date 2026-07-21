@@ -5,7 +5,15 @@
 
 Раскладка по областям: `test-cases/<area>/TC-xxx.md`
 (`rating`, `visibility`, `tabs`, `library`, `downloads`, `filter-profiles`,
-`backup`, `settings`, `browser`, `errors`, `canary`).
+`backup`, `settings`, `browser`, `errors`, `canary`, `performance`).
+
+Область `performance` — нефункциональный smoke E2 (docs/01 §9, R-12): cold
+start, WebView first load, отсутствие crash/ANR/fatal, memory sanity длинной
+сессии. Пороги — относительные бюджеты/тренды, не абсолютный SLA; `features`
+непусто (валидатор требует непустой список), но связь ПРИБЛИЗИТЕЛЬНАЯ —
+ближайшая по смыслу существующая запись реестра, не заявление, что кейс
+проверяет Then этой фичи (сами пороговые/трендовые проверки дискретной
+UI-фичей не покрыты).
 
 Область `browser` — оверлейные контролы поверх экрана Browse: side panel
 (`BrowseSidePanel.kt` — тема/шрифт как второй UI-вход в тот же `SettingsViewModel`,

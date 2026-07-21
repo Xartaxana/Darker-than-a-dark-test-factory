@@ -2,27 +2,27 @@
 key: "TC-095"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Скрытие рейтинга Kudosed (не-Disliked) в Settings исключает только работы с этим рейтингом, остальные видны"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:visibility", "risk:R-06"]
+labels: ["test-case", "area:visibility", "risk:R-06", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-20T01:39:00Z"
-updated: "2026-07-20T01:39:00Z"
+created: "2026-07-21T15:54:38Z"
+updated: "2026-07-21T15:54:38Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Скрытие рейтинга Kudosed (не-Disliked) в Settings исключает только работы с этим рейтингом, остальные видны
 
 _Спроецировано из `test-cases/visibility/TC-095.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-095 — Скрытие Kudosed не задевает остальные рейтинги
 

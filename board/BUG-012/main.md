@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-19T09:55:00Z"
-updated: "2026-07-19T09:55:00Z"
+created: "2026-07-21T15:39:44Z"
+updated: "2026-07-21T15:39:44Z"
 archived: false
 resolution: null
 ---
@@ -107,6 +107,7 @@ fun confirmClearAll() {
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-07-21 | 1.10 (versionCode 11), emulator-5554 | TC-020 (`test_clear_all_ratings_resets_open_work_page_badge`, skip временно снят для контрольного прогона, возвращён тем же ходом) + `test_smoke.py` (9/9 полный регресс-контроль) | TC-020: FAILED (репро подтверждено) — `TimeoutException`: "рейтинг SAVE остаётся в выбранном виде (luma не поднялась выше 178.9, baseline выбранного=134.2) после Clear all ratings — бейдж не обновился без reload"; тот же метод/пороги, что witness test-automator 2026-07-18. `test_smoke.py`: 9/9 PASSED (0:03:45), регрессии нет | still-repro (D3): баг воспроизводится ТЕМ ЖЕ СПОСОБОМ на текущей сборке — статус НЕ меняется (Open, known_issue=true, awaiting=dev остаются штатно) |
 
 ## Обсуждение
 
@@ -150,3 +151,27 @@ test-cases/settings/TC-020.md обновлена на новый id.
 `test_clear_all_ratings_resets_open_work_page_badge` остаётся в файле под
 `@pytest.mark.skip` как witness. Возврат TC-020 в `Approved` — когда BUG-012
 дойдёт до `Fixed` (фикс-верификация D1 включит снятие skip и прогон).
+
+**2026-07-21T15:39:44Z — fix-verifier (Sonnet), still-repro (D3), сборка 1.10
+(versionCode 11), emulator-5554:** подтверждаю, репро живо тем же способом.
+`@pytest.mark.skip` временно снят ТОЛЬКО для контрольного прогона
+`test_clear_all_ratings_resets_open_work_page_badge` (не мой мандат чинить
+тест/TC-020 — статус TC-020 не трогал) и восстановлен дословно тем же ходом
+(`git diff` после отката пуст). Прогон FAILED тем же luma-методом и теми же
+порогами, что witness test-automator 2026-07-18: baseline(selected)=134.2,
+порог деселекта 178.9, после Clear all + возврата на Browse без reload luma
+не поднялась выше порога — бейдж «Loved» остаётся в выбранном виде. Смок
+`test_smoke.py` — 9/9 PASSED, регрессии в области settings/rating/browse не
+внесено. `last_seen_in` обновлён на `1.10 (versionCode 11)`. Статус НЕ меняю
+(остаётся `Open`, `known_issue: true`, `awaiting: dev`) — это штатное
+подтверждение «не ухудшился», а не новый вердикт; решение по фиксу — за
+разработчиком, как и было. Аналогов не замечено (класс локализован в одном
+методе `SettingsViewModel.confirmClearAll()`, других Clear all-путей в коде
+нет).
+
+**Витнес дословно (добавлено координатором по находке critic-входа приёмки —
+предыдущая запись несла пересказ, не точный вывод прогона):**
+```
+framework/tests/test_settings.py::test_clear_all_ratings_resets_open_work_page_badge FAILED: TimeoutException — рейтинг SAVE остаётся выбранным (luma не поднялась выше 178.9, baseline=134.2) после Clear all ratings
+tests/test_smoke.py: 9 passed in 225.21s (0:03:45), PYTEST_EXIT=0
+```

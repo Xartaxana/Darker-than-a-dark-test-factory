@@ -2,7 +2,7 @@
 key: "TC-079"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p0"
 summary: "Чекбокс 'Main pairing only' инжектируется в include-фильтр формы Sort&Filter, доступен только при ровно одном выбранном relationship-теге (replay)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-18T08:56:39Z"
-updated: "2026-07-18T08:56:39Z"
+created: "2026-07-21T16:07:49Z"
+updated: "2026-07-21T16:07:49Z"
 archived: false
 resolution: null
 ---

@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-21T13:25:00Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-21T16:47:13Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -11,16 +11,17 @@ generated_at: 2026-07-21T13:25:00Z · генератор: `scripts/coverage_map.
 |---|---|---|---|
 | backup | 1 | 1 | designed-full |
 | browser | 9 | 9 | designed-full |
-| canary | 18 | 15 | partial |
+| canary | 18 | 17 | partial |
 | downloads | 8 | 8 | designed-full |
 | errors | 1 | 1 | designed-full |
 | filter-profiles | 5 | 5 | designed-full |
 | library | 15 | 15 | designed-full |
-| rating | 14 | 13 | partial |
+| performance | 4 | 0 | none |
+| rating | 14 | 14 | designed-full |
 | settings | 7 | 6 | partial |
 | smoke | 5 | 5 | designed-full |
 | tabs | 6 | 6 | designed-full |
-| visibility | 6 | 3 | partial |
+| visibility | 6 | 6 | designed-full |
 
 ## Риски (docs/01-test-strategy.md §5) → покрытие
 
@@ -37,7 +38,7 @@ generated_at: 2026-07-21T13:25:00Z · генератор: `scripts/coverage_map.
 | R-11 | TECH | browser:TC-050, browser:TC-051, browser:TC-052, browser:TC-053, browser:TC-054, browser:TC-055, browser:TC-057, browser:TC-058, settings:TC-047, settings:TC-048, settings:TC-049, settings:TC-059 |
 | R-09 | BUS | filter-profiles:TC-040, filter-profiles:TC-041, filter-profiles:TC-042, filter-profiles:TC-085, filter-profiles:TC-086 |
 | R-10 | DATA | library:TC-089, rating:TC-043, rating:TC-044, rating:TC-045, rating:TC-056, rating:TC-087, rating:TC-088, rating:TC-090, rating:TC-091 |
-| R-12 | PERF | риск не покрыт дизайном |
+| R-12 | PERF | performance:TC-096, performance:TC-097, performance:TC-098, performance:TC-099 |
 | R-13 | A11Y | риск не покрыт дизайном |
 | R-14 | COMPAT | риск не покрыт дизайном |
 | R-15 | SEC | риск не покрыт дизайном |
@@ -46,8 +47,8 @@ generated_at: 2026-07-21T13:25:00Z · генератор: `scripts/coverage_map.
 
 | Фича | Экран | Кейсы |
 |---|---|---|
-| browse-tab-limit-max | browse | tabs:TC-022[Automated] |
-| browse-tab-close-undo | browse | tabs:TC-023[Automated] |
+| browse-tab-limit-max | browse | tabs:TC-022[Automated], performance:TC-099[Approved] |
+| browse-tab-close-undo | browse | tabs:TC-023[Automated], performance:TC-099[Approved] |
 | browse-tab-undo-history-limit | browse | tabs:TC-024[Automated] |
 | browse-tab-list-persistence | browse | tabs:TC-025[Automated] |
 | browse-tab-open-background-link | browse | tabs:TC-026[Automated] |
@@ -62,12 +63,12 @@ generated_at: 2026-07-21T13:25:00Z · генератор: `scripts/coverage_map.
 | browse-two-finger-brightness | browse | browser:TC-055[Automated] |
 | browse-bridge-injection | browse | canary:TC-066[Automated], canary:TC-067[Automated], canary:TC-068[Automated], canary:TC-069[Automated] |
 | browse-tabstrip-indicators | browse | нет кейсов |
-| browse-bottombar-nav | browse | smoke:TC-002[Automated] |
+| browse-bottombar-nav | browse | smoke:TC-002[Automated], performance:TC-098[Approved] |
 | sidepanel-home | side-panel | browser:TC-057[Automated] |
 | sidepanel-theme-toggle | side-panel | browser:TC-050[Automated] |
 | sidepanel-font-size | side-panel | browser:TC-051[Automated], browser:TC-052[Automated] |
 | sidepanel-fullscreen-toggle | side-panel | browser:TC-058[Automated] |
-| sidepanel-rating-filters | side-panel | browser:TC-094[Automated], visibility:TC-095[Approved] |
+| sidepanel-rating-filters | side-panel | browser:TC-094[Automated], visibility:TC-095[Automated] |
 | sidepanel-settings-sync-theme-font | side-panel | browser:TC-054[Automated] |
 | sidepanel-settings-sync-hidden-ratings | side-panel | browser:TC-094[Automated] |
 | library-tabs-six | library | smoke:TC-003[Automated], library:TC-006[Automated], library:TC-016[Automated], library:TC-017[Automated], rating:TC-043[Automated] |
@@ -91,8 +92,8 @@ generated_at: 2026-07-21T13:25:00Z · генератор: `scripts/coverage_map.
 | settings-webview-dark-mode | settings | settings:TC-048[Automated], browser:TC-050[Automated], settings:TC-059[Automated] |
 | settings-font-slider | settings | нет кейсов |
 | settings-brightness-slider | settings | нет кейсов |
-| settings-rating-visibility-filter | settings | visibility:TC-015[Automated], visibility:TC-095[Approved] |
-| settings-filter-display-mode | settings | visibility:TC-093[Approved] |
+| settings-rating-visibility-filter | settings | visibility:TC-015[Automated], visibility:TC-095[Automated] |
+| settings-filter-display-mode | settings | visibility:TC-093[Automated] |
 | settings-panel-side | settings | нет кейсов |
 | settings-tap-to-scroll-toggle | settings | нет кейсов |
 | settings-infinite-scroll-toggle | settings | нет кейсов |
@@ -106,26 +107,26 @@ generated_at: 2026-07-21T13:25:00Z · генератор: `scripts/coverage_map.
 | settings-filter-profiles-list | settings | нет кейсов |
 | settings-filter-profiles-delete | settings | filter-profiles:TC-042[Automated] |
 | settings-filter-profiles-rename | settings | filter-profiles:TC-085[Automated], filter-profiles:TC-086[Automated] |
-| browser-filter-profile-save | ao3-bridge | filter-profiles:TC-040[Automated], canary:TC-082[Automated], canary:TC-083[Approved] |
+| browser-filter-profile-save | ao3-bridge | filter-profiles:TC-040[Automated], canary:TC-082[Automated], canary:TC-083[Automated] |
 | browser-filter-profile-apply | browse | filter-profiles:TC-041[Automated] |
 | browser-error-page | browse | errors:TC-046[Automated] |
 | bridge-tag-highlight | ao3-bridge | rating:TC-056[Automated] |
-| browse-initial-load | browse | smoke:TC-001[Automated] |
-| rating-overlay-five-options | rating-notes | rating:TC-007[Automated], rating:TC-009[Automated] |
+| browse-initial-load | browse | smoke:TC-001[Automated], performance:TC-096[Approved], performance:TC-097[Approved], performance:TC-098[Approved] |
+| rating-overlay-five-options | rating-notes | rating:TC-007[Automated], rating:TC-009[Automated], performance:TC-098[Approved] |
 | rating-deselect-on-tap | rating-notes | rating:TC-008[Automated] |
 | rating-comment-save | rating-notes | rating:TC-087[Automated] |
 | rating-comment-clear | rating-notes | rating:TC-088[Automated] |
 | rating-tags-chip-add | rating-notes | rating:TC-090[Automated] |
-| rating-tags-chip-remove | rating-notes | rating:TC-091[Approved] |
+| rating-tags-chip-remove | rating-notes | rating:TC-091[Automated] |
 | rating-entry-work-panel | rating-notes | rating:TC-007[Automated], rating:TC-008[Automated], rating:TC-010[Automated] |
 | rating-entry-listing-overlay | rating-notes | rating:TC-009[Automated], rating:TC-011[Automated] |
 | rating-note-button-listing | rating-notes | rating:TC-044[Automated] |
 | bridge-rate-note-tag-buttons | ao3-bridge | canary:TC-068[Automated], canary:TC-069[Automated], canary:TC-070[Automated], canary:TC-071[Automated], canary:TC-072[Automated], canary:TC-073[Automated], canary:TC-074[Automated], canary:TC-075[Automated], canary:TC-076[Automated], canary:TC-077[Automated] |
 | bridge-badge-sync-multi | ao3-bridge | rating:TC-012[Automated] |
 | bridge-hide-filter | ao3-bridge | visibility:TC-013[Automated], visibility:TC-014[Automated], visibility:TC-015[Automated], rating:TC-043[Automated], rating:TC-045[Automated] |
-| bridge-dim-filter | ao3-bridge | visibility:TC-092[Approved] |
+| bridge-dim-filter | ao3-bridge | visibility:TC-092[Automated] |
 | bridge-main-pairing-filter | ao3-bridge | canary:TC-078[Automated], canary:TC-079[Approved] |
-| bridge-exclude-main-pairing-filter | ao3-bridge | canary:TC-080[Automated], canary:TC-081[Approved] |
+| bridge-exclude-main-pairing-filter | ao3-bridge | canary:TC-080[Automated], canary:TC-081[Automated] |
 | bridge-dark-css | ao3-bridge | нет кейсов |
 | bridge-scroll-reporting | ao3-bridge | нет кейсов |
 | data-workrating-model | data | нет кейсов |
@@ -191,16 +192,16 @@ generated_at: 2026-07-21T13:25:00Z · генератор: `scripts/coverage_map.
 
 ### canary
 
-- coverage_status: **partial** (15/18 Automated)
+- coverage_status: **partial** (17/18 Automated)
 - риски: R-02, R-02/R-04
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-079 [P0, Approved], TC-081 [P0, Approved], TC-083 [P0, Approved]
-- автотесты (automated_by): framework/tests/canary/test_ao3_selectors.py::test_bridge_marker_present_live, framework/tests/canary/test_ao3_selectors.py::test_bridge_marker_present_replay, framework/tests/canary/test_ao3_selectors.py::test_exclude_main_pairing_checkbox_availability_live, framework/tests/canary/test_ao3_selectors.py::test_exclude_main_pairing_checkbox_availability_replay, framework/tests/canary/test_ao3_selectors.py::test_main_pairing_checkbox_availability_live, framework/tests/canary/test_ao3_selectors.py::test_note_button_present_iff_comment_live, framework/tests/canary/test_ao3_selectors.py::test_note_button_present_iff_comment_replay, framework/tests/canary/test_ao3_selectors.py::test_rate_button_badge_opaque_color_live, framework/tests/canary/test_ao3_selectors.py::test_rate_button_badge_opaque_color_replay, framework/tests/canary/test_ao3_selectors.py::test_rate_button_injected_on_live_listing, framework/tests/canary/test_ao3_selectors.py::test_rate_button_injected_on_replay_listing, framework/tests/canary/test_ao3_selectors.py::test_save_filter_button_idempotent_live, framework/tests/canary/test_ao3_selectors.py::test_save_filter_button_idempotent_replay, framework/tests/canary/test_ao3_selectors.py::test_tag_button_present_iff_custom_tag_live, framework/tests/canary/test_ao3_selectors.py::test_tag_button_present_iff_custom_tag_replay, framework/tests/canary/test_ao3_selectors.py::test_work_blurb_selector_matches_live_listing, framework/tests/canary/test_ao3_selectors.py::test_work_blurb_selector_matches_replay_listing
+- P0/P1 не в Automated: TC-079 [P0, Approved]
+- автотесты (automated_by): framework/tests/canary/test_ao3_selectors.py::test_bridge_marker_present_live, framework/tests/canary/test_ao3_selectors.py::test_bridge_marker_present_replay, framework/tests/canary/test_ao3_selectors.py::test_exclude_main_pairing_checkbox_availability_live, framework/tests/canary/test_ao3_selectors.py::test_exclude_main_pairing_checkbox_availability_replay, framework/tests/canary/test_ao3_selectors.py::test_main_pairing_checkbox_availability_live, framework/tests/canary/test_ao3_selectors.py::test_main_pairing_checkbox_availability_replay, framework/tests/canary/test_ao3_selectors.py::test_note_button_present_iff_comment_live, framework/tests/canary/test_ao3_selectors.py::test_note_button_present_iff_comment_replay, framework/tests/canary/test_ao3_selectors.py::test_rate_button_badge_opaque_color_live, framework/tests/canary/test_ao3_selectors.py::test_rate_button_badge_opaque_color_replay, framework/tests/canary/test_ao3_selectors.py::test_rate_button_injected_on_live_listing, framework/tests/canary/test_ao3_selectors.py::test_rate_button_injected_on_replay_listing, framework/tests/canary/test_ao3_selectors.py::test_save_filter_button_idempotent_live, framework/tests/canary/test_ao3_selectors.py::test_save_filter_button_idempotent_replay, framework/tests/canary/test_ao3_selectors.py::test_tag_button_present_iff_custom_tag_live, framework/tests/canary/test_ao3_selectors.py::test_tag_button_present_iff_custom_tag_replay, framework/tests/canary/test_ao3_selectors.py::test_work_blurb_selector_matches_live_listing, framework/tests/canary/test_ao3_selectors.py::test_work_blurb_selector_matches_replay_listing
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
-| P0 |  |  | 3 | 15 |  |
+| P0 |  |  | 1 | 17 |  |
 | P1 |  |  |  |  |  |
 | P2 |  |  |  |  |  |
 | P3 |  |  |  |  |  |
@@ -269,19 +270,35 @@ generated_at: 2026-07-21T13:25:00Z · генератор: `scripts/coverage_map.
 | P2 |  |  |  | 2 |  |
 | P3 |  |  |  | 1 |  |
 
+### performance
+
+- coverage_status: **none** (0/4 Automated)
+- риски: R-12
+- кейсы без risk: нет
+- P0/P1 не в Automated: TC-096 [P1, Approved], TC-097 [P1, Approved], TC-098 [P0, Approved], TC-099 [P0, Approved]
+- автотесты (automated_by): —
+- last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
+
+| Priority | Draft | Review | Approved | Automated | Blocked |
+|---|---|---|---|---|---|
+| P0 |  |  | 2 |  |  |
+| P1 |  |  | 2 |  |  |
+| P2 |  |  |  |  |  |
+| P3 |  |  |  |  |  |
+
 ### rating
 
-- coverage_status: **partial** (13/14 Automated)
+- coverage_status: **designed-full** (14/14 Automated)
 - риски: R-04, R-10
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-091 [P1, Approved]
+- P0/P1 не в Automated: нет
 - автотесты (automated_by): framework/tests/test_rating.py::test_deselect_rating_on_work_page_panel, framework/tests/test_rating.py::test_rate_work_from_work_page_panel, framework/tests/test_rating_listing.py::test_add_freeform_tag_persists, framework/tests/test_rating_listing.py::test_apply_ratings_syncs_duplicate_blurbs, framework/tests/test_rating_listing.py::test_clear_note_removes_comment, framework/tests/test_rating_listing.py::test_comment_only_visible_on_listing_and_absent_from_rating_tabs, framework/tests/test_rating_listing.py::test_listing_rate_button_updates_without_reload, framework/tests/test_rating_listing.py::test_matching_personal_tag_highlighted_on_listing, framework/tests/test_rating_listing.py::test_note_button_opens_overlay_with_expanded_comment, framework/tests/test_rating_listing.py::test_panel_rating_updates_without_reload, framework/tests/test_rating_listing.py::test_personal_tags_do_not_affect_visibility, framework/tests/test_rating_listing.py::test_rate_work_from_listing_overlay, framework/tests/test_rating_listing.py::test_save_note_persists_comment, framework/tests/test_rating_listing.py::test_tap_selected_chip_removes_tag
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  | 3 |  |
-| P1 |  |  | 1 | 6 |  |
+| P1 |  |  |  | 7 |  |
 | P2 |  |  |  | 3 |  |
 | P3 |  |  |  | 1 |  |
 
@@ -335,17 +352,17 @@ generated_at: 2026-07-21T13:25:00Z · генератор: `scripts/coverage_map.
 
 ### visibility
 
-- coverage_status: **partial** (3/6 Automated)
+- coverage_status: **designed-full** (6/6 Automated)
 - риски: R-06
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-092 [P1, Approved], TC-093 [P1, Approved], TC-095 [P1, Approved]
+- P0/P1 не в Automated: нет
 - автотесты (automated_by): framework/tests/test_visibility.py::test_dim_mode_dims_hidden_rating_blurb, framework/tests/test_visibility.py::test_disliked_hidden_on_listing, framework/tests/test_visibility.py::test_disliked_visible_after_hide_toggle_off, framework/tests/test_visibility.py::test_display_mode_hide_to_dim_live_push, framework/tests/test_visibility.py::test_hide_kudosed_only_excludes_kudosed, framework/tests/test_visibility.py::test_no_rating_or_comment_only_never_hidden
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  | 3 |  |
-| P1 |  |  | 3 |  |  |
+| P1 |  |  |  | 3 |  |
 | P2 |  |  |  |  |  |
 | P3 |  |  |  |  |  |
 

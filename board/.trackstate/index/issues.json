@@ -537,7 +537,7 @@
     "epicPath": null,
     "summary": "Чекбокс 'Main pairing only' инжектируется в include-фильтр формы Sort&Filter, доступен только при ровно одном выбранном relationship-теге (replay)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -545,7 +545,7 @@
       "area:canary",
       "risk:R-02"
     ],
-    "updated": "2026-07-18T08:56:39Z",
+    "updated": "2026-07-21T16:07:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -582,16 +582,17 @@
     "epicPath": null,
     "summary": "Чекбокс исключения main pairing инжектируется в exclude-фильтр формы Sort&Filter, доступен только при ровно одном выбранном relationship-теге (replay)",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:canary",
-      "risk:R-02"
+      "risk:R-02",
+      "automation:active"
     ],
-    "updated": "2026-07-18T09:15:14Z",
-    "resolution": null,
+    "updated": "2026-07-21T15:54:38Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -627,16 +628,17 @@
     "epicPath": null,
     "summary": "Кнопка 'Save filter' инжектируется рядом с submit формы Sort&Filter и не дублируется при повторных мутациях формы (replay)",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:canary",
-      "risk:R-02"
+      "risk:R-02",
+      "automation:active"
     ],
-    "updated": "2026-07-18T09:15:18Z",
-    "resolution": null,
+    "updated": "2026-07-21T15:54:38Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1307,6 +1309,94 @@
     "archived": false
   },
   {
+    "key": "TC-096",
+    "path": "board/TC-096/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Холодный старт приложения укладывается в относительный бюджет TotalTime (am start -W)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:performance",
+      "risk:R-12"
+    ],
+    "updated": "2026-07-21T15:12:03Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-097",
+    "path": "board/TC-097/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Первая загрузка WebView укладывается в относительный бюджет до сигнала завершения загрузки (replay)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:performance",
+      "risk:R-12"
+    ],
+    "updated": "2026-07-21T15:12:09Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-098",
+    "path": "board/TC-098/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Отсутствие FATAL EXCEPTION/ANR в logcat при прогоне P0-smoke",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:performance",
+      "risk:R-12"
+    ],
+    "updated": "2026-07-21T15:11:58Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-099",
+    "path": "board/TC-099/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Память не растёт безоткатно за длинную WebView-сессию до 10 табов",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:performance",
+      "risk:R-12"
+    ],
+    "updated": "2026-07-21T15:12:43Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "TC-007",
     "path": "board/TC-007/main.md",
     "parent": null,
@@ -1614,16 +1704,17 @@
     "epicPath": null,
     "summary": "Тап по выбранному чипу удаляет личный тег работы",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:rating",
-      "risk:R-10"
+      "risk:R-10",
+      "automation:active"
     ],
-    "updated": "2026-07-20T01:41:26Z",
-    "resolution": null,
+    "updated": "2026-07-21T15:54:38Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -2116,16 +2207,17 @@
     "epicPath": null,
     "summary": "Работа со скрытым рейтингом в dim-режиме остаётся на листинге, но затемнена (opacity 0.3)",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:visibility",
-      "risk:R-06"
+      "risk:R-06",
+      "automation:active"
     ],
-    "updated": "2026-07-20T01:38:45Z",
-    "resolution": null,
+    "updated": "2026-07-21T15:54:38Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -2138,16 +2230,17 @@
     "epicPath": null,
     "summary": "Переключение Display mode Hide→Dim в Settings меняет поведение фильтрации на уже открытом листинге (live-push)",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:visibility",
-      "risk:R-06"
+      "risk:R-06",
+      "automation:active"
     ],
-    "updated": "2026-07-20T01:38:53Z",
-    "resolution": null,
+    "updated": "2026-07-21T15:54:38Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -2160,16 +2253,17 @@
     "epicPath": null,
     "summary": "Скрытие рейтинга Kudosed (не-Disliked) в Settings исключает только работы с этим рейтингом, остальные видны",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:visibility",
-      "risk:R-06"
+      "risk:R-06",
+      "automation:active"
     ],
-    "updated": "2026-07-20T01:39:00Z",
-    "resolution": null,
+    "updated": "2026-07-21T15:54:38Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -2647,7 +2741,7 @@
     "epicPath": null,
     "summary": "Нет наблюдения, различающего рабочий switchTab от no-op, когда цель — вкладка-0: assert_active_tab_url(HOME) после reduce-to-one тривиально проходит независимо от факта переключения — блокирует TC-084",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2655,8 +2749,8 @@
       "test_case:TC-084",
       "sev:major"
     ],
-    "updated": "2026-07-21T12:01:54Z",
-    "resolution": null,
+    "updated": "2026-07-21T15:40:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -2669,7 +2763,7 @@
     "epicPath": null,
     "summary": "2 P0 canary tests не запускаются: отсутствуют фикстуры disliked_work_with_comment_seeded и disliked_work_with_custom_tag_seeded в conftest.py",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -2678,8 +2772,8 @@
       "test_case:TC-077",
       "sev:critical"
     ],
-    "updated": "2026-07-21T09:30:00Z",
-    "resolution": null,
+    "updated": "2026-07-21T16:20:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -2744,7 +2838,7 @@
       "test_case:TC-020",
       "sev:minor"
     ],
-    "updated": "2026-07-19T09:55:00Z",
+    "updated": "2026-07-21T15:39:44Z",
     "resolution": null,
     "children": [],
     "archived": false
