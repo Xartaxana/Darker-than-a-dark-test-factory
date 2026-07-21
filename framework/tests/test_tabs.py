@@ -313,3 +313,60 @@ def test_long_press_link_opens_background_tab_without_switching(replay, clean_ap
     browser_steps.switch_to_tab(driver, 1)
     browser_steps.swipe_close_tab(driver, 0)
     browser_steps.assert_active_tab_url(driver, first_work.url)
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-084")
+@allure.title("Тап по чипу неактивной вкладки активирует её и переключает контент WebView")
+@pytest.mark.parametrize("replay", [rb.TAB_MARKER_FILENAME], indirect=True)
+def test_tap_inactive_tab_chip_activates_it(replay, clean_app, driver):
+    """AT-BUG-022 (Fixed): reduce-to-one (established-приём TC-023/024/025/026)
+    структурно не различает «switchTab(0) сработал» от «switchTab(0) — no-op»,
+    когда цель тапа — вкладка 0 (sticky-прилипание chromedriver к вкладке-0
+    делает `assert_active_tab_url(HOME)` тривиально истинным независимо от
+    факта переключения, см. полный разбор конфаунда в bugs/AT-BUG-022.md). Then
+    доказывается через `assert_tab_became_active_via_scroll` — scrollY-
+    асимметрию нативного скролла (эмпирически подтверждена на эмуляторе
+    2026-07-20, см. «Обсуждение» бага)."""
+    app_steps.wait_home_ready_for_deep_link(driver)
+    title1 = rb.tab_marker_title(1)
+    title2 = rb.tab_marker_title(2)
+
+    # Given открыто 3 вкладки: 0 — Home, 1 — маркер 1, 2 — маркер 2 (последняя
+    # созданная deep-link'ом добавляется В КОНЕЦ и становится активной — см.
+    # модульный докстринг про openOrNavigateDeepLink, BrowserViewModel.kt:637-644).
+    # Активна вкладка 2, как и требует Given TC-084. TabStrip (и с ним чипы)
+    # рендерится только при tabs>1 (см. заметки TC-022.md) — заголовок вкладки 0
+    # читаем ПОСЛЕ первого deep-link'а, не до него.
+    app_steps.open_deep_link(rb.tab_marker_url(1))
+    browser_steps.assert_tab_title_visible(driver, title1, timeout=15)
+    home_title = browser_steps.tab_chip_title_at(driver, 0)
+    app_steps.open_deep_link(rb.tab_marker_url(2))
+    browser_steps.assert_tab_title_visible(driver, title2, timeout=15)
+    browser_steps.assert_tab_title_at_position(driver, 0, home_title)
+    browser_steps.assert_tab_title_at_position(driver, 1, title1)
+    browser_steps.assert_tab_title_at_position(driver, 2, title2)
+
+    # When пользователь тапает по чипу вкладки 0 (неактивной — активна вкладка 2)
+    browser_steps.switch_to_tab(driver, 0)
+
+    # Then вкладка 0 становится ФИЗИЧЕСКИ активной — доказано scrollY-
+    # асимметрией нативного скролла, а не reduce-to-one (тот приём для цели=0
+    # структурно не различает переключение от no-op, см. bugs/AT-BUG-022.md)
+    browser_steps.assert_tab_became_active_via_scroll(driver, target_position=0)
+
+    # And набор вкладок не изменился этим действием — соседи на позициях 1/2
+    # сохраняют те же заголовки/URL, что были до тапа (switchTab — чистая смена
+    # индекса, не создаёт и не закрывает вкладки, BrowserViewModel.kt:289-295)
+    browser_steps.assert_tab_title_at_position(driver, 0, home_title)
+    browser_steps.assert_tab_title_at_position(driver, 1, title1)
+    browser_steps.assert_tab_title_at_position(driver, 2, title2)
+
+    # And повторный тап по уже активному чипу (вкладка 0) не меняет состояние —
+    # число, порядок и заголовки вкладок остаются теми же (идемпотентность
+    # switchTab на уже активном индексе)
+    browser_steps.switch_to_tab(driver, 0)
+    browser_steps.assert_tab_title_at_position(driver, 0, home_title)
+    browser_steps.assert_tab_title_at_position(driver, 1, title1)
+    browser_steps.assert_tab_title_at_position(driver, 2, title2)
