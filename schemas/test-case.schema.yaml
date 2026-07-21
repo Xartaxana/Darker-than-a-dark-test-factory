@@ -20,8 +20,11 @@ fields:
   requirements: {}
   # trace-matrix диспатч 1 (2026-07-17): список id из docs/feature-registry.yaml.
   # Кросс-файловая проверка (id ∉ реестра → ERROR) — validate_frontmatter.py
-  # check_feature_ids; отсутствующее/пустое поле — WARNING, не ERROR (backfill
-  # данных — диспатч 2, отдельная приёмка).
+  # check_feature_ids; отсутствующее/пустое поле — ERROR с 2026-07-17
+  # (error-flip; было WARNING на момент написания этого комментария —
+  # комментарий догоняет фактическое поведение validate_frontmatter.py,
+  # см. правило «пустой features для нефункциональных областей» — решение
+  # политики в очереди Lead, не меняется этой правкой).
   features: {}
   # B5 (docs/09 Этап 2): причина простоя в Blocked; см. schemas/bug.schema.yaml.
   blocked_reason: { enum: [environment, missing_fixture, product_decision, dev_answer, permissions] }
