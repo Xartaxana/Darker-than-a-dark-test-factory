@@ -321,3 +321,11 @@ reachability guard в `mitm.wait_device_proxy_reachable`, тест не долж
   от которого зависит истинность «без reload») не процитирован явно в
   теле кейса — некритичная находка critic, дописать при следующей правке.
 - Опционально (владелец): del C:\Windows\System32\drivers\aehd.sys.
+- ВХОДЯЩЕЕ ОТ OS (07-21, ось 1, t-257 OS): wiring-integrity чек —
+  SessionStart-хук OS теперь проверяет целостность enforcement-проводки
+  (hooksPath + существование/импортируемость каждого хук-файла из
+  settings.json + python в PATH) и печатает WIRING OK/WARNING в Boot
+  Report; класс «хуки умирают молча — неотличимо от "всё прошло"»
+  применим к любому деплою с хуками. К решению Lead AO3: примерить на
+  свою hook-инфраструктуру (порт/адаптация/н-п с основанием). Референс:
+  OS tools/session_context.py (блок wiring) + tools/test_session_context_wiring.py.
