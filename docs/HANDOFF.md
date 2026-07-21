@@ -264,30 +264,20 @@ reachability guard в `mitm.wait_device_proxy_reachable`, тест не долж
 
 ## Открытые хвосты (вне текущей очереди)
 
-- **Батч мелочей (D-0081; копится, уходит builder'у одним пакетом на
-  границе этапа):** (1) parity-тест «каждый dispatch-агент rules.yaml
-  есть в enum agent-output.schema.yaml (кроме critic — исключён
-  намеренно)» — класс-детектор находки B1 критика 2026-07-21;
-  (2) дедуп `_iter_charters()` — 3-й экземпляр в sla_sweep.py
-  (сиблинг-находка builder, ещё в queue_snapshot.py и
-  stale_locks.py) — вынести в общий модуль;
-  (3) sibling-находка critic D1-верификации AT-BUG-022 (2026-07-21,
-  /qa-loop 10 Sonnet): `automated_by` остальных 12 кейсов F1 batch 6
-  (`9eb15e4`) не сверены на совпадение с реально существующими
-  функциями теста — тот же класс, что дважды ронял этот баг
-  (заявленный `automated_by` указывал на несуществующую функцию);
-  (4) sibling-находка того же ревью: обязательность `-Gpu host` для
-  полного canary-регресса (batch C, TC-078..083) не задокументирована
-  в `docs/environment-setup.md`/README — без неё каждый следующий
-  прогонщик натыкается на уже решённый AT-BUG-021 заново;
-  (5) устаревший комментарий схемы `schemas/test-case.schema.yaml:21-24`
-  (говорит «пустой features — WARNING», а `validate_frontmatter.py`
-  делает ERROR с 2026-07-17, error-flip) — находка test-designer при
-  дизайне области performance (2026-07-21); владелец схемы также должен
-  решить, допускать ли пустой `features` для нефункциональных
-  cross-cutting областей (perf/stability, canary-подобные) вместо
-  приблизительной привязки к ближайшему функциональному id;
-  (6) sibling-находка CH-004 (exploratory-tester, 2026-07-21T18:40:00Z):
+- **Батч мелочей (D-0081)** — пп.(1)–(5) прежнего списка ЗАКРЫТЫ
+  2026-07-21 Fable-сессией «улучшение фабрики» двумя принятыми батчами
+  (misc-batch-0721: a07b2fd/027681e/6e79586/ac620f3; misc-batch2-0721:
+  5bbba9c/1dfc25d — оба critic PASS, witness в routing-log): parity-тесты
+  rules.yaml↔enum↔роли↔model (двусторонние, scripts/tests/
+  test_rules_agent_parity.py), дедуп `_iter_charters` (charter_utils.py),
+  runbook `-Gpu host` в environment-setup (+точная атрибуция сигнатур
+  021/016), комментарий схемы features. Судьба бывших (3) и (5):
+  automated_by-аудит 9eb15e4 — В РАБОТЕ (automated-by-audit-0721,
+  аудит + parity-тест automated_by→функция); решение по пустому
+  `features` ПРИНЯТО оператором 2026-07-21 — НЕ допускать, вместо
+  этого nf-записи реестра — В РАБОТЕ (nf-registry-0721). ЖИВОЙ
+  остаток батча:
+  (1) sibling-находка CH-004 (exploratory-tester, 2026-07-21T18:40:00Z):
   `driver.get()` на WebView этого приложения виснет неограниченно, если
   load-событие не срабатывает — воспроизведено И под live, И под replay
   одинаково (не Cloudflare-специфично), `driver.set_page_load_timeout`
@@ -301,6 +291,7 @@ reachability guard в `mitm.wait_device_proxy_reachable`, тест не долж
   непокрытыми ПО ЭТОЙ причине (не по недостатку времени), уже в
   `mission_leftover` CH-004, но сама причина (жест-классификатор) стоит
   зафиксировать здесь для следующего чартера/test-automator.
+  (Нумерация (1)/(2) — бывшие (6)/(7) списка до свипа 2026-07-21.)
 - **CH-004 Done (2026-07-21T18:40:00Z, /qa-loop 10 Sonnet):** 5 находок
   все `ok` (флагманская гипотеза «theme-reload теряет scroll» НЕ
   подтвердилась — scrollY/dim-состояние переживают reload), 0
@@ -381,14 +372,12 @@ reachability guard в `mitm.wait_device_proxy_reachable`, тест не долж
   оба теста written, mojibake-корень — reconfigure после parse_args —
   устранён; заодно errors=replace в 12 скриптах класса и doctor-баг
   «rc!=0 = полный клон»).
-- hygiene_gate v2 (остаточный риск critic, не блокер): подстрочная
-  детекция «канонического вызова» гасится упоминанием log_append.py в
-  любом месте команды (комментарий-обход) — ужесточить до
-  формы-префикса при касании; для WARN-режима v1 приемлемо. Обратная
-  сторона той же грубости — первый живой FALSE-POSITIVE (07-19, этой
-  же сессией): git commit, чьё СООБЩЕНИЕ упоминает «orchestrator-log»
-  и содержит `>` в тексте, словил warn — v2 должен исключать
-  commit-message-контекст.
+- ~~hygiene_gate v2~~ — ХВОСТ УСТАРЕЛ: v2 реализован ещё 2026-07-20
+  (990615e — канон формой-префикса + вырезание commit-message, оба
+  описанных здесь дефекта закрыты; critic PASS, accepted by fable,
+  журнал hygiene-gate-v2). Остаточные дыры HoleA/HoleB признаны ценой
+  warn-режима (докстринг scripts/hygiene_gate.py); ужесточение — только
+  по evidence утечки (правило 10г). Вычищено 2026-07-21 Fable-сессией.
 - Некритичные замечания critic по AT-BUG-004 инкр.3 (при касании
   файлов): докстринг assert_rating_badge_visible; ListingPage.badge_for.
 - TC-028: устаревшая заметка про эскалацию seed_db — почистит reviewer.
