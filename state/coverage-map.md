@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-21T17:02:37Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-21T17:25:29Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -47,8 +47,8 @@ generated_at: 2026-07-21T17:02:37Z · генератор: `scripts/coverage_map.
 
 | Фича | Экран | Кейсы |
 |---|---|---|
-| browse-tab-limit-max | browse | tabs:TC-022[Automated], performance:TC-099[Approved] |
-| browse-tab-close-undo | browse | tabs:TC-023[Automated], performance:TC-099[Approved] |
+| browse-tab-limit-max | browse | tabs:TC-022[Automated] |
+| browse-tab-close-undo | browse | tabs:TC-023[Automated] |
 | browse-tab-undo-history-limit | browse | tabs:TC-024[Automated] |
 | browse-tab-list-persistence | browse | tabs:TC-025[Automated] |
 | browse-tab-open-background-link | browse | tabs:TC-026[Automated] |
@@ -63,7 +63,7 @@ generated_at: 2026-07-21T17:02:37Z · генератор: `scripts/coverage_map.
 | browse-two-finger-brightness | browse | browser:TC-055[Automated] |
 | browse-bridge-injection | browse | canary:TC-066[Automated], canary:TC-067[Automated], canary:TC-068[Automated], canary:TC-069[Automated] |
 | browse-tabstrip-indicators | browse | нет кейсов |
-| browse-bottombar-nav | browse | smoke:TC-002[Automated], performance:TC-098[Approved] |
+| browse-bottombar-nav | browse | smoke:TC-002[Automated] |
 | sidepanel-home | side-panel | browser:TC-057[Automated] |
 | sidepanel-theme-toggle | side-panel | browser:TC-050[Automated] |
 | sidepanel-font-size | side-panel | browser:TC-051[Automated], browser:TC-052[Automated] |
@@ -111,8 +111,8 @@ generated_at: 2026-07-21T17:02:37Z · генератор: `scripts/coverage_map.
 | browser-filter-profile-apply | browse | filter-profiles:TC-041[Automated] |
 | browser-error-page | browse | errors:TC-046[Automated] |
 | bridge-tag-highlight | ao3-bridge | rating:TC-056[Automated] |
-| browse-initial-load | browse | smoke:TC-001[Automated], performance:TC-096[Approved], performance:TC-097[Approved], performance:TC-098[Approved] |
-| rating-overlay-five-options | rating-notes | rating:TC-007[Automated], rating:TC-009[Automated], performance:TC-098[Approved] |
+| browse-initial-load | browse | smoke:TC-001[Automated] |
+| rating-overlay-five-options | rating-notes | rating:TC-007[Automated], rating:TC-009[Automated] |
 | rating-deselect-on-tap | rating-notes | rating:TC-008[Automated] |
 | rating-comment-save | rating-notes | rating:TC-087[Automated] |
 | rating-comment-clear | rating-notes | rating:TC-088[Automated] |
@@ -134,6 +134,16 @@ generated_at: 2026-07-21T17:02:37Z · генератор: `scripts/coverage_map.
 | data-clear-all-ratings | data | smoke:TC-004[Automated], settings:TC-018[Automated], settings:TC-019[Automated], settings:TC-020[Blocked] |
 | background-download-repository | background | downloads:TC-032[Automated], downloads:TC-033[Automated] |
 | background-auto-download-trigger | background | downloads:TC-032[Automated] |
+| nf-perf-cold-start-budget | non-functional | performance:TC-096[Approved] |
+| nf-perf-webview-first-load-budget | non-functional | performance:TC-097[Approved] |
+| nf-stability-no-crash-anr | non-functional | performance:TC-098[Approved] |
+| nf-perf-memory-trend | non-functional | performance:TC-099[Approved] |
+| nf-sec-exported-components | non-functional | нет кейсов |
+| nf-sec-cleartext-traffic | non-functional | нет кейсов |
+| nf-sec-js-bridge-exposure | non-functional | нет кейсов |
+| nf-sec-file-access | non-functional | нет кейсов |
+| nf-sec-backup-privacy | non-functional | нет кейсов |
+| nf-sec-logcat-leak | non-functional | нет кейсов |
 
 ## Фичи без единого кейса
 
@@ -155,6 +165,12 @@ generated_at: 2026-07-21T17:02:37Z · генератор: `scripts/coverage_map.
 - bridge-scroll-reporting (ao3-bridge): Отчёт позиции скролла и прогресса чтения (глава/%) в Kotlin
 - data-workrating-model (data): Room-сущность WorkRating (rating/comment/tags/fandom/author/wordCount/downloadPath)
 - data-filterprofile-model (data): Room-сущность FilterProfile (name/queryString)
+- nf-sec-exported-components (non-functional): НФ-sec: exported-компоненты — MainActivity exported=true с VIEW/BROWSABLE intent-filter (archiveofourown.org); статическая инспекция манифеста APK
+- nf-sec-cleartext-traffic (non-functional): НФ-sec: политика cleartext-трафика (манифест/network-security-config; intent-filter несёт http://archiveofourown.org — cleartext-политику стоит проверить)
+- nf-sec-js-bridge-exposure (non-functional): НФ-sec: @JavascriptInterface (window.Android) экспонирован WebView, грузящему удалённый AO3-контент (addJavascriptInterface)
+- nf-sec-file-access (non-functional): НФ-sec: WebView allowFileAccess=true + file://-доступ ограничен SAF-выбранной папкой, нет traversal за разрешённый путь
+- nf-sec-backup-privacy (non-functional): НФ-sec: приватность бэкапа — allowBackup=true + fullBackupContent/dataExtractionRules; SAF-экспорт JSON не пишется в мир-читаемое место
+- nf-sec-logcat-leak (non-functional): НФ-sec: отсутствие чувствительных данных (cookie/session/токены/локальные пути) в logcat при smoke (cross-cutting, adb-скан)
 
 ## Области
 

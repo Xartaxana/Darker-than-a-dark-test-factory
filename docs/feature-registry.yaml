@@ -511,3 +511,78 @@ features:
     title: "Автозапуск скачивания при простановке рейтинга Favorite (SAVE), если тумблер включён"
     screen: background
     source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt"
+
+  # ── Нефункциональные cross-cutting области ────────────────────────────────
+  # Решение владельца 2026-07-21 (диспатч test-strategist): пустой `features` НЕ
+  # допускается (валидатор check_feature_ids: пусто/отсутствует=ERROR), поэтому
+  # нефункциональные cross-cutting области получают СОБСТВЕННЫЕ записи реестра —
+  # так инвариант «пусто=ERROR» сохраняется, а coverage_map.py видит область
+  # (кейс тегируется nf-записью, а не приблизительной функциональной привязкой,
+  # искажавшей покрытие функции: перф-кейс, тегнутый browse-initial-load, ложно
+  # зачитывал эту фичу «покрытой»).
+  # Эти записи ОПРЕДЕЛЕНЫ ИЗМЕРЕНИЕМ/проверкой, а не дискретной код-фичей: `source`
+  # указывает на ПЕРВИЧНЫЙ якорь измеряемой подсистемы (не заявление, что вся
+  # «фича» живёт в одном файле — часть свойств cross-cutting по всему процессу).
+  # Гранулярность (правило шапки): одна запись = одно наблюдаемо различимое
+  # НФ-свойство. cold-start-тайминг / webview-load-тайминг / стабильность
+  # (crash/ANR) / память-тренд — разные When/Then, поэтому разные записи, не один
+  # зонтик «performance». Область растёт (E2/E4-min остаток docs/01 §9) — новые
+  # пробы = новые записи. inventoried_at_commit не тронут: это не переинвентаризация
+  # кода (та же сборка 63f6aac), а заведение cross-cutting НФ-записей.
+
+  # E2 performance/stability (docs/01 §5 R-12; область §9 «performance/stability
+  # smoke (E2)», designed 2026-07-21). Каждая запись покрыта ровно одним кейсом
+  # TC-096..099 (Then кейса = Then записи).
+  - id: nf-perf-cold-start-budget
+    title: "НФ: холодный старт процесса укладывается в относительный бюджет (am start -W TotalTime/WaitTime)"
+    screen: non-functional
+    source: "app/src/main/java/com/example/ao3_wrapper/MainActivity.kt"
+  - id: nf-perf-webview-first-load-budget
+    title: "НФ: первая загрузка WebView укладывается в относительный бюджет до сигнала завершения onPageFinished (replay)"
+    screen: non-functional
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserScreen.kt"
+  - id: nf-stability-no-crash-anr
+    title: "НФ: отсутствие FATAL EXCEPTION / ANR в logcat при представительном smoke-прогоне (cross-cutting)"
+    screen: non-functional
+    source: "app/src/main/java/com/example/ao3_wrapper/MainActivity.kt"
+  - id: nf-perf-memory-trend
+    title: "НФ: рост памяти длинной WebView-сессии (до 10 табов) обратим — PSS откатывается после закрытия вкладок, а не растёт безоткатно"
+    screen: non-functional
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserScreen.kt"
+
+  # E4-min security/privacy (docs/01 §5 R-15; область §9 «security/privacy smoke
+  # (E4→минимальный)», needs-design). Кейсов ещё НЕТ — записи заведены заранее,
+  # чтобы будущие security-кейсы (дизайн следующим /qa-loop) тегировались
+  # реальными id, а не приблизительной привязкой, и чтобы фичи были видны в
+  # coverage_map «Фичи без единого кейса» как непокрытые (прямой вход needs-design).
+  # Скоуп минимальный (решение владельца 2026-07-14): статическая инспекция
+  # манифеста + adb-пробы; НЕ полный аудит (§8). Одна запись = один распознаваемый
+  # класс проверки (bullet'ы §9 security), сверено с кодом:
+  # AndroidManifest.xml (allowBackup=true стр.9, exported=true стр.20,
+  # intent-filter http/https archiveofourown.org стр.30-36),
+  # BrowserScreen.kt (allowFileAccess=true стр.529, addJavascriptInterface(bridge,
+  # "Android") стр.535).
+  - id: nf-sec-exported-components
+    title: "НФ-sec: exported-компоненты — MainActivity exported=true с VIEW/BROWSABLE intent-filter (archiveofourown.org); статическая инспекция манифеста APK"
+    screen: non-functional
+    source: "app/src/main/AndroidManifest.xml"
+  - id: nf-sec-cleartext-traffic
+    title: "НФ-sec: политика cleartext-трафика (манифест/network-security-config; intent-filter несёт http://archiveofourown.org — cleartext-политику стоит проверить)"
+    screen: non-functional
+    source: "app/src/main/AndroidManifest.xml"
+  - id: nf-sec-js-bridge-exposure
+    title: "НФ-sec: @JavascriptInterface (window.Android) экспонирован WebView, грузящему удалённый AO3-контент (addJavascriptInterface)"
+    screen: non-functional
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserScreen.kt"
+  - id: nf-sec-file-access
+    title: "НФ-sec: WebView allowFileAccess=true + file://-доступ ограничен SAF-выбранной папкой, нет traversal за разрешённый путь"
+    screen: non-functional
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserScreen.kt"
+  - id: nf-sec-backup-privacy
+    title: "НФ-sec: приватность бэкапа — allowBackup=true + fullBackupContent/dataExtractionRules; SAF-экспорт JSON не пишется в мир-читаемое место"
+    screen: non-functional
+    source: "app/src/main/AndroidManifest.xml"
+  - id: nf-sec-logcat-leak
+    title: "НФ-sec: отсутствие чувствительных данных (cookie/session/токены/локальные пути) в logcat при smoke (cross-cutting, adb-скан)"
+    screen: non-functional
+    source: "app/src/main/java/com/example/ao3_wrapper/MainActivity.kt"
