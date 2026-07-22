@@ -2,7 +2,7 @@
 key: "TC-102"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "JS-bridge (window.Android) доступность: baseline на доверенном AO3-origin vs проба на локальной error-странице (не-AO3-контент)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-22T02:00:00Z"
-updated: "2026-07-22T02:00:00Z"
+created: "2026-07-22T11:58:00Z"
+updated: "2026-07-22T11:58:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # JS-bridge (window.Android) доступность: baseline на доверенном AO3-origin vs проба на локальной error-странице (не-AO3-контент)
 
 _Спроецировано из `test-cases/security/TC-102.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-102 — JS-bridge exposure: доверенный origin vs не-AO3-контент
 

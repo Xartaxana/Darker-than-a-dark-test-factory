@@ -2,7 +2,7 @@
 key: "TC-106"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p2"
 summary: "Ключевые контролы (Rate/Note/тема/шрифт/таб) несут content-description или видимый текст в accessibility tree"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-22T03:00:00Z"
-updated: "2026-07-22T03:00:00Z"
+created: "2026-07-22T11:58:00Z"
+updated: "2026-07-22T11:58:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Ключевые контролы (Rate/Note/тема/шрифт/таб) несут content-description или видимый текст в accessibility tree
 
 _Спроецировано из `test-cases/accessibility/TC-106.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-106 — Content-description/текст на ключевых контролах (accessibility tree)
 

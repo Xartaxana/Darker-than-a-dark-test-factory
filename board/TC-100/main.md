@@ -2,7 +2,7 @@
 key: "TC-100"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Exported-компоненты: MainActivity exported=true с VIEW/BROWSABLE intent-filter на archiveofourown.org (статическая инспекция манифеста)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-22T02:00:00Z"
-updated: "2026-07-22T02:00:00Z"
+created: "2026-07-22T11:58:00Z"
+updated: "2026-07-22T11:58:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Exported-компоненты: MainActivity exported=true с VIEW/BROWSABLE intent-filter на archiveofourown.org (статическая инспекция манифеста)
 
 _Спроецировано из `test-cases/security/TC-100.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-100 — Exported-компоненты: MainActivity + intent-filter (build-level)
 

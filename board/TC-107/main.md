@@ -2,7 +2,7 @@
 key: "TC-107"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p2"
 summary: "Font scaling (font_scale 1.3): основные экраны без крашей, ключевые контролы остаются в дереве"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-22T03:00:00Z"
-updated: "2026-07-22T03:00:00Z"
+created: "2026-07-22T11:58:00Z"
+updated: "2026-07-22T11:58:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Font scaling (font_scale 1.3): основные экраны без крашей, ключевые контролы остаются в дереве
 
 _Спроецировано из `test-cases/accessibility/TC-107.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-107 — Font scaling 1.3× на основных экранах: нет краша, контролы присутствуют
 

@@ -8,7 +8,7 @@
     "epicPath": null,
     "summary": "Ключевые контролы (Rate/Note/тема/шрифт/таб) несут content-description или видимый текст в accessibility tree",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -16,7 +16,7 @@
       "area:accessibility",
       "risk:R-13"
     ],
-    "updated": "2026-07-22T03:00:00Z",
+    "updated": "2026-07-22T11:58:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -30,7 +30,7 @@
     "epicPath": null,
     "summary": "Font scaling (font_scale 1.3): основные экраны без крашей, ключевые контролы остаются в дереве",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -38,7 +38,7 @@
       "area:accessibility",
       "risk:R-13"
     ],
-    "updated": "2026-07-22T03:00:00Z",
+    "updated": "2026-07-22T11:58:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -52,7 +52,7 @@
     "epicPath": null,
     "summary": "Contrast sanity dark/light: текст и фон различимы в обоих системных вариантах темы",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -60,7 +60,7 @@
       "area:accessibility",
       "risk:R-11"
     ],
-    "updated": "2026-07-22T03:00:00Z",
+    "updated": "2026-07-22T11:58:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -718,7 +718,7 @@
     "epicPath": null,
     "summary": "P0-smoke на втором (нижнем) API level (minSdk 26): базовый путь без регресса относительно основного AVD",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -726,7 +726,7 @@
       "area:compatibility",
       "risk:R-14"
     ],
-    "updated": "2026-07-22T03:00:00Z",
+    "updated": "2026-07-22T11:58:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -740,7 +740,7 @@
     "epicPath": null,
     "summary": "Системная dark/light матрица: P0-smoke путь без регресса в обоих системных режимах",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -748,7 +748,7 @@
       "area:compatibility",
       "risk:R-14"
     ],
-    "updated": "2026-07-22T03:00:00Z",
+    "updated": "2026-07-22T11:58:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -762,7 +762,7 @@
     "epicPath": null,
     "summary": "Portrait/landscape: поворот сохраняет активную вкладку/URL/скролл, не пересоздаёт WebView",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -770,7 +770,7 @@
       "area:compatibility",
       "risk:R-14"
     ],
-    "updated": "2026-07-22T03:00:00Z",
+    "updated": "2026-07-22T11:58:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1864,7 +1864,7 @@
     "epicPath": null,
     "summary": "Exported-компоненты: MainActivity exported=true с VIEW/BROWSABLE intent-filter на archiveofourown.org (статическая инспекция манифеста)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1872,7 +1872,7 @@
       "area:security",
       "risk:R-15"
     ],
-    "updated": "2026-07-22T02:00:00Z",
+    "updated": "2026-07-22T11:58:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1886,7 +1886,7 @@
     "epicPath": null,
     "summary": "Cleartext-трафик: политика манифеста/network-security-config зафиксирована и сверена с http-схемой intent-filter (статическая инспекция)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1894,7 +1894,7 @@
       "area:security",
       "risk:R-15"
     ],
-    "updated": "2026-07-22T02:00:00Z",
+    "updated": "2026-07-22T11:58:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1908,7 +1908,7 @@
     "epicPath": null,
     "summary": "JS-bridge (window.Android) доступность: baseline на доверенном AO3-origin vs проба на локальной error-странице (не-AO3-контент)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1916,7 +1916,7 @@
       "area:security",
       "risk:R-15"
     ],
-    "updated": "2026-07-22T02:00:00Z",
+    "updated": "2026-07-22T11:58:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1930,7 +1930,7 @@
     "epicPath": null,
     "summary": "file:// доступ из открытого скачанного файла не выходит за пределы контента загрузки при переходе по встроенной ссылке (∩ TC-034, негативный/граничный случай)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1938,7 +1938,7 @@
       "area:security",
       "risk:R-15"
     ],
-    "updated": "2026-07-22T02:00:00Z",
+    "updated": "2026-07-22T11:58:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1952,7 +1952,7 @@
     "epicPath": null,
     "summary": "Приватность бэкапа: allowBackup сопровождён явным ограничением области (манифест-факт) + SAF-экспортный JSON не получает мир-читаемые права (поведенческая проверка)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1960,7 +1960,7 @@
       "area:security",
       "risk:R-15"
     ],
-    "updated": "2026-07-22T02:00:00Z",
+    "updated": "2026-07-22T11:58:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1974,7 +1974,7 @@
     "epicPath": null,
     "summary": "Отсутствие чувствительных данных (cookie/session/токены/локальные пути) в logcat при представительном smoke-прогоне",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1982,7 +1982,7 @@
       "area:security",
       "risk:R-15"
     ],
-    "updated": "2026-07-22T02:00:00Z",
+    "updated": "2026-07-22T11:58:00Z",
     "resolution": null,
     "children": [],
     "archived": false

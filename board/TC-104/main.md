@@ -2,7 +2,7 @@
 key: "TC-104"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Приватность бэкапа: allowBackup сопровождён явным ограничением области (манифест-факт) + SAF-экспортный JSON не получает мир-читаемые права (поведенческая проверка)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-22T02:00:00Z"
-updated: "2026-07-22T02:00:00Z"
+created: "2026-07-22T11:58:00Z"
+updated: "2026-07-22T11:58:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Приватность бэкапа: allowBackup сопровождён явным ограничением области (манифест-факт) + SAF-экспортный JSON не получает мир-читаемые права (поведенческая проверка)
 
 _Спроецировано из `test-cases/security/TC-104.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-104 — Приватность бэкапа: манифест-скоуп + права SAF-файла
 

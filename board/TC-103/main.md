@@ -2,7 +2,7 @@
 key: "TC-103"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "file:// доступ из открытого скачанного файла не выходит за пределы контента загрузки при переходе по встроенной ссылке (∩ TC-034, негативный/граничный случай)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-22T02:00:00Z"
-updated: "2026-07-22T02:00:00Z"
+created: "2026-07-22T11:58:00Z"
+updated: "2026-07-22T11:58:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # file:// доступ из открытого скачанного файла не выходит за пределы контента загрузки при переходе по встроенной ссылке (∩ TC-034, негативный/граничный случай)
 
 _Спроецировано из `test-cases/security/TC-103.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-103 — file:// доступ: попытка выйти за пределы контента загрузки
 

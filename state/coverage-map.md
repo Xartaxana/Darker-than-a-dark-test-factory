@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-22T11:49:14Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-22T11:54:57Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -141,18 +141,18 @@ generated_at: 2026-07-22T11:49:14Z · генератор: `scripts/coverage_map.
 | nf-perf-webview-first-load-budget | non-functional | performance:TC-097[Automated] |
 | nf-stability-no-crash-anr | non-functional | performance:TC-098[Automated] |
 | nf-perf-memory-trend | non-functional | performance:TC-099[Automated] |
-| nf-sec-exported-components | non-functional | security:TC-100[Review] |
-| nf-sec-cleartext-traffic | non-functional | security:TC-101[Review] |
-| nf-sec-js-bridge-exposure | non-functional | security:TC-102[Review] |
-| nf-sec-file-access | non-functional | security:TC-103[Review] |
-| nf-sec-backup-privacy | non-functional | security:TC-104[Review] |
-| nf-sec-logcat-leak | non-functional | security:TC-105[Review] |
-| nf-a11y-content-labels | non-functional | accessibility:TC-106[Review] |
-| nf-a11y-font-scaling | non-functional | accessibility:TC-107[Review] |
-| nf-a11y-contrast-sanity | non-functional | accessibility:TC-108[Review] |
-| nf-compat-api-level | non-functional | compatibility:TC-109[Review] |
-| nf-compat-dark-light-matrix | non-functional | compatibility:TC-110[Review] |
-| nf-compat-orientation | non-functional | compatibility:TC-111[Review] |
+| nf-sec-exported-components | non-functional | security:TC-100[Approved] |
+| nf-sec-cleartext-traffic | non-functional | security:TC-101[Approved] |
+| nf-sec-js-bridge-exposure | non-functional | security:TC-102[Approved] |
+| nf-sec-file-access | non-functional | security:TC-103[Approved] |
+| nf-sec-backup-privacy | non-functional | security:TC-104[Approved] |
+| nf-sec-logcat-leak | non-functional | security:TC-105[Approved] |
+| nf-a11y-content-labels | non-functional | accessibility:TC-106[Approved] |
+| nf-a11y-font-scaling | non-functional | accessibility:TC-107[Approved] |
+| nf-a11y-contrast-sanity | non-functional | accessibility:TC-108[Approved] |
+| nf-compat-api-level | non-functional | compatibility:TC-109[Approved] |
+| nf-compat-dark-light-matrix | non-functional | compatibility:TC-110[Approved] |
+| nf-compat-orientation | non-functional | compatibility:TC-111[Approved] |
 
 ## Фичи без единого кейса
 
@@ -190,7 +190,7 @@ generated_at: 2026-07-22T11:49:14Z · генератор: `scripts/coverage_map.
 |---|---|---|---|---|---|
 | P0 |  |  |  |  |  |
 | P1 |  |  |  |  |  |
-| P2 |  | 3 |  |  |  |
+| P2 |  |  | 3 |  |  |
 | P3 |  |  |  |  |  |
 
 ### backup
@@ -254,7 +254,7 @@ generated_at: 2026-07-22T11:49:14Z · генератор: `scripts/coverage_map.
 |---|---|---|---|---|---|
 | P0 |  |  |  |  |  |
 | P1 |  |  |  |  |  |
-| P2 |  | 3 |  |  |  |
+| P2 |  |  | 3 |  |  |
 | P3 |  |  |  |  |  |
 
 ### downloads
@@ -358,14 +358,14 @@ generated_at: 2026-07-22T11:49:14Z · генератор: `scripts/coverage_map.
 - coverage_status: **none** (0/6 Automated)
 - риски: R-15
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-100 [P1, Review], TC-101 [P1, Review], TC-102 [P1, Review], TC-103 [P1, Review], TC-104 [P1, Review], TC-105 [P1, Review]
+- P0/P1 не в Automated: TC-100 [P1, Approved], TC-101 [P1, Approved], TC-102 [P1, Approved], TC-103 [P1, Approved], TC-104 [P1, Approved], TC-105 [P1, Approved]
 - автотесты (automated_by): —
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  |  |  |
-| P1 |  | 6 |  |  |  |
+| P1 |  |  | 6 |  |  |
 | P2 |  |  |  |  |  |
 | P3 |  |  |  |  |  |
 

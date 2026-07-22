@@ -2,7 +2,7 @@
 key: "TC-108"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p2"
 summary: "Contrast sanity dark/light: текст и фон различимы в обоих системных вариантах темы"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-22T03:00:00Z"
-updated: "2026-07-22T03:00:00Z"
+created: "2026-07-22T11:58:00Z"
+updated: "2026-07-22T11:58:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Contrast sanity dark/light: текст и фон различимы в обоих системных вариантах темы
 
 _Спроецировано из `test-cases/accessibility/TC-108.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-108 — Contrast sanity: различимость текст/фон в dark и light
 
