@@ -60,7 +60,7 @@ $ADB shell "su 0 sh -c '
   cp /data/local/tmp/'${HASH}'.0 \$STORE/
   chmod 644 \$STORE/*
   sh $MOUNT_SH
-  echo store=\$(ls \$STORE | wc -l) apex=\$(ls /apex/com.android.conscrypt/cacerts | wc -l)
+  echo store=\$(ls \$STORE | wc -l) apex=\$([ -d /apex/com.android.conscrypt/cacerts ] && ls /apex/com.android.conscrypt/cacerts | wc -l || echo 0)
 '"
 
 # Перезапуск фреймворка: новый zygote форкается из init и наследует mount из
@@ -75,10 +75,17 @@ for i in $(seq 1 45); do
 done
 echo "boot_completed=$b"
 
-# Проверка: новый zygote в init-namespace и видит наш CA-хэш.
+# Проверка: новый zygote в init-namespace и видит наш CA-хэш. Признак готовности
+# (AT-BUG-024): apex-стор — только когда /apex/com.android.conscrypt существует
+# (API>=29); на API<29 (нет apex-модуля conscrypt, см. ca-mount.sh) единственный
+# стор — /system/etc/security/cacerts, признак переключается на него.
 $ADB shell "su 0 sh -c '
   z=\$(pidof zygote64)
   echo \"zygote64 pid=\$z ns=\$(readlink /proc/\$z/ns/mnt) init_ns=\$(readlink /proc/1/ns/mnt)\"
-  ls /apex/com.android.conscrypt/cacerts/ | grep -q '${HASH}' && echo \"CA visible in apex store: OK\" || echo \"CA MISSING in apex store\"
+  if [ -d /apex/com.android.conscrypt/cacerts ]; then
+    ls /apex/com.android.conscrypt/cacerts/ | grep -q '${HASH}' && echo \"CA visible in apex store: OK\" || echo \"CA MISSING in apex store\"
+  else
+    ls /system/etc/security/cacerts/ | grep -q '${HASH}' && echo \"CA visible in system store: OK\" || echo \"CA MISSING in system store\"
+  fi
 '"
 echo "Готово. CA установлен и виден приложениям; можно запускать прогоны в replay/record."

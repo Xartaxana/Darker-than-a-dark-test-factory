@@ -18,7 +18,11 @@ function Clear-EmulatorStaleLocks {
     # qemu-system-x86_64. Remove-Item -Force без -Recurse на непустой директории
     # падает NullReferenceException, которую -ErrorAction SilentlyContinue НЕ
     # гасит, и это останавливает весь Start-Emulator. Ветвим по типу элемента.
-    $avdDir = "$root\tools\avd\ao3_test_api34.avd"
+    #
+    # AT-BUG-024: параметризовано именем AVD (дефолт — прежнее поведение,
+    # обратная совместимость с вызовами без аргумента).
+    param([string]$AvdName = "ao3_test_api34")
+    $avdDir = "$root\tools\avd\$AvdName.avd"
     foreach ($name in @("multiinstance.lock", "hardware-qemu.ini.lock")) {
         $p = Join-Path $avdDir $name
         if (Test-Path $p) {
@@ -51,14 +55,17 @@ function Start-Emulator {
     # Оверрайд введён для диагностики AT-BUG-021 (краши qemu 0xc0000005 на
     # тяжёлых live-страницах): ремедиация п.1 бага — прогон под альтернативным
     # бэкендом (host / angle_indirect). Параметр > env > дефолт.
-    param([switch]$WritableSystem, [int]$SnapshotBootTimeoutSec = 45, [string]$Gpu = "")
+    # AT-BUG-024: -AvdName параметризует имя AVD (дефолт — прежний ao3_test_api34,
+    # обратная совместимость обязательна — существующие вызовы без аргумента не меняют
+    # поведение). Второй (нижний API) AVD — ao3_test_api26.
+    param([switch]$WritableSystem, [int]$SnapshotBootTimeoutSec = 45, [string]$Gpu = "", [string]$AvdName = "ao3_test_api34")
     if (-not $Gpu) { $Gpu = if ($env:AO3_EMU_GPU) { $env:AO3_EMU_GPU } else { "swiftshader_indirect" } }
     $adb = "$env:ANDROID_HOME\platform-tools\adb.exe"
     $emu = "$env:ANDROID_HOME\emulator\emulator.exe"
 
-    Clear-EmulatorStaleLocks
+    Clear-EmulatorStaleLocks -AvdName $AvdName
 
-    $emuArgs = @("-avd","ao3_test_api34","-no-boot-anim","-gpu",$Gpu)
+    $emuArgs = @("-avd",$AvdName,"-no-boot-anim","-gpu",$Gpu)
     if ($WritableSystem) { $emuArgs += "-writable-system" }
 
     $proc = Start-Process -FilePath $emu -ArgumentList $emuArgs -WindowStyle Minimized -PassThru
@@ -98,13 +105,13 @@ function Start-Emulator {
             Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
         }
         Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
-            Where-Object { $_.Name -match 'qemu-system' -and $_.CommandLine -match 'ao3_test_api34' } |
+            Where-Object { $_.Name -match 'qemu-system' -and $_.CommandLine -match [regex]::Escape($AvdName) } |
             ForEach-Object {
-                Write-Host "Killing orphaned qemu-system process for ao3_test_api34 (PID $($_.ProcessId))..." -ForegroundColor Yellow
+                Write-Host "Killing orphaned qemu-system process for $AvdName (PID $($_.ProcessId))..." -ForegroundColor Yellow
                 Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
             }
         Start-Sleep 2
-        Clear-EmulatorStaleLocks
+        Clear-EmulatorStaleLocks -AvdName $AvdName
         $fallbackArgs = $emuArgs + "-no-snapshot-load"
         $proc = Start-Process -FilePath $emu -ArgumentList $fallbackArgs -WindowStyle Minimized -PassThru
         & $adb wait-for-device

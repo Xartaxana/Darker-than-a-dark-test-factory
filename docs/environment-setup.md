@@ -12,7 +12,18 @@
 | platform-tools (adb) | 37.0.0 | `tools\android-sdk\platform-tools` |
 | Android Emulator | установлен | `tools\android-sdk\emulator` |
 | System image | android-34, **default** (без Google Play → есть root для CA mitmproxy) | `tools\android-sdk\system-images` |
-| AVD | `ao3_test_api34` (Pixel 6) | `tools\avd` (через `ANDROID_AVD_HOME`) |
+| System image (второй AVD, E3) | android-26, **google_apis** (без Play Store, rootable) | `tools\android-sdk\system-images` |
+| AVD | `ao3_test_api34` (Pixel 6); второй — `ao3_test_api26` (Pixel 6, AT-BUG-024) | `tools\avd` (через `ANDROID_AVD_HOME`) |
+
+**Выбор образа для WebView-AVD (урок AT-BUG-024, 2026-07-22):** AOSP
+`default`-образ на API 26 НЕ несёт пакета WebView вообще — приложение
+падает на старте (`MissingWebViewPackageException`), это не «старый
+WebView», а его отсутствие. Для любого AVD под WebView-приложение на
+нижних API брать `google_apis` (без Play Store — root сохраняется);
+`default` допустим только там, где WebView заведомо есть (на api34 —
+есть). Запуск второго AVD: `Start-Emulator -WritableSystem -AvdName
+ao3_test_api26`; CA на API<29 ставится в system-store (признак
+готовности «CA visible in system store: OK» — apex-стора там нет).
 | Appium | 2.x + uiautomator2 8.0.1 | `tools\appium` (локальный npm-проект, запуск `npx appium`) |
 | Python venv | 3.12: pytest 9, Appium-Python-Client 5, allure-pytest, mitmproxy 11, pytest-rerunfailures, PyYAML | `framework\.venv` |
 | Приложение (исходники) | клон gitlab, **read-only по конвенции** | `app-under-test\` |
