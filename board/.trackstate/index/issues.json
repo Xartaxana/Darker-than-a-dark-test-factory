@@ -3055,7 +3055,7 @@
     "epicPath": null,
     "summary": "Второй AVD (нижний API level, minSdk 26, rootable без Google Play) отсутствует в tools/avd — блокирует автоматизацию TC-109 (compatibility, P2)",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -3063,7 +3063,7 @@
       "test_case:TC-109",
       "sev:minor"
     ],
-    "updated": "2026-07-22T03:30:00Z",
+    "updated": "2026-07-22T11:40:00Z",
     "resolution": null,
     "children": [],
     "archived": false
