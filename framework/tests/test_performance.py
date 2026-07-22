@@ -147,8 +147,12 @@ def test_memory_trend_recovers_after_closing_tabs(replay, clean_app, driver):
     операционализацию критерия в `perf_steps.assert_memory_trend_recovered`)."""
     app_steps.wait_home_ready_for_deep_link(driver)
 
-    # Given baseline (1 вкладка Home, уже загружена) — TOTAL PSS
-    baseline_pss = perf_steps.measure_total_pss()
+    # Given baseline (1 вкладка Home, уже загружена) — TOTAL PSS. Снимается ТОЖЕ
+    # через settle (misc-batch-0722, sibling консистентности фикса rejected attempt 1
+    # выше, D-0043): baseline обязан пройти ту же дисциплину, что peak/after_close —
+    # все три точки тренда осевшие, ни одна не сырая (незакрытое наблюдение
+    # test-reviewer, TC-099.md «Незакрытое наблюдение», закрыто).
+    baseline_pss = perf_steps.wait_memory_settled()
 
     # When открыто 10 вкладок (MAX_TABS, тот же механизм добавления вкладки, что
     # TC-022): исходная Home-вкладка (уже реальный AO3-контент от штатного

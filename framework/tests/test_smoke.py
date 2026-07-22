@@ -81,3 +81,14 @@ def test_theme_toggle_stable(clean_app, driver):
         settings_steps.select_theme(driver, mode)
     # Then экран Settings по-прежнему отрисован (не крашнулись)
     settings_steps.assert_settings_loaded(driver)
+    # And финально выбранный режим (System) отражён как выбранный (misc-batch-0722):
+    # ThemeModeRow рисует выбор цветом фона TextButton, НЕ через accessibility
+    # selected/checked (сверено на живом дереве — settings_steps.py:116-124,
+    # selected="false" у всех вариантов независимо от выбора) — единственный
+    # наблюдаемый источник истины финально выбранного режима, тот же для обоих
+    # входов (Settings/side panel), это SharedPreferences, читаемая
+    # `assert_theme_mode_pref`. Проверка НЕ дублирует глубокое применение темы
+    # (перекраска UI/WebView — TC-047/048/049/059, side_panel_steps/browser_steps
+    # цветовые ассерты): здесь проверяется только факт, что System сохранился как
+    # финальный выбор, а не собственно визуальный эффект System-режима.
+    settings_steps.assert_theme_mode_pref("SYSTEM")

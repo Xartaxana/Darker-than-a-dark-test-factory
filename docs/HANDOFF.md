@@ -20,6 +20,10 @@ Sibling: AT-BUG-024 (второй AVD отсутствует, заведён tes
 вопреки противоречивой инструкции координатора — ратифицировано);
 TC-104 dual-assert independence, aapt-vs-dumpsys, TC-099
 baseline_pss, TC-005 слабый assert — все в очередь, не блокеры.
+**Вся четвёрка ЗАКРЫТА 2026-07-22 батчем misc-batch-0722** (baseline
+через settle; TC-005 assert усилен pref-проверкой — selected-локатора
+в Compose нет, ратифицировано; независимость и aapt — заметками
+автоматизации в TC-100/101/104; попутно заведён AT-BUG-025).
 Эмулятор/Appium погашены, NO DEVICE подтверждён канонически.
 Коммиты: 24203ca (проход), ca32c15 (фикс mangled-path). Полный текст
 — docs/09-history.md §«Шапка 2026-07-22 (5)».
@@ -283,9 +287,10 @@ reachability guard в `mitm.wait_device_proxy_reachable`, тест не долж
   одинаково (не Cloudflare-специфично), `driver.set_page_load_timeout`
   не реализован UiAutomator2-драйвером; любая `driver.get`-автоматизация
   должна оборачивать вызов в try + ручной поллинг readyState (приём,
-  которым сама exploratory-сессия обошла зависание) — кандидат на
-  test_debt-баг framework-уровня, не заведён этим проходом (решение за
-  test-automator/Lead); (7) та же сессия: двухпальцевые жесты
+  которым сама exploratory-сессия обошла зависание) — **ЗАВЕДЁН
+  bugs/AT-BUG-025.md (2026-07-22, misc-batch-0722, Open)** — станет
+  B4-целью следующего прохода qa-loop (починка: общий navigate-хелпер,
+  критерий Fixed в баге); (7) та же сессия: двухпальцевые жесты
   (brightness drag/font pinch) через Appium W3C actions не триггерят
   pointerInput classifier — механизмы настроек #4/#5 CH-004 остались
   непокрытыми ПО ЭТОЙ причине (не по недостатку времени), уже в
