@@ -170,6 +170,23 @@ test_backup_clear_restore_returns_original_data` — полное покрыти
 повторное ревью штатно. Дизайн-вход test-designer НЕ требуется: скоуп решён
 этой записью, формулировка инварианта дана ревьюером.
 
+## Красная проба (red_probe, ретрофит — test-reviewer, 2026-07-22T00:58:17Z)
+
+Режим red-probe-only (только пп.6-7 F1, статус кейса не менялся).
+- **Зелёный (п.6):** `Invoke-Pytest tests/test_backup_restore.py` → `1 passed in 64.55s`,
+  `PYTEST_EXIT=0`, emulator-5554 (`Get-Device` → DEVICE до прогона).
+- **Красная проба (п.7):** порча на уровне данных, бьющая прямо в инвариант C4 round-trip
+  `restore(backup(S)) == S` — сидинг в фикстуре `backup_restore_seeded` подменён на
+  `seed_with_comment([(w, r, c + " REDPROBE", t) ...])`: все comment'ы засеяны с суффиксом,
+  так что после backup→clear→restore восстановленные поля отличаются от эталонного
+  `_EXPECTED_AFTER_RESTORE` (счётчики диалогов не меняются, ловит именно Room-сверка).
+  Прогон `Invoke-Pytest tests/test_backup_restore.py --reruns 0` → `FAILED`:
+  `AssertionError: поля отличаются от исходных после Restore: {...'comment':
+  'Reread this every winter. REDPROBE'...}` (`backup_steps.py:66`, `assert_restored_fields_match`)
+  — падение указывает на суть (round-trip не сохранил множество полей), с точным
+  expected/actual-диффом, не таймаут.
+- **Откат:** `git checkout -- framework/tests/test_backup_restore.py`; дифф теста чист.
+
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»
 - [x] Given описывает полное состояние, воспроизводимое фикстурами

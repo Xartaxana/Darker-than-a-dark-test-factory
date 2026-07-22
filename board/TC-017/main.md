@@ -73,3 +73,15 @@ DISLIKED экрана Library
 ## B3-поля (test-maintainer, 2026-07-08, AT-BUG-003)
 Автоматизирован до гейта F1 (B3-поля бэкфилл, ревью задним числом не проводилось).
 `automation_status: active` проставлен по факту (тест живёт в suite и зелёный).
+
+## Ревью автотеста (red-probe ретрофит, test-reviewer, 2026-07-22)
+Только пп.6-7 чек-листа F1 (статус кейса не меняется).
+- Зелёный прогон: `Invoke-Pytest -k test_comment_only_not_in_any_rating_tab`
+  PASSED (52.38s).
+- **Красная проба (п.7, 2026-07-22T00:24:08Z):** порча ДАННЫХ — фикстура
+  `comment_only_work` (`framework/tests/conftest.py`) засеяна с `rating="LIKE"`
+  вместо `None` (comment-only перестал быть comment-only, получил рейтинг). Тест
+  УПАЛ на сути: `assert_work_not_in_tab(LIKE)` → «работа «A Kudosed Test Work»
+  неожиданно присутствует во вкладке KUDOSED». Осмысленный assert, не таймаут.
+  Порча откачена в том же ходе (`git checkout -- framework/tests/conftest.py`),
+  дифф чист. Тест умеет падать.

@@ -2,27 +2,27 @@
 key: "TC-097"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p1"
 summary: "Первая загрузка WebView укладывается в относительный бюджет до сигнала завершения загрузки (replay)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:performance", "risk:R-12"]
+labels: ["test-case", "area:performance", "risk:R-12", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-21T15:12:09Z"
-updated: "2026-07-21T15:12:09Z"
+created: "2026-07-22T00:03:16Z"
+updated: "2026-07-22T00:03:16Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Первая загрузка WebView укладывается в относительный бюджет до сигнала завершения загрузки (replay)
 
 _Спроецировано из `test-cases/performance/TC-097.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-097 — Первая загрузка WebView: бюджет до сигнала завершения загрузки (replay)
 
@@ -83,16 +83,55 @@ baseline-прогонам на replay (не абсолютный SLA)
 - Live-режим для этого кейса не подходит принципиально (сетевая вариативность
   Cloudflare делает бюджет неинтерпретируемым) — маркер `@pytest.mark.replay`
   обязателен, `@pytest.mark.live`-вариант не проектируется.
-- **`features` — приблизительная связь (attempt 2, task perf-stability-smoke-e2;
-  скорректировано критик-входом приёмки).** `browse-initial-load` — навигация
-  на домашнюю AO3-страницу совпадает с этой записью реестра. Изначально сюда
-  же добавлялся `browse-bridge-injection` по ошибочной посылке «`__ao3AppDark`
-  = сигнал инъекции bridge» — неверно (см. уточнение маркера выше, `__ao3AppDark`
-  — флаг темы/загрузки, а не bridge); id убран, остался только
-  `browse-initial-load`. Это ближайшая существующая запись, не заявление, что
-  кейс проверяет её Then (кейс проверяет ТОЛЬКО тайминг до сигнала). См. ту же
-  оговорку про приблизительность связи `features` для области performance в
-  `test-cases/README.md`/`docs/01-test-strategy.md` §9 (E2) и в TC-096.
+- **`features` — точная nf-привязка `nf-perf-webview-first-load-budget`.**
+  Прежние приблизительные функциональные привязки (`browse-initial-load`,
+  а также ошибочно добавлявшийся и позже убранный `browse-bridge-injection`
+  — см. уточнение маркера выше) сняты решением 2026-07-21 (анти-двойной-зачёт,
+  `docs/01-test-strategy.md` §9): нефункциональная область получает
+  собственную запись реестра. Поведенческое покрытие `browse-initial-load` —
+  за его собственными кейсами, не за этим.
+
+**2026-07-22 — test-automator, решение по порогу (N/множитель):** N=5
+повторных навигаций на replay-записи `ao3_home_smoke.mitm` (медиана), бюджет
+= медиана x2.5, с полом 1.0s — `framework/tests/test_performance.py::
+BUDGET_MULTIPLIER`/`BASELINE_RUNS`/`MIN_WEBVIEW_LOAD_BUDGET_S`. Замер —
+`perf_steps.measure_home_page_load_time`: `time.monotonic()` вокруг
+`driver.get(HOME_URL)` → опрос `window.__ao3AppDark` через уже существующий
+`BrowserScreen.wait_home_page_loaded` (маркер/локатор не дублируется).
+`server_replay_reuse=true` (`framework/core/mitm.py::start_replay`) допускает
+повтор одной записи на все N+1 навигаций без исчерпания. 3 зелёных прогона
+подряд (`test_webview_first_load_within_relative_budget`, ~29-30s каждый).
+
+## Ревью автотеста
+
+**test-reviewer, 2026-07-22 — вердикт: PASS (`Approved → Automated`,
+`automation_status: active`).** Весь чек-лист F1 пройден.
+
+- **Архитектура (C1):** `arch_check.py` — 0 ошибок / 0 предупреждений; не в
+  ALLOWLIST. Замер (`perf_steps.measure_home_page_load_time`/
+  `webview_load_baseline`) — только временная обвязка `time.monotonic()` вокруг
+  уже существующего опроса `BrowserScreen.wait_home_page_loaded`; новых
+  локаторов/маркеров нет, `sleep` нет.
+- **Traceability:** `@allure.id("TC-097")` == id; `@pytest.mark.p1` ↔
+  `priority: P1`, `@pytest.mark.replay` ↔ replay-предусловие кейса; `automated_by`
+  указывает на существующую функцию.
+- **Соответствие кейсу:** измеряется ИМЕННО загрузка страницы — время от
+  `driver.get(HOME_URL)` до JS-маркера `window.__ao3AppDark` (флаг темы,
+  пушится синхронно в `onPageFinished`), НЕ до маркера готовности bridge
+  `window.__ao3Bridge` — уточнение маркера критиком соблюдено в коде. assert
+  проверяет бюджет (медиана ×2.5, пол 1.0s), не «элемент существует».
+- **Flake:** только replay (нет обращения к живому AO3 — детерминизм против
+  Cloudflare, R-03); `server_replay_reuse=true` допускает повтор записи на N+1
+  навигаций; штатная загрузка при старте не входит в замер.
+- **Фикстуры:** порядок `clean_app → replay → driver` — сидинг/прокси до
+  создания сессии Appium; teardown replay гарантирован.
+- **Независимое воспроизведение (п.6):** собственный зелёный прогон —
+  PYTEST_EXIT=0 (в составе модуля, 144s).
+- **Красная проба (п.7), 2026-07-22:** порча — временно `BUDGET_MULTIPLIER=0.001`
+  + `MIN_WEBVIEW_LOAD_BUDGET_S=0.001` (сжат бюджет). `Invoke-Pytest -k
+  webview_first_load` → FAILED: «загрузка WebView заняла 2.42s, бюджет 0.00s».
+  Осмысленный assert. Порча откачена в том же ходе (дифф чист). Тест умеет
+  падать.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»

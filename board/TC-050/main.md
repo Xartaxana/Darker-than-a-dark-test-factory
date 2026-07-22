@@ -84,6 +84,22 @@ Dark→Light; после каждого переключения contentDescript
 - Эквивалентность стейта Settings↔side panel проверяется отдельно (TC-054) —
   здесь только факт срабатывания входа через панель.
 
+## Ревью автотеста
+
+- **Красная проба (red-probe-only ретрофит, test-reviewer, 2026-07-22T00:38:43Z).**
+  Режим ретрофита: полное F1-ревью не повторялось (тест уже `Automated`,
+  `automation_status: active`), выполнены только пп.6-7 чек-листа.
+- **Зелёный прогон (п.6):** `Invoke-Pytest tests/test_side_panel.py -k
+  test_side_panel_contrast_toggles_theme_instantly` на emulator-5554 (в батче 6
+  browser-кейсов) → `6 passed in 187.55s`, `PYTEST_EXIT=0`.
+- **Красная проба (п.7):** временно удалил действие `side_panel_steps.toggle_theme`
+  (test_side_panel.py:42, заменил на `pass`) — порча проверяемого условия «тап
+  Contrast переключает тему». Прогон УПАЛ осмысленно: `assert_theme_is_dark` →
+  `AssertionError: ожидали иконку Contrast «Switch to light mode» (тема Dark)`
+  (тема осталась Light — суть, не таймаут-мусор). Откат
+  `git checkout -- framework/tests/test_side_panel.py`; дифф framework/ чист.
+  Тест УМЕЕТ падать.
+
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»
 - [x] Given описывает полное состояние, воспроизводимое фикстурами

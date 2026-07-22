@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-21T18:02:08Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-22T02:13:28Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -9,15 +9,18 @@ generated_at: 2026-07-21T18:02:08Z · генератор: `scripts/coverage_map.
 
 | Область | Кейсов | Automated | coverage_status |
 |---|---|---|---|
+| accessibility | 3 | 0 | none |
 | backup | 1 | 1 | designed-full |
 | browser | 9 | 9 | designed-full |
-| canary | 18 | 17 | partial |
+| canary | 18 | 18 | designed-full |
+| compatibility | 3 | 0 | none |
 | downloads | 8 | 8 | designed-full |
 | errors | 1 | 1 | designed-full |
 | filter-profiles | 5 | 5 | designed-full |
 | library | 15 | 15 | designed-full |
-| performance | 4 | 0 | none |
+| performance | 4 | 4 | designed-full |
 | rating | 14 | 14 | designed-full |
+| security | 6 | 0 | none |
 | settings | 7 | 6 | partial |
 | smoke | 5 | 5 | designed-full |
 | tabs | 6 | 6 | designed-full |
@@ -35,13 +38,13 @@ generated_at: 2026-07-21T18:02:08Z · генератор: `scripts/coverage_map.
 | R-06 | BUS | browser:TC-094, library:TC-027, library:TC-028, library:TC-029, library:TC-030, library:TC-031, library:TC-060, library:TC-061, library:TC-062, library:TC-063, library:TC-064, library:TC-065, visibility:TC-013, visibility:TC-014, visibility:TC-015, visibility:TC-092, visibility:TC-093, visibility:TC-095 |
 | R-07 | OPS | риск не покрыт дизайном |
 | R-08 | TECH | tabs:TC-022, tabs:TC-023, tabs:TC-024, tabs:TC-025, tabs:TC-026, tabs:TC-084 |
-| R-11 | TECH | browser:TC-050, browser:TC-051, browser:TC-052, browser:TC-053, browser:TC-054, browser:TC-055, browser:TC-057, browser:TC-058, settings:TC-047, settings:TC-048, settings:TC-049, settings:TC-059 |
+| R-11 | TECH | accessibility:TC-108, browser:TC-050, browser:TC-051, browser:TC-052, browser:TC-053, browser:TC-054, browser:TC-055, browser:TC-057, browser:TC-058, settings:TC-047, settings:TC-048, settings:TC-049, settings:TC-059 |
 | R-09 | BUS | filter-profiles:TC-040, filter-profiles:TC-041, filter-profiles:TC-042, filter-profiles:TC-085, filter-profiles:TC-086 |
 | R-10 | DATA | library:TC-089, rating:TC-043, rating:TC-044, rating:TC-045, rating:TC-056, rating:TC-087, rating:TC-088, rating:TC-090, rating:TC-091 |
 | R-12 | PERF | performance:TC-096, performance:TC-097, performance:TC-098, performance:TC-099 |
-| R-13 | A11Y | риск не покрыт дизайном |
-| R-14 | COMPAT | риск не покрыт дизайном |
-| R-15 | SEC | риск не покрыт дизайном |
+| R-13 | A11Y | accessibility:TC-106, accessibility:TC-107 |
+| R-14 | COMPAT | compatibility:TC-109, compatibility:TC-110, compatibility:TC-111 |
+| R-15 | SEC | security:TC-100, security:TC-101, security:TC-102, security:TC-103, security:TC-104, security:TC-105 |
 
 ## Фичи → покрытие
 
@@ -125,7 +128,7 @@ generated_at: 2026-07-21T18:02:08Z · генератор: `scripts/coverage_map.
 | bridge-badge-sync-multi | ao3-bridge | rating:TC-012[Automated] |
 | bridge-hide-filter | ao3-bridge | visibility:TC-013[Automated], visibility:TC-014[Automated], visibility:TC-015[Automated], rating:TC-043[Automated], rating:TC-045[Automated] |
 | bridge-dim-filter | ao3-bridge | visibility:TC-092[Automated] |
-| bridge-main-pairing-filter | ao3-bridge | canary:TC-078[Automated], canary:TC-079[Approved] |
+| bridge-main-pairing-filter | ao3-bridge | canary:TC-078[Automated], canary:TC-079[Automated] |
 | bridge-exclude-main-pairing-filter | ao3-bridge | canary:TC-080[Automated], canary:TC-081[Automated] |
 | bridge-dark-css | ao3-bridge | нет кейсов |
 | bridge-scroll-reporting | ao3-bridge | нет кейсов |
@@ -134,16 +137,22 @@ generated_at: 2026-07-21T18:02:08Z · генератор: `scripts/coverage_map.
 | data-clear-all-ratings | data | smoke:TC-004[Automated], settings:TC-018[Automated], settings:TC-019[Automated], settings:TC-020[Blocked] |
 | background-download-repository | background | downloads:TC-032[Automated], downloads:TC-033[Automated] |
 | background-auto-download-trigger | background | downloads:TC-032[Automated] |
-| nf-perf-cold-start-budget | non-functional | performance:TC-096[Approved] |
-| nf-perf-webview-first-load-budget | non-functional | performance:TC-097[Approved] |
-| nf-stability-no-crash-anr | non-functional | performance:TC-098[Approved] |
-| nf-perf-memory-trend | non-functional | performance:TC-099[Approved] |
-| nf-sec-exported-components | non-functional | нет кейсов |
-| nf-sec-cleartext-traffic | non-functional | нет кейсов |
-| nf-sec-js-bridge-exposure | non-functional | нет кейсов |
-| nf-sec-file-access | non-functional | нет кейсов |
-| nf-sec-backup-privacy | non-functional | нет кейсов |
-| nf-sec-logcat-leak | non-functional | нет кейсов |
+| nf-perf-cold-start-budget | non-functional | performance:TC-096[Automated] |
+| nf-perf-webview-first-load-budget | non-functional | performance:TC-097[Automated] |
+| nf-stability-no-crash-anr | non-functional | performance:TC-098[Automated] |
+| nf-perf-memory-trend | non-functional | performance:TC-099[Automated] |
+| nf-sec-exported-components | non-functional | security:TC-100[Review] |
+| nf-sec-cleartext-traffic | non-functional | security:TC-101[Review] |
+| nf-sec-js-bridge-exposure | non-functional | security:TC-102[Review] |
+| nf-sec-file-access | non-functional | security:TC-103[Review] |
+| nf-sec-backup-privacy | non-functional | security:TC-104[Review] |
+| nf-sec-logcat-leak | non-functional | security:TC-105[Review] |
+| nf-a11y-content-labels | non-functional | accessibility:TC-106[Review] |
+| nf-a11y-font-scaling | non-functional | accessibility:TC-107[Review] |
+| nf-a11y-contrast-sanity | non-functional | accessibility:TC-108[Review] |
+| nf-compat-api-level | non-functional | compatibility:TC-109[Review] |
+| nf-compat-dark-light-matrix | non-functional | compatibility:TC-110[Review] |
+| nf-compat-orientation | non-functional | compatibility:TC-111[Review] |
 
 ## Фичи без единого кейса
 
@@ -165,14 +174,24 @@ generated_at: 2026-07-21T18:02:08Z · генератор: `scripts/coverage_map.
 - bridge-scroll-reporting (ao3-bridge): Отчёт позиции скролла и прогресса чтения (глава/%) в Kotlin
 - data-workrating-model (data): Room-сущность WorkRating (rating/comment/tags/fandom/author/wordCount/downloadPath)
 - data-filterprofile-model (data): Room-сущность FilterProfile (name/queryString)
-- nf-sec-exported-components (non-functional): НФ-sec: exported-компоненты — MainActivity exported=true с VIEW/BROWSABLE intent-filter (archiveofourown.org); статическая инспекция манифеста APK
-- nf-sec-cleartext-traffic (non-functional): НФ-sec: политика cleartext-трафика (манифест/network-security-config; intent-filter несёт http://archiveofourown.org — cleartext-политику стоит проверить)
-- nf-sec-js-bridge-exposure (non-functional): НФ-sec: @JavascriptInterface (window.Android) экспонирован WebView, грузящему удалённый AO3-контент (addJavascriptInterface)
-- nf-sec-file-access (non-functional): НФ-sec: WebView allowFileAccess=true + file://-доступ ограничен SAF-выбранной папкой, нет traversal за разрешённый путь
-- nf-sec-backup-privacy (non-functional): НФ-sec: приватность бэкапа — allowBackup=true + fullBackupContent/dataExtractionRules; SAF-экспорт JSON не пишется в мир-читаемое место
-- nf-sec-logcat-leak (non-functional): НФ-sec: отсутствие чувствительных данных (cookie/session/токены/локальные пути) в logcat при smoke (cross-cutting, adb-скан)
 
 ## Области
+
+### accessibility
+
+- coverage_status: **none** (0/3 Automated)
+- риски: R-11, R-13
+- кейсы без risk: нет
+- P0/P1 не в Automated: нет
+- автотесты (automated_by): —
+- last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
+
+| Priority | Draft | Review | Approved | Automated | Blocked |
+|---|---|---|---|---|---|
+| P0 |  |  |  |  |  |
+| P1 |  |  |  |  |  |
+| P2 |  | 3 |  |  |  |
+| P3 |  |  |  |  |  |
 
 ### backup
 
@@ -208,18 +227,34 @@ generated_at: 2026-07-21T18:02:08Z · генератор: `scripts/coverage_map.
 
 ### canary
 
-- coverage_status: **partial** (17/18 Automated)
+- coverage_status: **designed-full** (18/18 Automated)
 - риски: R-02, R-02/R-04
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-079 [P0, Approved]
+- P0/P1 не в Automated: нет
 - автотесты (automated_by): framework/tests/canary/test_ao3_selectors.py::test_bridge_marker_present_live, framework/tests/canary/test_ao3_selectors.py::test_bridge_marker_present_replay, framework/tests/canary/test_ao3_selectors.py::test_exclude_main_pairing_checkbox_availability_live, framework/tests/canary/test_ao3_selectors.py::test_exclude_main_pairing_checkbox_availability_replay, framework/tests/canary/test_ao3_selectors.py::test_main_pairing_checkbox_availability_live, framework/tests/canary/test_ao3_selectors.py::test_main_pairing_checkbox_availability_replay, framework/tests/canary/test_ao3_selectors.py::test_note_button_present_iff_comment_live, framework/tests/canary/test_ao3_selectors.py::test_note_button_present_iff_comment_replay, framework/tests/canary/test_ao3_selectors.py::test_rate_button_badge_opaque_color_live, framework/tests/canary/test_ao3_selectors.py::test_rate_button_badge_opaque_color_replay, framework/tests/canary/test_ao3_selectors.py::test_rate_button_injected_on_live_listing, framework/tests/canary/test_ao3_selectors.py::test_rate_button_injected_on_replay_listing, framework/tests/canary/test_ao3_selectors.py::test_save_filter_button_idempotent_live, framework/tests/canary/test_ao3_selectors.py::test_save_filter_button_idempotent_replay, framework/tests/canary/test_ao3_selectors.py::test_tag_button_present_iff_custom_tag_live, framework/tests/canary/test_ao3_selectors.py::test_tag_button_present_iff_custom_tag_replay, framework/tests/canary/test_ao3_selectors.py::test_work_blurb_selector_matches_live_listing, framework/tests/canary/test_ao3_selectors.py::test_work_blurb_selector_matches_replay_listing
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
-| P0 |  |  | 1 | 17 |  |
+| P0 |  |  |  | 18 |  |
 | P1 |  |  |  |  |  |
 | P2 |  |  |  |  |  |
+| P3 |  |  |  |  |  |
+
+### compatibility
+
+- coverage_status: **none** (0/3 Automated)
+- риски: R-14
+- кейсы без risk: нет
+- P0/P1 не в Automated: нет
+- автотесты (automated_by): —
+- last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
+
+| Priority | Draft | Review | Approved | Automated | Blocked |
+|---|---|---|---|---|---|
+| P0 |  |  |  |  |  |
+| P1 |  |  |  |  |  |
+| P2 |  | 3 |  |  |  |
 | P3 |  |  |  |  |  |
 
 ### downloads
@@ -288,17 +323,17 @@ generated_at: 2026-07-21T18:02:08Z · генератор: `scripts/coverage_map.
 
 ### performance
 
-- coverage_status: **none** (0/4 Automated)
+- coverage_status: **designed-full** (4/4 Automated)
 - риски: R-12
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-096 [P1, Approved], TC-097 [P1, Approved], TC-098 [P0, Approved], TC-099 [P0, Approved]
-- автотесты (automated_by): —
+- P0/P1 не в Automated: нет
+- автотесты (automated_by): framework/tests/test_performance.py::test_cold_start_within_relative_budget, framework/tests/test_performance.py::test_memory_trend_recovers_after_closing_tabs, framework/tests/test_performance.py::test_no_crash_or_anr_during_smoke_path, framework/tests/test_performance.py::test_webview_first_load_within_relative_budget
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
-| P0 |  |  | 2 |  |  |
-| P1 |  |  | 2 |  |  |
+| P0 |  |  |  | 2 |  |
+| P1 |  |  |  | 2 |  |
 | P2 |  |  |  |  |  |
 | P3 |  |  |  |  |  |
 
@@ -317,6 +352,22 @@ generated_at: 2026-07-21T18:02:08Z · генератор: `scripts/coverage_map.
 | P1 |  |  |  | 7 |  |
 | P2 |  |  |  | 3 |  |
 | P3 |  |  |  | 1 |  |
+
+### security
+
+- coverage_status: **none** (0/6 Automated)
+- риски: R-15
+- кейсы без risk: нет
+- P0/P1 не в Automated: TC-100 [P1, Review], TC-101 [P1, Review], TC-102 [P1, Review], TC-103 [P1, Review], TC-104 [P1, Review], TC-105 [P1, Review]
+- автотесты (automated_by): —
+- last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
+
+| Priority | Draft | Review | Approved | Automated | Blocked |
+|---|---|---|---|---|---|
+| P0 |  |  |  |  |  |
+| P1 |  | 6 |  |  |  |
+| P2 |  |  |  |  |  |
+| P3 |  |  |  |  |  |
 
 ### settings
 

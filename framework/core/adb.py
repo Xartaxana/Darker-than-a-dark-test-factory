@@ -4,6 +4,7 @@
 """
 from __future__ import annotations
 
+import re
 import subprocess
 import time
 from pathlib import Path
@@ -177,3 +178,44 @@ def push_app_file(src: Path, rel_path: str) -> None:
     _run(["-s", settings.DEVICE_NAME, "push", str(src), tmp], timeout=settings.ADB_TRANSFER_TIMEOUT)
     run_as(f"cp {tmp} {rel_path}")
     shell(f"rm -f {tmp}")
+
+
+# --- Разбор вывода adb-команд для нефункциональных замеров (TC-096/TC-099,
+# test-cases/performance/) — генерический парсинг формата вывода `am
+# start -W`/`dumpsys meminfo`, ничего не знает о приложении сверх пакета. ---
+
+def parse_am_start_metrics(output: str) -> dict[str, int]:
+    """Парсит `TotalTime`/`WaitTime` (мс) из stdout `am start -W` (TC-096).
+
+    Эмпирически подтверждено (live-калибровка 2026-07-22, emulator-5554): для
+    УЖЕ запущенного процесса `am start -W` возвращает `TotalTime: 0` (вывод
+    несёт `Warning: Activity not started, intent has been delivered to
+    currently running top-most instance.`) — это НЕ холодный старт. Вызывающий
+    код обязан гарантировать реальный холодный старт (`force_stop()` +
+    `clear_app_data()` ДО вызова `am start -W`), иначе метрика тривиально
+    «пройдёт» любой бюджет, не измерив ничего реального."""
+    metrics: dict[str, int] = {}
+    for key in ("TotalTime", "WaitTime"):
+        m = re.search(rf"{key}:\s*(\d+)", output)
+        if m:
+            metrics[key] = int(m.group(1))
+    if "TotalTime" not in metrics:
+        raise RuntimeError(
+            f"вывод 'am start -W' не содержит 'TotalTime' — запуск не подтверждён, "
+            f"вывод: {output!r}"
+        )
+    return metrics
+
+
+def total_pss_kb(timeout: float = settings.ADB_SHELL_TIMEOUT) -> int:
+    """Парсит `TOTAL PSS` (КБ) из `dumpsys meminfo <package>` (TC-099) — формат
+    строки сверен на живом устройстве (emulator-5554, 2026-07-22):
+    `           TOTAL PSS:   157913            TOTAL RSS:   313124 ...` (секция
+    "App Summary")."""
+    out = shell(f"dumpsys meminfo {_PKG}", timeout=timeout)
+    m = re.search(r"TOTAL PSS:\s*(\d+)", out)
+    if not m:
+        raise RuntimeError(
+            f"вывод 'dumpsys meminfo {_PKG}' не содержит 'TOTAL PSS' — вывод: {out!r}"
+        )
+    return int(m.group(1))

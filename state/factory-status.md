@@ -1,22 +1,21 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-21T18:02:07Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-07-22T02:13:24Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **470.5** (RUN-20260702-0300)
+- smoke: Closed · smoke_freshness_hours: **478.6** (RUN-20260702-0300)
 - regression: not_run
 - canary: not_run
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **1**
-- p0_automation_coverage: **91%** (31/34)
-- p1_automation_coverage: **96%** (45/47)
-  - непокрытые P0: TC-079, TC-098, TC-099
-- Test debt открыт: **0**
+- p0_automation_coverage: **100%** (34/34)
+- p1_automation_coverage: **89%** (47/53)
+- Test debt открыт: **1** — AT-BUG-024
 - Карантин автотестов: **0**
-- Automated без red_probe: **28** — TC-021, TC-050, TC-051, TC-052, TC-053, TC-054, TC-055, TC-034, TC-035, TC-036, TC-038, TC-039, TC-016, TC-017, TC-027, TC-028, TC-029, TC-030, TC-007, TC-008, TC-047, TC-048, TC-049, TC-001, TC-002, TC-003, TC-004, TC-005
+- Automated без red_probe: **0**
 - Untriaged: **0** · untriaged_failure_age: **0**
 
 ## Сборка под тестом
@@ -24,22 +23,25 @@ generated_at: 2026-07-21T18:02:07Z · генератор: `scripts/queue_snapsho
 - 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
 - smoke: passed · regression: not_run
 
-## Тест-кейсы (99)
+## Тест-кейсы (111)
 
-- Approved: **5** · Automated: **93** · Blocked: **1**
-- автотесты (B3): active: **93**
+- Review: **12** · Automated: **98** · Blocked: **1**
+- автотесты (B3): active: **98**
 
 | Область | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
+| accessibility |  | 3 |  |  |  |
 | backup |  |  |  | 1 |  |
 | browser |  |  |  | 9 |  |
-| canary |  |  | 1 | 17 |  |
+| canary |  |  |  | 18 |  |
+| compatibility |  | 3 |  |  |  |
 | downloads |  |  |  | 8 |  |
 | errors |  |  |  | 1 |  |
 | filter-profiles |  |  |  | 5 |  |
 | library |  |  |  | 15 |  |
-| performance |  |  | 4 |  |  |
+| performance |  |  |  | 4 |  |
 | rating |  |  |  | 14 |  |
+| security |  | 6 |  |  |  |
 | settings |  |  |  | 6 | 1 |
 | smoke |  |  |  | 5 |  |
 | tabs |  |  |  | 6 |  |
@@ -57,9 +59,9 @@ generated_at: 2026-07-21T18:02:07Z · генератор: `scripts/queue_snapsho
 
 - BUG-012 [minor] Open — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
 
-## Test debt (0)
+## Test debt (1)
 
-- нет
+- AT-BUG-024 [missing_fixture] Open — Второй AVD (нижний API level, minSdk 26, rootable без Google Play) отсутствует в tools/avd — блокирует автоматизацию TC-109 (compatibility, P2)
 
 ## Прогоны (1)
 
@@ -76,7 +78,8 @@ generated_at: 2026-07-21T18:02:07Z · генератор: `scripts/queue_snapsho
 
 - нет
 
-## Эскалации (2)
+## Эскалации (3)
 
 - [2026-07-21T08:57:20Z] **BUG-012** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-18T12:00:00Z | нужно: ответить в ## Обсуждение
 - [2026-07-21T08:57:20Z] **TC-020** [sla:blocked_any] — в Blocked с 2026-07-19T09:55:00Z (причина: product_decision) | нужно: разобрать причину и вывести из Blocked
+- [2026-07-21T22:43:25Z] **BUG-013** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-19T17:30:00Z | нужно: ответить в ## Обсуждение

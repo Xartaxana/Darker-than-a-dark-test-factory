@@ -96,6 +96,22 @@ open-иконка карточки в Library (`library_steps.assert_open_icon_s
   orphan-файлов (диалог НЕ появляется — не покрыт отдельным кейсом, т.к. не описан
   явно как отдельный риск в §9; при необходимости можно добавить как P2).
 
+## Красная проба (red_probe, ретрофит — test-reviewer, 2026-07-22T00:58:17Z)
+
+Режим red-probe-only (только пп.6-7 F1, статус кейса не менялся).
+- **Зелёный (п.6):** `Invoke-Pytest tests/test_downloads.py -k '<5 downloads-тестов>'` →
+  `5 passed in 220.66s`, `PYTEST_EXIT=0`, emulator-5554.
+- **Красная проба (п.7):** порча на уровне данных (сам инвариант — «диалог отражает
+  ФАКТИЧЕСКОЕ число перелинкованного») — в фикстуре `orphan_download_relink_seeded`
+  закомментирован сидинг работы (`app_steps.seed_library([(work, "SAVE")])`), так что
+  orphan-файл матчит паттерн, но строки WorkRating для его workId в Room нет → scan
+  добавляет stub (added), а не перелинковывает существующую (relinked). Прогон
+  `-k test_change_download_folder... --reruns 0` → `FAILED`: `AssertionError: текст диалога
+  результата скана не совпал с ожидаемым «Found 1 files — relinked 1, added 0 new.»`
+  (`settings_steps.py:151`; фактически «relinked 0, added 1») — падение указывает на суть
+  (перелинковки не было), не таймаут.
+- **Откат:** `git checkout -- framework/tests/test_downloads.py`; дифф теста чист.
+
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»
 - [x] Given описывает полное состояние, воспроизводимое фикстурами

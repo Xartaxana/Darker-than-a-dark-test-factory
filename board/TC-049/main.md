@@ -108,3 +108,19 @@ test-reviewer, 2026-07-09 — **пройдено** (Approved → Automated).
   реактивен при `configChanges="uiMode"` (сверено по MainActivity.kt) — Activity
   не пересоздаётся.
 - Независимый прогон: 3/3 PASS (2026-07-09, emulator-5554).
+
+## Красная проба (red_probe, ретрофит — test-reviewer, 2026-07-22T01:33:11Z)
+
+Режим red-probe-only (только пп.6-7 F1, статус кейса и `automation_status` не менялись).
+- **Зелёный (п.6):** `Get-Device` → `DEVICE: emulator-5554`; `Invoke-Pytest
+  tests/test_settings.py -k '<3 theme-теста>'` → `3 passed in 121.83s`, `PYTEST_EXIT=0`
+  (в т.ч. `test_system_theme_follows_os_dark_mode`).
+- **Красная проба (п.7):** порча на уровне окружения (независимая переменная кейса —
+  тема ОС) — `set_system_dark_mode(True)` в «When» заменён на `set_system_dark_mode(False)`,
+  т.е. ОС остаётся Light, системной смены темы нет. Прогон `-k
+  test_system_theme_follows_os_dark_mode --reruns 0` → `FAILED`:
+  `AssertionError: ожидали иконку Contrast «Switch to light mode» (тема Dark)`
+  (`assert_theme_is_dark`, `side_panel_steps.py:35`) — падение указывает на суть
+  (приложение не последовало за OS Dark), не таймаут. Порча откачена `git checkout --
+  framework/tests/test_settings.py`, дифф файла чист; `finally`-блок вернул системную
+  тему в Light (общий ресурс эмулятора не протёк).

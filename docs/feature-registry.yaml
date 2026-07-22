@@ -586,3 +586,39 @@ features:
     title: "НФ-sec: отсутствие чувствительных данных (cookie/session/токены/локальные пути) в logcat при smoke (cross-cutting, adb-скан)"
     screen: non-functional
     source: "app/src/main/java/com/example/ao3_wrapper/MainActivity.kt"
+
+  # E1 accessibility smoke (docs/01 §5 R-13 A11Y, contrast → существующий R-11;
+  # область §9 «accessibility smoke (E1)», designed 2026-07-22 test-designer).
+  # Одна запись = одно наблюдаемо различимое НФ-свойство: наличие
+  # content-desc/text ключевых контролов / font-scaling без краша /
+  # contrast sanity dark-light — разные When/Then, разные кейсы (TC-106..108).
+  - id: nf-a11y-content-labels
+    title: "НФ-a11y: ключевые контролы (Rate/Note/тема/шрифт/таб) несут content-description или видимый текст в accessibility tree (UiAutomator2 black-box)"
+    screen: non-functional
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BottomBar.kt"
+  - id: nf-a11y-font-scaling
+    title: "НФ-a11y: основные экраны (Library/Browse/Settings) остаются без краша и с присутствующими контролами при системном font_scale 1.3"
+    screen: non-functional
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  - id: nf-a11y-contrast-sanity
+    title: "НФ-a11y: текст и фон различимы (luma-sanity, не точный WCAG-ratio) в обоих системных вариантах темы dark/light"
+    screen: non-functional
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowseSidePanel.kt"
+
+  # E3 compatibility (docs/01 §5 R-14 COMPAT; dark/light matrix ∩ R-11;
+  # orientation ∩ R-08/R-11; область §9 «compatibility (E3)», designed
+  # 2026-07-22 test-designer). Одна запись = один распознаваемый класс
+  # проверки (второй API level / системная dark-light матрица / поворот) —
+  # разные When/Then, разные кейсы (TC-109..111).
+  - id: nf-compat-api-level
+    title: "НФ-compat: базовый smoke-путь даёт тот же наблюдаемый результат на нижней границе minSdk (API 26), что и на основном AVD (API 34)"
+    screen: non-functional
+    source: "app/src/main/AndroidManifest.xml"
+  - id: nf-compat-dark-light-matrix
+    title: "НФ-compat: базовый smoke-путь без регресса в обоих системных режимах uimode night (dark/light)"
+    screen: non-functional
+    source: "app/src/main/java/com/example/ao3_wrapper/MainActivity.kt"
+  - id: nf-compat-orientation
+    title: "НФ-compat: поворот экрана (portrait/landscape, обе стороны) сохраняет активную вкладку/URL/scroll и не пересоздаёт WebView"
+    screen: non-functional
+    source: "app/src/main/java/com/example/ao3_wrapper/MainActivity.kt"

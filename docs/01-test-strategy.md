@@ -86,9 +86,9 @@ CLAUDE.md + фактическое наблюдаемое поведение; PR
 | R-09 | BUS | Фильтр-профили: сохранённый `queryString` теряется или применяется не тот профиль | 2 | 2 | 4 | P1-покрытие TC-040/041/042 (сохранение из формы AO3, применение с панели, удаление из Settings); автоматизация блокирована test debt AT-BUG-006 (replay-запись формы Sort&Filter) |
 | R-10 | DATA | Заметки/личные теги: comment-only записи (`rating=null`) ломают правила видимости или теряются | 2 | 2 | 4 | P1-покрытие TC-043/044/045/056 (comment-only не в рейтинговых вкладках и не фильтруется, note-overlay, теги не влияют на видимость) |
 | R-12 | PERF | Деградация производительности/стабильности: cold start и первая загрузка WebView вне бюджета, ANR/crash/fatal в smoke, безоткатный рост памяти длинной WebView-сессии (до 10 табов) | 2 | 2 | 4 | designed область E2 (§9), 2026-07-21: TC-096 (cold start), TC-097 (WebView first load, replay), TC-098 (crash/ANR/fatal scan), TC-099 (memory sanity, тренд) — все `status: Review` |
-| R-13 | A11Y | Регресс доступности: пропавшие content-description/лейблы ключевых контролов (одновременно — локаторы фабрики), поломка вёрстки при font scaling | 2 | 1 | 2 | needs-design область E1 (§9): accessibility tree через UiAutomator2, font_scale 1.3; contrast — под R-11 |
-| R-14 | COMPAT | Расхождение поведения между API-уровнями/конфигурациями: нижний API (minSdk 26) ломает WebView/рендер; поворот теряет табы/скролл или пересоздаёт WebView; системная dark/light | 2 | 2 | 4 | needs-design область E3 (§9): второй AVD (низкий API, rootable без Google Play), `cmd uimode`, rotate; ∩ R-08/R-11 |
-| R-15 | SEC | Приватность/безопасность конфигурации: `@JavascriptInterface` на удалённой странице, cleartext, world-readable backup, sensitive data в logcat | 2 | 2 | 4 | needs-design область E4-min (§9), **приоритет P1** (поднят 2026-07-21, docs/09 Этап 5 п.2 — цель мультипроектности); записи реестра `nf-sec-*` заведены (кейсов ещё нет); статические пункты (exported/cleartext/allowBackup) — инспекция манифеста/adb, НЕ Appium-UI (подтверждено владельцем 2026-07-14); полный аудит — вне скоупа (§8) |
+| R-13 | A11Y | Регресс доступности: пропавшие content-description/лейблы ключевых контролов (одновременно — локаторы фабрики), поломка вёрстки при font scaling | 2 | 1 | 2 | designed область E1 (§9), 2026-07-22: TC-106 (content-desc/text), TC-107 (font_scale 1.3), TC-108 (contrast sanity dark/light, под R-11) — все `status: Review` |
+| R-14 | COMPAT | Расхождение поведения между API-уровнями/конфигурациями: нижний API (minSdk 26) ломает WebView/рендер; поворот теряет табы/скролл или пересоздаёт WebView; системная dark/light | 2 | 2 | 4 | designed область E3 (§9), 2026-07-22: TC-109 (второй AVD API 26, **заблокирован AT-BUG-024** — второй AVD отсутствует в tools/avd), TC-110 (системная dark/light матрица), TC-111 (rotate, ∩ R-08/R-11) — все `status: Review` |
+| R-15 | SEC | Приватность/безопасность конфигурации: `@JavascriptInterface` на удалённой странице, cleartext, world-readable backup, sensitive data в logcat | 2 | 2 | 4 | designed область E4-min (§9), 2026-07-22, **приоритет P1** (поднят 2026-07-21, docs/09 Этап 5 п.2 — цель мультипроектности): TC-100..105, `status: Review`; статические пункты (exported/cleartext/allowBackup) — инспекция манифеста/adb, НЕ Appium-UI (подтверждено владельцем 2026-07-14); полный аудит — вне скоупа (§8) |
 
 Утверждён человеком 2026-07-02 (ранее «proposed» в §9). R-09 и R-10 утверждены
 человеком 2026-07-14 (сверка внешнего ревью docs/10, пункт P10; счёт P×I —
@@ -503,13 +503,16 @@ TITLE несёт "/" на Rate/Note/Tag — три разных Then) задок
 (E1/E2/E3 — 2026-07-07, docs/09 Этап 4 п.1-3; security/privacy smoke
 минимального скоупа — 2026-07-14, docs/09 Этап 4 п.13; сверка внешнего ревью
 docs/10 P8/P9). Изначально все четыре — `needs-design`; **E2 переведена в
-`designed` 2026-07-21** (TC-096..099 ниже), E1/E3/security остаются
-`needs-design`. **Приоритет области —
+`designed` 2026-07-21** (TC-096..099 ниже), **security переведена в
+`designed` 2026-07-22** (TC-100..105 ниже), **E1/E3 переведены в
+`designed` 2026-07-22** (TC-106..111 ниже) — все четыре области теперь
+`designed`.
+**Приоритет области —
 ниже закрытия P0-automation-гэпов и baseline canary (Этап 3);** внутри четвёрки
 порядок дизайна был **E2 → E1 → E3 → security** (порядок docs/09 Этап 4), НО
 **security ПОДНЯТ 2026-07-21** (docs/09 Этап 5 п.2, цель мультипроектности —
 довести security/privacy smoke на AO3 как методику-образец): security больше НЕ
-«ниже E1–E3», идёт следующим за E2 (единственной уже `designed`). Приоритет
+«ниже E1–E3», идёт следующим за E2 (обе уже `designed`). Приоритет
 security-области — **P1** (обоснование в её пункте ниже). Каждый пункт
 сформулирован проверяемым штатным стеком (Appium/UiAutomator2 UI + `adb` на
 эмуляторе, replay-режим для детерминизма); пункт, не наблюдаемый через этот
@@ -554,25 +557,36 @@ security-области — **P1** (обоснование в её пункте 
     отсутствие безоткатного роста (тренд), не абсолютный порог. **TC-099**
     (инвариант — тренд пик→откат по трём точкам замера, не единичное число).
 - **accessibility smoke (E1)** (labels/font → **R-13** A11Y, утверждён 2026-07-14; contrast
-  dark/light → существующий **R-11**) — **needs-design**:
+  dark/light → существующий **R-11**) — **designed** (2026-07-22,
+  test-designer), приоритет **P2**, `status: Review`, область
+  `test-cases/accessibility/`:
   - contentDescription/лейблы ключевых контролов: accessibility tree читается
     UiAutomator2 напрямую — точная black-box проверка наличия content-desc/text
-    на Rate/Note/тема/шрифт/таб-контролах.
+    на Rate/Note/тема/шрифт/таб-контролах. → **TC-106**.
   - font scaling основных экранов: `adb shell settings put system font_scale
     1.3` → экраны без крашей и без обрезки; assert = присутствие контролов +
     отсутствие crash (+ опц. скриншот); программная детекция клиппинга —
-    **testability gap** (штатный Appium не измеряет overflow вёрстки).
+    **testability gap** (штатный Appium не измеряет overflow вёрстки). → **TC-107**.
   - contrast sanity dark/light: точный WCAG-ratio требует пиксельной выборки со
     скриншота + кастомного расчёта — вне штатного Appium-assert, **testability
     gap**; штатно доступна только sanity (различимость bg/fg на скрине).
-    Привязка к R-11 — та же хрупкая тема-зона (CLAUDE.md «Dark mode fragile»).
+    Привязка к R-11 — та же хрупкая тема-зона (CLAUDE.md «Dark mode fragile»). → **TC-108**
+    (комбинаторная семья «темы» — инвариант различимости назван строкой в кейсе).
+  Блокеров автоматизации не обнаружено (все три кейса переиспользуют
+  существующие примитивы `framework/core/adb.py`/luma-метод TC-009/TC-010) —
+  `AT-BUG`-долг не заводился для этой области.
 - **compatibility (E3)** (**R-14** COMPAT, утверждён 2026-07-14; dark/light matrix ∩ R-11;
-  orientation ∩ R-08/R-11) — **needs-design**:
+  orientation ∩ R-08/R-11) — **designed** (2026-07-22, test-designer),
+  приоритет **P2**, `status: Review`, область `test-cases/compatibility/`:
   - второй (нижний) API level: P0-smoke на втором AVD с нижним API (нижняя
     граница — minSdk 26 по §1/манифесту); инфраструктурная предпосылка — тот же
-    rootable образ без Google Play для mitm-CA, что в §4 (replay).
+    rootable образ без Google Play для mitm-CA, что в §4 (replay). → **TC-109**
+    — **заблокирован автоматизацией**: второй AVD физически отсутствует в
+    `tools/avd` (только `ao3_test_api34.ini`) — заведён `bugs/AT-BUG-024.md`
+    (`type: test_debt`, `debt_kind: missing_fixture`) тем же ходом дизайна.
   - системная dark/light матрица: P0-smoke в обоих системных режимах
-    (`adb shell "cmd uimode night yes|no"`); пересечение с R-11.
+    (`adb shell "cmd uimode night yes|no"`); пересечение с R-11. → **TC-110**
+    (комбинаторная семья «темы», системный слой — инвариант в кейсе).
   - portrait/landscape: **поддерживается приложением — подтверждено по коду, не
     по памяти** (след: `AndroidManifest.xml`, `<activity .MainActivity>` несёт
     `configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize"`
@@ -580,23 +594,32 @@ security-области — **P1** (обоснование в её пункте 
     `MainActivity.kt` ~стр. 563 — явная landscape-логика side panel). Драйв —
     rotate через Appium/`adb`; критерий — сохранение активной вкладки/URL/скролла
     и отсутствие пересоздания WebView при повороте (∩ R-08 персистентность
-    табов, R-11 WebView/яркость).
+    табов, R-11 WebView/яркость). → **TC-111** (комбинаторная семья
+    «tabs»-персистентность — инвариант в кейсе).
 - **security/privacy smoke (E4→минимальный, решение 2026-07-14)** (**R-15** SEC,
-  утверждён 2026-07-14) — **needs-design**, **приоритет P1** (поднят 2026-07-21,
+  утверждён 2026-07-14) — **designed** (2026-07-22, test-designer), **приоритет
+  P1** (поднят 2026-07-21,
   docs/09 Этап 5 п.2 — цель мультипроектности). Обоснование P1: R-15 SEC (счёт
   4), приложение вешает `@JavascriptInterface` (`window.Android`) на удалённый
   AO3-origin и несёт cleartext-intent-filter — это активная поверхность
   приватности; методику security-smoke целью мультипроектности нужно довести на
   AO3 как образец для переносимости. Выше P2 (больше не «ниже E1–E3»), но НЕ P0 —
   не release-gate-блокер личного sideload-приложения без бэкенда. **Записи реестра
-  (заведены test-strategist 2026-07-21; кейсов ещё нет):**
-  `nf-sec-exported-components`, `nf-sec-cleartext-traffic`,
-  `nf-sec-js-bridge-exposure`, `nf-sec-file-access`, `nf-sec-backup-privacy`,
-  `nf-sec-logcat-leak` — по одной на распознаваемый класс проверки (блок
-  «Нефункциональные cross-cutting области» в `docs/feature-registry.yaml`); видны
-  в coverage_map «Фичи без единого кейса» как непокрытые — прямой вход для
-  test-designer. **Дизайн кейсов НЕ начат** (эта правка заводит только область/
-  записи; кейсы возьмёт конвейер правилом `needs-design` следующим /qa-loop).
+  (заведены test-strategist 2026-07-21) → кейсы (test-designer 2026-07-22,
+  `status: Review`, область `test-cases/security/`):**
+  `nf-sec-exported-components` → TC-100, `nf-sec-cleartext-traffic` → TC-101,
+  `nf-sec-js-bridge-exposure` → TC-102, `nf-sec-file-access` → TC-103,
+  `nf-sec-backup-privacy` → TC-104, `nf-sec-logcat-leak` → TC-105 — по одной
+  записи реестра на кейс (блок «Нефункциональные cross-cutting области» в
+  `docs/feature-registry.yaml`), кроме `nf-sec-backup-privacy`: её собственный
+  title уже текстуально сочетает static+behavioral как ОДНО распознаваемое
+  свойство «приватность бэкапа» — один кейс (TC-104) с двумя частями Then
+  вместо дробления (обоснование — в теле кейса). Блокеров автоматизации не
+  обнаружено: все шесть кейсов переиспользуют существующую инфраструктуру
+  фреймворка (`adb.shell`/`aapt`-инспекция манифеста, `saf_steps`/
+  `backup_steps` SAF-экспорт, `seed_with_download`, механизм error page TC-046,
+  `logcat_clear`/`logcat_dump` TC-098) без новых фикстур/сидинга —
+  `AT-BUG`-долг не заводился.
   **Явно НЕ security-аудит** (полный аудит — вне скоупа, §8); минимальный
   smoke-скоуп docs/09 Этап 4 п.13. Замечание по
   режиму проверки: часть пунктов — статические факты собранного APK, НЕ

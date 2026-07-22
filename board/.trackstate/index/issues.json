@@ -1,5 +1,71 @@
 [
   {
+    "key": "TC-106",
+    "path": "board/TC-106/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Ключевые контролы (Rate/Note/тема/шрифт/таб) несут content-description или видимый текст в accessibility tree",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:accessibility",
+      "risk:R-13"
+    ],
+    "updated": "2026-07-22T03:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-107",
+    "path": "board/TC-107/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Font scaling (font_scale 1.3): основные экраны без крашей, ключевые контролы остаются в дереве",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:accessibility",
+      "risk:R-13"
+    ],
+    "updated": "2026-07-22T03:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-108",
+    "path": "board/TC-108/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Contrast sanity dark/light: текст и фон различимы в обоих системных вариантах темы",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:accessibility",
+      "risk:R-11"
+    ],
+    "updated": "2026-07-22T03:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "TC-021",
     "path": "board/TC-021/main.md",
     "parent": null,
@@ -537,16 +603,17 @@
     "epicPath": null,
     "summary": "Чекбокс 'Main pairing only' инжектируется в include-фильтр формы Sort&Filter, доступен только при ровно одном выбранном relationship-теге (replay)",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:canary",
-      "risk:R-02"
+      "risk:R-02",
+      "automation:active"
     ],
-    "updated": "2026-07-21T16:07:49Z",
-    "resolution": null,
+    "updated": "2026-07-21T22:53:56Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -639,6 +706,72 @@
     ],
     "updated": "2026-07-21T15:54:38Z",
     "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-109",
+    "path": "board/TC-109/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "P0-smoke на втором (нижнем) API level (minSdk 26): базовый путь без регресса относительно основного AVD",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:compatibility",
+      "risk:R-14"
+    ],
+    "updated": "2026-07-22T03:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-110",
+    "path": "board/TC-110/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Системная dark/light матрица: P0-smoke путь без регресса в обоих системных режимах",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:compatibility",
+      "risk:R-14"
+    ],
+    "updated": "2026-07-22T03:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-111",
+    "path": "board/TC-111/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Portrait/landscape: поворот сохраняет активную вкладку/URL/скролл, не пересоздаёт WebView",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:compatibility",
+      "risk:R-14"
+    ],
+    "updated": "2026-07-22T03:00:00Z",
+    "resolution": null,
     "children": [],
     "archived": false
   },
@@ -1317,16 +1450,17 @@
     "epicPath": null,
     "summary": "Холодный старт приложения укладывается в относительный бюджет TotalTime (am start -W)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:performance",
-      "risk:R-12"
+      "risk:R-12",
+      "automation:active"
     ],
-    "updated": "2026-07-21T15:12:03Z",
-    "resolution": null,
+    "updated": "2026-07-22T00:03:16Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1339,16 +1473,17 @@
     "epicPath": null,
     "summary": "Первая загрузка WebView укладывается в относительный бюджет до сигнала завершения загрузки (replay)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:performance",
-      "risk:R-12"
+      "risk:R-12",
+      "automation:active"
     ],
-    "updated": "2026-07-21T15:12:09Z",
-    "resolution": null,
+    "updated": "2026-07-22T00:03:16Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1361,16 +1496,17 @@
     "epicPath": null,
     "summary": "Отсутствие FATAL EXCEPTION/ANR в logcat при прогоне P0-smoke",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:performance",
-      "risk:R-12"
+      "risk:R-12",
+      "automation:active"
     ],
-    "updated": "2026-07-21T15:11:58Z",
-    "resolution": null,
+    "updated": "2026-07-22T00:03:16Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1383,16 +1519,17 @@
     "epicPath": null,
     "summary": "Память не растёт безоткатно за длинную WebView-сессию до 10 табов",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:performance",
-      "risk:R-12"
+      "risk:R-12",
+      "automation:active"
     ],
-    "updated": "2026-07-21T15:12:43Z",
-    "resolution": null,
+    "updated": "2026-07-22T00:03:16Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1715,6 +1852,138 @@
     ],
     "updated": "2026-07-21T15:54:38Z",
     "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-100",
+    "path": "board/TC-100/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Exported-компоненты: MainActivity exported=true с VIEW/BROWSABLE intent-filter на archiveofourown.org (статическая инспекция манифеста)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:security",
+      "risk:R-15"
+    ],
+    "updated": "2026-07-22T02:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-101",
+    "path": "board/TC-101/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Cleartext-трафик: политика манифеста/network-security-config зафиксирована и сверена с http-схемой intent-filter (статическая инспекция)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:security",
+      "risk:R-15"
+    ],
+    "updated": "2026-07-22T02:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-102",
+    "path": "board/TC-102/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "JS-bridge (window.Android) доступность: baseline на доверенном AO3-origin vs проба на локальной error-странице (не-AO3-контент)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:security",
+      "risk:R-15"
+    ],
+    "updated": "2026-07-22T02:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-103",
+    "path": "board/TC-103/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "file:// доступ из открытого скачанного файла не выходит за пределы контента загрузки при переходе по встроенной ссылке (∩ TC-034, негативный/граничный случай)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:security",
+      "risk:R-15"
+    ],
+    "updated": "2026-07-22T02:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-104",
+    "path": "board/TC-104/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Приватность бэкапа: allowBackup сопровождён явным ограничением области (манифест-факт) + SAF-экспортный JSON не получает мир-читаемые права (поведенческая проверка)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:security",
+      "risk:R-15"
+    ],
+    "updated": "2026-07-22T02:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-105",
+    "path": "board/TC-105/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Отсутствие чувствительных данных (cookie/session/токены/локальные пути) в logcat при представительном smoke-прогоне",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:security",
+      "risk:R-15"
+    ],
+    "updated": "2026-07-22T02:00:00Z",
+    "resolution": null,
     "children": [],
     "archived": false
   },
@@ -2774,6 +3043,28 @@
     ],
     "updated": "2026-07-21T16:20:00Z",
     "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-024",
+    "path": "board/AT-BUG-024/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Второй AVD (нижний API level, minSdk 26, rootable без Google Play) отсутствует в tools/avd — блокирует автоматизацию TC-109 (compatibility, P2)",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-109",
+      "sev:minor"
+    ],
+    "updated": "2026-07-22T03:30:00Z",
+    "resolution": null,
     "children": [],
     "archived": false
   },

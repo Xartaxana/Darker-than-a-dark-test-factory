@@ -83,3 +83,16 @@ comment-only (не исчезает полностью из Library/Downloads т
 ## B3-поля (test-maintainer, 2026-07-08, AT-BUG-003)
 Автоматизирован до гейта F1 (B3-поля бэкфилл, ревью задним числом не проводилось).
 `automation_status: active` проставлен по факту (тест живёт в suite и зелёный).
+
+## Красная проба (red_probe, ретрофит — test-reviewer, 2026-07-22T01:19:44Z)
+
+Режим red-probe-only (только пп.6-7 F1, статус кейса и `automation_status` не менялись).
+- **Зелёный (п.6):** `Get-Device` → `DEVICE: emulator-5554`;
+  `Invoke-Pytest tests/test_rating.py` → `6 passed in 213.26s`, `PYTEST_EXIT=0`
+  (в т.ч. `test_deselect_rating_on_work_page_panel`).
+- **Красная проба (п.7):** порча проверяемого условия — повторный (deselect) тап
+  `rate_current_work(driver, "SAVE")` пропущен (рейтинг остаётся SAVE). Прогон
+  `-k test_deselect_rating_on_work_page_panel --reruns 0` → `FAILED`:
+  `AssertionError: работа «A Loved Test Work» неожиданно присутствует во вкладке FAVORITE`
+  (`library_steps.py:49`) — падение указывает на суть (deselect должен убрать работу из FAVORITE).
+- **Откат:** `git checkout -- framework/tests/test_rating.py`; дифф теста чист.
