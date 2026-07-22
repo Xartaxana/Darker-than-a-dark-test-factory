@@ -783,3 +783,114 @@ Git-Bash съел `/qa-loop 20` как Windows-путь в одной orchestrat
 строке — исправлено отдельным коммитом. Эмулятор/Appium штатно
 погашены на закрытии (NO DEVICE подтверждён канонически). Коммиты:
 24203ca (проход), ca32c15 (фикс mangled-path).
+
+### Шапка 2026-07-22 (6) (VERBATIM из HANDOFF; смещена следующим handoff'ом)
+
+Обновлено: 2026-07-22 (6), Lead Fable «входящие OS + порты механизмов
++ AT-BUG-024 + аппрув TC-100..111 + батч мелочей». Сессия: (1) разбор
+4 входящих OS (двухпроходка D-0066, 2 scout) — решения Lead: N4
+escape-allowlist ПРИНЯТ (кросс-репо sha-пины концессий CLAUDE.md на
+OS DECISIONS_FULL), t-257 wiring-чек ПРИНЯТ, t-259 машиночитаемый
+вердикт критика ПРИНЯТ, D-0087 judge-приёмка — ПРИЗНАННОЕ ОТЛИЧИЕ
+(гейты фабрики + basis=critic уже покрывают лист-класс; BASIS_VALUES
+не расширять); полные тексты решений — «Открытые хвосты» HANDOFF. (2)
+Порт-батч os-port-0722 РЕАЛИЗОВАН тем же днём (builder 650 passed,
+106 новых тестов → critic ПРИНЯТЬ → Lead placement 542e8be):
+.githooks/pre-commit + scripts/escape_check.py (сид 5 записей),
+scripts/wiring_check.py SessionStart-хуком (строка WIRING на буте —
+её отсутствие = находка), правило 16 critic.md + scripts/
+critic_verdict_check.py — чекер провалидировал ОБА живых вердикта
+этой сессии (VERDICT OK x2). (3) AT-BUG-024 Fixed фокус-проходом
+/qa-loop B4 (test-maintainer + critic ПРИНЯТЬ): второй AVD
+ao3_test_api26 — образ google_apis (default API26 НЕ НЕСЁТ WebView
+вовсе — MissingWebViewPackageException, урок в environment-setup);
+tasks.ps1 параметризован -AvdName (обратная совместимость живым
+прогоном); CA-скрипты с apex-гейтом (API<29 — system-store); p0
+46/46 зелёный; deadlock-пункт критерия Fixed переформулирован Lead'ом
+на приёмке (TC-109-прогон = downstream, правило 14 + D1). (4)
+TC-100..111 Review→Approved по слову оператора (human-переход
+transitions.yaml). (5) misc-batch-0722: sibling-четвёрка шапки (5)
+ЗАКРЫТА (TC-099 baseline через settle; TC-005 assert усилен
+pref-проверкой с красной пробой обеими сторонами — selected-локатора
+в Compose нет, ратифицировано; независимость static/behavioral и
+aapt-vs-dumpsys — заметками автоматизации TC-100/101/104); заведён
+AT-BUG-025 (driver.get-класс, Open — B4-цель). (6) Рецидив «жду
+фоновый» у builder — разбужен SendMessage по протоколу, классовый
+пробел закрыт: канон-блок в builder.md (правило 9, коммит 22e7b85).
+Эмулятор/Appium погашены, NO DEVICE подтверждён канонически. Коммиты:
+1534523, 542e8be, 3544823, 0e0f4bb, 4d107d4, 1d66fc3, ea7f129,
+1a560e5, 22e7b85.
+
+### Решения Lead по входящим OS 2026-07-22 (полные тексты; свип из HANDOFF handoff'ом (6))
+
+- **РЕШЕНИЕ Lead 2026-07-22 по входящему N4/D-0082 (escape-allowlist)
+  — ПЕРЕНЯТЬ адаптированно, кросс-репо форма** (разбор
+  os-inbox-0722, scout-двухпроходка D-0066, приёмка в routing-log):
+  пиннуем sha256 секций OS DECISIONS_FULL.md, обосновывающих
+  концессии нашего CLAUDE.md (skip-льгота D-0058, батчинг D-0081,
+  fail-open замер D-0083, льготы деградации D-0039/D-0042) — дрейф
+  обоснований происходит в ЧУЖОМ git и нам не виден (прецедент: их
+  repin D-0089 вскрылся на их же сидах). Чекер переносим (decision_file
+  — поле entry, абсолютный путь легален). Требует нового
+  .githooks/pre-commit — введён вместе с wiring-чеком.
+  Признанное отличие внутри решения: AO3-собственные концессии без
+  внешнего носителя решения (reopen-семантика) НЕ пиннятся —
+  named-not-covered до появления собственного файла решений; детектор
+  утечки — первый живой инцидент дрейфа такой концессии.
+  РЕАЛИЗОВАН 2026-07-22 (os-port-0722, сид 5 записей: D-0058, D-0081,
+  D-0083, D-0039, D-0042). Не-блокирующие наблюдения critic при
+  касании: пустой entries проходит exit 0 (floor-guard'а нет);
+  fail-open распространяется и на относительный недостижимый
+  decision_file (шире буквы решения — осознано); wiring_check ловит
+  Exception, но не BaseException при exec_module (безопасно, пока все
+  хук-скрипты __main__-guarded — новый хук-скрипт с top-level кодом
+  сломает инвариант).
+
+- **РЕШЕНИЕ Lead 2026-07-22 по входящему D-0087 (judge-приёмка
+  лист-класса) — ПРИЗНАННОЕ ОТЛИЧИЕ, не перенимать:** (а) лист-класс
+  конвейера у нас уже принимается машинными гейтами фабрики (D1
+  fix-verifier, F1 test-reviewer — функциональный аналог их
+  «калиброванного судьи», причём с запретом ручного диспатча очереди);
+  (б) не-конвейерный лист принимается через basis=critic — вход без
+  Lead-чтения уже есть (двухслойный критик-вход); (в) предпосылок
+  OS-механики нет: ни шлюза, ни JUDGE_SYSTEM_PROMPT, ни аналога их
+  чека 30 калибровки, ни $/задачу-замера — без калибровочной сетки
+  basis "judge" стал бы каналом самосертификации (класс F-22).
+  BASIS_VALUES log_append.py НЕ расширять. Пересмотр — только с
+  evidence дороговизны critic-входа на листах (еженедельная
+  калибровка). Референс: OS docs/DECISIONS_FULL.md D-0087.
+
+- **РЕШЕНИЕ Lead 2026-07-22 по входящему t-257 (wiring-integrity чек)
+  — ПЕРЕНЯТЬ адаптированно:** класс «хуки умирают молча» применим к
+  нам буквально: core.hooksPath — ЛОКАЛЬНЫЙ git-конфиг (свежий клон =
+  commit-msg/mechanism_gate мёртв молча), hygiene_gate.py в PreToolUse
+  умирает молча при битом файле/python вне PATH. Адаптация:
+  scripts/wiring_check.py (каналы: hooksPath→.githooks с ожидаемым
+  набором {commit-msg, pre-commit}; hooks из .claude/settings.json по
+  нашему паттерну `python scripts/*.py`; python в PATH) + регистрация
+  SessionStart-хуком в settings.json — печать WIRING OK/WARNING на
+  старте сессии, fail-open (никогда не ломает старт). Код-гейт по
+  D-0063 сильнее дисциплины SKILL.md. Референс: OS
+  tools/session_context.py (wiring) +
+  tools/test_session_context_wiring.py. РЕАЛИЗОВАН 2026-07-22
+  (os-port-0722).
+
+- **РЕШЕНИЕ Lead 2026-07-22 по входящему t-259 (машиночитаемый вердикт
+  критика) — ПЕРЕНЯТЬ адаптированно:** critic.md п.6 уже требует
+  явный вердикт + след, но свободным текстом — basis=critic
+  тир-матрицы опирается на вердикт, который ничто не проверяет
+  механически. Порт: схема (русский enum ПРИНЯТЬ/ДОРАБОТАТЬ/ОТКЛОНИТЬ
+  дословно по словарю critic.md п.6; поля
+  verdict/blockers/class_completeness/trail) +
+  scripts/critic_verdict_check.py (последний fenced ```json,
+  fail-closed: нет/бит блок = вердикт возвращается без приёмки) +
+  правило 16 в critic.md. Скоуп — только .claude/agents/critic.md
+  (QA-агенты покрыты схемами agent-output, ось 6); frontmatter
+  `model` critic.md НЕ тронут (FP-риск parity-теста S2). Референс: OS
+  tools/critic_verdict.schema.json + tools/critic_verdict_check.py +
+  правило 16 critic_staged.md (staged-файл у OS промоутнут в их живой
+  critic.md). РЕАЛИЗОВАН 2026-07-22 (os-port-0722): чекер
+  провалидировал оба живых вердикта сессии (VERDICT OK x2). Аналог
+  «12 agent.md со свободным вердиктом» — named-not-covered: QA-агенты
+  намеренно покрыты agent_output (ось 6), расширение — по первому
+  живому инциденту.
