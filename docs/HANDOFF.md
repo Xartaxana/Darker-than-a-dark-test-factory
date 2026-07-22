@@ -48,7 +48,10 @@ docs/09-history.md.
 следующего события — проза сканером не читается). Грязное дерево или
 неотправленные коммиты = прошлая сессия закрылась без
 handoff-проверки — зафиксировать находкой в журнале (`log_append`),
-не поглощать молча. Затем — preflight шаг 0 (сверка яруса).
+не поглощать молча. С 2026-07-22 SessionStart-хук печатает строку
+`WIRING: OK`/`WIRING WARNING` (scripts/wiring_check.py, os-port-0722)
+— отсутствие строки на буте или WARNING = находка, разобрать до
+Lead-действий (класс «хуки умирают молча»). Затем — preflight шаг 0 (сверка яруса).
 **Сверка яруса (D-0058/D-0042):** деградации НЕТ — окно 14:51:04
 сессии (3) закрыто `lead_restored` 2026-07-21T17:12:05 с приёмкой
 окна (D-0044, 7 queued-to-lead ратифицированы без замечаний). Новая
@@ -94,16 +97,13 @@ docs/09-history.md (boot-budget sweep 2026-07-21).
    раньше по APP_CHANGED/кластеру (settings-кластер BUG-012/013 уже
    существовал ДО CH-004 — не новый, не событийный триггер сам по
    себе, но следующий НОВЫЙ баг той же зоны — событийный триггер).
-2. **Порт-батч os-port-0722** (решения Lead 2026-07-22 по входящим
-   OS, см. «Открытые хвосты»): builder-спека одним батчем — (а)
-   порт escape_check + scripts/escape_allowlist.json с кросс-репо
-   sha-пинами концессий CLAUDE.md на OS DECISIONS_FULL + новый
-   .githooks/pre-commit; (б) scripts/wiring_check.py +
-   SessionStart-хук в .claude/settings.json; (в) схема + чекер
-   вердикта критика + правило в critic.md (frontmatter model не
-   трогать — S2). Приёмка: critic обязателен (механизмы, схема
-   данных); placement на live path и Rule-10 блоки в
-   коммит-сообщениях — Lead-коммитом (паттерн D-0069 OS).
+2. ~~Порт-батч os-port-0722~~ — ИСПОЛНЕН 2026-07-22 тем же днём:
+   builder (650 passed, 106 новых тестов) → critic ПРИНЯТЬ без
+   блокеров → Lead placement; DAG docs/tasks/2026-07-22_os-port-0722.md,
+   витнессы в routing-log. Живые тесты обоих новых гейтов — этим же
+   placement-коммитом (pre-commit escape_check + commit-msg
+   mechanism_gate), чекер вердикта прогнан на реальном вердикте
+   критика (VERDICT OK).
 3. **Калибровка №4** — штатно ~2026-07-25. От сессии (5) добавить:
    тир-матрица D-0058 на практике — Sonnet-координатор НЕ может
    принять Sonnet-тир результат через queued-to-lead, только через
@@ -113,7 +113,13 @@ docs/09-history.md (boot-budget sweep 2026-07-21).
    последнего чартера); фантом-класс от собственной путаницы
    координатора (delegated до понимания path-коллизии) — закрыт
    штатным closes-phantom, но стоит отметить как пример «координатор
-   тоже ошибается, механизм ловит».
+   тоже ошибается, механизм ловит». От сессии 2026-07-22 (os-port):
+   **детектор утечки правила 16 critic.md** — выборочная сверка
+   accepted-событий с basis=critic (или agent=critic) периода: в
+   транскрипте критика есть fenced json-вердикт И координатор прогнал
+   scripts/critic_verdict_check.py до приёмки (упоминание в notes);
+   плюс контроль строки WIRING в бутах сессий периода (детектор
+   wiring_check самого себя).
 4. **Подготовка репетиции (docs/11)** — без изменений; включение
    heartbeat-задачи — слово владельца.
 
@@ -216,7 +222,14 @@ reachability guard в `mitm.wait_device_proxy_reachable`, тест не долж
   внешнего носителя решения (reopen-семантика) НЕ пиннятся —
   named-not-covered до появления собственного файла решений; детектор
   утечки — первый живой инцидент дрейфа такой концессии.
-  Реализация — порт-батч os-port-0722 (СЛЕДУЮЩИЙ ШАГ п.2).
+  РЕАЛИЗОВАН 2026-07-22 (os-port-0722, сид 5 записей: D-0058, D-0081,
+  D-0083, D-0039, D-0042). Не-блокирующие наблюдения critic при
+  касании: пустой entries проходит exit 0 (floor-guard'а нет);
+  fail-open распространяется и на относительный недостижимый
+  decision_file (шире буквы решения — осознано); wiring_check ловит
+  Exception, но не BaseException при exec_module (безопасно, пока все
+  хук-скрипты __main__-guarded — новый хук-скрипт с top-level кодом
+  сломает инвариант).
 
 - **РЕШЕНИЕ Lead 2026-07-22 по входящему D-0087 (judge-приёмка
   лист-класса) — ПРИЗНАННОЕ ОТЛИЧИЕ, не перенимать:** (а) лист-класс
@@ -333,7 +346,8 @@ reachability guard в `mitm.wait_device_proxy_reachable`, тест не долж
   печать WIRING OK/WARNING на старте сессии, fail-open (никогда не
   ломает старт). Сейчас Session Start — дисциплина SKILL.md; код-гейт
   по D-0063 сильнее. Референс: OS tools/session_context.py (wiring) +
-  tools/test_session_context_wiring.py. Реализация — os-port-0722.
+  tools/test_session_context_wiring.py. РЕАЛИЗОВАН 2026-07-22
+  (os-port-0722).
 - **РЕШЕНИЕ Lead 2026-07-22 по входящему t-259 (машиночитаемый вердикт
   критика) — ПЕРЕНЯТЬ адаптированно:** critic.md п.6 уже требует
   явный вердикт + след, но свободным текстом — basis=critic
@@ -347,5 +361,10 @@ reachability guard в `mitm.wait_device_proxy_reachable`, тест не долж
   (QA-агенты покрыты схемами agent-output, ось 6); frontmatter
   `model` critic.md НЕ трогать (FP-риск parity-теста S2, см. хвост
   выше). Референс: OS tools/critic_verdict.schema.json +
-  tools/critic_verdict_check.py + правило 16 critic_staged.md.
-  Реализация — os-port-0722.
+  tools/critic_verdict_check.py + правило 16 critic_staged.md
+  (уточнение builder: staged-файл у OS промоутнут в их живой
+  critic.md). РЕАЛИЗОВАН 2026-07-22 (os-port-0722): правило 16
+  нашего critic.md, чекер провалидировал первый же реальный вердикт
+  (VERDICT OK: ПРИНЯТЬ). Аналог «12 agent.md со свободным вердиктом»
+  — named-not-covered: QA-агенты намеренно покрыты agent_output
+  (ось 6), расширение — по первому живому инциденту.

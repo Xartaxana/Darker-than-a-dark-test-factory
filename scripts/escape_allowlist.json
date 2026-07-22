@@ -1,0 +1,54 @@
+{
+  "entries": [
+    {
+      "id": "critic-skipped-concession",
+      "carrier_file": "CLAUDE.md",
+      "carrier_anchor": "critic: skipped, <причина>",
+      "decision_id": "D-0058",
+      "decision_file": "D:/Improving_AI/Operating-System-for-LLMs/docs/DECISIONS_FULL.md",
+      "section_sha256": "e30ce06c46026f8c5ad9328bf50a64f70c4e041efe5b5d088d70a56dfeac0760",
+      "affirmed": "2026-07-22",
+      "note": "small-diff critic-skip concession, acceptor-above-only (CLAUDE.md rule 3/8, Role != tier matrix)"
+    },
+    {
+      "id": "batching-blocking-self-execution",
+      "carrier_file": "CLAUDE.md",
+      "carrier_anchor": "самоисполнение со skip-событием легально только для правки, блокирующей текущий ход",
+      "decision_id": "D-0081",
+      "decision_file": "D:/Improving_AI/Operating-System-for-LLMs/docs/DECISIONS_FULL.md",
+      "section_sha256": "9823d781aea7f76c726d2ee570b49677fdb62b7031f1d36042bcfa1825fb6990",
+      "affirmed": "2026-07-22",
+      "note": "batching exception for blocking-only self-execution (CLAUDE.md rule 8)"
+    },
+    {
+      "id": "tier-measurement-fail-open",
+      "carrier_file": "CLAUDE.md",
+      "carrier_anchor": "MISMATCH-предупреждение разбирается ДО использования результата как слова требуемого яруса",
+      "decision_id": "D-0083",
+      "decision_file": "D:/Improving_AI/Operating-System-for-LLMs/docs/DECISIONS_FULL.md",
+      "section_sha256": "38f0c82a1422ec440e07bef29cf75e8b54517f2012d27c27663b478e3b84f53c",
+      "affirmed": "2026-07-22",
+      "note": "tier requirement is closed by measurement, not blocked by mismatch (CLAUDE.md rule 4в)"
+    },
+    {
+      "id": "degradation-concession-d0039",
+      "carrier_file": "CLAUDE.md",
+      "carrier_anchor": "рутинная координация продолжается, но НЕ меняются статусы делегационной таблицы, НЕ подписываются гейты",
+      "decision_id": "D-0039",
+      "decision_file": "D:/Improving_AI/Operating-System-for-LLMs/docs/DECISIONS_FULL.md",
+      "section_sha256": "df181f86bd17fe0a8e19a2af02bb2ad0d4e58dd7e6e0de17395050f73a9c7c98",
+      "affirmed": "2026-07-22",
+      "note": "degraded Lead keeps coordinating without changing statuses/gates (CLAUDE.md, section Деградация Lead)"
+    },
+    {
+      "id": "degradation-concession-d0042",
+      "carrier_file": "CLAUDE.md",
+      "carrier_anchor": "оператор явно переключил модель на ярус ниже",
+      "decision_id": "D-0042",
+      "decision_file": "D:/Improving_AI/Operating-System-for-LLMs/docs/DECISIONS_FULL.md",
+      "section_sha256": "03d07b79d91e1e3a694d5757d5bb700ddd5c66cdf54e19085ef435182e89d9ab",
+      "affirmed": "2026-07-22",
+      "note": "explicit operator-initiated model switch is a lead_degraded trigger (CLAUDE.md, section Деградация Lead)"
+    }
+  ]
+}

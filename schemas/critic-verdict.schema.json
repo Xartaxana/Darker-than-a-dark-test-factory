@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "critic-verdict.schema.json",
+  "title": "Critic verdict (AO3_tests)",
+  "description": "Machine-checkable structure for a critic (Opus) review verdict. Emitted as the last fenced ```json block in the critic's final message. Validated by scripts/critic_verdict_check.py (rules are hardcoded there; this file is the reference schema, checked for drift by scripts/tests/test_critic_verdict_check.py). Port of D:\\Improving_AI\\Operating-System-for-LLMs tools/critic_verdict.schema.json, task os-port-0722, with a deliberate adaptation: the 'verdict' enum is Russian, verbatim from .claude/agents/critic.md rule 6, instead of the OS original's English fit/fit_with_fixes/blocker -- avoiding a two-dictionary drift between the agent prompt's own wording and the machine schema.",
+  "type": "object",
+  "required": ["verdict", "blockers", "class_completeness", "trail"],
+  "additionalProperties": true,
+  "properties": {
+    "verdict": {
+      "type": "string",
+      "enum": ["ПРИНЯТЬ", "ДОРАБОТАТЬ", "ОТКЛОНИТЬ"],
+      "description": "ПРИНЯТЬ = accept, ДОРАБОТАТЬ = needs fixes, ОТКЛОНИТЬ = reject. Verbatim dictionary of .claude/agents/critic.md rule 6."
+    },
+    "blockers": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Blocking findings. Empty when verdict is ПРИНЯТЬ; non-empty when verdict is ОТКЛОНИТЬ."
+    },
+    "class_completeness": {
+      "type": "string",
+      "description": "Answer on class completeness of the fix per docs/SIBLING_MAP.md (D-0043)."
+    },
+    "trail": {
+      "type": "object",
+      "required": ["read", "reruns"],
+      "properties": {
+        "read": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Files/paths actually read during review."
+        },
+        "reruns": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["command", "result"],
+            "properties": {
+              "command": { "type": "string" },
+              "result": { "type": "string" }
+            }
+          },
+          "description": "Control reruns of the mechanical layer (D-0046)."
+        }
+      }
+    },
+    "fixes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Required and non-empty when verdict is ДОРАБОТАТЬ; optional otherwise."
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "verdict": { "const": "ПРИНЯТЬ" } } },
+      "then": {
+        "properties": { "blockers": { "type": "array", "maxItems": 0 } }
+      }
+    },
+    {
+      "if": { "properties": { "verdict": { "const": "ОТКЛОНИТЬ" } } },
+      "then": {
+        "properties": { "blockers": { "type": "array", "minItems": 1 } }
+      }
+    },
+    {
+      "if": { "properties": { "verdict": { "const": "ДОРАБОТАТЬ" } } },
+      "then": {
+        "required": ["fixes"],
+        "properties": {
+          "fixes": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ]
+}

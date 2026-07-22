@@ -1,0 +1,4 @@
+#!/bin/sh
+# task os-port-0722: cross-repo escape-allowlist check (adaptation of
+# D:\Improving_AI\Operating-System-for-LLMs tools/escape_check.py).
+python scripts/escape_check.py
