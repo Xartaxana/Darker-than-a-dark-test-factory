@@ -1,19 +1,19 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-22T11:54:56Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-07-22T12:29:51Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **488.3** (RUN-20260702-0300)
+- smoke: Closed · smoke_freshness_hours: **488.9** (RUN-20260702-0300)
 - regression: not_run
 - canary: not_run
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **1**
 - p0_automation_coverage: **100%** (34/34)
 - p1_automation_coverage: **89%** (47/53)
-- Test debt открыт: **0**
+- Test debt открыт: **1** — AT-BUG-025
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
 - Untriaged: **0** · untriaged_failure_age: **0**
@@ -59,9 +59,10 @@ generated_at: 2026-07-22T11:54:56Z · генератор: `scripts/queue_snapsho
 
 - BUG-012 [minor] Open — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
 
-## Test debt (1)
+## Test debt (2)
 
 - AT-BUG-024 [missing_fixture] Fixed — Второй AVD (нижний API level, minSdk 26, rootable без Google Play) отсутствует в tools/avd — блокирует автоматизацию TC-109 (compatibility, P2)
+- AT-BUG-025 [flaky_test] Open — driver.get зависает неограниченно в WebView-контексте при отсутствии load-события (нет общего navigate-хелпера с таймаутом во всех местах browser_steps.py)
 
 ## Прогоны (1)
 

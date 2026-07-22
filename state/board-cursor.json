@@ -669,6 +669,11 @@
     "artifact_status": "Fixed",
     "board_status": "Fixed"
   },
+  "AT-BUG-025": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
   "BUG-001": {
     "itype": "bug",
     "artifact_status": "Open",
