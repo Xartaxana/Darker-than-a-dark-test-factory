@@ -87,10 +87,29 @@ docs/09-history.md (boot-budget sweep 2026-07-21).
    правило 15 (red_probe ретрофит) ЗАКРЫТО целиком (28/28),
    правило 16 (needs-design) ЗАКРЫТО целиком (все 4 non-func области
    Этапа 4 designed). Приоритет теперь: **B4 test debt AT-BUG-024**
-   (второй AVD нижнего API отсутствует — блокирует автоматизацию
-   TC-109; существенная инфра-задача, НЕ мелкий фикс — оценить
-   реальный объём до диспатча, возможен отдельный фокус-проход, не
-   попутный слот обычного /qa-loop); ЗАТЕМ обычная очередь
+   — **объём ОЦЕНЁН 2026-07-22** (at-bug-024-avd-recon, accepted в
+   routing-log): один фокус-проход /qa-loop по B4 (test-maintainer),
+   состав: (а) скачать system-image API 26 (~2–4 GB, D: 251 GB
+   свободно; наличие `system-images;android-26;default;x86_64` у
+   Google — сверить `sdkmanager --list` при диспатче, оценка не
+   проверена; фолбэк по критерию бага — google_apis без Play /
+   27/28 с документированием выбора); (б) второй AVD ini+config.ini
+   по образцу api34; (в) параметризация tasks.ps1 — хардкод
+   ao3_test_api34 в 4 местах (avdDir:21, emuArgs:61,
+   orphan-kill:101/103), Install-App без `-s` = только
+   последовательные запуски эмуляторов, не параллель; (г) apex-гейт
+   в install-mitm-ca.sh/ca-mount.sh: на API 26 нет
+   /apex/com.android.conscrypt — mount и echo-диагностика должны
+   условно пропускать apex-путь (копия certs уже с `|| true`);
+   признак готовности «CA visible in apex store» в Start-Emulator —
+   переключить на system-store для API 26. Фреймворк УЖЕ
+   параметризован (AO3_DEVICE/AO3_PLATFORM_VERSION, caps без
+   правок). РИСК-буфер: WebView API 26 ≈ Chrome 58 против эталона
+   113 при активном webview-context (chromedriverAutodownload
+   потянет древний chromedriver) — может добавить итерацию на
+   TC-109. Автоматизация TC-109 — после Fixed, штатно правилом 14;
+   DoD фикса — критерий Fixed в bugs/AT-BUG-024.md (включая smoke
+   без регресса на api34). ЗАТЕМ обычная очередь
    автоматизации (Approved-кейсы TC-100..111 designed этой сессией,
    automated_by пуст — правило 14 подхватит). Чартеров Planned нет;
    АВТОЗАВЕДЕНИЕ сработает по каденции 72ч от 2026-07-21T18:40Z либо
