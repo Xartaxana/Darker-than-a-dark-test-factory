@@ -137,6 +137,19 @@ def set_system_dark_mode(dark: bool):
     adb.set_night_mode(dark)
 
 
+@allure.step("When системный font_scale установлен в {scale}")
+def set_font_scale(scale: float):
+    """TC-107: системный масштаб шрифта, применяется ДО старта приложения.
+    Вызывающий код обязан восстановить `1.0` в teardown (см. `adb.set_font_scale`)."""
+    adb.set_font_scale(scale)
+
+
+@allure.step("Then процесс приложения жив (pidof)")
+def assert_process_alive():
+    pid = adb.pidof_app()
+    assert pid is not None, "процесс приложения не найден (pidof пуст) — похоже на краш"
+
+
 @allure.step("When в приложение отправлен deep-link {url}")
 def open_deep_link(url: str) -> None:
     """Реальный Android `ACTION_VIEW` intent (не `driver.get()`/`execute_script`) —

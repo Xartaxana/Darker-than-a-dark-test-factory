@@ -14,6 +14,11 @@ FRAMEWORK_ROOT = REPO_ROOT / "framework"
 TOOLS = REPO_ROOT / "tools"
 ANDROID_HOME = Path(os.environ.get("ANDROID_HOME", TOOLS / "android-sdk"))
 ADB = str(ANDROID_HOME / "platform-tools" / "adb.exe")
+# aapt — статическая инспекция AndroidManifest.xml (security area, TC-100/101/104:
+# misc-batch-0722, замечание critic прохода (5) — `dumpsys package` неполон/косвенен
+# для атрибутов exported/cleartextTraffic/fullBackupContent, `aapt dump xmltree` даёт
+# их напрямую из скомпилированного бинарного манифеста).
+AAPT = str(ANDROID_HOME / "build-tools" / "36.0.0" / "aapt.exe")
 
 # --- Тестируемое приложение ---
 APP_PACKAGE = "com.example.ao3_wrapper"
@@ -25,6 +30,18 @@ APPIUM_URL = os.environ.get("APPIUM_URL", "http://127.0.0.1:4723")
 DEVICE_NAME = os.environ.get("AO3_DEVICE", "emulator-5554")
 PLATFORM_VERSION = os.environ.get("AO3_PLATFORM_VERSION", "")  # пусто = любой
 
+# CHROMEDRIVER_EXECUTABLE — AT-BUG-028: embedded System WebView образа
+# `ao3_test_api26` (google_apis, API 26, см. AT-BUG-024) — Chrome 69.0.3497
+# (EOL ~2018); appium:chromedriverAutodownload (см. build_options ниже) не
+# находит совместимый chromedriver для этой версии ('No Chromedriver found
+# that can automate Chrome 69.0.3497'). Пусто по умолчанию — основной AVD
+# (api34, Chrome 113) продолжает автозагрузку без изменений. Прогон на
+# api26 задаёт `AO3_CHROMEDRIVER_EXECUTABLE` (см. docs/environment-setup.md) —
+# явный legacy-бинарник (chromedriver 2.41, ChromeDriver 2.41.578737,
+# `Supports Chrome v67-69`, https://chromedriver.storage.googleapis.com/
+# 2.41/notes.txt) вместо autodownload.
+CHROMEDRIVER_EXECUTABLE = os.environ.get("AO3_CHROMEDRIVER_EXECUTABLE", "")
+
 # --- Режим прогона: live | replay ---
 MODE = os.environ.get("AO3_MODE", "live").lower()
 PROXY_HOST_ALIAS = os.environ.get("AO3_PROXY", "10.0.2.2:8080")  # для replay (Фаза 1: доводка транспорта)
@@ -34,6 +51,35 @@ IMPLICIT_WAIT = 0            # используем только явные ож
 DEFAULT_TIMEOUT = int(os.environ.get("AO3_TIMEOUT", "20"))
 WEBVIEW_LOAD_TIMEOUT = int(os.environ.get("AO3_WEBVIEW_TIMEOUT", "40"))
 NEW_COMMAND_TIMEOUT = 300
+
+# PERF_MEASUREMENT_HANG_GUARD — fail-safe (НЕ рабочий предел измерения) для
+# `perf_steps.measure_home_page_load_time` (TC-097, AT-BUG-027, сиблинг
+# AT-BUG-025). Тот же класс риска: голый `driver.get()` в WebView-контексте
+# этого приложения может зависнуть без load-события. Отличие от остальных
+# call-site'ов `framework/steps/browser_steps.py` — сам вызов `driver.get()`
+# ЯВЛЯЕТСЯ измеряемым интервалом (`time.monotonic()` вокруг него), поэтому
+# НАИВНОЕ переиспользование `WEBVIEW_LOAD_TIMEOUT` (40s) как таймаута этого
+# вызова рискованно: бюджет TC-097 (`test_performance.py::BUDGET_MULTIPLIER`
+# x медиана, пол 1.0s) в принципе мог бы приблизиться к тому же порядку при
+# реальной (не зависшей, просто медленной) деградации — обрезка на 40s
+# превратила бы информативный "загрузка заняла Xs, бюджет провален" в голый
+# `TimeoutError` без числа X.
+#
+# Поэтому здесь ОТДЕЛЬНАЯ константа, СУЩЕСТВЕННО больше любого правдоподобного
+# значения самого измерения: наблюдаемые загрузки — единицы секунд (red-проба
+# test-reviewer TC-097.md, 2026-07-22: 2.42s; TC-096 холодный старт baseline
+# на этом же эмуляторе — единицы секунд). 60s — на порядок больше самой
+# WEBVIEW_LOAD_TIMEOUT (сама уже щедрый запас над наблюдаемыми единицами
+# секунд) и заметно МЕНЬШЕ глобального `APPIUM_HTTP_TIMEOUT` (120s), которым
+# и без того ограничен ЛЮБОЙ HTTP-вызов к Appium (см. ниже) — то есть этот
+# guard не расширяет риск-профиль, а сужает его: ловит зависание раньше и с
+# понятной семантикой (perf-специфичный `TimeoutError`, конвертируемый
+# `navigate()` из `ReadTimeoutError`/`MaxRetryError`, matчащийся
+# `pytest.ini --only-rerun`), не дожидаясь общего 120s+compensating rerun.
+# Только ГЕНУИННЫЙ бесконечный/близкий-к-бесконечному хенг (класс AT-BUG-025)
+# пересечёт эту границу — любое конечное, пусть и деградировавшее, измерение
+# остаётся ниже неё на порядок и не искажается.
+PERF_MEASUREMENT_HANG_GUARD = int(os.environ.get("AO3_PERF_HANG_GUARD", "60"))
 # Client-side read-timeout на КАЖДЫЙ HTTP-вызов к Appium (AT-BUG-007): без него
 # WebDriverWait (waits.py) проверяет дедлайн только МЕЖДУ поллами — единичный
 # блокирующий вызов (классика: driver.contexts из contexts.to_native) при мёртвом

@@ -213,6 +213,33 @@ reachability guard в `mitm.wait_device_proxy_reachable`, тест не долж
 
 ## Открытые хвосты (вне текущей очереди)
 
+- **A11y-находка (test-automator, a11y-compat batch, 2026-07-22):**
+  раскрытие side panel (BrowseSidePanel, собственный fullscreen-scrim)
+  убирает WebView/TabStrip/BottomBar/RatingMenu ЦЕЛИКОМ из
+  accessibility tree (UiAutomator2) — тот же класс, что уже
+  задокументированная находка `top_chrome_avg_luma` (fullscreen-toggle
+  reflow), теперь воспроизведена ещё и через поворот экрана (device
+  rotation), держится ≥10с, не самовосстанавливается по тапу.
+  Кандидат в R-13 (accessibility) триаж — решение test-strategist/
+  test-designer при следующем касании области, не заведено как баг
+  (неопределённость: намеренный UX-дизайн scrim vs дефект). Не
+  расширяет scope TC-106/111 (обойдено операционализацией: TC-106 —
+  последовательная инспекция, TC-111 — WebView-rect прокси вместо
+  взаимодействия с side panel).
+
+- **ВХОДЯЩЕЕ ОТ OS 2026-07-22 №2 (гейт-батч t-278, критик F1, ось 1
+  карты OS):** ваш `scripts/mechanism_gate.py` (порт 0a0a8c6 от
+  07-12) вероятно несёт исходный дефект `find_tier_declaration` —
+  `.search()` матчит только ПЕРВУЮ `tier:`-строку сообщения (критик
+  t-068: цитированная строка маскирует настоящую). Штабной фикс
+  07-22: `find_tier_declarations` (plural, `.findall()`), отказ если
+  ХОТЬ ОДНА найденная строка ниже планки (fail-closed на цитатах —
+  осознанный трейдофф, формулировку гарантии штабной критик просил
+  не переоценивать). Решение перенять/признать отличие — за вашим
+  Lead по процедуре входящих (прецедент os-inbox-0722);
+  первоисточник: Operating-System-for-LLMs/tools/mechanism_gate.py +
+  тест «две tier-строки».
+
 - **Решения Lead 2026-07-22 по 4 входящим OS — ВСЕ РАЗОБРАНЫ**
   (os-inbox-0722, двухпроходка D-0066): escape-allowlist (N4/D-0082)
   — ПРИНЯТ и реализован (кросс-репо sha-пины; AO3-собственные

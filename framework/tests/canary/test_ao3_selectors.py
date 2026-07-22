@@ -424,11 +424,22 @@ def test_exclude_main_pairing_checkbox_availability_replay(clean_app, replay, dr
     browser_steps.assert_relationship_checkbox_disabled(driver, "exclude")
 
 
-@pytest.mark.p0
+@pytest.mark.p1
 @pytest.mark.live
 @allure.id("TC-082")
 @allure.title("Кнопка 'Save filter' инжектируется рядом с submit формы Sort&Filter и не дублируется при повторных мутациях формы (live)")
 def test_save_filter_button_idempotent_live(clean_app, driver):
+    # AT-BUG-026: демотирован из p0 в p1 (2026-07-22, test-maintainer) —
+    # подтверждённый крашер qemu (0xc0000005) под тяжёлым live-рендером
+    # archiveofourown.org/tags/Fluff/works, повторяемо ронявший ВЕСЬ
+    # эмулятор в блокирующем `-m p0` прогоне. Тот же идемпотентный контракт
+    # детерминированно покрыт TC-083 (test_save_filter_button_idempotent_replay,
+    # replay, остаётся в p0) — риск-покрытие НЕ теряется, теряется только
+    # блокирующий гейт для LIVE-варианта конкретно этого теста. Canary-ценность
+    # (дрейф реальной разметки AO3) сохраняется прогоном в p1/regression, не
+    # ценой падения всего конвейера на вероятностной qemu-хрупкости. Полный
+    # разбор, включая опробованную и НЕ давшую надёжных 3/3 подряд
+    # GPU-параметризацию (-gpu host) — bugs/AT-BUG-026.md.
     # Given приложение live с чистыми данными, страница с формой Sort & Filter
     # загружена (форма изначально скрыта CSS narrow-hidden — не мешает проверке,
     # см. sort_filter_form_page.py)

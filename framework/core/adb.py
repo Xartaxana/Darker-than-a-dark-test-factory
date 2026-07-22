@@ -125,6 +125,23 @@ def set_night_mode(dark: bool) -> None:
     shell(f"cmd uimode night {'yes' if dark else 'no'}")
 
 
+def set_font_scale(scale: float) -> None:
+    """Переключает системный масштаб шрифта (`settings put system font_scale`) —
+    простейший детерминированный способ подхватить увеличенный шрифт (TC-107):
+    применяется ДО старта приложения, не зависит от live-конфига активности
+    (тот же класс системной настройки, что `set_night_mode`). Вызывающий код
+    ОБЯЗАН восстановить дефолт (`1.0`) в teardown — иначе следующий тест
+    наследует изменённый масштаб (тот же класс, что logcat в TC-098/105)."""
+    shell(f"settings put system font_scale {scale}")
+
+
+def pidof_app() -> str | None:
+    """PID процесса приложения (`pidof <pkg>`) или `None`, если процесс не
+    запущен — прокси «процесс жив» (TC-107), тот же приём, что уже использует
+    `security_steps.assert_logcat_has_no_sensitive_data` для скоупинга logcat."""
+    return shell(f"pidof {_PKG}").strip() or None
+
+
 def logcat_dump(dest: Path, lines: int = 400) -> None:
     out = shell(f"logcat -d -t {lines}")
     dest.write_text(out, encoding="utf-8", errors="replace")

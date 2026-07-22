@@ -29,6 +29,15 @@ class RatingOverlay(BaseScreen):
         self.tap(self.by_text(RATING_BUTTON_LABEL[rating]))
         return self
 
+    def button_container_locator(self, rating: str):
+        """Родитель текстового узла кнопки рейтинга — `clickable="true"` живёт на
+        НЁМ, не на самом `Text` (сверено живым деревом, 2026-07-22: `tap()`
+        успешен через текстовый узел лишь потому, что Appium кликает по его
+        границам, лежащим ВНУТРИ кликабельного `TextButton`-родителя — тот же
+        класс, что `SidePanel._button_container`/`SettingsScreen.theme_button_locator`).
+        Нужен для честного чтения атрибута `clickable` (TC-107), без тапа."""
+        return (AppiumBy.XPATH, f'//*[@text="{RATING_BUTTON_LABEL[rating]}"]/..')
+
     def add_note_toggle_visible(self, timeout: int = 4) -> bool:
         return self.is_present(self.by_text("Add a note"), timeout=timeout)
 

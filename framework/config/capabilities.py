@@ -26,9 +26,18 @@ def build_options(no_reset: bool = True) -> UiAutomator2Options:
     opts.new_command_timeout = settings.NEW_COMMAND_TIMEOUT
     opts.auto_grant_permissions = True
 
-    # WebView приложения — Chrome 113; chromedriver докачивается автоматически
-    # (сервер должен быть запущен с --allow-insecure uiautomator2:chromedriver_autodownload).
-    opts.set_capability("appium:chromedriverAutodownload", True)
+    # WebView приложения — Chrome 113 на основном AVD (api34); chromedriver
+    # докачивается автоматически (сервер должен быть запущен с --allow-insecure
+    # uiautomator2:chromedriver_autodownload). AT-BUG-028: второй AVD
+    # (ao3_test_api26) несёт EOL Chrome 69.0.3497 — autodownload для него не
+    # находит совместимый chromedriver. Если settings.CHROMEDRIVER_EXECUTABLE
+    # задан (AO3_CHROMEDRIVER_EXECUTABLE env, прогон на api26), используем явный
+    # путь к legacy-бинарнику ВМЕСТО autodownload; иначе — прежнее поведение
+    # (api34 не регрессирует, capability не выставляется вовсе).
+    if settings.CHROMEDRIVER_EXECUTABLE:
+        opts.set_capability("appium:chromedriverExecutable", settings.CHROMEDRIVER_EXECUTABLE)
+    else:
+        opts.set_capability("appium:chromedriverAutodownload", True)
     opts.set_capability("appium:ensureWebviewsHavePages", True)
     opts.set_capability("appium:nativeWebScreenshot", True)
 

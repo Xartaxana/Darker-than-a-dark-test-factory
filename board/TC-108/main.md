@@ -2,27 +2,27 @@
 key: "TC-108"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p2"
 summary: "Contrast sanity dark/light: текст и фон различимы в обоих системных вариантах темы"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:accessibility", "risk:R-11"]
+labels: ["test-case", "area:accessibility", "risk:R-11", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-22T11:58:00Z"
-updated: "2026-07-22T11:58:00Z"
+created: "2026-07-22T23:13:20Z"
+updated: "2026-07-22T23:13:20Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Contrast sanity dark/light: текст и фон различимы в обоих системных вариантах темы
 
 _Спроецировано из `test-cases/accessibility/TC-108.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-108 — Contrast sanity: различимость текст/фон в dark и light
 
@@ -83,3 +83,22 @@ luma текст/фон выше sanity-порога — не точный WCAG-r
 - [x] Кейс независим от порядка выполнения других кейсов
 - [x] Область комбинаторная (семья «темы») — инвариант назван строкой
   `Инвариант:` выше
+
+## Ревью автотеста (F1, test-reviewer 2026-07-22)
+
+Полный чек-лист F1 пройден, `Approved → Automated`.
+- **Архитектура:** `arch_check.py` — 0 ошибок; luma-прокси в `browser_steps`, sleep нет.
+- **Traceability:** `@allure.id("TC-108")` == id, маркер `p2` == P2,
+  `automated_by` резолвится, фича `nf-a11y-contrast-sanity` в реестре.
+- **Соответствие инварианту (особое внимание):** кейс называет инвариант
+  (различимость текст/фон верна для КАЖДОГО из dark и light). Тест раздельно
+  ассертит `assert_bottom_bar_text_distinguishable` + `assert_work_title_...` в
+  ОБОИХ вариантах темы (dark после toggle, затем light после обратного toggle) — не
+  единичный пример, а свойство для обоих членов семьи.
+- **Зелёный прогон:** PASSED (в составе `test_accessibility.py`); измеренная luma
+  std bottom bar ≈ 29.7 (реальное значение с текстом, порог 15.0).
+- **Красная проба (2026-07-22T23:13:20Z):** временно поднял
+  `CONTRAST_SANITY_MIN_STD` 15.0 → 10000.0. Прогон упал содержательно:
+  `AssertionError: bottom bar: luma std=29.7 ниже sanity-порога 10000.0` — std
+  реально измеряется по региону скриншота и сравнивается с порогом (не тавтология:
+  29.7 — содержательное, зависящее от контента значение). Порча откачена (source чист).

@@ -15,6 +15,23 @@ def assert_settings_loaded(driver):
     assert SettingsScreen(driver).is_loaded(), "экран Settings не отрисовался (нет секции Theme)"
 
 
+@allure.step("Then контролы темы/шрифта/яркости в Settings присутствуют в дереве и кликабельны")
+def assert_reader_controls_present_and_clickable(driver):
+    """TC-107 (font_scale=1.3): доказывает, что увеличенный масштаб не вытеснил
+    контролы из accessibility-дерева и не сделал их некликабельными — НЕ
+    проверяет визуальную обрезку/наложение (testability gap, см. TC-107.md)."""
+    screen = SettingsScreen(driver)
+    for mode in ("LIGHT", "DARK", "SYSTEM"):
+        loc = screen.theme_button_locator(mode)
+        assert screen.is_present(loc), f"кнопка темы «{mode}» не найдена в дереве (font_scale=1.3)"
+        assert screen.is_clickable_attr(loc), f"кнопка темы «{mode}» не кликабельна (font_scale=1.3)"
+    for step in range(7):
+        loc = screen.font_size_button_locator(step)
+        assert screen.is_present(loc), f"кнопка размера шрифта (шаг {step}) не найдена в дереве (font_scale=1.3)"
+        assert screen.is_clickable_attr(loc), f"кнопка размера шрифта (шаг {step}) не кликабельна (font_scale=1.3)"
+    assert screen.is_present(screen.BRIGHTNESS_SLIDER), "слайдер Brightness не найден в дереве (font_scale=1.3)"
+
+
 @allure.step("When выбрана тема {mode}")
 def select_theme(driver, mode: str):
     SettingsScreen(driver).select_theme(mode)

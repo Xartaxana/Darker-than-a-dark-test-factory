@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-22T12:29:52Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-22T23:28:15Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -9,18 +9,18 @@ generated_at: 2026-07-22T12:29:52Z · генератор: `scripts/coverage_map.
 
 | Область | Кейсов | Automated | coverage_status |
 |---|---|---|---|
-| accessibility | 3 | 0 | none |
+| accessibility | 3 | 3 | designed-full |
 | backup | 1 | 1 | designed-full |
 | browser | 9 | 9 | designed-full |
 | canary | 18 | 18 | designed-full |
-| compatibility | 3 | 0 | none |
+| compatibility | 3 | 3 | designed-full |
 | downloads | 8 | 8 | designed-full |
 | errors | 1 | 1 | designed-full |
 | filter-profiles | 5 | 5 | designed-full |
 | library | 15 | 15 | designed-full |
 | performance | 4 | 4 | designed-full |
 | rating | 14 | 14 | designed-full |
-| security | 6 | 0 | none |
+| security | 6 | 6 | designed-full |
 | settings | 7 | 6 | partial |
 | smoke | 5 | 5 | designed-full |
 | tabs | 6 | 6 | designed-full |
@@ -141,18 +141,18 @@ generated_at: 2026-07-22T12:29:52Z · генератор: `scripts/coverage_map.
 | nf-perf-webview-first-load-budget | non-functional | performance:TC-097[Automated] |
 | nf-stability-no-crash-anr | non-functional | performance:TC-098[Automated] |
 | nf-perf-memory-trend | non-functional | performance:TC-099[Automated] |
-| nf-sec-exported-components | non-functional | security:TC-100[Approved] |
-| nf-sec-cleartext-traffic | non-functional | security:TC-101[Approved] |
-| nf-sec-js-bridge-exposure | non-functional | security:TC-102[Approved] |
-| nf-sec-file-access | non-functional | security:TC-103[Approved] |
-| nf-sec-backup-privacy | non-functional | security:TC-104[Approved] |
-| nf-sec-logcat-leak | non-functional | security:TC-105[Approved] |
-| nf-a11y-content-labels | non-functional | accessibility:TC-106[Approved] |
-| nf-a11y-font-scaling | non-functional | accessibility:TC-107[Approved] |
-| nf-a11y-contrast-sanity | non-functional | accessibility:TC-108[Approved] |
-| nf-compat-api-level | non-functional | compatibility:TC-109[Approved] |
-| nf-compat-dark-light-matrix | non-functional | compatibility:TC-110[Approved] |
-| nf-compat-orientation | non-functional | compatibility:TC-111[Approved] |
+| nf-sec-exported-components | non-functional | security:TC-100[Automated] |
+| nf-sec-cleartext-traffic | non-functional | security:TC-101[Automated] |
+| nf-sec-js-bridge-exposure | non-functional | security:TC-102[Automated] |
+| nf-sec-file-access | non-functional | security:TC-103[Automated] |
+| nf-sec-backup-privacy | non-functional | security:TC-104[Automated] |
+| nf-sec-logcat-leak | non-functional | security:TC-105[Automated] |
+| nf-a11y-content-labels | non-functional | accessibility:TC-106[Automated] |
+| nf-a11y-font-scaling | non-functional | accessibility:TC-107[Automated] |
+| nf-a11y-contrast-sanity | non-functional | accessibility:TC-108[Automated] |
+| nf-compat-api-level | non-functional | compatibility:TC-109[Automated] |
+| nf-compat-dark-light-matrix | non-functional | compatibility:TC-110[Automated] |
+| nf-compat-orientation | non-functional | compatibility:TC-111[Automated] |
 
 ## Фичи без единого кейса
 
@@ -179,18 +179,18 @@ generated_at: 2026-07-22T12:29:52Z · генератор: `scripts/coverage_map.
 
 ### accessibility
 
-- coverage_status: **none** (0/3 Automated)
+- coverage_status: **designed-full** (3/3 Automated)
 - риски: R-11, R-13
 - кейсы без risk: нет
 - P0/P1 не в Automated: нет
-- автотесты (automated_by): —
+- автотесты (automated_by): framework/tests/test_accessibility.py::test_contrast_sanity_dark_and_light, framework/tests/test_accessibility.py::test_font_scale_1_3_no_crash_key_controls_present, framework/tests/test_accessibility.py::test_key_controls_have_accessible_label_or_text
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  |  |  |
 | P1 |  |  |  |  |  |
-| P2 |  |  | 3 |  |  |
+| P2 |  |  |  | 3 |  |
 | P3 |  |  |  |  |  |
 
 ### backup
@@ -236,25 +236,25 @@ generated_at: 2026-07-22T12:29:52Z · генератор: `scripts/coverage_map.
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
-| P0 |  |  |  | 18 |  |
-| P1 |  |  |  |  |  |
+| P0 |  |  |  | 17 |  |
+| P1 |  |  |  | 1 |  |
 | P2 |  |  |  |  |  |
 | P3 |  |  |  |  |  |
 
 ### compatibility
 
-- coverage_status: **none** (0/3 Automated)
+- coverage_status: **designed-full** (3/3 Automated)
 - риски: R-14
 - кейсы без risk: нет
 - P0/P1 не в Automated: нет
-- автотесты (automated_by): —
+- автотесты (automated_by): framework/tests/test_compatibility.py::test_orientation_rotation_preserves_tab_state, framework/tests/test_compatibility.py::test_smoke_path_in_system_dark_and_light_modes, framework/tests/test_compatibility.py::test_smoke_path_on_api26_no_regression
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  |  |  |
 | P1 |  |  |  |  |  |
-| P2 |  |  | 3 |  |  |
+| P2 |  |  |  | 3 |  |
 | P3 |  |  |  |  |  |
 
 ### downloads
@@ -355,17 +355,17 @@ generated_at: 2026-07-22T12:29:52Z · генератор: `scripts/coverage_map.
 
 ### security
 
-- coverage_status: **none** (0/6 Automated)
+- coverage_status: **designed-full** (6/6 Automated)
 - риски: R-15
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-100 [P1, Approved], TC-101 [P1, Approved], TC-102 [P1, Approved], TC-103 [P1, Approved], TC-104 [P1, Approved], TC-105 [P1, Approved]
-- автотесты (automated_by): —
+- P0/P1 не в Automated: нет
+- автотесты (automated_by): framework/tests/test_security_backup_privacy.py::test_backup_privacy_manifest_scope_declared, framework/tests/test_security_file_access.py::test_file_link_inside_downloaded_work_does_not_escape_download_content, framework/tests/test_security_js_bridge.py::test_js_bridge_exposure_baseline_vs_non_ao3_error_page, framework/tests/test_security_logcat.py::test_logcat_has_no_sensitive_data_during_smoke_path, framework/tests/test_security_manifest.py::test_cleartext_traffic_policy_documented_and_cross_checked, framework/tests/test_security_manifest.py::test_main_activity_exported_with_ao3_intent_filter
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  |  |  |
-| P1 |  |  | 6 |  |  |
+| P1 |  |  |  | 6 |  |
 | P2 |  |  |  |  |  |
 | P3 |  |  |  |  |  |
 

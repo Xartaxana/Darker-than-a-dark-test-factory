@@ -14,3 +14,9 @@ class DownloadedWorkPage(BasePage):
 
     def wait_reader_css(self, timeout: int | None = None):
         return self.wait_css(selectors.READER_CSS_STYLE, timeout=timeout)
+
+    def probe_link(self, timeout: int | None = None):
+        """TC-103 (security/file-access): ссылка `#probe-link`, встроенная только в
+        HTML-фикстуру этого кейса (см. `test_security_file_access.py`), целится в
+        internal-файл приложения вне директории загрузок."""
+        return self.wait_css(selectors.PROBE_LINK, timeout=timeout)

@@ -15,6 +15,7 @@ import allure
 
 from framework.config import settings
 from framework.core import adb, contexts
+from framework.core.navigate import navigate
 from framework.core.waits import wait_for
 from framework.screens.browser_screen import BrowserScreen
 from framework.steps import browser_steps
@@ -53,11 +54,22 @@ def measure_home_page_load_time(driver, timeout: int | None = None) -> float:
     (флаг тёмной темы, пушится синхронно внутри `onPageFinished`, детерминированный
     признак «страница догрузилась», НЕ маркер готовности bridge) уже определены и
     опрашиваются существующим кодом — `BrowserScreen.wait_home_page_loaded`;
-    здесь только временная обвязка вокруг него, локатор/маркер не дублируется."""
+    здесь только временная обвязка вокруг него, локатор/маркер не дублируется.
+
+    Сам `driver.get()` — ЧАСТЬ измеряемого интервала (не обёрнут
+    `WEBVIEW_LOAD_TIMEOUT`, как остальные call-site'ы `browser_steps.py`,
+    AT-BUG-025/027 — это исказило бы замер того же порядка величины). Вместо
+    этого используется measurement-safe fail-safe
+    `settings.PERF_MEASUREMENT_HANG_GUARD` (на порядок больше любой
+    правдоподобной длительности загрузки, см. обоснование числа в
+    `settings.py`) — ловит только генуинный бесконечный хенг WebView
+    (класс AT-BUG-025), не рабочий предел измерения; нормальная и даже
+    заметно деградировавшая (но конечная) загрузка остаётся далеко под этой
+    границей и замеряется точно, без искажения."""
     screen = BrowserScreen(driver)
     start = time.monotonic()
     with contexts.in_webview(driver, timeout):
-        driver.get(browser_steps.HOME_URL)
+        navigate(driver, browser_steps.HOME_URL, settings.PERF_MEASUREMENT_HANG_GUARD)
     screen.wait_home_page_loaded(timeout)
     return time.monotonic() - start
 

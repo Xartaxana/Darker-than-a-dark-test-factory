@@ -55,6 +55,22 @@ class SettingsScreen(BaseScreen):
     def is_loaded(self) -> bool:
         return self.is_present(self.THEME_HEADER, timeout=10)
 
+    # --- TC-107: font scaling smoke — presence/clickability без реального тапа
+    # (изменение выбранной темы/шрифта не входит в сценарий кейса). Text-узел
+    # сам по себе всегда несёт `clickable="false"` в этом экране (сверено живым
+    # деревом, 2026-07-22) — `tap()`/`select_theme` попадают по нему только
+    # потому, что Appium кликает по границам элемента, лежащим ВНУТРИ
+    # кликабельного родителя; для честного чтения атрибута `clickable` нужен
+    # именно родитель, тот же приём, что `_display_mode_button_locator`.
+    def theme_button_locator(self, mode: str):
+        return (AppiumBy.XPATH, f'//*[@text="{THEME_LABELS[mode]}"]/..')
+
+    def font_size_button_locator(self, step: int):
+        label = f"{100 + step * 15}%"
+        return (AppiumBy.XPATH, f'//*[@text="{label}"]/..')
+
+    BRIGHTNESS_SLIDER = (AppiumBy.CLASS_NAME, "android.widget.SeekBar")
+
     # --- Auto-download toggle (секция "Data", SettingsScreen.kt SettingsSwitchRow —
     # Compose Switch без text/content-desc). Тот же приём XPath `following::`, что и
     # `_delete_button_locator` ниже: ближайший checkable-узел ПОСЛЕ подписи строки в

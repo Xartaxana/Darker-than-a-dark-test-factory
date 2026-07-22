@@ -81,3 +81,10 @@ WORD_COUNT_MIN_BOUNDARY = Work("900000271", "TC-027 Word Count Min Boundary",
                                "seed_author_wc_min", "Fandom WC Min", 1000)
 WORD_COUNT_MAX_BOUNDARY = Work("900000272", "TC-027 Word Count Max Boundary",
                                "seed_author_wc_max", "Fandom WC Max", 5000)
+
+# TC-103 (security/file-access) — работа со скачанным файлом, HTML которого
+# дополнен (сверх базовой фикстуры TC-034) одной тестовой file:// ссылкой на
+# реально существующий internal-путь приложения (Room DB), вне директории
+# загрузок — см. `framework/tests/test_security_file_access.py`.
+FILE_ACCESS_PROBE_TARGET = Work("900000103", "TC-103 File Access Probe Target",
+                                "seed_author_file_access", "Fandom File Access", 900)

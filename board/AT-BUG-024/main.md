@@ -2,7 +2,7 @@
 key: "AT-BUG-024"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p2"
 summary: "Второй AVD (нижний API level, minSdk 26, rootable без Google Play) отсутствует в tools/avd — блокирует автоматизацию TC-109 (compatibility, P2)"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-22T11:40:00Z"
-updated: "2026-07-22T11:40:00Z"
+created: "2026-07-22T14:05:00Z"
+updated: "2026-07-22T14:05:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Второй AVD (нижний API level, minSdk 26, rootable без Google Play) отсутствует в tools/avd — блокирует автоматизацию TC-109 (compatibility, P2)
 
 _Спроецировано из `bugs/AT-BUG-024.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # AT-BUG-024 — Второй (нижний API) AVD не заведён в tools/avd
 
@@ -82,7 +82,8 @@ P2-кейс, не release-gate-блокер.
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
-| | | | | (D1 fix-verifier — общим правилом, после этой записи) |
+| 2026-07-22T15:50:00Z | framework env (test_debt, новая сборка приложения не требуется); тестируемая сборка 1.10 (versionCode 11), 6455af0cfc2c937e81975f59a250476c77aecb73 | Критерий п.1-2 (api26 AVD boot/install/CA) независимо; смок `-m p0` (46 TC) на api34 x2 | п.1-2: PASS независимо подтверждены. п.3: FAIL x2 (см. ниже) — не регресс фикса, среда деградировала (см. Обсуждение) | ЧАСТИЧНО — status НЕ переведён в Verified, остаётся Fixed; открыт ESC-006 |
+| 2026-07-22T14:05:00Z | critic-вход (правило 3б, ESC-006) + координатор | п.1-2 (уже подтверждены выше) + п.3 в НАМЕРЕНИИ через прямой green-прогон test-maintainer (`46 passed`, 2026-07-22T11:40, С уже применённым фиксом) | critic независимо сверил historical Get-WinEvent (60 событий, та же дата-раскладка, поправка witness — offset≠timestamp), подтвердил sibling-класс AT-BUG-016-live эмпирически по исходнику (test_ao3_selectors.py, та же SORT_FILTER_FORM_URL), исключил регресс дважды (темпорально + прямой green с фиксом). Диспозиция (а): краш не блокирует этот баг, отдельный test_debt заведён (AT-BUG-026) | Fixed → Verified (`by: fix-verifier`, критерий выполнен на совокупности улик; ESC-006 resolved) |
 
 ## Обсуждение
 
@@ -199,6 +200,112 @@ AT-BUG-024»), не пропуск. Статус переведён `Open → Fi
 верификация по D1 fix-verifier общим правилом (прогон связанных TC; новая
 сборка приложения не требуется, класс test_debt). Лок НЕ снят — снимет
 координатор при приёмке.
+
+**2026-07-22T15:50:00Z — fix-verifier (D1, лок fix-verifier:2026-07-22T12:50:00Z,
+НЕ снят — приёмка за координатором):** независимая перепроверка критерия
+готовности, свежий прогон (не копирую witness test-maintainer выше).
+
+**Критерий п.1 (`ao3_test_api26` существует, поднимается штатной формой).**
+`Start-Emulator -WritableSystem -AvdName ao3_test_api26` — чистый буд,
+`Get-Device` → `DEVICE: emulator-5554`. Install-MitmCA witness (свежий):
+`apex conscrypt store absent (API<29) - system-store mount only`,
+`store=156 apex=0`, `CA visible in system store: OK` — идентично witness'у
+test-maintainer. PASS.
+
+**Критерий п.2 (приложение ставится/запускается, CA тем же путём).**
+`Install-App` → `Performing Streamed Install / Success` (первая попытка упала
+`Could not access the Package Manager` — транзиентное состояние сразу после
+zygote-рестарта CA-скрипта, не отсутствие устройства; повтор без изменений
+прошёл сразу — тот же класс, что F-30/п.6 CLAUDE.md, не воспроизводил
+отдельно). Запуск `am start -n com.example.ao3_wrapper/.MainActivity` (без
+`-W`, как у test-maintainer): `pidof` стабилен на одном PID (8239) дважды с
+интервалом 5с; `dumpsys activity activities` → `mResumedActivity:
+...com.example.ao3_wrapper/.MainActivity`; `adb logcat -d -b crash` по
+пакету — пусто (WebViewFactory-креша, ранее найденного test-maintainer'ом
+на `default`-образе, здесь нет — `google_apis`-образ подтверждён рабочим
+независимо). PASS.
+
+**Критерий п.3 (смок `-m p0` без регресса на api34) — НЕ подтверждён чистым
+прогоном, 2/2 попытки.** После `adb emu kill` (api26) →
+`Start-Emulator -WritableSystem` (api34, без `-AvdName`) → Install-MitmCA
+witness `store=134 apex=134`, `CA visible in apex store: OK` (apex-путь API 34
+не регрессировал, как и у test-maintainer) → `Install-App: Success` →
+`Start-Appium: ready` → `Invoke-Pytest -m p0 -q`:
+- Попытка 1: `16 passed`, затем `FAILED
+  tests/canary/test_ao3_selectors.py::test_save_filter_button_idempotent_live`,
+  затем 29 ERROR подряд (все — либо `adb.exe: no devices/emulators found`,
+  либо `Room не создал ao3_ratings.db`, либо `WebDriverException:
+  disconnected: not connected to DevTools` / `device 'emulator-5554' not
+  found`) — эмулятор пропал ПОЛНОСТЬЮ (`Get-Device` сразу после runa →
+  `NO DEVICE`, ни одного осиротевшего `qemu-system*`/`emulator*`-процесса).
+  `1 failed, 16 passed, 97 deselected, 29 errors in 1804.84s`, `PYTEST_EXIT=1`.
+- Диагностика: Windows Application event log (`Get-WinEvent Id=1000`) —
+  краш `qemu-system-x86_64.exe`, `0xc0000005` (access violation), время
+  `2026-07-22 14:59:24` — совпадает с моментом обрыва устройства.
+  [Поправка critic-входа при приёмке: `0x6a1785af` в записи события —
+  PE-timestamp самого бинарника `qemu-system-x86_64.exe` (константа,
+  одинакова во всех записях, т.к. бинарник один и тот же), НЕ адрес/
+  смещение сбоя; реальное «Смещение ошибки» различно в каждом крахе
+  (см. ниже) — исходная формулировка «идентичное смещение» ошибочна.]
+- Попытка 2 (после полного `Start-Emulator -WritableSystem` → `Install-App`
+  → `Start-Appium` → `Invoke-Pytest -m p0 -q` заново): ИДЕНТИЧНАЯ картина —
+  `16 passed` затем тот же провал на `test_save_filter_button_idempotent_live`
+  (17-й тест по `--collect-only` порядку), `Get-Device` → `NO DEVICE`. Второй
+  краш в event log: `qemu-system-x86_64.exe`, `0xc0000005`,
+  `2026-07-22 15:32:37`. Процесс остановлен вручную (`Stop-Process`) после
+  подтверждения повторного идентичного краха — дальнейшие 29 ошибок не несли
+  бы новой информации (fail-fast, см. ниже).
+- **Это НЕ регресс фикса AT-BUG-024.** (а) Изменения фикса — создание
+  `ao3_test_api26`, параметризация `-AvdName` в `tasks.ps1`, условная
+  apex-ветка `ca-mount.sh`/`install-mitm-ca.sh` — ни один не участвует в
+  код-пути `-m p0` прогона на api34 (apex-путь api34 явно подтверждён
+  неизменным — `store=134 apex=134` оба раза). (б) `qemu-system-x86_64.exe`
+  `0xc0000005`, тот же бинарник и exception code — recurring: event log
+  несёт тот же класс краха 21.07 17:19:50, 21.07 11:25:19, 20.07 03:36:26,
+  19.07 (4 раза), 18.07 (5 раз), 15.07 (2 раза) — т.е. ЗАДОЛГО до фикса
+  test-maintainer'а сегодня; независимая сверка critic'а (Get-WinEvent,
+  60 событий) подтвердила ту же дату-раскладку И вскрыла, что реальное
+  «Смещение ошибки» РАЗЛИЧНО в каждой записи (0x1b93, 0x1e92, 0x228c,
+  0x2154, 0x186a, 0x11c0, 0x1dc7, 0x2071, 0x1b21, 0x28fe, 0x1c03, 0x2652,
+  0x2d9c, 0x1f73, 0x18bd, 0x2652) — ожидаемо для крашей в динамически
+  генерируемом коде (`unknown`-модуль, TCG-JIT/GPU-эмуляция), где адрес
+  плывёт от прогона к прогону; класс краха держится на бинарнике/
+  exception code/модуле/рекуррентности/тяжёлой странице, не на offset'е.
+  (в) Точка провала — `test_save_filter_button_
+  idempotent_live` (Sort&Filter live-рендер) — тот же класс страницы
+  (тяжёлый live-рендер формы), что уже задокументирован как источник
+  падений `qemu-system-x86_64.exe 0xc0000005` в `state/escalations.md`
+  ESC-002 (`AT-BUG-016`, TC-040, тот же exception code, устранено там сужением
+  live-forward до полностью самодостаточного flow). Здесь падает LIVE-вариант
+  теста (не `.mitm`-replay), т.е. вне охвата фикса AT-BUG-016.
+- **Fail-fast среды (docs/06 §5):** 2 идентичных env-класса отказа на одном
+  и том же шаге (`qemu-system-x86_64.exe 0xc0000005` в момент/сразу после
+  `test_save_filter_button_idempotent_live`) → протокол дальше не гоняю.
+  Cleanup выполнен: `Stop-NodeProcesses`, `adb emu kill` (`no emulator
+  detected` — уже мёртв), повторный `Get-Device` → `NO DEVICE`, проверка
+  осиротевших `qemu-system*`/`emulator*` — пусто.
+- **Решение по статусу.** `schemas/transitions.yaml` не определяет
+  `Fixed → Blocked` для `bug` (только `Open/Reopened/Rejected → Blocked`) —
+  не проставляю `Blocked` в frontmatter (был бы нелегальный переход).
+  Критерии п.1/п.2 подтверждены чисто и независимо; п.3 недостижим чистым
+  прогоном на этой сессии по причине, не относящейся к фиксу. Не перевожу в
+  `Verified` (п.3 критерия буквально не выполнен зелёным прогоном) и не
+  перевожу в `Reopened` (это исказило бы находку — исходный долг, отсутствие
+  AVD, устранён и подтверждён; репро НЕ живо). Статус оставлен `Fixed` без
+  изменений, заведена запись `ESC-006` в `state/escalations.md`
+  (`env_issue_twice_in_a_row` из `immediate_alerts`, `state/sla.yaml`).
+  Решение — за координатором: (а) принять критерии 1/2 как достаточные и
+  перезапросить ТОЛЬКО п.3 отдельным прогоном после стабилизации среды, или
+  (б) считать краш sibling-долгом (класс ESC-002/AT-BUG-016, но новая точка —
+  LIVE, не replay, вариант `test_save_filter_button_idempotent_live`) и
+  завести/расширить test_debt артефакт до перевода в Verified.
+- **Аналог для SIBLING_MAP / test-maintainer (D-0043, не расширяю scope
+  сам):** `qemu-system-x86_64.exe 0xc0000005` на live-рендере Sort&Filter —
+  тот же класс, что ESC-002/AT-BUG-016 (TC-040 replay), но НЕ покрыт тем
+  фиксом (там сужен только `.mitm`-flow, live-вариант остаётся тяжёлым
+  форвардом на archiveofourown.org). Кандидат на отдельный test_debt/infra
+  долг (broken_environment) или на расширение AT-BUG-016, решение —
+  test-maintainer/Lead.
 
 **Наблюдение для SIBLING_MAP / следующего теста-designer:** риск-буфер в
 оценке объёма («WebView API 26 ≈ Chrome 58 против эталона») недооценил

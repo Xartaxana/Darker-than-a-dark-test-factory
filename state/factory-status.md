@@ -1,19 +1,19 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-22T12:29:51Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-07-22T23:28:12Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **488.9** (RUN-20260702-0300)
+- smoke: Closed · smoke_freshness_hours: **499.9** (RUN-20260702-0300)
 - regression: not_run
 - canary: not_run
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **1**
-- p0_automation_coverage: **100%** (34/34)
-- p1_automation_coverage: **89%** (47/53)
-- Test debt открыт: **1** — AT-BUG-025
+- p0_automation_coverage: **100%** (33/33)
+- p1_automation_coverage: **100%** (54/54)
+- Test debt открыт: **1** — AT-BUG-026
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
 - Untriaged: **0** · untriaged_failure_age: **0**
@@ -25,23 +25,23 @@ generated_at: 2026-07-22T12:29:51Z · генератор: `scripts/queue_snapsho
 
 ## Тест-кейсы (111)
 
-- Approved: **12** · Automated: **98** · Blocked: **1**
-- автотесты (B3): active: **98**
+- Automated: **110** · Blocked: **1**
+- автотесты (B3): active: **110**
 
 | Область | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
-| accessibility |  |  | 3 |  |  |
+| accessibility |  |  |  | 3 |  |
 | backup |  |  |  | 1 |  |
 | browser |  |  |  | 9 |  |
 | canary |  |  |  | 18 |  |
-| compatibility |  |  | 3 |  |  |
+| compatibility |  |  |  | 3 |  |
 | downloads |  |  |  | 8 |  |
 | errors |  |  |  | 1 |  |
 | filter-profiles |  |  |  | 5 |  |
 | library |  |  |  | 15 |  |
 | performance |  |  |  | 4 |  |
 | rating |  |  |  | 14 |  |
-| security |  |  | 6 |  |  |
+| security |  |  |  | 6 |  |
 | settings |  |  |  | 6 | 1 |
 | smoke |  |  |  | 5 |  |
 | tabs |  |  |  | 6 |  |
@@ -59,10 +59,11 @@ generated_at: 2026-07-22T12:29:51Z · генератор: `scripts/queue_snapsho
 
 - BUG-012 [minor] Open — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
 
-## Test debt (2)
+## Test debt (3)
 
-- AT-BUG-024 [missing_fixture] Fixed — Второй AVD (нижний API level, minSdk 26, rootable без Google Play) отсутствует в tools/avd — блокирует автоматизацию TC-109 (compatibility, P2)
-- AT-BUG-025 [flaky_test] Open — driver.get зависает неограниченно в WebView-контексте при отсутствии load-события (нет общего navigate-хелпера с таймаутом во всех местах browser_steps.py)
+- AT-BUG-026 [broken_environment] Open — qemu-system-x86_64.exe крашится (0xc0000005) mid-test на тяжёлом live-рендере AO3 в эмуляторном WebView — sibling AT-BUG-016/ESC-002, охватывает LIVE-canary-поверхность
+- AT-BUG-027 [flaky_test] Fixed — Незащищённый driver.get() вне framework/steps/ — browser_screen.py (open_work) и perf_steps.py (measure_home_page_load_time), тот же класс, что AT-BUG-025
+- AT-BUG-028 [missing_fixture] Fixed — AVD ao3_test_api26 несёт EOL WebView (Chrome 69.0.3497) без совместимого chromedriver — блокирует автоматизацию TC-109 (compatibility, P2)
 
 ## Прогоны (1)
 

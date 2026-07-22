@@ -8,16 +8,17 @@
     "epicPath": null,
     "summary": "Ключевые контролы (Rate/Note/тема/шрифт/таб) несут content-description или видимый текст в accessibility tree",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:accessibility",
-      "risk:R-13"
+      "risk:R-13",
+      "automation:active"
     ],
-    "updated": "2026-07-22T11:58:00Z",
-    "resolution": null,
+    "updated": "2026-07-22T23:13:20Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -30,16 +31,17 @@
     "epicPath": null,
     "summary": "Font scaling (font_scale 1.3): основные экраны без крашей, ключевые контролы остаются в дереве",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:accessibility",
-      "risk:R-13"
+      "risk:R-13",
+      "automation:active"
     ],
-    "updated": "2026-07-22T11:58:00Z",
-    "resolution": null,
+    "updated": "2026-07-22T23:13:20Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -52,16 +54,17 @@
     "epicPath": null,
     "summary": "Contrast sanity dark/light: текст и фон различимы в обоих системных вариантах темы",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:accessibility",
-      "risk:R-11"
+      "risk:R-11",
+      "automation:active"
     ],
-    "updated": "2026-07-22T11:58:00Z",
-    "resolution": null,
+    "updated": "2026-07-22T23:13:20Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -673,7 +676,7 @@
     "summary": "Кнопка 'Save filter' инжектируется рядом с submit формы Sort&Filter и не дублируется при повторных мутациях формы (live)",
     "issueType": "test-case",
     "status": "tc-automated",
-    "priority": "p0",
+    "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
@@ -716,18 +719,19 @@
     "epic": null,
     "parentPath": null,
     "epicPath": null,
-    "summary": "P0-smoke на втором (нижнем) API level (minSdk 26): базовый путь без регресса относительно основного AVD",
+    "summary": "P0-smoke на втором AVD (API 29, ближайший практичный уровень >= minSdk 26): базовый путь без регресса относительно основного AVD",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:compatibility",
-      "risk:R-14"
+      "risk:R-14",
+      "automation:active"
     ],
-    "updated": "2026-07-22T11:58:00Z",
-    "resolution": null,
+    "updated": "2026-07-22T23:26:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -740,16 +744,17 @@
     "epicPath": null,
     "summary": "Системная dark/light матрица: P0-smoke путь без регресса в обоих системных режимах",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:compatibility",
-      "risk:R-14"
+      "risk:R-14",
+      "automation:active"
     ],
-    "updated": "2026-07-22T11:58:00Z",
-    "resolution": null,
+    "updated": "2026-07-22T23:13:20Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -762,16 +767,17 @@
     "epicPath": null,
     "summary": "Portrait/landscape: поворот сохраняет активную вкладку/URL/скролл, не пересоздаёт WebView",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:compatibility",
-      "risk:R-14"
+      "risk:R-14",
+      "automation:active"
     ],
-    "updated": "2026-07-22T11:58:00Z",
-    "resolution": null,
+    "updated": "2026-07-22T23:13:20Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1864,16 +1870,17 @@
     "epicPath": null,
     "summary": "Exported-компоненты: MainActivity exported=true с VIEW/BROWSABLE intent-filter на archiveofourown.org (статическая инспекция манифеста)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:security",
-      "risk:R-15"
+      "risk:R-15",
+      "automation:active"
     ],
-    "updated": "2026-07-22T11:58:00Z",
-    "resolution": null,
+    "updated": "2026-07-22T22:54:43Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1886,16 +1893,17 @@
     "epicPath": null,
     "summary": "Cleartext-трафик: политика манифеста/network-security-config зафиксирована и сверена с http-схемой intent-filter (статическая инспекция)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:security",
-      "risk:R-15"
+      "risk:R-15",
+      "automation:active"
     ],
-    "updated": "2026-07-22T11:58:00Z",
-    "resolution": null,
+    "updated": "2026-07-22T22:54:43Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1908,16 +1916,17 @@
     "epicPath": null,
     "summary": "JS-bridge (window.Android) доступность: baseline на доверенном AO3-origin vs проба на локальной error-странице (не-AO3-контент)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:security",
-      "risk:R-15"
+      "risk:R-15",
+      "automation:active"
     ],
-    "updated": "2026-07-22T11:58:00Z",
-    "resolution": null,
+    "updated": "2026-07-22T22:54:43Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1930,16 +1939,17 @@
     "epicPath": null,
     "summary": "file:// доступ из открытого скачанного файла не выходит за пределы контента загрузки при переходе по встроенной ссылке (∩ TC-034, негативный/граничный случай)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:security",
-      "risk:R-15"
+      "risk:R-15",
+      "automation:active"
     ],
-    "updated": "2026-07-22T11:58:00Z",
-    "resolution": null,
+    "updated": "2026-07-22T22:54:43Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1952,16 +1962,17 @@
     "epicPath": null,
     "summary": "Приватность бэкапа: allowBackup сопровождён явным ограничением области (манифест-факт) + SAF-экспортный JSON не получает мир-читаемые права (поведенческая проверка)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:security",
-      "risk:R-15"
+      "risk:R-15",
+      "automation:active"
     ],
-    "updated": "2026-07-22T11:58:00Z",
-    "resolution": null,
+    "updated": "2026-07-22T22:54:43Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1974,16 +1985,17 @@
     "epicPath": null,
     "summary": "Отсутствие чувствительных данных (cookie/session/токены/локальные пути) в logcat при представительном smoke-прогоне",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:security",
-      "risk:R-15"
+      "risk:R-15",
+      "automation:active"
     ],
-    "updated": "2026-07-22T11:58:00Z",
-    "resolution": null,
+    "updated": "2026-07-22T22:54:43Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -3055,7 +3067,7 @@
     "epicPath": null,
     "summary": "Второй AVD (нижний API level, minSdk 26, rootable без Google Play) отсутствует в tools/avd — блокирует автоматизацию TC-109 (compatibility, P2)",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -3063,8 +3075,8 @@
       "test_case:TC-109",
       "sev:minor"
     ],
-    "updated": "2026-07-22T11:40:00Z",
-    "resolution": null,
+    "updated": "2026-07-22T14:05:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -3077,14 +3089,79 @@
     "epicPath": null,
     "summary": "driver.get зависает неограниченно в WebView-контексте при отсутствии load-события (нет общего navigate-хелпера с таймаутом во всех местах browser_steps.py)",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-07-22T00:00:00Z",
+    "updated": "2026-07-22T19:45:51Z",
+    "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-026",
+    "path": "board/AT-BUG-026/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "qemu-system-x86_64.exe крашится (0xc0000005) mid-test на тяжёлом live-рендере AO3 в эмуляторном WebView — sibling AT-BUG-016/ESC-002, охватывает LIVE-canary-поверхность",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-082",
+      "sev:major"
+    ],
+    "updated": "2026-07-22T17:35:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-027",
+    "path": "board/AT-BUG-027/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Незащищённый driver.get() вне framework/steps/ — browser_screen.py (open_work) и perf_steps.py (measure_home_page_load_time), тот же класс, что AT-BUG-025",
+    "issueType": "bug",
+    "status": "bug-fixed",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:minor"
+    ],
+    "updated": "2026-07-22T18:15:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-028",
+    "path": "board/AT-BUG-028/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "AVD ao3_test_api26 несёт EOL WebView (Chrome 69.0.3497) без совместимого chromedriver — блокирует автоматизацию TC-109 (compatibility, P2)",
+    "issueType": "bug",
+    "status": "bug-fixed",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-109",
+      "sev:minor"
+    ],
+    "updated": "2026-07-23T02:20:00Z",
     "resolution": null,
     "children": [],
     "archived": false

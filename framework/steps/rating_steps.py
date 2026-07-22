@@ -53,6 +53,19 @@ def dismiss_rating_overlay(driver):
     RatingOverlay(driver).dismiss()
 
 
+@allure.step("Then панель рейтинга присутствует в дереве и кликабельна (без изменения выбора)")
+def assert_rating_panel_present_and_clickable(driver):
+    """TC-107 (font_scale=1.3): доказывает присутствие/кликабельность панели без
+    реального тапа (изменение сохранённого рейтинга не входит в сценарий кейса,
+    в отличие от `rate_current_work`)."""
+    BottomNav(driver).ensure_visible()
+    overlay = RatingOverlay(driver)
+    assert overlay.is_visible(), "меню рейтинга не появилось на странице работы (font_scale=1.3)"
+    assert overlay.is_clickable_attr(overlay.button_container_locator("SAVE")), (
+        "кнопка рейтинга Favorite не кликабельна (font_scale=1.3)"
+    )
+
+
 @allure.step("Given зафиксирован baseline цвета кнопки рейтинга {rating} на панели работы")
 def capture_panel_rating_baseline(driver, rating: str) -> float:
     """Раскрывает панель `RatingMenu` (если ещё не раскрыта) и измеряет исходный

@@ -10,7 +10,9 @@ from PIL import Image
 from selenium.webdriver.common.actions.action_builder import ActionBuilder
 from selenium.webdriver.common.actions.interaction import POINTER_TOUCH
 
+from framework.config import settings
 from framework.core import contexts
+from framework.core.navigate import navigate
 from framework.core.waits import wait_until
 from framework.screens.base_screen import BaseScreen
 
@@ -59,7 +61,12 @@ class BrowserScreen(BaseScreen):
         (Используется точечно; основной P0-smoke опирается на сидинг данных, чтобы
         не нагружать сторонний сайт AO3.)"""
         with contexts.in_webview(self.driver):
-            self.driver.get(f"https://archiveofourown.org/works/{work_id}")
+            # AT-BUG-027 (сиблинг AT-BUG-025): driver.get() голым вызовом может
+            # зависнуть без load-события (WebView этого приложения) — bounded-хелпер
+            # ограничивает сам вызов навигации тем же бюджетом, что и остальные
+            # места `framework/steps/browser_steps.py`.
+            navigate(self.driver, f"https://archiveofourown.org/works/{work_id}",
+                     settings.WEBVIEW_LOAD_TIMEOUT)
             wait_until(
                 self.driver,
                 lambda d: f"/works/{work_id}" in (d.current_url or ""),
@@ -191,6 +198,63 @@ class BrowserScreen(BaseScreen):
     def drag_brightness_up(self, dy_total_px: int = 2000) -> None:
         """Обратный драг вверх — убирает overlay и повышает яркость обратно."""
         self._two_finger_vertical_drag(-dy_total_px)
+
+    # --- TC-108: contrast sanity (luma-прокси различимости текста от фона) ---
+    def region_luma_stats(self, box: tuple[int, int, int, int]) -> tuple[float, float]:
+        """Среднее и стандартное отклонение luma (0..255) внутри `box` скриншота.
+        `std` — sanity-прокси наличия видимого текста поверх фона (не WCAG-ratio,
+        см. TC-108 «Testability gap»): однородная заливка даёт `std`≈0, текст на
+        контрастном фоне — заметно бОльший разброс (бимодальное распределение
+        тёмных/светлых пикселей текста и фона), тот же скриншот-приём, что
+        `screenshot_avg_luma`/`top_chrome_avg_luma`, только с гистограммной
+        дисперсией вместо одного среднего."""
+        png = self.driver.get_screenshot_as_png()
+        img = Image.open(io.BytesIO(png)).convert("L")
+        cropped = img.crop(box)
+        hist = cropped.histogram()
+        total = sum(hist)
+        mean = sum(i * c for i, c in enumerate(hist)) / total
+        variance = sum(c * (i - mean) ** 2 for i, c in enumerate(hist)) / total
+        return mean, variance ** 0.5
+
+    def bottom_bar_box(self) -> tuple[int, int, int, int]:
+        """Прямоугольник нижней полосы экрана (bottom bar: Library/Browse/Settings) —
+        проценты высоты, тот же приём, что `top_chrome_avg_luma` использует для
+        верхней полосы (не зависит от того, свёрнута ли нижняя навигация за
+        пилюлей — сама пилюля/навигация занимает нижние ~10% экрана в обоих
+        состояниях)."""
+        size = self.driver.get_window_size()
+        return (0, int(size["height"] * 0.90), size["width"], size["height"])
+
+    def work_title_zone_box(self) -> tuple[int, int, int, int]:
+        """Прямоугольник верхней части содержимого WebView (первые ~12% высоты
+        WebView-контейнера, ПОД нативным top-chrome) — операционализация зоны
+        «заголовок работы» для TC-108: пиксельная привязка к конкретному DOM-узлу
+        (`h2.title.heading`) через WebView-контекст непереносима на экранные
+        координаты штатными средствами этого фреймворка (нет прецедента поэлементного
+        маппинга WebView DOM -> screenshot pixel rect, в отличие от нативных
+        Compose-элементов); заголовок работы AO3 рендерится в самом верху страницы
+        сразу после загрузки — proxy-зона того же класса, что и остальные
+        luma-прокси в этом файле (sanity, не точная геометрия)."""
+        contexts.to_native(self.driver)
+        el = self.driver.find_element(AppiumBy.CLASS_NAME, "android.webkit.WebView")
+        rect = el.rect
+        top = rect["y"]
+        bottom = rect["y"] + int(rect["height"] * 0.12)
+        return (rect["x"], top, rect["x"] + rect["width"], bottom)
+
+    def webview_rect(self) -> dict:
+        """Экранный прямоугольник нативного WebView-контейнера (TC-111): прокси
+        «компоновка соответствует ориентации» через ШИРИНУ/ВЫСОТУ native-элемента
+        — не зависит от accessibility-проекции side panel/TabStrip/BottomBar,
+        которая (разведка TC-111, 2026-07-22, emulator-5554) полностью пропадает
+        из UiAutomator2-дерева сразу после поворота устройства (тот же класс,
+        что уже документирован в `top_chrome_avg_luma` для входа/выхода
+        fullscreen — reflow WebView задевает соседние Compose-узлы), не
+        восстанавливается за 10с ожидания/тап — вне скоупа этого файла, находка
+        для триажа."""
+        contexts.to_native(self.driver)
+        return self.driver.find_element(AppiumBy.CLASS_NAME, "android.webkit.WebView").rect
 
     def screenshot_avg_luma(self) -> float:
         """Средняя яркость (0..255) полноэкранного скриншота — прокси для реальной

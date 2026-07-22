@@ -12,8 +12,8 @@
 | platform-tools (adb) | 37.0.0 | `tools\android-sdk\platform-tools` |
 | Android Emulator | установлен | `tools\android-sdk\emulator` |
 | System image | android-34, **default** (без Google Play → есть root для CA mitmproxy) | `tools\android-sdk\system-images` |
-| System image (второй AVD, E3) | android-26, **google_apis** (без Play Store, rootable) | `tools\android-sdk\system-images` |
-| AVD | `ao3_test_api34` (Pixel 6); второй — `ao3_test_api26` (Pixel 6, AT-BUG-024) | `tools\avd` (через `ANDROID_AVD_HOME`) |
+| System image (второй AVD, E3) | android-29, **google_apis** (без Play Store, rootable; сменён с android-26 — AT-BUG-028, EOL WebView) | `tools\android-sdk\system-images` |
+| AVD | `ao3_test_api34` (Pixel 6); второй — `ao3_test_api29` (Pixel 6, AT-BUG-024/AT-BUG-028; старый `ao3_test_api26` оставлен на диске, не используется) | `tools\avd` (через `ANDROID_AVD_HOME`) |
 
 **Выбор образа для WebView-AVD (урок AT-BUG-024, 2026-07-22):** AOSP
 `default`-образ на API 26 НЕ несёт пакета WebView вообще — приложение
@@ -24,6 +24,73 @@ WebView», а его отсутствие. Для любого AVD под WebVie
 есть). Запуск второго AVD: `Start-Emulator -WritableSystem -AvdName
 ao3_test_api26`; CA на API<29 ставится в system-store (признак
 готовности «CA visible in system store: OK» — apex-стора там нет).
+
+**Второй AVD переведён API 26 -> API 29 (AT-BUG-028, 2026-07-22):**
+embedded System WebView образа `ao3_test_api26` (google_apis, API 26) —
+Chrome 69.0.3497 (EOL ~2018); `appium:chromedriverAutodownload`
+(дефолт для api34, Chrome 113) не находит совместимый chromedriver для
+этой версии (`No Chromedriver found that can automate Chrome
+69.0.3497`).
+
+Сверка `sdkmanager --list` (2026-07-22) подтвердила: для API 26
+доступен только один Google-без-Play образ (`google_apis;x86_64`, уже
+использованный AT-BUG-024) — альтернативного канала с более свежим
+WebView на этом API level нет (`google_apis_playstore` — только x86, не
+x86_64, и добавляет Google Play, что противоречит rootable/без-Google-Play
+требованию §4).
+
+**Опробован и ОТВЕРГНУТ путь «legacy chromedriver вручную»** (скачан
+`ChromeDriver 2.41.578737`, `Supports Chrome v67-69`, с
+`https://chromedriver.storage.googleapis.com/2.41/chromedriver_win32.zip`,
+распакован в `tools\chromedriver-legacy\chromedriver.exe`, zip —
+`tools\downloads\chromedriver_2.41_win32.zip`) — эмпирическая проверка
+(запуск бинарника локально, прямой GET `/status`) вскрыла СТРУКТУРНУЮ,
+не версийную причину провала: текущий `appium-chromedriver`
+(`node_modules\...\appium-chromedriver\build\lib\commands\process.js::
+waitForOnline`) жёстко требует поле `status.ready === true` в ответе
+`/status`. Проверены локально бинарники 2.41/2.42/2.43/2.44 (все — Chrome
+v67-71, диапазон, покрывающий 69.0.3497): ни один не несёт поля `ready`
+в `/status` (`{"build":{"version":"alpha"},...}`, без `ready`). Первая
+версия с полем `ready` — **2.45** (`Supports Chrome v70-72`) — уже НЕ
+покрывает Chrome 69. Вывод: ЛЮБОЙ chromedriver, совместимый с Chrome 69,
+структурно не проходит readiness-проверку современного Appium — путь
+"в" тупиковый по конструкции, не просто «трудно найти бинарник».
+Механика осталась в коде как общая возможность
+(`framework/config/settings.py::CHROMEDRIVER_EXECUTABLE`,
+`AO3_CHROMEDRIVER_EXECUTABLE` env → `appium:chromedriverExecutable`
+capability вместо autodownload в `framework/config/capabilities.py`) —
+пуста по умолчанию, api34 не регрессирует; не используется в текущем
+решении TC-109.
+
+**Рабочее решение — путь "б" критерия готовности:** второй AVD переведён
+на `system-images;android-29;google_apis;x86_64` (тот же класс образа,
+что и раньше — rootable, `PlayStore.enabled = no`, подтверждено в
+`config.ini`). Embedded WebView этого образа — **Chrome 74.0.3729.185**
+(`adb shell dumpsys package com.google.android.webview`), для него
+`appium:chromedriverAutodownload` штатно находит совместимый
+chromedriver (2.45+, несёт `ready`) — без ручных капабилити. Это НЕ
+буквальная нижняя граница `minSdk` (26) — ближайший практичный уровень
+API ≥26, явно разрешённый критерием готовности AT-BUG-028/AT-BUG-024
+(«если 26 недоступен как ЖИЗНЕСПОСОБНЫЙ канал»; здесь образ API 26
+физически доступен, но структурно недоступен современному Appium ни
+одним совместимым chromedriver — тот же класс непригодности, что
+`default`-образ без WebView вовсе в AT-BUG-024). Отмечено для прохода
+test-strategist (см. `bugs/AT-BUG-028.md`).
+
+AVD: `tools\avd\ao3_test_api29.ini` + `tools\avd\ao3_test_api29.avd\`
+(создан из `system-images;android-29;google_apis;x86_64`, `-d pixel_6`,
+тот же приём, что `ao3_test_api26`). Старый `ao3_test_api26.ini`/
+`.avd` оставлен на диске (не удалён — не мешает, `tasks.ps1`
+параметризован `-AvdName`, ничего по умолчанию на него не ссылается),
+но НЕ используется TC-109 больше.
+
+```powershell
+. D:\AO3_tests\scripts\tasks.ps1
+Start-Emulator -WritableSystem -AvdName ao3_test_api29
+Install-App
+Start-Appium
+Invoke-Pytest -k test_smoke_path_on_api26_no_regression
+```
 | Appium | 2.x + uiautomator2 8.0.1 | `tools\appium` (локальный npm-проект, запуск `npx appium`) |
 | Python venv | 3.12: pytest 9, Appium-Python-Client 5, allure-pytest, mitmproxy 11, pytest-rerunfailures, PyYAML | `framework\.venv` |
 | Приложение (исходники) | клон gitlab, **read-only по конвенции** | `app-under-test\` |

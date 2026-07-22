@@ -2,27 +2,27 @@
 key: "TC-102"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p1"
 summary: "JS-bridge (window.Android) доступность: baseline на доверенном AO3-origin vs проба на локальной error-странице (не-AO3-контент)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:security", "risk:R-15"]
+labels: ["test-case", "area:security", "risk:R-15", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-22T11:58:00Z"
-updated: "2026-07-22T11:58:00Z"
+created: "2026-07-22T22:54:43Z"
+updated: "2026-07-22T22:54:43Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # JS-bridge (window.Android) доступность: baseline на доверенном AO3-origin vs проба на локальной error-странице (не-AO3-контент)
 
 _Спроецировано из `test-cases/security/TC-102.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-102 — JS-bridge exposure: доверенный origin vs не-AO3-контент
 
@@ -95,3 +95,24 @@ P1: «@JavascriptInterface на удалённом AO3-origin — активна
 - [x] Указаны приоритет, область и источник требования
 - [x] Кейс независим от порядка выполнения других кейсов
 - [x] Область НЕ комбинаторная (два дискретных состояния origin, не множество входов) — строка `Инвариант:` не требуется
+
+## Ревью автотеста (F1, test-reviewer, 2026-07-22)
+
+Вердикт: **Пройдено** (Approved → Automated, `automation_status: active`).
+- **Архитектура (C1):** `arch_check.py` 0/0, ALLOWLIST пуст; driver-взаимодействие — через
+  `steps` (`app_steps`/`browser_steps`/`security_steps`), WebView-контекст — `core/contexts`;
+  `sleep` нет.
+- **Traceability:** `@allure.id("TC-102")` == id; маркеры `p1`+`live` (priority P1, режим live —
+  тест грузит живой HOME_URL, replay не заявлен); `automated_by` резолвится.
+- **Смысл:** baseline на доверенном AO3-origin ассертится по сути (`window.Android !==
+  'undefined'`); доступность на локальной error-странице фиксируется как наблюдаемый факт
+  (E4-min non-verdict, §8) — по дизайну кейса. Переход на не-AO3-контент переиспользует
+  механизм TC-046 (недоступный `.test`-URL → кастомная error page), гонок с анимацией нет.
+- **Фикстуры:** `clean_app` (pm clear) до сессии Appium, порядок фикстур корректен.
+- **Независимый зелёный прогон:** `Invoke-Pytest tests/test_security_js_bridge.py` → passed
+  (в батче 4 passed / финально 7 passed).
+- **Красная проба (2026-07-22T22:54:43Z):** временно инверсия baseline-assert
+  (`assert result != "undefined"` → `== "undefined"`, `security_steps.py`) →
+  `test_js_bridge_exposure_baseline_vs_non_ao3_error_page` FAILED, осмысленно:
+  «typeof window.Android == 'object' на доверенном AO3-origin — ожидали доступный bridge».
+  Порча откачена (Edit-revert), финальный прогон зелёный.

@@ -95,3 +95,9 @@ READER_CSS_STYLE = "#ao3-reader-css"
 # пересекается с реальной разметкой AO3 (сверено с buildErrorHtml: `<div class="wrap">`).
 ERROR_PAGE_HEADING = ".wrap h1"
 ERROR_PAGE_RETRY_LINK = ".wrap a"
+
+# Тестовая ссылка, встроенная ТОЛЬКО в HTML-фикстуру TC-103 (security/file-access,
+# `framework/tests/test_security_file_access.py`) — не часть разметки TC-034
+# `downloaded_work.html`. Целится в реально существующий internal-файл приложения
+# (Room DB) ВНЕ директории загрузок — см. докстринг фикстуры теста.
+PROBE_LINK = "#probe-link"

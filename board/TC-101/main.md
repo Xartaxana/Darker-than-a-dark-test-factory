@@ -2,27 +2,27 @@
 key: "TC-101"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p1"
 summary: "Cleartext-трафик: политика манифеста/network-security-config зафиксирована и сверена с http-схемой intent-filter (статическая инспекция)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:security", "risk:R-15"]
+labels: ["test-case", "area:security", "risk:R-15", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-22T11:58:00Z"
-updated: "2026-07-22T11:58:00Z"
+created: "2026-07-22T22:54:43Z"
+updated: "2026-07-22T22:54:43Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Cleartext-трафик: политика манифеста/network-security-config зафиксирована и сверена с http-схемой intent-filter (статическая инспекция)
 
 _Спроецировано из `test-cases/security/TC-101.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-101 — Cleartext-трафик: манифест-факт (build-level)
 
@@ -82,3 +82,29 @@ intent-filter (TC-100): расхождение (напр. intent-filter рекл
 - [x] Указаны приоритет, область и источник требования
 - [x] Кейс независим от порядка выполнения других кейсов
 - [x] Область НЕ комбинаторная (единичный статический факт + сверка с TC-100) — строка `Инвариант:` не требуется
+
+## Ревью автотеста (F1, test-reviewer, 2026-07-22)
+
+Вердикт: **Пройдено** (Approved → Automated, `automation_status: active`).
+- **Архитектура (C1):** `arch_check.py` 0/0, ALLOWLIST пуст; статическая инспекция через
+  `core/manifest.py`, `sleep` нет.
+- **Traceability:** `@allure.id("TC-101")` == id; маркер `p1` == priority P1; `automated_by`
+  резолвится.
+- **Смысл:** тест фиксирует эффективную политику cleartext одним из трёх источников
+  (`usesCleartextTraffic` / `networkSecurityConfig` / дефолт по `targetSdkVersion`) и сверяет
+  с http-схемой intent-filter — это осознанно E4-min «документирует факт, не выносит вердикт»
+  (§8), как и задано в Then кейса. Область не комбинаторная — строка инварианта не нужна.
+- **Наблюдение (не блокер):** на реальном манифесте (нет `usesCleartextTraffic`, нет
+  `networkSecurityConfig` → ветвь дефолта `targetSdk`) охранный assert
+  `raw is not None or nsc_ref is not None or effective is not None` истинен по построению —
+  сам ЗНАЧЕНИЕ cleartext-политики не ассертится (по дизайну non-verdict). Failable-условия
+  теста: разрешимость политики (охранный assert) и совместный intent-filter-assert (TC-100).
+  Соответствует явному дизайну кейса, прошедшему 2 круга critic; сигналом «баг/не-баг» служит
+  allure-attachment для триажа.
+- **Независимый зелёный прогон:** `Invoke-Pytest -k test_security_manifest` → 2 passed; в батче
+  — 7 passed.
+- **Красная проба (2026-07-22T22:54:43Z):** временно в ветви дефолта `effective = None`
+  (`security_steps.py`) → `test_cleartext_traffic_policy_documented_and_cross_checked` FAILED,
+  осмысленно: «не удалось зафиксировать политику cleartext-трафика ни одним из трёх источников».
+  Порча откачена (Edit-revert), финальный прогон зелёный. Проба подтверждает: охранный assert
+  cleartext НЕ мёртв — падает, когда политика действительно неразрешима.

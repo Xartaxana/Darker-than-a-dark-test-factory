@@ -2,27 +2,27 @@
 key: "TC-103"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p1"
 summary: "file:// доступ из открытого скачанного файла не выходит за пределы контента загрузки при переходе по встроенной ссылке (∩ TC-034, негативный/граничный случай)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:security", "risk:R-15"]
+labels: ["test-case", "area:security", "risk:R-15", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-22T11:58:00Z"
-updated: "2026-07-22T11:58:00Z"
+created: "2026-07-22T22:54:43Z"
+updated: "2026-07-22T22:54:43Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # file:// доступ из открытого скачанного файла не выходит за пределы контента загрузки при переходе по встроенной ссылке (∩ TC-034, негативный/граничный случай)
 
 _Спроецировано из `test-cases/security/TC-103.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-103 — file:// доступ: попытка выйти за пределы контента загрузки
 
@@ -89,3 +89,26 @@ _Спроецировано из `test-cases/security/TC-103.md` (источни
 - [x] Указаны приоритет, область и источник требования
 - [x] Кейс независим от порядка выполнения других кейсов
 - [x] Область НЕ комбинаторная (единичный граничный сценарий, не множество входов/сортировок) — строка `Инвариант:` не требуется
+
+## Ревью автотеста (F1, test-reviewer, 2026-07-22)
+
+Вердикт: **Пройдено** (Approved → Automated, `automation_status: active`).
+- **Архитектура (C1):** `arch_check.py` 0/0, ALLOWLIST пуст; открытие/навигация — через
+  `library_steps`/`browser_steps`, локатор `probe_link` — в screen-слое; клик через JS DOM
+  (не Selenium `.click()`), `sleep` нет.
+- **Traceability:** `@allure.id("TC-103")` == id; маркер `p1` == priority P1; `automated_by`
+  резолвится.
+- **Смысл:** assert проверяет суть негативного случая — навигация по встроенной `file://`-ссылке
+  вне директории загрузок НЕ даёт успешно отрисованную страницу целевого файла (три допустимых
+  исхода: URL не изменился / кастомная error page / пустой body), не «элемент существует».
+  Единичный граничный сценарий — строка инварианта не нужна.
+- **Фикстуры:** собственная HTML-фикстура (`_PROBE_HTML`, отдельный tmp-файл, не трогает
+  `downloaded_work.html` TC-034), сидинг до сессии Appium (`file_access_probe_seeded` перед
+  `driver`), tmpdir чистится в `finally`. Целевой путь — Room DB того же UID (реально существует).
+- **Независимый зелёный прогон:** `Invoke-Pytest tests/test_security_file_access.py` → passed
+  (в батче 4 passed / финально 7 passed).
+- **Красная проба (2026-07-22T22:54:43Z):** временно тесту передан `original_url + "TC103MUT"`
+  (симуляция смены URL = навигация-escape) → `assert_file_link_navigation_blocked_or_empty`
+  FAILED, осмысленно: «клик по probe-link привёл к успешно отображённой странице целевого файла:
+  current_url='file:///data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000103.html',
+  258 символов непустого текста». Порча откачена (Edit-revert), финальный прогон зелёный.

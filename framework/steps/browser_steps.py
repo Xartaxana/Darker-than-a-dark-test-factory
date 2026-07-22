@@ -14,6 +14,7 @@ from selenium.common.exceptions import (
 
 from framework.config import settings
 from framework.core import contexts
+from framework.core.navigate import navigate
 from framework.core.waits import wait_until
 from framework.screens.browser_screen import BrowserScreen
 from framework.screens.navigation import BottomNav
@@ -140,7 +141,10 @@ def open_stable_tall_page(driver) -> str:
        на идеально статичной странице). Подходящий Given для assert'а сохранности
        scroll-позиции."""
     with contexts.in_webview(driver):
-        driver.get(STABLE_TALL_LIVE_URL)
+        # AT-BUG-025: driver.get() голым вызовом может зависнуть без load-события
+        # (WebView этого приложения) — bounded-хелпер ограничивает сам вызов
+        # навигации тем же бюджетом, что и последующий wait_until.
+        navigate(driver, STABLE_TALL_LIVE_URL, settings.WEBVIEW_LOAD_TIMEOUT)
         wait_until(
             driver,
             lambda d: (
@@ -158,6 +162,31 @@ def open_stable_tall_page(driver) -> str:
 def get_webview_scroll_y(driver) -> int:
     with contexts.in_webview(driver):
         return int(driver.execute_script("return window.scrollY;") or 0)
+
+
+@allure.step("Then компоновка WebView соответствует ориентации (landscape={landscape})")
+def assert_layout_matches_orientation(driver, landscape: bool) -> None:
+    """TC-111: прокси «side panel/лейаут отражает ориентацию» через ШИРИНУ/ВЫСОТУ
+    нативного WebView-контейнера — не через взаимодействие с side panel (см.
+    `BrowserScreen.webview_rect` докстринг за находкой разведки: side panel/
+    TabStrip/BottomBar полностью пропадают из accessibility-дерева сразу после
+    поворота устройства, не восстанавливаются за 10с/тап — находка для триажа,
+    не блокер этого кейса)."""
+    rect = BrowserScreen(driver).webview_rect()
+    if landscape:
+        assert rect["width"] > rect["height"], f"компоновка не landscape: WebView rect={rect}"
+    else:
+        assert rect["height"] > rect["width"], f"компоновка не portrait: WebView rect={rect}"
+
+
+@allure.step("When устройство повёрнуто в {orientation}")
+def rotate(driver, orientation: str) -> None:
+    """TC-111: штатное Appium/WebDriver-capability (`driver.orientation`), не
+    требует нового framework-примитива — манифест приложения несёт
+    `configChanges="uiMode|orientation|screenSize|screenLayout|
+    smallestScreenSize"` (сверено в `AndroidManifest.xml`), поворот НЕ
+    пересоздаёт Activity."""
+    driver.orientation = orientation
 
 
 @allure.step("Then позиция скролла активной вкладки восстановлена (не с нуля)")
@@ -218,6 +247,34 @@ def measure_top_chrome_luma(driver) -> float:
     return BrowserScreen(driver).top_chrome_avg_luma()
 
 
+# --- TC-108: contrast sanity (luma-прокси различимости текста от фона) ---
+# Порог подобран эмпирически на живом прогоне (emulator-5554, 2026-07-22): область
+# однородной заливки (без текста) даёт std однозначных единиц (шум сжатия PNG/
+# сглаживание), область с реальным текстом на контрастном фоне — на порядок больше
+# (десятки единиц) в обоих системных вариантах темы (см. witness теста). Щедрый
+# отступ ниже минимума здорового диапазона — тот же класс калибровки, что
+# `perf_steps.MEMORY_RECOVERY_FRACTION`.
+CONTRAST_SANITY_MIN_STD = 15.0
+
+
+@allure.step("Then текст bottom bar различим от фона по luma-прокси (std >= {min_std})")
+def assert_bottom_bar_text_distinguishable(driver, min_std: float = CONTRAST_SANITY_MIN_STD):
+    _, std = BrowserScreen(driver).region_luma_stats(BrowserScreen(driver).bottom_bar_box())
+    assert std >= min_std, (
+        f"bottom bar: luma std={std:.1f} ниже sanity-порога {min_std} — текст и фон "
+        f"визуально неразличимы (luma-прокси, не точный WCAG-ratio, см. TC-108)"
+    )
+
+
+@allure.step("Then заголовок работы различим от фона по luma-прокси (std >= {min_std})")
+def assert_work_title_distinguishable(driver, min_std: float = CONTRAST_SANITY_MIN_STD):
+    _, std = BrowserScreen(driver).region_luma_stats(BrowserScreen(driver).work_title_zone_box())
+    assert std >= min_std, (
+        f"заголовок работы: luma std={std:.1f} ниже sanity-порога {min_std} — текст и "
+        f"фон визуально неразличимы (luma-прокси, не точный WCAG-ratio, см. TC-108)"
+    )
+
+
 @allure.step("Then верхняя полоса экрана заметно темнее baseline (TabStrip/статус-бар скрыты — fullscreen)")
 def assert_top_chrome_darkened(driver, baseline: float, ratio: float = 0.5, timeout: int = 10):
     """Опрашивает luma верхней полосы, пока она не пересечёт порог потемнения — вход
@@ -273,6 +330,69 @@ def assert_downloaded_page_styled(driver):
         page = DownloadedWorkPage(driver)
         page.wait_viewport_meta()
         page.wait_reader_css()
+
+
+@allure.step("Then текущий URL активной вкладки Browse прочитан")
+def get_active_tab_url(driver) -> str:
+    with contexts.in_webview(driver):
+        return driver.current_url or ""
+
+
+# --- TC-103 (security/file-access): встроенная в скачанный файл ссылка на
+# internal-путь вне директории загрузок — негативный/граничный случай, ∩ TC-034 ---
+
+@allure.step("When внутри открытого локального файла нажата тестовая ссылка probe-link")
+def click_probe_link(driver) -> None:
+    """Клик через JS DOM API (не Selenium `.click()`) — тот же приём, что
+    `tap_rate_button` (TC-072/074/076): не требует геометрической интерактивности,
+    достаточно скроллнуть элемент в область видимости перед кликом."""
+    with contexts.in_webview(driver):
+        link = DownloadedWorkPage(driver).probe_link()
+        driver.execute_script(
+            "arguments[0].scrollIntoView({block: 'center'}); arguments[0].click();", link,
+        )
+
+
+@allure.step("Then WebView не отображает содержимое целевого файла как успешно загруженную страницу")
+def assert_file_link_navigation_blocked_or_empty(
+    driver, original_url: str, timeout: int = 10,
+) -> None:
+    """TC-103: после клика по `probe-link` (файл вне `_DOWNLOAD_FIXTURE_REL_DIR`)
+    Then кейса допускает ЛЮБОЙ из трёх исходов — навигация не состоялась (URL не
+    изменился), показана ошибка загрузки (включая кастомную error page приложения,
+    TC-046 — `about:blank` base URL + заголовок «Couldn't load this page»), либо
+    пустой результат (WebView НЕ отрисовал непустое содержимое целевого файла).
+    НЕ проверяет единственный конкретный исход — какой из трёх сработает,
+    зависит от реального поведения WebView/ОС для конкретного целевого файла
+    (не задокументировано заранее, testability gap TC-103.md)."""
+    with contexts.in_webview(driver):
+        wait_until(
+            driver,
+            lambda d: d.execute_script("return document.readyState;") == "complete",
+            timeout=timeout,
+            message="WebView не стабилизировался (readyState != complete) после клика "
+                    "по probe-link",
+        )
+        current_url = driver.current_url or ""
+        body_text = driver.execute_script(
+            "return (document.body && document.body.innerText) || '';"
+        ) or ""
+    same_url = current_url.rstrip("/") == original_url.rstrip("/")
+    is_custom_error_page = current_url == "about:blank" and "Couldn't load this page" in body_text
+    is_empty = body_text.strip() == ""
+    allure.attach(
+        f"original_url={original_url!r} current_url={current_url!r} "
+        f"body_text_len={len(body_text)} same_url={same_url} "
+        f"is_custom_error_page={is_custom_error_page} is_empty={is_empty}",
+        name="tc103-file-link-navigation-observation",
+        attachment_type=allure.attachment_type.TEXT,
+    )
+    assert same_url or is_custom_error_page or is_empty, (
+        f"клик по probe-link привёл к успешно отображённой странице целевого файла: "
+        f"current_url={current_url!r}, {len(body_text)} символов непустого текста в "
+        f"body — открытие скачанного контента дало доступ к произвольному internal-"
+        f"файлу приложения по клику на встроенную ссылку"
+    )
 
 
 @allure.step("Then активная вкладка загрузила {url}")
@@ -359,7 +479,9 @@ def open_listing(driver, url: str):
     Rate-кнопки (`onWorksFound` → `applyRatings`), а не просто что страница ответила
     200."""
     with contexts.in_webview(driver):
-        driver.get(url)
+        # AT-BUG-025: см. `open_stable_tall_page` — bounded-навигация вместо
+        # голого driver.get().
+        navigate(driver, url, settings.WEBVIEW_LOAD_TIMEOUT)
         wait_until(
             driver,
             lambda d: len(d.find_elements(AppiumBy.CSS_SELECTOR, selectors.WORK_BLURB)) > 0,
@@ -374,7 +496,10 @@ def open_url_and_wait_ready(driver, url: str, timeout: int | None = None) -> Non
     и т.п.) — годится и для живой домашней/произвольной страницы AO3 (TC-066), и
     для replay-фикстур без work-блёрбов (TC-067, `ao3_home_smoke.mitm`)."""
     with contexts.in_webview(driver):
-        driver.get(url)
+        # AT-BUG-025: bounded-навигация — раньше таймаут был навешен только на
+        # ПОСЛЕДУЮЩИЙ wait_until (readyState-поллинг), а не на сам driver.get(),
+        # который мог зависнуть без load-события и без исключения вовсе.
+        navigate(driver, url, timeout or settings.WEBVIEW_LOAD_TIMEOUT)
         wait_until(
             driver,
             lambda d: d.execute_script("return document.readyState;") == "complete",
@@ -479,14 +604,32 @@ def open_live_listing(driver, url: str, timeout: int | None = None) -> None:
     `settings.WEBVIEW_LOAD_TIMEOUT`, разбитый на короткие попытки, а не одно
     длинное ожидание — иначе первая интерстишл-попытка съедает весь таймаут, не
     оставляя шанса на повторную навигацию. `open_listing` (replay-фикстуры) этому
-    риску не подвержен — там нет реальной Cloudflare, повторные попытки не нужны."""
+    риску не подвержен — там нет реальной Cloudflare, повторные попытки не нужны.
+
+    AT-BUG-025: раньше `driver.get(url)` на каждой попытке был ничем не ограничен
+    (таймаут был только у ПОСЛЕДУЮЩЕГО `wait_until`) — зависание самого вызова
+    навигации без load-события съедало весь `total_timeout` (или весь
+    `settings.APPIUM_HTTP_TIMEOUT`) уже на первой попытке, не давая ретрай-циклу
+    вообще сработать. Теперь `driver.get()` тоже ограничен per-попыточным
+    бюджетом (`min(attempt_timeout, remaining)`) через bounded-хелпер `navigate`;
+    его таймаут (`navigate()` перехватывает `urllib3.exceptions.ReadTimeoutError`/
+    `MaxRetryError` и перебрасывает встроенным `TimeoutError` — см.
+    `framework/core/navigate.py`; НИ ОДИН из urllib3-классов сам по себе не
+    наследует builtin `TimeoutError`, вопреки более ранней ошибочной записи в
+    `bugs/AT-BUG-025.md`) трактуется как неудавшаяся попытка наравне с
+    `TimeoutException` от `wait_until`."""
     total_timeout = timeout or settings.WEBVIEW_LOAD_TIMEOUT
     attempt_timeout = 8
     deadline = time.time() + total_timeout
     with contexts.in_webview(driver):
         last_exc: Exception | None = None
         while time.time() < deadline:
-            driver.get(url)
+            remaining = max(1, int(deadline - time.time()))
+            try:
+                navigate(driver, url, min(attempt_timeout, remaining))
+            except TimeoutError as exc:
+                last_exc = exc
+                continue
             remaining = max(1, int(deadline - time.time()))
             try:
                 wait_until(
@@ -1016,7 +1159,7 @@ def _is_stale(element) -> bool:
 
 
 @allure.step("When в WebView открыт заведомо недоступный по сети URL {url}")
-def open_unreachable_url(driver, url: str = UNREACHABLE_URL) -> None:
+def open_unreachable_url(driver, url: str = UNREACHABLE_URL, timeout: int | None = None) -> None:
     """Навигация активной вкладки на несуществующий домен — main-frame запрос
     гарантированно завершается `ERR_NAME_NOT_RESOLVED` (см. `UNREACHABLE_URL`).
 
@@ -1029,13 +1172,27 @@ def open_unreachable_url(driver, url: str = UNREACHABLE_URL) -> None:
     без него не было бы что проверять), не флейк: гасим только `net::ERR*`,
     любая другая причина падения `get()` (не про сеть) уходит дальше.
     Не ждём успешной загрузки (её не будет по построению) — ожидание кастомной
-    error page делает отдельный шаг `assert_error_page_shown`."""
+    error page делает отдельный шаг `assert_error_page_shown`.
+
+    AT-BUG-025: раньше `try/except WebDriverException` гасил только СИНХРОННУЮ
+    сетевую ошибку — зависание `driver.get()` БЕЗ исключения (WebView не отдал
+    ни `net::ERR`, ни успешную загрузку) не было ничем ограничено. Навигация
+    теперь идёт через bounded-хелпер `navigate`; истечение его таймаута —
+    встроенный `TimeoutError` (`navigate()` сам перехватывает
+    `urllib3.exceptions.ReadTimeoutError`/`MaxRetryError` — НИ ОДИН из них не
+    наследует builtin `TimeoutError` сам по себе, см. `framework/core/navigate.py`
+    за исправлением более ранней ошибочной записи — и перебрасывает встроенным
+    классом) — гасится тем же способом, что и ожидаемая сетевая ошибка:
+    реальную проверку итога всё равно делает `assert_error_page_shown`
+    следующим шагом."""
     with contexts.in_webview(driver):
         try:
-            driver.get(url)
+            navigate(driver, url, timeout or settings.WEBVIEW_LOAD_TIMEOUT)
         except WebDriverException as exc:
             if "net::ERR" not in str(exc):
                 raise
+        except TimeoutError:
+            pass
 
 
 @allure.step("Then показана кастомная themed error page с Retry-ссылкой на {expected_url}")

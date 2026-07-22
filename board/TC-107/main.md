@@ -2,27 +2,27 @@
 key: "TC-107"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p2"
 summary: "Font scaling (font_scale 1.3): основные экраны без крашей, ключевые контролы остаются в дереве"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:accessibility", "risk:R-13"]
+labels: ["test-case", "area:accessibility", "risk:R-13", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-22T11:58:00Z"
-updated: "2026-07-22T11:58:00Z"
+created: "2026-07-22T23:13:20Z"
+updated: "2026-07-22T23:13:20Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Font scaling (font_scale 1.3): основные экраны без крашей, ключевые контролы остаются в дереве
 
 _Спроецировано из `test-cases/accessibility/TC-107.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-107 — Font scaling 1.3× на основных экранах: нет краша, контролы присутствуют
 
@@ -84,3 +84,26 @@ EXCEPTION`)
 - [x] Кейс независим от порядка выполнения других кейсов
 - [x] Область НЕ комбинаторная (единичное значение масштаба 1.3, не семейство
   входов с инвариантом) — строка `Инвариант:` не требуется
+
+## Ревью автотеста (F1, test-reviewer 2026-07-22)
+
+Полный чек-лист F1 пройден, `Approved → Automated`.
+- **Архитектура:** `arch_check.py` — 0 ошибок; шаги в `settings_steps`/`app_steps`,
+  sleep нет.
+- **Traceability:** `@allure.id("TC-107")` == id, маркер `p2` == P2,
+  `automated_by` резолвится, фича `nf-a11y-font-scaling` в реестре.
+- **Фикстуры/teardown (особое внимание):** фикстура `font_scale_1_3`
+  (`test_accessibility.py:25`) — yield-генератор, восстанавливает
+  `DEFAULT_FONT_SCALE=1.0` в блоке `finally` БЕЗУСЛОВНО (не зависит от исхода
+  теста). Порядок фикстур `font_scale_1_3 → placeholder_seeded_work → driver`:
+  масштаб и сидинг применяются ДО создания Appium-сессии/старта приложения. Соседние
+  UI-тесты не наследуют испорченный масштаб.
+- **Зелёный прогон:** PASSED (в составе `test_accessibility.py`, 120.67s).
+- **Красная проба (2026-07-22T23:13:20Z):** в
+  `settings_steps.assert_reader_controls_present_and_clickable` временно расширил
+  диапазон контролов шрифта `range(7)` → `range(8)` (шаг 7 не существует — 7 ступеней
+  0..6). Прогон упал содержательно: `AssertionError: кнопка размера шрифта (шаг 7)
+  не найдена в дереве (font_scale=1.3)` — assert реально опрашивает accessibility-
+  дерево на присутствие каждого контрола, падение содержательное (не грязный масштаб
+  от прошлого теста: контролы 0..6 найдены, только фиктивный шаг 7 отсутствует). Порча
+  откачена (source чист).

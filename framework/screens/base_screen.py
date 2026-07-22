@@ -52,8 +52,24 @@ class BaseScreen:
         видимости/кликабельности — сам факт enabled=false и есть проверяемое состояние)."""
         return self.find(locator, timeout).get_attribute("enabled") == "true"
 
+    def is_clickable_attr(self, locator, timeout: int = 5) -> bool:
+        """Читает accessibility-атрибут `clickable` найденного узла БЕЗ клика (в
+        отличие от `tap()`/`element_to_be_clickable`, который клика дожидается И
+        выполняет) — TC-107: доказать «контрол кликабелен» без побочного эффекта
+        реального нажатия (например, изменения выбранной темы/размера шрифта)."""
+        return self.find(locator, timeout).get_attribute("clickable") == "true"
+
     def text_of(self, locator, timeout: int | None = None) -> str:
         return self.find(locator, timeout).text
+
+    def label_of(self, locator, timeout: int | None = None) -> tuple[str, str]:
+        """Возвращает `(content-desc, text)` найденного узла — чтение атрибутов
+        accessibility-дерева без взаимодействия (TC-106: инспекция «непустой
+        content-desc ИЛИ видимый text» на уже отрисованных контролах)."""
+        el = self.find(locator, timeout)
+        desc = el.get_attribute("contentDescription") or ""
+        text = el.get_attribute("text") or el.text or ""
+        return desc, text
 
     def swipe_to_text(self, text: str, max_swipes: int = 8) -> bool:
         """Прокручивает экран свайпами, пока не покажется текст. Устойчиво к Compose,

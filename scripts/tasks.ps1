@@ -57,7 +57,9 @@ function Start-Emulator {
     # бэкендом (host / angle_indirect). Параметр > env > дефолт.
     # AT-BUG-024: -AvdName параметризует имя AVD (дефолт — прежний ao3_test_api34,
     # обратная совместимость обязательна — существующие вызовы без аргумента не меняют
-    # поведение). Второй (нижний API) AVD — ao3_test_api26.
+    # поведение). Второй (нижний API) AVD — ao3_test_api29 (AT-BUG-028: перевод с
+    # api26 — embedded WebView Chrome 69 EOL, структурно несовместим с текущим
+    # appium-chromedriver; api26 AVD оставлен на диске неиспользуемым).
     param([switch]$WritableSystem, [int]$SnapshotBootTimeoutSec = 45, [string]$Gpu = "", [string]$AvdName = "ao3_test_api34")
     if (-not $Gpu) { $Gpu = if ($env:AO3_EMU_GPU) { $env:AO3_EMU_GPU } else { "swiftshader_indirect" } }
     $adb = "$env:ANDROID_HOME\platform-tools\adb.exe"
