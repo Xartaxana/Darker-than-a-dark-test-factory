@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -19,20 +20,30 @@ def _write(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
+def _write_hook(path: Path, executable: bool) -> None:
+    _write(path, "#!/bin/sh\necho ok\n")
+    # На POSIX git молча игнорирует хук без exec-бита (живой инцидент
+    # 2026-07-23, облачный клон) — «полностью прошитый» хук обязан его
+    # нести; на Windows бита нет, chmod — no-op для проверки.
+    if executable and os.name == "posix":
+        path.chmod(0o755)
+
+
 def _git(*args, cwd):
     return subprocess.run(["git", *args], cwd=str(cwd), capture_output=True,
                           text=True, check=True)
 
 
 def _init_repo_with_hooks(tmp_path, hooks_path_value=".githooks",
-                          make_commit_msg=True, make_pre_commit=True):
+                          make_commit_msg=True, make_pre_commit=True,
+                          executable=True):
     _git("init", "-q", cwd=tmp_path)
     if hooks_path_value is not None:
         _git("config", "core.hooksPath", hooks_path_value, cwd=tmp_path)
     if make_commit_msg:
-        _write(tmp_path / ".githooks" / "commit-msg", "#!/bin/sh\necho ok\n")
+        _write_hook(tmp_path / ".githooks" / "commit-msg", executable)
     if make_pre_commit:
-        _write(tmp_path / ".githooks" / "pre-commit", "#!/bin/sh\necho ok\n")
+        _write_hook(tmp_path / ".githooks" / "pre-commit", executable)
     return tmp_path
 
 
@@ -100,6 +111,18 @@ def test_git_hooks_channel_missing_both_hook_files(tmp_path):
     _init_repo_with_hooks(tmp_path, make_commit_msg=False, make_pre_commit=False)
     warnings = wc.git_hooks_channel(tmp_path)
     assert sum("missing" in w for w in warnings) == 2
+
+
+@pytest.mark.skipif(os.name != "posix",
+                    reason="exec-бит осмыслен только на POSIX")
+def test_git_hooks_channel_non_executable_hooks_warn(tmp_path):
+    # Живой класс 2026-07-23: файлы на месте, hooksPath верен, но git
+    # молча игнорирует неисполняемые хуки — прежний is_file()-чек давал
+    # false-OK, механизменный коммит прошёл без гейта.
+    _init_repo_with_hooks(tmp_path, executable=False)
+    warnings = wc.git_hooks_channel(tmp_path)
+    assert sum("not executable" in w for w in warnings) == 2
+    assert not any("missing" in w for w in warnings)
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="drive-letter case only exists on Windows")

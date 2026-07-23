@@ -6,7 +6,15 @@ Three independent, read-only checks:
 
     (a) git-channel     -- core.hooksPath resolves to <root>/.githooks AND
                             both required git hook files exist under it
-                            (commit-msg, pre-commit).
+                            (commit-msg, pre-commit) AND, on POSIX, carry
+                            the executable bit (git silently ignores a
+                            non-executable hook -- found live 2026-07-23:
+                            a cloud Linux checkout of this repo had both
+                            files present but mode 100644, so a mechanism
+                            commit went through with NO gate run and NO
+                            warning; Windows has no exec bit, there
+                            os.access(X_OK) is trivially true and the
+                            check self-neutralizes).
     (b) harness-channel  -- every "python scripts/<file>.py" hook command
                             in .claude/settings.json (our pattern -- NOT
                             "tools/", the OS repo's pattern) names a file
@@ -133,8 +141,17 @@ def git_hooks_channel(root: Path) -> list:
             )
 
     for name in _REQUIRED_GITHOOKS:
-        if not (root / _GITHOOKS_DIRNAME / name).is_file():
+        hook_file = root / _GITHOOKS_DIRNAME / name
+        if not hook_file.is_file():
             warnings.append(f"hook file missing: {_GITHOOKS_DIRNAME}/{name} -- {reason}")
+        elif os.name == "posix" and not os.access(hook_file, os.X_OK):
+            # git ignores a present-but-non-executable hook SILENTLY
+            # (only an advice-hint at commit time, invisible to a boot
+            # check) -- the exact "hooks die silently" failure mode this
+            # whole channel exists to surface.
+            warnings.append(
+                f"hook file not executable: {_GITHOOKS_DIRNAME}/{name} -- {reason}"
+            )
 
     return warnings
 
