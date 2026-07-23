@@ -1,45 +1,46 @@
 # HANDOFF — точка возобновления
 
-Обновлено: 2026-07-22 (6), Lead Fable «входящие OS + порты механизмов
-+ AT-BUG-024 + аппрув TC-100..111 + батч мелочей». Сессия: (1) разбор
-4 входящих OS (двухпроходка D-0066, 2 scout) — решения Lead: N4
-escape-allowlist ПРИНЯТ (кросс-репо sha-пины концессий CLAUDE.md на
-OS DECISIONS_FULL), t-257 wiring-чек ПРИНЯТ, t-259 машиночитаемый
-вердикт критика ПРИНЯТ, D-0087 judge-приёмка — ПРИЗНАННОЕ ОТЛИЧИЕ
-(гейты фабрики + basis=critic уже покрывают лист-класс; BASIS_VALUES
-не расширять); полные тексты решений — «Открытые хвосты». (2)
-Порт-батч os-port-0722 РЕАЛИЗОВАН тем же днём (builder 650 passed,
-106 новых тестов → critic ПРИНЯТЬ → Lead placement 542e8be):
-.githooks/pre-commit + scripts/escape_check.py (сид 5 записей),
-scripts/wiring_check.py SessionStart-хуком (строка WIRING на буте —
-её отсутствие = находка), правило 16 critic.md + scripts/
-critic_verdict_check.py — чекер провалидировал ОБА живых вердикта
-этой сессии (VERDICT OK x2). (3) AT-BUG-024 Fixed фокус-проходом
-/qa-loop B4 (test-maintainer + critic ПРИНЯТЬ): второй AVD
-ao3_test_api26 — образ google_apis (default API26 НЕ НЕСЁТ WebView
-вовсе — MissingWebViewPackageException, урок в environment-setup);
-tasks.ps1 параметризован -AvdName (обратная совместимость живым
-прогоном); CA-скрипты с apex-гейтом (API<29 — system-store); p0
-46/46 зелёный; deadlock-пункт критерия Fixed переформулирован Lead'ом
-на приёмке (TC-109-прогон = downstream, правило 14 + D1). (4)
-TC-100..111 Review→Approved по слову оператора (human-переход
-transitions.yaml). (5) misc-batch-0722: sibling-четвёрка шапки (5)
-ЗАКРЫТА (TC-099 baseline через settle; TC-005 assert усилен
-pref-проверкой с красной пробой обеими сторонами — selected-локатора
-в Compose нет, ратифицировано; независимость static/behavioral и
-aapt-vs-dumpsys — заметками автоматизации TC-100/101/104); заведён
-AT-BUG-025 (driver.get-класс, Open — B4-цель). (6) Рецидив «жду
-фоновый» у builder — разбужен SendMessage по протоколу, классовый
-пробел закрыт: канон-блок в builder.md (правило 9, коммит 22e7b85).
-Эмулятор/Appium погашены, NO DEVICE подтверждён канонически. Коммиты:
-1534523, 542e8be, 3544823, 0e0f4bb, 4d107d4, 1d66fc3, ea7f129,
-1a560e5, 22e7b85. Полный текст — docs/09-history.md §«Шапка
-2026-07-22 (6)».
+Обновлено: 2026-07-23 (7), координатор Sonnet (degraded, весь проход —
+самодетекция «Fable» на старте была ошибочной, ретроактивный
+`lead_degraded`) «/qa-loop 20 — B4-цепочка AT-BUG-024..028 + полная
+автоматизация E4-min/E1/E3 (TC-100..111) + F1». 12 триггеров из 20.
+(1) AT-BUG-024 Fixed→Verified: п.1-2 (AVD api26) чисто, п.3 (smoke p0)
+дал 2 краша qemu 0xc0000005 — critic-диагностика ESC-006 подтвердила
+sibling AT-BUG-016-live (не регресс), нашла и поправила фактическую
+ошибку витнесса fix-verifier'а (`0x6a1785af` — PE-timestamp бинарника,
+не offset сбоя); заведён AT-BUG-026 на сам краш. (2) AT-BUG-025
+(driver.get зависает в WebView без общего таймаут-хелпера) — Fixed за
+2 попытки: attempt 1 REJECTED критиком (реальный блокер B1 — urllib3
+`ReadTimeoutError` НЕ наследует builtin `TimeoutError`, misread автора),
+attempt 2 закрыл ветку правильно + новый device-free тест на саму
+ветку таймаута; Verified тем же проходом. (3) AT-BUG-026 (qemu-краш
+под тяжёлым live-рендером) — 2 ремедиации (GPU `host`-параметризация,
+демоушен TC-082 p0→p1) не дали DoD; critic поймал ложную находку
+воркера «краш подтверждён и на replay» (упавший тест рухнул в
+fixture-setup ДО рендера — witness'а на replay нет). Open, эскалирован:
+диагностика (replay-изолированный краш-цикл) и архитектура (пересмотр
+DoD «p0 без единого краха×3» для вероятностной хрупкости) — в очередь,
+не решено этим циклом. (4) AT-BUG-027 (sibling driver.get вне
+framework/steps/) и (5) AT-BUG-028 (AVD api26 несёт EOL WebView Chrome
+69 — legacy chromedriver эмпирически отвергнут, `status.ready`
+структурно недостижим для этой пары; AVD переведён api26→api29) — оба
+Fixed, оба приняты с критик-входом. (6) Rule 14+F1: 12 Approved-кейсов
+(security P1 TC-100-105 через новый `aapt dump xmltree`-парсер +
+accessibility/compatibility TC-106-111, включая разблокированный
+TC-109) автоматизированы и прошли полный F1 (не ретрофит) — все
+Automated. Класс-находки в очередь: schema `automated_by` не тянет 2
+теста на один TC-id (TC-104); side-panel scrim прячет весь a11y-tree
+(HANDOFF «Открытые хвосты», R-13 триаж). Каждый Sonnet-класс результат
+(fix-verifier×2, test-maintainer×4, test-automator×2) — РЕАЛЬНЫЙ
+critic-вход (basis=critic, self-accept недоступен в degraded-режиме);
+Opus-класс (critic-диагностика, test-reviewer×3 батча) —
+basis=queued-to-lead. Эмулятор/Appium погашены, NO DEVICE подтверждён
+канонически. Коммит: 7f292a0 (push d33855e..7f292a0).
 
-Шапка (5) (Sonnet «/qa-loop 20»: F1 TC-079, automate+F1 TC-096..099,
-red-probe ретрофит 28/28, needs-design закрыта целиком) — VERBATIM в
-docs/09-history.md §«Шапка 2026-07-22 (5)»; шапка (4) — §«Шапка
-2026-07-21 (4)», как и все предыдущие.
+Шапка (6) (Fable: входящие OS + порты механизмов + AT-BUG-024 + аппрув
+TC-100..111 + батч мелочей) — VERBATIM в docs/09-history.md §«Шапка
+2026-07-22 (6)»; шапка (5) — §«Шапка 2026-07-22 (5)»; шапка (4) —
+§«Шапка 2026-07-21 (4)», как и все предыдущие.
 
 Предыдущие шапки дня — VERBATIM в docs/09-history.md §«HANDOFF-свип
 2026-07-21»: (3) Sonnet «/qa-loop 10» (D1 AT-BUG-022/023 Verified, E2
@@ -241,41 +242,19 @@ reachability guard в `mitm.wait_device_proxy_reachable`, тест не долж
   тест «две tier-строки».
 
 - **Решения Lead 2026-07-22 по 4 входящим OS — ВСЕ РАЗОБРАНЫ**
-  (os-inbox-0722, двухпроходка D-0066): escape-allowlist (N4/D-0082)
-  — ПРИНЯТ и реализован (кросс-репо sha-пины; AO3-собственные
-  концессии без внешнего носителя решения НЕ пиннятся —
-  named-not-covered); judge-приёмка (D-0087) — ПРИЗНАННОЕ ОТЛИЧИЕ,
-  не перенимать: **BASIS_VALUES log_append.py НЕ расширять**,
-  пересмотр — только с evidence дороговизны critic-входа на листах;
-  wiring-чек (t-257) и машиночитаемый вердикт критика (t-259) —
-  ПРИНЯТЫ и реализованы (os-port-0722). Полные тексты четырёх
-  решений + не-блокирующие наблюдения порта (пустой entries exit 0;
-  fail-open и на относительный decision_file; BaseException-шов
-  wiring при будущих не-__main__-guarded хук-скриптах) —
-  docs/09-history.md §«Решения Lead по входящим OS 2026-07-22».
+  (os-inbox-0722): escape-allowlist ПРИНЯТ, judge-приёмка (D-0087) —
+  ПРИЗНАННОЕ ОТЛИЧИЕ (**BASIS_VALUES log_append.py НЕ расширять**),
+  wiring-чек и вердикт критика ПРИНЯТЫ и реализованы (os-port-0722).
+  Полный текст — docs/09-history.md §«Решения Lead по входящим OS
+  2026-07-22».
 
-- **Батч мелочей (D-0081)** — пп.(1)–(5) прежнего списка ЗАКРЫТЫ
-  2026-07-21 Fable-сессией «улучшение фабрики» двумя принятыми батчами
-  (misc-batch-0721: a07b2fd/027681e/6e79586/ac620f3; misc-batch2-0721:
-  5bbba9c/1dfc25d — оба critic PASS, witness в routing-log): parity-тесты
-  rules.yaml↔enum↔роли↔model (двусторонние, scripts/tests/
-  test_rules_agent_parity.py), дедуп `_iter_charters` (charter_utils.py),
-  runbook `-Gpu host` в environment-setup (+точная атрибуция сигнатур
-  021/016), комментарий схемы features. Судьба бывших (3) и (5):
-  automated_by-аудит 9eb15e4 — В РАБОТЕ (automated-by-audit-0721,
-  аудит + parity-тест automated_by→функция); решение по пустому
-  `features` ПРИНЯТО оператором 2026-07-21 — НЕ допускать, вместо
-  этого nf-записи реестра — В РАБОТЕ (nf-registry-0721). ЖИВОЙ
-  остаток батча:
-  (1) sibling-находка CH-004 про `driver.get()`-зависание — ЗАВЕДЁН
-  bugs/AT-BUG-025.md (2026-07-22, misc-batch-0722, Open, B4-цель;
-  вся фактура и критерий Fixed — в баге); (7) та же сессия: двухпальцевые жесты
-  (brightness drag/font pinch) через Appium W3C actions не триггерят
-  pointerInput classifier — механизмы настроек #4/#5 CH-004 остались
-  непокрытыми ПО ЭТОЙ причине (не по недостатку времени), уже в
-  `mission_leftover` CH-004, но сама причина (жест-классификатор) стоит
-  зафиксировать здесь для следующего чартера/test-automator.
-  (Нумерация (1)/(2) — бывшие (6)/(7) списка до свипа 2026-07-21.)
+- **Батч мелочей (D-0081)** — largely закрыт; automated_by-аудит и
+  nf-registry — В РАБОТЕ (automated-by-audit-0721, nf-registry-0721).
+  ЖИВОЙ остаток: двухпальцевые жесты (brightness drag/font pinch) через
+  Appium W3C actions не триггерят pointerInput classifier — механизмы
+  настроек #4/#5 CH-004 непокрыты по этой причине (не по недостатку
+  времени), уже в `mission_leftover` CH-004, причина зафиксирована
+  здесь для следующего чартера/test-automator.
 - **Швы automated_by-семейства — named-not-covered (решение Lead
   2026-07-21, правило 10г):** названы critic'ом при приёмке
   automated-by-audit-0721; shadowing уже закрыт кодом (5b3fc0e),
@@ -308,10 +287,6 @@ reachability guard в `mitm.wait_device_proxy_reachable`, тест не долж
   живой Proposed-чартер прогнать через гейт
   внимательно — обкатка критик-режима charter-plan-review.
 
-- ~~F-49 (финал-сообщение воркера теряет содержательную часть)~~ и
-  ~~вопрос OS про прозаические закрытия фантомов~~ — оба ЗАКРЫТЫ
-  (2026-07-21/07-20 полным Lead); полные вердикты — docs/09-history.md
-  §«Закрытый хвост F-49 от OS-репо» и окрестности.
 - **Порт D-0083 — исполнен по слову оператора «портируй в АО3»**
   (заголовок пункта восстановлен 07-20 — был повреждён слиянием с
   соседним при прошлой правке): правило 4в CLAUDE.md +
@@ -327,19 +302,13 @@ reachability guard в `mitm.wait_device_proxy_reachable`, тест не долж
   записью в следующем `accepted` (не эскалирован: Haiku ниже Sonnet,
   accept легален по матрице). Механизм подтверждён рабочим на первом
   же реальном случае.
-- ~~Порт D-0082~~, ~~калибровка №3 a/б/в~~, ~~журнал-тесты~~,
-  ~~hygiene_gate v2~~ — все ЗАКРЫТЫ (07-19/07-20/07-21); полные
-  нарративы — docs/09-history.md §«Закрытые хвосты 07-19».
-- Некритичные замечания critic по AT-BUG-004 инкр.3 (при касании
-  файлов): докстринг assert_rating_badge_visible; ListingPage.badge_for.
-- TC-028: устаревшая заметка про эскалацию seed_db — почистит reviewer.
-- TC-015.md: несущий факт «WebView живёт между табами» (MainActivity.kt:471,
-  от которого зависит истинность «без reload») не процитирован явно в
-  теле кейса — некритичная находка critic, дописать при следующей правке.
-- Опционально (владелец): del C:\Windows\System32\drivers\aehd.sys.
-- Решения по t-257 (wiring-чек) и t-259 (вердикт критика) — см.
-  сводный пункт «Решения Lead 2026-07-22 по 4 входящим OS» выше;
-  оперативные следствия: строка WIRING на буте (её отсутствие =
-  находка, Session Start-блок выше), вердикт критика без валидного
-  fenced-json не принимается (координатор гоняет
-  scripts/critic_verdict_check.py до приёмки, правило 16 critic.md).
+- Мелкие точечные заметки «при касании файла» (некритичные, не
+  load-bearing): AT-BUG-004 инкр.3 докстринги (assert_rating_badge_visible,
+  ListingPage.badge_for); TC-028 устаревшая заметка про эскалацию
+  seed_db; TC-015.md — факт «WebView живёт между табами»
+  (MainActivity.kt:471) не процитирован в теле кейса. Опционально
+  (владелец): del C:\Windows\System32\drivers\aehd.sys.
+- Оперативные следствия входящих OS (t-257/t-259, см. пункт выше):
+  строка WIRING на буте (её отсутствие = находка); вердикт критика без
+  валидного fenced-json не принимается (scripts/critic_verdict_check.py
+  до приёмки, правило 16 critic.md).
