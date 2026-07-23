@@ -181,3 +181,39 @@ def test_committed_snapshot_parses_contiguous_axes():
     axes = mg.parse_axes(text)
     assert len(axes) >= 9
     assert axes == list(range(1, len(axes) + 1))
+
+
+# ---------------------------------------------------------------------------
+# snapshot_shrink_guard — same-commit-ужатие среза (блокер 1 вердикта critic)
+# ---------------------------------------------------------------------------
+
+def test_shrink_guard_removed_axis_without_justification_fails():
+    code, reason = mg.snapshot_shrink_guard(
+        "feat: X\n\nось 1: покрыта\ntier: fable",
+        head_axes=[1, 2, 3], staged_axes=[1, 2])
+    assert code == 1 and "3" in reason and "удалена" in reason
+
+
+def test_shrink_guard_removed_axis_with_explicit_line_passes():
+    code, _ = mg.snapshot_shrink_guard(
+        "map: слияние осей\n\nось 3: удалена (слита с осью 1 в живой карте)",
+        head_axes=[1, 2, 3], staged_axes=[1, 2])
+    assert code == 0
+    # Обоснование ДРУГОЙ оси не покрывает удалённую (номер несущий).
+    code, reason = mg.snapshot_shrink_guard(
+        "map: X\n\nось 2: удалена (причина)",
+        head_axes=[1, 2, 3], staged_axes=[1, 3])
+    assert code == 0  # удалена ось 2, строка есть
+    code, reason = mg.snapshot_shrink_guard(
+        "map: X\n\nось 2: удалена (причина)",
+        head_axes=[1, 2, 3], staged_axes=[2, 3])
+    assert code == 1 and "1" in reason  # удалена ось 1, строка про 2
+
+
+def test_shrink_guard_growth_and_creation_do_not_trigger():
+    # Рост осей — не ужатие.
+    assert mg.snapshot_shrink_guard("map: X", [1, 2], [1, 2, 3]) == (0, "")
+    # Срез только создаётся (HEAD-версии нет) — не ужатие.
+    assert mg.snapshot_shrink_guard("map: X", [], [1, 2]) == (0, "")
+    # Без изменений.
+    assert mg.snapshot_shrink_guard("map: X", [1, 2], [1, 2]) == (0, "")
