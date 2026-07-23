@@ -25,6 +25,10 @@ def test_mechanism_paths_filters_ao3_prefixes_with_boundary():
                                ".githooks/commit-msg"]) == [
         "scripts/mechanism_gate.py", ".githooks/commit-msg"]
     assert mg.mechanism_paths(["scripts/board_sync.py"]) == []
+    # 2026-07-23: срез карты — вход гейта, тихая правка = обход осей.
+    assert mg.mechanism_paths(["state/sibling-map.snapshot.md"]) == [
+        "state/sibling-map.snapshot.md"]
+    assert mg.mechanism_paths(["state/sibling-map.snapshot.md.bak"]) == []
 
 
 def test_decide_skip_and_block_only_from_commit_message():
@@ -94,3 +98,86 @@ def test_two_tier_lines_any_below_binding_fails():
     code, _ = mg.decide_full("Merge branch 'x'", ["CLAUDE.md"], MAP_SAMPLE,
                              merging=True)
     assert code == 0
+
+
+# ---------------------------------------------------------------------------
+# resolve_map_source — тройная цепочка источника карты (2026-07-23)
+# ---------------------------------------------------------------------------
+
+def _chain(monkeypatch, tmp_path, env=None, live=None, snapshot=None):
+    """Собирает изолированную цепочку: env-значение (или его отсутствие),
+    подменённые пути живой карты и среза (существуют, только если задан
+    текст)."""
+    live_path = tmp_path / "live" / "SIBLING_MAP.md"
+    snap_path = tmp_path / "snap" / "sibling-map.snapshot.md"
+    if live is not None:
+        live_path.parent.mkdir(parents=True, exist_ok=True)
+        live_path.write_text(live, encoding="utf-8")
+    if snapshot is not None:
+        snap_path.parent.mkdir(parents=True, exist_ok=True)
+        snap_path.write_text(snapshot, encoding="utf-8")
+    monkeypatch.setattr(mg, "MAP_PATH", live_path)
+    monkeypatch.setattr(mg, "MAP_SNAPSHOT_PATH", snap_path)
+    if env is None:
+        monkeypatch.delenv(mg.MAP_ENV_VAR, raising=False)
+    else:
+        monkeypatch.setenv(mg.MAP_ENV_VAR, env)
+
+
+def test_resolve_env_override_wins_over_live_and_snapshot(monkeypatch, tmp_path):
+    env_map = tmp_path / "env-map.md"
+    env_map.write_text("## Ось 7 — Env\n", encoding="utf-8")
+    _chain(monkeypatch, tmp_path, env=str(env_map),
+           live="## Ось 1 — Live\n", snapshot="## Ось 2 — Snap\n")
+    text, label, used_snapshot = mg.resolve_map_source()
+    assert mg.parse_axes(text) == [7]
+    assert mg.MAP_ENV_VAR in label
+    assert used_snapshot is False
+
+
+def test_resolve_env_set_but_unreadable_fails_closed_no_silent_fallback(
+        monkeypatch, tmp_path):
+    # ГРАНИЦА: env выставлен, файла нет — отказ, хотя ниже по цепочке
+    # лежат читаемые живая карта И срез (тихий откат запрещён, F-30).
+    _chain(monkeypatch, tmp_path, env=str(tmp_path / "нет-такого.md"),
+           live="## Ось 1 — Live\n", snapshot="## Ось 2 — Snap\n")
+    text, label, used_snapshot = mg.resolve_map_source()
+    assert text is None
+    assert "не читается" in label
+    assert used_snapshot is False
+    code, reason = mg.decide("feat: X", ["CLAUDE.md"], text, map_label=label)
+    assert code == 1 and "fail-closed" in reason and mg.MAP_ENV_VAR in reason
+
+
+def test_resolve_live_map_wins_over_snapshot(monkeypatch, tmp_path):
+    _chain(monkeypatch, tmp_path,
+           live="## Ось 1 — Live\n", snapshot="## Ось 2 — Snap\n")
+    text, label, used_snapshot = mg.resolve_map_source()
+    assert mg.parse_axes(text) == [1]
+    assert used_snapshot is False
+
+
+def test_resolve_snapshot_fallback_flagged(monkeypatch, tmp_path):
+    _chain(monkeypatch, tmp_path, snapshot="## Ось 2 — Snap\n")
+    text, label, used_snapshot = mg.resolve_map_source()
+    assert mg.parse_axes(text) == [2]
+    assert used_snapshot is True
+    assert "срез" in label
+
+
+def test_resolve_nothing_available_fails_closed(monkeypatch, tmp_path):
+    _chain(monkeypatch, tmp_path)
+    text, label, used_snapshot = mg.resolve_map_source()
+    assert text is None and used_snapshot is False
+    code, reason = mg.decide("feat: X", ["CLAUDE.md"], text, map_label=label)
+    assert code == 1 and "fail-closed" in reason
+
+
+def test_committed_snapshot_parses_contiguous_axes():
+    """Анти-дрейф: реальный закоммиченный срез обязан парситься тем же
+    regex'ом, что живая карта, — оси непрерывны с 1, не меньше девяти
+    (срез 2026-07-23)."""
+    text = mg.MAP_SNAPSHOT_PATH.read_text(encoding="utf-8")
+    axes = mg.parse_axes(text)
+    assert len(axes) >= 9
+    assert axes == list(range(1, len(axes) + 1))
