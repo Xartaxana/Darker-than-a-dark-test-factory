@@ -137,11 +137,19 @@ def lead_family(binding: str) -> str | None:
     return None
 
 
-def find_tier_declaration(msg: str) -> str | None:
-    """Значение строки «tier: <значение>» — только из СООБЩЕНИЯ коммита
-    (не из диффа), та же самодекларативная форма, что и skip-строка."""
-    m = TIER_LINE_RE.search(msg)
-    return m.group(1).strip() if m else None
+def find_tier_declarations(msg: str) -> list[str]:
+    """ВСЕ значения строк «tier: <значение>» — только из СООБЩЕНИЯ коммита
+    (не из диффа), та же самодекларативная форма, что и skip-строка.
+
+    Штабной фикс OS-репо 2026-07-22 (гейт-батч t-278, критик t-068),
+    принят Lead'ом 2026-07-23: прежний `.search()` матчил только ПЕРВУЮ
+    tier-строку — цитированная строка (например, высокий ярус в
+    процитированном тексте) маскировала настоящую декларацию ниже по
+    сообщению. Теперь `.findall()`: проходят только сообщения, где
+    КАЖДАЯ найденная tier-строка не ниже привязки. Fail-closed на
+    цитатах — осознанный трейдофф (цитируешь чужую tier-строку в
+    механизменном коммите — перефразируй, чтобы она не парсилась)."""
+    return [v.strip() for v in TIER_LINE_RE.findall(msg)]
 
 
 def tier_declared_ok(declared: str, binding: str) -> bool:
@@ -205,15 +213,18 @@ def decide_full(msg: str, staged: list[str], map_text: str | None,
     if not hits or merging or SKIP_RE.search(msg):
         return 0, ""
     binding = resolve_lead_binding()
-    declared = find_tier_declaration(msg)
-    if declared is None:
+    declared_all = find_tier_declarations(msg)
+    if not declared_all:
         return 1, ("коммит трогает механизмные файлы:\n  " + "\n  ".join(hits)
                     + "\nНет строки «tier: <значение>» (привязка lead: "
                     + binding + ") — " + _tier_queue_note())
-    if not tier_declared_ok(declared, binding):
+    below = [d for d in declared_all if not tier_declared_ok(d, binding)]
+    if below:
         return 1, ("коммит трогает механизмные файлы:\n  " + "\n  ".join(hits)
-                    + "\nЯрус не lead: «tier: " + declared
-                    + "» не совпадает с привязкой (" + binding + ") — "
+                    + "\nЯрус не lead: «tier: " + below[0]
+                    + "» не совпадает с привязкой (" + binding + "); при "
+                    "нескольких tier-строках отказ даёт ЛЮБАЯ ниже привязки "
+                    "(fail-closed на цитатах, штабной фикс t-278) — "
                     + _tier_queue_note())
     return 0, ""
 
