@@ -220,6 +220,14 @@ reachability guard в `mitm.wait_device_proxy_reachable`, тест не долж
 
 ## Открытые хвосты (вне текущей очереди)
 
+- **Кросс-пункт от OS-репо 2026-07-24 №2 (сиблинг-класс escape-в-
+  докстрингах, ось 1):** scripts/mechanism_gate.py строки 18/158 —
+  SyntaxWarning invalid escape sequence ('\-', '\ ') в докстринге;
+  в OS тот же класс сегодня ломал 7 тестов hygiene_gate через
+  cp1251-stderr (фикс B2 t-309: экранировать backslash в
+  докстрингах). Починить обе строки + grep '\\[^nrt"'\'']' по
+  scripts/*.py на братьев.
+
 - **Кросс-пункт от OS-репо 2026-07-24 (Phase 4 Hardening, D-0098;
   класс E4 enforcement-аудита):** у роль-файлов БЕЗ строки `tools:`
   во frontmatter субагент получает ВСЕ инструменты, включая
