@@ -220,6 +220,18 @@ reachability guard в `mitm.wait_device_proxy_reachable`, тест не долж
 
 ## Открытые хвосты (вне текущей очереди)
 
+- **Кросс-пункт от OS-репо 2026-07-24 (Phase 4 Hardening, D-0098;
+  класс E4 enforcement-аудита):** у роль-файлов БЕЗ строки `tools:`
+  во frontmatter субагент получает ВСЕ инструменты, включая
+  Task/Agent — норма «воркеры не запускают воркеров» (D-0037)
+  держится только текстом. В OS-репо закрыто 07-24: builder получил
+  `tools: Read, Glob, Grep, Edit, Write, NotebookEdit, Bash,
+  PowerShell`, кит-critic — `Read, Glob, Grep, Bash`. ЗДЕСЬ: пройти
+  .claude/agents/* (3 базовых + 11 QA-агентов конвейера) и добавить
+  tools-ограничение каждому, у кого его нет (Task/Agent не даётся
+  никому из воркеров); детектор — чек 26-класс живости гейтов при
+  следующей калибровке OS.
+
 - **A11y-находка (test-automator, a11y-compat batch, 2026-07-22):**
   раскрытие side panel (BrowseSidePanel, собственный fullscreen-scrim)
   убирает WebView/TabStrip/BottomBar/RatingMenu ЦЕЛИКОМ из
