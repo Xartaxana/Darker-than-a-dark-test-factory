@@ -1,12 +1,12 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-23T11:48:33Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-07-24T06:26:13Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **512.2** (RUN-20260702-0300)
+- smoke: Closed · smoke_freshness_hours: **530.9** (RUN-20260702-0300)
 - regression: not_run
 - canary: not_run
 - Открытые blocker/critical: **0**
@@ -59,11 +59,9 @@ generated_at: 2026-07-23T11:48:33Z · генератор: `scripts/queue_snapsho
 
 - BUG-012 [minor] Open — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
 
-## Test debt (3)
+## Test debt (1)
 
 - AT-BUG-026 [broken_environment] Open — qemu-system-x86_64.exe крашится (0xc0000005) mid-test на тяжёлом live-рендере AO3 в эмуляторном WebView — sibling AT-BUG-016/ESC-002, охватывает LIVE-canary-поверхность
-- AT-BUG-027 [flaky_test] Fixed — Незащищённый driver.get() вне framework/steps/ — browser_screen.py (open_work) и perf_steps.py (measure_home_page_load_time), тот же класс, что AT-BUG-025
-- AT-BUG-028 [missing_fixture] Fixed — AVD ao3_test_api26 несёт EOL WebView (Chrome 69.0.3497) без совместимого chromedriver — блокирует автоматизацию TC-109 (compatibility, P2)
 
 ## Прогоны (1)
 
@@ -80,8 +78,9 @@ generated_at: 2026-07-23T11:48:33Z · генератор: `scripts/queue_snapsho
 
 - нет
 
-## Эскалации (3)
+## Эскалации (4)
 
 - [2026-07-21T08:57:20Z] **BUG-012** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-18T12:00:00Z | нужно: ответить в ## Обсуждение
 - [2026-07-21T08:57:20Z] **TC-020** [sla:blocked_any] — в Blocked с 2026-07-19T09:55:00Z (причина: product_decision) | нужно: разобрать причину и вывести из Blocked
 - [2026-07-21T22:43:25Z] **BUG-013** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-19T17:30:00Z | нужно: ответить в ## Обсуждение
+- [2026-07-24T05:10:04Z] **BUG-011** [sla:bug_open_major] — major-баг open с 2026-07-15T14:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом

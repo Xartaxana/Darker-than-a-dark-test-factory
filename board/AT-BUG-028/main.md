@@ -2,7 +2,7 @@
 key: "AT-BUG-028"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p2"
 summary: "AVD ao3_test_api26 несёт EOL WebView (Chrome 69.0.3497) без совместимого chromedriver — блокирует автоматизацию TC-109 (compatibility, P2)"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-23T02:20:00Z"
-updated: "2026-07-23T02:20:00Z"
+created: "2026-07-24T05:56:00Z"
+updated: "2026-07-24T05:56:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # AVD ao3_test_api26 несёт EOL WebView (Chrome 69.0.3497) без совместимого chromedriver — блокирует автоматизацию TC-109 (compatibility, P2)
 
 _Спроецировано из `bugs/AT-BUG-028.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # AT-BUG-028 — ao3_test_api26 WebView EOL (Chrome 69), нет chromedriver — блокирует TC-109
 
@@ -90,7 +90,7 @@ TC-109 остаётся единственным заблокированным 
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
-| | | | | (D1 fix-verifier — общим правилом, после Fixed) |
+| 2026-07-24 | framework env (не завязано на сборку приложения); тестируемая сборка 1.10 (versionCode 11) не изменилась | TC-109 (`test_smoke_path_on_api26_no_regression`, AVD `ao3_test_api29`, БЕЗ `AO3_CHROMEDRIVER_EXECUTABLE`) + регресс api34 (`test_smoke.py`+`test_rating.py`, тот же WebView-код-путь, что тронула правка `capabilities.py`) | ao3_test_api29: `1 passed in 94.45s`, `PYTEST_EXIT=0` (независимый прогон fix-verifier, не полагается на 3 прогона отчёта фикса). api34 регресс: `15 passed in 465.36s`, `PYTEST_EXIT=0`. Код-сверка `settings.py`/`capabilities.py`: `CHROMEDRIVER_EXECUTABLE` пусто по умолчанию (`os.environ.get("AO3_CHROMEDRIVER_EXECUTABLE", "")`), пустая ветка → `appium:chromedriverAutodownload=True` (autodownload-путь не тронут) — подтверждено и косвенно зелёным api34-прогоном. TC-109.md: `status: Automated`, `automated_by` заполнен, уже прошёл F1 (test-reviewer, красная проба зафиксирована в кейсе) — сверено, не доверился пересказу. Cleanup обоих AVD подтверждён (`Get-Device` → `NO DEVICE`, нет осиротевших `qemu-system*`). | **Verified** (D1, fix-verifier) |
 
 ## Обсуждение
 
@@ -232,3 +232,61 @@ API 29, `automated_by` заполнен). Ни одна правка не кос
 **Статус.** `Open → Fixed` (guard `type: test_debt`, `schemas/
 transitions.yaml`, актор test-maintainer). Лок НЕ снят — снимет
 координатор при приёмке.
+
+**2026-07-24T05:56:00Z — fix-verifier (mode=verify, D1):** независимый
+прогон на актуальной среде (лок fix-verifier:2026-07-24T05:26:00Z).
+`Start-Emulator -WritableSystem -AvdName ao3_test_api29` → `Get-Device`
+DEVICE, API 29 подтверждён (`getprop ro.build.version.sdk` → 29) →
+`Install-App` Success (первая попытка упала транзиентно —
+`PackageManagerInternal.freeStorage` NPE, тот же класс гонки boot vs
+package manager, что уже отмечен в отчёте фикса — повтор через ~15с
+прошёл) → `Start-Appium` ready (первый запуск не поднялся за 60s,
+`Stop-NodeProcesses` + повтор — поднялся штатно) →
+`Invoke-Pytest -k test_smoke_path_on_api26_no_regression -v`, БЕЗ
+`AO3_CHROMEDRIVER_EXECUTABLE` (сверено отдельно: `env:
+AO3_CHROMEDRIVER_EXECUTABLE` → `NOT SET`) — **`1 passed in 94.45s`,
+`PYTEST_EXIT=0`**.
+
+Переключение AVD: `Stop-NodeProcesses` + `adb emu kill` → `Get-Device`
+NO DEVICE → `Start-Emulator -WritableSystem` (без `-AvdName`, api34,
+сработал fallback `-no-snapshot-load` по известному AT-BUG-012, boot
+всё равно завершился) → `Get-Device` DEVICE, API 34 подтверждён →
+`Install-App` Success → `Start-Appium` ready → регресс
+`Invoke-Pytest tests/test_smoke.py tests/test_rating.py -v`
+(фоновый прогон, дождался блокирующим `Wait-Process` до завершения в
+этом же ходе, не бросил на нотификацию) — **`15 passed in 465.36s`,
+`PYTEST_EXIT=0`**.
+
+Пункт DoD 4 (regression-safe пустой `CHROMEDRIVER_EXECUTABLE` на api34)
+подтверждён точечным чтением кода (`settings.py`: default `""`;
+`capabilities.py::build_options`: пустая ветка →
+`appium:chromedriverAutodownload=True`, ветка `chromedriverExecutable`
+не задета) — как и разрешал диспетчер, вместе с косвенным
+подтверждением зелёного api34-регресса.
+
+Пункт DoD 2 сверен самостоятельно (не пересказ фикса):
+`test-cases/compatibility/TC-109.md` — `status: Automated`,
+`automation_status: active`, `automated_by:
+"framework/tests/test_compatibility.py::
+test_smoke_path_on_api26_no_regression"`, F1-ревью test-reviewer уже
+пройдено (независимое воспроизведение + красная проба
+зафиксированы в самом кейсе).
+
+Cleanup подтверждён: `Stop-NodeProcesses` + `adb emu kill` →
+`Get-Device` NO DEVICE; проверка осиротевших процессов
+(`Get-CimInstance Win32_Process` по `qemu*`/`emulator*`) — только два
+штатных kill-helper'а (`emulator -kill <pid> -sleep 20`,
+самозавершающиеся), реальных `qemu-system*`/эмулятор-инстансов нет.
+
+Ни одна правка не коснулась `app-under-test/` (только frontmatter/
+таблица этого бага и `test-cases/compatibility/TC-109.md` не
+трогались — уже заполнены test-maintainer'ом).
+
+**Дефекты-собратья:** не замечено новых аналогов сверх уже
+задокументированных в этом баге (R-14 смещение отмечено
+test-maintainer для test-strategist, capability-механика
+`CHROMEDRIVER_EXECUTABLE` оставлена как общий примитив на будущее —
+оба уже учтены выше, повторно не дублирую).
+
+**Статус.** `Fixed → Verified` (guard `by: [fix-verifier]`,
+`schemas/transitions.yaml`). Лок снят.

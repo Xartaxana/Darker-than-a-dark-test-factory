@@ -3118,7 +3118,7 @@
       "test_case:TC-082",
       "sev:major"
     ],
-    "updated": "2026-07-22T17:35:00Z",
+    "updated": "2026-07-24T06:18:05Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3132,15 +3132,15 @@
     "epicPath": null,
     "summary": "Незащищённый driver.get() вне framework/steps/ — browser_screen.py (open_work) и perf_steps.py (measure_home_page_load_time), тот же класс, что AT-BUG-025",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-07-22T18:15:00Z",
-    "resolution": null,
+    "updated": "2026-07-24T05:55:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -3153,7 +3153,7 @@
     "epicPath": null,
     "summary": "AVD ao3_test_api26 несёт EOL WebView (Chrome 69.0.3497) без совместимого chromedriver — блокирует автоматизацию TC-109 (compatibility, P2)",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -3161,8 +3161,8 @@
       "test_case:TC-109",
       "sev:minor"
     ],
-    "updated": "2026-07-23T02:20:00Z",
-    "resolution": null,
+    "updated": "2026-07-24T05:56:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },

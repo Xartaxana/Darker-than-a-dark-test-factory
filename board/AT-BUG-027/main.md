@@ -2,7 +2,7 @@
 key: "AT-BUG-027"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p2"
 summary: "Незащищённый driver.get() вне framework/steps/ — browser_screen.py (open_work) и perf_steps.py (measure_home_page_load_time), тот же класс, что AT-BUG-025"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-22T18:15:00Z"
-updated: "2026-07-22T18:15:00Z"
+created: "2026-07-24T05:55:00Z"
+updated: "2026-07-24T05:55:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Незащищённый driver.get() вне framework/steps/ — browser_screen.py (open_work) и perf_steps.py (measure_home_page_load_time), тот же класс, что AT-BUG-025
 
 _Спроецировано из `bugs/AT-BUG-027.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # AT-BUG-027 — driver.get() без bounded-обёртки вне framework/steps/ (сиблинг AT-BUG-025)
 
@@ -69,7 +69,7 @@ load-события, `driver.set_page_load_timeout` не реализован д
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
-| | | | | (D1 fix-verifier — общим правилом, после Fixed) |
+| 2026-07-24 | framework-фикс (test_debt, не завязан на сборку приложения per DoD); приложение при прогоне — 1.10 (versionCode 11), та же сборка, что found_in/last_seen_in | `test_rating.py::test_rate_work_from_work_page_panel` (5 параметризаций), `test_rating.py::test_deselect_rating_on_work_page_panel`, `test_performance.py::test_webview_first_load_within_relative_budget[ao3_home_smoke.mitm]` (эмулятор ao3_test_api34, Install-App+Install-MitmCA+Start-Appium) | `7 passed in 261.32s (0:04:21)`, `PYTEST_EXIT=0`; независимая grep-сверка (`grep -rn "driver\.get(" framework --include=*.py`, вне `.venv`) подтвердила: единственный реальный вызов — `navigate.py:96` внутри хелпера, остальные совпадения — комментарии/докстринги; точечно прочитаны `browser_screen.py:59-74` и `perf_steps.py:50-74` — оба места действительно переведены на `navigate()`/`PERF_MEASUREMENT_HANG_GUARD`, как заявлено в фиксе | Fixed → Verified, все 3 пункта DoD подтверждены на независимом прогоне |
 
 ## Обсуждение
 
@@ -189,3 +189,41 @@ Cleanup выполнен: `Stop-NodeProcesses`, `adb emu kill`, `Get-Device` →
 Критерий готовности выполнен по всем 3 пунктам (оба места переведены на
 bounded-навигацию/measurement-safe fail-safe, grep-сверка полноты чиста,
 затронутые TC зелёные 3х подряд без искажения baseline). **Open → Fixed.**
+
+---
+
+**2026-07-24T05:55:00Z — fix-verifier (Sonnet), верификация (mode=verify, D1):**
+
+Долг тестовый (`type: test_debt`), `found_in` не завязан на сборку
+приложения — новой сборки APK для верификации не требуется (framework-фикс
+проверяется на текущей тестируемой сборке 1.10/versionCode 11, той же, что
+`found_in`/`last_seen_in`).
+
+Прогон: эмулятор `ao3_test_api34` (`Start-Emulator` → `Install-App` →
+`Install-MitmCA` → `Start-Appium`), независимый (не переиспользован из
+diff test-maintainer) прогон связанных TC:
+`Invoke-Pytest tests/test_rating.py::test_rate_work_from_work_page_panel
+tests/test_rating.py::test_deselect_rating_on_work_page_panel
+tests/test_performance.py::test_webview_first_load_within_relative_budget -v`
+→ `7 passed in 261.32s (0:04:21)`, `PYTEST_EXIT=0` (все 5 параметризаций
+`test_rate_work_from_work_page_panel`, `test_deselect_rating_on_work_page_panel`,
+`test_webview_first_load_within_relative_budget[ao3_home_smoke.mitm]`).
+
+Независимая проверка DoD-пункта 3 (полнота): `grep -rn "driver\.get("
+framework --include=*.py`, отфильтровано `.venv` — единственный реальный
+вызов остался в `framework/core/navigate.py:96` (внутри самого хелпера),
+все прочие совпадения — комментарии/докстринги
+(`settings.py`, `mitm.py`, `browser_screen.py`, `app_steps.py`,
+`browser_steps.py`, `perf_steps.py`, `test_errors.py`,
+`test_navigate_timeout_unit.py`, `test_tabs.py`). Совпадает с
+grep-сверкой test-maintainer в фиксе. Точечно прочитаны сами места:
+`browser_screen.py:59-74` (`open_work` → `navigate(self.driver, ...,
+settings.WEBVIEW_LOAD_TIMEOUT)`) и `perf_steps.py:50-74`
+(`measure_home_page_load_time` → `navigate(driver, browser_steps.HOME_URL,
+settings.PERF_MEASUREMENT_HANG_GUARD)` внутри `contexts.in_webview`,
+таймер `time.monotonic()` вокруг всего блока — измерение не искажено)
+— подтверждают заявленный дифф.
+
+Cleanup: `Stop-NodeProcesses`, `adb emu kill`, `Get-Device` → `NO DEVICE`.
+
+Все 3 пункта DoD подтверждены независимым прогоном. **Fixed → Verified.**
