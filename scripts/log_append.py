@@ -155,8 +155,10 @@ TASK_ID_FULL_RE = re.compile(r"^t-(\d+)$")
 SEQ_LIKE_RE = re.compile(r"^t-(\d+)$", re.IGNORECASE)
 
 # D-0058 (порт OS-репо, task_id journal-port-by-basis): матрица приёмки.
-# 'by' обязателен для accepted/rejected. Для accepted дополнительно легален
-# только если tier(by) строго выше tier(agent), либо задан валидный 'basis'.
+# 'by' обязателен для accepted/rejected. accepted легален, если tier(by)
+# строго выше tier(agent), либо задан basis, допустимый для ПОЛНОЙ ПАРЫ
+# (tier(agent), tier(by)) — см. _allowed_basis (код-гейт калибровки №4,
+# 2026-07-28; членство в BASIS_VALUES само по себе больше не легализует).
 BY_REQUIRED_EVENTS = {"accepted", "rejected"}
 TIER_ORDER = {"haiku": 0, "sonnet": 1, "opus": 2, "fable": 3}
 # Статично для канонических ярусов-функций (как в референсе OS-репо) —
@@ -316,20 +318,69 @@ def _resolve_agent_tier(agent: str) -> str | None:
     return None
 
 
+def _allowed_basis(agent_tier: str, by_tier: int) -> set[str]:
+    """Калибровка №4 (2026-07-28): какой basis легализует accepted, когда
+    tier(by) НЕ строго выше tier(agent) — полная пара вместо членства в
+    BASIS_VALUES. Прецеденты класса: две Sonnet-сессии (шапки (5) и (9)
+    HANDOFF) приняли Sonnet-класс результаты через basis=queued-to-lead,
+    тогда как матрица D-0058 («Роль ≠ ярус», CLAUDE.md) для этой пары
+    требует ИМЕННО critic-вход; членство в словаре это пропускало —
+    правило держалось прозой, теперь кодом (правило 10г).
+
+    Семантика матрицы:
+    - basis=critic — «решение несёт вход яруса выше»: легален только когда
+      ярус критика (opus) сам СТРОГО выше tier(agent), т.е. для
+      haiku/sonnet-класса результатов. Opus-класс (в т.ч. вердикты самого
+      critic) критиком не покрывается — критик не ревьюит равного себе.
+    - basis=queued-to-lead — «приёмка поставлена в очередь полного Lead»:
+      легален для классов, которые critic покрыть не может (opus и выше).
+    - Координация ниже Sonnet не предусмотрена матрицей: by=haiku не
+      легализуется никаким basis.
+    """
+    if by_tier < TIER_ORDER["sonnet"]:
+        return set()
+    if TIER_ORDER["opus"] > TIER_ORDER[agent_tier]:
+        # В контексте вызова (_matrix_violation: strict-tier уже отсёк
+        # by_tier > agent_tier) эта ветка достижима только при
+        # agent_tier == "sonnet": haiku-класс при by>=sonnet проходит по
+        # tier раньше. Условие оставлено общим НАМЕРЕННО — оно выражает
+        # семантику («critic легален, пока ярус критика строго выше
+        # исполнителя»), а не путь исполнения; не «чинить».
+        return {"critic"}
+    return {"queued-to-lead"}
+
+
 def _matrix_violation(agent: str, by: str, basis: str) -> str | None:
     """Правило D-0058 для accepted. Возвращает текст нарушения или None."""
     agent_tier = _resolve_agent_tier(agent)
     if agent_tier is None:
         return None
     by_tier = TIER_ORDER.get(by)
-    ok_tier = by_tier is not None and by_tier > TIER_ORDER[agent_tier]
-    ok_basis = basis in BASIS_VALUES
-    if ok_tier or ok_basis:
+    if by_tier is not None and by_tier > TIER_ORDER[agent_tier]:
         return None
+    if by_tier is None:
+        return (
+            f"by={by!r} не является известным ярусом "
+            f"({sorted(TIER_ORDER)}) — basis не может легализовать приёмку "
+            "от неизвестного принимающего (калибровка №4)"
+        )
+    allowed = _allowed_basis(agent_tier, by_tier)
+    if basis in allowed:
+        return None
+    allowed_txt = (", ".join(sorted(allowed)) if allowed
+                   else "НИЧЕГО (координация ниже sonnet не предусмотрена "
+                        "— эскалация, не приёмка)")
+    if basis in BASIS_VALUES:
+        return (
+            f"basis={basis!r} нелегален для пары (tier(agent)={agent_tier}, "
+            f"by={by!r}): матрица D-0058 для этой пары допускает "
+            f"{allowed_txt} (калибровка №4: прецеденты basis=queued-to-lead "
+            "на Sonnet-классе, шапки (5)/(9) HANDOFF)"
+        )
     return (
         f"agent={agent!r} (tier={agent_tier}) принят by={by!r} — не строго "
-        f"выше яруса исполнителя, и --basis не задан валидным значением "
-        f"({sorted(BASIS_VALUES)})"
+        f"выше яруса исполнителя, и --basis не задан значением, допустимым "
+        f"для этой пары (допустимо: {allowed_txt})"
     )
 
 
@@ -706,8 +757,11 @@ def main(argv: list[str] | None = None) -> int:
                       help="модель принимающего (обязательна для accepted/"
                            "rejected, D-0058 OS-репо)")
     p_rt.add_argument("--basis", default="",
-                      help="critic|queued-to-lead — обходит tier-матрицу "
-                           "D-0058 для accepted")
+                      help="critic|queued-to-lead — легализует accepted при "
+                           "tier(by) не выше tier(agent) СТРОГО по паре "
+                           "(калибровка №4): haiku/sonnet-класс — только "
+                           "critic; opus-класс и выше — только "
+                           "queued-to-lead; by ниже sonnet не легализуется")
     p_rt.add_argument("--worker-ref", dest="worker_ref", default="",
                       help="D-0076: хэндл, по которому следующая сессия "
                            "найдёт воркера/результат (id фонового таска, "

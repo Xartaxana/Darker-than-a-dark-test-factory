@@ -442,7 +442,7 @@ def test_accepted_matrix_fails_when_by_tier_not_above_agent_and_no_basis(logs):
     assert not routing.exists()
 
 
-def test_accepted_matrix_basis_rescues_non_strict_tier(logs):
+def test_accepted_matrix_basis_critic_rescues_sonnet_class_by_sonnet(logs):
     routing, _ = logs
     # tier(by=sonnet) не строго выше tier(builder=sonnet), но basis=critic
     # (Sonnet-координатор принимает Sonnet-воркера только с critic-входом,
@@ -452,11 +452,108 @@ def test_accepted_matrix_basis_rescues_non_strict_tier(logs):
                       witness="pytest -q -> passed")
     rec = json.loads(routing.read_text(encoding="utf-8"))
     assert rec["basis"] == "critic"
-    la.append_routing("accepted", "builder", model="sonnet", by="sonnet",
-                      basis="queued-to-lead", task_id="t-002",
-                      witness="pytest -q -> passed")
+
+
+def test_accepted_matrix_queued_to_lead_illegal_for_sonnet_class_by_sonnet(logs):
+    # Калибровка №4 (2026-07-28): ПРЕЦЕДЕНТНЫЙ класс (шапки (5)/(9)
+    # HANDOFF) — Sonnet-координатор принимает Sonnet-класс через
+    # basis=queued-to-lead, тогда как матрица D-0058 для этой пары требует
+    # ИМЕННО critic. Раньше членство в BASIS_VALUES это пропускало; теперь
+    # решает полная пара (tier(agent), tier(by)).
+    routing, _ = logs
+    with pytest.raises(SystemExit, match="нелегален для пары"):
+        la.append_routing("accepted", "builder", model="sonnet", by="sonnet",
+                          basis="queued-to-lead", task_id="t-001",
+                          witness="pytest -q -> passed")
+    assert not routing.exists()
+
+
+def test_accepted_matrix_pair_gate_applies_to_frontmatter_qa_agents(logs):
+    # Прецедентный класс включал QA-агентов (fix-verifier/test-maintainer/
+    # test-designer): tier из frontmatter проходит ту же парную проверку.
+    routing, _ = logs
+    with pytest.raises(SystemExit, match="нелегален для пары"):
+        la.append_routing("accepted", "test-automator", model="sonnet",
+                          by="sonnet", basis="queued-to-lead", task_id="t-001")
+    la.append_routing("accepted", "test-automator", model="sonnet",
+                      by="sonnet", basis="critic", task_id="t-001")
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 1
+
+
+def test_accepted_matrix_queued_to_lead_legal_for_opus_class(logs):
+    # (opus, sonnet) и (opus, opus): critic не покрывает равного себе —
+    # очередь полного Lead и есть штатный basis (образец: приёмка вердикта
+    # критика Sonnet-сессией (9) 2026-07-24 — легальна и ратифицирована).
+    routing, _ = logs
+    la.append_routing("accepted", "critic", model="opus", by="sonnet",
+                      basis="queued-to-lead", task_id="t-001")
+    la.append_routing("accepted", "critic", model="opus", by="opus",
+                      basis="queued-to-lead", task_id="t-002")
     lines = routing.read_text(encoding="utf-8").splitlines()
-    assert json.loads(lines[1])["basis"] == "queued-to-lead"
+    assert [json.loads(x)["basis"] for x in lines] == ["queued-to-lead"] * 2
+
+
+def test_accepted_matrix_critic_basis_illegal_for_opus_class(logs):
+    # Граница сверху (правило 11: тест на границе): opus-класс не
+    # легализуется critic-входом — критик не ревьюит равного себе.
+    routing, _ = logs
+    with pytest.raises(SystemExit, match="нелегален для пары"):
+        la.append_routing("accepted", "critic", model="opus", by="sonnet",
+                          basis="critic", task_id="t-001")
+    with pytest.raises(SystemExit, match="нелегален для пары"):
+        la.append_routing("accepted", "critic", model="opus", by="opus",
+                          basis="critic", task_id="t-001")
+    assert not routing.exists()
+
+
+def test_accepted_matrix_no_basis_rescues_coordinator_below_sonnet(logs):
+    # Граница снизу (правило 11: за границей): координация ниже Sonnet не
+    # предусмотрена матрицей — by=haiku не легализуется никаким basis.
+    routing, _ = logs
+    for basis in ("critic", "queued-to-lead"):
+        with pytest.raises(SystemExit, match="D-0058"):
+            la.append_routing("accepted", "scout", model="haiku", by="haiku",
+                              basis=basis, task_id="t-001")
+        with pytest.raises(SystemExit, match="D-0058"):
+            la.append_routing("accepted", "builder", model="sonnet",
+                              by="haiku", basis=basis, task_id="t-001",
+                              witness="pytest -q -> passed")
+    assert not routing.exists()
+
+
+def test_accepted_matrix_strict_tier_short_circuits_before_basis(logs):
+    # Пин порядка коротких замыканий (fix 7 вердикта calibration-4-basis-
+    # gate): при tier(by) СТРОГО выше tier(agent) запись проходит по tier
+    # ДО парной проверки basis — «неправильный» для пары basis не
+    # отклоняется (он информационный). Это намеренная семантика.
+    routing, _ = logs
+    la.append_routing("accepted", "builder", model="sonnet", by="opus",
+                      basis="queued-to-lead", task_id="t-001",
+                      witness="pytest -q -> passed")
+    rec = json.loads(routing.read_text(encoding="utf-8"))
+    assert rec["basis"] == "queued-to-lead"
+
+
+def test_accepted_matrix_opus_agent_by_fable_passes_without_basis(logs):
+    # Пин границы: opus-ярусный агент, принятый fable, — строго выше,
+    # basis не требуется (штатная приёмка полного Lead).
+    routing, _ = logs
+    la.append_routing("accepted", "critic", model="opus", by="fable",
+                      task_id="t-001")
+    rec = json.loads(routing.read_text(encoding="utf-8"))
+    assert "basis" not in rec
+
+
+def test_accepted_matrix_unknown_by_not_rescued_by_basis(logs):
+    # by вне TIER_ORDER: basis не легализует приёмку от неизвестного
+    # принимающего (ужесточение калибровки №4; раньше словарный basis
+    # пропускал и это).
+    routing, _ = logs
+    with pytest.raises(SystemExit, match="известным ярусом"):
+        la.append_routing("accepted", "builder", model="sonnet", by="gpt-5",
+                          basis="critic", task_id="t-001",
+                          witness="pytest -q -> passed")
+    assert not routing.exists()
 
 
 def test_accepted_matrix_invalid_basis_does_not_rescue(logs):
