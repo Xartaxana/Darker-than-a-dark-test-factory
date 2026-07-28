@@ -133,6 +133,74 @@ SORT_FILTER_FORM_FILENAME = "sort_filter_form.mitm"
 SORT_FILTER_FORM_URL = "https://archiveofourown.org/tags/Fluff/works"
 
 
+# --- Идентификаторы пагинированной листинговой фикстуры (эксплораторная клетка
+# «infinite scroll/пагинация», матрица PERTURBATIONS × coverage — `CH-005`
+# `mission_leftover`: "infinite_scroll НЕ ТРОНУТ (блокер фикстур, объявлен в Data
+# setup): ни одна replay-запись не несёт пагинации. Запрос фикстуры
+# listing_paginated.mitm — builder-класс, test-automator"; причина диспатча —
+# `docs/HANDOFF.md` «Батч мелочей (новый, 2026-07-28)» пункт (а)).
+#
+# ПЯТЬ страниц (`page=1..5`, доработка attempt 2 критик-вход B2) — не две:
+# эвикция `PAGE_WINDOW=3` (`ao3_bridge.js:594-605`) срабатывает только при >3
+# ЗАГРУЖЕННЫХ страницах, двух страниц было бы недостаточно, чтобы её вообще
+# достичь; пять дают эвикцию НА 4-й странице и ещё один шаг после (5-я). Каждая
+# страница несёт РЕАЛЬНУЮ разметку пагинации AO3 (`render_pagination_html`,
+# сверено с `sort_filter_form.mitm`), блок повторён ДВАЖДЫ на странице — сверху
+# и снизу листинга (доработка attempt 2, критик-вход F3, как в реальной
+# записи). Href пагинации — HOST-RELATIVE (доработка attempt 2, критик-вход F2:
+# реальный AO3 рендерит их относительными, не абсолютными — см.
+# `sort_filter_form.mitm`: `href="/tags/Fluff/works?page=2"`); резолвятся
+# `urljoin(page_url, href)` перед сверкой с записанными URL (см.
+# `framework/tests/test_recording_builder_unit.py::_pagination_hrefs_covered`).
+# Страница 5 (последняя записанная) — БЕЗ next-ссылки (граница класса:
+# следующая страница в фикстуре не существует).
+#
+# ИНВАРИАНТ (класс AT-BUG-006, `bugs/AT-BUG-006.md` — непокрытый href в записи
+# уводит `server_replay_extra=forward` в live): КАЖДЫЙ href пагинационного
+# блока КАЖДОЙ страницы обязан иметь свой flow в этом же `.mitm` — номерные/
+# next-ссылки ведут ТОЛЬКО на соседние ЗАПИСАННЫЕ страницы (1..5), ссылок на
+# страницы 6+ нет. По тому же классу (доработка attempt 2, критик-вход F4) —
+# work-страницы ВСЕХ работ, чьи блёрбы встречаются на любой из 5 страниц,
+# записаны в ЭТОМ ЖЕ `.mitm` (`render_work_page_html`, тот же приём, что
+# `works_multi.mitm` ниже) — тап по любому блёрбу листинга не должен уходить в
+# live.
+#
+# Высота/скролл (доработка attempt 2, критик-вход B1): каждая страница несёт
+# `<meta name="viewport" content="width=device-width, initial-scale=1.0">` и 80
+# филлер-абзацев ПО ЭТАЛОНУ `render_tab_marker_html`/AT-BUG-015 (см. докстринг
+# там же). ЧЕСТНАЯ ГРАНИЦА: высота — по эталону, а не по измерению; device-замер
+# `scrollHeight`/`innerHeight` ИМЕННО этой фикстуры на эмуляторе НЕ СНЯТ — остаток
+# см. `docs/HANDOFF.md`.
+LISTING_PAGINATED_FILENAME = "listing_paginated.mitm"
+LISTING_PAGINATED_URL = "https://archiveofourown.org/works?ao3_companion_fixture=listing_paginated"
+LISTING_PAGINATED_PAGE_COUNT = 5
+
+
+def listing_paginated_page_url(page: int) -> str:
+    """Страница 1 -> `LISTING_PAGINATED_URL` (без `page=` — реальный AO3 не несёт
+    `?page=1` в URL первой страницы, см. `sort_filter_form.mitm`); страница >=2 ->
+    `LISTING_PAGINATED_URL + '&page={N}'` (та же конкатенация, что
+    `LISTING_FILTERED_URL` выше)."""
+    if page <= 1:
+        return LISTING_PAGINATED_URL
+    return f"{LISTING_PAGINATED_URL}&page={page}"
+
+# --- Идентификаторы фикстуры с НЕСКОЛЬКИМИ work-страницами (CH-005 `mission_leftover`,
+# Г7 "live-push настройки при 10 открытых вкладках... По существу механизм НЕ
+# проверен: страницы tab_markers имеют pathname=/works, тап-зоны там выключены
+# (ao3_bridge.js:1154)" — live-push/`applyRatings` на СТАРЫХ (уже открытых)
+# вкладках непроверяем по существу без ВТОРОЙ реальной work-страницы, на которую
+# можно перейти отдельной вкладкой; причина диспатча — `docs/HANDOFF.md` «Батч
+# мелочей (новый, 2026-07-28)» пункт (а)). Листинг фикстуры несёт href на ОБЕ
+# work-страницы — тот же класс покрытия URL, что и `listing_paginated`
+# (AT-BUG-006): flow обязан существовать для каждого href, которым тест реально
+# кликает по этой фикстуре (см. `scripts/build_replay_recordings.py::
+# build_works_multi` — граница по DoD этой задачи, не все вспомогательные ссылки
+# блёрба вроде author/tag).
+WORKS_MULTI_FILENAME = "works_multi.mitm"
+WORKS_MULTI_LISTING_URL = "https://archiveofourown.org/works?ao3_companion_fixture=works_multi"
+
+
 def _deterministic_id(*parts: str) -> str:
     """UUID-формой (mitmproxy требует именно её для conn.id), но детерминированный:
     md5 от связки url/роли соединения вместо `uuid.uuid4()`. Без этого `.mitm`-файл
@@ -233,7 +301,13 @@ def _blurb_html(work: Work) -> str:
     </li>"""
 
 
-def render_listing_html(works: list[Work], heading: str = "Test Fixture Listing") -> str:
+def render_listing_html(
+    works: list[Work],
+    heading: str = "Test Fixture Listing",
+    pagination_html: str = "",
+    filler_html: str = "",
+    include_viewport_meta: bool = False,
+) -> str:
     """Минимальная, но структурно-валидная страница листинга AO3: `ol.work.index.group`
     с одним `li[id^="work_"].work.blurb` на каждую `Work`. Никаких внешних
     `<script src>`/`<link rel=stylesheet>` — самодостаточна, не требует
@@ -244,21 +318,116 @@ def render_listing_html(works: list[Work], heading: str = "Test Fixture Listing"
     того же `ao3_id` (см. `build_listing_duplicate_work` в
     `scripts/build_replay_recordings.py`, вызывающий `render_listing_html([work, work])`).
     Дублирующиеся `id` невалидны по спеке HTML, но реальные браузеры/`querySelectorAll`
-    это допускают — соответствует тому, что должен пережить `applyRatings`."""
+    это допускают — соответствует тому, что должен пережить `applyRatings`.
+
+    Три опциональных параметра (доработка attempt 2, `listing_paginated.mitm`) —
+    ВСЕ по умолчанию пустые/`False`, вывод БЕЗ них байт-в-байт идентичен прежней
+    сигнатуре функции (`listing_basic.mitm`/`listing_duplicate_work.mitm`/
+    `work_with_download.mitm`/`tab_markers.mitm` не меняются от этого расширения):
+    - `pagination_html` — готовый `<ol class="pagination...">...</ol>` (см.
+      `render_pagination_html`), вставляется ДВАЖДЫ — под `<h4 class="landmark
+      heading">Navigation</h4>` ПЕРЕД листингом работ И ПОСЛЕ него (критик-вход
+      F3: реальный AO3 показывает пагинацию сверху и снизу, см.
+      `sort_filter_form.mitm`).
+    - `filler_html` — готовый блок филлер-контента (см.
+      `render_listing_filler_html`), вставляется В КОНЦЕ, после листинга/нижней
+      пагинации — гарантирует прокручиваемость страницы (критик-вход B1,
+      AT-BUG-015).
+    - `include_viewport_meta` — добавляет `<meta name="viewport" content=
+      "width=device-width, initial-scale=1.0">` в `<head>` (реальный AO3 несёт
+      его на каждой странице, см. `sort_filter_form.mitm`)."""
     blurbs = "\n".join(_blurb_html(w) for w in works)
+    pagination_top = (
+        f'\n  <h4 class="landmark heading">Navigation</h4>\n  {pagination_html}'
+        if pagination_html
+        else ""
+    )
+    pagination_bottom = f"\n  {pagination_html}" if pagination_html else ""
+    filler_block = f"\n  {filler_html}" if filler_html else ""
+    viewport_meta = (
+        '\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">'
+        if include_viewport_meta
+        else ""
+    )
     return f"""<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8"><title>{html.escape(heading)} | Archive of Our Own</title></head>
+<head><meta charset="utf-8">{viewport_meta}<title>{html.escape(heading)} | Archive of Our Own</title></head>
 <body>
 <div id="main" class="works-index dashboard region" role="main">
-  <h2 class="heading">{html.escape(heading)}</h2>
+  <h2 class="heading">{html.escape(heading)}</h2>{pagination_top}
   <ol class="work index group">
     {blurbs}
-  </ol>
+  </ol>{pagination_bottom}{filler_block}
 </div>
 </body>
 </html>
 """
+
+
+def render_listing_filler_html(label: str) -> str:
+    """80 коротких абзацев-филлеров — ТОТ ЖЕ приём и обоснование, что
+    `render_tab_marker_html` (AT-BUG-015: короткая синтетическая страница не
+    прокручивается — «страница не прыгнула» неотличимо от «зона/эвикция не
+    сработала»). `label` — только для читаемости текста филлера (например,
+    номер страницы), на детерминизм/высоту не влияет."""
+    return "\n".join(
+        f"    <p>Filler paragraph {i} for {html.escape(label)} — scroll padding, "
+        f"not real content.</p>"
+        for i in range(80)
+    )
+
+
+# --- Разметка блока пагинации — сверена с РЕАЛЬНОЙ записью AO3 (`sort_filter_form.mitm`,
+# `https://archiveofourown.org/tags/Fluff/works`, флоу-эксплорация builder'а этой задачи):
+# `<ol class="pagination actions pagy" role="navigation" aria-label="Pagination">` с
+# `li.previous` (disabled `<span>` на первой странице, иначе `<a href>`), текущая
+# страница — `<a class="current" ...>` БЕЗ `href` (реальный AO3 не делает текущую
+# страницу кликабельной — не участвует в инварианте покрытия), номерная ссылка на
+# следующую страницу и `li.next` (оба — тот же `next_url`, как в реальной записи, где
+# численная "2" и "Next →" ведут на один и тот же URL).
+def _relative_href(absolute_url: str) -> str:
+    """Host-relative форма абсолютного AO3 URL (доработка attempt 2, критик-вход
+    F2) — реальный AO3 рендерит href пагинации HOST-RELATIVE, не абсолютными
+    (`sort_filter_form.mitm`: `href="/tags/Fluff/works?page=2"`), а не
+    `href="https://archiveofourown.org/tags/Fluff/works?page=2"`."""
+    parsed = urlparse(absolute_url)
+    rel = parsed.path
+    if parsed.query:
+        rel += f"?{parsed.query}"
+    return rel
+
+
+def render_pagination_html(prev_url: str | None, current_page: int, next_url: str | None) -> str:
+    """`prev_url`/`next_url` — АБСОЛЮТНЫЕ URL соседних страниц (та же форма, что
+    URL записанного flow) — внутри рендерятся HOST-RELATIVE href'ами
+    (`_relative_href`); резолвить обратно для сверки с записанными URL — через
+    `urljoin(page_url, href)` на стороне потребителя (см. `_pagination_hrefs_covered`
+    в `framework/tests/test_recording_builder_unit.py`).
+
+    `prev_url=None` — первая страница (disabled Previous, без ссылки).
+    `next_url=None` — последняя страница (нет номерной ссылки вперёд и нет `li.next`) —
+    граница класса AT-BUG-006: непокрытый href в записи увёл бы `server_replay_extra=
+    forward` в live, поэтому на последней записанной странице ссылок ВПЕРЁД нет вовсе."""
+    if prev_url is None:
+        prev_li = '<li class="previous"><span class="disabled">← Previous</span></li>'
+    else:
+        prev_li = f'<li class="previous"><a href="{_relative_href(prev_url)}">← Previous</a></li>'
+    current_li = (
+        '<li><a role="link" aria-disabled="true" aria-current="page" '
+        f'class="current">{current_page}</a></li>'
+    )
+    if next_url is None:
+        next_number_li = ""
+        next_li = ""
+    else:
+        next_href = _relative_href(next_url)
+        next_number_li = f'<li><a href="{next_href}">{current_page + 1}</a></li>'
+        next_li = f'<li class="next"><a href="{next_href}">Next →</a></li>'
+    return (
+        '<ol class="pagination actions pagy" role="navigation" aria-label="Pagination">'
+        f"{prev_li}{current_li}{next_number_li}{next_li}"
+        "</ol>"
+    )
 
 
 # --- Разметка work-страницы с download-ссылкой (TC-032/033, AT-BUG-004 инкремент 3) ---

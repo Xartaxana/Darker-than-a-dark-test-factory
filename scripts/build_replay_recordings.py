@@ -94,12 +94,75 @@ def build_tab_markers() -> Path:
     return path
 
 
+def build_listing_paginated() -> Path:
+    """ПЯТЬ листинговых страниц (`page=1..5`) с реальной разметкой пагинации AO3
+    (`rb.render_pagination_html`, сверено с `sort_filter_form.mitm`) — закрывает
+    эксплораторную клетку «infinite scroll/пагинация», непокрытую ни одной
+    replay-записью (`CH-005 mission_leftover`, `docs/HANDOFF.md` «Батч мелочей
+    (новый, 2026-07-28)» пункт (а); полное обоснование B1/B2/F2/F3/F4 (доработка
+    attempt 2, критик-вход) — докстринг `LISTING_PAGINATED_FILENAME` в
+    `recording_builder.py`).
+
+    `ALL_WORKS` (5 работ) — по одной работе на страницу (1:1), НЕТ страницы без
+    work-блёрба. Пагинация: страница `N` несёт `previous` на страницу `N-1`
+    (`None`/disabled на странице 1) и `next`+номерную ссылку на страницу `N+1`
+    (`None` на странице 5 — последняя записанная, граница класса AT-BUG-006).
+    Каждая страница несёт `include_viewport_meta=True` и `filler_html`
+    (`render_listing_filler_html`) — гарантированная прокручиваемость (B1).
+    F4: work-страница КАЖДОЙ из 5 работ записана в ЭТОМ ЖЕ `.mitm`
+    (`render_work_page_html`, тот же приём, что `build_works_multi`) — клик по
+    любому блёрбу любой из 5 страниц не уходит в live."""
+    page_count = rb.LISTING_PAGINATED_PAGE_COUNT
+    listing_flows = []
+    for page in range(1, page_count + 1):
+        page_url = rb.listing_paginated_page_url(page)
+        prev_url = rb.listing_paginated_page_url(page - 1) if page > 1 else None
+        next_url = rb.listing_paginated_page_url(page + 1) if page < page_count else None
+        pagination_html = rb.render_pagination_html(prev_url, page, next_url)
+        filler_html = rb.render_listing_filler_html(f"paginated listing page {page}")
+        page_html = rb.render_listing_html(
+            [ALL_WORKS[page - 1]],
+            heading=f"Test Fixture Paginated Listing (page {page})",
+            pagination_html=pagination_html,
+            filler_html=filler_html,
+            include_viewport_meta=True,
+        )
+        listing_flows.append(rb.make_html_get_flow(page_url, page_html))
+    work_page_flows = [
+        rb.make_html_get_flow(work.url, rb.render_work_page_html(work)) for work in ALL_WORKS
+    ]
+    path = settings.RECORDINGS_DIR / rb.LISTING_PAGINATED_FILENAME
+    rb.write_flows(path, listing_flows + work_page_flows)
+    return path
+
+
+def build_works_multi() -> Path:
+    """Листинг + ДВЕ РАЗНЫЕ work-страницы в одном `.mitm` — закрывает CH-005
+    `mission_leftover` Г7 (live-push/`applyRatings` на старых вкладках непроверяем
+    без второй реальной work-страницы, см. докстринг `WORKS_MULTI_FILENAME` в
+    `recording_builder.py`). Работы выбраны произвольно (`ALL_WORKS[0]`/`[1]`,
+    `LOVED`/`KUDOSED`) — сценарий не завязан на конкретную пару. Листинговый flow
+    несёт блёрбы обеих работ (кликабельные ссылки на их work-страницы), обе
+    work-страницы записаны — тот же класс покрытия URL, что AT-BUG-006
+    (непокрытый клик уводит `server_replay_extra=forward` в live)."""
+    work_a, work_b = ALL_WORKS[0], ALL_WORKS[1]
+    listing_html = rb.render_listing_html([work_a, work_b], heading="Test Fixture Multi-Work Listing")
+    listing_flow = rb.make_html_get_flow(rb.WORKS_MULTI_LISTING_URL, listing_html)
+    work_a_flow = rb.make_html_get_flow(work_a.url, rb.render_work_page_html(work_a))
+    work_b_flow = rb.make_html_get_flow(work_b.url, rb.render_work_page_html(work_b))
+    path = settings.RECORDINGS_DIR / rb.WORKS_MULTI_FILENAME
+    rb.write_flows(path, [listing_flow, work_a_flow, work_b_flow])
+    return path
+
+
 def main() -> None:
     for path in (
         build_listing_basic(),
         build_listing_duplicate_work(),
         build_work_with_download(),
         build_tab_markers(),
+        build_listing_paginated(),
+        build_works_multi(),
     ):
         print(f"written: {path}")
 

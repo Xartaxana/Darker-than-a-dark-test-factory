@@ -160,20 +160,35 @@ scroll/toggleFullscreen), геометрия ему нужна по другой
 Готово, когда:
 - `render_work_page_html` несёт узлы 1 (button+span)/2 (div[onclick])/3
   (высота >= 3× innerHeight).
-- **Регрессия пересборки называет ОБЕ записи, куда вшита
+- **Регрессия пересборки называет ВСЕ записи, куда вшита
   `render_work_page_html`, не только общий прогон pytest** (доработка attempt
-  2, критик-вход M1): `listing_basic.mitm` (`build_listing_basic` —
+  2, критик-вход M1; список расширен builder'ом батча мелочей 2026-07-28 после
+  того, как `works_multi.mitm`/`listing_paginated.mitm` стали ТРЕТЬИМ и
+  ЧЕТВЁРТЫМ потребителем той же функции — см. `scripts/
+  build_replay_recordings.py::build_works_multi`/`build_listing_paginated`):
+  `listing_basic.mitm` (`build_listing_basic` —
   `scripts/build_replay_recordings.py:24-50`, третий flow — work-страница
   ПЕРВОЙ работы листинга, потребитель TC-026: long-press по ссылке блёрба
-  открывает её в фоновой вкладке) и `work_with_download.mitm`
+  открывает её в фоновой вкладке), `work_with_download.mitm`
   (`build_work_with_download`, `:68-80`, потребитель TC-032/033: download-flow
-  по `li.download a[href*=".html"]`) обе пересобираются
-  (`python scripts/build_replay_recordings.py`) и обе явно сверяются на
-  регресс — TC-026 (открытие/фон вкладки на удлинённой странице по-прежнему
-  работает) и TC-032/033 (`DownloadRepository.fetchDownloadUrl` по-прежнему
-  находит `.html`-ссылку ПЕРВЫМ совпадением regex — узлы 1/2/3 добавляются
-  ПОСЛЕ `_download_list_html` в исходном HTML, не перед ней, чтобы не менять
-  порядок совпадений).
+  по `li.download a[href*=".html"]`), `works_multi.mitm`
+  (`build_works_multi`, ДВА flow — work-страницы `ALL_WORKS[0]`/`[1]`,
+  потребитель: клики по блёрбам листинга открывают вкладки с work-страницами,
+  `framework/tests/test_recording_builder_unit.py`) и `listing_paginated.mitm`
+  (`build_listing_paginated`, ПЯТЬ flow — work-страница КАЖДОЙ из `ALL_WORKS`,
+  один work на страницу пагинации, потребитель: инвариант покрытия href блёрба
+  — AT-BUG-006, `framework/tests/test_recording_builder_unit.py`) — ВСЕ ЧЕТЫРЕ
+  пересобираются (`python scripts/build_replay_recordings.py`) и явно
+  сверяются на регресс — TC-026 (открытие/фон вкладки на удлинённой странице
+  по-прежнему работает), TC-032/033 (`DownloadRepository.fetchDownloadUrl`
+  по-прежнему находит `.html`-ссылку ПЕРВЫМ совпадением regex — узлы 1/2/3
+  добавляются ПОСЛЕ `_download_list_html` в исходном HTML, не перед ней, чтобы
+  не менять порядок совпадений), и для `works_multi.mitm`/`listing_paginated.mitm`
+  — зелёный `Invoke-Pytest tests/test_recording_builder_unit.py -q` (device-free
+  юниты, не завязаны на конкретное тело `render_work_page_html`, но сверяют
+  сам факт наличия/уникальности записанных work-flow — регрессия узлов 1/2/3
+  не меняет URL work-страниц, поэтому эти юниты остаются валидным регресс-
+  сигналом для новых двух потребителей).
 - `framework/tests/canary/test_ao3_selectors.py` (или новый модуль) реализует
   TC-119/TC-120/TC-122, все используют новые узлы (TC-122 — узел 1,
   span-потомок).
