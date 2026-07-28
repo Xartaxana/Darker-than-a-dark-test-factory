@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-28T09:57:22Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-28T10:55:11Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -45,6 +45,8 @@ generated_at: 2026-07-28T09:57:22Z · генератор: `scripts/coverage_map.
 | R-13 | A11Y | accessibility:TC-106, accessibility:TC-107 |
 | R-14 | COMPAT | compatibility:TC-109, compatibility:TC-110, compatibility:TC-111 |
 | R-15 | SEC | security:TC-100, security:TC-101, security:TC-102, security:TC-103, security:TC-104, security:TC-105 |
+| R-16 | BUS | риск не покрыт дизайном |
+| R-17 | BUS | риск не покрыт дизайном |
 
 ## Фичи → покрытие
 
@@ -132,6 +134,7 @@ generated_at: 2026-07-28T09:57:22Z · генератор: `scripts/coverage_map.
 | bridge-exclude-main-pairing-filter | ao3-bridge | canary:TC-080[Automated], canary:TC-081[Automated] |
 | bridge-dark-css | ao3-bridge | нет кейсов |
 | bridge-scroll-reporting | ao3-bridge | нет кейсов |
+| bridge-tap-zone-guard | ao3-bridge | нет кейсов |
 | data-workrating-model | data | нет кейсов |
 | data-filterprofile-model | data | нет кейсов |
 | data-clear-all-ratings | data | smoke:TC-004[Automated], settings:TC-018[Automated], settings:TC-019[Automated], settings:TC-020[Blocked] |
@@ -172,6 +175,7 @@ generated_at: 2026-07-28T09:57:22Z · генератор: `scripts/coverage_map.
 - settings-filter-profiles-list (settings): Список сохранённых AO3-фильтр-профилей
 - bridge-dark-css (ao3-bridge): CSS-переопределения тёмной темы на AO3-страницах (window.__ao3AppDark)
 - bridge-scroll-reporting (ao3-bridge): Отчёт позиции скролла и прогресса чтения (глава/%) в Kotlin
+- bridge-tap-zone-guard (ao3-bridge): Guard тап-зон: тап по интерактивному узлу страницы работы (a/button/input/select/textarea/label/summary/[role=button] или их потомку) не запускает зональное действие
 - data-workrating-model (data): Room-сущность WorkRating (rating/comment/tags/fandom/author/wordCount/downloadPath)
 - data-filterprofile-model (data): Room-сущность FilterProfile (name/queryString)
 - background-auto-kudos-trigger (background): Автоклик кнопки kudos на странице работы AO3, когда рейтинг работы становится Kudosed (LIKE) или Favorite (SAVE)
