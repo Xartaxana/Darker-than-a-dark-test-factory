@@ -1,0 +1,165 @@
+---
+id: AT-BUG-029
+title: "listing_basic.mitm не несёт .html-файл скачивания (недостаёт одной транзакции) — блокирует автоматизацию TC-115 (edge-vs-level BUG-014 через листинг)"
+type: test_debt
+debt_kind: missing_fixture
+severity: minor
+status: Open
+found_in: "test-designer, проектирование области settings/downloads auto-download-favorite (needs-design по BUG-014), 2026-07-28"
+fixed_in: ""
+last_seen_in: ""
+test_cases: ["TC-115"]
+runs: []
+duplicates: []
+regression_of: ""
+status_since: "2026-07-28T15:00:00Z"
+updated: "2026-07-28T15:00:00Z"
+reopen_count: 0
+dispute_count: 0
+awaiting: none
+resolution: ""
+resolution_comment: ""
+known_issue: "false"
+blocked_reason: ""
+lock: ""
+---
+
+# AT-BUG-029 — В listing_basic.mitm недостаёт одной транзакции (.html-файл) для TC-115
+
+## Окружение
+
+Не зависит от сборки приложения: долг тестовой системы (`type: test_debt`,
+`debt_kind: missing_fixture`). Текущая тестируемая сборка 1.10 (versionCode 11).
+Класс СМЕЖНЫЙ с уже закрытым `AT-BUG-004` (Verified, 2026-07-09), но НЕ дубликат —
+AT-BUG-004 закрыл отсутствие replay-инфраструктуры КАК ТАКОВОЙ (mitm не подключён к
+conftest, записей не было вообще); эта находка — про узкий пробел уже ПОСЛЕ того,
+как инфраструктура доведена: существующей записи `listing_basic.mitm` не хватает
+РОВНО ОДНОЙ транзакции (`.html`-файл скачивания) для одного конкретного сценария
+(TC-115).
+
+## Суть долга
+
+**Поправка 2026-07-28 (critic-вход, разбор вердикта ДОРАБОТАТЬ):** первая версия
+этого бага ошибочно диагностировала пробел как «нет комбинации ДВУХ записей
+(листинг + work-с-download) в одном flow-файле». Парсинг самих `.mitm`-записей и
+`scripts/build_replay_recordings.py:24-50` (`build_listing_basic`) опровергает
+это: `listing_basic.mitm` УЖЕ несёт ТРИ транзакции — `base_flow` (листинг),
+`filtered_flow` (та же HTML под filtered URL) и, что важно здесь,
+`work_page_flow = rb.make_html_get_flow(first_work.url,
+rb.render_work_page_html(first_work))` (:47) — GET work-страницы `ALL_WORKS[0]`
+= `W.LOVED` (`framework/data/works.py:31`), той же работы, что использует
+`build_work_with_download`. Work-страница-с-download-ссылкой для W.LOVED в
+`listing_basic.mitm` УЖЕ ЕСТЬ.
+
+`TC-115.md` (проектируется тем же ходом, что этот баг — регрессионный тест на
+edge-vs-level класс BUG-014 через ВХОД С ЛИСТИНГА, зеркало уже автоматизируемого
+TC-114 через панель работы) требует ОДНОВРЕМЕННО:
+
+1. WebView в момент правки комментария показывает ЛИСТИНГОВУЮ страницу с блёрбом
+   работы W (`li.work.blurb`) — иначе Rate-кнопка/bottom-sheet (`RatingOverlay`,
+   вход `applyRating`) физически недостижимы; **уже покрыто** `base_flow`
+   `listing_basic.mitm`.
+2. Фоновый OkHttp-вызов `DownloadRepository.downloadWork` (GET work-страницы работы
+   W + GET `.html`-файла) РЕАЛЬНО резолвится через replay и завершается файлом,
+   ЕСЛИ (и только если) сработал дефект BUG-014 — иначе негативный Then кейса
+   («файл не появился») истинен ВСЕГДА независимо от того, сработал баг или нет
+   (ложно-зелёный тест). GET work-страницы W.LOVED — **уже покрыто**
+   `work_page_flow` `listing_basic.mitm` (см. выше). Отсутствует РОВНО ОДНА
+   транзакция: GET `.html`-файла (`rb.download_url(work)` →
+   `rb.render_downloaded_work_html(work)`, тот же приём, что `download_flow` в
+   `build_work_with_download`, :76-77) — её `listing_basic.mitm` не несёт.
+
+Без исправления: фоновый GET `.html`-файла (второй шаг `downloadWork`, ЕСЛИ он
+случится из-за бага) уйдёт через `server_replay_extra=forward`
+(`framework/core/mitm.py:121`, «незаписанные запросы уходят на живой сервер») на
+реальный `archiveofourown.org`, где синтетического download-пути не существует —
+попытка молча провалится (404/таймаут), файл не появится НЕЗАВИСИМО от того,
+вызвался ли `downloadWork()` в принципе. Оракул побочных эффектов (`download_oracle`,
+conftest.py, класс BUG-014) в этом случае НЕ отличает «бага нет» от «бага не поймали
+из-за дыры в фикстуре» — тест был бы неинформативным приёмом регрессии, а не
+осмысленной защитой.
+
+## Критерий готовности (Fixed)
+
+Минимальный фикс — добавить недостающий `.html`-flow в `build_listing_basic()`
+(`scripts/build_replay_recordings.py:24-50`), по образцу `download_flow` из
+`build_work_with_download` (:76-77):
+
+```python
+download_flow = rb.make_html_get_flow(rb.download_url(first_work),
+                                       rb.render_downloaded_work_html(first_work))
+...
+rb.write_flows(path, [base_flow, filtered_flow, work_page_flow, download_flow])
+```
+
+Путь «расширить сигнатуру `start_replay` до списка flows-файлов» из первой
+версии этого бага УБРАН из критерия готовности — он не нужен: раз work-страница
+W.LOVED уже в `listing_basic.mitm`, комбинировать два ОТДЕЛЬНЫХ `.mitm`-файла в
+одной сессии `replay`-фикстуры не требуется вовсе, это был переразмеренный
+критерий поверх реального (двухстрочного) пробела.
+
+**Остаётся ли это отдельным test_debt-тикетом при правке в ~2 строки?** Да —
+осознанно, не по инерции: правило 4 воркфлоу test-designer требует завести
+test_debt-баг на ЛЮБОЙ блокер автоматизации, обнаруженный в заметках кейса,
+независимо от размера фикса — тикет служит машиночитаемым триггером очереди
+«Устранить test debt» (B4, `state/rules.yaml`), которую проза заметки кейса не
+триггерит вовсе (см. прецедент AT-BUG-004/005/006, на который ссылается сам
+промпт test-designer: блокеры-заметки без тикета годами не попадали в очередь).
+Размер диффа фикса не отменяет этого — он лишь снижает severity/объём работы
+самого тикета (severity minor уже стоит верно).
+
+Готово, когда:
+- `build_listing_basic()` несёт четвёртый flow (`.html` W.LOVED), `listing_basic.mitm`
+  пересобран (`python scripts/build_replay_recordings.py`).
+- `framework/tests/test_downloads.py::test_edit_note_on_already_saved_work_via_listing_overlay_does_not_redownload`
+  (или аналогичное имя) реализован и подключён к TC-115, использует ОДИН
+  `listing_basic.mitm` (без правки `mitm.py::start_replay`).
+- Красная проба: временное восстановление условий BUG-014 (или прямой вызов
+  `downloadWork` в тестовом хуке) РЕАЛЬНО создаёт файл в download-директории и
+  `download_oracle` его ловит — доказательство, что негативный Then содержателен,
+  а не тривиально истинен из-за дыры в фикстуре.
+- Зелёный прогон TC-115 (после фикса BUG-014 в app-under-test, отдельная работа вне
+  этого долга) — тест переходит из ожидаемо-красного в зелёный без правки самого
+  теста.
+- `python -m pytest scripts/tests -q` без регресса.
+
+## Верификация (заполняет fix-verifier)
+| Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
+|---|---|---|---|---|
+| | | | | |
+
+## Обсуждение
+
+**2026-07-28 — test-designer, заведение (правило 4 промпта test-designer):**
+блокер обнаружен при проектировании TC-115 (шаг 4 воркфлоу test-designer — блокер
+в заметках для автоматизации ОБЯЗАН быть заведён test_debt-багом в том же ходе, не
+оставлен только прозой тела кейса, урок AT-BUG-004/005/006 про заметки, живущие
+годами без баг-тикета). Дизайн кейса завершён и полон (`TC-115.md`, `status:
+Review`) — ограничена ТОЛЬКО автоматизация; сам кейс НЕ переведён в `Blocked`.
+Основание — `schemas/transitions.yaml` (машина `test-case`, `initial: [Draft,
+Review]`, :78 и :94-95): комментарий у `initial` прямо говорит «test-designer:
+Draft при спорных требованиях, иначе сразу Review» — TC-115 не несёт спорного
+ТРЕБОВАНИЯ (никакого расхождения PROJECT.md/UI нет), поэтому `Review` — штатный
+начальный статус, а не самовольное избегание `Blocked`. Дополнительно
+`{from: "*", to: Review, by: [human, test-automator, test-maintainer], ref:
+"вернуть на доработку (прецедент TC-009: replay-блокер)"}` (:94-95) явно называет
+именно ЭТОТ класс ситуации («replay-блокер») легальным поводом быть/оставаться в
+`Review`, с прямым прецедентом TC-009. Транзиция test-case `*→Blocked` (:96-97) —
+актор `factory` (эскалация деградации/конфликта, прецедент TC-013..015), не
+`test-designer`/`human`; заводимый здесь `missing_fixture` — рутинный долг
+инфраструктуры, не деградация/конфликт, эскалация не требуется.
+
+## Чек-лист качества
+- [x] Проверены дубликаты среди открытых test_debt-багов — не совпадает с
+      AT-BUG-004 (Verified, закрыл отсутствие инфраструктуры КАК ТАКОВОЙ — mitm
+      не подключён к conftest, записей не было вообще, а не недостающую ОДНУ
+      транзакцию в уже существующей записи) и не пересекается с прочими
+      открытыми test_debt (AT-BUG-025/026/027/028 — другие классы:
+      navigate-таймаут, AVD/WebView EOL)
+- [x] Суть долга ясна и воспроизводима по коду (`build_replay_recordings.py:24-50
+      build_listing_basic`, `recording_builder.py` перечень записей) — перепроверена
+      парсингом `.mitm` при разборе critic-вердикта 2026-07-28, диагноз исправлен
+- [x] Severity: minor — блокирует автоматизацию ровно одного P1-кейса (TC-115), не
+      целый батч, и сам кейс спроектирован и полноценен (design не заблокирован)
+- [x] Ни одно изменение не внесено в app-under-test/
+- [x] `test_cases: ["TC-115"]` указывает единственный заблокированный кейс

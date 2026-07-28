@@ -329,6 +329,9 @@ features:
     title: "Тумблер Infinite scroll (listing pages)"
     screen: settings
     source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  # Coverage-гэп 0 кейсов закрыт test-designer 2026-07-28 (needs-design по
+  # bugs/BUG-014.md): TC-112 (off-путь), TC-113 (ретроактивность включения) —
+  # семантика тумблера как настройки, см. docs/01-test-strategy.md §9.
   - id: settings-auto-download-favorite
     title: "Тумблер авто-скачивания HTML при рейтинге Favorite (SAVE)"
     screen: settings
@@ -507,6 +510,14 @@ features:
     title: "DownloadRepository: скачивание HTML работы через OkHttp в SAF-папку или app storage"
     screen: background
     source: "app/src/main/java/com/example/ao3_wrapper/data/repository/DownloadRepository.kt"
+  # Расширена test-designer 2026-07-28 (needs-design по bugs/BUG-014.md) с
+  # TC-032 (единственный кейс, позитивный путь) до TC-032, TC-112 (off-путь,
+  # объявляет также settings-auto-download-favorite), TC-114 (:756, панель),
+  # TC-115 (:862, листинг — автоматизация блокирована bugs/AT-BUG-029.md),
+  # TC-116/TC-117 (граница смены/снятия рейтинга); позитивная граница третьего
+  # места вызова (:1057) — уже TC-032, не задвоена. Покрытие по КАЖДОМУ месту
+  # вызова — по одной стороне (не симметрично), остаток см. docs/01-test-
+  # strategy.md §9.
   - id: background-auto-download-trigger
     title: "Автозапуск скачивания при простановке рейтинга Favorite (SAVE), если тумблер включён"
     screen: background
