@@ -41,10 +41,147 @@ def _ensure_app_installed():
     yield
 
 
+# AT-BUG-026 (device-liveness guard, контейнмент): один инстанс НА ВСЮ
+# pytest-сессию (module-level, тот же приём, что `_ca_checked`/
+# `_download_oracle_last_post` — переживает отдельные тесты, сбрасывается
+# только новым процессом pytest). `recovery_count` копится по ВСЕМ тестам
+# сессии, не за один тест — см. `driver_factory.DeviceLivenessGuard`.
+_DEVICE_GUARD = driver_factory.DeviceLivenessGuard(
+    max_recoveries=settings.MAX_RECOVERIES_PER_SESSION
+)
+
+# B1 (критик-вход attempt 3, ДОРАБОТАТЬ): guard, живущий ТОЛЬКО в setup
+# фикстуры `driver`, недостижим для тестов, где `replay`/`clean_app`/
+# `seeded_library`-семья перечислена В СИГНАТУРЕ ТЕСТА РАНЬШЕ `driver`
+# (`test_x(clean_app, replay, driver)`) — pytest инстанцирует фикстуры В
+# ПОРЯДКЕ АРГУМЕНТОВ, значит `replay`(-> `mitm.set_device_proxy()`, кидает
+# `CalledProcessError` НАПРЯМУЮ на мёртвом устройстве) или `clean_app`(->
+# `adb.clear_app_data()`, тихий no-op — см. B2 ниже) успевают тронуть
+# мёртвое устройство ДО того, как guard вообще получает шанс сработать.
+# Сообщение, переданное `warnings.warn` фикстурой `driver` (если recovery
+# произошёл ИМЕННО в этот вызов ensure_ready) — читается той же фикстурой
+# ниже, чтобы решить `settle_retries` (находка красной пробы w1).
+_pending_recovery_warning: str | None = None
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_runtest_setup(item: pytest.Item) -> None:
+    """AT-BUG-026 B1: device-liveness guard обязан выполниться ДО того, как
+    pytest начнёт инстанцировать ЛЮБУЮ device-трогающую фикстуру ТЕКУЩЕГО
+    теста — не только `driver`. `tryfirst=True` гарантирует, что ЭТА
+    реализация хука отработает РАНЬШЕ встроенной
+    (`_pytest.runner.pytest_runtest_setup`, которая и вызывает
+    `item.session._setupstate.setup(item)` — саму fixture-инстанциацию):
+    без явного `tryfirst` порядок держался бы на детали реализации pytest
+    (LIFO-порядок регистрации плагинов), полагаться на неё молча — то же
+    нарушение, что описывает CLAUDE.md про env-негатив без сверки.
+
+    Признак «тест трогает устройство» — `"driver" in item.fixturenames`,
+    НЕ перечисление device-фикстур поимённо: КАЖДЫЙ существующий device-тест
+    (`replay`/`clean_app`/`seeded_library`-семья) запрашивает `driver` В ТОЙ
+    ЖЕ сигнатуре (grep-проверено по `framework/tests/` — единственное
+    исключение, device-free unit-пробы вида `test_replay_ca_check_unit.py`,
+    `driver` не запрашивают вовсе); `item.fixturenames` — ПОЛНОЕ транзитивное
+    множество, не зависящее от ПОРЯДКА аргументов в сигнатуре. Единый
+    самообновляющийся признак вместо allowlist, который пришлось бы
+    поддерживать вручную при каждой новой device-фикстуре.
+
+    Если `ensure_ready()` бросает `DeviceRecoveryError` (лимит исчерпан или
+    сам restart не вернул устройство) — исключение поднимается ИЗ ЭТОГО
+    хука, ДО вызова `item.setup()`: pytest трактует это как ошибку setup'а
+    теста, ни одна фикстура (включая `clean_app`/`replay`) вообще не
+    инстанцируется — короткое замыкание сохраняется в точности как раньше,
+    просто точка вызова поднята выше по стеку.
+
+    R1 (критик-вход attempt 4): `_pending_recovery_warning` сбрасывается
+    в `None` В САМОМ НАЧАЛЕ хука, ДО проверки `"driver" in
+    item.fixturenames` — устаревающий глобал иначе пережил бы тест БЕЗ
+    `driver` (тот вернётся раньше, не тронув переменную) и следующий
+    device-тест мог бы унаследовать `_pending_recovery_warning` от теста
+    ДВА-ИЛИ-БОЛЕЕ шага назад, если между ними не было ни одного вызова
+    `ensure_ready()`, устанавливающего своё собственное значение (в
+    штатном потоке `ensure_ready()` вызывается на КАЖДОМ device-тесте и
+    сама переустанавливает переменную — но явный сброс ДО предиката не
+    полагается на этот побочный эффект как единственную гарантию).
+
+    R2 (критик-вход attempt 4): `warnings.warn(...)` для recovery-WARN
+    перенесён СЮДА, в сам хук — раньше жил в фикстуре `driver`, которая
+    инстанцируется ПОСЛЕ `clean_app`/`replay` (см. их докстринги про
+    порядок аргументов сигнатуры теста): если один из НИХ падает на
+    setup ДО того, как pytest дойдёт до `driver`, состоявшееся recovery
+    не давало WARN вовсе (оставалась только терминальная B3-строка в
+    самом конце прогона, без per-тестовой атрибуции). Плагин `warnings`
+    захватывает предупреждения из ЛЮБОЙ фазы протокола, включая хуки
+    setup, поэтому перенос не меняет видимость WARN на happy path,
+    только чинит путь падения соседних фикстур."""
+    global _pending_recovery_warning
+    _pending_recovery_warning = None
+    if "driver" not in item.fixturenames:
+        return
+    _pending_recovery_warning = _DEVICE_GUARD.ensure_ready()
+    if _pending_recovery_warning is not None:
+        _reset_ca_check()
+        warnings.warn(_pending_recovery_warning)
+
+
+def _reset_ca_check() -> None:
+    """AT-BUG-026 F4 (критик-вход attempt 3): recovery ребутит эмулятор
+    (`Start-Emulator -WritableSystem` сама переустанавливает mitm-CA — см.
+    `driver_factory._restart_emulator_writable_system`), но module-level кеш
+    `_ca_checked` (AT-BUG-011, «проверка CA — раз на сессию») об этом не
+    знает и остаётся `True`, если ХОТЯ БЫ ОДИН replay-тест этой сессии уже
+    прошёл проверку раньше. Если CA почему-то НЕ переустановился в рамках
+    ИМЕННО этого recovery (частичный сбой `tasks.ps1`, гонка) — следующий
+    replay-тест НЕ переспросит `_ensure_replay_ca()` (кеш всё ещё `True`) и
+    упрётся в 120–240с `ReadTimeoutError` вместо мгновенной понятной
+    `RuntimeError`, которую сама проверка AT-BUG-011 существует, чтобы
+    предотвратить — то есть контейнмент сам создал бы ИМЕННО тот класс
+    каскада, который должен предотвращать. Сброс кеша ПОСЛЕ КАЖДОГО
+    recovery форсирует одну дешёвую повторную проверку (adb+openssl, доли
+    секунды) на первом СЛЕДУЮЩЕМ replay-тесте — happy path (CA реально
+    переустановился) платит только эту проверку, несчастливый путь получает
+    быстрый диагноз вместо зависания."""
+    global _ca_checked
+    _ca_checked = False
+
+
 @pytest.fixture()
 def driver():
-    """Сессия Appium на тест. no_reset=True — состоянием управляют фикстуры данных."""
-    drv = driver_factory.create_driver(no_reset=True)
+    """Сессия Appium на тест. no_reset=True — состоянием управляют фикстуры данных.
+
+    AT-BUG-026 (контейнмент): device-liveness guard (см. `pytest_runtest_setup`
+    выше) уже отработал ДО setup ЭТОГО (и любого другого device-) теста —
+    проверил присутствие устройства и, если оно исчезло (вероятностный
+    qemu-краш `0xc0000005` или иной класс NO DEVICE), сделал ОГРАНИЧЕННОЕ
+    авто-восстановление (см. `driver_factory.DeviceLivenessGuard` — там же
+    границы: recovery только при отсутствии устройства, лимит за сессию,
+    идемпотентность, честный FAILED/ERROR текущего теста без маскировки).
+    Эта фикстура ЧИТАЕТ результат того вызова (`_pending_recovery_warning`),
+    не вызывает `ensure_ready()` САМА (B1: единственная точка вызова —
+    хук, чтобы recovery гарантированно происходил РАНЬШЕ `replay`/
+    `clean_app`/`seeded_library`, а не только раньше `driver`).
+    Recovery отмечается `warnings.warn`, вызванным ИЗ ХУКА
+    `pytest_runtest_setup` (R2, критик-вход attempt 4 — перенесено ИЗ этой
+    фикстуры, см. докстринг хука выше: `driver` инстанцируется ПОСЛЕ
+    `clean_app`/`replay` по сигнатуре большинства device-тестов, и WARN,
+    живущий здесь, терялся бы, если одна из НИХ падает на setup раньше)
+    — WARN-атрибуция видна в отчёте прогона независимо от исхода самого
+    теста; эта фикстура сама `warnings.warn` больше не зовёт, только читает
+    `_pending_recovery_warning` для `settle_retries`.
+    Лимит исчерпан -> `DeviceRecoveryError` (сообщение начинается с
+    `ENV_ISSUE`) поднимается из хука ДО setup ЛЮБОЙ фикстуры теста —
+    короткое замыкание, не 20-секундный таймаут на каждом следующем тесте.
+
+    `settle_retries=2` передаётся `create_driver` ТОЛЬКО когда recovery
+    произошёл В ЭТОМ тесте (`warn_message is not None`) — находка красной
+    пробы w1 (2026-07-28): первая Appium-сессия сразу после рестарта
+    эмулятора иногда не успевает "устояться" (`bugs/AT-BUG-026.md`, известный
+    класс). Обычный путь (recovery не требовался) settle_retries=0 — поведение
+    не меняется."""
+    warn_message = _pending_recovery_warning
+    drv = driver_factory.create_driver(
+        no_reset=True, settle_retries=(2 if warn_message is not None else 0)
+    )
     yield drv
     driver_factory.quit_driver(drv)
 
@@ -440,6 +577,25 @@ def _ensure_replay_ca() -> None:
     _ca_checked = True
 
 
+def _proxy_reachable_timeout() -> int | None:
+    """N2 (критик-вход attempt 4): выбор таймаута ожидания достижимости
+    прокси СО СТОРОНЫ УСТРОЙСТВА, вынесенный из тела фикстуры `replay` в
+    отдельную ЧИСТУЮ функцию — единственная причина: сделать выбор
+    таймаута device-free-тестируемым. `replay` — генераторная фикстура
+    (`mitm.set_device_proxy()`/`start_replay()`/реальный файл записи), её
+    саму напрямую не вызвать вне pytest-инстанцирования (pytest 9 запрещает
+    прямой вызов декорированной fixture-функции); эта функция несёт РОВНО
+    решающую логику (см. `replay` ниже, найдено красной пробой w1,
+    2026-07-28) и не трогает сеть/устройство — читает только module-level
+    `_pending_recovery_warning` и `settings.PROXY_DEVICE_REACHABLE_TIMEOUT_
+    AFTER_RECOVERY`. Recovery произошёл В ЭТОМ тесте -> увеличенный
+    таймаут; иначе -> `None` (дефолт `mitm.wait_device_proxy_reachable`,
+    поведение до находки w1 не меняется)."""
+    if _pending_recovery_warning is not None:
+        return settings.PROXY_DEVICE_REACHABLE_TIMEOUT_AFTER_RECOVERY
+    return None
+
+
 @pytest.fixture()
 def replay(request):
     """Поднимает mitmdump в режиме server-replay на записи `request.param` (имя файла
@@ -462,7 +618,20 @@ def replay(request):
     первая навигация теста иногда ловила интермиттентный
     `net::ERR_PROXY_CONNECTION_FAILED` (race NAT-уровня qemu / задержка
     применения системной настройки прокси Android'ом), не покрытый
-    rerun-whitelist `pytest.ini` — тест теперь не видит этот транзиент."""
+    rerun-whitelist `pytest.ini` — тест теперь не видит этот транзиент.
+
+    AT-BUG-026 B1, находка красной пробы w1 (attempt 3): ЕСЛИ device-liveness
+    recovery произошёл В ЭТОМ тесте (`_pending_recovery_warning is not None`
+    — тот же признак, что использует `driver` для `settle_retries`) —
+    достижимость прокси ждём увеличенным таймаутом
+    (`settings.PROXY_DEVICE_REACHABLE_TIMEOUT_AFTER_RECOVERY`): СРАЗУ после
+    restart эмулятора (который ТАКЖЕ переустанавливает CA и рестартует
+    framework/zygote) сетевой adb-мост/NAT иногда не успевает settle'иться за
+    дефолтные 10s — живой witness этой сессии поймал `TimeoutError` на 26
+    попытках. Обычный путь (recovery не требовался) таймаут не меняется —
+    поведение до этой находки идентично. Сам выбор таймаута вынесен в
+    `_proxy_reachable_timeout()` (N2, критик-вход attempt 4) — device-free
+    юнит-проба покрывает обе ветки без реального устройства."""
     _ensure_replay_ca()
     flow_name = request.param
     flows_file = settings.RECORDINGS_DIR / flow_name
@@ -470,10 +639,11 @@ def replay(request):
         f"replay-запись не найдена: {flows_file} "
         f"(сгенерировать: python scripts/build_replay_recordings.py)"
     )
+    proxy_reachable_timeout = _proxy_reachable_timeout()
     try:
         mitm.set_device_proxy()
         mitm.start_replay(flows_file)
-        mitm.wait_device_proxy_reachable()
+        mitm.wait_device_proxy_reachable(timeout=proxy_reachable_timeout)
         yield flows_file
     finally:
         # clear_device_proxy идемпотентен (check=False, ставит ":0" безусловно) —
@@ -751,3 +921,50 @@ def pytest_runtest_makereport(item, call):
         drv = item.funcargs.get("driver")
         if drv is not None:
             reporting.attach_failure_artifacts(drv, item.name)
+
+
+# AT-BUG-026 B3 (критик-вход attempt 3): часть спеки контейнмента, п.3 —
+# «run-артефакт конвейерного прогона несёт строку ENV_ISSUE с числом
+# восстановлений». Реализовано в объёме, доступном ИЗНУТРИ этого файла
+# (conftest/pytest-хук) — печатает ОДНУ greppable-строку в терминальный
+# вывод прогона в самом конце (тот же вывод, который test-runner уже
+# использует как основной источник данных для `runs/RUN-*.md`, см.
+# `.claude/agents/test-runner.md`: «Собери итоги» читается из терминального
+# вывода pytest, не из отдельного JSON). Строка печатается ВСЕГДА (в т.ч.
+# recoveries=0) — отсутствие строки в выводе однозначно значит «прогон не
+# дошёл до pytest_sessionfinish» (краш самого pytest-процесса), а не «guard
+# молчит о нуле».
+#
+# N1 (критик-вход attempt 4): токен `ENV_ISSUE` печатается ТОЛЬКО когда
+# `recovery_count > 0` — раньше он был частью строки ВСЕГДА, в т.ч. на
+# полностью зелёном прогоне без единого recovery, что ломало greppable-
+# семантику самого слова `ENV_ISSUE` (чужой контракт — `schemas/
+# evidence.yaml`, `.claude/agents/failure-analyst.md`: вердикт по этому
+# слову) и собственный приёмочный приём «grep ENV_ISSUE -> 0 совпадений =
+# нет побочек» этой же задачи. Свойство «строка печатается ВСЕГДА»
+# (см. абзац выше — отсутствие строки в выводе значит краш pytest-процесса
+# ДО sessionfinish, не молчание guard'а о нуле) СОХРАНЕНО буквально: строка
+# печатается в обеих ветках, разнится только присутствие токена.
+#
+# ЧЕСТНО НЕ СДЕЛАНО В ЭТОМ ДИСПАТЧЕ (явная постановка в очередь, правило 9
+# CLAUDE.md, чтобы не повторить пробел attempt 2): (1) отдельное ПОЛЕ в
+# `schemas/run.schema.yaml` под этот счётчик (например
+# `env_issue_recoveries: {}`) и (2) обновление workflow
+# `.claude/agents/test-runner.md` шаг 3/4, чтобы он транскрибировал эту
+# строку В frontmatter/discussion `runs/RUN-*.md` — оба пункта трогают
+# схему И чужой агентный промпт (test-runner, не test-maintainer), что
+# шире мандата ЭТОГО B4-точечного фикса (driver_factory/conftest); решение
+# по вопросу «стоит ли» — за координатором/Lead следующим диспатчем.
+def pytest_terminal_summary(terminalreporter, exitstatus, config) -> None:
+    recovery_count = _DEVICE_GUARD.recovery_count
+    max_recoveries = _DEVICE_GUARD.max_recoveries
+    if recovery_count > 0:
+        terminalreporter.write_line(
+            f"ENV_ISSUE (AT-BUG-026): device-liveness guard recoveries this "
+            f"session = {recovery_count}/{max_recoveries}"
+        )
+    else:
+        terminalreporter.write_line(
+            f"AT-BUG-026 device-liveness guard: recoveries this session = "
+            f"{recovery_count}/{max_recoveries}"
+        )

@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-28T11:07:55Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-28T16:51:15Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -12,7 +12,7 @@ generated_at: 2026-07-28T11:07:55Z · генератор: `scripts/coverage_map.
 | accessibility | 3 | 3 | designed-full |
 | backup | 1 | 1 | designed-full |
 | browser | 9 | 9 | designed-full |
-| canary | 18 | 18 | designed-full |
+| canary | 23 | 18 | partial |
 | compatibility | 3 | 3 | designed-full |
 | downloads | 14 | 8 | partial |
 | errors | 1 | 1 | designed-full |
@@ -31,7 +31,7 @@ generated_at: 2026-07-28T11:07:55Z · генератор: `scripts/coverage_map.
 | Риск | Категория | Покрывающие кейсы |
 |---|---|---|
 | R-01 | DATA | backup:TC-021, settings:TC-018, settings:TC-019, settings:TC-020, smoke:TC-004 |
-| R-02 | TECH | canary:TC-066, canary:TC-067, canary:TC-068, canary:TC-069, canary:TC-070, canary:TC-071, canary:TC-072, canary:TC-073, canary:TC-074, canary:TC-075, canary:TC-076, canary:TC-077, canary:TC-078, canary:TC-079, canary:TC-080, canary:TC-081, canary:TC-082, canary:TC-083 |
+| R-02 | TECH | canary:TC-066, canary:TC-067, canary:TC-068, canary:TC-069, canary:TC-070, canary:TC-071, canary:TC-072, canary:TC-073, canary:TC-074, canary:TC-075, canary:TC-076, canary:TC-077, canary:TC-078, canary:TC-079, canary:TC-080, canary:TC-081, canary:TC-082, canary:TC-083, canary:TC-118, canary:TC-119, canary:TC-120, canary:TC-121, canary:TC-122 |
 | R-03 | TECH | errors:TC-046, smoke:TC-001 |
 | R-04 | DATA | canary:TC-072, canary:TC-073, canary:TC-074, canary:TC-075, canary:TC-076, canary:TC-077, library:TC-016, library:TC-017, rating:TC-007, rating:TC-008, rating:TC-009, rating:TC-010, rating:TC-011, rating:TC-012, smoke:TC-003 |
 | R-05 | TECH | downloads:TC-032, downloads:TC-033, downloads:TC-034, downloads:TC-035, downloads:TC-036, downloads:TC-037, downloads:TC-038, downloads:TC-039, downloads:TC-112, downloads:TC-113, downloads:TC-114, downloads:TC-115, downloads:TC-116, downloads:TC-117 |
@@ -134,7 +134,7 @@ generated_at: 2026-07-28T11:07:55Z · генератор: `scripts/coverage_map.
 | bridge-exclude-main-pairing-filter | ao3-bridge | canary:TC-080[Automated], canary:TC-081[Automated] |
 | bridge-dark-css | ao3-bridge | нет кейсов |
 | bridge-scroll-reporting | ao3-bridge | нет кейсов |
-| bridge-tap-zone-guard | ao3-bridge | нет кейсов |
+| bridge-tap-zone-guard | ao3-bridge | canary:TC-118[Review], canary:TC-119[Review], canary:TC-120[Review], canary:TC-121[Review], canary:TC-122[Review] |
 | data-workrating-model | data | нет кейсов |
 | data-filterprofile-model | data | нет кейсов |
 | data-clear-all-ratings | data | smoke:TC-004[Automated], settings:TC-018[Automated], settings:TC-019[Automated], settings:TC-020[Blocked] |
@@ -175,7 +175,6 @@ generated_at: 2026-07-28T11:07:55Z · генератор: `scripts/coverage_map.
 - settings-filter-profiles-list (settings): Список сохранённых AO3-фильтр-профилей
 - bridge-dark-css (ao3-bridge): CSS-переопределения тёмной темы на AO3-страницах (window.__ao3AppDark)
 - bridge-scroll-reporting (ao3-bridge): Отчёт позиции скролла и прогресса чтения (глава/%) в Kotlin
-- bridge-tap-zone-guard (ao3-bridge): Guard тап-зон: тап по интерактивному узлу страницы работы (a/button/input/select/textarea/label/summary/[role=button] или их потомку) не запускает зональное действие
 - data-workrating-model (data): Room-сущность WorkRating (rating/comment/tags/fandom/author/wordCount/downloadPath)
 - data-filterprofile-model (data): Room-сущность FilterProfile (name/queryString)
 - background-auto-kudos-trigger (background): Автоклик кнопки kudos на странице работы AO3, когда рейтинг работы становится Kudosed (LIKE) или Favorite (SAVE)
@@ -232,16 +231,16 @@ generated_at: 2026-07-28T11:07:55Z · генератор: `scripts/coverage_map.
 
 ### canary
 
-- coverage_status: **designed-full** (18/18 Automated)
+- coverage_status: **partial** (18/23 Automated)
 - риски: R-02, R-02/R-04
 - кейсы без risk: нет
-- P0/P1 не в Automated: нет
+- P0/P1 не в Automated: TC-118 [P0, Review], TC-119 [P0, Review], TC-120 [P0, Review], TC-121 [P0, Review], TC-122 [P0, Review]
 - автотесты (automated_by): framework/tests/canary/test_ao3_selectors.py::test_bridge_marker_present_live, framework/tests/canary/test_ao3_selectors.py::test_bridge_marker_present_replay, framework/tests/canary/test_ao3_selectors.py::test_exclude_main_pairing_checkbox_availability_live, framework/tests/canary/test_ao3_selectors.py::test_exclude_main_pairing_checkbox_availability_replay, framework/tests/canary/test_ao3_selectors.py::test_main_pairing_checkbox_availability_live, framework/tests/canary/test_ao3_selectors.py::test_main_pairing_checkbox_availability_replay, framework/tests/canary/test_ao3_selectors.py::test_note_button_present_iff_comment_live, framework/tests/canary/test_ao3_selectors.py::test_note_button_present_iff_comment_replay, framework/tests/canary/test_ao3_selectors.py::test_rate_button_badge_opaque_color_live, framework/tests/canary/test_ao3_selectors.py::test_rate_button_badge_opaque_color_replay, framework/tests/canary/test_ao3_selectors.py::test_rate_button_injected_on_live_listing, framework/tests/canary/test_ao3_selectors.py::test_rate_button_injected_on_replay_listing, framework/tests/canary/test_ao3_selectors.py::test_save_filter_button_idempotent_live, framework/tests/canary/test_ao3_selectors.py::test_save_filter_button_idempotent_replay, framework/tests/canary/test_ao3_selectors.py::test_tag_button_present_iff_custom_tag_live, framework/tests/canary/test_ao3_selectors.py::test_tag_button_present_iff_custom_tag_replay, framework/tests/canary/test_ao3_selectors.py::test_work_blurb_selector_matches_live_listing, framework/tests/canary/test_ao3_selectors.py::test_work_blurb_selector_matches_replay_listing
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
-| P0 |  |  |  | 17 |  |
+| P0 |  | 5 |  | 17 |  |
 | P1 |  |  |  | 1 |  |
 | P2 |  |  |  |  |  |
 | P3 |  |  |  |  |  |

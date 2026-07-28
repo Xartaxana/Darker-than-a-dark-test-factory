@@ -47,12 +47,63 @@ def force_stop() -> None:
 
 
 def clear_app_data() -> None:
-    """Полный сброс приложения к состоянию чистой установки (pm clear)."""
-    shell(f"pm clear {_PKG}")
+    """Полный сброс приложения к состоянию чистой установки (pm clear).
+
+    AT-BUG-026 B2 (критик-вход attempt 3): в отличие от `shell()` (отбрасывает
+    returncode подпроцесса — годится для best-effort зондов вроде
+    `download_oracle`, где отсутствие каталога — валидный исход), ЭТА операция
+    ЛОГИЧЕСКИ КРИТИЧНА: КАЖДЫЙ device-тест полагается на реально очищенное
+    состояние ДО сидинга/старта. Молчаливый no-op на мёртвом/офлайн устройстве
+    (`adb shell` возвращает пустой/ошибочный stdout, ненулевой returncode, но
+    `shell()` тихо отбросил бы это) продолжил бы прогон на устаревших данных
+    вместо честного отказа — устройство считалось бы «очищенным», не будучи
+    таковым.
+
+    B1 (device-liveness guard в `pytest_runtest_setup`, ДО любой
+    device-фикстуры) делает этот путь практически недостижимым В ШТАТНОМ
+    ПОТОКЕ ЭТОГО репозитория (guard уже подтвердил присутствие/восстановил
+    устройство ДО того, как pytest успевает инстанцировать `clean_app`/
+    `seeded_library`/любую сидинг-фикстуру) — но это структурная защита
+    ПОРЯДКОМ ФИКСТУР, не гарантия самой функции: TOCTOU-окно между
+    guard-проверкой и фактическим вызовом `pm clear` остаётся теоретически
+    возможным, и любой БУДУЩИЙ вызывающий код, который решит звать
+    `clear_app_data()` в обход `clean_app`/`seeded_library` (например,
+    напрямую из нового теста/степа), не получил бы защиты B1 вовсе. Поэтому
+    returncode проверяется здесь же, а не только полагается на порядок
+    фикстур — та же независимая от вызывающего кода гарантия, что уже даёт
+    `install()` (проверяет `"Success" not in cp.stdout`)."""
+    cp = _run(["-s", settings.DEVICE_NAME, "shell", f"pm clear {_PKG}"])
+    if cp.returncode != 0:
+        raise RuntimeError(
+            f"pm clear {_PKG} завершился returncode={cp.returncode} — "
+            "устройство недоступно/офлайн или иная ошибка очистки данных "
+            f"(AT-BUG-026 B2). stdout={cp.stdout!r} stderr={cp.stderr!r}"
+        )
 
 
 def is_installed() -> bool:
     return _PKG in shell("pm list packages")
+
+
+def device_present() -> bool:
+    """Позитивная сверка присутствия устройства (класс `Get-Device`/`tasks.ps1`,
+    CLAUDE.md permission-hygiene п.6: пустой/ошибочный вывод голого adb ≠ факт
+    отсутствия устройства). Парсит `adb devices` (полный путь к `adb.exe` —
+    `settings.ADB`, не зависит от PATH сессии) и ищет `settings.DEVICE_NAME` в
+    состоянии `device` (не `offline`/`unauthorized`/отсутствует вовсе) — то же
+    состояние, которое печатает PowerShell `Get-Device` как `DEVICE: <serial>`.
+    Используется device-liveness guard'ом (AT-BUG-026,
+    `framework/core/driver_factory.py::DeviceLivenessGuard`) перед КАЖДОЙ
+    попыткой создать Appium-сессию."""
+    try:
+        cp = _run(["devices"], timeout=settings.ADB_SHELL_TIMEOUT)
+    except TimeoutError:
+        return False
+    for line in cp.stdout.splitlines()[1:]:
+        parts = line.split()
+        if len(parts) >= 2 and parts[0] == settings.DEVICE_NAME and parts[1] == "device":
+            return True
+    return False
 
 
 def _wait_package_service_ready(timeout: float) -> None:
@@ -190,10 +241,49 @@ def push_external(local_path: Path, remote_path: str) -> None:
 
 
 def push_app_file(src: Path, rel_path: str) -> None:
-    """Кладёт файл в приватную песочницу приложения через /data/local/tmp + run-as cp."""
+    """Кладёт файл в приватную песочницу приложения через /data/local/tmp + run-as cp.
+
+    AT-BUG-026 N3 (критик-вход attempt 4, тот же аргумент, что B2/
+    `clear_app_data`): эта функция ПИШЕТ засеянные Room-БД/HTML-фикстуры на
+    устройство (см. `framework/data/seed_db.py`) — тихий no-op на любом из
+    двух КРИТИЧНЫХ шагов (push на хост-сторону /data/local/tmp, затем cp
+    внутрь песочницы приложения через run-as) продолжил бы тест на
+    СТАРЫХ/отсутствующих данных с ложным PASS, тот же класс риска, что
+    молчаливый `pm clear`, закрытый в B2. Оба шага проверяются НАПРЯМУЮ через
+    `_run()` (не через `run_as()`/`shell()`, которые отбрасывают returncode)
+    — returncode != 0 -> явный `RuntimeError` с контекстом, вместо
+    продолжения на непонятно каком состоянии устройства.
+
+    Намеренно НЕ распространено на `run_as()` как таковую (публичная
+    функция) и на завершающий `rm -f {tmp}`: `run_as()` используется в
+    НЕСКОЛЬКИХ местах, где ненулевой returncode — ВАЛИДНЫЙ исход, не ошибка
+    (например `app_steps.py`/`settings_steps.py` читают `cat` файла,
+    который может легитимно отсутствовать) — превращение returncode-check
+    в часть контракта `run_as()` сломало бы эти вызовы; менять её ради ОДНОГО
+    вызывающего кода шире мандата узкого B4-фикса. Финальный `rm -f`
+    (уборка временного файла в /data/local/tmp) — best-effort: его отказ не
+    искажает засеянные данные (файл уже скопирован в песочницу шагом выше),
+    только оставляет мусор в /data/local/tmp, не критично для целостности
+    теста, поэтому оставлен как раньше (через `shell()`, без проверки)."""
     tmp = f"/data/local/tmp/{src.name}"
-    _run(["-s", settings.DEVICE_NAME, "push", str(src), tmp], timeout=settings.ADB_TRANSFER_TIMEOUT)
-    run_as(f"cp {tmp} {rel_path}")
+    cp_push = _run(
+        ["-s", settings.DEVICE_NAME, "push", str(src), tmp],
+        timeout=settings.ADB_TRANSFER_TIMEOUT,
+    )
+    if cp_push.returncode != 0:
+        raise RuntimeError(
+            f"adb push {src} -> {tmp} завершился returncode={cp_push.returncode} "
+            "(AT-BUG-026 N3) — устройство недоступно/офлайн, сидинг-файл НЕ "
+            f"попал на устройство. stdout={cp_push.stdout!r} stderr={cp_push.stderr!r}"
+        )
+    cp_copy = _run(["-s", settings.DEVICE_NAME, "shell", f"run-as {_PKG} cp {tmp} {rel_path}"])
+    if cp_copy.returncode != 0:
+        raise RuntimeError(
+            f"run-as {_PKG} cp {tmp} {rel_path} завершился "
+            f"returncode={cp_copy.returncode} (AT-BUG-026 N3) — сидинг-файл НЕ "
+            f"попал в песочницу приложения. stdout={cp_copy.stdout!r} "
+            f"stderr={cp_copy.stderr!r}"
+        )
     shell(f"rm -f {tmp}")
 
 

@@ -154,6 +154,31 @@
     "artifact_status": "Automated",
     "board_status": "Automated"
   },
+  "TC-118": {
+    "itype": "test-case",
+    "artifact_status": "Review",
+    "board_status": "Review"
+  },
+  "TC-119": {
+    "itype": "test-case",
+    "artifact_status": "Review",
+    "board_status": "Review"
+  },
+  "TC-120": {
+    "itype": "test-case",
+    "artifact_status": "Review",
+    "board_status": "Review"
+  },
+  "TC-121": {
+    "itype": "test-case",
+    "artifact_status": "Review",
+    "board_status": "Review"
+  },
+  "TC-122": {
+    "itype": "test-case",
+    "artifact_status": "Review",
+    "board_status": "Review"
+  },
   "TC-109": {
     "itype": "test-case",
     "artifact_status": "Automated",
@@ -720,6 +745,16 @@
     "board_status": "Verified"
   },
   "AT-BUG-029": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "AT-BUG-030": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "AT-BUG-031": {
     "itype": "bug",
     "artifact_status": "Open",
     "board_status": "Open"

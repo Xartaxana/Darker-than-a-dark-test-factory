@@ -713,6 +713,116 @@
     "archived": false
   },
   {
+    "key": "TC-118",
+    "path": "board/TC-118/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Числовая проба предпосылки guard'а: узлы вне whitelist с собственным обработчиком в теле живой work-страницы (live)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:canary",
+      "risk:R-02"
+    ],
+    "updated": "2026-07-28T20:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-119",
+    "path": "board/TC-119/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Guard тап-зон блокирует зональное действие при тапе по whitelisted-узлу (button) в теле work-страницы (replay)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:canary",
+      "risk:R-02"
+    ],
+    "updated": "2026-07-28T20:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-120",
+    "path": "board/TC-120/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Тап по НЕ-whitelisted узлу с собственным обработчиком в теле work-страницы запускает ОБА эффекта (guard-пробой, replay)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:canary",
+      "risk:R-02"
+    ],
+    "updated": "2026-07-28T16:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-121",
+    "path": "board/TC-121/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Тап по whitelisted-ссылке БЕЗ собственного JS-обработчика в теле work-страницы не запускает зональное действие (whitelist по тегу, независимо от наличия обработчика, replay)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:canary",
+      "risk:R-02"
+    ],
+    "updated": "2026-07-28T19:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-122",
+    "path": "board/TC-122/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Тап по потомку (span) whitelisted-узла в теле work-страницы блокирует зональное действие через closest — семантика предка, не изолированной проверки target (replay)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:canary",
+      "risk:R-02"
+    ],
+    "updated": "2026-07-28T19:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "TC-109",
     "path": "board/TC-109/main.md",
     "parent": null,
@@ -3250,7 +3360,7 @@
       "test_case:TC-082",
       "sev:major"
     ],
-    "updated": "2026-07-28T09:45:00Z",
+    "updated": "2026-07-28T18:05:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3316,6 +3426,51 @@
       "sev:minor"
     ],
     "updated": "2026-07-28T15:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-030",
+    "path": "board/AT-BUG-030/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "render_work_page_html не несёт ни whitelisted <button> (со span-потомком), ни НЕ-whitelisted интерактивного узла, ни достаточной высоты в теле работы — блокирует TC-119/TC-120/TC-122 (bridge-tap-zone-guard)",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-119",
+      "test_case:TC-120",
+      "test_case:TC-122",
+      "sev:minor"
+    ],
+    "updated": "2026-07-28T20:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-031",
+    "path": "board/AT-BUG-031/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Stop-NodeProcesses (tasks.ps1) убивает ЛЮБОЙ node.exe по имени — коллатеральный риск для чужих неAO3 node-процессов на этом же хосте",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:minor"
+    ],
+    "updated": "2026-07-28T15:40:00Z",
     "resolution": null,
     "children": [],
     "archived": false

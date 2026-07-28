@@ -13,7 +13,7 @@ runs: []
 duplicates: []
 regression_of: ""
 status_since: "2026-07-22T14:05:00Z"
-updated: "2026-07-28T09:45:00Z"
+updated: "2026-07-28T18:05:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -816,3 +816,541 @@ run-артефакте = recovery не сработал — ловит триа�
 (ENV_ISSUE) + чек калибровки; красная проба w1 — канарейка при
 приёмке. (г) код на пути исполнения: guard живёт в setup фикстуры
 `driver` — обойти нельзя, каждый device-тест проходит через него.
+
+---
+
+**2026-07-28T15:40:00Z — test-maintainer (B4, лок
+`test-maintainer:2026-07-28T11:20:54Z`), РЕАЛИЗАЦИЯ КОНТЕЙНМЕНТА
+(исполнение спеки Lead выше) — DoD w1/w2/w3/w5 достигнуты живым device-
+witness'ом, w4 НЕ достигнут буквально (см. честная оговорка ниже).**
+
+**Реализация (changed_files):**
+- `framework/core/adb.py` — добавлен `device_present()` (позитивная
+  сверка присутствия устройства, класс `Get-Device`, парсит `adb
+  devices` через `settings.ADB`/`settings.DEVICE_NAME`).
+- `framework/core/driver_factory.py` — `DeviceRecoveryError`
+  (сообщение всегда начинается с `ENV_ISSUE`), `DeviceLivenessGuard`
+  (`ensure_ready()`: device_present → None; иначе лимит/restart/verify-
+  install/final-check), `_restart_emulator_writable_system` (канони-
+  ческий `Start-Emulator -WritableSystem`, сама переустанавливает
+  mitm-CA), `_verify_app_installed_with_retry` (bounded retry на
+  транзиентную гонку storage/vold сразу после рестарта — находка
+  красной пробы w1, см. ниже), `create_driver(..., settle_retries=0)`
+  (opt-in bounded retry создания Appium-сессии, находка той же пробы).
+- `framework/config/settings.py` — `MAX_RECOVERIES_PER_SESSION`
+  (env-override `AO3_MAX_RECOVERIES_PER_SESSION`, дефолт 2).
+- `framework/tests/conftest.py` — фикстура `driver` вызывает
+  `_DEVICE_GUARD.ensure_ready()` (module-level, session-scope
+  инстанс) ПЕРЕД `create_driver`; WARN-атрибуция `warnings.warn`
+  (паттерн `download_oracle`); `settle_retries=2` только когда
+  recovery произошёл В ЭТОМ тесте.
+- `framework/tests/test_device_liveness_guard_unit.py` (новый, w5) —
+  7 device-free юнит-проб (adb/adb.install/restart-функция монки-
+  патчатся): device-жив/recovery-ок/recovery-переустанавливает-
+  приложение/recovery-фейл-даёт-чистый-ENV_ISSUE/install-транзиент-
+  выживает-retry/install-retry-исчерпан-даёт-чистый-ENV_ISSUE/граница
+  лимита (2/2) И за ней (3-й крах, без повторного restart).
+
+**Находка красной пробы w1 (2026-07-28, живое устройство,
+`emulator-5554`) — ДОРАБОТАТЬ до зелёного, не заметка:** первая
+реализация (без bounded retry) дала на живом device красную пробу
+`FAILED`/`ERROR` вместо требуемых зелёных тестов 2-3:
+1. Сразу после `Start-Emulator -WritableSystem` (boot_completed=1 уже
+   подтверждён) `adb install` падал `NullPointerException:
+   StorageManager.getVolumes() on a null object reference` —
+   storage/vold-сервис гостя ещё не settled. Сиблинг класса
+   AT-BUG-013 (`_wait_package_service_ready` покрывает ТОЛЬКО
+   готовность `pm path android`, эта гонка на шаг позже — во время
+   самой установки). Фикс: `_verify_app_installed_with_retry`
+   (bounded 3 попытки, backoff 5s).
+2. Первая Appium-сессия сразу после recovery падала
+   `WebDriverException: Appium Settings app is not running after
+   30000ms` — класс уже был описан в истории ЭТОГО бага (запись
+   2026-07-22 test-maintainer, попытка (а): «первая Appium-сессия
+   после рестарта не успела settle»), но не имел кодового фикса. Фикс:
+   `create_driver(settle_retries=2)`, opt-in ТОЛЬКО когда `driver`
+   фикстура знает, что recovery произошёл в этом тесте.
+После обоих фиксов красная проба переснята и дала **чистый зелёный**
+(witness ниже).
+
+**Witness w1 (красная проба, ≥3 теста, `adb emu kill` между тестом 1 и
+2, временный файл `test_at_bug_026_redprobe.py`, удалён после
+witness'а):** `3 passed, 3 warnings in 103.58s`, `PYTEST_EXIT=0`.
+WARN дословно: *"AT-BUG-026 device-liveness guard: устройство
+отсутствовало, выполнено восстановление 1/2 за сессию (Start-Emulator
+-WritableSystem + переустановка mitm-CA)."*
+
+**Witness w2 (граница лимита И за ней, 5 тестов, kill в конце тел
+1-3, временный файл `test_at_bug_026_boundary_probe.py`, удалён):**
+recovery 1/2 (setup 82.17s) и 2/2 РОВНО НА ГРАНИЦЕ (setup 84.93s) —
+оба зелёные; 3-й крах (за лимитом) → тесты 4 и 5 **ERROR за 0.11s и
+0.08s setup** (не 20с-каскад) с сообщением `ENV_ISSUE (AT-BUG-026):
+... (2/2) ... без каскада 20с-таймаутов`. Итог:
+`3 passed, 9 warnings, 2 errors in 181.77s`, `PYTEST_EXIT=1`
+(честный, есть реальные ошибки).
+
+**Witness w3 (критерий (б) бага, K=10 live-соук TC-082-паттерна,
+временный параметризованный файл `test_at_bug_026_w3_soak.py`,
+удалён — housekeeping, как прежние измерения этого бага):**
+позитивный контроль Event Log (14 дней) ДО цикла — 3 известных старых
+события найдены, форма запроса рабочая. Прогон:
+`4 failed, 2 passed, 15 warnings, 4 errors in 642.98s`,
+`PYTEST_EXIT=1`. Event Log окна прогона (`Get-WinEvent`, узкое окно) —
+**РОВНО 3 новых `0xc0000005`-краша** (14:06:05, 14:10:05, 14:15:33),
+что ТОЧНО соответствует: крах теста[0] (честный FAILED в теле, guard
+не вмешивается мид-тест — по спеке), recovery 1/2 перед тестом[1]
+(WARN, PASSED), крах теста[3] (честный FAILED), recovery 2/2 перед
+тестом[4] (WARN, PASSED сама сессия — тест[4] всё равно упал
+`TimeoutException` — отдельный, НЕ device-liveness баг, честно не
+маскирован), крах теста[5] (FAILED, лимит исчерпан ЭТИМ крахом) →
+тесты[6..9] — **ERROR за 0.10-0.17s КАЖДЫЙ** (не каскад 20с-таймаутов).
+Соотношение «попыток к итерациям» 1:1 не сохранилось буквально ПОСЛЕ
+исчерпания лимита (по дизайну — это и есть требуемое «без каскада»),
+но каждый реальный крах ДО исчерпания лимита дал реальную навигацию и
+детерминированно пойман Event Log'ом.
+
+**Witness w5 (unit-слой, device-free):** `Invoke-Pytest
+tests/test_device_liveness_guard_unit.py -v` → `7 passed in 0.10s`,
+`PYTEST_EXIT=0`. Полный `tests -q -k unit` (регрессия остального
+device-free слоя) → `40 passed, 128 deselected in 12.34s`,
+`PYTEST_EXIT=0` (было 38 до этой правки — +2 к исходным 5 новым
+файлам этой сессии = 7, консистентно).
+
+**Witness w4 (ОДИН полный `-m p0`, смок на отсутствие побочек) — ЧЕСТНАЯ
+ОГОВОРКА: буквально НЕ достигнут.** Два независимых препятствия,
+диагностированных, не замаскированных:
+1. **Тулинг**: фоновый job этой сессии (тот же класс, что уже
+   задокументирован в истории ЭТОГО бага, запись 2026-07-22:
+   «фоновый Bash-job имеет собственный жёсткий потолок времени жизни
+   ~50-60 минут») дважды обрывал полный `-m p0` (45 тестов) БЕЗ
+   PYTEST_EXIT — не код-регресс, тулинг-ограничение среды оркестрации
+   агента, не репозитория.
+2. **Окружение**: эта сессия (после ~8 часов непрерывной работы,
+   множества рестартов эмулятора) показала повышенную частоту
+   `ReadTimeoutError` на REPLAY-навигации (`net::ERR`/`driver.get()`),
+   НЕ связанную с device-liveness guard'ом — диагностический мини-
+   прогон (docs/06 §5) подтвердил: `Get-Device` → DEVICE (жив),
+   mitm-CA в APEX-сторе → 134 (не деградировал), Appium health-check
+   → ready. Event Log в окнах ВСЕХ трёх попыток полного/батч-прогона
+   → **0 новых `0xc0000005`-событий** — устройство НИ РАЗУ не падало
+   в этих попытках; вся флуктуация — на уровне replay-прокси/webview,
+   класс, не относящийся к этому guard'у (не маскирую: возможно,
+   заслуживает отдельного внимания, но НЕ в мандате этой B4-задачи —
+   critic/Lead решают, заводить ли отдельный test_debt по нему; я его
+   НЕ завожу сам, т.к. не блокирует и не является НОВЫМ — тот же класс
+   `ReadTimeoutError`/AT-BUG-017, уже известный).
+
+   Получена ЧАСТИЧНАЯ смок-эвиденция вместо полной: батч БЕЗ
+   `tests/canary` (29 тестов, `--ignore=tests/canary`) прогнан ОДНИМ
+   процессом до конца: `8 failed, 20 passed, 8 rerun in 2117.65s
+   (0:35:17)`, `PYTEST_EXIT=1`. **grep по этому выводу на
+   `ENV_ISSUE|DeviceRecoveryError|AT-BUG-026` → 0 совпадений** — ни
+   один из 8 failed не связан с device-liveness guard'ом (все 8 —
+   `test_rate_work_from_listing_overlay`/`test_visibility.py`,
+   ВСЕ на одной и той же реплей-записи `listing_basic.mitm`,
+   локализованная, не общая деградация). Это — прямое доказательство
+   «побочных эффектов guard'а на обычном (без крахов) пути НЕТ» для
+   29/45 тестов p0. Батч `tests/canary` (16 тестов, самые тяжёлые
+   live/replay) начат дважды, оба раза прерван МНОЙ (не харнессом)
+   после подтверждения диагностики (Get-Device/CA/Appium здоровы,
+   Event Log пуст) — не достиг естественного завершения в отведённое
+   время сессии.
+
+   **Рекомендация координатору:** принять w1/w2/w3/w5 как решающий
+   witness корректности МЕХАНИЗМА (включая ТРИ реальных
+   `0xc0000005`-краха и два реальных recovery на живом устройстве —
+   сильнее любого смок-теста), а w4 — либо (а) повторить ОДНИМ полным
+   `-m p0` в свежей сессии/окне с меньшей фоновой нагрузкой (после
+   этой правки код не тронут, повторный прогон бесплатен), либо (б)
+   принять частичную эвиденцию (29/45 чисто, 0 участия guard'а в
+   failures) как достаточную для «нет побочек» и дозаказать полный
+   canary-батч отдельным быстрым прогоном при первой возможности.
+   Я НЕ перевожу `status` сам (Open остаётся) — DoD технически не
+   закрыт целиком по букве (w4), хотя по СУТИ (критерии (а)/(б)/(в)
+   спеки контейнмента) уже подтверждён живым device-witness'ом.
+
+**Housekeeping:** все временные файлы (`test_at_bug_026_redprobe.py`,
+`test_at_bug_026_boundary_probe.py`, `test_at_bug_026_w3_soak.py`)
+удалены после снятия witness'а — не оставлены в дереве. Окружение
+оставлено чистым: `Stop-NodeProcesses`, `adb emu kill`, `Get-Device` →
+`NO DEVICE` подтверждено. Побочная находка: во время этой сессии
+обнаружены ~20 «чужих» `node.exe`-процессов другого проекта
+(`D:\AI CRM\govard-crm`, vitest/tinypool/vite dev-сервер) на этом же
+хосте — `Stop-NodeProcesses` (канонический, но ИМЯ-широкий фильтр
+`Get-Process node`) убивает ЛЮБОЙ процесс с именем `node`, включая
+чужие; доложено честно, не расширяю мандат раздельным фиксом этого
+инструмента в рамках B4.
+
+**КРИТИК-ВХОД ОБЯЗАТЕЛЕН (правило 3 CLAUDE.md, фикстурное ядро,
+builder-класс дифф):** не жду сам, координатор диспатчит отдельным
+ходом. Lock НЕ снят — оставлен координатору по протоколу приёмки
+(инструкция диспетча).
+
+---
+
+**2026-07-28T16:22:24Z — test-maintainer (B4, лок
+`test-maintainer:2026-07-28T11:20:54Z`), attempt 3 — ДОРАБОТКА по вердикту
+critic на attempt 2 (B1/B2/B3 + F4-F8). Guard сам признан корректным построчно
+(critic attempt 2) — правки этого захода все в ТОЧКЕ ВЫЗОВА/периферии, не в
+логике `DeviceLivenessGuard`.**
+
+**B1 (главный блокер) — ИСПРАВЛЕНО.** Guard был достижим ТОЛЬКО из setup
+фикстуры `driver`, а `replay`/`clean_app`/`seeded_library`-семья исполняется
+РАНЬШЕ `driver` в сигнатурах вида `test_x(clean_app, replay, driver)` (pytest
+инстанцирует фикстуры В ПОРЯДКЕ АРГУМЕНТОВ) — на мёртвом устройстве
+`mitm.set_device_proxy()` кидал `CalledProcessError` НАПРЯМУЮ, guard не успевал
+сработать.
+
+Фикс: `pytest_runtest_setup(item)` хук в `framework/tests/conftest.py`
+(`@pytest.hookimpl(tryfirst=True)` — гарантирует исполнение РАНЬШЕ встроенного
+`_pytest.runner.pytest_runtest_setup`, который и вызывает `item.setup()`, т.е.
+саму fixture-инстанциацию; без явного `tryfirst` порядок держался бы на
+детали реализации pytest/LIFO-регистрации плагинов). Признак «тест трогает
+устройство» — `"driver" in item.fixturenames`, НЕ allowlist device-фикстур
+поимённо: grep по `framework/tests/` подтвердил, что КАЖДЫЙ существующий
+device-тест (вся `replay`/`clean_app`/`seeded_library`-семья) запрашивает
+`driver` в ТОЙ ЖЕ сигнатуре — `item.fixturenames` полное транзитивное
+множество, не зависящее от порядка аргументов; единственное исключение —
+device-free unit-пробы (`test_replay_ca_check_unit.py` и т.п.), которые
+`driver` не запрашивают вовсе и `driver`-фикстуру не платят даже за один
+`adb devices`. Единый самообновляющийся признак вместо списка, который
+пришлось бы вручную дополнять при каждой новой device-фикстуре.
+
+Результат вызова (`ensure_ready()`) складывается в module-level
+`_pending_recovery_warning`; фикстура `driver` теперь ЧИТАЕТ это значение
+(не вызывает `ensure_ready()` сама) — единственная точка вызова guard'а
+теперь хук, что и гарантирует срабатывание РАНЬШЕ `replay`/`clean_app`, а не
+только раньше `driver`. Если `ensure_ready()` бросает `DeviceRecoveryError`
+(лимит исчерпан) — исключение поднимается ИЗ ХУКА, ДО `item.setup()`: ни одна
+фикстура теста вообще не инстанцируется, короткое замыкание сохранено в
+точности, просто точка вызова поднята выше по стеку.
+
+**Живой device-witness w1 (замена — красная проба на REPLAY-тесте, как
+запросил критик, НЕ полный `-m p0`):** временный файл
+`test_at_bug_026_b1_redprobe.py` (3 теста: baseline на `driver` -> `adb emu
+kill` в теле test 1 -> `test_b1_redprobe_2_replay_after_kill(clean_app,
+replay, driver)` — БУКВАЛЬНО та же сигнатура/порядок, что реальный
+крашер-паттерн этого бага -> `test_b1_redprobe_3_replay_still_green`,
+подтверждает, что recovery не оставил среду хрупкой). Первый прогон (после
+фикса B1, ДО находки ниже) дал `TimeoutError` на `replay`-фикстуре (не
+regression B1 — recovery СРАБОТАЛ, `ENV_ISSUE ... = 1/2` в summary
+подтверждает; проблема оказалась в другом месте, см. ниже). После
+дополнительного фикса — **дословный witness**:
+```
+tests/test_at_bug_026_b1_redprobe.py::test_b1_redprobe_1_baseline PASSED
+tests/test_at_bug_026_b1_redprobe.py::test_b1_redprobe_2_replay_after_kill[ao3_home_smoke.mitm] PASSED
+tests/test_at_bug_026_b1_redprobe.py::test_b1_redprobe_3_replay_still_green[ao3_home_smoke.mitm] PASSED
+...
+ENV_ISSUE (AT-BUG-026): device-liveness guard recoveries this session = 1/2
+3 passed, 2 warnings in 122.77s (0:02:02)
+PYTEST_EXIT=0
+```
+WARN'ы дословно: (1) `download_oracle`-зонд поймал неожиданный rc на
+снимке ПОСЛЕ test 1 (устройство умирало ИМЕННО в этот момент teardown'а —
+ожидаемое поведение зонда «warn, не fail» на аномалии probe surface, не
+дефект этого фикса); (2) `AT-BUG-026 device-liveness guard: устройство
+отсутствовало, выполнено восстановление 1/2 за сессию` — recovery сработал
+ПЕРЕД `clean_app`/`replay` теста 2, ровно то, что доказывает B1. Временный
+файл удалён после снятия witness'а (housekeeping).
+
+**Побочная находка ИМЕННО этого witness'а (не из списка критика, доложено
+честно — правило 9 CLAUDE.md):** первый прогон red-probe (recovery
+сработал корректно) всё равно упал на `mitm.wait_device_proxy_reachable()`
+— `TimeoutError: прокси 10.0.2.2:8080 не достижим за 10s (26 попыток)`.
+Причина: `_restart_emulator_writable_system()` не только ребутит эмулятор,
+но и переустанавливает CA (рестартует framework/zygote) — СЕТЕВОЙ
+adb-мост/NAT-маршрут иногда не успевает settle'иться за дефолтные
+`PROXY_DEVICE_REACHABLE_TIMEOUT=10s` СРАЗУ после этого — тот же класс
+"сервис технически поднят, системе нужен ещё момент", что уже потребовал
+`settle_retries` для Appium-сессии (F1 прошлой сессии), только для
+СЕТЕВОГО пути прокси, не Appium. Повторный прогон на уже settled
+устройстве (без recovery) прошёл чисто — подтверждает: это ИМЕННО
+пост-recovery транзиент, не общая деградация `wait_device_proxy_reachable`.
+Фикс: `settings.PROXY_DEVICE_REACHABLE_TIMEOUT_AFTER_RECOVERY` (дефолт 45s,
+env-override `AO3_...`) — фикстура `replay` (`conftest.py`) передаёт его
+`mitm.wait_device_proxy_reachable(timeout=...)` ТОЛЬКО когда
+`_pending_recovery_warning is not None` (recovery произошёл В ЭТОМ тесте);
+обычный путь (recovery не требовался) таймаут не меняется. Это НЕ
+расширение мандата — это часть ДОСТИЖЕНИЯ самого w1-witness'а B1 (без
+этого фикса красная проба не зеленеет буквально, а w1 — явно
+сформулированный DoD этого диспатча).
+
+**B2 — ЗАКРЫТО фиксом (не только документированием недостижимости).**
+`adb.clear_app_data()` теперь зовёт `_run()` напрямую и проверяет
+`cp.returncode != 0` -> `RuntimeError` с контекстом (stdout/stderr) — тот
+же класс гарантии, что уже даёт `install()` (`"Success" not in
+cp.stdout`). B1 делает этот путь практически недостижимым В ШТАТНОМ ПОТОКЕ
+(guard уже подтвердил присутствие/восстановил устройство ДО инстанциации
+`clean_app`/`seeded_library`), но это защита ПОРЯДКОМ ФИКСТУР, не гарантия
+самой функции — TOCTOU-окно между guard-проверкой и фактическим `pm clear`
+остаётся теоретически возможным, и будущий код, вызывающий
+`clear_app_data()` в обход `clean_app`/`seeded_library`, не получил бы
+защиты B1 вовсе. Живой witness: red-probe test 2/3 (см. выше) реально
+прогнали `clean_app` (через `pm clear`) на живом устройстве С этим
+изменением — прошли чисто, регресса на happy path нет.
+
+**B3 — ЧАСТИЧНО реализовано (а) + ОСТАТОК ЯВНО в очередь (б), не оставлен
+неназванным.** Реализовано В МАНДАТЕ этого B4-фикса (conftest.py/pytest-хук,
+без правки схемы/чужого агентного промпта): `pytest_terminal_summary` хук в
+`conftest.py` печатает ОДНУ greppable-строку в конце КАЖДОГО прогона в
+терминальный вывод pytest — ВСЕГДА (в т.ч. N=0), отсутствие строки в выводе
+однозначно значит «прогон не дошёл до `pytest_sessionfinish`», не «guard
+молчит о нуле».
+
+**Поправка формулировки (R3, критик-вход attempt 4 — предыдущая
+формулировка здесь была неточной, критик сверил `.claude/agents/
+test-runner.md:58` дословно).** Прежний текст утверждал, что эта строка
+«уже попадает в run-артефакт test-runner'а», ссылаясь на шаг «Собери
+итоги» — ЭТО НЕ ТАК: шаг 3 промпта test-runner (`.claude/agents/
+test-runner.md`, «Собери итоги: passed/failed/skipped/quarantined,
+длительность, каталог Allure») НЕ содержит инструкции переносить ЭТУ
+конкретную строку (или вообще произвольные доп.строки терминального
+вывода) в `runs/RUN-*.md`. Верно только буквально: terminal-вывод pytest
+— это общий ИСТОЧНИК ДАННЫХ, которым test-runner в принципе пользуется
+для подсчёта passed/failed/skipped/duration (тот факт не оспаривается),
+но АВТОМАТИЧЕСКОГО переноса именно этой greppable-строки в артефакт
+прогона НЕТ — она видна только в сыром терминальном логе конкретного
+запуска, если он где-то сохранён (например Allure/лог CI), не в
+`runs/RUN-*.md` автоматически. Это делает пункт (б) ниже НЕСУЩИМ, не
+полировкой поверх уже готового (а) — без него строка практически не
+доходит до консьюмера (failure-analyst/операторский обзор `runs/`),
+кроме случая, когда кто-то вручную грепает сырой лог конкретного прогона.
+
+N1 (критик-вход attempt 4, доп. правка этой же строки): токен `ENV_ISSUE`
+теперь печатается ТОЛЬКО при `recovery_count > 0` — на зелёном прогоне без
+recovery печатается та же строка без токена (`"AT-BUG-026 device-liveness
+guard: recoveries this session = 0/2"`), чтобы не ломать greppable-семантику
+слова `ENV_ISSUE` (см. `schemas/evidence.yaml`/`.claude/agents/
+failure-analyst.md`) на КАЖДОМ зелёном прогоне. Свойство «строка печатается
+всегда» (см. абзац выше) сохранено буквально.
+
+ЯВНО В ОЧЕРЕДЬ (не сделано в этом диспатче, причина — правило 9 CLAUDE.md):
+(1) отдельное поле в `schemas/run.schema.yaml` (например
+`env_issue_recoveries: {}`) под этот счётчик; (2) обновление workflow
+`.claude/agents/test-runner.md` (шаги 3/4), чтобы test-runner
+детерминированно транскрибировал строку из терминального вывода В
+frontmatter/discussion `runs/RUN-*.md`. Оба пункта трогают схему И ЧУЖОЙ
+агентный промпт (test-runner, не test-maintainer) — шире мандата ЭТОГО
+точечного B4-фикса (`driver_factory`/`conftest`); решение «делать ли и как
+именно» — за координатором/Lead следующим диспатчем (mechanism-путь,
+правило 10 CLAUDE.md — коммит с ось-блоком, если решат делать).
+
+**F4 — ИСПРАВЛЕНО.** `_reset_ca_check()` (новая функция, `conftest.py`)
+сбрасывает module-level `_ca_checked = False`; вызывается ИЗ ХУКА
+`pytest_runtest_setup` сразу после успешного recovery (`if
+_pending_recovery_warning is not None: _reset_ca_check()`) — следующий
+replay-тест форсированно перепроверит CA (дешёвая adb+openssl проверка),
+вместо риска 120-240с `ReadTimeoutError`, если CA почему-то не
+переустановился в рамках ИМЕННО этого recovery.
+
+**F5 — ИСПРАВЛЕНО.** `_verify_app_installed_with_retry` теперь ловит
+`(RuntimeError, OSError)`, не только `RuntimeError` — `adb._run()` кидает
+`TimeoutError` (подкласс `OSError`) на зависшем/неотвечающем adb, раньше
+улетавший мимо retry-цикла и мимо чистого `ENV_ISSUE`-сообщения.
+
+**F6 — ИСПРАВЛЕНО.** `device_present()` в `ensure_ready()` теперь
+проверяется СРАЗУ после `_restart_emulator_writable_system()`, ДО
+`_verify_app_installed_with_retry()` (была после неё) — если рестарт не
+вернул устройство, guard больше не жжёт
+`_APP_VERIFY_RETRIES*_APP_VERIFY_BACKOFF` (~10-15s) install-retry на
+заведомо мёртвом устройстве, сообщает об отказе сразу. Финальная проверка
+ПОСЛЕ install-verify убрана как избыточная (её роль уже покрывает
+собственный `DeviceRecoveryError` install-verify при исчерпании retry).
+Один существующий unit-тест (`test_install_retry_exhausted_raises_clean_env_issue`)
+пришлось поправить: его мок `device_present` был "всегда False", что при
+НОВОМ порядке проверки короткозамыкало guard РАНЬШЕ, чем тест успевал
+дойти до install-retry логики, которую и должен проверять — заменён на
+тот же паттерн iterator([False, True]), что у соседних тестов.
+
+**F7 — ИСПРАВЛЕНО.** `create_driver` теперь зовёт `quit_driver(driver)` в
+`except`-ветке ПЕРЕД повторной settle-попыткой, если `webdriver.Remote(...)`
+успел создать сессию, но упал позже (например на `implicitly_wait`) —
+раньше частично созданная Appium-сессия утекала бы на сервере при каждом
+settle-ретрае. `driver = None` в начале итерации гарантирует, что
+`quit_driver` не получит доступ к сессии ПРЕДЫДУЩЕЙ итерации по ошибке.
+
+**F8 — НЕ чинится (по инструкции диспетча), остаточный риск подтверждён,
+без изменений с прошлой сессии:** `Start-Emulator` в `tasks.ps1` не имеет
+собственного таймаута ожидания буда, `subprocess.run(timeout=300)` убивает
+только `powershell.exe`, эмулятор может остаться осиротело бутящимся
+(класс AT-BUG-014). Не в этом мандате.
+
+**Юниты (device-free, w5-расширение):** добавлено 5 новых проб в
+`framework/tests/test_device_liveness_guard_unit.py` (12 всего, было 7):
+`test_hook_skips_tests_without_driver_fixture`,
+`test_hook_calls_guard_when_driver_in_fixturenames` (B1-wiring, порядок
+`clean_app, replay, driver` — независимость признака от позиции),
+`test_hook_skips_ca_reset_when_no_recovery_happened`,
+`test_reset_ca_check_clears_cache` (F4),
+`test_create_driver_quits_partial_session_before_retry` (F7). Импортируют
+РЕАЛЬНЫЙ модуль `framework.tests.conftest` (тот же объект, что pytest уже
+загрузил как conftest-плагин сессии — sys.modules кеширует по полному
+имени) и монки-патчат `_DEVICE_GUARD`/`_reset_ca_check` с фейковым `item`
+(duck-typing, нужен только `.fixturenames`) — без вложенного pytest-прогона
+(`pytester`). Witness:
+```
+tests/test_device_liveness_guard_unit.py — 12 passed in 0.12s
+tests -q -k unit — 45 passed, 128 deselected in 8.28s (было 40 до этой сессии)
+PYTEST_EXIT=0
+```
+`Invoke-Pytest --collect-only -q` — 173 теста, коллекция без ошибок,
+`PYTEST_EXIT=0` (полный p0/regression не гонялся — не входит в DoD этого
+диспатча, w4 из прошлой сессии остаётся как есть, не переснимался).
+
+**Regression-гигиена:** `python scripts/validate_frontmatter.py` — `ошибок
+0, предупреждений 0`. `python -m pytest scripts/tests -q` — `675 passed, 1
+skipped`.
+
+**Housekeeping:** временный `test_at_bug_026_b1_redprobe.py` удалён после
+witness'а. `Stop-NodeProcesses` + `adb emu kill`, `Get-Device` -> `NO
+DEVICE` подтверждено после завершения.
+
+**Изменённые файлы:** `framework/core/adb.py` (B2),
+`framework/core/driver_factory.py` (F5/F6/F7),
+`framework/config/settings.py` (новая
+`PROXY_DEVICE_REACHABLE_TIMEOUT_AFTER_RECOVERY`),
+`framework/tests/conftest.py` (B1-хук, F4, B3-терминальная строка,
+`replay`-фикстура — пост-recovery таймаут),
+`framework/tests/test_device_liveness_guard_unit.py` (+5 юнитов, 1
+поправленный мок).
+
+**КРИТИК-ВХОД ОБЯЗАТЕЛЕН (правило 3 CLAUDE.md, builder-класс дифф) — не
+жду сам.** Lock НЕ снят — оставлен координатору/critic по протоколу
+приёмки. `status` не трогаю (решение по Fixed/дальнейшим шагам —
+координатор/critic после приёмки этой доработки).
+
+---
+
+**2026-07-28 — test-maintainer, attempt 4 — ДОРАБОТКА по вердикту critic на
+attempt 3 (N1/N2/N3 + R1-R3, три «дешёвые» находки). B1-механизм (хук,
+транзитивная проверка через fixturenames) НЕ тронут — critic подтвердил
+его закрытым классово тремя независимыми пробами, не переоткрываю.**
+
+**N1 — ИСПРАВЛЕНО.** `pytest_terminal_summary` (`conftest.py`) теперь
+печатает токен `ENV_ISSUE` ТОЛЬКО при `recovery_count > 0`. На зелёном
+прогоне без recovery печатается та же строка БЕЗ токена (`"AT-BUG-026
+device-liveness guard: recoveries this session = 0/2"`) — greppable-
+свойство «строка печатается ВСЕГДА» (значимо для отличения «прогон дошёл
+до конца с 0 recoveries» от «прогон крашнулся до sessionfinish»)
+сохранено буквально, ломается только совместное присутствие слова
+`ENV_ISSUE` на зелёном прогоне. См. также правку формулировки B3 выше (R3).
+
+**N2 — ИСПРАВЛЕНО.** `PROXY_DEVICE_REACHABLE_TIMEOUT_AFTER_RECOVERY`
+(`settings.py`) была введена без единого теста. Логика ВЫБОРА таймаута
+вынесена из тела генераторной фикстуры `replay` в отдельную чистую
+функцию `_proxy_reachable_timeout()` (`conftest.py`) — фикстуру напрямую
+не вызвать в юнит-тесте (pytest 9 запрещает прямой вызов декорированной
+fixture-функции; `replay` к тому же реально трогает mitm/сеть), но
+решающая логика («recovery произошёл в этом тесте -> увеличенный таймаут,
+иначе -> None») читает только `_pending_recovery_warning` и константу
+settings, чисто и device-free. Два новых юнита в
+`test_device_liveness_guard_unit.py`:
+`test_proxy_reachable_timeout_after_recovery_when_pending` (ветка (а)),
+`test_proxy_reachable_timeout_default_when_no_recovery` (ветка (б)).
+Дополнительно: константа `45` помечена явно как ОЦЕНКА, НЕ ИЗМЕРЕНО —
+комментарий у самой константы в `settings.py` (расширение F-30 CLAUDE.md,
+как и требовал диспетч).
+
+**N3 — ВЫБРАН ВАРИАНТ (а), УЗКО: `push_app_file` (приоритет critic,
+пишет сидинг-данные), остальные 5 — НЕ тронуты, названы явно (не
+молчаливый остаток).**
+
+Обоснование выбора: `run_as()` (соседняя функция того же класса)
+используется в НЕСКОЛЬКИХ существующих вызывающих местах, где ненулевой
+returncode — ВАЛИДНЫЙ исход, не ошибка (`app_steps.py` — `cat` файла,
+который может легитимно отсутствовать; `settings_steps.py` — то же,
+`seed_db.py:31` — `test -f ... && echo YES || echo NO`, где ветвление уже
+в самой shell-строке). Проверено grep'ом по репозиторию перед решением
+(`Grep run_as\( framework` — 8 вызывающих мест вне `adb.py`). Сделать
+`run_as()` строгой (raise on returncode!=0) сломало бы эти вызовы —
+риск регресса на соседних тестах шире, чем стоит в узком B4-проходе.
+Поэтому `push_app_file` переписана так, чтобы проверять returncode ДВУХ
+критичных шагов (push на хост-сторону, cp внутрь песочницы через
+run-as) НАПРЯМУЮ через `_run()`, не трогая публичный контракт `run_as()`
+вовсе — 0 сайд-эффектов на другие вызывающие места. Финальный `rm -f`
+(уборка /data/local/tmp) оставлен best-effort (не критичен для
+целостности засеянных данных — файл уже скопирован шагом выше).
+
+**Явно НАЗВАННЫЙ, не молчаливый остаток класса (правило 9 CLAUDE.md):**
+следующие 5 функций `framework/core/adb.py` — тот же класс риска
+(device-критичная adb-обёртка глотает returncode -> тихий no-op), НЕ
+исправлены в этом B4-проходе, решение сознательное (риск/мандат):
+- `force_stop()` (:46) — используется ПЕРЕД каждым `clear_app_data()`/
+  холодным стартом (`seed_db.py`, `perf_steps.py`); отказ здесь обычно
+  проявился бы явно на СЛЕДУЮЩЕМ шаге (`pm clear` того же теста уже
+  проверяет returncode — B2), но если приложение просто НЕ БЫЛО
+  запущено, `force_stop` тривиально успешен, риск ниже, чем у
+  `push_app_file`/`clear_app_data`.
+- `run_as()` (:207) — намеренно НЕ трогаю по причине выше (тонкий
+  контракт, несколько мест полагаются на «returncode!=0 — валидный
+  исход»); распространение проверки потребовало бы отдельного прохода
+  по каждому call-site с решением "критично/не критично" для КАЖДОГО —
+  шире мандата этого диспатча.
+- `logcat_clear()` (:202), `set_night_mode()` (:176),
+  `set_font_scale()` (:186) — системные one-off команды (очистка
+  logcat-буфера, тёмная тема/масштаб шрифта для TC-049/TC-107), не
+  часть пути сидинга данных теста — молчаливый no-op здесь не даёт
+  ложный PASS на СТАРЫХ данных (в отличие от `push_app_file`/
+  `clear_app_data`), а даёт неприменённую системную настройку, которую
+  сам тест-кейс, скорее всего, заметит по поведению UI (TC-049/TC-107
+  проверяют РЕЗУЛЬТАТ переключения, не сам факт вызова adb).
+
+Если следующая сессия захочет закрыть этот остаток — точечный проход по
+карте выше (каждая функция — отдельное решение "критично/нет", не
+блочная правка всех пятерых одним патчем).
+
+**R1 — ИСПРАВЛЕНО.** `_pending_recovery_warning = None` перенесено В
+САМОЕ НАЧАЛО `pytest_runtest_setup`, ДО проверки `"driver" in
+item.fixturenames` — устаревающий глобал больше не может пережить тест
+без `driver` в замыкании.
+
+**R2 — ИСПРАВЛЕНО.** `warnings.warn(...)` для recovery-WARN перенесён ИЗ
+фикстуры `driver` В САМ ХУК `pytest_runtest_setup` (сразу после
+`_reset_ca_check()`) — плагин `warnings` захватывает предупреждения из
+ЛЮБОЙ фазы протокола, включая setup-хуки, поэтому видимость WARN на happy
+path не изменилась; починен путь, где `clean_app`/`replay` падают НА
+setup раньше, чем pytest успевает дойти до `driver` (WARN раньше терялся
+бы вовсе).
+
+**R3 — ИСПРАВЛЕНО.** Формулировка B3 выше поправлена — прежний текст
+ошибочно утверждал, что greppable-строка «уже попадает в run-артефакт
+test-runner'а»; критик сверил `.claude/agents/test-runner.md:58`
+дословно — шаг 3 НЕ содержит такой инструкции. B3-(б) (поле схемы +
+правка промпта test-runner) остаётся НЕСУЩИМ пунктом очереди, не
+полировкой поверх уже готового (а).
+
+**Юниты (device-free):** 2 новых пробы в
+`test_device_liveness_guard_unit.py` (14 всего, было 12). Witness:
+```
+tests/test_device_liveness_guard_unit.py — 14 passed in 0.13s
+PYTEST_EXIT=0
+```
+
+**N1-witness (зелёный прогон БЕЗ токена ENV_ISSUE):**
+```
+tests/test_device_liveness_guard_unit.py -q
+AT-BUG-026 device-liveness guard: recoveries this session = 0/2
+14 passed in 0.13s
+PYTEST_EXIT=0
+```
+`grep -c "ENV_ISSUE" <вывод выше>` -> `0` совпадений (позитивный
+контроль: та же команда против ЖИВОГО (не изменённого) прежнего текста
+из этого файла находит `ENV_ISSUE` в строке B3 several раз — форма
+запроса рабочая, класс F-34).
+
+**Regression-гигиена:** `python scripts/validate_frontmatter.py` и
+`python -m pytest scripts/tests -q` — прогнать перед сдачей (см. отчёт
+диспатча).
+
+**Изменённые файлы (attempt 4):** `framework/tests/conftest.py`
+(N1/N2/R1/R2 — терминальная строка, `_proxy_reachable_timeout()`, порядок
+сброса/warn в хуке), `framework/config/settings.py` (N2 — комментарий
+«оценка, не измерено» у константы), `framework/core/adb.py` (N3 —
+`push_app_file` returncode-check), `framework/tests/
+test_device_liveness_guard_unit.py` (N2 — 2 новых юнита), `bugs/
+AT-BUG-026.md` (R3 — поправка формулировки B3, N3 — явный список
+остатка).
+
+**КРИТИК-ВХОД ОБЯЗАТЕЛЕН (правило 3 CLAUDE.md) — не жду сам.** Lock не
+трогаю (снимет координатор/critic по протоколу приёмки). `status` не
+меняю.

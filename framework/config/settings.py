@@ -181,6 +181,43 @@ PACKAGE_SERVICE_WAIT_TIMEOUT = int(os.environ.get("AO3_PACKAGE_SERVICE_WAIT_TIME
 # явная `TimeoutError` при исчерпании, не молчаливый клин.
 PROXY_DEVICE_REACHABLE_TIMEOUT = int(os.environ.get("AO3_PROXY_DEVICE_REACHABLE_TIMEOUT", "10"))
 
+# PROXY_DEVICE_REACHABLE_TIMEOUT_AFTER_RECOVERY — AT-BUG-026 B1, находка красной
+# пробы w1 (attempt 3, 2026-07-28): ПЕРВЫЙ `replay`-тест СРАЗУ после
+# device-liveness recovery (`driver_factory.DeviceLivenessGuard.ensure_ready`,
+# который перезапускает эмулятор И framework — CA reinstall рестартует zygote)
+# ловил `TimeoutError` на дефолтных 10s `PROXY_DEVICE_REACHABLE_TIMEOUT` — тот
+# же класс "сервис технически поднят, но система ещё не settled", что уже
+# потребовал `settle_retries` для Appium-сессии (см. `driver_factory.
+# create_driver`), только для СЕТЕВОГО пути adb-моста/NAT, а не для Appium.
+# Живой прогон: 26 попыток за 10s не хватило; на не-recovery пути (обычный
+# replay-тест без недавнего restart) дефолт 10s стабилен и не трогается.
+# Используется ТОЛЬКО фикстурой `replay` (conftest.py), когда recovery
+# произошёл В ЭТОМ тесте — обычный путь поведение не меняет.
+#
+# N2 (критик-вход attempt 4): "45" — ОЦЕНКА, НЕ ИЗМЕРЕНО (расширение F-30
+# CLAUDE.md). Живой witness w1 (26 попыток за 10s не хватило) даёт нижнюю
+# границу «дефолт мал», но не верхнюю: 45s не откалиброван повторными
+# recovery-прогонами (сколько РЕАЛЬНО занимает settle NAT/adb-моста после
+# restart) — щедрый запас по аналогии с соседними таймаутами этого файла,
+# не замер. Если следующая сессия наберёт живой witness с фактическим
+# временем settle — значение стоит пересмотреть по измерению, не по оценке.
+PROXY_DEVICE_REACHABLE_TIMEOUT_AFTER_RECOVERY = int(
+    os.environ.get("AO3_PROXY_DEVICE_REACHABLE_TIMEOUT_AFTER_RECOVERY", "45")
+)
+
+# MAX_RECOVERIES_PER_SESSION — AT-BUG-026 (device-liveness guard, контейнмент
+# вероятностного qemu-краха 0xc0000005): сколько раз `driver_factory.
+# DeviceLivenessGuard` разрешено перезапустить эмулятор + переустановить
+# mitm-CA ЗА ОДНУ pytest-сессию, прежде чем остановиться явным ENV_ISSUE
+# вместо бесконечных попыток на деградировавшей среде (тот же дух, что
+# fail-fast docs/06 §5, хотя класс отказа другой — не ReadTimeoutError, а
+# исчезновение устройства целиком). Стартовое значение 2 — решение Lead
+# (см. `bugs/AT-BUG-026.md`, «СПЕКА КОНТЕЙНМЕНТА»); baseline 2026-07-24
+# (live 2/3 краша) показывает, что 1 recovery почти наверняка недостаточен
+# на длинном прогоне, а неограниченный retry маскировал бы систематически
+# больную среду под видом «прогон прошёл».
+MAX_RECOVERIES_PER_SESSION = int(os.environ.get("AO3_MAX_RECOVERIES_PER_SESSION", "2"))
+
 # --- Артефакты ---
 RUNS_DIR = REPO_ROOT / "runs"
 ALLURE_RESULTS = Path(os.environ.get("ALLURE_RESULTS", FRAMEWORK_ROOT / "allure-results"))
