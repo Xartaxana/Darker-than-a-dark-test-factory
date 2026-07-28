@@ -3118,7 +3118,7 @@
       "test_case:TC-082",
       "sev:major"
     ],
-    "updated": "2026-07-24T06:18:05Z",
+    "updated": "2026-07-28T06:20:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3249,6 +3249,48 @@
       "sev:minor"
     ],
     "updated": "2026-07-19T17:30:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-014",
+    "path": "board/BUG-014/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Авто-скачивание Favorite срабатывает ретроактивно при правке тега ранее отмеченной работы",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:major"
+    ],
+    "updated": "2026-07-28T12:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-015",
+    "path": "board/BUG-015/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Авто-клик kudos на AO3 срабатывает ретроактивно при правке тега ранее отмеченной работы",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:major"
+    ],
+    "updated": "2026-07-28T12:00:01Z",
     "resolution": null,
     "children": [],
     "archived": false

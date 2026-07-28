@@ -709,6 +709,16 @@
     "artifact_status": "Open",
     "board_status": "Open"
   },
+  "BUG-014": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "BUG-015": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
   "RUN-20260702-0300": {
     "itype": "run",
     "artifact_status": "Closed",
