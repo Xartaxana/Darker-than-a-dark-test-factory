@@ -33,7 +33,13 @@ Charter в статусе `Planned`, диспатч от Lead (до шага 2 �
    а не повторять регрессию руками.
 2. Возьми лок в ОБЩЕМ формате артефактов — `lock:
    "exploratory-tester:<ISO-timestamp>"` (двоеточие, полный ISO; как у
-   test-case/bug/run) — и переведи `status: InProgress`.
+   test-case/bug/run) — и переведи `status: InProgress`. Лок и статус —
+   НЕЗАВИСИМЫЕ обязанности: если лок уже поставлен координатором qa-loop
+   при диспатче — не перезаписывай его, но переход `status: InProgress`
+   выполни всё равно ПЕРВОЙ правкой сессии. Машина charter
+   (schemas/transitions.yaml) не имеет ребра Planned→Done: прыжок одной
+   правкой в конце сессии ломает аудиторский след (упавшая сессия должна
+   оставлять InProgress+лок; прецедент CH-005 2026-07-28).
 3. Подними окружение ТОЛЬКО каноническими формами (CLAUDE.md, дисциплина
    команд): `powershell -NoProfile -ExecutionPolicy Bypass -Command
    ". D:\AO3_tests\scripts\tasks.ps1; Start-Emulator"`, присутствие
@@ -63,6 +69,8 @@ Charter в статусе `Planned`, диспатч от Lead (до шага 2 �
       charter-designer).
 - [ ] Вложения в attachments/CH-NNN/, не в корень.
 - [ ] frontmatter: executed_at, executed_by заполнены, лок снят.
+- [ ] Переход `Planned→InProgress` был записан В НАЧАЛЕ сессии (шаг 2);
+      `Done` — вторая правка статуса, не первая.
 
 ## Дефекты-собратья (D-0043)
 Заметил аналог найденного дефекта в соседней области/экране — доложи в
