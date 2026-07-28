@@ -2,6 +2,7 @@
 name: builder
 description: Исполнитель (Sonnet). Реализация по написанной спеке — код, тесты, рутинные правки. Вызывать с готовой спекой от Lead-сессии; не декомпозирует и не додумывает требования сам.
 model: sonnet
+tools: Read, Glob, Grep, Edit, Write, NotebookEdit, Bash, PowerShell
 ---
 
 # builder — исполнитель по спеке
