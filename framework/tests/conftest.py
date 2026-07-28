@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import json
+import warnings
 
 import pytest
 
@@ -25,6 +26,12 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "p1: регрессия")
     config.addinivalue_line("markers", "live: требует живого AO3")
     config.addinivalue_line("markers", "replay: требует replay-прокси")
+    config.addinivalue_line(
+        "markers",
+        "produces_download: тест легитимно инициирует реальное скачивание "
+        "файла в download-директорию приложения — download_oracle не считает "
+        "результат незапрошенным (класс BUG-014)",
+    )
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -476,11 +483,270 @@ def replay(request):
         mitm.clear_device_proxy()
 
 
+# --- download_oracle: глобальный инвариант-оракул скачиваний (BUG-014) ---
+# `DownloadRepository.downloadWork` (app-under-test) пишет файл в
+# `context.getExternalFilesDir("ao3_downloads")`, когда пользователь НЕ выбрал
+# кастомную SAF-папку (`customFolderUri == null`) — дефолтное состояние после
+# `clean_state()`/`pm clear` (см. `DownloadRepository.kt:31-32`, `downloadWork`
+# ветка `?: run { val dir = defaultDownloadDir ... }`). Это и есть путь, по
+# которому TC-032 (авто-скачивание)/TC-033 (ручное скачивание) реально кладут
+# файл — путь, куда БЕЗ УЧАСТИЯ пользователя мог бы попасть файл класса
+# BUG-014. НЕ путать с `_DOWNLOAD_FIXTURE_REL_DIR` (`seed_db.py`,
+# ВНУТРЕННЯЯ песочница `files/ao3_test_downloads`, используется фикстурами
+# `downloaded_work_seeded`/`seed_downloaded_work(s)` для имитации «уже
+# скачанного» состояния БЕЗ сети) и с `/sdcard/Download/<...>` (публичный SAF-
+# каталог, выбираемый через `saf_steps.saf_pick_folder` в TC-038/TC-039) — ни
+# тот, ни другой каталог этот оракул не наблюдает (см. докстринг `download_oracle`).
+_DOWNLOAD_DIR_DEVICE = f"/sdcard/Android/data/{settings.APP_PACKAGE}/files/ao3_downloads"
+
+
+# Критик-вход (download-oracle-0728, ДОРАБОТАТЬ) B1-доп.: sentinel-эхо кода
+# возврата `find` сразу в stdout — отличает «каталога нет» (rc=1, штатно
+# трактуется как пустой снимок) от «команда сломалась иначе» (rc вне {0,1}:
+# смена пакета/пути, битый toybox, неожиданный shell) — последнее не должно
+# молча выглядеть как пустая директория, WARN на распознанную аномалию.
+_ORACLE_RC_SENTINEL = "ORACLE_SNAPSHOT_RC="
+
+
+def _snapshot_download_dir() -> dict[str, tuple[int, int]]:
+    """Снимок файлов download-директории устройства: `{путь: (размер_байт,
+    mtime_epoch_сек)}`. Рекурсивно по вложенным подкаталогам (`find` рекурсивен
+    по умолчанию). Пустая/отсутствующая директория — валидный пустой снимок:
+    эмпирически проверено (`emulator-5554`, 2026-07-28) — `find
+    <несуществующий каталог> -type f -exec stat ...` пишет
+    "No such file or directory" в stderr и завершается кодом 1, но
+    `adb.shell()` возвращает только `stdout` — это НЕ трактуется как сбой
+    оракула, а как «файлов нет». Код возврата ловится ЯВНО через sentinel-эхо
+    в САМОЙ shell-строке (см. `_ORACLE_RC_SENTINEL`) — `adb.shell()` не
+    прокидывает returncode подпроцесса наружу, поэтому единственный способ
+    узнать его — вывести самим `echo $?` внутри той же remote-shell-сессии.
+    `rc==0` (файлы есть или каталог пуст) и `rc==1` (каталога нет) — штатные
+    исходы; любой другой код -> `warnings.warn` (B1-доп., критик-вход
+    download-oracle-0728): признак поломки самой поверхности зонда (смена
+    пакета/пути, недоступный toybox), не позиция в бизнес-логике, поэтому
+    не `fail` — основной детектор мёртвого зонда — B1/B2 liveness-канарейка
+    (см. `download_oracle`), эта проверка дополнительная и дешёвая.
+
+    M1 (критик-вход download-oracle-0728): построчный парсинг защищён от
+    нечисловых токенов — испорченная/неожиданная строка (например обрывок
+    `stat:`/`find:`, просочившийся в stdout не по plan) не валит `ERROR` на
+    КАЖДОМ device-тесте, а даёт `warnings.warn` с этой строкой и пропускается.
+
+    Третий признак (mtime), сверх буквального «имя+размер» спеки задачи, —
+    эмпирически необходимая поправка (не своевольная правка API): pytest
+    инстанцирует autouse-фикстуры (эта — тоже autouse) ДО explicitly
+    requested (`clean_app`/`seeded_library`/`loved_work_seeded` и т.п., чей
+    `pm clear` выполняется ПОСЛЕ pre-снимка этой фикстуры). Если предыдущий
+    тест той же сессии оставил в этой директории файл с ТЕМ ЖЕ именем и
+    размером (контент replay-записей побайтно детерминирован —
+    `rb.WORK_WITH_DOWNLOAD_FILENAME` всегда отдаёт идентичные байты для
+    `W.LOVED`, что и подтверждено прогоном TC-032→TC-033 подряд), `pm clear`
+    текущего теста стирает этот файл, а тест воссоздаёт файл с тем же именем
+    и размером — БЕЗ mtime диф по одному «имя+размер» не заметил бы новый
+    файл (ложноотрицательный класс, обратный самой цели этой задачи). mtime
+    воссозданного файла детерминированно позже старого (реальный разрыв между
+    тестами — секунды), что и ловит диф."""
+    out = adb.shell(
+        "( find " + _DOWNLOAD_DIR_DEVICE + " -type f -exec stat -c '%s %Y %n' {} \\; ; "
+        "echo " + _ORACLE_RC_SENTINEL + "$? )"
+    )
+    lines = out.splitlines()
+    rc: int | None = None
+    if lines and lines[-1].startswith(_ORACLE_RC_SENTINEL):
+        rc_raw = lines.pop()[len(_ORACLE_RC_SENTINEL):].strip()
+        try:
+            rc = int(rc_raw)
+        except ValueError:
+            rc = None
+    if rc not in (0, 1):
+        warnings.warn(
+            "download_oracle: зонд снимка вернул неожиданный/нераспознанный "
+            f"код возврата ({rc!r}, ожидались 0 «есть файлы/пусто» или 1 "
+            "«каталога нет») — возможна поломка probe surface (смена "
+            f"пакета/пути/toybox). Сырой вывод: {out!r}"
+        )
+    snapshot: dict[str, tuple[int, int]] = {}
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        parts = line.split(" ", 2)
+        if len(parts) != 3:
+            warnings.warn(f"download_oracle: не распознана строка снимка (пропущена): {line!r}")
+            continue
+        size_str, mtime_str, path = parts
+        try:
+            snapshot[path] = (int(size_str), int(mtime_str))
+        except ValueError:
+            warnings.warn(f"download_oracle: не распознана строка снимка (пропущена): {line!r}")
+    return snapshot
+
+
+_download_oracle_last_post: dict[str, tuple[int, int]] | None = None
+
+
+@pytest.fixture(autouse=True)
+def download_oracle(request):
+    """Глобальный инвариант-оракул скачиваний (решение по классу BUG-014:
+    незапрошенное скачивание проходило бы незамеченным в ЛЮБОМ тесте, не
+    только в угаданных заранее кейсах). ДО теста снимает снимок файлов
+    `_DOWNLOAD_DIR_DEVICE` (см. константу выше), ПОСЛЕ теста — повторный
+    снимок; диф new_files сверяется с ОЖИДАЕМЫМ количеством из маркера (см.
+    ниже), не бинарно «есть маркер / нет».
+
+    МАРКЕР С ОЖИДАНИЕМ (критик-вход download-oracle-0728, B1+B2 одной
+    правкой): `@pytest.mark.produces_download` (без аргументов — дефолт
+    `count=1`, форма совместима с уже расставленными на TC-032/TC-033) или
+    `@pytest.mark.produces_download(count=N)`. Три исхода:
+    - маркера нет (`expected=0`) и есть новые файлы -> `fail` «незапрошенное
+      скачивание — класс BUG-014» (как раньше);
+    - маркер есть и новых файлов БОЛЬШЕ ожидания -> `fail` «незапрошенное
+      скачивание СВЕРХ ОЖИДАЕМОГО» — тест легитимно качает, но не СТОЛЬКО;
+    - маркер есть (`expected>0`) и новых файлов МЕНЬШЕ ожидания -> `fail`
+      LIVENESS «оракул не увидел ожидаемого файла — проверить поверхность
+      зонда». Это и есть детектор мёртвого/сломанного зонда (B1): TC-032/
+      TC-033 несут `produces_download` (дефолт count=1) и потому сами стали
+      ПОСТОЯННОЙ КАНАРЕЙКОЙ — если снятие снимка когда-нибудь молча
+      перестанет видеть реальные файлы (смена пакета/пути, регресс парсинга,
+      сама поломка probe surface), эти два теста провалятся с понятным
+      LIVENESS-сообщением вместо того, чтобы прогон тихо остался зелёным.
+
+    Дополнительный (дешёвый) детектор поломки зонда — sentinel-код возврата
+    `find` в `_snapshot_download_dir`/`_ORACLE_RC_SENTINEL`: отличает «каталога
+    нет» (rc=1, штатно) от прочих кодов (WARN, не fail — основной детектор
+    поломки эту роль уже покрывает через LIVENESS выше).
+
+    ВАЖНАЯ ДЕТАЛЬ ПОВЕРХНОСТИ (эмпирически подтверждено красной пробой,
+    `emulator-5554`, 2026-07-28): т.к. `pytest.fail()` вызывается из
+    POST-yield кода АВТОUSE-ФИКСТУРЫ (teardown-фаза), pytest репортит это как
+    `ERROR at teardown of <тест>`, НЕ как `FAILED` call-фазы — так устроен
+    протокол pytest для любой autouse-фикстуры-инварианта (общий класс, не
+    специфично для этого кода). Функционально эквивалентно: тест всё равно
+    попадает в "short test summary info" и в невыполненные, exit-код прогона
+    ненулевой (`PYTEST_EXIT=1`), CI/гейт блокируется — но при чтении вывода
+    искать нужно `ERROR at teardown`, а не `FAILED`, если сообщение оракула
+    не найдено в секции FAILURES.
+
+    Гейт `"driver" not in request.fixturenames`: device-free unit-пробы
+    (`test_*_unit.py`) монки-патчат `subprocess.run` НА УРОВНЕ МОДУЛЯ (см.
+    `test_adb_install_package_wait_unit.py::test_install_...`,
+    `test_subprocess_timeout_unit.py`, аналогично `test_replay_ca_check_unit.py`
+    и др.) — недекорированный вызов `adb.shell()` внутри этой фикстуры попал
+    бы под чужой фейк `subprocess.run` (тот же объект модуля, `adb.py` делает
+    `import subprocess; subprocess.run(...)`) и упал бы на парсинге
+    произвольного stdout фейка. Ни один из этих тестов не запрашивает
+    `driver` (не трогает устройство вообще — тот же признак уже использует
+    `_ensure_app_installed`-переопределение в этих же файлах), поэтому
+    пропуск по этому признаку безопасен и не сужает продуктовое покрытие:
+    скачивание в принципе возможно только через реальный UI/driver
+    (`DownloadRepository.downloadWork` вызывается из `BrowserViewModel`,
+    reachable только через панель работы/оверлей рейтинга/карточку Library).
+
+    Края:
+    - файл, появившийся МЕЖДУ тестами (async-хвост ПРЕДЫДУЩЕГО теста, не
+      попавший в его собственный post-снимок) отличает pre-снимок ТЕКУЩЕГО
+      теста от post-снимка предыдущего (`_download_oracle_last_post`) ->
+      `warnings.warn` с явной атрибуцией «хвост предыдущего теста», БЕЗ fail
+      текущего — файл не его;
+    - async-скачивание, завершившееся ПОСЛЕ post-снимка ТЕКУЩЕГО теста — v1
+      осознанно пропускает; несоответствие поймает WARN хвоста на
+      pre-снимке СЛЕДУЮЩЕГО теста (детектор класса на один тест позже, не
+      дыра — осознанное решение спеки задачи, не забытый случай);
+    - вложенные подкаталоги — `find` рекурсивен по умолчанию, отдельного кода
+      не требует; пустая/отсутствующая директория — валидный пустой снимок
+      (см. `_snapshot_download_dir`), не ошибка оракула;
+    - teardown идемпотентен и не маскирует оригинальное падение теста: если
+      `setup`- ИЛИ `call`-фаза теста уже упала (`item.rep_setup`/`rep_call`,
+      проставляются хуком `pytest_runtest_makereport` этого файла ДО того,
+      как фикстуры начинают teardown — см. порядок фаз рантест-протокола),
+      оракул при обнаружении незапрошенных/недостающих файлов только
+      `warnings.warn`, не даёт второй `fail` поверх исходной ошибки (M2,
+      критик-вход download-oracle-0728: раньше проверялся только `rep_call`
+      — падение setup'а ДРУГОЙ фикстуры, идущей после `download_oracle` по
+      порядку setup, ушло бы в отдельный `call` не запустившимся, и `rep_call`
+      был бы `None`, не покрывая этот случай)."""
+    global _download_oracle_last_post
+    if "driver" not in request.fixturenames:
+        yield
+        return
+
+    pre_snapshot = _snapshot_download_dir()
+    if _download_oracle_last_post is not None:
+        tail_new = {
+            path: value
+            for path, value in pre_snapshot.items()
+            if _download_oracle_last_post.get(path) != value
+        }
+        if tail_new:
+            warnings.warn(
+                "download_oracle: файл(ы) в download-директории появились "
+                "МЕЖДУ тестами (хвост предыдущего теста, не текущего — "
+                f"BUG-014, атрибуция по разнице pre-снимка с последним "
+                f"известным post-снимком): {sorted(tail_new)}"
+            )
+
+    yield
+
+    post_snapshot = _snapshot_download_dir()
+    _download_oracle_last_post = post_snapshot
+    new_files = {
+        path: value
+        for path, value in post_snapshot.items()
+        if pre_snapshot.get(path) != value
+    }
+
+    marker = request.node.get_closest_marker("produces_download")
+    if marker is None:
+        expected_count = 0
+    elif marker.args:
+        expected_count = marker.args[0]
+    else:
+        expected_count = marker.kwargs.get("count", 1)
+    actual_count = len(new_files)
+
+    message = None
+    if expected_count == 0 and actual_count > 0:
+        message = (
+            "download_oracle: незапрошенное скачивание — класс BUG-014. "
+            f"Новые/изменившиеся файлы в {_DOWNLOAD_DIR_DEVICE}: "
+            f"{sorted(new_files)}. Если тест легитимно скачивает — "
+            "промаркируйте тест @pytest.mark.produces_download."
+        )
+    elif expected_count > 0 and actual_count > expected_count:
+        message = (
+            "download_oracle: незапрошенное скачивание СВЕРХ ОЖИДАЕМОГО — "
+            f"класс BUG-014. Ожидалось {expected_count} файл(ов) "
+            f"(@pytest.mark.produces_download(count={expected_count})), "
+            f"фактически {actual_count}: {sorted(new_files)}."
+        )
+    elif expected_count > 0 and actual_count < expected_count:
+        message = (
+            "download_oracle: LIVENESS — оракул НЕ УВИДЕЛ ожидаемого файла. "
+            f"Тест помечен @pytest.mark.produces_download(count={expected_count}), "
+            f"но в {_DOWNLOAD_DIR_DEVICE} обнаружено только {actual_count} "
+            f"новых/изменившихся файлов: {sorted(new_files)}. Проверьте "
+            "поверхность зонда download_oracle (снятие снимка/путь/пакет) "
+            "или регресс самого скачивания в тесте."
+        )
+
+    if message is not None:
+        rep_setup = getattr(request.node, "rep_setup", None)
+        rep_call = getattr(request.node, "rep_call", None)
+        already_failed = any(
+            rep is not None and rep.failed for rep in (rep_setup, rep_call)
+        )
+        if already_failed:
+            warnings.warn(message)
+        else:
+            pytest.fail(message, pytrace=False)
+
+
 # --- Артефакты падений ---
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     outcome = yield
     report = outcome.get_result()
+    setattr(item, f"rep_{report.when}", report)
     if report.when == "call" and report.failed:
         drv = item.funcargs.get("driver")
         if drv is not None:

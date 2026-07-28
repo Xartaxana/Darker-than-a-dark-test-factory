@@ -138,6 +138,7 @@ _DOWNLOAD_OPEN_ICON_TIMEOUT = 25  # сеть через локальный mitmd
 
 @pytest.mark.p1
 @pytest.mark.replay
+@pytest.mark.produces_download
 @allure.id("TC-032")
 @allure.title("Авто-скачивание запускается при простановке Loved с включённым Auto-download")
 @pytest.mark.parametrize("replay", [rb.WORK_WITH_DOWNLOAD_FILENAME], indirect=True)
@@ -178,6 +179,7 @@ def test_auto_download_triggers_on_loved_rating(replay, clean_app, driver):
 
 @pytest.mark.p1
 @pytest.mark.replay
+@pytest.mark.produces_download
 @allure.id("TC-033")
 @allure.title("Ручное скачивание работы из Library добавляет локальный файл")
 @pytest.mark.parametrize("replay", [rb.WORK_WITH_DOWNLOAD_FILENAME], indirect=True)
