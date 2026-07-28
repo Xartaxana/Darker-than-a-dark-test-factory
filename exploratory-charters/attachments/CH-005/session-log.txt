@@ -1,0 +1,294 @@
+[10:31:07] === CH-005 SEED 1 ===
+[10:31:14] replay поднят: listing_basic.mitm
+[10:32:31] S0 window size = {'width': 1080, 'height': 2400}
+[10:32:33] S0 tab-0 на work-странице: {'dpr': 2.625, 'ih': 1897, 'iw': 980, 'path': '/works/900000001', 'sh': 1897, 'sy': 0, 'tts': False}
+[10:32:40]   NATIVE[после deep-link 2-й вкладки]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': {'height': 1988, 'width': 1080, 'x': 0, 'y': 234}, 'handle': {'x': 0, 'y': 2185, 'w': 1080, 'h': 126}, 'top_luma': 232.0}
+[10:32:44]   NATIVE[активна вкладка-0 (work)]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': {'height': 1988, 'width': 1080, 'x': 0, 'y': 234}, 'handle': {'x': 0, 'y': 2185, 'w': 1080, 'h': 126}, 'top_luma': 233.3}
+[10:32:45] S0 geom после возврата на вкладку-0: {'dpr': 2.625, 'ih': 1800, 'iw': 980, 'path': '/works/900000001', 'sh': 1800, 'sy': 0, 'tts': False}
+[10:32:46] S1 grow_dom -> {'ih': 1800, 'paras': 140, 'sh': 5429}
+[10:32:47] S1 ИНВ ДО первого тапа: innerHeight=1800 scrollHeight=5429 ratio=3.02 (критерий >=3.0), path=/works/900000001, tabs=2
+[10:32:54] S2 скролл к середине: sy=0, маркер='CH005 filler paragraph 17', tabs=2
+[10:32:55] S3 handle rect = {'x': 0, 'y': 2185, 'w': 1080, 'h': 126}
+[10:32:58]   NATIVE[после тапа по полосе-хэндлу]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': True, 'bottom_nav': True, 'wv_rect': None, 'handle': {'x': 367, 'y': 2064, 'w': 346, 'h': 210}, 'top_luma': 214.7}
+[10:33:01] S3 рейтинг Favorite поставлен из WorkRatingPanel
+[10:33:02] S3 ИНВ: prefs tap_to_scroll=<absent> tabs=2 geom={'dpr': 2.625, 'ih': 1204, 'iw': 980, 'path': '/works/900000001', 'sh': 5429, 'sy': 0, 'tts': False}
+[10:33:06]   NATIVE[после сворачивания панели]: {'tab_count': 0, 'tabstrip': False, 'rating_panel': False, 'bottom_nav': True, 'wv_rect': None, 'handle': {'x': 0, 'y': 2064, 'w': 346, 'h': 210}, 'top_luma': 44.3}
+[10:33:10] S5 switch checked ДО = false
+[10:33:11] S5 prefs tap_to_scroll ПОСЛЕ = true
+[10:33:19]   NATIVE[вернулись на Browse]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': {'height': 1988, 'width': 1080, 'x': 0, 'y': 234}, 'handle': {'x': 0, 'y': 2185, 'w': 1080, 'h': 126}, 'top_luma': 233.3}
+[10:33:20] S5 ИНВ: geom={'dpr': 2.625, 'ih': 1800, 'iw': 980, 'path': '/works/900000001', 'sh': 5429, 'sy': 0, 'tts': True} (tts в JS=True), tabs=2, маркер='CH005 filler paragraph 17'
+[10:33:21] S5 NO RELOAD (live-push без перезагрузки) — ОК
+[10:33:21] S6 wv_rect={'height': 1988, 'width': 1080, 'x': 0, 'y': 234}, innerHeight=1800
+[10:33:25] S6 тап нижняя треть (y=1923): sy 0 -> 1710 (dy=1710, ожидание ~+1710), маркер='CH005 filler paragraph 64'
+[10:33:28]   NATIVE[после тапа по нижней трети]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': {'height': 1988, 'width': 1080, 'x': 0, 'y': 234}, 'handle': {'x': 0, 'y': 2185, 'w': 1080, 'h': 126}, 'top_luma': 233.4}
+[10:33:31] S7 тап верхняя треть (y=432): sy 1710 -> 0 (dy=-1710, ожидание ~-1710)
+[10:33:34]   NATIVE[после тапа по верхней трети]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': {'height': 1988, 'width': 1080, 'x': 0, 'y': 234}, 'handle': {'x': 0, 'y': 2185, 'w': 1080, 'h': 126}, 'top_luma': 233.3}
+[10:33:35] S8 handle rect перед тапом = {'x': 0, 'y': 2185, 'w': 1080, 'h': 126}
+[10:33:38]   NATIVE[после тапа у нижней кромки]: {'tab_count': 0, 'tabstrip': False, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': None, 'handle': {'x': 23, 'y': 2106, 'w': 207, 'h': 166}, 'top_luma': 199.3}
+[10:33:38] S8 тап y=2395: sy 0 -> 0 (dy=0); панель раскрылась=False
+[10:33:43]   NATIVE[после тапа по центру полосы-хэндла]: {'tab_count': 0, 'tabstrip': False, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': None, 'handle': {'x': 23, 'y': 2106, 'w': 207, 'h': 166}, 'top_luma': 199.3}
+[10:33:43] S8b тап по центру хэндла y=2248: sy 0 -> 0 (dy=0); панель=False
+[10:33:44]   NATIVE[перед S9]: {'tab_count': 0, 'tabstrip': False, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': None, 'handle': {'x': 23, 'y': 2106, 'w': 207, 'h': 166}, 'top_luma': 199.3}
+[10:33:47]   NATIVE[панель раскрыта (S9)]: {'tab_count': 0, 'tabstrip': False, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': None, 'handle': {'x': 0, 'y': 2126, 'w': 360, 'h': 148}, 'top_luma': 146.7}
+[10:33:48] S9 innerHeight С РАСКРЫТОЙ панелью = 1800 (scrollHeight=5429)
+[10:33:49] FINAL prefs tap_to_scroll=true panel_side=<absent> open_tabs=[{&quot;historyEntries&quot;:[{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/&quot;},{&quot;sc
+[10:35:42] === CH-005 SEED 1, ЧАСТЬ B ===
+[10:35:49] replay поднят: listing_basic.mitm
+[10:37:12] B0 window={'width': 1080, 'height': 2400}
+[10:37:14] B0 ОДНА вкладка, work-страница: innerHeight=1897
+[10:37:23]   NATIVE[2 вкладки, активна вкладка-0 (work)]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': {'height': 1988, 'width': 1080, 'x': 0, 'y': 234}, 'handle': {'x': 0, 'y': 2185, 'w': 1080, 'h': 126}, 'top_luma': 233.3}
+[10:37:23] B0 ДВЕ вкладки (TabStrip виден): innerHeight=1800 (разница с 1 вкладкой = 97 CSS px)
+[10:37:25] B1 ИНВ ДО тапов: ih=1800 sh=5429 ratio=3.02 tabs=2 path=/works/900000001
+[10:37:40] B1 tap_to_scroll pref=true JS=True
+[10:37:40] B1 wv_rect={'height': 1988, 'width': 1080, 'x': 0, 'y': 234} -> нижняя кромка WebView y=2222; полоса-хэндл ожидается 2222..2275; системная навбар-полоса ~2274..2400
+[10:37:49] Г1б тап y=2220 [нижняя треть WebView (2px над кромкой)]: sy 0->1710 (dy=1710); панель False->False; ih 1800->1800
+[10:37:58] Г1б тап y=2247 [полоса-хэндл (кромка+25)]: sy 1710->1710 (dy=0); панель False->True; ih 1800->1204
+[10:38:03]    (панель свёрнута обратно: False)
+[10:38:09] Г1б тап y=2272 [полоса-хэндл (кромка+50)]: sy 1710->1710 (dy=0); панель False->False; ih 1603->1603
+[10:38:14]   NATIVE[панель раскрыта перед fullscreen]: {'tab_count': 0, 'tabstrip': False, 'rating_panel': False, 'bottom_nav': True, 'wv_rect': None, 'handle': {'x': 0, 'y': 2064, 'w': 346, 'h': 210}, 'top_luma': 44.3}
+[10:38:15] Г1а ih С РАСКРЫТОЙ панелью = 1603 (sy=1000)
+[10:38:15] FINAL prefs tap_to_scroll=true
+[10:40:01] === CH-005 SEED 1, ЧАСТЬ B ===
+[10:40:08] replay поднят: listing_basic.mitm
+[10:41:25] B0 window={'width': 1080, 'height': 2400}
+[10:41:27] B0 ОДНА вкладка, work-страница: innerHeight=1897
+[10:41:35]   NATIVE[2 вкладки, активна вкладка-0 (work)]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': {'height': 1988, 'width': 1080, 'x': 0, 'y': 234}, 'handle': {'x': 0, 'y': 2185, 'w': 1080, 'h': 126}, 'top_luma': 233.3}
+[10:41:36] B0 ДВЕ вкладки (TabStrip виден): innerHeight=1800 (разница с 1 вкладкой = 97 CSS px)
+[10:41:39] B1 ИНВ ДО тапов: ih=1800 sh=5429 ratio=3.02 tabs=2 path=/works/900000001
+[10:41:53] B1 tap_to_scroll pref=true JS=True
+[10:41:54] B1 wv_rect={'height': 1988, 'width': 1080, 'x': 0, 'y': 234} -> нижняя кромка WebView y=2222; полоса-хэндл ожидается 2222..2275; системная навбар-полоса ~2274..2400
+[10:42:04] Г1б тап y=2220 [нижняя треть WebView (2px над кромкой)]: sy 0->1710 (dy=1710); панель False->False; ih 1800->1800
+[10:42:12] Г1б тап y=2247 [полоса-хэндл (кромка+25)]: sy 1710->1710 (dy=0); панель False->True; ih 1800->1204
+[10:42:19]    (панель свёрнута обратно: False, ih=1800)
+[10:42:27] Г1б тап y=2272 [полоса-хэндл (кромка+50)]: sy 1710->1710 (dy=0); панель False->True; ih 1800->1204
+[10:42:34]    (панель свёрнута обратно: False, ih=1800)
+[10:42:39]   NATIVE[панель раскрыта перед fullscreen]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': True, 'bottom_nav': True, 'wv_rect': None, 'handle': {'x': 367, 'y': 2064, 'w': 346, 'h': 210}, 'top_luma': 214.8}
+[10:42:40] Г1а ih С РАСКРЫТОЙ панелью = 1204 (sy=1000)
+[10:42:41] Г4 тап по средней трети y=898
+[10:42:48]   NATIVE[после тапа по средней трети]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': {'height': 1988, 'width': 1080, 'x': 0, 'y': 234}, 'handle': {'x': 0, 'y': 2185, 'w': 1080, 'h': 126}, 'top_luma': 233.4}
+[10:42:48] Г1а ih: 1 вкладка=1897, 2 вкладки=1800, панель раскрыта=1204, ПОСЛЕ тапа=1800
+[10:42:48] Г1в после входа: rating_panel=False bottom_nav=False tabstrip=True top_luma=233.4 handle={'x': 0, 'y': 2185, 'w': 1080, 'h': 126}
+[10:42:48] Г1а бывшая граница верх/середина (с раскрытой панелью) экранный y=677
+[10:42:54]   NATIVE[после повторного тапа в ту же точку]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': {'height': 1988, 'width': 1080, 'x': 0, 'y': 234}, 'handle': {'x': 0, 'y': 2185, 'w': 1080, 'h': 126}, 'top_luma': 233.3}
+[10:42:54] Г1а повтор в ту же точку: clientY теперь=392, граница третей теперь=600 -> sy 1000->0 (dy=-1000), ih=1800
+[10:42:58] Г1в в fullscreen: handle-кандидат={'x': 0, 'y': 2185, 'w': 1080, 'h': 126}; rating_panel=False
+[10:43:05]   NATIVE[после N=2 быстрых тапов по средней трети]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': {'height': 1988, 'width': 1080, 'x': 0, 'y': 234}, 'handle': {'x': 0, 'y': 2185, 'w': 1080, 'h': 126}, 'top_luma': 233.3}
+[10:43:06] Г3 N=2: ih 1800->1800 (чётное N => состояние ДОЛЖНО совпасть с исходным), tabstrip=True top_luma=233.3
+[10:43:14]   NATIVE[после N=3 быстрых тапов]: {'tab_count': 0, 'tabstrip': False, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': {'height': 2272, 'width': 1080, 'x': 0, 'y': 128}, 'handle': {'x': 0, 'y': 496, 'w': 84, 'h': 168}, 'top_luma': 137.1}
+[10:43:15] Г3 N=3: ih 1800->2059 (нечётное N => состояние ДОЛЖНО инвертироваться), tabstrip=False top_luma=137.1
+[10:43:23]   NATIVE[после N=5 быстрых тапов]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': {'height': 1988, 'width': 1080, 'x': 0, 'y': 234}, 'handle': {'x': 0, 'y': 2185, 'w': 1080, 'h': 126}, 'top_luma': 233.3}
+[10:43:24] Г3 N=5: ih 2059->1800, tabstrip=True top_luma=233.3
+[10:43:27]   NATIVE[перед Г2]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': {'height': 1988, 'width': 1080, 'x': 0, 'y': 234}, 'handle': {'x': 0, 'y': 2185, 'w': 1080, 'h': 126}, 'top_luma': 233.3}
+[10:43:28] выход: tabstrip=True handle={'x': 0, 'y': 2185, 'w': 1080, 'h': 126} ih=1800
+[10:43:32]   NATIVE[панель после круга по геометрии]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': True, 'bottom_nav': True, 'wv_rect': None, 'handle': {'x': 367, 'y': 2064, 'w': 346, 'h': 210}, 'top_luma': 214.7}
+[10:43:34] Г1в возврат: рейтинг повторно поставлен из панели — ОК
+[10:43:35] Г2 проба установлена: {'added': True, 'hits': 0}
+[10:43:44]   NATIVE[после тапа по div[onclick]]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': {'height': 1988, 'width': 1080, 'x': 0, 'y': 234}, 'handle': {'x': 0, 'y': 2185, 'w': 1080, 'h': 126}, 'top_luma': 233.3}
+[10:43:45] Г2 РЕЗУЛЬТАТ: обработчик div сработал 0 раз; tabstrip True->True, ih=1800 (оба потребителя?)
+[10:43:45] === SEED 1B ЗАВЕРШЕНА ===
+[10:43:45] FINAL prefs tap_to_scroll=true
+[10:45:40] === CH-005 SEED 2 (потолок 10 вкладок, deep-link, Undo) ===
+[10:45:41] replay поднят: tab_markers.mitm
+[10:47:00] C0 старт: вкладок=1 ['https://archiveofourown.org/']
+[10:47:23] C1 ИНВ: вкладок=10 (ожидание 10), порядок=['https://archiveofourown.org/', 'https://archiveofourown.org/works?ao3_tab_marker\\u003d1', 'https://archiveofourown.org/works?ao3_tab_marker\\u003d2', 'https://archiveofourown.org/works?ao3_tab_marker\\u003d3', 'https://archiveofourown.org/works?ao3_tab_marker\\u003d4', 'https://archiveofourown.org/works?ao3_tab_marker\\u003d5', 'https://archiveofourown.org/works?ao3_tab_marker\\u003d6', 'https://archiveofourown.org/works?ao3_tab_marker\\u003d7', 'https://archiveofourown.org/works?ao3_tab_marker\\u003d8', 'https://archiveofourown.org/works?ao3_tab_marker\\u003d1']
+[10:47:27] Г6а deep-link 11-й: диалог виден=True, текст='You have 10 tabs open. Close some tabs before opening a new one.', вкладок=10
+[10:47:30] Г6а после OK: вкладок=10
+[10:47:33] Г6а close-иконок в дереве (LazyRow виртуализирован): 4
+[10:47:36] Г6а после закрытия вкладки: вкладок=8 (отложенный deep-link URL сам НЕ открывается? marker=7 присутствует 0 раз)
+[10:47:40] Г6а +4с: вкладок=8 — очереди отложенного открытия в коде нет
+[10:47:43] C2 ИНВ перед Г8: вкладок=9
+[10:47:44] Г8 до закрытия: вкладок=9; закрываем chip[1]
+[10:47:44] Г8 снекбар Undo виден сразу после закрытия=True; вкладок=8
+[10:47:46] Г8 deep-link занял слот: вкладок=9 (прошло 2.7с с закрытия)
+[10:47:47] Г8 снекбар Undo ещё жив=True
+[10:47:51] Г8 ПОСЛЕ Undo: вкладок=10 (было 10 на потолке); порядок=['https://archiveofourown.org/', 'https://archiveofourown.org/works?ao3_tab_marker\\u003d1', 'https://archiveofourown.org/works?ao3_tab_marker\\u003d2', 'https://archiveofourown.org/works?ao3_tab_marker\\u003d3', 'https://archiveofourown.org/works?ao3_tab_marker\\u003d4', 'https://archiveofourown.org/works?ao3_tab_marker\\u003d7', 'https://archiveofourown.org/works?ao3_tab_marker\\u003d8', 'https://archiveofourown.org/works?ao3_tab_marker\\u003d1', 'https://archiveofourown.org/works?ao3_tab_marker\\u003d6', 'https://archiveofourown.org/works?ao3_tab_marker\\u003d5']
+[10:47:55] Г8 сообщение пользователю? снекбар/диалог виден=False / False
+[10:47:58] --- КОНТРОЛЬ (без занятия слота, та же задержка) ---
+[10:48:01] K0 вкладок=9
+[10:48:04] K1 закрыли, ждали 2.6с; снекбар жив=True; вкладок=8
+[10:48:08] K2 ПОСЛЕ Undo (свободное место): вкладок=9 (было 9), вернулась=True
+[10:48:08] --- Г6б: reuse HOME-вкладки ---
+[10:48:29] Г6б осталось вкладок=1: ['https://archiveofourown.org/']
+[10:48:32] Г6б deep-link при 1 вкладке НА HOME: вкладок=2 (1 => переиспользована, 2 => создана новая): ['https://archiveofourown.org/', 'https://archiveofourown.org/works?ao3_tab_marker\\u003d2']
+[10:48:32] === SEED 2 ЗАВЕРШЕНА ===
+[10:49:54] === CH-005 SEED 2B (Г8 на потолке) ===
+[10:49:55] replay поднят: tab_markers.mitm
+[10:51:13] старт: вкладок=1
+[10:51:13] --- Г8 попытка 1: РОВНО на потолке ---
+[10:51:36] Г8-1 ИНВ: вкладок=10 (обязательно 10)
+[10:51:39] Г8-1 закрыли одну: вкладок=9; снекбар Undo=True
+[10:51:41] Г8-1 deep-link занял освободившийся слот: вкладок=10
+[10:51:43] Г8-1 снекбар Undo ещё жив=False
+[10:51:44] Г8-1 !! снекбар протух — попытка недостоверна
+[10:51:44] --- Г8 попытка 2: РОВНО на потолке ---
+[10:51:44] Г8-2 ИНВ: вкладок=10 (обязательно 10)
+[10:51:47] Г8-2 закрыли одну: вкладок=9; снекбар Undo=True
+[10:51:49] Г8-2 deep-link занял освободившийся слот: вкладок=10
+[10:51:51] Г8-2 снекбар Undo ещё жив=False
+[10:51:52] Г8-2 !! снекбар протух — попытка недостоверна
+[10:51:52] Г8 воспроизведение: попытка1=None вкладок, попытка2=None вкладок
+[10:51:52] === SEED 2B ЗАВЕРШЕНА ===
+[10:53:41] === CH-005 SEED 2C (Г8 быстрый слот + Г7) ===
+[10:53:43] replay поднят: tab_markers.mitm
+[10:55:18] --- Г8 раунд 1 (слот занимает: newtab) ---
+[10:55:39] Г8-1 ИНВ: вкладок=10
+[10:55:40] Г8-1 слот занят за 1.0с
+[10:55:40] Г8-1 вкладок сейчас=10 (t+1.1с)
+[10:55:42] Г8-1 снекбар Undo жив=True (t+2.5с)
+[10:55:47] Г8-1 ПОСЛЕ Undo на потолке (10): вкладок=10; вкладка вернулась=False
+[10:55:51] Г8-1 сказали ли пользователю: снекбар=False, диалог лимита=False
+[10:55:53] Г8-1 освободили слот: вкладок=9 (теперь Undo из НОВОГО снекбара относится к НОВОМУ закрытию, старый токен уже снят с карты — restoreClosedTab:338 до :340)
+[10:55:53] --- Г8 раунд 2 (слот занимает: newtab) ---
+[10:55:55] Г8-2 ИНВ: вкладок=10
+[10:55:57] Г8-2 слот занят за 0.7с
+[10:55:57] Г8-2 вкладок сейчас=10 (t+0.8с)
+[10:55:58] Г8-2 снекбар Undo жив=True (t+1.7с)
+[10:56:02] Г8-2 ПОСЛЕ Undo на потолке (10): вкладок=10; вкладка вернулась=False
+[10:56:07] Г8-2 сказали ли пользователю: снекбар=False, диалог лимита=False
+[10:56:10] Г8-2 освободили слот: вкладок=9 (теперь Undo из НОВОГО снекбара относится к НОВОМУ закрытию, старый токен уже снят с карты — restoreClosedTab:338 до :340)
+[10:56:10] --- Г8 раунд 3 (слот занимает: deeplink) ---
+[10:56:12] Г8-3 ИНВ: вкладок=10
+[10:56:13] Г8-3 слот занят за 0.1с
+[10:56:14] Г8-3 вкладок сейчас=10 (t+0.8с)
+[10:56:14] Г8-3 снекбар Undo жив=True (t+1.7с)
+[10:56:19] Г8-3 ПОСЛЕ Undo на потолке (10): вкладок=10; вкладка вернулась=False
+[10:56:24] Г8-3 сказали ли пользователю: снекбар=False, диалог лимита=False
+[10:56:28] Г8-3 освободили слот: вкладок=9 (теперь Undo из НОВОГО снекбара относится к НОВОМУ закрытию, старый токен уже снят с карты — restoreClosedTab:338 до :340)
+[10:56:28] Г8 ИТОГ: раунды -> 10, 10, 10
+[10:56:31] Г7 ИНВ: вкладок=10, tap_to_scroll pref=<absent>
+[10:56:48] Г7 pref после переключения=true
+[10:56:52] Г7 ИНВ после возврата: вкладок=10
+[10:56:55] Г7 ЗАМЕЧАНИЕ: страницы вкладок — /works?ao3_tab_marker=N, pathname=/works, тап-зоны там ВЫКЛЮЧЕНЫ по ao3_bridge.js:1154 — доехавшее значение __ao3TapToScroll на этих вкладках наблюдаемо только чтением JS, а chromedriver прилипает к вкладке-0; проверка по действию невозможна на этой фикстуре (нужна фикстура с НЕСКОЛЬКИМИ work-страницами)
+[10:56:55] === SEED 2C ЗАВЕРШЕНА ===
+[10:58:20] === CH-005 SEED 3 (Левша: panel_side) ===
+[10:58:27] replay поднят: listing_basic.mitm
+[10:59:58]   NATIVE[L0 старт (2 вкладки, work активна)]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': {'height': 1988, 'width': 1080, 'x': 0, 'y': 234}, 'handle': {'x': 0, 'y': 2185, 'w': 1080, 'h': 126}, 'top_luma': 233.3}
+[10:59:59] L0 ИНВ: geom={'dpr': 2.625, 'ih': 1800, 'iw': 980, 'path': '/works/900000001', 'sh': 5429, 'sy': 0, 'tts': False}, panel_side pref=<absent>
+[11:00:00] L1 handle side panel (LEFT) по живому дереву: {'Expand panel': [{'height': 32, 'width': 32, 'x': 5, 'y': 564}], 'Collapse panel': []}
+[11:00:05] L1 панель раскрыта=True; дерево: {'Expand panel': [], 'Collapse panel': [{'height': 32, 'width': 32, 'x': 110, 'y': 564}]}
+[11:00:12]   NATIVE[L2 нижняя панель раскрыта]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': True, 'bottom_nav': True, 'wv_rect': None, 'handle': {'x': 367, 'y': 2064, 'w': 346, 'h': 210}, 'top_luma': 214.7}
+[11:00:14] L2 рейтинг Favorite поставлен ДО возмущения
+[11:00:26] L3 panel_side pref после переключения = RIGHT
+[11:00:28] L3 tap_to_scroll pref = true
+[11:00:35]   NATIVE[L3 вернулись на Browse при panel_side=RIGHT]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': {'height': 1988, 'width': 1080, 'x': 0, 'y': 234}, 'handle': {'x': 0, 'y': 2185, 'w': 1080, 'h': 126}, 'top_luma': 233.3}
+[11:00:36] L3 ИНВ: вкладок=2, geom={'dpr': 2.625, 'ih': 1800, 'iw': 980, 'path': '/works/900000001', 'sh': 5429, 'sy': 0, 'tts': True}
+[11:00:37] Г5а handle side panel при RIGHT по живому дереву: {'Expand panel': [{'height': 32, 'width': 32, 'x': 1043, 'y': 564}], 'Collapse panel': []}
+[11:00:42] Г5а панель открылась штатным локатором=True
+[11:01:20] === CH-005 SEED 3 (Левша: panel_side) ===
+[11:01:29] replay поднят: listing_basic.mitm
+[11:02:59]   NATIVE[L0 старт (2 вкладки, work активна)]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': {'height': 1988, 'width': 1080, 'x': 0, 'y': 234}, 'handle': {'x': 0, 'y': 2185, 'w': 1080, 'h': 126}, 'top_luma': 233.3}
+[11:02:59] L0 ИНВ: geom={'dpr': 2.625, 'ih': 1800, 'iw': 980, 'path': '/works/900000001', 'sh': 5429, 'sy': 0, 'tts': False}, panel_side pref=<absent>
+[11:03:00] L1 handle side panel (LEFT) по живому дереву: {'Expand panel': [{'height': 32, 'width': 32, 'x': 5, 'y': 564}], 'Collapse panel': []}
+[11:03:05] L1 панель раскрыта=True; дерево: {'Expand panel': [], 'Collapse panel': [{'height': 32, 'width': 32, 'x': 110, 'y': 564}]}
+[11:03:11]   NATIVE[L2 нижняя панель раскрыта]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': True, 'bottom_nav': True, 'wv_rect': None, 'handle': {'x': 367, 'y': 2064, 'w': 346, 'h': 210}, 'top_luma': 214.7}
+[11:03:13] L2 рейтинг Favorite поставлен ДО возмущения
+[11:03:25] L3 panel_side pref после переключения = RIGHT
+[11:03:28] L3 tap_to_scroll pref = true
+[11:03:34]   NATIVE[L3 вернулись на Browse при panel_side=RIGHT]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': {'height': 1988, 'width': 1080, 'x': 0, 'y': 234}, 'handle': {'x': 0, 'y': 2185, 'w': 1080, 'h': 126}, 'top_luma': 233.3}
+[11:03:35] L3 ИНВ: вкладок=2, geom={'dpr': 2.625, 'ih': 1800, 'iw': 980, 'path': '/works/900000001', 'sh': 5429, 'sy': 0, 'tts': True}
+[11:03:37] Г5а handle side panel при RIGHT по живому дереву: {'Expand panel': [{'height': 32, 'width': 32, 'x': 1043, 'y': 564}], 'Collapse panel': []}
+[11:03:41] Г5а панель открылась штатным локатором=True
+[11:03:44] Г5б тумблер темы (Contrast) из ПРАВОЙ панели: theme_mode <absent> -> DARK
+[11:03:48] Г5б A+ из ПРАВОЙ панели: font_size_step <absent> -> 1
+[11:03:51] Г4 подпись контрола (RIGHT): Enter=True Exit=False
+[11:03:55]   NATIVE[Г4 fullscreen ЧЕРЕЗ переехавшую панель]: {'tab_count': 0, 'tabstrip': False, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': None, 'handle': {'x': 966, 'y': 510, 'w': 114, 'h': 126}, 'top_luma': 9.7}
+[11:03:56] Г4 через панель: tabstrip=False ih=2059 handle={'x': 966, 'y': 510, 'w': 114, 'h': 126}
+[11:04:01] Г4 подпись в fullscreen: Enter=False Exit=True
+[11:04:07]   NATIVE[Г4 выход через панель]: {'tab_count': 0, 'tabstrip': False, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': None, 'handle': {'x': 966, 'y': 510, 'w': 114, 'h': 126}, 'top_luma': 30.2}
+[11:04:08] Г4 выход: tabstrip=False ih=1800
+[11:04:10]   NATIVE[Г5в перед тапами]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': {'height': 1988, 'width': 1080, 'x': 0, 'y': 234}, 'handle': {'x': 0, 'y': 2185, 'w': 1080, 'h': 126}, 'top_luma': 37.6}
+[11:04:14]   NATIVE[Г5в после тапа у правого края нижней трети]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': {'height': 1988, 'width': 1080, 'x': 0, 'y': 234}, 'handle': {'x': 0, 'y': 2185, 'w': 1080, 'h': 126}, 'top_luma': 37.6}
+[11:04:15] Г5в тап (x=1050, y=1923): sy 0->0 (dy=0); панель side открыта=False
+[11:04:18] Г5в контроль слева (x=30): sy 0->0 (dy=0)
+[11:04:19]   NATIVE[перед Г2]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': {'height': 1988, 'width': 1080, 'x': 0, 'y': 234}, 'handle': {'x': 0, 'y': 2185, 'w': 1080, 'h': 126}, 'top_luma': 37.6}
+[11:04:26]   NATIVE[Г2 после тапа по div[onclick]]: {'tab_count': 0, 'tabstrip': False, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': {'height': 2272, 'width': 1080, 'x': 0, 'y': 128}, 'handle': {'x': 996, 'y': 496, 'w': 84, 'h': 168}, 'top_luma': 10.5}
+[11:04:27] Г2 РЕЗУЛЬТАТ: onclick div сработал 1 раз; ih 1800->2059; tabstrip True->False (оба потребителя = True)
+[11:04:34] L4 поворот: Message: Screen rotation cannot be changed to ROTATION_270 after 2000ms. Is it locked programmatically?
+Stacktrace:
+io.appium.uiautomator2.common.exceptions.InvalidElementStateException: Screen rotation cannot be changed to ROTATION_270 after 2000ms. Is it locked programmatically?
+	at io.appium.uiautomator2.model.internal.CustomUiDevice.setRotationSync(CustomUiDevice.java:226)
+	at io.appium.uiautomator2.handler.SetOrientation.safeHandle(SetOrientation.java:41)
+	at io.appium.uiautomator2.handler.request.SafeRequestHandler.handle(SafeRequestHandler.java:59)
+	at io.appium.uiautomator2.server.AppiumServlet.handleRequest(AppiumServlet.java:267)
+	at io.appium.uiautomator2.server.AppiumServlet.handleHttpRequest(AppiumServlet.java:261)
+	at io.appium.uiautomator2.http.ServerHandler.channelRead(ServerHandler.java:77)
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)
+	at io.netty.handler.codec.MessageToMessageDecoder.channelRead(MessageToMessageDecoder.java:107)
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)
+	at io.netty.channel.CombinedChannelDuplexHandler$DelegatingChannelHandlerContext.fireChannelRead(CombinedChannelDuplexHandler.java:434)
+	at io.netty.handler.codec.ByteToMessageDecoder.fireChannelRead(ByteToMessageDecoder.java:361)
+	at io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:325)
+	at io.netty.channel.CombinedChannelDuplexHandler.channelRead(CombinedChannelDuplexHandler.java:249)
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:355)
+	at io.netty.handler.timeout.IdleStateHandler.channelRead(IdleStateHandler.java:288)
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:355)
+	at io.netty.channel.DefaultChannelPipeline$HeadContext.channelRead(DefaultChannelPipeline.java:1429)
+	at io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:918)
+	at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:176)
+	at io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.handle(AbstractNioChannel.java:445)
+	at io.netty.channel.nio.NioIoHandler$DefaultNioRegistration.handle(NioIoHandler.java:388)
+	at io.netty.channel.nio.NioIoHandler.processSelectedKey(NioIoHandler.java:596)
+	at io.netty.channel.nio.NioIoHandler.processSelectedKeysOptimized(NioIoHandler.java:571)
+	at io.netty.channel.nio.NioIoHandler.processSelectedKeys(NioIoHandler.java:512)
+	at io.netty.channel.nio.NioIoHandler.run(NioIoHandler.java:484)
+	at io.netty.channel.SingleThreadIoEventLoop.runIo(SingleThreadIoEventLoop.java:225)
+	at io.netty.channel.SingleThreadIoEventLoop.run(SingleThreadIoEventLoop.java:196)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:1195)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	at java.lang.Thread.run(Thread.java:1012)
+
+[11:04:49] L5 после kill+relaunch: panel_side=RIGHT tap_to_scroll=true вкладок(prefs)=[{&quot;historyEntries&quot;:[{&quot;scrollY&quot;:0,&quot;u...
+[11:04:50] L5 handle-узлы: {'Expand panel': [{'height': 32, 'width': 32, 'x': 2235, 'y': 499}], 'Collapse panel': []}
+[11:04:51]   NATIVE[L5 после релонча]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': {'height': 859, 'width': 2146, 'x': 126, 'y': 169}, 'handle': {'x': 126, 'y': 991, 'w': 2146, 'h': 89}, 'top_luma': 35.5}
+[11:04:52] === SEED 3 ЗАВЕРШЕНА ===
+[11:06:22] === CH-005 ДОБОР (Г1в через side panel, Г5в) ===
+[11:06:30] replay поднят: listing_basic.mitm
+[11:07:47] D0 window={'width': 1080, 'height': 2400}
+[11:08:13]   NATIVE[D0 старт]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': {'height': 1988, 'width': 1080, 'x': 0, 'y': 234}, 'handle': {'x': 0, 'y': 2185, 'w': 1080, 'h': 126}, 'top_luma': 233.3}
+[11:08:14] D0 ИНВ: geom={'dpr': 2.625, 'ih': 1800, 'iw': 980, 'path': '/works/900000001', 'sh': 5429, 'sy': 0, 'tts': True} tap_to_scroll=true вкладок=2
+[11:08:19]   NATIVE[Г1в нижняя панель раскрыта]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': True, 'bottom_nav': True, 'wv_rect': None, 'handle': {'x': 367, 'y': 2064, 'w': 346, 'h': 210}, 'top_luma': 214.7}
+[11:08:20] Г1в ih с раскрытой нижней панелью = 1204
+[11:08:20] Г1в handle side panel при раскрытой нижней панели: [{'height': 32, 'width': 32, 'x': 5, 'y': 564}]
+[11:08:25] Г1в side panel раскрылась=True; нижняя панель ещё жива=False
+[11:08:25] Г1в подпись до входа: Enter=True
+[11:08:30]   NATIVE[Г1в ПОСЛЕ входа в fullscreen через side panel]: {'tab_count': 0, 'tabstrip': False, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': None, 'handle': {'x': 0, 'y': 510, 'w': 63, 'h': 126}, 'top_luma': 102.7}
+[11:08:31] Г1в АССЕРТ (MainActivity.kt:238): ih 1204 -> 2059; rating_panel=False bottom_nav=False tabstrip=False
+[11:08:36]   NATIVE[Г1в fullscreen, side panel свёрнута]: {'tab_count': 0, 'tabstrip': False, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': {'height': 2272, 'width': 1080, 'x': 0, 'y': 128}, 'handle': {'x': 0, 'y': 496, 'w': 84, 'h': 168}, 'top_luma': 137.1}
+[11:08:36] Г1в съём по протоколу (side panel свёрнута): tabstrip=False handle={'x': 0, 'y': 496, 'w': 84, 'h': 168} rating_panel=False bottom_nav=False ih=2059
+[11:08:36] Г1в СТРОКА ПРОТОКОЛА: в fullscreen полосы-хэндла нет -> раскрыть WorkRatingPanel нечем -> рейтинг work-страницы недостижим
+[11:08:38] Г1а точка y=1363 была нижней третью при ih=1204 (граница 2/3 = 803); теперь ih=2059, clientY=1118, граница 2/3 = 1373 -> СРЕДНЯЯ треть
+[11:08:44]   NATIVE[Г1а после повтора в ту же точку]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': {'height': 1988, 'width': 1080, 'x': 0, 'y': 234}, 'handle': {'x': 0, 'y': 2185, 'w': 1080, 'h': 126}, 'top_luma': 233.3}
+[11:08:44] Г1а РЕЗУЛЬТАТ: sy 0->0 (dy=0), ih 2059->1800, tabstrip=True
+[11:08:51] D1 состояние: tabstrip=True ih=1800
+[11:08:59] Г5в panel_side=RIGHT
+[11:09:03] Г5в geom после смены panel_side: {'dpr': 2.625, 'ih': 1800, 'iw': 980, 'path': '/works/900000001', 'sh': 5429, 'sy': 0, 'tts': True} (scrollHeight сохранён = True) — если DOM сброшен, наращиваем заново
+[11:09:03] Г5в handle side panel (RIGHT): [{'height': 32, 'width': 32, 'x': 1043, 'y': 564}]
+[11:09:08] Г5в тап x=1070 (нижняя треть): sy 0->1710 (dy=1710); side panel открыта=False
+[11:09:14] Г5в тап x=1050 (нижняя треть): sy 0->1710 (dy=1710); side panel открыта=False
+[11:09:19] Г5в тап x=1020 (нижняя треть): sy 0->1710 (dy=1710); side panel открыта=False
+[11:09:25] Г5в тап x=540 (нижняя треть): sy 0->1710 (dy=1710); side panel открыта=False
+[11:09:27] === ДОБОР ЗАВЕРШЁН ===
+[11:10:40] === CH-005 ДОБОР 2 (reload/kill/идемпотентность) ===
+[11:10:47] replay поднят: listing_basic.mitm
+[11:12:28] E0 ИНВ: geom={'dpr': 2.625, 'ih': 1800, 'iw': 980, 'path': '/works/900000001', 'sh': 5429, 'sy': 0, 'tts': True}, tap_to_scroll=true, вкладок=2
+[11:12:32] E0 контрольный тап (нижняя треть) ДО темы: dy=1710
+[11:12:46] E1 после theme Dark (reload): theme_mode=DARK, geom={'dpr': 2.625, 'ih': 1800, 'iw': 980, 'path': '/works/900000001', 'sh': 1800, 'sy': 0, 'tts': True} (__ao3TapToScroll пережил reload = True; инструментальный DOM сброшен = True)
+[11:12:48] E1 DOM наращён заново (reload его снёс — ожидаемо): {'dpr': 2.625, 'ih': 1800, 'iw': 980, 'path': '/works/900000001', 'sh': 5429, 'sy': 0, 'tts': True}
+[11:12:54] E1 тап (нижняя треть) ПОСЛЕ theme-reload: sy 0->1710 (dy=1710) — зоны живы=True
+[11:13:06] E2 после kill+relaunch: tap_to_scroll=true, theme_mode=DARK, вкладок=2 (было 2)
+[11:13:07]   NATIVE[E2 после релонча]: {'tab_count': 2, 'tabstrip': True, 'rating_panel': False, 'bottom_nav': False, 'wv_rect': {'height': 1988, 'width': 1080, 'x': 0, 'y': 234}, 'handle': {'x': 0, 'y': 2185, 'w': 1080, 'h': 126}, 'top_luma': 36.7}
+[11:13:09] E2 geom={'dpr': 2.625, 'ih': 1800, 'iw': 980, 'path': '/works/900000001', 'sh': 1800, 'sy': 0, 'tts': True} (__ao3TapToScroll реинжектирован = True)
+[11:13:14] E2 тап (нижняя треть) после релонча: dy=1710 — зоны работают=True
+[11:13:18] Г6в deep-link отправлен: вкладок 2 -> 3
+[11:13:24] Г6в возврат в приложение из recents (am start без -d): вкладок 3 -> 3 (дубль-вкладка = False)
+[11:13:33] Г6в после kill+relaunch: вкладок 3 -> 3 (тот же deep-link повторно НЕ открылся = True)
+[11:13:33] Г6в порядок вкладок: ['https://archiveofourown.org/works/900000001', 'https://archiveofourown.org/works?ao3_companion_fixture\\u003dlisting_basic', 'https://archiveofourown.org/works?ao3_tab_marker\\u003d3']
+[11:13:33] === ДОБОР 2 ЗАВЕРШЁН ===
+[11:14:40] === CH-005 Г2 перепроверка ===
+[11:14:47] replay поднят: listing_basic.mitm
+[11:16:26] Г2 ИНВ: geom={'dpr': 2.625, 'ih': 1800, 'iw': 980, 'path': '/works/900000001', 'sh': 5429, 'sy': 0, 'tts': True} tap_to_scroll=true
+[11:16:40] Г2 воспр.1: onclick=1, ih 1800->2059, tabstrip True->False => ОБА потребителя=True
+[11:16:57] Г2 воспр.2: onclick=1, ih 1800->2059, tabstrip True->False => ОБА потребителя=True
+[11:17:17] Г2 КОНТРОЛЬ <button>: onclick=1, ih 1800->1800, tabstrip True->True => guard отсёк тап-зону=True
+[11:17:17] === Г2 ПЕРЕПРОВЕРКА ЗАВЕРШЕНА ===
