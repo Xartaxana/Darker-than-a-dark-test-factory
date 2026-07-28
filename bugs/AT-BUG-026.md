@@ -4,16 +4,16 @@ title: "qemu-system-x86_64.exe крашится (0xc0000005) mid-test на тя�
 type: test_debt
 debt_kind: broken_environment
 severity: major
-status: Open
+status: Fixed
 found_in: "framework env, не зависит от сборки приложения; текущая тестируемая сборка 1.10 (versionCode 11), 6455af0cfc2c937e81975f59a250476c77aecb73"
-fixed_in: ""
+fixed_in: "framework, не сборка приложения: containment device-liveness guard (80d3d5e) + B3-(б) перенос счётчика в run-артефакт (коммит полного Lead 2026-07-28)"
 last_seen_in: "1.10 (versionCode 11)"
 test_cases: ["TC-082"]
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-07-22T14:05:00Z"
-updated: "2026-07-28T18:05:00Z"
+status_since: "2026-07-28T20:15:00Z"
+updated: "2026-07-28T20:15:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -1354,3 +1354,33 @@ AT-BUG-026.md` (R3 — поправка формулировки B3, N3 — яв
 **КРИТИК-ВХОД ОБЯЗАТЕЛЕН (правило 3 CLAUDE.md) — не жду сам.** Lock не
 трогаю (снимет координатор/critic по протоколу приёмки). `status` не
 меняю.
+
+---
+
+**Решение полного Lead (Fable, 2026-07-28, разбор очереди):** оба
+архитектурных вопроса достаточности DoD закрыты.
+
+1. **B3-(б) — НЕСУЩИЙ пункт DoD, исполнен** (Lead-tier механизменный
+   коммит): поле `recoveries: "N/M"` в `schemas/run.schema.yaml`
+   (опционально для прогонов до 2026-07-28 и Blocked-прогонов без
+   старта pytest); шаг 3 `.claude/agents/test-runner.md` — перенос
+   счётчика из терминальной строки в frontmatter + ДОСЛОВНЫЙ дубль
+   ENV_ISSUE-строки в теле отчёта при N>0 (вход failure-analyst);
+   детектор пропуска (правило 10в) — `scripts/coverage_map.py`,
+   строка «свежие прогоны без recoveries» симметрично tc_results,
+   4 юнита (baseline / flagged / Blocked-исключение / чисто).
+2. **w4 — полный `-m p0` НЕ гейтит Fixed** (принята рекомендация
+   критика, дважды подтверждённая: без краха guard не активируется,
+   решающий witness уже есть — красная проба на REPLAY-тесте,
+   3 passed / 122.77с, Event-Log-подтверждённый crash+recovery).
+   Полный `-m p0` остаётся ГИГИЕНИЧЕСКИМ смоком — первым
+   device-заходом следующей сессии (поставлен в HANDOFF «СЛЕДУЮЩИЙ
+   ШАГ»), его результат попадёт в run-артефакт уже с полем
+   `recoveries`.
+
+`status: Open -> Fixed` этим же решением; верификация — штатный D1
+(fix-verifier, mode=verify, связанный TC-082) следующим проходом
+/qa-loop, вручную не диспатчится (очередь фабрики — полигон конвейера).
+Остаток класса adb-обёрток (`force_stop`/`run_as`/`logcat_clear`/
+`set_night_mode`/`set_font_scale`) остаётся named-not-covered с картой
+рисков выше — отдельный точечный проход при первом живом инциденте.

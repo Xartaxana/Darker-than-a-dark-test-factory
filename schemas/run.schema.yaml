@@ -22,3 +22,12 @@ fields:
   selection: {}
   # B5 (docs/09 Этап 2): причина простоя в Blocked; см. schemas/bug.schema.yaml.
   blocked_reason: { enum: [environment, missing_fixture, product_decision, dev_answer, permissions] }
+  # AT-BUG-026 B3-(б): счётчик device-liveness guard'а "N/M" из терминальной
+  # строки pytest «recoveries this session = N/M» (framework/tests/conftest.py::
+  # pytest_terminal_summary; при N>0 строка вывода несёт токен ENV_ISSUE —
+  # schemas/evidence.yaml, вход failure-analyst). Заполняет test-runner (шаг 3
+  # промпта). Опционален для прогонов до 2026-07-28 и для Blocked-прогонов,
+  # где pytest не стартовал (строки в выводе нет — причина словами в отчёте);
+  # отсутствие в НОВОМ прогоне ловит coverage_map (строка деградации,
+  # симметрично tc_results).
+  recoveries: { pattern: "^\\d+/\\d+$" }

@@ -3352,7 +3352,7 @@
     "epicPath": null,
     "summary": "qemu-system-x86_64.exe крашится (0xc0000005) mid-test на тяжёлом live-рендере AO3 в эмуляторном WebView — sibling AT-BUG-016/ESC-002, охватывает LIVE-canary-поверхность",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -3360,7 +3360,7 @@
       "test_case:TC-082",
       "sev:major"
     ],
-    "updated": "2026-07-28T18:05:00Z",
+    "updated": "2026-07-28T20:15:00Z",
     "resolution": null,
     "children": [],
     "archived": false

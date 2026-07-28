@@ -1,12 +1,12 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-28T18:34:32Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-07-28T20:10:49Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **639.0** (RUN-20260702-0300)
+- smoke: Closed · smoke_freshness_hours: **640.6** (RUN-20260702-0300)
 - regression: not_run
 - canary: not_run
 - Открытые blocker/critical: **0**
@@ -14,7 +14,7 @@ generated_at: 2026-07-28T18:34:32Z · генератор: `scripts/queue_snapsho
 - p0_automation_coverage: **87%** (33/38)
 - p1_automation_coverage: **93%** (54/58)
   - непокрытые P0: TC-118, TC-119, TC-120, TC-121, TC-122
-- Test debt открыт: **4** — AT-BUG-026, AT-BUG-029, AT-BUG-030, AT-BUG-031
+- Test debt открыт: **3** — AT-BUG-029, AT-BUG-030, AT-BUG-031
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
 - Untriaged: **0** · untriaged_failure_age: **0**
@@ -65,7 +65,7 @@ generated_at: 2026-07-28T18:34:32Z · генератор: `scripts/queue_snapsho
 
 ## Test debt (4)
 
-- AT-BUG-026 [broken_environment] Open — qemu-system-x86_64.exe крашится (0xc0000005) mid-test на тяжёлом live-рендере AO3 в эмуляторном WebView — sibling AT-BUG-016/ESC-002, охватывает LIVE-canary-поверхность
+- AT-BUG-026 [broken_environment] Fixed — qemu-system-x86_64.exe крашится (0xc0000005) mid-test на тяжёлом live-рендере AO3 в эмуляторном WebView — sibling AT-BUG-016/ESC-002, охватывает LIVE-canary-поверхность
 - AT-BUG-029 [missing_fixture] Open — listing_basic.mitm не несёт .html-файл скачивания (недостаёт одной транзакции) — блокирует автоматизацию TC-115 (edge-vs-level BUG-014 через листинг)
 - AT-BUG-030 [missing_fixture] Open — render_work_page_html не несёт ни whitelisted <button> (со span-потомком), ни НЕ-whitelisted интерактивного узла, ни достаточной высоты в теле работы — блокирует TC-119/TC-120/TC-122 (bridge-tap-zone-guard)
 - AT-BUG-031 [broken_environment] Open — Stop-NodeProcesses (tasks.ps1) убивает ЛЮБОЙ node.exe по имени — коллатеральный риск для чужих неAO3 node-процессов на этом же хосте

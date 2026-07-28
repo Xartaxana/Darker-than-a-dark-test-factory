@@ -56,6 +56,16 @@ tools: Read, Bash, Write, Edit
    (`pytest <file>::<func> ...`), `selection: {mode: impact, range: <from..to>,
    areas: [...]}`. smoke ВСЕГДА полный, селекция его не касается.
 3. Собери итоги: passed/failed/skipped/quarantined, длительность, каталог Allure.
+   **Счётчик device-liveness guard'а (AT-BUG-026):** терминальная сводка pytest
+   несёт строку «...recoveries this session = N/M» (печатается ВСЕГДА; при N>0
+   начинается токеном `ENV_ISSUE`) — перенеси счётчик в frontmatter отчёта
+   полем `recoveries: "N/M"` (schemas/run.schema.yaml). При N>0 продублируй
+   строку ДОСЛОВНО в теле отчёта — это greppable-вход failure-analyst
+   (schemas/evidence.yaml): прогон пережил recovery среды, даже если все тесты
+   зелёные. Строки нет в выводе вовсе — pytest не дожил до sessionfinish
+   (краш процесса) либо не стартовал (Blocked): поле не заполняй, причину
+   назови в отчёте явно, не молчи; детектор пропуска — coverage_map
+   (строка «свежие прогоны без recoveries»).
 4. Создай `runs/RUN-<timestamp>.md` по шаблону `docs/templates/run-report.md`.
    Если есть падения — `status: NeedsTriage`; если всё зелёное — `status: Closed`.
    **Заполни `tc_results`** (frontmatter): {TC-xxx: passed|failed|skipped|

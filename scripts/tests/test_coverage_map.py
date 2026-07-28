@@ -35,11 +35,14 @@ def _tc(root: Path, key: str, area: str, status: str, priority: str = "P1",
 
 
 def _run(root: Path, key: str, *, suite: str, status: str, updated: str,
-         passed: int = 1, failed: int = 0, tc_results: dict[str, str] | None = None) -> Path:
+         passed: int = 1, failed: int = 0, tc_results: dict[str, str] | None = None,
+         recoveries: str | None = None) -> Path:
     tc_line = ""
     if tc_results is not None:
         body = ", ".join(f"{k}: {v}" for k, v in tc_results.items())
         tc_line = f"tc_results: {{ {body} }}\n"
+    if recoveries is not None:
+        tc_line += f'recoveries: "{recoveries}"\n'
     text = (
         f"---\nid: {key}\ntitle: Прогон {key}\nsuite: {suite}\nstatus: {status}\n"
         f"totals: {{ passed: {passed}, failed: {failed} }}\n{tc_line}"
@@ -297,6 +300,57 @@ def test_no_newer_runs_without_tc_results_no_detector_line(repo, monkeypatch):
     text = cm.render(cm.collect(), "T")
 
     assert "свежие прогоны без tc_results" not in text
+
+
+# --- AT-BUG-026 B3-(б): детектор переноса счётчика recoveries в run-артефакт ---
+
+def test_no_run_carries_recoveries_baseline_wording(repo, monkeypatch):
+    """Ни один run не несёт recoveries — baseline-формулировка «поле ещё не
+    внедрено», не «свежие» (та же двухформенная семантика, что у tc_results)."""
+    _patch(repo, monkeypatch)
+    _run(repo.root, "RUN-800", suite="smoke", status="Closed", updated="2026-07-01T00:00:00Z")
+
+    text = cm.render(cm.collect(), "T")
+
+    assert "прогоны без recoveries (поле ещё не внедрено, AT-BUG-026 B3-(б)): RUN-800" in text
+    assert "свежие прогоны без recoveries" not in text
+
+
+def test_newer_run_without_recoveries_flagged(repo, monkeypatch):
+    """Есть run НОВЕЕ самого свежего run-с-recoveries и без поля — детекторная
+    строка «свежие прогоны без recoveries: RUN-...»."""
+    _patch(repo, monkeypatch)
+    _run(repo.root, "RUN-810", suite="smoke", status="Closed", updated="2026-07-01T00:00:00Z",
+         recoveries="0/2")
+    _run(repo.root, "RUN-811", suite="regression", status="Closed", updated="2026-07-10T00:00:00Z")
+
+    text = cm.render(cm.collect(), "T")
+
+    assert "свежие прогоны без recoveries: RUN-811" in text
+
+
+def test_blocked_run_without_recoveries_exempt(repo, monkeypatch):
+    """Blocked-прогон без recoveries легален (pytest мог не стартовать,
+    терминальной строки нет — run.schema.yaml) — детектор его не считает."""
+    _patch(repo, monkeypatch)
+    _run(repo.root, "RUN-820", suite="smoke", status="Closed", updated="2026-07-01T00:00:00Z",
+         recoveries="1/2")
+    _run(repo.root, "RUN-821", suite="regression", status="Blocked", updated="2026-07-10T00:00:00Z")
+
+    text = cm.render(cm.collect(), "T")
+
+    assert "свежие прогоны без recoveries" not in text
+    assert "прогоны без recoveries (поле ещё не внедрено" not in text
+
+
+def test_all_runs_carry_recoveries_no_detector_line(repo, monkeypatch):
+    _patch(repo, monkeypatch)
+    _run(repo.root, "RUN-830", suite="smoke", status="Closed", updated="2026-07-01T00:00:00Z",
+         recoveries="0/2")
+
+    text = cm.render(cm.collect(), "T")
+
+    assert "без recoveries" not in text
 
 
 # --- trace-matrix диспатч 1 (§1c спеки): «Фичи → покрытие» / «без единого кейса» ---

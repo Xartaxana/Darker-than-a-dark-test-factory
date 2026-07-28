@@ -108,6 +108,13 @@ def _has_tc_results(run_meta: dict) -> bool:
     return isinstance(run_meta.get("tc_results"), dict)
 
 
+def _has_recoveries(run_meta: dict) -> bool:
+    """Run несёт поле recoveries (AT-BUG-026 B3-(б), run.schema.yaml) —
+    счётчик "N/M" device-liveness guard'а из терминальной строки pytest.
+    Непустое значение — «несёт»; отсутствие/пустое — нет."""
+    return bool(run_meta.get("recoveries"))
+
+
 def _last_passed_run(tc_id: str, runs_with_tc: list[dict]) -> dict | None:
     """Последний (по updated) run из числа несущих tc_results, где
     tc_results[tc_id] == passed. None — ни одного такого прогона (кейс без
@@ -155,6 +162,24 @@ def collect() -> dict:
         if not _has_tc_results(r) and (baseline_ts is None or str(r.get("updated") or "") > baseline_ts)
     )
 
+    # AT-BUG-026 B3-(б): дисциплина переноса счётчика guard'а в run-артефакт —
+    # тот же детектор-паттерн, что newer_without_tc выше (baseline = самый
+    # свежий run с полем; ловит и вырожденный случай «ВСЕ без поля»).
+    # Blocked-прогоны исключены целиком: там pytest мог не стартовать,
+    # терминальной строки нет — отсутствие поля легально (run.schema.yaml).
+    runs_rec_eligible = [r for r in runs if str(r.get("status")) != "Blocked"]
+    runs_with_rec = [r for r in runs_rec_eligible if _has_recoveries(r)]
+    has_recoveries = bool(runs_with_rec)
+    rec_baseline_ts = (
+        str(max(runs_with_rec, key=lambda r: str(r.get("updated") or "")).get("updated") or "")
+        if runs_with_rec else None
+    )
+    newer_without_recoveries = sorted(
+        str(r.get("id")) for r in runs_rec_eligible
+        if not _has_recoveries(r)
+        and (rec_baseline_ts is None or str(r.get("updated") or "") > rec_baseline_ts)
+    )
+
     risk_catalog = _load_risk_catalog()
     risk_index: dict[str, list[tuple[str, str]]] = defaultdict(list)
     for area, cases in by_area.items():
@@ -187,6 +212,8 @@ def collect() -> dict:
         "runs_with_tc": runs_with_tc,
         "has_tc_results": has_tc_results,
         "newer_without_tc": newer_without_tc,
+        "has_recoveries": has_recoveries,
+        "newer_without_recoveries": newer_without_recoveries,
         "feature_registry": feature_registry,
         "feature_coverage": dict(feature_coverage),
         "current_build_commit": _current_build_commit(),
@@ -288,6 +315,18 @@ def render(data: dict, generated_at: str) -> str:
             lines.append(
                 "прогоны без tc_results (поле ещё не внедрено): "
                 + ", ".join(data["newer_without_tc"]))
+        lines.append("")
+    # AT-BUG-026 B3-(б): та же двухформенная семантика, что у tc_results выше
+    # (baseline-случай «поле ещё не внедрено» ≠ «свежий прогон забыл»).
+    if data["newer_without_recoveries"]:
+        if data["has_recoveries"]:
+            lines.append(
+                "свежие прогоны без recoveries: "
+                + ", ".join(data["newer_without_recoveries"]))
+        else:
+            lines.append(
+                "прогоны без recoveries (поле ещё не внедрено, AT-BUG-026 B3-(б)): "
+                + ", ".join(data["newer_without_recoveries"]))
         lines.append("")
     lines += [
         "## Сводка по областям",
