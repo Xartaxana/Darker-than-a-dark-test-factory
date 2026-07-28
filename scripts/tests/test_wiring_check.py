@@ -125,6 +125,36 @@ def test_git_hooks_channel_non_executable_hooks_warn(tmp_path):
     assert not any("missing" in w for w in warnings)
 
 
+def test_git_hooks_channel_index_mode_644_warns_cross_platform(tmp_path):
+    # Порт формы OS-детектора (кросс-репо остаток, закрыт 2026-07-28):
+    # индексная мода не зависит от хоста — hook, затреканный 100644,
+    # молча игнорируется git'ом в любом СВЕЖЕМ POSIX-чекауте, даже если
+    # на Windows-хосте X_OK-проверка самонейтрализуется.
+    _init_repo_with_hooks(tmp_path)
+    _git("add", ".githooks", cwd=tmp_path)
+    _git("update-index", "--chmod=-x",
+         ".githooks/commit-msg", ".githooks/pre-commit", cwd=tmp_path)
+    warnings = wc.git_hooks_channel(tmp_path)
+    assert sum("index mode 100644" in w for w in warnings) == 2
+
+
+def test_git_hooks_channel_index_mode_755_no_warning(tmp_path):
+    _init_repo_with_hooks(tmp_path)
+    _git("add", ".githooks", cwd=tmp_path)
+    _git("update-index", "--chmod=+x",
+         ".githooks/commit-msg", ".githooks/pre-commit", cwd=tmp_path)
+    warnings = wc.git_hooks_channel(tmp_path)
+    assert not any("index mode" in w for w in warnings)
+
+
+def test_git_hooks_channel_untracked_hooks_no_index_warning(tmp_path):
+    # Untracked-хуки работают локально — индексная проверка молчит
+    # (граница проверки: дисциплина трекинга — не её забота).
+    _init_repo_with_hooks(tmp_path)
+    warnings = wc.git_hooks_channel(tmp_path)
+    assert not any("index mode" in w for w in warnings)
+
+
 @pytest.mark.skipif(sys.platform != "win32", reason="drive-letter case only exists on Windows")
 def test_git_hooks_channel_case_insensitive_and_slash_tolerant(tmp_path):
     # Windows: core.hooksPath can be configured/echoed with a different

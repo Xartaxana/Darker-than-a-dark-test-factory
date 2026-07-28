@@ -153,6 +153,42 @@ def git_hooks_channel(root: Path) -> list:
                 f"hook file not executable: {_GITHOOKS_DIRNAME}/{name} -- {reason}"
             )
 
+    # Index-mode twin of the POSIX X_OK check above (form ported from the
+    # OS-repo detector, cross-repo remainder closed 2026-07-28): on Windows
+    # there is no working-tree exec bit and the check above
+    # self-neutralizes, but the GIT INDEX mode is host-independent -- a
+    # required hook tracked with a non-755 mode means every fresh POSIX
+    # checkout gets a present-but-silently-ignored hook (the live
+    # 2026-07-23 cloud-clone incident). Untracked hooks are skipped
+    # (they still run locally; tracking discipline is not this check's
+    # concern). Never raises: a failing git call becomes one WARNING.
+    try:
+        ls = subprocess.run(
+            ["git", "ls-files", "-s", "--", _GITHOOKS_DIRNAME],
+            cwd=str(root),
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except Exception as e:
+        detail = _ascii_sanitize(
+            f"git ls-files -s {_GITHOOKS_DIRNAME} failed ({type(e).__name__})", 120)
+        warnings.append(f"{detail} -- {reason}")
+        return warnings
+    if ls.returncode == 0:
+        for line in (ls.stdout or "").splitlines():
+            parts = line.split()
+            if len(parts) < 3 or "\t" not in line:
+                continue
+            mode = parts[0]
+            tracked_path = line.split("\t", 1)[1].strip()
+            name = tracked_path.replace("\\", "/").rsplit("/", 1)[-1]
+            if name in _REQUIRED_GITHOOKS and mode != "100755":
+                warnings.append(
+                    f"hook index mode {mode} (not 100755): {tracked_path} -- "
+                    f"fresh POSIX checkout gets a silently ignored hook -- {reason}"
+                )
+
     return warnings
 
 

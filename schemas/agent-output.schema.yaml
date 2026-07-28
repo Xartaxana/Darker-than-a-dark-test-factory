@@ -21,6 +21,14 @@ fields:
             # атрибуция orchestrator-log врёт молча. Правишь rules.yaml —
             # сверь enum (parity-тест enum↔rules.yaml — в очереди батча
             # мелочей, HANDOFF 2026-07-21).
+            # Routing-ярусы (scout/builder/critic, D-0037) в enum НЕ входят
+            # НАМЕРЕННО (решение Lead 2026-07-28, батч мелочей (в)): F2-блок —
+            # контракт КОНВЕЙЕРНЫХ диспатчей (шапка файла: /qa-loop,
+            # /run-suite, /triage); не-конвейерный Lead-диспатч (builder и
+            # пр.) agent_output НЕ эмитит — его приёмка идёт witness/
+            # critic-входом (D-0052/D-0058), F2-блок не требуется и не
+            # валидируется. Два прецедента честных builder-докладов «нет
+            # моего имени в enum» закрыты этой строкой.
     enum: [test-strategist, test-designer, test-automator, test-runner,
            failure-analyst, bug-reporter, fix-verifier, test-maintainer,
            test-reviewer, exploratory-tester, charter-designer]
