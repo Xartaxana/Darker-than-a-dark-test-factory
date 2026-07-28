@@ -367,7 +367,6 @@ resolved при закрытии.
   witness всех прогонов — `bugs/AT-BUG-026.md` «Обсуждение» запись
   2026-07-22T16:20:00Z.
 - [2026-07-24T05:10:04Z] **BUG-011** [sla:bug_open_major] — major-баг open с 2026-07-15T14:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
-- [2026-07-28T05:26:25Z] **CHARTER-QUEUE** [sla:charter_queue_empty] — нет активных charter'ов (Proposed/Planned/InProgress), последний Done старше 96ч или executed_at отсутствует/битый у Done-чартеров | нужно: завести charter (charter-designer / вручную)
 
 ## ESC-008 — AT-BUG-026, ремедиация `-gpu host`: fail-fast сработал ДО начала live-соука (2 идентичных ReadTimeoutError на позитивном replay-контроле)
 

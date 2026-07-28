@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-28T07:39:12Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-28T09:30:41Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -14,7 +14,7 @@ generated_at: 2026-07-28T07:39:12Z · генератор: `scripts/coverage_map.
 | browser | 9 | 9 | designed-full |
 | canary | 18 | 18 | designed-full |
 | compatibility | 3 | 3 | designed-full |
-| downloads | 8 | 8 | designed-full |
+| downloads | 14 | 8 | partial |
 | errors | 1 | 1 | designed-full |
 | filter-profiles | 5 | 5 | designed-full |
 | library | 15 | 15 | designed-full |
@@ -34,7 +34,7 @@ generated_at: 2026-07-28T07:39:12Z · генератор: `scripts/coverage_map.
 | R-02 | TECH | canary:TC-066, canary:TC-067, canary:TC-068, canary:TC-069, canary:TC-070, canary:TC-071, canary:TC-072, canary:TC-073, canary:TC-074, canary:TC-075, canary:TC-076, canary:TC-077, canary:TC-078, canary:TC-079, canary:TC-080, canary:TC-081, canary:TC-082, canary:TC-083 |
 | R-03 | TECH | errors:TC-046, smoke:TC-001 |
 | R-04 | DATA | canary:TC-072, canary:TC-073, canary:TC-074, canary:TC-075, canary:TC-076, canary:TC-077, library:TC-016, library:TC-017, rating:TC-007, rating:TC-008, rating:TC-009, rating:TC-010, rating:TC-011, rating:TC-012, smoke:TC-003 |
-| R-05 | TECH | downloads:TC-032, downloads:TC-033, downloads:TC-034, downloads:TC-035, downloads:TC-036, downloads:TC-037, downloads:TC-038, downloads:TC-039 |
+| R-05 | TECH | downloads:TC-032, downloads:TC-033, downloads:TC-034, downloads:TC-035, downloads:TC-036, downloads:TC-037, downloads:TC-038, downloads:TC-039, downloads:TC-112, downloads:TC-113, downloads:TC-114, downloads:TC-115, downloads:TC-116, downloads:TC-117 |
 | R-06 | BUS | browser:TC-094, library:TC-027, library:TC-028, library:TC-029, library:TC-030, library:TC-031, library:TC-060, library:TC-061, library:TC-062, library:TC-063, library:TC-064, library:TC-065, visibility:TC-013, visibility:TC-014, visibility:TC-015, visibility:TC-092, visibility:TC-093, visibility:TC-095 |
 | R-07 | OPS | риск не покрыт дизайном |
 | R-08 | TECH | tabs:TC-022, tabs:TC-023, tabs:TC-024, tabs:TC-025, tabs:TC-026, tabs:TC-084 |
@@ -100,7 +100,7 @@ generated_at: 2026-07-28T07:39:12Z · генератор: `scripts/coverage_map.
 | settings-panel-side | settings | нет кейсов |
 | settings-tap-to-scroll-toggle | settings | нет кейсов |
 | settings-infinite-scroll-toggle | settings | нет кейсов |
-| settings-auto-download-favorite | settings | нет кейсов |
+| settings-auto-download-favorite | settings | downloads:TC-112[Review], downloads:TC-113[Review] |
 | settings-download-folder-saf | settings | downloads:TC-038[Automated] |
 | settings-backup-export | settings | backup:TC-021[Automated] |
 | settings-restore-merge | settings | backup:TC-021[Automated] |
@@ -136,7 +136,7 @@ generated_at: 2026-07-28T07:39:12Z · генератор: `scripts/coverage_map.
 | data-filterprofile-model | data | нет кейсов |
 | data-clear-all-ratings | data | smoke:TC-004[Automated], settings:TC-018[Automated], settings:TC-019[Automated], settings:TC-020[Blocked] |
 | background-download-repository | background | downloads:TC-032[Automated], downloads:TC-033[Automated] |
-| background-auto-download-trigger | background | downloads:TC-032[Automated] |
+| background-auto-download-trigger | background | downloads:TC-032[Automated], downloads:TC-112[Review], downloads:TC-114[Review], downloads:TC-115[Review], downloads:TC-116[Review], downloads:TC-117[Review] |
 | nf-perf-cold-start-budget | non-functional | performance:TC-096[Automated] |
 | nf-perf-webview-first-load-budget | non-functional | performance:TC-097[Automated] |
 | nf-stability-no-crash-anr | non-functional | performance:TC-098[Automated] |
@@ -168,7 +168,6 @@ generated_at: 2026-07-28T07:39:12Z · генератор: `scripts/coverage_map.
 - settings-panel-side (settings): Позиция side panel Left/Right
 - settings-tap-to-scroll-toggle (settings): Тумблер Tap to scroll (work pages)
 - settings-infinite-scroll-toggle (settings): Тумблер Infinite scroll (listing pages)
-- settings-auto-download-favorite (settings): Тумблер авто-скачивания HTML при рейтинге Favorite (SAVE)
 - settings-filter-profiles-list (settings): Список сохранённых AO3-фильтр-профилей
 - bridge-dark-css (ao3-bridge): CSS-переопределения тёмной темы на AO3-страницах (window.__ao3AppDark)
 - bridge-scroll-reporting (ao3-bridge): Отчёт позиции скролла и прогресса чтения (глава/%) в Kotlin
@@ -259,18 +258,18 @@ generated_at: 2026-07-28T07:39:12Z · генератор: `scripts/coverage_map.
 
 ### downloads
 
-- coverage_status: **designed-full** (8/8 Automated)
+- coverage_status: **partial** (8/14 Automated)
 - риски: R-05
 - кейсы без risk: нет
-- P0/P1 не в Automated: нет
+- P0/P1 не в Automated: TC-112 [P1, Review], TC-113 [P1, Review], TC-114 [P1, Review], TC-115 [P1, Review]
 - автотесты (automated_by): framework/tests/test_downloads.py::test_auto_download_triggers_on_loved_rating, framework/tests/test_downloads.py::test_change_download_folder_triggers_silent_scan_and_relinks_orphan_file, framework/tests/test_downloads.py::test_delete_downloaded_file_keeps_rating_row, framework/tests/test_downloads.py::test_delete_work_removes_row_and_file, framework/tests/test_downloads.py::test_manual_download_from_library_adds_local_file, framework/tests/test_downloads.py::test_manual_scan_for_downloads_shows_dialog_on_zero_files, framework/tests/test_downloads.py::test_open_downloaded_file_applies_viewport_and_reader_css, framework/tests/test_downloads.py::test_restore_folds_orphan_scan_into_single_dialog
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  |  |  |
-| P1 |  |  |  | 5 |  |
-| P2 |  |  |  | 2 |  |
+| P1 |  | 4 |  | 5 |  |
+| P2 |  | 2 |  | 2 |  |
 | P3 |  |  |  | 1 |  |
 
 ### errors

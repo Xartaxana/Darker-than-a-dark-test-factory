@@ -966,6 +966,138 @@
     "archived": false
   },
   {
+    "key": "TC-112",
+    "path": "board/TC-112/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Тумблер Auto-download выключен — простановка Favorite не скачивает файл (off-путь)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:downloads",
+      "risk:R-05"
+    ],
+    "updated": "2026-07-28T15:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-113",
+    "path": "board/TC-113/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Включение тумблера Auto-download не скачивает задним числом ранее отмеченные Favorite-работы",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:downloads",
+      "risk:R-05"
+    ],
+    "updated": "2026-07-28T15:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-114",
+    "path": "board/TC-114/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Правка личного тега уже-Favorite работы через панель работы не скачивает файл повторно (edge vs level, :756)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:downloads",
+      "risk:R-05"
+    ],
+    "updated": "2026-07-28T15:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-115",
+    "path": "board/TC-115/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Правка комментария уже-Favorite работы через bottom-sheet листинга не скачивает файл повторно (edge vs level, :862)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:downloads",
+      "risk:R-05"
+    ],
+    "updated": "2026-07-28T15:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-116",
+    "path": "board/TC-116/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Смена рейтинга с Favorite на другой не запускает скачивание",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:downloads",
+      "risk:R-05"
+    ],
+    "updated": "2026-07-28T15:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-117",
+    "path": "board/TC-117/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Снятие рейтинга Favorite (deselect) не запускает скачивание",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:downloads",
+      "risk:R-05"
+    ],
+    "updated": "2026-07-28T15:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "TC-046",
     "path": "board/TC-046/main.md",
     "parent": null,
@@ -3167,6 +3299,28 @@
     "archived": false
   },
   {
+    "key": "AT-BUG-029",
+    "path": "board/AT-BUG-029/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "listing_basic.mitm не несёт .html-файл скачивания (недостаёт одной транзакции) — блокирует автоматизацию TC-115 (edge-vs-level BUG-014 через листинг)",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-115",
+      "sev:minor"
+    ],
+    "updated": "2026-07-28T15:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "BUG-001",
     "path": "board/BUG-001/main.md",
     "parent": null,
@@ -3291,6 +3445,29 @@
       "sev:major"
     ],
     "updated": "2026-07-28T12:00:01Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-016",
+    "path": "board/BUG-016/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Undo закрытия вкладки на потолке 10 молча теряет вкладку и её снапшот",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-023",
+      "test_case:TC-024",
+      "sev:major"
+    ],
+    "updated": "2026-07-28T09:27:34Z",
     "resolution": null,
     "children": [],
     "archived": false
