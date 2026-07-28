@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-28T09:30:41Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-28T09:57:22Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -137,6 +137,7 @@ generated_at: 2026-07-28T09:30:41Z · генератор: `scripts/coverage_map.
 | data-clear-all-ratings | data | smoke:TC-004[Automated], settings:TC-018[Automated], settings:TC-019[Automated], settings:TC-020[Blocked] |
 | background-download-repository | background | downloads:TC-032[Automated], downloads:TC-033[Automated] |
 | background-auto-download-trigger | background | downloads:TC-032[Automated], downloads:TC-112[Review], downloads:TC-114[Review], downloads:TC-115[Review], downloads:TC-116[Review], downloads:TC-117[Review] |
+| background-auto-kudos-trigger | background | нет кейсов |
 | nf-perf-cold-start-budget | non-functional | performance:TC-096[Automated] |
 | nf-perf-webview-first-load-budget | non-functional | performance:TC-097[Automated] |
 | nf-stability-no-crash-anr | non-functional | performance:TC-098[Automated] |
@@ -156,8 +157,8 @@ generated_at: 2026-07-28T09:30:41Z · генератор: `scripts/coverage_map.
 
 ## Фичи без единого кейса
 
-- browse-deep-link-new-tab (browse): Deep link открывает URL в НОВОЙ вкладке, если уже есть вкладки помимо одинокой AO3 root
-- browse-deep-link-reuse-home-tab (browse): Deep link переиспользует единственную вкладку на AO3 root (HOME_URL), навигируя её на URL вместо создания новой
+- browse-deep-link-new-tab (browse): Deep link открывает URL в НОВОЙ вкладке, если уже есть вкладки помимо одинокой AO3 root; на потолке MAX_TABS вкладка не создаётся, показывается диалог лимита, а отклонённый URL отбрасывается без очереди
+- browse-deep-link-reuse-home-tab (browse): Deep link переиспользует единственную вкладку на AO3 root, навигируя её вместо создания новой — только пока URL вкладки точно равен HOME_URL без слэша (окно до загрузки домашней страницы); иначе создаётся вторая вкладка
 - browse-infinite-scroll (browse): Бесконечная подгрузка следующих страниц листинга при скролле
 - browse-tap-to-scroll (browse): Тап по верхней/нижней трети страницы работы скроллит вверх/вниз
 - browse-tap-fullscreen (browse): Тап по средней трети страницы работы переключает fullscreen (toggleFullscreen)
@@ -173,6 +174,7 @@ generated_at: 2026-07-28T09:30:41Z · генератор: `scripts/coverage_map.
 - bridge-scroll-reporting (ao3-bridge): Отчёт позиции скролла и прогресса чтения (глава/%) в Kotlin
 - data-workrating-model (data): Room-сущность WorkRating (rating/comment/tags/fandom/author/wordCount/downloadPath)
 - data-filterprofile-model (data): Room-сущность FilterProfile (name/queryString)
+- background-auto-kudos-trigger (background): Автоклик кнопки kudos на странице работы AO3, когда рейтинг работы становится Kudosed (LIKE) или Favorite (SAVE)
 
 ## Области
 
