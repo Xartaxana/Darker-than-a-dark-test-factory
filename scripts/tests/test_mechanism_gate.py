@@ -44,6 +44,59 @@ def test_decide_skip_and_block_only_from_commit_message():
     assert code == 0
 
 
+# ---------------------------------------------------------------------------
+# SKIP_RE — якорь ^\s* + MULTILINE (порт штабного фикса fadb7c0 OS-репо,
+# полигон Dog D-0093; решение Lead 2026-07-28: перенять). Без якоря
+# .search() матчил инлайн-цитату синтаксиса отказа посреди прозы
+# коммит-сообщения, глуша гейт целиком.
+# ---------------------------------------------------------------------------
+
+def test_skip_re_standalone_line_passes():
+    # (а) легальная skip-строка отдельной строкой в начале блока → активна.
+    msg = "feat: механизм X\n\nоси: не-механизм (причина)\n\nдоп. текст\n"
+    assert mg.SKIP_RE.search(msg)
+
+
+def test_skip_re_standalone_line_with_indent_passes():
+    # (б) та же строка с отступом пробелами → активна (якорь ^\s*).
+    msg = "feat: механизм X\n\n   оси: не-механизм (причина с отступом)\n"
+    assert mg.SKIP_RE.search(msg)
+
+
+def test_skip_re_inline_quote_mid_sentence_not_a_declaration():
+    # (в) цитата ЧУЖОЙ skip-строки в середине предложения текста → НЕ
+    # считается декларацией (иначе цитата обходила бы гейт).
+    msg = ("feat: механизм X\n\nсм. чужую строку «оси: не-механизм (x)» "
+           "из другого коммита\n")
+    assert not mg.SKIP_RE.search(msg)
+    code, reason = mg.decide(msg, ["CLAUDE.md"], MAP_SAMPLE)
+    assert code == 1 and "Осевой блок" in reason
+
+
+def test_skip_re_line_starting_with_quote_before_marker_not_a_declaration():
+    # (г) граница: строка НАЧИНАЕТСЯ с цитатной кавычки/ёлочки перед
+    # маркером — не декларация (перед «оси» стоит непробельный символ,
+    # якорь ^\s* его не пропускает).
+    msg_guillemet = "feat: механизм X\n\n«оси: не-механизм (пример)»\n"
+    assert not mg.SKIP_RE.search(msg_guillemet)
+    msg_straight = 'feat: механизм X\n\n"оси: не-механизм (пример)"\n'
+    assert not mg.SKIP_RE.search(msg_straight)
+
+
+def test_skip_re_first_line_no_leading_newline_matches():
+    # skip-строка — самая первая строка сообщения целиком, без ведущего
+    # \n: MULTILINE ^ матчит и позицию 0, не только позицию сразу после \n.
+    msg = "оси: не-механизм (причина, без ведущего текста)\n\nдоп. текст\n"
+    assert mg.SKIP_RE.search(msg)
+    code, _ = mg.decide(msg, ["CLAUDE.md"], MAP_SAMPLE)
+    assert code == 0
+
+
+def test_skip_re_matches_on_crlf_message():
+    msg = "feat: механизм X\r\n\r\nоси: не-механизм (причина)\r\n"
+    assert mg.SKIP_RE.search(msg)
+
+
 def test_decide_merge_and_non_mechanism_pass_and_fail_closed():
     code, _ = mg.decide("Merge branch 'x'", ["CLAUDE.md"], MAP_SAMPLE, merging=True)
     assert code == 0
