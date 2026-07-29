@@ -2,27 +2,27 @@
 key: "TC-112"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Тумблер Auto-download выключен — простановка Favorite не скачивает файл (off-путь)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:downloads", "risk:R-05"]
+labels: ["test-case", "area:downloads", "risk:R-05", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-29T18:55:00Z"
-updated: "2026-07-29T18:55:00Z"
+created: "2026-07-29T19:03:21Z"
+updated: "2026-07-29T19:03:21Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Тумблер Auto-download выключен — простановка Favorite не скачивает файл (off-путь)
 
 _Спроецировано из `test-cases/downloads/TC-112.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-112 — Favorite не скачивает файл при выключенном Auto-download
 
@@ -101,6 +101,73 @@ _Спроецировано из `test-cases/downloads/TC-112.md` (источн�
   "SAVE")` — уже существуют, использовались в TC-007/TC-032, дополнительных
   локаторов не требуется. Проверка вкладки FILES — `library_steps.
   assert_work_not_in_files_tab` (уже существует, используется в TC-035).
+
+## Ревью автотеста (F1, test-reviewer, 2026-07-29T19:03:21Z) — ПРОЙДЕНО
+
+Вердикт: `Approved -> Automated`, `automation_status: active`. Все 7 пунктов
+чек-листа пройдены самостоятельно (чужие отчёты как замена собственным прогонам не
+использовались).
+
+1. **Архитектура (C1):** `python scripts/arch_check.py` -> «ошибок 0, предупреждений
+   0»; `ALLOWLIST` в `scripts/arch_check.py:80` — пустое множество (исключение «под
+   себя» не заводилось). В теле теста нет ни локаторов, ни прямых обращений к
+   `driver`-API, ни `sleep` — только шаги `app_steps`/`rating_steps`/`library_steps`.
+2. **Traceability:** `@allure.id("TC-112")` == id кейса; `@pytest.mark.p1` ==
+   `priority: P1`; `@pytest.mark.replay` + `parametrize("replay",
+   [rb.WORK_WITH_DOWNLOAD_FILENAME])` соответствуют Предусловиям; `automated_by`
+   указывает на реально существующую функцию (`framework/tests/test_downloads.py:251`)
+   и конформен паттерну `schemas/test-case.schema.yaml`.
+3. **Соответствие кейсу по смыслу:** все четыре Then реализованы содержательно —
+   `assert_work_in_tab(SAVE)` (рейтинг сохранён; заодно ПОДТВЕРЖДАЕТ, что When
+   реально произошёл — класс «When не подтверждён у идемпотентных сеттеров» здесь
+   не применим), `assert_download_icon_shown` (файла нет), `assert_work_not_in_files_tab`,
+   плюс autouse-`download_oracle` без `produces_download` (ожидание 0 файлов).
+   Инвариантной строки `Инвариант:` кейс не требует: область не комбинаторная
+   (один off-путь одной настройки), а off-инвариантный характер уже назван в
+   заметках («Батарея правил-реакций (off-инвариант)»).
+4. **Фикстуры и данные:** порядок сигнатуры `(replay, placeholder_seeded_work,
+   driver)` — сидинг (`clean_state` + `seed_with_comment`) исполняется ДО создания
+   Appium-сессии, контракт HANDOFF соблюдён; тест владеет своими данными, от других
+   тестов и порядка не зависит (прогонялся изолированно `-k`, зелёный дважды).
+5. **Flake-риск:** ожидания явные (шаги/`core.waits`), гонка Compose
+   `AnimatedVisibility` нижней панели закрыта `BottomNav.ensure_visible()` внутри
+   `rate_current_work`, живого AO3 при заявленном replay нет (весь трафик — через
+   `mitm`-прокси фикстуры `replay`).
+6. **Независимое воспроизведение (зелёное):** `Get-Device` -> `DEVICE: emulator-5554`;
+   `Invoke-Pytest -k test_favorite_rating_does_not_download_when_auto_download_off -q`
+   -> `1 passed, 231 deselected in 43.60s`, `PYTEST_EXIT=0`. Повторный прогон ПОСЛЕ
+   отката красной пробы -> `1 passed ... in 42.59s`, `PYTEST_EXIT=0` (среда
+   восстановлена, остатка от порчи нет).
+7. **Красная проба (мутационная):**
+   - что портил: настройка приложения — тумблер «Auto-download favorite works»
+     переведён в ON (`saf_steps.open_settings_scrolled_to` +
+     `settings_steps.enable_auto_download` + возврат на Browse, три строки временно
+     вставлены в тело теста в `framework/tests/test_downloads.py`) — это ровно та
+     регрессия, которую кейс запирает: предикат `rating == Rating.SAVE &&
+     autoDownloadSaved` (`BrowserViewModel.kt:756`) становится истинным;
+   - команда: `powershell -NoProfile -ExecutionPolicy Bypass -Command
+     ". D:\AO3_tests\scripts\tasks.ps1; Invoke-Pytest -k
+     test_favorite_rating_does_not_download_when_auto_download_off -q"`;
+   - результат: `1 failed, 231 deselected, 1 warning in 57.32s`, `PYTEST_EXIT=1`.
+     Падение содержательное и указывает на суть порчи —
+     `tests/test_downloads.py:277` -> `steps/library_steps.py:129`:
+     `AssertionError: download-иконка не появилась у «A Loved Test Work»` (карточка
+     показала open-иконку: файл скачан). НЕЗАВИСИМО сработал и второй слой:
+     `download_oracle` зафиксировал реальный файл
+     `/sdcard/Android/data/com.example.ao3_wrapper/files/ao3_downloads/ao3_A Loved
+     Test Work_900000001.html` (в этом прогоне как WARN, а не второй fail — штатное
+     немаскирование уже упавшей call-фазы, `conftest.py`, правка M2). Таким образом
+     ОБА заявленных кейсом слоя защиты доказали зубы;
+   - откат: `git checkout -- framework/tests/test_downloads.py` в том же ходе,
+     `git status` — файл чист, дифф тестового кода пуст; следом зелёный
+     перепрогон (см. п.6).
+
+Наблюдения (НЕ замечания, вердикт не блокируют, вносить правки в тестовый код
+ревьюер не вправе — на будущее автору/очереди): Given «тумблер OFF» держится
+дефолтом `clean_state` и явным assert'ом не подтверждён (в отличие от TC-113, где
+assert добавлен по критик-входу). Ложно-зелёности это не создаёт — при обратном
+дефолте тест упал бы, а не позеленел, — так что доработка не требуется; ценность
+такого assert'а была бы только диагностической.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»

@@ -2,27 +2,27 @@
 key: "TC-121"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p0"
 summary: "Тап по whitelisted-ссылке БЕЗ собственного JS-обработчика в теле work-страницы не запускает зональное действие (whitelist по тегу, независимо от наличия обработчика, replay)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:canary", "risk:R-02"]
+labels: ["test-case", "area:canary", "risk:R-02", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-29T17:20:31Z"
-updated: "2026-07-29T17:20:31Z"
+created: "2026-07-29T19:29:48Z"
+updated: "2026-07-29T19:29:48Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Тап по whitelisted-ссылке БЕЗ собственного JS-обработчика в теле work-страницы не запускает зональное действие (whitelist по тегу, независимо от наличия обработчика, replay)
 
 _Спроецировано из `test-cases/canary/TC-121.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-121 — Тап по ссылке скачивания (whitelisted тег, БЕЗ собственного обработчика) не запускает зональное действие
 
@@ -59,9 +59,13 @@ _Спроецировано из `test-cases/canary/TC-121.md` (источник
 отсекает тап ДО вычисления третьей, независимо от координаты)
 **And** дефолтное действие ссылки ПРОИСХОДИТ — WebView навигирует на
 скачиваемый `.html`-документ (`render_downloaded_work_html`, записан в том же
-`.mitm`) — используется как ПОЗИТИВНОЕ доказательство, что тап физически дошёл
-до целевого узла (клик не проглочен панелью/чем-либо ещё), не просто
-«ничего не произошло»
+`.mitm`) — используется как ПОЗИТИВНОЕ доказательство того, что дефолтное
+действие ссылки НЕ отменено (guard вернулся из обработчика ДО ветки
+`scrollBy` + `e.preventDefault()`, `ao3_bridge.js:1157-1165`), не просто
+«ничего не произошло». Формулировка уточнена ревью F1 2026-07-29: `dispatchEvent`
+обходит hit-testing, поэтому «тап физически дошёл до узла» этот ассерт НЕ
+доказывает — он доказывает не-отмену дефолтного действия, что и есть
+наблюдаемое отсутствие зонального действия для верхней/нижней трети
 
 **Инвариант:** решение guard'а — функция ТОЛЬКО от членства `e.target.
 closest(...)` в whitelist тегов/role, НЕ от наличия у узла собственного JS
@@ -118,3 +122,98 @@ guard'а зависит только от тега/role» не доказано 
 - [x] Строка `Инвариант:` добавлена добровольно (та же практика, что
       TC-119/TC-120 — область не входит в банк C4 строго, но Then замыкает
       2×2-матрицу вместе с сиблингами)
+
+## Ревью автотеста (F1, test-reviewer, 2026-07-29) — ПРОЙДЕНО
+
+Вердикт: `Approved -> Automated`, `automation_status: active`. Чек-лист пройден
+целиком, блокирующих замечаний нет.
+
+1. **Архитектура (C1).** `python scripts/arch_check.py` — «ошибок 0,
+   предупреждений 0»; `ALLOWLIST` (`scripts/arch_check.py:80`) пуст — исключение
+   «под себя» не добавлялось. Тест зовёт только именованные steps-обёртки
+   (`browser_steps.dispatch_tap_zone_download_link_tap`,
+   `assert_top_chrome_not_darkened`, `assert_active_tab_url`); CSS-селектор
+   инкапсулирован в `framework/web/selectors.py:120`
+   (`DOWNLOAD_HTML_LINK = 'li.download a[title="HTML"]'`), в `tests/` не
+   просачивается; ни `execute_script`, ни `driver_factory`, ни `sleep` в тесте
+   нет — ожидания идут через `core.waits` (`wait_until`, `assert_holds_for`).
+2. **Traceability.** `@allure.id("TC-121")` == id кейса; `@pytest.mark.p0`
+   соответствует `priority: P0`, `@pytest.mark.replay` + отсутствие
+   `@pytest.mark.live` — заявленному replay-режиму (см. «Заметки для
+   автоматизации»); `automated_by` указывает на существующую функцию — собрана
+   и прогнана `-k`, node id совпал (`[work_with_download.mitm]`).
+3. **Соответствие по смыслу (инвариант).** Then кейса требует отсутствия ОБОИХ
+   зональных действий (`scrollBy` И `toggleFullscreen`). Тест закрывает обе
+   ветви guard'а ПАРОЙ ассертов, и это покрытие полное по всем трём зонам
+   (`ao3_bridge.js:1157-1165`):
+   - тап пришёлся бы в среднюю треть -> при пробое guard'а сработал бы
+     `Android.toggleFullscreen()` c `return` ДО `preventDefault()` -> ловит
+     `assert_top_chrome_not_darkened`;
+   - тап в верхней/нижней трети -> при пробое сработал бы `scrollBy` + ОБЯЗАТЕЛЬНЫЙ
+     `e.preventDefault()` (строка 1165 исполняется на обеих скролл-ветвях) ->
+     дефолтная навигация ссылки была бы отменена -> ловит
+     `assert_active_tab_url(rb.download_url(work, "html"))`.
+   Фактическая геометрия узла на стенде (Allure-вложение
+   `tap-zone-guard-dispatch-geometry` зелёного прогона): `rect.top=187.0`,
+   `dispatched_clientY=196.4`, `innerHeight=1603`,
+   `fraction_of_innerHeight=0.123` — то есть ВЕРХНЯЯ треть. Значит
+   диагностическую нагрузку на этом стенде несёт именно ассерт навигации
+   (`assert_top_chrome_not_darkened` при `clientY < innerHeight/3`
+   структурно не может покраснеть), и красная проба (п.7) целилась именно в
+   него. Ослабления вида «элемент существует» нет; отсутствие geometry-band
+   ассерта для этого узла обосновано (guard отсекает whitelisted-тег ДО
+   вычисления трети) и не создаёт дыры — покрытие не зависит от того, в какую
+   треть уедет ссылка.
+4. **Фикстуры и данные.** Порядок сигнатуры `(loved_work_seeded, replay,
+   driver)` соблюдает контракт «сидинг ДО создания Appium-сессии»
+   (`conftest.py:212-220`: `clean_state()` + `seed_library`); `pm clear`
+   очищает и данные, и настройку `tap_to_scroll` за собой; `replay`-фикстура
+   гарантированно возвращает прокси в teardown. Порядковой зависимости от
+   TC-119/120/122 нет — Given каждого теста самодостаточен. Новых фикстурных
+   узлов кейс не требует (`_download_list_html`, TC-032/033).
+5. **Flake-риск.** Живого AO3 в тесте нет (обе транзакции — work-страница и
+   скачиваемый `.html` — записаны ВТОРЫМ flow в том же `work_with_download.mitm`,
+   `build_work_with_download`), `server_replay_extra=forward` не задействован.
+   Ожидания явные: `assert_top_chrome_not_darkened` держит условие ВЕСЬ бюджет
+   10 с (`assert_holds_for`, не одно чтение), `assert_active_tab_url` опрашивает
+   `current_url` до `WEBVIEW_LOAD_TIMEOUT`. Гонки с Compose `AnimatedVisibility`
+   нет: TabStrip читается пиксельным прокси с калиброванным `ratio=0.7`;
+   клика по родителю текстового узла нет — тап синтетический, по реальному
+   `getBoundingClientRect()` самой ссылки.
+6. **Независимое воспроизведение (зелёный прогон, 2026-07-29).**
+   `Get-Device` -> `DEVICE: emulator-5554`.
+   `powershell -NoProfile -ExecutionPolicy Bypass -Command ". D:\AO3_tests\scripts\tasks.ps1; Invoke-Pytest -q -k test_tap_zone_guard_whitelisted_link_without_own_handler"`
+   -> `1 passed, 231 deselected in 53.89s`, `PYTEST_EXIT=0`.
+7. **Красная проба (мутационная, 2026-07-29) — witness.**
+   - Что портил (уровень ДАННЫХ, не ассерта): в
+     `framework/data/recording_builder.py::_download_list_html` download-ссылке
+     добавлен `onclick="return false;"` — точная симуляция наблюдаемого
+     следствия пробоя guard'а на фактической геометрии узла (верхняя треть:
+     `scrollBy` + `preventDefault()` отменяют дефолтное действие ссылки).
+     Записи пересобраны:
+     `framework/.venv/Scripts/python.exe scripts/build_replay_recordings.py`
+     (`written: ...work_with_download.mitm`).
+   - Команда прогона: та же каноническая
+     `Invoke-Pytest -q -k test_tap_zone_guard_whitelisted_link_without_own_handler`.
+   - Результат: `1 failed ... in 104.09s`, `PYTEST_EXIT=1`. Упал на СОДЕРЖАТЕЛЬНОМ
+     Then (`test_tap_zone_guard.py:169`, `browser_steps.assert_active_tab_url`)
+     с текстом, называющим суть порчи: `URL активной вкладки не стал
+     https://archiveofourown.org/downloads/900000001/A_Loved_Test_Work.html?updated_at=0`.
+     Первый ассерт (`assert_top_chrome_not_darkened`) при этом ЗЕЛЁН — ожидаемая
+     полярность: guard по-прежнему отсекает `<a>`, зональное действие не
+     возникает, отменено только дефолтное действие ссылки.
+   - Откат: `git checkout -- framework/data/recording_builder.py
+     framework/data/recordings` в том же ходе; `git status --short` не
+     показывает изменений под `framework/` (дифф чист, `.mitm` восстановлены
+     побайтно из индекса).
+
+**Неблокирующее замечание (принято к сведению, не changes_requested).**
+Формулировка «тап физически дошёл до целевого узла» неточна: `dispatchEvent`
+обходит hit-testing, и ассерт навигации доказывает НЕ-отмену дефолтного
+действия, а не физическую достижимость узла. В теле этого кейса формулировка
+исправлена ревью; те же слова остались в тестовом коде — правку туда ревьюер не
+вносит по границе роли (F1: ревьюер не правит `framework/`), она передана
+списком аналогов в отчёте прохода:
+`framework/tests/canary/test_tap_zone_guard.py:29-32` (докстринг модуля) и
+`:166-168` (комментарий над ассертом). Смысл проверки от этого не меняется —
+на вердикт не влияет.
