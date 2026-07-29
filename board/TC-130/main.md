@@ -2,7 +2,7 @@
 key: "TC-130"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Infinite scroll ON: скролл к концу листинга подгружает следующую страницу без навигации"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-29T00:00:00Z"
-updated: "2026-07-29T00:00:00Z"
+created: "2026-07-29T19:44:32Z"
+updated: "2026-07-29T19:44:32Z"
 archived: false
 resolution: null
 ---

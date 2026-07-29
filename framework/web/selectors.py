@@ -129,3 +129,15 @@ DOWNLOAD_HTML_LINK = 'li.download a[title="HTML"]'
 # наличия обработчика, ложноположительно засчитывая `role="main"/"navigation"`
 # реальной разметки AO3).
 TAP_ZONE_GUARD_WHITELIST = 'a, button, input, select, textarea, label, summary, [role="button"]'
+
+# TC-118 доработка attempt 2 (критик-вход): позитивный якорь идентичности
+# документа — узлы РЕАЛЬНОГО контента work-страницы, СИММЕТРИЧНО тем, что уже
+# читает сам `ao3_bridge.js:1139-1142` (`h2.title.heading`, `h3.byline a`,
+# `dd.fandom a`, `dd.words`) для скрапинга метаданных по завершении чтения.
+# Без этого якоря N=0 неотличим от «страница — Cloudflare-интерстишл с
+# readyState=complete и БЕЗ контента» (риск, доказанный critic-вердиктом:
+# интерстишл естественно не содержит атрибутных onclick вне whitelist —
+# пустое множество не значит «прочитан work»). Список сверен чтением файла
+# 2026-07-30, не взят из критик-отчёта как данность (`#workskin`/`div.work`
+# из черновика критик-отчёта в ao3_bridge.js НЕ встречаются — не использованы).
+WORK_PAGE_CONTENT_MARKERS = "h2.title.heading, h3.byline, dd.fandom, dd.words"

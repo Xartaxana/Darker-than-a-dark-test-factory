@@ -2,7 +2,7 @@
 key: "TC-118"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p0"
 summary: "Числовая проба предпосылки guard'а: узлы вне whitelist с собственным обработчиком в теле живой work-страницы (live)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-29T17:08:36Z"
-updated: "2026-07-29T17:08:36Z"
+created: "2026-07-30T09:15:00Z"
+updated: "2026-07-30T09:15:00Z"
 archived: false
 resolution: null
 ---
@@ -144,25 +144,54 @@ JS-зарегистрированного обработчика.
   поведенческого контроля неинформативна — см. §9 docs/01).
 - Не путать с багом: находка N > 0 — это ВХОД для пере-оценки §5 test-strategist,
   не самостоятельный тикет от test-designer (явное non-goal этого диспатча).
-- **Попытка автоматизации 2026-07-29 (test-automator): реализовано, не подтверждено
-  прогоном — env fail-fast.** Тест написан
+- **Попытка автоматизации 2026-07-29 (test-automator, attempt 1): реализовано, не
+  подтверждено прогоном — env fail-fast.** 2 прогона подряд упали ИДЕНТИЧНЫМ
+  env-классом (`ReadTimeoutError`/`TimeoutError` от Appium HTTP-канала к сессии) на
+  `browser_steps.open_live_listing` -> `contexts.in_webview` — диагноз деградации
+  среды (docs/06 §5), `automated_by` не заполнялся.
+- **Попытка автоматизации 2026-07-29 (test-automator, attempt 2): оборвана
+  транзиентной 500-ошибкой API** до завершения прогона; `automated_by` был
+  преждевременно проставлен без witness, координатор откатил.
+- **Подтверждено 2026-07-30 (test-automator, attempt 3): 3 зелёных прогона
+  подряд** (`Invoke-Pytest tests/canary/test_ao3_selectors.py -k
+  test_no_non_whitelisted_onclick_candidates_on_live_work_page`, PYTEST_EXIT=0
+  каждый раз, 18.4–27.0с). Числовой результат первого прогона (Allure-вложение
+  `tc-118-non-whitelisted-onclick-candidates`): **N = 0** — на посещённой живой
+  work-странице нет узлов вне whitelist guard'а с собственным атрибутным
+  `onclick` (текущая гипотеза подтверждена эмпирически, риск R-02 закрыт фактом
+  для класса атрибутных обработчиков, см. Then/B3 выше). Тест написан
   (`framework/tests/canary/test_ao3_selectors.py::
   test_no_non_whitelisted_onclick_candidates_on_live_work_page`), локатор whitelist
   вынесен в `framework/web/selectors.py::TAP_ZONE_GUARD_WHITELIST` (симметрично
   `ao3_bridge.js:1155`, единый предикат, как требует Then), assert-функция —
   `framework/steps/browser_steps.py::assert_no_non_whitelisted_onclick_candidates`.
-  2 прогона подряд (исходный + авто-rerun `pytest-rerunfailures`) упали
-  ИДЕНТИЧНЫМ env-классом (`ReadTimeoutError`/`TimeoutError` от Appium HTTP-канала
-  к сессии) на ОДНОМ И ТОМ ЖЕ шаге (`browser_steps.open_live_listing` ->
-  `contexts.in_webview`) — по docs/06 §5 это диагноз деградации среды, не 3
-  зелёных прогона добиваться дальше. Диагностика: `Get-Device` — устройство
-  присутствует; `adb ... dumpsys window` — приложение в фокусе (не крашнулось);
-  Appium `/status` отвечает `ready:true` за <1с — сам HTTP-сервер жив; таймаут
-  именно на уровне конкретной WebDriver-сессии (UiAutomator2/chromedriver канал
-  к устройству). `automated_by` НЕ заполнен (не подтверждено прогоном), `lock`
-  снят. Не блокер автоматизации (реализация не встретила недостатка
-  средств/фикстур) — `test_debt`-баг не заводится; это входной кандидат для
-  следующей попытки после восстановления среды (перезапуск Appium/эмулятора).
+  `automated_by` заполнен. Статус кейса не менялся (F1 — решает test-reviewer).
+- **Доработка по критик-вердикту (test-automator, 2026-07-30): добавлен
+  ПОЗИТИВНЫЙ ЯКОРЬ идентичности документа.** Критик доказал: N=0 сам по себе
+  не отличим от «страница — Cloudflare-интерстишл на `readyState=complete` БЕЗ
+  реального контента» (интерстишл естественно не содержит атрибутных onclick
+  вне whitelist — пустое множество не значит «прочитан work»). Все сиблинги
+  (TC-119/120/121/122) несут позитивный якорь в Then/ассерте; TC-118 был
+  единственным исключением. Фикс (вариант A критик-вердикта) — в том же
+  `execute_script` (`framework/steps/browser_steps.py::
+  assert_no_non_whitelisted_onclick_candidates`) ДО ассерта `count == 0`
+  теперь снимаются и заассертены: (1) `location.pathname` матчит `^/works/\d`
+  (симметрично `ao3_bridge.js:1154`); (2) присутствует хотя бы один узел
+  реального контента work-страницы — `selectors.WORK_PAGE_CONTENT_MARKERS =
+  "h2.title.heading, h3.byline, dd.fandom, dd.words"`, те же узлы, что читает
+  сам `ao3_bridge.js:1139-1142` для скрапинга метаданных (список сверен
+  чтением файла 2026-07-30, НЕ взят из критик-отчёта как данность —
+  `#workskin`/`div.work` из черновика критика в bridge НЕ встречаются, не
+  использованы). Оба поля вложены в тот же Allure-аттач
+  `tc-118-non-whitelisted-onclick-candidates`, что и count, для аудита.
+  **3 зелёных прогона подряд** (`Invoke-Pytest tests/canary/test_ao3_selectors.py
+  -k test_no_non_whitelisted_onclick_candidates_on_live_work_page -q`,
+  PYTEST_EXIT=0 каждый раз, 12.6–39.9с). Содержимое Allure-аттача первого
+  прогона: `pathname='/works/87997831/chapters/233262621'
+  has_content_marker=True count=0 details=[]` — позитивный якорь подтверждён
+  (реальная work-страница с контентом, не интерстишл), N=0 подтверждён
+  содержательно. `automated_by` не менялся (тот же тест). Статус кейса не
+  менялся (F1).
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»

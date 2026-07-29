@@ -1,6 +1,7 @@
 """Бизнес-шаги содержимого WebView, не привязанные к конкретному нативному экрану."""
 from __future__ import annotations
 
+import re
 import time
 import uuid
 
@@ -478,7 +479,19 @@ def assert_no_non_whitelisted_onclick_candidates(driver) -> int:
     Then/B3, решено владельцем 2026-07-28 — критерий сохранён с сужением до
     этого класса). Возвращает N; при N > 0 узлы (первые 200 символов
     `outerHTML` каждого) вложены в Allure как находка ДЛЯ test-strategist
-    (пере-оценка §5) — этот кейс баг по числу не заводит (non-goal, см. Then)."""
+    (пере-оценка §5) — этот кейс баг по числу не заводит (non-goal, см. Then).
+
+    Доработка attempt 2 (критик-вход): N=0 сам по себе НЕ доказывает, что
+    открытая страница — реальная work-страница с контентом (Cloudflare-
+    интерстишл на том же `readyState=complete` тоже не содержит атрибутных
+    onclick вне whitelist — N=0 неотличим от «измерена пустота»). В том же
+    `execute_script` дополнительно снимаются два позитивных якоря
+    идентичности документа ДО ассерта count == 0: `location.pathname` (обязан
+    матчить `^/works/\\d`, симметрично guard'у `ao3_bridge.js:1154`) и
+    наличие хотя бы одного узла реального контента work-страницы
+    (`selectors.WORK_PAGE_CONTENT_MARKERS` — те же узлы, что читает сам
+    `ao3_bridge.js:1139-1142` для скрапинга метаданных). Оба поля вложены в
+    тот же Allure-аттач, что и count, для аудита."""
     with contexts.in_webview(driver):
         wait_until(
             driver,
@@ -488,19 +501,37 @@ def assert_no_non_whitelisted_onclick_candidates(driver) -> int:
                     "подсчёт кандидатов вне whitelist guard'а не выполнить надёжно",
         )
         result = driver.execute_script(
-            "return (function(whitelist) {"
+            "return (function(whitelist, contentMarkers) {"
             "  var nodes = Array.from(document.body.querySelectorAll('[onclick]'))"
             "    .filter(function(n) { return !n.closest(whitelist); });"
-            "  return {count: nodes.length, "
+            "  return {pathname: window.location.pathname, "
+            "          hasContentMarker: !!document.querySelector(contentMarkers), "
+            "          count: nodes.length, "
             "          details: nodes.map(function(n) { return n.outerHTML.slice(0, 200); })};"
-            "})(arguments[0]);",
+            "})(arguments[0], arguments[1]);",
             selectors.TAP_ZONE_GUARD_WHITELIST,
+            selectors.WORK_PAGE_CONTENT_MARKERS,
         )
+    pathname = result["pathname"]
+    has_content_marker = bool(result["hasContentMarker"])
     count = int(result["count"])
     allure.attach(
+        f"pathname={pathname!r} has_content_marker={has_content_marker} "
         f"count={count} details={result['details']!r}",
         name="tc-118-non-whitelisted-onclick-candidates",
         attachment_type=allure.attachment_type.TEXT,
+    )
+    assert re.match(r"^/works/\d", pathname), (
+        f"pathname={pathname!r} не соответствует ^/works/\\d — открыта НЕ work-страница "
+        f"(guard тап-зон тоже проверяет только этот паттерн, ao3_bridge.js:1154); "
+        f"N={count} неинтерпретируем без этого якоря идентичности документа"
+    )
+    assert has_content_marker, (
+        f"на странице pathname={pathname!r} не найдено ни одного узла реального контента "
+        f"work-страницы ({selectors.WORK_PAGE_CONTENT_MARKERS!r}) — вероятен Cloudflare-"
+        f"интерстишл или иная нештатная страница с readyState=complete, но без контента "
+        f"(R-03); N={count} НЕ является доказательством отсутствия кандидатов, т.к. измерена "
+        f"пустая/нештатная страница, а не реальная work-страница"
     )
     assert count == 0, (
         f"найдено {count} узл(ов) вне whitelist guard'а тап-зон с собственным "
@@ -1796,3 +1827,128 @@ def click_retry(driver) -> None:
             message="страница не перезагрузилась после клика Retry (старый DOM-узел "
                     "Retry-ссылки остаётся валидным)",
         )
+
+
+# --- TC-129/TC-130: infinite scroll (`ao3_bridge.js:520-615`, browse-infinite-scroll) —
+# скролл к концу листинга подгружает следующую страницу ФОНОВЫМ запросом (fetch), не
+# навигацией. `SCROLL_MARGIN` сверен с `ao3_bridge.js:514` (`var SCROLL_MARGIN = 400;`)
+# на момент автоматизации TC-130 (2026-07-29) — сверить заново при правке этого модуля,
+# если константа в исходнике изменится.
+
+_INFINITE_SCROLL_MARGIN_PX = 400
+
+
+@allure.step("Then снят снимок id work-блёрбов листинга (для diff до/после подгрузки)")
+def snapshot_work_blurb_ids(driver) -> list[str]:
+    with contexts.in_webview(driver):
+        return ListingPage(driver).blurb_work_ids()
+
+
+@allure.step("Then window.location.pathname/query WebView сняты (снимок)")
+def get_webview_location(driver) -> tuple[str, str]:
+    with contexts.in_webview(driver):
+        result = driver.execute_script(
+            "return {pathname: window.location.pathname, search: window.location.search};"
+        )
+    return result["pathname"], result["search"]
+
+
+@allure.step("Then window.location.pathname/query WebView не изменились (фоновая подгрузка — не навигация)")
+def assert_webview_location_unchanged(driver, before: tuple[str, str]) -> None:
+    after = get_webview_location(driver)
+    assert after == before, (
+        f"window.location.pathname/query WebView изменились: было {before}, стало {after} "
+        f"— похоже на навигацию, а не фоновый fetch (TC-130 Then)"
+    )
+
+
+@allure.step(
+    "When листинг проскроллен вниз ПРИЦЕЛЬНЫМ минимальным скроллом "
+    "(триггер scroll-события infinite-scroll, ao3_bridge.js:548-554)"
+)
+def trigger_infinite_scroll_load(driver, min_blurb_count: int, timeout: int | None = None) -> None:
+    """TC-130 «Заметки для автоматизации», доработка attempt 4 (критик-вход измерение
+    headless Chromium): прицельный, ОДНОКРАТНЫЙ скролл с нижним ограничением —
+        delta = Math.max(1, ol.getBoundingClientRect().bottom
+                             - (innerHeight + SCROLL_MARGIN) + 1)
+        window.scrollTo(0, window.scrollY + delta)
+    На фикстуре `listing_paginated.mitm` сырая дельта (без `Math.max`) отрицательна
+    (предикат подгрузки уже истинен ПРИ ЗАГРУЗКЕ страницы, `ol.bottom ≈ 627 CSS px`
+    независимо от ширины вьюпорта) — `scrollTo` от `scrollY=0` клампился бы к 0, и
+    scroll-событие не породилось бы вовсе (`ev=0, fetches=0`, тест недостижимо
+    красный). `Math.max(1, …)` гарантирует минимальный ненулевой скролл — эквивалент
+    `scrollBy(0, 1)`, порождает РОВНО ОДНО scroll-событие и РОВНО ОДНУ подгрузку.
+
+    НЕ используется `scrollTo(0, document.body.scrollHeight)`: филлер-блок фикстуры
+    стоит СНАРУЖИ `<ol>` (`recording_builder.py`, `filler_block`), из-за чего условие
+    триггера (`ol.bottom > innerHeight + SCROLL_MARGIN`) остаётся ложным (то есть
+    подгрузка продолжает срабатывать) после КАЖДОГО аппенда, пока viewport стоит у
+    самого низа документа — риск зацепить эвикцию окна (`PAGE_WINDOW=3`) уже в рамках
+    этого кейса (явный non-goal TC-130).
+
+    Ждёт, пока число `li[id^="work_"]` не превысит `min_blurb_count` — сигнал, что
+    `fetchAndAppend` (`ao3_bridge.js:557-615`) успел завершиться и добавить хотя бы
+    один блёрб."""
+    with contexts.in_webview(driver):
+        driver.execute_script(
+            "var ol = document.querySelector('ol.work.index.group');"
+            "var SCROLL_MARGIN = arguments[0];"
+            "var delta = Math.max(1, ol.getBoundingClientRect().bottom - "
+            "(window.innerHeight + SCROLL_MARGIN) + 1);"
+            "window.scrollTo(0, window.scrollY + delta);",
+            _INFINITE_SCROLL_MARGIN_PX,
+        )
+        wait_until(
+            driver,
+            lambda d: len(ListingPage(d).blurb_work_ids()) > min_blurb_count,
+            timeout=timeout or settings.WEBVIEW_LOAD_TIMEOUT,
+            message=(
+                f"после скролла число work-блёрбов не превысило {min_blurb_count} — "
+                f"фоновая подгрузка (fetchAndAppend, ao3_bridge.js:557-615) не сработала"
+            ),
+        )
+
+
+@allure.step(
+    "Then после подгрузки на листинге >= 2 work-блёрбов, все id уникальны, и среди "
+    "них есть хотя бы один id, отсутствовавший в снимке ДО скролла"
+)
+def assert_infinite_scroll_appended_new_unique_blurbs(driver, ids_before: list[str]) -> list[str]:
+    """TC-130 Then (доработка attempt 2 критик-вход N2 — count `>= 2`, НЕ ровно 2:
+    после аппенда возможна каскадная третья подгрузка от scroll anchoring; доработка
+    attempt 3 критик-вход B3 — снимок-diff устойчив к глубине каскада, не привязан к
+    id конкретной СТРАНИЦЫ 2). Возвращает НОВЫЕ id (diff) — вызывающий тест сверяет
+    Rate-кнопку именно на них, не на позиционно предполагаемом «втором» блёрбе."""
+    with contexts.in_webview(driver):
+        ids_after = ListingPage(driver).blurb_work_ids()
+    assert len(ids_after) >= 2, (
+        f"после скролла на листинге {len(ids_after)} work-блёрбов (было {len(ids_before)} "
+        f"до скролла), ожидали >= 2: {ids_after}"
+    )
+    new_ids = [wid for wid in ids_after if wid not in ids_before]
+    assert new_ids, (
+        f"множество id work-блёрбов ПОСЛЕ скролла не содержит ни одного id, "
+        f"отсутствовавшего ДО скролла — фоновая подгрузка не добавила новых блёрбов "
+        f"(до={ids_before}, после={ids_after})"
+    )
+    assert len(ids_after) == len(set(ids_after)), (
+        f"id work-блёрбов ПОСЛЕ скролла содержат дубликаты: {ids_after}"
+    )
+    return new_ids
+
+
+@allure.step("Then у каждого вновь появившегося work-блёрба ({work_ids}) инжектирована собственная Rate-кнопка")
+def assert_rate_buttons_present_for(driver, work_ids: list[str]) -> None:
+    """TC-130 Then (доработка attempt 3 критик-вход B3): проверка «любой/каждый из
+    diff-множества», не «последний в списке» и не «специфично страница 2» — bridge
+    инжектирует Rate-кнопку в цикле на КАЖДЫЙ аппендящийся `li` (`ao3_bridge.js:
+    570-581`), проверка обязана покрывать ВСЕ новые id, не один."""
+    assert work_ids, "нечего проверять — пустой список вновь появившихся work id"
+    with contexts.in_webview(driver):
+        page = ListingPage(driver)
+        for work_id in work_ids:
+            state = page.rate_button_state(work_id)
+            assert state["button_count"] >= 1, (
+                f"вновь подгруженный блёрб work_id={work_id}: Rate-кнопка не найдена "
+                f"(button_count={state['button_count']})"
+            )

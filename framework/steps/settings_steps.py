@@ -65,6 +65,17 @@ def enable_tap_to_scroll(driver):
     SettingsScreen(driver).set_tap_to_scroll(True)
 
 
+@allure.step("Given в Settings включена опция «Infinite scroll (listing pages)»")
+def enable_infinite_scroll(driver):
+    """TC-129/TC-130: дефолт ON (`infiniteScroll: Boolean = true`,
+    SettingsScreen.kt:77) — вызов идемпотентен (тот же приём, что
+    `enable_tap_to_scroll`); явный вызов делает Given TC-130 независимым от
+    значения дефолта (гейт `ao3_bridge.js:530` вычисляется ОДИН РАЗ при инъекции,
+    на загрузке листинговой страницы — тумблер обязан быть установлен ДО перехода
+    на неё, см. заметки TC-130)."""
+    SettingsScreen(driver).set_infinite_scroll(True)
+
+
 @allure.step("When в Settings тумблер «Hide {rating_label} works» установлен в {enabled}")
 def set_hide_rating(driver, rating_label: str, enabled: bool):
     SettingsScreen(driver).set_hide_rating(rating_label, enabled)

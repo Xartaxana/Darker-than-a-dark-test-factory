@@ -376,7 +376,7 @@
     "epicPath": null,
     "summary": "Infinite scroll ON: скролл к концу листинга подгружает следующую страницу без навигации",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -384,7 +384,7 @@
       "area:browser",
       "risk:R-11"
     ],
-    "updated": "2026-07-29T00:00:00Z",
+    "updated": "2026-07-29T19:44:32Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -812,7 +812,7 @@
     "epicPath": null,
     "summary": "Числовая проба предпосылки guard'а: узлы вне whitelist с собственным обработчиком в теле живой work-страницы (live)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -820,7 +820,7 @@
       "area:canary",
       "risk:R-02"
     ],
-    "updated": "2026-07-29T17:08:36Z",
+    "updated": "2026-07-30T09:15:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -880,16 +880,17 @@
     "epicPath": null,
     "summary": "Тап по whitelisted-ссылке БЕЗ собственного JS-обработчика в теле work-страницы не запускает зональное действие (whitelist по тегу, независимо от наличия обработчика, replay)",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:canary",
-      "risk:R-02"
+      "risk:R-02",
+      "automation:active"
     ],
-    "updated": "2026-07-29T17:20:31Z",
-    "resolution": null,
+    "updated": "2026-07-29T19:29:48Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1178,16 +1179,17 @@
     "epicPath": null,
     "summary": "Тумблер Auto-download выключен — простановка Favorite не скачивает файл (off-путь)",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:downloads",
-      "risk:R-05"
+      "risk:R-05",
+      "automation:active"
     ],
-    "updated": "2026-07-29T18:55:00Z",
-    "resolution": null,
+    "updated": "2026-07-29T19:03:21Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1200,16 +1202,17 @@
     "epicPath": null,
     "summary": "Включение тумблера Auto-download не скачивает задним числом ранее отмеченные Favorite-работы",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:downloads",
-      "risk:R-05"
+      "risk:R-05",
+      "automation:active"
     ],
-    "updated": "2026-07-29T17:55:00Z",
-    "resolution": null,
+    "updated": "2026-07-29T21:15:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1222,16 +1225,17 @@
     "epicPath": null,
     "summary": "Правка личного тега уже-Favorite работы через панель работы не скачивает файл повторно (edge vs level, :756)",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:downloads",
-      "risk:R-05"
+      "risk:R-05",
+      "automation:active"
     ],
-    "updated": "2026-07-29T18:40:00Z",
-    "resolution": null,
+    "updated": "2026-07-29T19:19:08Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1267,7 +1271,7 @@
     "epicPath": null,
     "summary": "Смена рейтинга с Favorite на другой не запускает скачивание",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -1275,7 +1279,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-07-28T22:03:54Z",
+    "updated": "2026-07-29T22:55:13Z",
     "resolution": null,
     "children": [],
     "archived": false

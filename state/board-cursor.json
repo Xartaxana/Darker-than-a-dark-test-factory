@@ -191,8 +191,8 @@
   },
   "TC-121": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-122": {
     "itype": "test-case",
@@ -256,18 +256,18 @@
   },
   "TC-112": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-113": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-114": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-115": {
     "itype": "test-case",

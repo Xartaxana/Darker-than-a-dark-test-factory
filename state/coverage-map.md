@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-29T18:13:48Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-29T23:33:59Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -14,9 +14,9 @@ generated_at: 2026-07-29T18:13:48Z · генератор: `scripts/coverage_map.
 | accessibility | 3 | 3 | designed-full |
 | backup | 1 | 1 | designed-full |
 | browser | 13 | 12 | partial |
-| canary | 23 | 21 | partial |
+| canary | 23 | 22 | partial |
 | compatibility | 3 | 3 | designed-full |
-| downloads | 14 | 9 | partial |
+| downloads | 14 | 12 | partial |
 | errors | 1 | 1 | designed-full |
 | filter-profiles | 5 | 5 | designed-full |
 | library | 15 | 15 | designed-full |
@@ -104,7 +104,7 @@ generated_at: 2026-07-29T18:13:48Z · генератор: `scripts/coverage_map.
 | settings-panel-side | settings | нет кейсов |
 | settings-tap-to-scroll-toggle | settings | settings:TC-123[Approved], settings:TC-124[Approved], settings:TC-125[Approved] |
 | settings-infinite-scroll-toggle | settings | settings:TC-129[Approved], browser:TC-130[Approved] |
-| settings-auto-download-favorite | settings | downloads:TC-112[Approved], downloads:TC-113[Approved] |
+| settings-auto-download-favorite | settings | downloads:TC-112[Automated], downloads:TC-113[Automated] |
 | settings-download-folder-saf | settings | downloads:TC-038[Automated] |
 | settings-backup-export | settings | backup:TC-021[Automated] |
 | settings-restore-merge | settings | backup:TC-021[Automated] |
@@ -136,12 +136,12 @@ generated_at: 2026-07-29T18:13:48Z · генератор: `scripts/coverage_map.
 | bridge-exclude-main-pairing-filter | ao3-bridge | canary:TC-080[Automated], canary:TC-081[Automated] |
 | bridge-dark-css | ao3-bridge | нет кейсов |
 | bridge-scroll-reporting | ao3-bridge | нет кейсов |
-| bridge-tap-zone-guard | ao3-bridge | canary:TC-118[Approved], canary:TC-119[Automated], canary:TC-120[Automated], canary:TC-121[Approved], canary:TC-122[Automated] |
+| bridge-tap-zone-guard | ao3-bridge | canary:TC-118[Approved], canary:TC-119[Automated], canary:TC-120[Automated], canary:TC-121[Automated], canary:TC-122[Automated] |
 | data-workrating-model | data | нет кейсов |
 | data-filterprofile-model | data | нет кейсов |
 | data-clear-all-ratings | data | smoke:TC-004[Automated], settings:TC-018[Automated], settings:TC-019[Automated], settings:TC-020[Blocked] |
 | background-download-repository | background | downloads:TC-032[Automated], downloads:TC-033[Automated] |
-| background-auto-download-trigger | background | downloads:TC-032[Automated], downloads:TC-112[Approved], downloads:TC-114[Approved], downloads:TC-115[Automated], downloads:TC-116[Approved], downloads:TC-117[Approved] |
+| background-auto-download-trigger | background | downloads:TC-032[Automated], downloads:TC-112[Automated], downloads:TC-114[Automated], downloads:TC-115[Automated], downloads:TC-116[Approved], downloads:TC-117[Approved] |
 | background-auto-kudos-trigger | background | нет кейсов |
 | nf-perf-cold-start-budget | non-functional | performance:TC-096[Automated] |
 | nf-perf-webview-first-load-budget | non-functional | performance:TC-097[Automated] |
@@ -216,7 +216,7 @@ generated_at: 2026-07-29T18:13:48Z · генератор: `scripts/coverage_map.
 - риски: R-06, R-11
 - кейсы без risk: нет
 - P0/P1 не в Automated: TC-130 [P1, Approved]
-- автотесты (automated_by): framework/tests/test_reading_ux.py::test_tap_zone_bottom_third_scrolls_down, framework/tests/test_reading_ux.py::test_tap_zone_middle_third_toggles_fullscreen, framework/tests/test_reading_ux.py::test_tap_zone_top_third_scrolls_up, framework/tests/test_side_panel.py::test_font_buttons_disabled_at_range_boundaries, framework/tests/test_side_panel.py::test_font_size_increase_instant_and_persists, framework/tests/test_side_panel.py::test_pinch_spread_changes_font_size, framework/tests/test_side_panel.py::test_side_panel_and_settings_share_theme_and_font_state, framework/tests/test_side_panel.py::test_side_panel_contrast_toggles_theme_instantly, framework/tests/test_side_panel.py::test_side_panel_fullscreen_hides_tabstrip_and_toggles_label, framework/tests/test_side_panel.py::test_side_panel_home_navigates_active_tab_to_ao3_root, framework/tests/test_side_panel.py::test_side_panel_toggle_kudosed_hides_and_syncs_settings, framework/tests/test_side_panel.py::test_two_finger_drag_changes_brightness
+- автотесты (automated_by): framework/tests/test_infinite_scroll.py::test_infinite_scroll_on_loads_next_page_in_background, framework/tests/test_reading_ux.py::test_tap_zone_bottom_third_scrolls_down, framework/tests/test_reading_ux.py::test_tap_zone_middle_third_toggles_fullscreen, framework/tests/test_reading_ux.py::test_tap_zone_top_third_scrolls_up, framework/tests/test_side_panel.py::test_font_buttons_disabled_at_range_boundaries, framework/tests/test_side_panel.py::test_font_size_increase_instant_and_persists, framework/tests/test_side_panel.py::test_pinch_spread_changes_font_size, framework/tests/test_side_panel.py::test_side_panel_and_settings_share_theme_and_font_state, framework/tests/test_side_panel.py::test_side_panel_contrast_toggles_theme_instantly, framework/tests/test_side_panel.py::test_side_panel_fullscreen_hides_tabstrip_and_toggles_label, framework/tests/test_side_panel.py::test_side_panel_home_navigates_active_tab_to_ao3_root, framework/tests/test_side_panel.py::test_side_panel_toggle_kudosed_hides_and_syncs_settings, framework/tests/test_side_panel.py::test_two_finger_drag_changes_brightness
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
@@ -228,16 +228,16 @@ generated_at: 2026-07-29T18:13:48Z · генератор: `scripts/coverage_map.
 
 ### canary
 
-- coverage_status: **partial** (21/23 Automated)
+- coverage_status: **partial** (22/23 Automated)
 - риски: R-02, R-02/R-04
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-118 [P0, Approved], TC-121 [P0, Approved]
-- автотесты (automated_by): framework/tests/canary/test_ao3_selectors.py::test_bridge_marker_present_live, framework/tests/canary/test_ao3_selectors.py::test_bridge_marker_present_replay, framework/tests/canary/test_ao3_selectors.py::test_exclude_main_pairing_checkbox_availability_live, framework/tests/canary/test_ao3_selectors.py::test_exclude_main_pairing_checkbox_availability_replay, framework/tests/canary/test_ao3_selectors.py::test_main_pairing_checkbox_availability_live, framework/tests/canary/test_ao3_selectors.py::test_main_pairing_checkbox_availability_replay, framework/tests/canary/test_ao3_selectors.py::test_note_button_present_iff_comment_live, framework/tests/canary/test_ao3_selectors.py::test_note_button_present_iff_comment_replay, framework/tests/canary/test_ao3_selectors.py::test_rate_button_badge_opaque_color_live, framework/tests/canary/test_ao3_selectors.py::test_rate_button_badge_opaque_color_replay, framework/tests/canary/test_ao3_selectors.py::test_rate_button_injected_on_live_listing, framework/tests/canary/test_ao3_selectors.py::test_rate_button_injected_on_replay_listing, framework/tests/canary/test_ao3_selectors.py::test_save_filter_button_idempotent_live, framework/tests/canary/test_ao3_selectors.py::test_save_filter_button_idempotent_replay, framework/tests/canary/test_ao3_selectors.py::test_tag_button_present_iff_custom_tag_live, framework/tests/canary/test_ao3_selectors.py::test_tag_button_present_iff_custom_tag_replay, framework/tests/canary/test_ao3_selectors.py::test_work_blurb_selector_matches_live_listing, framework/tests/canary/test_ao3_selectors.py::test_work_blurb_selector_matches_replay_listing, framework/tests/canary/test_tap_zone_guard.py::test_tap_zone_guard_blocks_whitelisted_button, framework/tests/canary/test_tap_zone_guard.py::test_tap_zone_guard_closest_semantics_on_descendant, framework/tests/canary/test_tap_zone_guard.py::test_tap_zone_guard_pierced_by_non_whitelisted_div, framework/tests/canary/test_tap_zone_guard.py::test_tap_zone_guard_whitelisted_link_without_own_handler
+- P0/P1 не в Automated: TC-118 [P0, Approved]
+- автотесты (automated_by): framework/tests/canary/test_ao3_selectors.py::test_bridge_marker_present_live, framework/tests/canary/test_ao3_selectors.py::test_bridge_marker_present_replay, framework/tests/canary/test_ao3_selectors.py::test_exclude_main_pairing_checkbox_availability_live, framework/tests/canary/test_ao3_selectors.py::test_exclude_main_pairing_checkbox_availability_replay, framework/tests/canary/test_ao3_selectors.py::test_main_pairing_checkbox_availability_live, framework/tests/canary/test_ao3_selectors.py::test_main_pairing_checkbox_availability_replay, framework/tests/canary/test_ao3_selectors.py::test_no_non_whitelisted_onclick_candidates_on_live_work_page, framework/tests/canary/test_ao3_selectors.py::test_note_button_present_iff_comment_live, framework/tests/canary/test_ao3_selectors.py::test_note_button_present_iff_comment_replay, framework/tests/canary/test_ao3_selectors.py::test_rate_button_badge_opaque_color_live, framework/tests/canary/test_ao3_selectors.py::test_rate_button_badge_opaque_color_replay, framework/tests/canary/test_ao3_selectors.py::test_rate_button_injected_on_live_listing, framework/tests/canary/test_ao3_selectors.py::test_rate_button_injected_on_replay_listing, framework/tests/canary/test_ao3_selectors.py::test_save_filter_button_idempotent_live, framework/tests/canary/test_ao3_selectors.py::test_save_filter_button_idempotent_replay, framework/tests/canary/test_ao3_selectors.py::test_tag_button_present_iff_custom_tag_live, framework/tests/canary/test_ao3_selectors.py::test_tag_button_present_iff_custom_tag_replay, framework/tests/canary/test_ao3_selectors.py::test_work_blurb_selector_matches_live_listing, framework/tests/canary/test_ao3_selectors.py::test_work_blurb_selector_matches_replay_listing, framework/tests/canary/test_tap_zone_guard.py::test_tap_zone_guard_blocks_whitelisted_button, framework/tests/canary/test_tap_zone_guard.py::test_tap_zone_guard_closest_semantics_on_descendant, framework/tests/canary/test_tap_zone_guard.py::test_tap_zone_guard_pierced_by_non_whitelisted_div, framework/tests/canary/test_tap_zone_guard.py::test_tap_zone_guard_whitelisted_link_without_own_handler
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
-| P0 |  |  | 2 | 19 |  |
+| P0 |  |  | 1 | 20 |  |
 | P1 |  |  |  | 1 |  |
 | P2 |  |  |  | 1 |  |
 | P3 |  |  |  |  |  |
@@ -260,17 +260,17 @@ generated_at: 2026-07-29T18:13:48Z · генератор: `scripts/coverage_map.
 
 ### downloads
 
-- coverage_status: **partial** (9/14 Automated)
+- coverage_status: **partial** (12/14 Automated)
 - риски: R-05
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-112 [P1, Approved], TC-113 [P1, Approved], TC-114 [P1, Approved]
-- автотесты (automated_by): framework/tests/test_downloads.py::test_auto_download_triggers_on_loved_rating, framework/tests/test_downloads.py::test_change_download_folder_triggers_silent_scan_and_relinks_orphan_file, framework/tests/test_downloads.py::test_delete_downloaded_file_keeps_rating_row, framework/tests/test_downloads.py::test_delete_work_removes_row_and_file, framework/tests/test_downloads.py::test_edit_note_on_already_saved_work_via_listing_overlay_does_not_redownload, framework/tests/test_downloads.py::test_edit_tag_on_already_saved_work_via_panel_does_not_redownload, framework/tests/test_downloads.py::test_enabling_auto_download_does_not_retroactively_download_favorites, framework/tests/test_downloads.py::test_favorite_rating_does_not_download_when_auto_download_off, framework/tests/test_downloads.py::test_manual_download_from_library_adds_local_file, framework/tests/test_downloads.py::test_manual_scan_for_downloads_shows_dialog_on_zero_files, framework/tests/test_downloads.py::test_open_downloaded_file_applies_viewport_and_reader_css, framework/tests/test_downloads.py::test_restore_folds_orphan_scan_into_single_dialog
+- P0/P1 не в Automated: нет
+- автотесты (automated_by): framework/tests/test_downloads.py::test_auto_download_triggers_on_loved_rating, framework/tests/test_downloads.py::test_change_download_folder_triggers_silent_scan_and_relinks_orphan_file, framework/tests/test_downloads.py::test_delete_downloaded_file_keeps_rating_row, framework/tests/test_downloads.py::test_delete_work_removes_row_and_file, framework/tests/test_downloads.py::test_edit_note_on_already_saved_work_via_listing_overlay_does_not_redownload, framework/tests/test_downloads.py::test_edit_tag_on_already_saved_work_via_panel_does_not_redownload, framework/tests/test_downloads.py::test_enabling_auto_download_does_not_retroactively_download_favorites, framework/tests/test_downloads.py::test_favorite_rating_does_not_download_when_auto_download_off, framework/tests/test_downloads.py::test_manual_download_from_library_adds_local_file, framework/tests/test_downloads.py::test_manual_scan_for_downloads_shows_dialog_on_zero_files, framework/tests/test_downloads.py::test_open_downloaded_file_applies_viewport_and_reader_css, framework/tests/test_downloads.py::test_rating_change_from_favorite_to_kudosed_does_not_download, framework/tests/test_downloads.py::test_restore_folds_orphan_scan_into_single_dialog
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  |  |  |
-| P1 |  |  | 3 | 6 |  |
+| P1 |  |  |  | 9 |  |
 | P2 |  |  | 2 | 2 |  |
 | P3 |  |  |  | 1 |  |
 

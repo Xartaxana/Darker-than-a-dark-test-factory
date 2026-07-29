@@ -121,6 +121,33 @@ class SettingsScreen(BaseScreen):
             self.tap(self._TAP_TO_SCROLL_SWITCH)
         return self
 
+    # --- Infinite scroll toggle (секция "Reader", SettingsScreen.kt:701-707,
+    # TC-129/TC-130) — тот же приём XPath `following::`, что `_TAP_TO_SCROLL_SWITCH`:
+    # Compose `Switch` без text/content-desc, ближайший checkable-узел ПОСЛЕ подписи
+    # строки в document order. Строка идёт СРАЗУ ПОСЛЕ "Tap to scroll (work pages)" в
+    # том же разделе Reader (SettingsScreen.kt:694-707) — `following::` от ЭТОГО текста
+    # не зацепит чужой (более ранний) checkable-узел tap-to-scroll, только следующий в
+    # document order. `swipe_to_text` перед поиском — тот же паттерн, что
+    # `is_tap_to_scroll_checked`.
+    _INFINITE_SCROLL_SWITCH = (
+        AppiumBy.XPATH,
+        '(//*[@text="Infinite scroll (listing pages)"]/following::*[@checkable="true"])[1]',
+    )
+
+    def is_infinite_scroll_checked(self, timeout: int | None = None) -> bool:
+        assert self.swipe_to_text("Infinite scroll (listing pages)"), (
+            "строка «Infinite scroll (listing pages)» не найдена прокруткой (Reader)"
+        )
+        el = self.find(self._INFINITE_SCROLL_SWITCH, timeout)
+        return el.get_attribute("checked") == "true"
+
+    def set_infinite_scroll(self, enabled: bool):
+        """Тумблер — таплю только если текущее состояние не совпадает с желаемым
+        (идемпотентно, тот же приём, что `set_tap_to_scroll`)."""
+        if self.is_infinite_scroll_checked() != enabled:
+            self.tap(self._INFINITE_SCROLL_SWITCH)
+        return self
+
     # --- Per-rating "Hide {rating} works" toggle (секция "Content Visibility",
     # SettingsScreen.kt:718-759, TC-015) — тот же приём XPath `following::`, что и
     # `_AUTO_DOWNLOAD_SWITCH`: Compose `Switch` без text/content-desc, ближайший

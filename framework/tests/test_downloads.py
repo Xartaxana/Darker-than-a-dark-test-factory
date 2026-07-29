@@ -442,6 +442,74 @@ def test_enabling_auto_download_does_not_retroactively_download_favorites(replay
     library_steps.assert_work_not_in_files_tab(driver, work.title)
 
 
+# --- TC-116: смена рейтинга с Favorite (SAVE) на другой (LIKE) не запускает
+# скачивание (BrowserViewModel.kt:756-758, savePanelRating, ветка `existing !=
+# null`: предикат `rating == Rating.SAVE && autoDownloadSaved` — короткое
+# замыкание при rating != SAVE, `downloadWork()` структурно не вызывается).
+# `rb.WORK_WITH_DOWNLOAD_FILENAME` (та же запись, что TC-032/033/114) нужна по
+# тому же классу причин, что TC-112/113/114/115 (см. докстрины выше и заметки
+# TC-116.md): сценарий сам по себе не делает сетевого вызова, но негативный Then
+# проверяет отсутствие эффекта ГИПОТЕТИЧЕСКОГО бага (например, ошибочное
+# сравнение с устаревшим `existing.rating`), а не отсутствие штатного
+# поведения — без реально завершающегося (не молча проваливающегося в live-сеть)
+# скачивания негативный Then был бы ложно-зелёным независимо от того, сработал
+# бы гипотетический баг или нет.
+
+@pytest.mark.p2
+@pytest.mark.replay
+@allure.id("TC-116")
+@allure.title("Смена рейтинга с Favorite на другой (Kudosed) не скачивает файл")
+@pytest.mark.parametrize("replay", [rb.WORK_WITH_DOWNLOAD_FILENAME], indirect=True)
+def test_rating_change_from_favorite_to_kudosed_does_not_download(replay, loved_work_seeded, driver):
+    # Given работа W (LOVED) засеяна с рейтингом Favorite (SAVE), downloadPath=null
+    # (сидинг напрямую в Room — не через UI, `loved_work_seeded`); тумблер
+    # Auto-download включён в Settings; та же гонка, что закрыта в TC-032/114/115
+    # (см. докстринги): wait_app_ready (не wait_ui_ready) ПЕРЕД навигацией по Settings.
+    # Карточка на вкладке FAVORITE показывает download-иконку — baseline (файл ещё
+    # не скачан).
+    work = loved_work_seeded
+    app_steps.wait_app_ready(driver)
+    saf_steps.open_settings_scrolled_to(driver, "Auto-download favorite works")
+    settings_steps.enable_auto_download(driver)
+    settings_steps.assert_auto_download_enabled(driver, True)
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_work_in_tab(driver, "SAVE", work.title)
+    library_steps.assert_download_icon_shown(driver, work.title)
+
+    # And открыта страница работы W, встроенная панель RatingMenu раскрыта и уже
+    # показывает Favorite выбранным (рейтинг прочитан из Room при загрузке страницы,
+    # НЕ проставлен этим UI-визитом — тап по уже выбранной кнопке на панели
+    # деселектил бы её вместо переотправки того же SAVE, см. заметки TC-116.md)
+    app_steps.open_tab(driver, "Browse")
+    rating_steps.open_work_page(driver, work.ao3_id)
+
+    # When пользователь через панель RatingMenu нажимает «Kudosed» (LIKE) — смена
+    # рейтинга, реальный проход через `savePanelRating`, ветка `existing != null`
+    # (:743-758), ровно та ветка, что названа в `requirements` кейса
+    rating_steps.rate_current_work(driver, "LIKE")
+
+    # Then рейтинг меняется на Kudosed — работа W перемещается из вкладки FAVORITE
+    # во вкладку KUDOSED экрана Library
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_work_in_tab(driver, "LIKE", work.title)
+
+    # And скачивание НЕ запускается ни на каком этапе — карточка по-прежнему
+    # показывает download-иконку (не open-иконку) на вкладке KUDOSED (текущая
+    # вкладка после assert_work_in_tab выше — has_work/has_download_icon читают
+    # карточки ТЕКУЩЕЙ отрисованной вкладки, не ищут по всем вкладкам сразу,
+    # поэтому проверка иконки идёт ДО переключения на FAVORITE ниже)
+    library_steps.assert_download_icon_shown(driver, work.title)
+
+    # And работа W больше не отображается во вкладке FAVORITE (SAVE) — рейтинг
+    # реально сменился, а не задвоился
+    library_steps.assert_work_not_in_tab(driver, "SAVE", work.title)
+
+    # And работа не появляется во вкладке FILES; отсутствие незапрошенного файла в
+    # download-директории дополнительно и независимо ловит autouse-оракул
+    # `download_oracle` (conftest.py) — тест не несёт @pytest.mark.produces_download
+    library_steps.assert_work_not_in_files_tab(driver, work.title)
+
+
 # --- TC-037: ручной Scan for downloads показывает диалог даже при 0 файлов ---
 
 @pytest.mark.p3
