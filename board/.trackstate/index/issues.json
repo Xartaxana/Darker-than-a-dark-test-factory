@@ -3649,15 +3649,15 @@
     "epicPath": null,
     "summary": "Stop-NodeProcesses (tasks.ps1) убивает ЛЮБОЙ node.exe по имени — коллатеральный риск для чужих неAO3 node-процессов на этом же хосте",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-07-29T09:47:00Z",
-    "resolution": null,
+    "updated": "2026-07-29T11:35:13Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },

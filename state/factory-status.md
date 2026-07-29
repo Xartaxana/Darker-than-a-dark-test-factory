@@ -1,12 +1,12 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-29T11:03:49Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-07-29T11:45:26Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **655.5** (RUN-20260702-0300)
+- smoke: Closed · smoke_freshness_hours: **656.2** (RUN-20260702-0300)
 - regression: not_run
 - canary: not_run
 - Открытые blocker/critical: **0**
@@ -63,9 +63,9 @@ generated_at: 2026-07-29T11:03:49Z · генератор: `scripts/queue_snapsho
 
 - BUG-012 [minor] Open — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
 
-## Test debt (1)
+## Test debt (0)
 
-- AT-BUG-031 [broken_environment] Fixed — Stop-NodeProcesses (tasks.ps1) убивает ЛЮБОЙ node.exe по имени — коллатеральный риск для чужих неAO3 node-процессов на этом же хосте
+- нет
 
 ## Прогоны (1)
 

@@ -2,7 +2,7 @@
 key: "AT-BUG-031"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p2"
 summary: "Stop-NodeProcesses (tasks.ps1) убивает ЛЮБОЙ node.exe по имени — коллатеральный риск для чужих неAO3 node-процессов на этом же хосте"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-29T09:47:00Z"
-updated: "2026-07-29T09:47:00Z"
+created: "2026-07-29T11:35:13Z"
+updated: "2026-07-29T11:35:13Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Stop-NodeProcesses (tasks.ps1) убивает ЛЮБОЙ node.exe по имени — коллатеральный риск для чужих неAO3 node-процессов на этом же хосте
 
 _Спроецировано из `bugs/AT-BUG-031.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # AT-BUG-031 — `Stop-NodeProcesses` слишком широкий фильтр (по имени, не по владению) — риск для чужих node-процессов на общем хосте
 
@@ -97,7 +97,8 @@ node-скриптом ВНЕ `D:\AO3_tests`), не завершает посто
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
-| 2026-07-29 | n/a (test_debt, фикс в scripts/tasks.ps1, сборка приложения не при делах) | test_cases: [] (нет привязанных; связанных нет — правка чисто в PowerShell-обвязке) + минимальный smoke области: (1) `[System.Management.Automation.Language.Parser]::ParseFile` на `scripts/tasks.ps1` (2) dot-source `. D:\AO3_tests\scripts\tasks.ps1` (3) `python -m pytest scripts/tests -q` (4) `python scripts/validate_frontmatter.py` | (1) SYNTAX_OK, без ошибок парсера; (2) dot-source прошёл без ParserError, `Get-Command Stop-NodeProcesses` резолвится, вывод `Tasks loaded: ... Stop-NodeProcesses ...`; (3) 682 passed, 1 skipped (идентично witness test-maintainer, независимо воспроизведено); (4) ошибок 0, предупреждений 0. BOM `scripts/tasks.ps1` подтверждён (первые байты `EF BB BF`, CLAUDE.md п.7). Чтение текущего кода `Stop-NodeProcesses` (строки 171-214) подтверждает все 3 пункта фикса из «## Обсуждение»: (F1) ветка «убить родителя»-по-PPID отсутствует целиком, killer-шаг — только `foreach ($p in $owned) { Stop-Process -Id $p.ProcessId ... }` по cmdline-матчу на `$root`; (F2) счётчик `"Stopped $($owned.Count) AO3 node process(es)."` + отдельная ветка `if ($owned.Count -eq 0) { "No AO3 node processes found..." }` вместо безусловного "Node processes stopped."; (F3) guard `if (-not $root -or -not (Test-Path $root)) { throw ... }` перед любым киллом. Устройство/эмулятор не поднимались (не требуется по DoD режима verify для этого device-free долга). | PASS — фикс подтверждён фактическим состоянием файла, соответствует описанию attempt 2; Fixed → Verified |
+| 2026-07-29 | n/a (test_debt, фикс в scripts/tasks.ps1, сборка приложения не при делах) | test_cases: [] (нет привязанных; связанных нет — правка чисто в PowerShell-обвязке) + минимальный smoke области: (1) `[System.Management.Automation.Language.Parser]::ParseFile` на `scripts/tasks.ps1` (2) dot-source `. D:\AO3_tests\scripts\tasks.ps1` (3) `python -m pytest scripts/tests -q` (4) `python scripts/validate_frontmatter.py` | (1) SYNTAX_OK, без ошибок парсера; (2) dot-source прошёл без ParserError, `Get-Command Stop-NodeProcesses` резолвится, вывод `Tasks loaded: ... Stop-NodeProcesses ...`; (3) 682 passed, 1 skipped (идентично witness test-maintainer, независимо воспроизведено); (4) ошибок 0, предупреждений 0. BOM `scripts/tasks.ps1` подтверждён (первые байты `EF BB BF`, CLAUDE.md п.7). Чтение текущего кода `Stop-NodeProcesses` (строки 171-214) подтверждает все 3 пункта фикса из «## Обсуждение»: (F1) ветка «убить родителя»-по-PPID отсутствует целиком, killer-шаг — только `foreach ($p in $owned) { Stop-Process -Id $p.ProcessId ... }` по cmdline-матчу на `$root`; (F2) счётчик `"Stopped $($owned.Count) AO3 node process(es)."` + отдельная ветка `if ($owned.Count -eq 0) { "No AO3 node processes found..." }` вместо безусловного "Node processes stopped."; (F3) guard `if (-not $root -or -not (Test-Path $root)) { throw ... }` перед любым киллом. Устройство/эмулятор не поднимались (не требуется по DoD режима verify для этого device-free долга). | PASS — фикс подтверждён фактическим состоянием файла, соответствует описанию attempt 2; Fixed → Verified (ОТКАЧЕН, см. запись координатора 2026-07-29T09:47:00Z — device-free smoke не исполняет тело функции) |
+| 2026-07-29 | scripts/tasks.ps1 текущий HEAD, `Stop-NodeProcesses` строки 171-214 (attempt 2, F1/F2/F3 на месте) — device: emulator-5554 (`Get-Device` подтвердил, переиспользован, не поднимался заново), Appium уже был запущен (npx-launcher PID 14244, appium-worker PID 13944, `:4723/status` → `ready:true` build `3.5.2` до вызова) | test_cases: [] (штатно, см. «## Обсуждение» ниже) — ЖИВАЯ ДЕМОНСТРАЦИЯ DoD, буквально по разделу «Критерий готовности (Fixed)»: фейковый долгоживущий `node.exe` (`setInterval(()=>{}, 100000)`, `C:\Users\user\AppData\Local\Temp\claude\...\scratchpad\fake_foreign.js`, вне `D:\AO3_tests`) запущен параллельно живому Appium этого репо, затем вызван реальный `Stop-NodeProcesses` (дот-сорснутый из `scripts/tasks.ps1`, не читка кода) | BEFORE: PID 14244 (npx-launcher, cmdline без `$root`, PPID 7652=cmd.exe), PID 13944 (appium-worker, cmdline содержит `D:\AO3_tests`, PPID 25996=cmd.exe — промежуточное звено между launcher и worker подтверждено живым замером: 14244→7652(cmd.exe)→... и 13944→25996(cmd.exe), НЕ прямая связь родитель-ребёнок, ровно как независимо замерил critic), PID 22280 (фейковый, cmdline `...scratchpad\fake_foreign.js`, вне `$root`). Вызов: `Stopping AO3 node process (PID 13944): "node" "D:\AO3_tests\tools\appium\...\index.js" ...` / `Stopped 1 AO3 node process(es).` (счётчик F2 сработал, ровно 1 owned-процесс). AFTER (2с спустя): единственный оставшийся `node.exe` — PID 22280 (фейковый); `Get-Process -Id 22280` → ALIVE; `Get-Process -Id 14244` (npx-launcher) → DEAD/NOT FOUND (B2: самозавершился БЕЗ отдельного killer-шага, измерено, не предположено — комментарий в коде подтверждён фактом, не просто унаследован от test-maintainer); `Get-Process -Id 13944` (appium-worker) → DEAD/NOT FOUND (ожидаемо, целевой процесс); `:4723/status` → DOWN (ожидаемо, appium убит — часть демонстрации, не регресс). Cleanup: `Stop-Process -Id 22280 -Force` → подтверждено отсутствие, `fake_foreign.js` удалён из scratchpad. Эмулятор (`emulator-5554`) НЕ затронут (`Get-Device` после демонстрации по-прежнему видит устройство — Stop-NodeProcesses матчит только `node.exe`, эмулятор не node-процесс). | PASS (все 3 блокера critic закрыты фактическим измерением против отгруженного кода attempt 2) — Fixed → Verified. Appium сейчас DOWN (убит демонстрацией, ожидаемо) — не перезапускался, следующий шаг координатора решает, поднимать ли заново |
 
 ## Обсуждение
 
@@ -326,5 +327,72 @@ attempt 2: мёртвая ветка «убить родителя» убран�
 владения (единственный такой паттерн был именно в
 `Stop-NodeProcesses`); других кандидатов на «чини класс» в этом файле
 нет.
+
+`status: Fixed -> Verified`. Лок снят.
+
+**2026-07-29T11:35:13Z — fix-verifier (mode=verify, D1, attempt 2, лок
+`fix-verifier:2026-07-29T11:32:16Z`, доработка по критик-вердикту
+ДОРАБОТАТЬ, agent a11f0c0ea70f9273d):** закрываю все три блокера
+живой демонстрацией против ОТГРУЖЕННОГО кода attempt 2 (не читкой,
+не устаревшим witness attempt 1).
+
+**B1 — закрыт.** Прогнал буквально предписанную DoD-демонстрацию:
+фейковый `node.exe` вне `D:\AO3_tests` (`setInterval` в scratchpad)
++ уже живой Appium этого репо (переиспользован, `Get-Device`
+подтвердил `emulator-5554`, `:4723/status` `ready:true` до вызова) →
+дот-сорснутый `Stop-NodeProcesses` из текущего `scripts/tasks.ps1`.
+Результат: appium-worker (PID 13944, cmdline содержит `$root`) убит,
+фейковый посторонний процесс (PID 22280, cmdline вне `$root`) жив
+после вызова и подтверждён `Get-Process` живым до явного cleanup.
+Дословный witness — новая строка таблицы «## Верификация» выше.
+
+**B2 — закрыт измерением, не предположением.** До вызова
+подтверждено живым `Get-CimInstance Win32_Process`, что топология
+ровно та, что независимо замерил critic: npx-launcher (PID 14244) —
+НЕ прямой родитель appium-worker (PID 13944); между ними два
+отдельных `cmd.exe`-звена (14244→7652=cmd.exe и 13944→25996=cmd.exe),
+т.е. launcher — не прямой предок worker'а в смысле, который старый
+(убранный в attempt 2) killer-шаг предполагал. После вызова
+`Stop-NodeProcesses` (который убивает ТОЛЬКО owned-PID 13944, без
+отдельного шага для launcher'а) — PID 14244 (npx-launcher) сам ушёл
+из списка процессов (`Get-Process -Id 14244` → DEAD/NOT FOUND).
+Комментарий кода «обёртка завершается сама вслед за смертью дочернего
+процесса» подтверждён ФАКТИЧЕСКИМ измерением этой верификации (третье
+независимое наблюдение того же эффекта — witness attempt 1,
+измерение critic, и теперь это) — переписывать код/расширять фильтр
+не требуется, это фиксация факта по инструкции координатора, не
+починка.
+
+**B3 — решение: перевожу в Verified.** `test_cases: []` для этого
+бага штатно: `debt_kind: broken_environment` в PowerShell-обвязке
+(`scripts/tasks.ps1`) — область, для которой в этом репозитории
+принципиально не существует привязанного `test_case` (framework
+покрывает pytest/UI-кейсы приложения, не .ps1-инструменты
+housekeeping). DoD-демонстрация (B1), выполненная ЖИВЫМ вызовом
+против отгруженного кода с фактическими PID до/после, — прямой
+эквивалент «прогона связанных кейсов» для класса test_debt этого
+типа: раздел «Критерий готовности (Fixed)» самого бага ЯВНО
+допускает «юнит/интеграционный regression-тест (или ручная
+демонстрация)» как взаимозаменяемые формы DoD, и демонстрация
+выполнена буквально по тексту раздела, не device-free суррогатом
+(в отличие от attempt 1). `test_cases: []` не противоречит контракту
+fix-verifier — контракт требует Blocked, когда СВЯЗАННЫЕ кейсы не
+прогнаны при их наличии; здесь связанных кейсов не существует в
+принципе, а заменитель («минимальный smoke + связанные TC») выполнен
+в максимально доступной для этого класса форме.
+
+Регрессия окружения: эмулятор (`emulator-5554`) не затронут вызовом
+(`Get-Device` после демонстрации по-прежнему видит устройство —
+`Stop-NodeProcesses` матчит только `node.exe`-процессы). Appium
+сейчас DOWN — ожидаемый побочный эффект самой демонстрации (убит тем
+же вызовом, который убивает appium-worker этого репо), не регресс;
+не перезапускал по инструкции координатора («можешь перезапустить,
+если следующий шаг потребует» — следующий шаг неизвестен на момент
+записи, решение за координатором).
+
+Дефекты-собратья: не замечено новых (см. запись предыдущего
+fix-verifier attempt 1 — единственный `Get-Process <имя>`-паттерн без
+проверки владения в `tasks.ps1` был именно в `Stop-NodeProcesses`,
+уже почищен).
 
 `status: Fixed -> Verified`. Лок снят.
