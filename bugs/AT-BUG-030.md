@@ -4,7 +4,7 @@ title: "render_work_page_html не несёт ни whitelisted <button> (со sp
 type: test_debt
 debt_kind: missing_fixture
 severity: minor
-status: Fixed
+status: Verified
 found_in: "test-designer, проектирование области bridge-tap-zone-guard (needs-design, docs/01 §9, решение владельца §10 (н) ВАРИАНТ 1), 2026-07-28"
 fixed_in: "framework (test-only, без сборки приложения) — framework/data/recording_builder.py, framework/data/recordings/{listing_basic,work_with_download,works_multi,listing_paginated}.mitm, framework/web/selectors.py, framework/screens/settings_screen.py, framework/steps/{settings_steps,browser_steps}.py, framework/tests/canary/test_tap_zone_guard.py, framework/tests/test_recording_builder_unit.py (доработка attempt 2, S-3/S-4)"
 last_seen_in: ""
@@ -12,8 +12,8 @@ test_cases: ["TC-119", "TC-120", "TC-122", "TC-123", "TC-124", "TC-125", "TC-126
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-07-29T00:35:29Z"
-updated: "2026-07-29T00:35:29Z"
+status_since: "2026-07-29T09:44:21Z"
+updated: "2026-07-29T09:44:21Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -244,8 +244,28 @@ builder'а расширил `render_listing_html`/пагинацию други�
 |---|---|---|---|---|
 | 2026-07-29 | 1.10 (versionCode 11) | TC-119/TC-120/TC-122 (новые, `test_tap_zone_guard.py`) — 3/3 прогона подряд зелёные; TC-026/TC-032/TC-033 (регрессия потребителей `render_work_page_html`) — зелёные на пересобранных `listing_basic.mitm`/`work_with_download.mitm`; `python -m pytest scripts/tests -q` — 682 passed, 1 skipped; `Invoke-Pytest tests/test_recording_builder_unit.py -q` — 35 passed | test-maintainer, fix + автоматизация + регресс (пере-проверка fix-verifier ожидается) | — |
 | 2026-07-29 | 1.10 (versionCode 11) | Доработка attempt 2 (критик-вход B-1/B-2/B-3/S-1..S-6): TC-119/TC-120/TC-122 — 3/3 прогона подряд зелёные ПОСЛЕ правок S-1 (симметричный поллинг `assert_top_chrome_not_darkened`)/S-2 (geometry-ассерты в `dispatch_tap_zone_*_tap`); красная проба TC-120 ПЕРЕДЕЛАНА (была тождественной, см. «Красная проба» ниже) и реально прогнана вместе с переносом на TC-122 (было только рассуждением); `python -m pytest scripts/tests -q` — 682 passed, 1 skipped (без регресса); `Invoke-Pytest tests/test_recording_builder_unit.py -q` — **39 passed** (было заявлено 35, фактическое ДО этой доработки — 37 — расхождение S-6 исправлено; +2 новых юнита S-3/S-4 дают 39) | test-maintainer, доработка (пере-проверка fix-verifier ожидается) | — |
+| 2026-07-29 | 1.10 (versionCode 11), emulator-5554 (AVD ao3_test_api34, writable-system boot + свежий mitm-CA push — AT-BUG-011) | **НЕЗАВИСИМАЯ верификация fix-verifier** (не пересказ авторского witness — фактический прогон на пересобранной сборке/фикстурах). `Invoke-Pytest tests/canary/test_tap_zone_guard.py -v` — 3 passed (`test_tap_zone_guard_blocks_whitelisted_button`/`_pierced_by_non_whitelisted_div`/`_closest_semantics_on_descendant`[work_with_download.mitm]), PYTEST_EXIT=0, 147.81s. Регрессия потребителей: `Invoke-Pytest tests/test_downloads.py -v -k "test_auto_download_triggers_on_loved_rating or test_manual_download_from_library_adds_local_file"` — 2 passed, 7 deselected, PYTEST_EXIT=0 (TC-032/TC-033 на пересобранном `work_with_download.mitm`); `Invoke-Pytest tests/test_tabs.py -v -k test_long_press_link_opens_background_tab_without_switching` — 1 passed, 5 deselected, PYTEST_EXIT=0 (TC-026 на пересобранном `listing_basic.mitm`). Device-free: `python -m pytest scripts/tests -q` (venv-python, корень репо) — **682 passed, 1 skipped**, PYTEST_EXIT=0 (совпадает с авторской цифрой). `Invoke-Pytest tests/test_recording_builder_unit.py -q` — **39 passed**, PYTEST_EXIT=0 (совпадает с заявленным S-6). Все пять прогонов зелёные, ни одного расхождения с авторским witness | fix-verifier (независимое воспроизведение, mode=verify) | **Verified** |
 
 ## Обсуждение
+
+**2026-07-29T09:52:00Z — координатор (правка по критик-входу, единственный
+блокер D-1, agent abc414651e60718dc):** критик подтвердил существо
+независимой D1-верификации (все три узла реальны в коде и во всех 4
+потребителях-фикстурах, пять чисел witness внутренне согласованы, переход
+легален) — единственный блокер: строка верификации 09:44:21Z называет
+прогон только 3 из 8 `test_cases`, не поясняя судьбу остальных пяти.
+Уточнение: `TC-123`, `TC-124`, `TC-125`, `TC-126`, `TC-127` несут
+`automated_by: ""` (автоматизации ещё нет) — прогнать их физически нечего,
+это не пропуск, а отсутствие предмета прогона. Узел 3 (высота документа
+`>= 3×innerHeight`) для НИХ подтверждён device-free — `min-height:
+6000px` присутствует во всех четырёх пересобранных `.mitm`
+(`work_with_download`/`listing_basic`/`works_multi`/`listing_paginated`,
+по одному вхождению на work-страницу) и юнитами S-3/S-4
+(`test_recording_builder_unit.py`). Закрытие ЭТОГО test_debt (фикстурный
+артефакт) не равно верификации TC-123..127 как продуктовых кейсов — они
+ждут своей F1-автоматизации (см. правило «Автоматизировать Approved-кейс»,
+диспатч этим же проходом). Повторная верификация не требуется (критик явно
+это оговорил); правка — только текст.
 
 **2026-07-28 — test-designer, заведение (правило 4 промпта test-designer):**
 блокер обнаружен при проектировании TC-119/TC-120 (шаг 4 воркфлоу test-designer
@@ -486,6 +506,25 @@ screens/web. Исправлено: селекторные строки инка�
 `assert_tap_zone_button_tapped`/`assert_tap_zone_div_tapped`) — тест больше
 не видит CSS-селекторы напрямую. Финальные 3/3 зелёных прогона (см. таблицу
 верификации) — уже на этой исправленной версии.
+
+**2026-07-29 — fix-verifier, независимая верификация (mode=verify, D1).**
+Подтверждаю фикс НЕЗАВИСИМЫМ прогоном (не пересказ авторского witness):
+`Start-Emulator -WritableSystem` + свежий push mitm-CA (первый прогон
+`test_tap_zone_guard.py` без writable-system упал `RuntimeError: mitm-CA не
+установлен` — AT-BUG-011, восстановлено пересозданием AVD в writable-system
+режиме), `Install-App` (1.10, versionCode 11). TC-119/TC-120/TC-122 — 3
+passed за один прогон (`Invoke-Pytest tests/canary/test_tap_zone_guard.py
+-v`, PYTEST_EXIT=0). Регресс TC-026/TC-032/TC-033 — все зелёные на
+пересобранных `listing_basic.mitm`/`work_with_download.mitm` (изолированные
+`-k`-прогоны, не общий файл). `python -m pytest scripts/tests -q` — 682
+passed, 1 skipped (точное совпадение с авторской цифрой). `Invoke-Pytest
+tests/test_recording_builder_unit.py -q` — 39 passed (точное совпадение с
+S-6). Расхождений с авторским witness не найдено — `status: Fixed ->
+Verified`.
+
+**Дефекты-собратья (D-0043):** не найдено новых — класс уже назван автором
+(AT-BUG-004/AT-BUG-029, «фикстура не несёт нужную разметку»), в ходе
+верификации новых экземпляров того же класса не встретилось.
 
 ## Чек-лист качества
 - [x] Проверены дубликаты среди открытых test_debt-багов — не совпадает с

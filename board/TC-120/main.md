@@ -2,27 +2,27 @@
 key: "TC-120"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p0"
 summary: "Тап по НЕ-whitelisted узлу с собственным обработчиком в теле work-страницы запускает ОБА эффекта (guard-пробой, replay)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:canary", "risk:R-02"]
+labels: ["test-case", "area:canary", "risk:R-02", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-29T00:35:29Z"
-updated: "2026-07-29T00:35:29Z"
+created: "2026-07-29T10:00:00Z"
+updated: "2026-07-29T10:00:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Тап по НЕ-whitelisted узлу с собственным обработчиком в теле work-страницы запускает ОБА эффекта (guard-пробой, replay)
 
 _Спроецировано из `test-cases/canary/TC-120.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-120 — Тап по не-whitelisted узлу со своим обработчиком запускает и зону, и обработчик (replay)
 
@@ -121,3 +121,55 @@ test_tap_zone_guard_pierced_by_non_whitelisted_div` — 3 зелёных про�
 - [x] Строка `Инвариант:` добавлена добровольно (область строго не входит в
       банк C4, но Then квантифицируется парой TC-119/TC-120 над двумя
       значениями одной переменной — тот же класс, что TC-070/078)
+
+## Ревью автотеста (F1, test-reviewer, 2026-07-29) — ПРОЙДЕНО
+
+Вердикт: `Approved -> Automated`, `automation_status: active`. Чек-лист пройден
+целиком, замечаний нет.
+
+1. **Архитектура (C1).** `python scripts/arch_check.py` — «ошибок 0,
+   предупреждений 0»; `ALLOWLIST` (`scripts/arch_check.py:80`) пуст. Локатор
+   узла — `framework/web/selectors.py:113`, тест зовёт только
+   `browser_steps.dispatch_tap_zone_div_tap`/`assert_tap_zone_div_tapped`;
+   `sleep` в `tests/` нет.
+2. **Traceability.** `@allure.id("TC-120")` == id кейса; `@pytest.mark.p0` ==
+   `priority: P0`; `@pytest.mark.replay` соответствует режиму (кейс явно
+   требует «без `@pytest.mark.live`»); `automated_by` указывает на реально
+   собираемую функцию.
+3. **Соответствие по смыслу.** Позитивный Then реализован ОБОИМИ конъюнктами:
+   `assert_top_chrome_darkened` (toggleFullscreen ВЫЗВАН — пиксельный прокси
+   TabStrip, TC-058) и `assert_tap_zone_div_tapped` (`data-tapped`
+   собственного обработчика) — «оба потребителя одного тапа» доказаны, а не
+   один из них. Геометрия band 44-56% (рецепт CH-005) ассертится в рантайме
+   (`browser_steps._assert_tap_zone_geometry_band`,
+   `_TAP_ZONE_DIV_BAND = (0.44, 0.56)`) — здесь она определяет САМ ожидаемый
+   Then, и её дрейф роняет тест. Инвариант (решение guard'а — функция только
+   от членства в whitelist) держится парой с TC-119 в объявленной кейсом
+   форме.
+4. **Фикстуры и данные.** `loved_work_seeded, replay, driver` — сидинг ДО
+   Appium-сессии; teardown `replay` гарантирован (`finally`); зависимости от
+   порядка нет.
+5. **Flake-риск.** `assert_top_chrome_darkened` — `wait_until` c бюджетом 10 с
+   под анимированный fullscreen-reflow (гонка с системными барами закрыта);
+   `assert_tap_marker_tapped` — тоже поллинг, не одноразовое чтение. Живого
+   AO3 нет (replay + `work_with_download.mitm`).
+6. **Независимое воспроизведение (ревьюером).**
+   `powershell -NoProfile -ExecutionPolicy Bypass -Command ". D:\AO3_tests\
+   scripts\tasks.ps1; Invoke-Pytest tests/canary/test_tap_zone_guard.py -v"` на
+   emulator-5554 → `3 passed in 140.43s`, `PYTEST_EXIT=0`.
+7. **Красная проба (собственная, ревьюерская; уровень ДАННЫХ).** Порча —
+   подмена replay-записи: в `framework/data/recording_builder.py::
+   _tap_zone_guard_nodes_html` теги узлов поменяны местами, узел 2 стал
+   `<button data-tap-marker="div">` (т.е. ЛОЖНО попал в whitelist — класс
+   регрессии «выборка whitelist расширилась»), записи пересобраны
+   `scripts/build_replay_recordings.py`. Прогон той же командой →
+   `3 failed`, `PYTEST_EXIT=1`; ЭТОТ тест упал на позитивном Then:
+   `TimeoutException: верхняя полоса не потемнела после входа в fullscreen
+   относительно baseline=231.9 за 10с` (`steps/browser_steps.py:292`) —
+   падение указывает ровно на суть порчи (guard подавил зональное действие,
+   которого кейс ТРЕБУЕТ), а не на инфраструктурный таймаут: в том же прогоне
+   TC-119/TC-122 упали противоположным образом (полоса потемнела), что
+   исключает «всё сломалось». Порча откачена в том же ходе:
+   `git checkout -- framework/data/recording_builder.py
+   framework/data/recordings`; `git status --short` по `framework/` чист.
+   `app-under-test/` не тронут.

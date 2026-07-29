@@ -2,27 +2,27 @@
 key: "TC-122"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p0"
 summary: "Тап по потомку (span) whitelisted-узла в теле work-страницы блокирует зональное действие через closest — семантика предка, не изолированной проверки target (replay)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:canary", "risk:R-02"]
+labels: ["test-case", "area:canary", "risk:R-02", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-29T00:35:29Z"
-updated: "2026-07-29T00:35:29Z"
+created: "2026-07-29T10:00:00Z"
+updated: "2026-07-29T10:00:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Тап по потомку (span) whitelisted-узла в теле work-страницы блокирует зональное действие через closest — семантика предка, не изолированной проверки target (replay)
 
 _Спроецировано из `test-cases/canary/TC-122.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-122 — Тап по span внутри кнопки блокирует зону так же, как тап по самой кнопке (closest-семантика)
 
@@ -142,3 +142,54 @@ attempt 2 — прежде была только перенесена рассу
 - [x] Строка `Инвариант:` добавлена добровольно (тот же класс, что TC-119/120 —
       пара TC-119/TC-122 варьирует ОДНУ переменную, глубину e.target
       относительно предка)
+
+## Ревью автотеста (F1, test-reviewer, 2026-07-29) — ПРОЙДЕНО
+
+Вердикт: `Approved -> Automated`, `automation_status: active`. Чек-лист пройден
+целиком, замечаний нет.
+
+1. **Архитектура (C1).** `python scripts/arch_check.py` — «ошибок 0,
+   предупреждений 0»; `ALLOWLIST` (`scripts/arch_check.py:80`) пуст. Селектор
+   потомка — `framework/web/selectors.py:112`
+   (`[data-tap-marker-child="span"]`), тест зовёт только
+   `browser_steps.dispatch_tap_zone_button_child_tap`; `sleep` в `tests/` нет.
+2. **Traceability.** `@allure.id("TC-122")` == id кейса; `@pytest.mark.p0` ==
+   `priority: P0`; `@pytest.mark.replay` — как требует кейс (без `live`);
+   `automated_by` разрешается в реально собираемую функцию.
+3. **Соответствие по смыслу.** When действительно делает `e.target` ОТЛИЧНЫМ
+   от whitelisted-узла: тап адресован `<span>`, координата вычисляется из его
+   РЕАЛЬНОГО `getBoundingClientRect()`
+   (`browser_steps.dispatch_synthetic_tap`), а не из центра кнопки — то самое
+   требование заметок кейса. Then реализован обоими конъюнктами:
+   `assert_top_chrome_not_darkened` (зональное действие подавлено) и
+   `assert_tap_zone_button_tapped` — маркер читается с КНОПКИ
+   (`selectors.TAP_ZONE_BUTTON`), т.е. проверяется именно пузырение к предку,
+   а не срабатывание span'а. Инвариант («guard смотрит цепочку предков»)
+   покрыт парой TC-119/TC-122 в объявленной кейсом форме; красная проба ниже
+   доказывает, что зелёный этого кейса не тождественен зелёному TC-119.
+4. **Фикстуры и данные.** `loved_work_seeded, replay, driver` — сидинг ДО
+   Appium-сессии; `replay` возвращает прокси в `finally`; порядок тестов не
+   значим.
+5. **Flake-риск.** Ожидания явные; негативный Then опрашивает ВЕСЬ бюджет 10 с
+   (симметрично позитивной проверке) — поздний fullscreen-reflow не
+   проскакивает мимо. Геометрия span'а ассертится в рантайме (band
+   [1/3, 2/3]) — дрейф фикстуры роняет тест, а не даёт ложно-зелёный. Живого
+   AO3 нет.
+6. **Независимое воспроизведение (ревьюером).**
+   `powershell -NoProfile -ExecutionPolicy Bypass -Command ". D:\AO3_tests\
+   scripts\tasks.ps1; Invoke-Pytest tests/canary/test_tap_zone_guard.py -v"` на
+   emulator-5554 → `3 passed in 140.43s`, `PYTEST_EXIT=0`.
+7. **Красная проба (собственная, ревьюерская; уровень ДАННЫХ).** Порча —
+   подмена replay-записи: в `framework/data/recording_builder.py::
+   _tap_zone_guard_nodes_html` узел 1 стал `<div data-tap-marker="button">`
+   (span-потомок потерял whitelisted-ПРЕДКА, сам `<span>` в whitelist не
+   входил и раньше — порча бьёт ровно по closest-семантике, ради которой
+   существует кейс), записи пересобраны
+   `scripts/build_replay_recordings.py`. Прогон той же командой →
+   `3 failed`, `PYTEST_EXIT=1`; ЭТОТ тест упал осмысленно:
+   `AssertionError: верхняя полоса потемнела (luma=137.1 < baseline*0.7=162.4)
+   после тапа — toggleFullscreen, похоже, был вызван, хотя guard должен был
+   его подавить` (`steps/browser_steps.py:455`), не таймаут-мусор. Порча
+   откачена в том же ходе: `git checkout --
+   framework/data/recording_builder.py framework/data/recordings`;
+   `git status --short` по `framework/` чист. `app-under-test/` не тронут.

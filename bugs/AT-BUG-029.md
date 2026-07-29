@@ -4,7 +4,7 @@ title: "listing_basic.mitm не несёт .html-файл скачивания (
 type: test_debt
 debt_kind: missing_fixture
 severity: minor
-status: Fixed
+status: Verified
 found_in: "test-designer, проектирование области settings/downloads auto-download-favorite (needs-design по BUG-014), 2026-07-28"
 fixed_in: "framework (test-only, без сборки приложения) — scripts/build_replay_recordings.py, framework/data/recordings/listing_basic.mitm, framework/tests/test_downloads.py"
 last_seen_in: ""
@@ -12,8 +12,8 @@ test_cases: ["TC-115"]
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-07-28T23:15:00Z"
-updated: "2026-07-28T23:30:00Z"
+status_since: "2026-07-29T09:35:11Z"
+updated: "2026-07-29T09:35:11Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -141,8 +141,19 @@ test_debt-баг на ЛЮБОЙ блокер автоматизации, обн
 |---|---|---|---|---|
 | — | — | — | — | Open, ждёт фикса |
 | 2026-07-28 | app 1.10 (versionCode 11, debug, неизменна — test_debt в фреймворке) | TC-115 (`test_edit_note_on_already_saved_work_via_listing_overlay_does_not_redownload`, новый) + `python -m pytest scripts/tests -q` + регрессия `test_rate_work_from_listing_overlay` (TC-009, x5 параметризаций, тот же `listing_basic.mitm`) | TC-115: FAILED (ожидаемо-красный, см. «Обсуждение» — реальный файл скачан живым BUG-014, `assert_download_icon_shown` не прошёл, `download_oracle` поймал незапрошенный файл). `scripts/tests`: 682 passed, 1 skipped, без регресса. TC-009 x5: 5 passed — остальные потребители `listing_basic.mitm` не задеты добавлением четвёртого flow. `Get-Device`: `DEVICE: emulator-5554` | **Fixed (test_debt)** — критерий готовности этого долга выполнен; продуктовый TC-115 остаётся красным по ВНЕШНЕЙ причине (см. ниже), не входит в критерий этого Fixed |
+| 2026-07-29 | framework test-only, без сборки приложения (device-free юнит; `Get-Device` не запрашивался — верификация не требует устройства, см. предупреждение в этом разделе) | `framework/tests/test_recording_builder_unit.py` (39 items — оба целевых юнита + весь модуль как минимальный smoke области recording-builder: `listing_paginated.mitm`/`works_multi.mitm` не задеты) — `powershell -NoProfile -ExecutionPolicy Bypass -Command ". D:\AO3_tests\scripts\tasks.ps1; Invoke-Pytest tests/test_recording_builder_unit.py -v"` | `test_listing_basic_has_exactly_four_flows` PASSED, `test_listing_basic_has_download_html_flow_for_first_work` PASSED (подтверждает `rb.download_url(first_work)`/`rb.render_downloaded_work_html(first_work)` — ровно тот flow, что требует критерий готовности) — весь модуль: `39 passed`, `PYTEST_EXIT=0`. TC-115 не перезапускался этим ходом (заведомо ожидаемо-красный по BUG-014, `status: Open` — см. предупреждение выше и запись 2026-07-28; красный TC-115 НЕ основание для Reopened) | **Verified** — критерий готовности test_debt подтверждён напрямую device-free юнитом; `Fixed → Verified` |
 
 ## Обсуждение
+
+**2026-07-29T09:37:00Z — координатор (правка по критик-входу, единственный блокер):**
+критик подтвердил существо D1-верификации (39 passed, обе целевые пробы,
+переход легален), единственный блокер — `status_since`/`updated` были
+проставлены `00:00:00Z` вместо фактического момента перехода (сравнение с
+`state/orchestrator-log.md`: диспатч D1 09:35:11Z). Поля исправлены на
+`2026-07-29T09:35:11Z`; повторная верификация не требуется (критик явно это
+оговорил). Ригор-замечания критика (N1 validate_frontmatter, N2 негатив о
+собратьях, N3/N4 носитель S1/S3 и рассинхрон HANDOFF) — переданы отдельно,
+не блокируют это accepted.
 
 **2026-07-28 — test-designer, заведение (правило 4 промпта test-designer):**
 блокер обнаружен при проектировании TC-115 (шаг 4 воркфлоу test-designer — блокер
@@ -257,6 +268,27 @@ Draft при спорных требованиях, иначе сразу Review
 `S3` (`bugs/BUG-014.md::test_cases`) и `S1` (недостающие work-flow
 `/works/900000002..900000005` в `listing_basic.mitm`) — доложены находками в
 отчёте /qa-loop, не расширяю scope этим ходом (правило 9/D-0037 CLAUDE.md).
+
+**2026-07-29 — fix-verifier (mode=verify, D1).** Верифицировал ФИКСТУРНЫЙ
+артефакт долга напрямую, device-free, как предписано предупреждением выше —
+не TC-115. Прогон `framework/tests/test_recording_builder_unit.py` (канонической
+формой `Invoke-Pytest`): `39 passed`, `PYTEST_EXIT=0`, включая оба целевых юнита
+(`test_listing_basic_has_exactly_four_flows`,
+`test_listing_basic_has_download_html_flow_for_first_work`) — `listing_basic.mitm`
+несёт ровно 4 flow, среди них `rb.download_url(first_work)` с телом
+`rb.render_downloaded_work_html(first_work)`. Критерий готовности test_debt
+(раздел «Критерий готовности (Fixed)») выполнен целиком: четвёртый flow есть и
+пересобран, TC-115 реализован и подключён к фикстуре, красная проба уже
+задокументирована (запись 2026-07-28) как содержательная (не тривиально-зелёная
+из-за дыры в фикстуре), `scripts/tests` без регресса (запись 2026-07-28). TC-115
+намеренно не перезапускался этим ходом — предупреждение автора корректно: он
+остаётся красным по BUG-014 (app_bug, Open), это НЕ регресс этого test_debt.
+Аналогов класса «недостающая транзакция в уже существующей `.mitm`-записи» в
+других фикстурах не замечено (докстринг модуля упоминает `listing_paginated.mitm`/
+`works_multi.mitm` как соседей той же доработки — оба уже покрыты своими юнитами
+в том же файле, не новый пробел). `app-under-test/` не тронут. Статус переведён
+`Fixed → Verified` (`schemas/transitions.yaml`: `{from: Fixed, to: Verified, by:
+[fix-verifier]}`, легально). Лок снят.
 
 Долг переведён `Open → Fixed` (B4, guard `type: test_debt`, актор
 test-maintainer легален по `schemas/transitions.yaml`). Лок снят.

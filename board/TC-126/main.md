@@ -2,7 +2,7 @@
 key: "TC-126"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Тап по верхней трети work-страницы скроллит вверх (tap-to-scroll ON)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-28T23:02:37Z"
-updated: "2026-07-28T23:02:37Z"
+created: "2026-07-29T10:27:26Z"
+updated: "2026-07-29T10:27:26Z"
 archived: false
 resolution: null
 ---
@@ -79,6 +79,12 @@ innerHeight/3`, цель — неинтерактивный узел)
   (`0.95×innerHeight`) для обеих зон; сиблинг TC-127 держит ту же настройку
   ON и варьирует только зону (низ), доказывая, что различие в Then — знак
   дельты, а не наличие эффекта вообще.
+- **Ограничение синтетического тапа (тот же класс, что TC-119/120/122,
+  AT-BUG-018):** `dispatch_synthetic_viewport_tap` даёт честный hit-testing
+  через `document.elementFromPoint` (целевой узел — реальный, не хардкод), но
+  событие — синтетический `MouseEvent`/`dispatchEvent`, не Selenium `.click()`
+  и не физический нативный тап; `dispatchEvent` бьёт напрямую в
+  JS-обработчик `ao3_bridge.js`, минуя нативный Android touch-стек.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»

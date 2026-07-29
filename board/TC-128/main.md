@@ -2,7 +2,7 @@
 key: "TC-128"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Тап по средней трети work-страницы переключает fullscreen (вход и выход)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-28T23:02:41Z"
-updated: "2026-07-28T23:02:41Z"
+created: "2026-07-29T10:27:26Z"
+updated: "2026-07-29T10:27:26Z"
 archived: false
 resolution: null
 ---
@@ -116,6 +116,19 @@ _Спроецировано из `test-cases/browser/TC-128.md` (источни�
   ставит рейтинг с панели work-страницы во время сценария — вход в fullscreen
   убирает `WorkRatingPanel`, но это следствие уже покрыто отдельным кейсом
   области side panel (docs/01 §9, строки ~876-891), здесь не дублируется.
+- **Ограничение синтетического тапа (тот же класс, что TC-119/120/122,
+  AT-BUG-018):** `dispatch_synthetic_viewport_tap` даёт честный hit-testing
+  через `document.elementFromPoint` (целевой узел — реальный, не хардкод), но
+  событие — синтетический `MouseEvent`/`dispatchEvent`, не Selenium `.click()`
+  и не физический нативный тап; `dispatchEvent` бьёт напрямую в
+  JS-обработчик `ao3_bridge.js`, минуя нативный Android touch-стек.
+- **Факт против CH-005 (критик-вход attempt 2, B3):** замеренные аттачменты
+  прогона этого теста показали `innerHeight=1603` НЕИЗМЕННЫМ на ОБОИХ тапах
+  (вход и выход fullscreen, `emulator-5554`) — расходится с числами CH-005
+  R1.8 (`1800→2059`), на которые опирается обоснование пересчёта координаты
+  выше. Пересчёт координаты перед каждым тапом оставлен КАК ЕСТЬ (защитная
+  мера) независимо от того, воспроизводится ли изменение `innerHeight` на
+  этом стенде.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...» (вход+выход —

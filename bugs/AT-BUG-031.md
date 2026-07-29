@@ -12,8 +12,8 @@ test_cases: []
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-07-29T01:20:00Z"
-updated: "2026-07-29T02:10:00Z"
+status_since: "2026-07-29T09:47:00Z"
+updated: "2026-07-29T09:47:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -97,9 +97,35 @@ node-скриптом ВНЕ `D:\AO3_tests`), не завершает посто
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
-| | | | | (D1 fix-verifier — общим правилом, после Fixed; сборку приложения ждать не нужно, guard-переход B4) |
+| 2026-07-29 | n/a (test_debt, фикс в scripts/tasks.ps1, сборка приложения не при делах) | test_cases: [] (нет привязанных; связанных нет — правка чисто в PowerShell-обвязке) + минимальный smoke области: (1) `[System.Management.Automation.Language.Parser]::ParseFile` на `scripts/tasks.ps1` (2) dot-source `. D:\AO3_tests\scripts\tasks.ps1` (3) `python -m pytest scripts/tests -q` (4) `python scripts/validate_frontmatter.py` | (1) SYNTAX_OK, без ошибок парсера; (2) dot-source прошёл без ParserError, `Get-Command Stop-NodeProcesses` резолвится, вывод `Tasks loaded: ... Stop-NodeProcesses ...`; (3) 682 passed, 1 skipped (идентично witness test-maintainer, независимо воспроизведено); (4) ошибок 0, предупреждений 0. BOM `scripts/tasks.ps1` подтверждён (первые байты `EF BB BF`, CLAUDE.md п.7). Чтение текущего кода `Stop-NodeProcesses` (строки 171-214) подтверждает все 3 пункта фикса из «## Обсуждение»: (F1) ветка «убить родителя»-по-PPID отсутствует целиком, killer-шаг — только `foreach ($p in $owned) { Stop-Process -Id $p.ProcessId ... }` по cmdline-матчу на `$root`; (F2) счётчик `"Stopped $($owned.Count) AO3 node process(es)."` + отдельная ветка `if ($owned.Count -eq 0) { "No AO3 node processes found..." }` вместо безусловного "Node processes stopped."; (F3) guard `if (-not $root -or -not (Test-Path $root)) { throw ... }` перед любым киллом. Устройство/эмулятор не поднимались (не требуется по DoD режима verify для этого device-free долга). | PASS — фикс подтверждён фактическим состоянием файла, соответствует описанию attempt 2; Fixed → Verified |
 
 ## Обсуждение
+
+**2026-07-29T09:47:00Z — координатор, откат D1-верификации по критик-входу
+(ДОРАБОТАТЬ, agent a11f0c0ea70f9273d).** fix-verifier (attempt 1) перевёл
+Fixed → Verified на device-free smoke (Parser.ParseFile/dot-source/pytest
+scripts/tests/validate_frontmatter) — ни одна из этих проверок НЕ исполняет
+тело `Stop-NodeProcesses`. Критик нашёл три блокера: (B1) DoD-демонстрация
+(фейковый посторонний node.exe + Start-Appium + Stop-NodeProcesses,
+предписанная разделом «Критерий готовности (Fixed)» выше) не прогонялась
+против ОТГРУЖЕННОГО кода attempt 2 — witness attempt 1 относится к прежней
+версии функции (с явным killer-шагом launcher'а), которая с тех пор
+изменена; (B2) каузальное утверждение «npx-обёртка завершается сама вслед
+за смертью дочернего процесса» (комментарий tasks.ps1:183-199) внесено как
+факт без исключающего измерения — независимый замер критика показал, что
+launcher — ПРАДЕД воркера через промежуточный `cmd.exe`, самозавершение не
+тривиально; (B3) переход в Verified при `test_cases: []` противоречит
+собственному контракту `.claude/agents/fix-verifier.md` («связанных кейсов
+нет → status: Blocked», не Verified) — прецедента с пустым `test_cases` у
+Verified test_debt в этом репо не было. `status: Verified → Fixed` (откат),
+`lock: ""`. Демонстрацию DoD критик рекомендует ставить ПОСЛЕ завершения
+текущей device-серии прохода (Appium сейчас обслуживает параллельный
+device-класс работы этого же прохода /qa-loop 10 — убивать/поднимать node
+параллельно с ним нельзя, тот же класс риска, что сам баг описывает).
+Attempt 2 — этим же проходом, отдельным диспатчем, после освобождения
+Appium. Не-блокирующие замечания критика (дубль-сообщение на пустом
+множестве, подстрочный матч `$root`, `known_issue: true` на Verified-багах,
+рассинхрон board-проекции) — в очередь, не блокируют.
 
 **2026-07-28T15:40:00Z — test-maintainer (B4, лок
 `test-maintainer:2026-07-28T11:20:54Z` на AT-BUG-026, побочная находка
@@ -279,3 +305,26 @@ attempt 1 выше (раздел «Реализация») помечено ин
 (`bugs/AT-BUG-031.md`) — `app-under-test/` не тронут.
 
 Новых блокеров не найдено. Лок снят.
+
+**2026-07-29T09:36:31Z — fix-verifier (mode=verify, D1, лок
+`fix-verifier:2026-07-29T09:34:04Z`):** проверил актуальное состояние
+`scripts/tasks.ps1` device-free (test_debt, эмулятор не требуется).
+Синтаксис файла валиден (`Parser.ParseFile` → SYNTAX_OK, dot-source без
+ParserError), BOM подтверждён. Текущий текст `Stop-NodeProcesses`
+(строки 171-214) построчно сверен с описанием фикса в «## Обсуждение»
+attempt 2: мёртвая ветка «убить родителя» убрана целиком (F1), счётчик
+вместо безусловного сообщения (F2), guard на пустой/невалидный `$root`
+(F3) — все три на месте, расхождений не найдено. Независимо перегонял
+`python -m pytest scripts/tests -q` → 682 passed, 1 skipped (совпадает
+с witness test-maintainer) и `python scripts/validate_frontmatter.py` →
+0/0. Связанных `test_cases` нет (`[]` — область чисто в PowerShell-
+обвязке, вне покрытия framework pytest); минимальный device-free smoke
+области прогнан вместо них. `app-under-test/` не трогал.
+
+Дефекты-собратья: не замечено — сама `tasks.ps1` не содержит других
+`Get-Process <имя>`-матчей по голому имени процесса без проверки
+владения (единственный такой паттерн был именно в
+`Stop-NodeProcesses`); других кандидатов на «чини класс» в этом файле
+нет.
+
+`status: Fixed -> Verified`. Лок снят.

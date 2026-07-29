@@ -2,27 +2,27 @@
 key: "TC-115"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Правка комментария уже-Favorite работы через bottom-sheet листинга не скачивает файл повторно (edge vs level, :862)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:downloads", "risk:R-05"]
+labels: ["test-case", "area:downloads", "risk:R-05", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-28T23:22:00Z"
-updated: "2026-07-28T23:22:00Z"
+created: "2026-07-29T10:07:53Z"
+updated: "2026-07-29T10:07:53Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Правка комментария уже-Favorite работы через bottom-sheet листинга не скачивает файл повторно (edge vs level, :862)
 
 _Спроецировано из `test-cases/downloads/TC-115.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-115 — Bottom-sheet листинга: правка заметки уже-Favorite работы не запускает повторное скачивание
 
@@ -83,6 +83,73 @@ Auto-download включён; bottom-sheet рейтинга открыт Rate-к
   пункты (идемпотентность/propagation) — то же обоснование «н-п», что в TC-114
   (тот же класс эффекта, другой вход).
 - Сиблинг BUG-015 (авто-kudos, level-предикат) НЕ в скоупе — см. заметку TC-114.
+
+## Ревью автотеста
+
+**2026-07-29T10:07:53Z — test-reviewer (F1, вердикт: ПРОЙДЕНО, `Approved → Automated`,
+`automation_status: active`).**
+
+1. **Архитектура (C1):** `python scripts/arch_check.py` → «ошибок 0, предупреждений 0»;
+   `ALLOWLIST` в `scripts/arch_check.py:80` пуст — исключения «под себя» не заводились.
+   Локаторов/драйвера в теле теста нет, все действия — через `framework/steps/*`
+   (`app_steps`/`saf_steps`/`settings_steps`/`library_steps`/`browser_steps`/`rating_steps`),
+   `sleep` отсутствует (ожидания — `wait_until`/`is_present` слоя core/screens).
+2. **Traceability:** `@allure.id("TC-115")` == id кейса; `@pytest.mark.p1` == `priority: P1`;
+   `@pytest.mark.replay` соответствует режиму (`replay`-фикстура,
+   `rb.LISTING_BASIC_FILENAME`); `automated_by` указывает на реально существующую и
+   собираемую функцию (`collected 218 items / 1 selected` в прогоне ниже).
+3. **Соответствие кейсу по смыслу:** все три Then реализованы по сути, без ослабления —
+   комментарий проверяется по ТЕКСТУ в свёрнутом превью
+   (`rating_steps.assert_comment_collapsed_with_text`, не «элемент существует»);
+   негативный Then проверяется download-иконкой карточки (наблюдаемая проекция
+   `downloadPath=null`), а не наличием карточки; третий Then — общим оракулом
+   `download_oracle` БЕЗ `@pytest.mark.produces_download` (ожидание = 0 новых файлов).
+   Строка `Инвариант:` (C4) кейсу не требуется: область — не комбинаторная
+   (не фильтр/сортировка/видимость/backup/tabs/темы), а точечный edge-vs-level
+   негативный сценарий одной точки кода (`BrowserViewModel.kt:862`).
+4. **Фикстуры и данные:** порядок `(replay, loved_work_seeded, driver)` корректен —
+   `clean_state()` + `seed_library([(W.LOVED, "SAVE")])` выполняются ДО создания
+   Appium-сессии (контракт conftest, урок TC-008); тест владеет единственной работой,
+   от порядка других тестов не зависит, чистка — `pm clear` следующего `clean_state`.
+5. **Flake-риск:** явные ожидания на каждом шаге (`open_listing` ждёт блёрбы,
+   `assert_rating_badge_visible` опрашивает bridge-round-trip, а не читает однократно);
+   `wait_app_ready` (не `wait_ui_ready`) перед навигацией по Settings — та же гонка,
+   что закрыта в TC-032; клик Rate-кнопки — через JS DOM API (обход
+   `ElementNotInteractableException` на перекрывающем оверлее); живой AO3 не
+   используется — все четыре транзакции покрыты `listing_basic.mitm` (AT-BUG-029).
+6. **Независимое воспроизведение (ревьюером, не автором).** Среда:
+   `. tasks.ps1; Get-Device` → `DEVICE: emulator-5554`. Прогон:
+   `powershell -NoProfile -ExecutionPolicy Bypass -Command ". D:\AO3_tests\scripts\tasks.ps1;
+   Invoke-Pytest -k test_edit_note_on_already_saved_work_via_listing_overlay_does_not_redownload -v"`
+   → `1 failed, 217 deselected, 1 warning in 63.90s`, `PYTEST_EXIT=1`.
+   Падение — ДЕТЕРМИНИРОВАННОЕ и по ожидаемой причине: `tests/test_downloads.py:275`
+   → `steps/library_steps.py:129`, `AssertionError: download-иконка не появилась у
+   «A Loved Test Work»` (последний Then), НЕ setup/инфраструктурная ошибка — весь Given/When
+   (Settings-тумблер, листинг, bottom-sheet, «Save note», свёрнутое превью с текстом)
+   прошёл. Оракул зафиксировал суть: `UserWarning: download_oracle: незапрошенное
+   скачивание — класс BUG-014 … ['…/ao3_downloads/ao3_A Loved Test Work_900000001.html']`.
+   Rerun-политика (`--only-rerun ReadTimeoutError|MaxRetryError`) не сработала —
+   класс падения продуктовый, не env. Сигнатура полностью совпала с прогоном автора
+   от 2026-07-28 (`bugs/AT-BUG-029.md`) — воспроизводимость подтверждена независимо.
+7. **Красная проба (п.7 F1).** Отдельная синтетическая порча не вносилась и не
+   требовалась: тест ФАКТИЧЕСКИ красный на живом дефекте `bugs/BUG-014.md`
+   (`app_bug`, `status: Open`) — механизм понятен, подтверждён реальным файлом в
+   download-директории, текст падения указывает на суть (иконка/файл), а не таймаут-мусор.
+   Обратная полярность доказана В ТОМ ЖЕ прогоне: ТОТ ЖЕ ассерт
+   `library_steps.assert_download_icon_shown` ПРОШЁЛ на baseline-шаге (строка 249,
+   до When) и УПАЛ после When — предикат не тавтологически ложен, тест умеет и
+   зелёный, и красный. Порчи не вносилось → откатывать нечего, `git status` чист
+   по `framework/` (тестовый код ревьюером не тронут — граница роли).
+   Маскировки нет: assert не ослаблен ради зелёного, `@pytest.mark.produces_download`
+   не добавлен (что «узаконило» бы незапрошенное скачивание) — красный содержателен
+   и снимется САМ при фиксе BUG-014 в `app-under-test/`.
+
+Замечаний, требующих доработки автотеста, нет. Наблюдения (не блокирующие, вне
+границ правки этого кейса, доложены координатору по D-0043): `bugs/BUG-014.md`
+несёт `test_cases: []` и `known_issue: "false"` — при `automation_status: active`
+ожидаемо-красный TC-115 будет всплывать в каждом регрессионном прогоне и потребует
+дедупа failure-analyst/bug-reporter вручную; связка `test_cases: ["TC-114","TC-115"]`
++ решение по `known_issue` (D14) — работа Lead/владельца, не автора теста.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»

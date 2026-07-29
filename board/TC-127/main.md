@@ -2,7 +2,7 @@
 key: "TC-127"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Тап по нижней трети work-страницы скроллит вниз (tap-to-scroll ON)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-28T23:02:38Z"
-updated: "2026-07-28T23:02:38Z"
+created: "2026-07-29T10:27:26Z"
+updated: "2026-07-29T10:27:26Z"
 archived: false
 resolution: null
 ---
@@ -62,6 +62,12 @@ _Спроецировано из `test-cases/browser/TC-127.md` (источни�
   там), но собственный Given этого кейса от TC-126 не зависит.
 - **Инвариант (добровольно):** см. TC-126 — та же формулировка, TC-127
   фиксирует вторую половину пары (зона «низ» → положительный `dy`).
+- **Ограничение синтетического тапа (тот же класс, что TC-119/120/122,
+  AT-BUG-018):** `dispatch_synthetic_viewport_tap` даёт честный hit-testing
+  через `document.elementFromPoint` (целевой узел — реальный, не хардкод), но
+  событие — синтетический `MouseEvent`/`dispatchEvent`, не Selenium `.click()`
+  и не физический нативный тап; `dispatchEvent` бьёт напрямую в
+  JS-обработчик `ao3_bridge.js`, минуя нативный Android touch-стек.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»

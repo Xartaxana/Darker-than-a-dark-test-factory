@@ -307,7 +307,7 @@
     "epicPath": null,
     "summary": "Тап по верхней трети work-страницы скроллит вверх (tap-to-scroll ON)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -315,7 +315,7 @@
       "area:browser",
       "risk:R-11"
     ],
-    "updated": "2026-07-28T23:02:37Z",
+    "updated": "2026-07-29T10:27:26Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -329,7 +329,7 @@
     "epicPath": null,
     "summary": "Тап по нижней трети work-страницы скроллит вниз (tap-to-scroll ON)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -337,7 +337,7 @@
       "area:browser",
       "risk:R-11"
     ],
-    "updated": "2026-07-28T23:02:38Z",
+    "updated": "2026-07-29T10:27:26Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -351,7 +351,7 @@
     "epicPath": null,
     "summary": "Тап по средней трети work-страницы переключает fullscreen (вход и выход)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -359,7 +359,7 @@
       "area:browser",
       "risk:R-11"
     ],
-    "updated": "2026-07-28T23:02:41Z",
+    "updated": "2026-07-29T10:27:26Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -831,16 +831,17 @@
     "epicPath": null,
     "summary": "Guard тап-зон блокирует зональное действие при тапе по whitelisted-узлу (button) в теле work-страницы (replay)",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:canary",
-      "risk:R-02"
+      "risk:R-02",
+      "automation:active"
     ],
-    "updated": "2026-07-29T00:35:29Z",
-    "resolution": null,
+    "updated": "2026-07-29T10:00:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -853,16 +854,17 @@
     "epicPath": null,
     "summary": "Тап по НЕ-whitelisted узлу с собственным обработчиком в теле work-страницы запускает ОБА эффекта (guard-пробой, replay)",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:canary",
-      "risk:R-02"
+      "risk:R-02",
+      "automation:active"
     ],
-    "updated": "2026-07-29T00:35:29Z",
-    "resolution": null,
+    "updated": "2026-07-29T10:00:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -897,16 +899,17 @@
     "epicPath": null,
     "summary": "Тап по потомку (span) whitelisted-узла в теле work-страницы блокирует зональное действие через closest — семантика предка, не изолированной проверки target (replay)",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:canary",
-      "risk:R-02"
+      "risk:R-02",
+      "automation:active"
     ],
-    "updated": "2026-07-29T00:35:29Z",
-    "resolution": null,
+    "updated": "2026-07-29T10:00:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1238,16 +1241,17 @@
     "epicPath": null,
     "summary": "Правка комментария уже-Favorite работы через bottom-sheet листинга не скачивает файл повторно (edge vs level, :862)",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:downloads",
-      "risk:R-05"
+      "risk:R-05",
+      "automation:active"
     ],
-    "updated": "2026-07-28T23:22:00Z",
-    "resolution": null,
+    "updated": "2026-07-29T10:07:53Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -3594,7 +3598,7 @@
     "epicPath": null,
     "summary": "listing_basic.mitm не несёт .html-файл скачивания (недостаёт одной транзакции) — блокирует автоматизацию TC-115 (edge-vs-level BUG-014 через листинг)",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -3602,8 +3606,8 @@
       "test_case:TC-115",
       "sev:minor"
     ],
-    "updated": "2026-07-28T23:30:00Z",
-    "resolution": null,
+    "updated": "2026-07-29T09:35:11Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -3616,7 +3620,7 @@
     "epicPath": null,
     "summary": "render_work_page_html не несёт ни whitelisted <button> (со span-потомком), ни НЕ-whitelisted интерактивного узла, ни достаточной высоты в теле работы — блокирует TC-119/TC-120/TC-122 (bridge-tap-zone-guard) и TC-123..127 (reading-UX tap-to-scroll, узел 3, восемь кейсов итого)",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -3631,8 +3635,8 @@
       "test_case:TC-127",
       "sev:minor"
     ],
-    "updated": "2026-07-29T00:35:29Z",
-    "resolution": null,
+    "updated": "2026-07-29T09:44:21Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -3652,7 +3656,7 @@
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-07-29T02:10:00Z",
+    "updated": "2026-07-29T09:47:00Z",
     "resolution": null,
     "children": [],
     "archived": false

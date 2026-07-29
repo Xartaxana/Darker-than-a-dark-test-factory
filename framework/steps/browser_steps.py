@@ -461,6 +461,161 @@ def assert_top_chrome_not_darkened(
         time.sleep(poll_interval)
 
 
+# --- TC-126/TC-127/TC-128: reading-UX tap-зоны (`ao3_bridge.js:1149-1164`,
+# browse-tap-to-scroll/browse-tap-fullscreen) — верхняя/нижняя треть скроллят,
+# средняя переключает fullscreen. Узел 3 AT-BUG-030 (высота документа >=
+# 3×innerHeight) уже присутствует во всех потребителях `render_work_page_html`
+# (в т.ч. `work_with_download.mitm`, общем с TC-032/033/119/120/122).
+
+@allure.step("Then текущий window.innerHeight страницы AO3 в WebView измерен")
+def get_webview_inner_height(driver) -> int:
+    with contexts.in_webview(driver):
+        return int(driver.execute_script("return window.innerHeight;") or 0)
+
+
+@allure.step(
+    "When синтетически тапнута точка вьюпорта на высоте {y_fraction}×innerHeight "
+    "(X — центр ширины, целевой DOM-узел — document.elementFromPoint)"
+)
+def dispatch_synthetic_viewport_tap(driver, y_fraction: float) -> dict:
+    """Тап по ГЕОМЕТРИЧЕСКОЙ координате вьюпорта, не по конкретному CSS-селектору
+    (в отличие от `dispatch_synthetic_tap` узлов 1/2 AT-BUG-030): `clientX`/
+    `clientY` вычисляются из ТЕКУЩЕГО `innerWidth`/`innerHeight` НЕПОСРЕДСТВЕННО
+    перед диспатчем (обязательно для TC-128 — `innerHeight` меняется между
+    входом/выходом fullscreen, см. заметки кейса про пересчёт координаты перед
+    КАЖДЫМ тапом), целевой узел находится через `document.elementFromPoint(clientX,
+    clientY)` — та же связка hit-testing'а, что браузер использует для реального
+    клика пользователя, поэтому guard (`e.target.closest(...)`, `ao3_bridge.js:1152`)
+    видит РЕАЛЬНЫЙ узел под точкой, а не хардкод. Это верно только про
+    hit-testing (выбор узла-цели), НЕ про источник самого события: как и
+    `dispatch_synthetic_tap` (см. докстринг AT-BUG-030 выше), это синтетический
+    `MouseEvent`/`dispatchEvent`, не Selenium `.click()`/физический нативный тап
+    — `dispatchEvent` бьёт напрямую в JS-обработчик `ao3_bridge.js`, минуя
+    нативный Android touch-стек.
+
+    Узлы 1/2 AT-BUG-030 (`<button>`/`<div onclick>`) стоят в узкой колонке
+    `left:24px; width:200px` — центр вьюпорта по X (`innerWidth/2 ≈ 490px` на
+    эталонном AVD, CH-005:603) далеко за их правой границей (224px), поэтому
+    тап по центральной колонке X всегда промахивается мимо этих узлов
+    независимо от Y и от текущей scroll-позиции — целевым узлом в точке
+    оказывается неинтерактивный узел филлера (узел 3,
+    `render_reading_ux_filler_html`: `<div>`-обёртка или вложенный `<p>`,
+    эмпирически замечены оба тега в разных точках), вне whitelist guard'а."""
+    with contexts.in_webview(driver):
+        result = driver.execute_script(
+            "var innerHeight = window.innerHeight;"
+            "var innerWidth = window.innerWidth;"
+            "var clientX = innerWidth / 2;"
+            "var clientY = innerHeight * arguments[0];"
+            "var target = document.elementFromPoint(clientX, clientY);"
+            "if (!target) {"
+            "  return {found: false, innerHeight: innerHeight, innerWidth: innerWidth, "
+            "clientX: clientX, clientY: clientY};"
+            "}"
+            "var ev = new MouseEvent('click', {bubbles: true, cancelable: true, "
+            "clientX: clientX, clientY: clientY, view: window});"
+            "target.dispatchEvent(ev);"
+            "return {found: true, innerHeight: innerHeight, innerWidth: innerWidth, "
+            "clientX: clientX, clientY: clientY, tagName: target.tagName};",
+            y_fraction,
+        )
+    assert result.get("found"), (
+        f"document.elementFromPoint не нашёл узел на координате "
+        f"({result['clientX']:.1f}, {result['clientY']:.1f}) — тап не может быть диспатчен"
+    )
+    allure.attach(
+        f"y_fraction={y_fraction:.3f} innerHeight={result['innerHeight']} "
+        f"innerWidth={result['innerWidth']} clientX={result['clientX']:.1f} "
+        f"clientY={result['clientY']:.1f} target_tag={result['tagName']!r}",
+        name="viewport-tap-dispatch-geometry",
+        attachment_type=allure.attachment_type.TEXT,
+    )
+    return result
+
+
+# Середина каждой трети — запас от границ (1/3, 2/3), не пограничное значение.
+_TAP_ZONE_TOP_THIRD_FRACTION = 1 / 6
+_TAP_ZONE_BOTTOM_THIRD_FRACTION = 5 / 6
+_TAP_ZONE_MIDDLE_FRACTION = 0.5
+
+
+@allure.step("When пользователь тапает по верхней трети экрана work-страницы (tap-to-scroll)")
+def dispatch_tap_to_scroll_up_tap(driver) -> dict:
+    return dispatch_synthetic_viewport_tap(driver, _TAP_ZONE_TOP_THIRD_FRACTION)
+
+
+@allure.step("When пользователь тапает по нижней трети экрана work-страницы (tap-to-scroll)")
+def dispatch_tap_to_scroll_down_tap(driver) -> dict:
+    return dispatch_synthetic_viewport_tap(driver, _TAP_ZONE_BOTTOM_THIRD_FRACTION)
+
+
+@allure.step("When пользователь тапает по средней трети (центру вьюпорта) work-страницы (toggle fullscreen)")
+def dispatch_tap_zone_fullscreen_toggle_tap(driver) -> dict:
+    return dispatch_synthetic_viewport_tap(driver, _TAP_ZONE_MIDDLE_FRACTION)
+
+
+@allure.step(
+    "Given work-страница предварительно проскроллена вниз (execute_script), "
+    "чтобы scrollY > 0.95×innerHeight (предпосылка TC-126)"
+)
+def prescroll_past_tap_to_scroll_threshold(driver, margin_ratio: float = 1.5) -> tuple[int, int]:
+    """TC-126, «Заметки для автоматизации»: `execute_script("window.scrollTo(...)")`
+    — дешевле и не создаёт зависимости TC-126 от TC-127 (тап по нижней трети как
+    альтернативный способ предскролла). `innerHeight` читается заново
+    непосредственно перед `scrollTo` (дешёвый детерминированный расчёт, не
+    хардкод под конкретный AVD); `margin_ratio=1.5` даёт `scrollY` существенно
+    выше порога `0.95×innerHeight`, но безопасно ниже максимума скролла
+    документа (узел 3 AT-BUG-030 — высота >= 3×innerHeight — даёт запас).
+    Возвращает (scrollY после предскролла, innerHeight)."""
+    inner_height = get_webview_inner_height(driver)
+    target_px = int(inner_height * margin_ratio)
+    scroll_webview_to(driver, target_px)
+    scroll_after = get_webview_scroll_y(driver)
+    threshold = 0.95 * inner_height
+    assert scroll_after > threshold, (
+        f"предскролл не превысил порог 0.95×innerHeight={threshold:.1f}: "
+        f"scrollY={scroll_after} после scrollTo({target_px}px) — Given TC-126 не выполнен"
+    )
+    return scroll_after, inner_height
+
+
+_TAP_TO_SCROLL_DELTA_RATIO = 0.95
+# Допуск на округление/анимацию — сама дельта детерминирована (`behavior:
+# 'instant'`), но клампинг у границ документа/округление float в JS дают
+# небольшой люфт; 15% от ожидаемой дельты — щедрый запас без риска пропустить
+# реальную регрессию величины скролла.
+_TAP_TO_SCROLL_DELTA_TOLERANCE_RATIO = 0.15
+
+
+@allure.step(
+    "Then window.scrollY изменился примерно на {direction}×0.95×innerHeight "
+    "относительно scrollY до тапа ({scroll_before})"
+)
+def assert_tap_to_scroll_delta(
+    driver, scroll_before: int, inner_height: int, direction: int, timeout: int = 5,
+) -> int:
+    """TC-126 (direction=-1, тап по верхней трети)/TC-127 (direction=+1, тап по
+    нижней трети) — измерение CH-005 (`dy ≈ ±1710` при `innerHeight=1800`,
+    `0.95×1800=1710`). Опрашивает (не читает один раз) — тот же класс
+    WEBVIEW-round-trip латентности, что остальные опросы этого модуля."""
+    expected_delta = direction * _TAP_TO_SCROLL_DELTA_RATIO * inner_height
+    tolerance_px = abs(expected_delta) * _TAP_TO_SCROLL_DELTA_TOLERANCE_RATIO
+
+    def _matches(d):
+        actual_delta = get_webview_scroll_y(d) - scroll_before
+        return abs(actual_delta - expected_delta) <= tolerance_px
+
+    wait_until(
+        driver, _matches, timeout=timeout,
+        message=(
+            f"scrollY не изменился на ожидаемую дельту {expected_delta:.1f}px "
+            f"(±{tolerance_px:.1f}px) относительно scrollY до тапа={scroll_before} "
+            f"за {timeout}с (текущий scrollY={get_webview_scroll_y(driver)})"
+        ),
+    )
+    return get_webview_scroll_y(driver)
+
+
 @allure.step("When лишние вкладки WebView закрыты (оставлена только активная)")
 def close_other_tabs(driver):
     BrowserScreen(driver).close_leftmost_tab()
