@@ -56,6 +56,13 @@ machines:
          ref: "D1: связанные TC зелёные на сборке новее found_in; только fix-verifier, человек НЕ закрывает баги мимо верификации"}
       - {from: Fixed,    to: Reopened, by: [fix-verifier], effects: [reopen_count+1],
          ref: "D1: репро жив на новой сборке"}
+      - {from: Verified, to: Fixed, by: [qa-loop, lead],
+         ref: "откат ошибочной верификации по критик-вердикту на приёмке D1
+           (прецедент AT-BUG-031 2026-07-29: Verified поставлен по device-free
+           smoke, не исполнявшему тело функции; координатор откатил до
+           повторной верификации). НЕ reopen (reopen_count не растёт): дефект
+           ПРОЦЕДУРЫ верификации, не репро бага; причина отката — реплика в
+           Обсуждении с ссылкой на критик-вердикт"}
       # --- эскалации (эффект escalation = строка в state/escalations.md) ---
       - {from: Open,     to: Blocked, by: [human, factory], via_board: true, effects: [escalation],
          ref: "D6: продуктовый вопрос / конфликт борды / решение человека"}

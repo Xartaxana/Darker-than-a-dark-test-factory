@@ -19,7 +19,7 @@ dispute_count: 0
 awaiting: none
 resolution: ""
 resolution_comment: ""
-known_issue: "true"
+known_issue: "false"
 blocked_reason: ""
 lock: ""
 ---
@@ -101,6 +101,23 @@ node-скриптом ВНЕ `D:\AO3_tests`), не завершает посто
 | 2026-07-29 | scripts/tasks.ps1 текущий HEAD, `Stop-NodeProcesses` строки 171-214 (attempt 2, F1/F2/F3 на месте) — device: emulator-5554 (`Get-Device` подтвердил, переиспользован, не поднимался заново), Appium уже был запущен (npx-launcher PID 14244, appium-worker PID 13944, `:4723/status` → `ready:true` build `3.5.2` до вызова) | test_cases: [] (штатно, см. «## Обсуждение» ниже) — ЖИВАЯ ДЕМОНСТРАЦИЯ DoD, буквально по разделу «Критерий готовности (Fixed)»: фейковый долгоживущий `node.exe` (`setInterval(()=>{}, 100000)`, `C:\Users\user\AppData\Local\Temp\claude\...\scratchpad\fake_foreign.js`, вне `D:\AO3_tests`) запущен параллельно живому Appium этого репо, затем вызван реальный `Stop-NodeProcesses` (дот-сорснутый из `scripts/tasks.ps1`, не читка кода) | BEFORE: PID 14244 (npx-launcher, cmdline без `$root`, PPID 7652=cmd.exe), PID 13944 (appium-worker, cmdline содержит `D:\AO3_tests`, PPID 25996=cmd.exe — промежуточное звено между launcher и worker подтверждено живым замером: 14244→7652(cmd.exe)→... и 13944→25996(cmd.exe), НЕ прямая связь родитель-ребёнок, ровно как независимо замерил critic), PID 22280 (фейковый, cmdline `...scratchpad\fake_foreign.js`, вне `$root`). Вызов: `Stopping AO3 node process (PID 13944): "node" "D:\AO3_tests\tools\appium\...\index.js" ...` / `Stopped 1 AO3 node process(es).` (счётчик F2 сработал, ровно 1 owned-процесс). AFTER (2с спустя): единственный оставшийся `node.exe` — PID 22280 (фейковый); `Get-Process -Id 22280` → ALIVE; `Get-Process -Id 14244` (npx-launcher) → DEAD/NOT FOUND (B2: самозавершился БЕЗ отдельного killer-шага, измерено, не предположено — комментарий в коде подтверждён фактом, не просто унаследован от test-maintainer); `Get-Process -Id 13944` (appium-worker) → DEAD/NOT FOUND (ожидаемо, целевой процесс); `:4723/status` → DOWN (ожидаемо, appium убит — часть демонстрации, не регресс). Cleanup: `Stop-Process -Id 22280 -Force` → подтверждено отсутствие, `fake_foreign.js` удалён из scratchpad. Эмулятор (`emulator-5554`) НЕ затронут (`Get-Device` после демонстрации по-прежнему видит устройство — Stop-NodeProcesses матчит только `node.exe`, эмулятор не node-процесс). | PASS (все 3 блокера critic закрыты фактическим измерением против отгруженного кода attempt 2) — Fixed → Verified. Appium сейчас DOWN (убит демонстрацией, ожидаемо) — не перезапускался, следующий шаг координатора решает, поднимать ли заново |
 
 ## Обсуждение
+
+**2026-07-29T12:05:00Z — Lead (Fable), разбор очереди: известное ограничение
+фикса + сброс known_issue.** (1) **Известное ограничение (зафиксировано по
+рекомендации обоих критик-кругов, N3):** фильтр владения — ПОДСТРОЧНЫЙ
+регистронезависимый матч `CommandLine -match [regex]::Escape($root)`: любой
+посторонний `node.exe`, чья командная строка просто УПОМИНАЕТ `D:\AO3_tests`
+(аргументом, путём файла — второй критик-круг доказал живьём своим пробным
+процессом), будет убит; `D:\AO3_tests_old` тоже матчится. Направление отказа
+строго уже исходного бага (убивали ВСЁ), принято как ограничение, не дефект.
+(2) `known_issue` сброшен в `"false"` по конвенции «Verified ⇒ известная
+проблема закрыта» (введена этим же разбором в промпт fix-verifier;
+queue_snapshot и D3 still-repro перестают считать закрытый долг живой
+проблемой). (3) Остаточный риск (второй критик-круг, N2): самозавершение
+npx-launcher наблюдалось на текущей версии node/npm; на другой версии
+не самозавершившийся launcher переживёт вызов (его cmdline без `$root`) —
+триггер пересмотра: первый живой осиротевший launcher после
+`Stop-NodeProcesses`.
 
 **2026-07-29T09:47:00Z — координатор, откат D1-верификации по критик-входу
 (ДОРАБОТАТЬ, agent a11f0c0ea70f9273d).** fix-verifier (attempt 1) перевёл
