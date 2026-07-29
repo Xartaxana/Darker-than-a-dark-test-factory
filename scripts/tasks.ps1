@@ -169,9 +169,48 @@ function Start-Appium {
 }
 
 function Stop-NodeProcesses {
-    Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+    # AT-BUG-031: голый `Get-Process node` матчил ЛЮБОЙ node.exe в системе по
+    # имени, без проверки владения - на этом (разделяемом) хосте одновременно
+    # может крутиться другой проект со своими node-процессами (наблюдалось:
+    # D:\AI CRM\govard-crm, ~20 node.exe), и вызов этой функции убил бы их
+    # коллатерально. Сужаем до процессов, реально принадлежащих AO3-обвязке:
+    # матчим по командной строке (Get-CimInstance Win32_Process) на путь этого
+    # репозитория ($root). Start-Appium запускает appium из
+    # "$root\tools\appium" через локальный node_modules, поэтому дочерний
+    # worker-процесс (.../tools/appium/node_modules/appium/index.js) несёт
+    # $root в командной строке.
+    #
+    # AT-BUG-031 attempt 2 (critic-доработка, 2026-07-29): appium запускает
+    # node-обёртку (npx) и node-воркер; достаточно остановить воркер
+    # (совпадает по $root в командной строке) - обёртка завершается сама
+    # вслед за смертью дочернего процесса (эмпирически проверено). Раньше
+    # здесь был отдельный шаг "убить родителя воркера по ParentProcessId" с
+    # комментарием, что npx-launcher является РОДИТЕЛЕМ воркера - critic
+    # живым замером PPID (Get-CimInstance Win32_Process) это опроверг:
+    # фактический родитель appium-воркера - промежуточный cmd.exe, не
+    # npx-node напрямую, поэтому шаг матчился ("parents matched as
+    # node.exe") НОЛЬ раз и был мёртвым кодом. Единственный теоретически
+    # достижимый эффект мёртвой ветки - убийство ПОСТОРОННЕГО node.exe,
+    # если он случайно унаследует переиспользованный PID мёртвого
+    # cmd.exe-родителя - тот самый класс риска, против которого заведён этот
+    # баг. Убрано целиком; страховка не нужна - цепочка npx-launcher сама
+    # завершается, когда её дочерний appium-воркер убит (critic проверил
+    # живым прогоном: адресный Stop-Process только owned-PID схлопнул всю
+    # цепочку, :4723 ушёл в DOWN).
+    if (-not $root -or -not (Test-Path $root)) {
+        throw "Stop-NodeProcesses: `$root пуст или недействителен ('$root') - отказ убивать node-процессы вслепую (AT-BUG-031: [regex]::Escape('') заматчил бы ЛЮБУЮ командную строку)."
+    }
+    $allNode = Get-CimInstance Win32_Process -Filter "Name='node.exe'" -ErrorAction SilentlyContinue
+    $owned = @($allNode | Where-Object { $_.CommandLine -and $_.CommandLine -match [regex]::Escape($root) })
+    if ($owned.Count -eq 0) {
+        Write-Host "No AO3 node processes found (nothing to stop)." -ForegroundColor Yellow
+    }
+    foreach ($p in $owned) {
+        Write-Host "Stopping AO3 node process (PID $($p.ProcessId)): $($p.CommandLine)" -ForegroundColor Yellow
+        Stop-Process -Id $p.ProcessId -Force -ErrorAction SilentlyContinue
+    }
     Start-Sleep 1
-    Write-Host "Node processes stopped." -ForegroundColor Green
+    Write-Host "Stopped $($owned.Count) AO3 node process(es)." -ForegroundColor Green
 }
 
 function Wait-PackageServiceReady {

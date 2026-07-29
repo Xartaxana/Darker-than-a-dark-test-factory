@@ -42,6 +42,15 @@ def enable_auto_download(driver):
     SettingsScreen(driver).set_auto_download(True)
 
 
+@allure.step("Given в Settings включена опция «Tap to scroll (work pages)»")
+def enable_tap_to_scroll(driver):
+    """AT-BUG-030/TC-119/120/122: `BrowserScreen.kt` реактивно (`LaunchedEffect
+    (tapToScroll)`) переинжектирует `window.__ao3TapToScroll` при каждой
+    навигации/смене настройки — включать можно ДО открытия work-страницы (тот же
+    порядок, что `enable_auto_download`/`test_auto_download_triggers_on_loved_rating`)."""
+    SettingsScreen(driver).set_tap_to_scroll(True)
+
+
 @allure.step("When в Settings тумблер «Hide {rating_label} works» установлен в {enabled}")
 def set_hide_rating(driver, rating_label: str, enabled: bool):
     SettingsScreen(driver).set_hide_rating(rating_label, enabled)

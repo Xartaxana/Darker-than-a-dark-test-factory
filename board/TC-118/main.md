@@ -2,7 +2,7 @@
 key: "TC-118"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p0"
 summary: "Числовая проба предпосылки guard'а: узлы вне whitelist с собственным обработчиком в теле живой work-страницы (live)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-28T20:25:00Z"
-updated: "2026-07-28T20:25:00Z"
+created: "2026-07-28T22:03:22Z"
+updated: "2026-07-28T22:03:22Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Числовая проба предпосылки guard'а: узлы вне whitelist с собственным обработчиком в теле живой work-страницы (live)
 
 _Спроецировано из `test-cases/canary/TC-118.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-118 — Числовая проба: сколько узлов вне whitelist guard'а реально несут собственный обработчик на живой work-странице
 

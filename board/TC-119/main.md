@@ -2,7 +2,7 @@
 key: "TC-119"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-awaiting-review"
 priority: "p0"
 summary: "Guard тап-зон блокирует зональное действие при тапе по whitelisted-узлу (button) в теле work-страницы (replay)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-28T20:00:00Z"
-updated: "2026-07-28T20:00:00Z"
+created: "2026-07-29T00:35:29Z"
+updated: "2026-07-29T00:35:29Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Guard тап-зон блокирует зональное действие при тапе по whitelisted-узлу (button) в теле work-страницы (replay)
 
 _Спроецировано из `test-cases/canary/TC-119.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-119 — Тап по кнопке в теле работы НЕ запускает зональное действие (whitelist блокирует, replay)
 
@@ -71,7 +71,15 @@ true, сиблинг TC-120 держит то же «есть обработчи
 | Зона тапа | средняя треть viewport |
 | Ожидаемый Then | toggleFullscreen НЕ вызван; собственный обработчик кнопки вызван |
 
-## Заметки для автоматизации — БЛОКЕР (заведён test_debt-багом AT-BUG-030 в этом же ходе)
+## Заметки для автоматизации — БЛОКЕР СНЯТ (AT-BUG-030 -> Fixed, 2026-07-29, test-maintainer)
+Автоматизирован `framework/tests/canary/test_tap_zone_guard.py::
+test_tap_zone_guard_blocks_whitelisted_button` — 3 зелёных прогона подряд +
+красная проба (порча `Element.prototype.closest` в JS-контексте теста ловит
+регрессию guard'а, см. `bugs/AT-BUG-030.md` таблицу верификации). `status`/
+`automation_status` НЕ переведены этим ходом (F1: `Approved -> Automated` —
+только test-reviewer, `schemas/transitions.yaml`); `automated_by` заполнен.
+
+## Заметки для автоматизации — БЛОКЕР (заведён test_debt-багом AT-BUG-030 в этом же ходе, историческая версия)
 - **Суть блокера:** `recording_builder.py::render_work_page_html` не несёт ни
   одного `<button>` в теле страницы (`ul.work.navigation.actions` содержит
   только `<a>`-ссылки download-списка) — без фикстурного узла кейс физически

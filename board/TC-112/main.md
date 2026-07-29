@@ -2,7 +2,7 @@
 key: "TC-112"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Тумблер Auto-download выключен — простановка Favorite не скачивает файл (off-путь)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-28T15:00:00Z"
-updated: "2026-07-28T15:00:00Z"
+created: "2026-07-28T22:03:41Z"
+updated: "2026-07-28T22:03:41Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Тумблер Auto-download выключен — простановка Favorite не скачивает файл (off-путь)
 
 _Спроецировано из `test-cases/downloads/TC-112.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-112 — Favorite не скачивает файл при выключенном Auto-download
 

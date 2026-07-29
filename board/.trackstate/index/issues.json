@@ -299,6 +299,94 @@
     "archived": false
   },
   {
+    "key": "TC-126",
+    "path": "board/TC-126/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Тап по верхней трети work-страницы скроллит вверх (tap-to-scroll ON)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-11"
+    ],
+    "updated": "2026-07-28T23:02:37Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-127",
+    "path": "board/TC-127/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Тап по нижней трети work-страницы скроллит вниз (tap-to-scroll ON)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-11"
+    ],
+    "updated": "2026-07-28T23:02:38Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-128",
+    "path": "board/TC-128/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Тап по средней трети work-страницы переключает fullscreen (вход и выход)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-11"
+    ],
+    "updated": "2026-07-28T23:02:41Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-130",
+    "path": "board/TC-130/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Infinite scroll ON: скролл к концу листинга подгружает следующую страницу без навигации",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-11"
+    ],
+    "updated": "2026-07-29T00:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "TC-066",
     "path": "board/TC-066/main.md",
     "parent": null,
@@ -721,7 +809,7 @@
     "epicPath": null,
     "summary": "Числовая проба предпосылки guard'а: узлы вне whitelist с собственным обработчиком в теле живой work-страницы (live)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -729,7 +817,7 @@
       "area:canary",
       "risk:R-02"
     ],
-    "updated": "2026-07-28T20:25:00Z",
+    "updated": "2026-07-28T22:03:22Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -743,7 +831,7 @@
     "epicPath": null,
     "summary": "Guard тап-зон блокирует зональное действие при тапе по whitelisted-узлу (button) в теле work-страницы (replay)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-awaiting-review",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -751,7 +839,7 @@
       "area:canary",
       "risk:R-02"
     ],
-    "updated": "2026-07-28T20:00:00Z",
+    "updated": "2026-07-29T00:35:29Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -765,7 +853,7 @@
     "epicPath": null,
     "summary": "Тап по НЕ-whitelisted узлу с собственным обработчиком в теле work-страницы запускает ОБА эффекта (guard-пробой, replay)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-awaiting-review",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -773,7 +861,7 @@
       "area:canary",
       "risk:R-02"
     ],
-    "updated": "2026-07-28T16:00:00Z",
+    "updated": "2026-07-29T00:35:29Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -787,7 +875,7 @@
     "epicPath": null,
     "summary": "Тап по whitelisted-ссылке БЕЗ собственного JS-обработчика в теле work-страницы не запускает зональное действие (whitelist по тегу, независимо от наличия обработчика, replay)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -795,7 +883,7 @@
       "area:canary",
       "risk:R-02"
     ],
-    "updated": "2026-07-28T19:00:00Z",
+    "updated": "2026-07-28T22:04:07Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -809,7 +897,7 @@
     "epicPath": null,
     "summary": "Тап по потомку (span) whitelisted-узла в теле work-страницы блокирует зональное действие через closest — семантика предка, не изолированной проверки target (replay)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-awaiting-review",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -817,7 +905,7 @@
       "area:canary",
       "risk:R-02"
     ],
-    "updated": "2026-07-28T19:00:00Z",
+    "updated": "2026-07-29T00:35:29Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1084,7 +1172,7 @@
     "epicPath": null,
     "summary": "Тумблер Auto-download выключен — простановка Favorite не скачивает файл (off-путь)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1092,7 +1180,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-07-28T15:00:00Z",
+    "updated": "2026-07-28T22:03:41Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1106,7 +1194,7 @@
     "epicPath": null,
     "summary": "Включение тумблера Auto-download не скачивает задним числом ранее отмеченные Favorite-работы",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1114,7 +1202,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-07-28T15:00:00Z",
+    "updated": "2026-07-28T22:03:45Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1128,7 +1216,7 @@
     "epicPath": null,
     "summary": "Правка личного тега уже-Favorite работы через панель работы не скачивает файл повторно (edge vs level, :756)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1136,7 +1224,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-07-28T15:00:00Z",
+    "updated": "2026-07-28T22:03:50Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1150,7 +1238,7 @@
     "epicPath": null,
     "summary": "Правка комментария уже-Favorite работы через bottom-sheet листинга не скачивает файл повторно (edge vs level, :862)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1158,7 +1246,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-07-28T15:00:00Z",
+    "updated": "2026-07-28T23:22:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1172,7 +1260,7 @@
     "epicPath": null,
     "summary": "Смена рейтинга с Favorite на другой не запускает скачивание",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -1180,7 +1268,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-07-28T15:00:00Z",
+    "updated": "2026-07-28T22:03:54Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1194,7 +1282,7 @@
     "epicPath": null,
     "summary": "Снятие рейтинга Favorite (deselect) не запускает скачивание",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -1202,7 +1290,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-07-28T15:00:00Z",
+    "updated": "2026-07-28T22:03:58Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2402,6 +2490,94 @@
     "archived": false
   },
   {
+    "key": "TC-123",
+    "path": "board/TC-123/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Tap to scroll: тумблер OFF — тап ни по одной трети work-страницы не производит эффекта (негативный инвариант)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:settings",
+      "risk:R-11"
+    ],
+    "updated": "2026-07-28T23:02:52Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-124",
+    "path": "board/TC-124/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Tap to scroll: включение тумблера применяется мгновенно к уже открытой work-странице (live-push) и переживает reload от смены темы",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:settings",
+      "risk:R-11"
+    ],
+    "updated": "2026-07-28T23:03:01Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-125",
+    "path": "board/TC-125/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Tap to scroll: значение тумблера и его эффект переживают kill+relaunch приложения",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:settings",
+      "risk:R-11"
+    ],
+    "updated": "2026-07-28T23:03:04Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-129",
+    "path": "board/TC-129/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Infinite scroll: тумблер OFF — скролл к концу листинга не подгружает следующую страницу, нумерованная пагинация остаётся штатной",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:settings",
+      "risk:R-11"
+    ],
+    "updated": "2026-07-28T23:03:06Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "TC-001",
     "path": "board/TC-001/main.md",
     "parent": null,
@@ -3352,16 +3528,17 @@
     "epicPath": null,
     "summary": "qemu-system-x86_64.exe крашится (0xc0000005) mid-test на тяжёлом live-рендере AO3 в эмуляторном WebView — sibling AT-BUG-016/ESC-002, охватывает LIVE-canary-поверхность",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "test_case:TC-082",
+      "test_case:TC-080",
       "sev:major"
     ],
-    "updated": "2026-07-28T20:15:00Z",
-    "resolution": null,
+    "updated": "2026-07-28T22:44:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -3417,7 +3594,7 @@
     "epicPath": null,
     "summary": "listing_basic.mitm не несёт .html-файл скачивания (недостаёт одной транзакции) — блокирует автоматизацию TC-115 (edge-vs-level BUG-014 через листинг)",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -3425,7 +3602,7 @@
       "test_case:TC-115",
       "sev:minor"
     ],
-    "updated": "2026-07-28T15:00:00Z",
+    "updated": "2026-07-28T23:30:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3437,9 +3614,9 @@
     "epic": null,
     "parentPath": null,
     "epicPath": null,
-    "summary": "render_work_page_html не несёт ни whitelisted <button> (со span-потомком), ни НЕ-whitelisted интерактивного узла, ни достаточной высоты в теле работы — блокирует TC-119/TC-120/TC-122 (bridge-tap-zone-guard)",
+    "summary": "render_work_page_html не несёт ни whitelisted <button> (со span-потомком), ни НЕ-whitelisted интерактивного узла, ни достаточной высоты в теле работы — блокирует TC-119/TC-120/TC-122 (bridge-tap-zone-guard) и TC-123..127 (reading-UX tap-to-scroll, узел 3, восемь кейсов итого)",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -3447,9 +3624,14 @@
       "test_case:TC-119",
       "test_case:TC-120",
       "test_case:TC-122",
+      "test_case:TC-123",
+      "test_case:TC-124",
+      "test_case:TC-125",
+      "test_case:TC-126",
+      "test_case:TC-127",
       "sev:minor"
     ],
-    "updated": "2026-07-28T20:00:00Z",
+    "updated": "2026-07-29T00:35:29Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3463,14 +3645,14 @@
     "epicPath": null,
     "summary": "Stop-NodeProcesses (tasks.ps1) убивает ЛЮБОЙ node.exe по имени — коллатеральный риск для чужих неAO3 node-процессов на этом же хосте",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-07-28T15:40:00Z",
+    "updated": "2026-07-29T02:10:00Z",
     "resolution": null,
     "children": [],
     "archived": false

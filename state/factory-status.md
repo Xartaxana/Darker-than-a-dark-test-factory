@@ -1,20 +1,20 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-28T21:46:42Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-07-29T01:18:14Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **642.2** (RUN-20260702-0300)
+- smoke: Closed · smoke_freshness_hours: **645.7** (RUN-20260702-0300)
 - regression: not_run
 - canary: not_run
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **1**
 - p0_automation_coverage: **87%** (33/38)
-- p1_automation_coverage: **93%** (54/58)
+- p1_automation_coverage: **82%** (54/66)
   - непокрытые P0: TC-118, TC-119, TC-120, TC-121, TC-122
-- Test debt открыт: **3** — AT-BUG-029, AT-BUG-030, AT-BUG-031
+- Test debt открыт: **0**
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
 - Untriaged: **0** · untriaged_failure_age: **0**
@@ -24,26 +24,26 @@ generated_at: 2026-07-28T21:46:42Z · генератор: `scripts/queue_snapsho
 - 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
 - smoke: passed · regression: not_run
 
-## Тест-кейсы (122)
+## Тест-кейсы (130)
 
-- Review: **11** · Automated: **110** · Blocked: **1**
+- Approved: **19** · Automated: **110** · Blocked: **1**
 - автотесты (B3): active: **110**
 
 | Область | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | accessibility |  |  |  | 3 |  |
 | backup |  |  |  | 1 |  |
-| browser |  |  |  | 9 |  |
-| canary |  | 5 |  | 18 |  |
+| browser |  |  | 4 | 9 |  |
+| canary |  |  | 5 | 18 |  |
 | compatibility |  |  |  | 3 |  |
-| downloads |  | 6 |  | 8 |  |
+| downloads |  |  | 6 | 8 |  |
 | errors |  |  |  | 1 |  |
 | filter-profiles |  |  |  | 5 |  |
 | library |  |  |  | 15 |  |
 | performance |  |  |  | 4 |  |
 | rating |  |  |  | 14 |  |
 | security |  |  |  | 6 |  |
-| settings |  |  |  | 6 | 1 |
+| settings |  |  | 4 | 6 | 1 |
 | smoke |  |  |  | 5 |  |
 | tabs |  |  |  | 6 |  |
 | visibility |  |  |  | 6 |  |
@@ -63,12 +63,11 @@ generated_at: 2026-07-28T21:46:42Z · генератор: `scripts/queue_snapsho
 
 - BUG-012 [minor] Open — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
 
-## Test debt (4)
+## Test debt (3)
 
-- AT-BUG-026 [broken_environment] Fixed — qemu-system-x86_64.exe крашится (0xc0000005) mid-test на тяжёлом live-рендере AO3 в эмуляторном WebView — sibling AT-BUG-016/ESC-002, охватывает LIVE-canary-поверхность
-- AT-BUG-029 [missing_fixture] Open — listing_basic.mitm не несёт .html-файл скачивания (недостаёт одной транзакции) — блокирует автоматизацию TC-115 (edge-vs-level BUG-014 через листинг)
-- AT-BUG-030 [missing_fixture] Open — render_work_page_html не несёт ни whitelisted <button> (со span-потомком), ни НЕ-whitelisted интерактивного узла, ни достаточной высоты в теле работы — блокирует TC-119/TC-120/TC-122 (bridge-tap-zone-guard)
-- AT-BUG-031 [broken_environment] Open — Stop-NodeProcesses (tasks.ps1) убивает ЛЮБОЙ node.exe по имени — коллатеральный риск для чужих неAO3 node-процессов на этом же хосте
+- AT-BUG-029 [missing_fixture] Fixed — listing_basic.mitm не несёт .html-файл скачивания (недостаёт одной транзакции) — блокирует автоматизацию TC-115 (edge-vs-level BUG-014 через листинг)
+- AT-BUG-030 [missing_fixture] Fixed — render_work_page_html не несёт ни whitelisted <button> (со span-потомком), ни НЕ-whitelisted интерактивного узла, ни достаточной высоты в теле работы — блокирует TC-119/TC-120/TC-122 (bridge-tap-zone-guard) и TC-123..127 (reading-UX tap-to-scroll, узел 3, восемь кейсов итого)
+- AT-BUG-031 [broken_environment] Fixed — Stop-NodeProcesses (tasks.ps1) убивает ЛЮБОЙ node.exe по имени — коллатеральный риск для чужих неAO3 node-процессов на этом же хосте
 
 ## Прогоны (1)
 

@@ -101,3 +101,13 @@ ERROR_PAGE_RETRY_LINK = ".wrap a"
 # `downloaded_work.html`. Целится в реально существующий internal-файл приложения
 # (Room DB) ВНЕ директории загрузок — см. докстринг фикстуры теста.
 PROBE_LINK = "#probe-link"
+
+# AT-BUG-030: фикстурные узлы guard'а тап-зон (bridge-tap-zone-guard,
+# TC-119/120/122) — НЕ инжектируются bridge, часть HTML фикстуры
+# (`recording_builder.py::render_work_page_html` -> `_tap_zone_guard_nodes_html`),
+# тот же класс, что PROBE_LINK выше: фикстурный маркер живёт здесь для
+# единообразия со всеми остальными CSS-константами, даже не будучи частью
+# реальной разметки AO3.
+TAP_ZONE_BUTTON = '[data-tap-marker="button"]'
+TAP_ZONE_BUTTON_CHILD = '[data-tap-marker-child="span"]'
+TAP_ZONE_DIV = '[data-tap-marker="div"]'

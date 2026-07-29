@@ -1,19 +1,19 @@
 ---
 id: AT-BUG-030
-title: "render_work_page_html не несёт ни whitelisted <button> (со span-потомком), ни НЕ-whitelisted интерактивного узла, ни достаточной высоты в теле работы — блокирует TC-119/TC-120/TC-122 (bridge-tap-zone-guard)"
+title: "render_work_page_html не несёт ни whitelisted <button> (со span-потомком), ни НЕ-whitelisted интерактивного узла, ни достаточной высоты в теле работы — блокирует TC-119/TC-120/TC-122 (bridge-tap-zone-guard) и TC-123..127 (reading-UX tap-to-scroll, узел 3, восемь кейсов итого)"
 type: test_debt
 debt_kind: missing_fixture
 severity: minor
-status: Open
+status: Fixed
 found_in: "test-designer, проектирование области bridge-tap-zone-guard (needs-design, docs/01 §9, решение владельца §10 (н) ВАРИАНТ 1), 2026-07-28"
-fixed_in: ""
+fixed_in: "framework (test-only, без сборки приложения) — framework/data/recording_builder.py, framework/data/recordings/{listing_basic,work_with_download,works_multi,listing_paginated}.mitm, framework/web/selectors.py, framework/screens/settings_screen.py, framework/steps/{settings_steps,browser_steps}.py, framework/tests/canary/test_tap_zone_guard.py, framework/tests/test_recording_builder_unit.py (доработка attempt 2, S-3/S-4)"
 last_seen_in: ""
-test_cases: ["TC-119", "TC-120", "TC-122"]
+test_cases: ["TC-119", "TC-120", "TC-122", "TC-123", "TC-124", "TC-125", "TC-126", "TC-127"]
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-07-28T16:00:00Z"
-updated: "2026-07-28T20:00:00Z"
+status_since: "2026-07-29T00:35:29Z"
+updated: "2026-07-29T00:35:29Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -43,7 +43,12 @@ lock: ""
 НЕ-whitelisted узлу (например `div[onclick]`) с собственным обработчиком должен
 запускать ОБА эффекта (CH-005 находка 2).
 
-`framework/data/recording_builder.py::render_work_page_html` (:309-338) сейчас
+`framework/data/recording_builder.py::render_work_page_html` (:478-507,
+номера строк сверены ЗАНОВО test-designer 2026-07-29, задача
+`needs-design-sec9-batch-14` доработка N3 — код сдвинулся между диспатчами
+из-за расширений `render_listing_html`/пагинации, добавленных батчем
+builder'а; функция НЕ переименована, это по-прежнему
+`render_work_page_html`) сейчас
 рендерит тело work-страницы (`#workskin`) только из `h2.title.heading`,
 `h3.byline.heading a[rel=author]`, `h5.fandom.tags a`, `ul.work.navigation.actions`
 (download-список из `<a>`-ссылок, `_download_list_html`) и `<p>` с текстом-заглушкой:
@@ -73,7 +78,7 @@ lock: ""
 
 ## Критерий готовности (Fixed)
 
-`render_work_page_html` (`recording_builder.py:309-338`) несёт в теле (внутри
+`render_work_page_html` (`recording_builder.py:478-507`) несёт в теле (внутри
 `.wrapper` или соседним блоком, не ломая уже существующую структуру
 `#workskin`/`h2`/`h3`/`h5`/download-список) минимум:
 
@@ -199,10 +204,46 @@ scroll/toggleFullscreen), геометрия ему нужна по другой
 - `python -m pytest scripts/tests -q` без регресса (включая явную сверку
   TC-026/TC-032/TC-033 из пункта выше, не только общий зелёный статус набора).
 
+**2026-07-29 — test-designer, добавление консьюмеров узла 3 (дизайн области
+docs/01 §9 «reading-UX жесты и их тумблеры», settings-tap-to-scroll-toggle +
+browse-tap-to-scroll).** Проектируя TC-123..127 (обе стороны тумблера
+`tap_to_scroll` + зональная механика скролла верх/низ), обнаружено: та же
+короткая `render_work_page_html` (узел 3 критерия готовности — высота >= 3×
+`innerHeight`) делает эти пять кейсов диагностически бессильными по ТОЙ ЖЕ
+причине, что и TC-119/TC-120 (страница не прыгает — «зона не сработала»
+неотличимо от «страница уже была на границе»). Проверено — покрывающего бага
+на этот узкий пробел нет, кроме этого же тикета (правило 4 воркфлоу
+test-designer: перед заведением проверить существующие). Узлы 1/2 (`button`+
+`span`, `div[onclick]`) этим пяти кейсам НЕ нужны — они целятся в обычный
+неинтерактивный текстовый узел, зависимость только от узла 3. `test_cases`
+расширен без изменения критерия готовности (узел 3 уже был частью фикса);
+severity остаётся `minor` — по-прежнему один и тот же двухстрочный фикс
+`recording_builder.py`, но теперь блокирует 8 кейсов вместо 3 (P0 canary +
+P1 reading-UX). Регресс-список потребителей `render_work_page_html`
+(`listing_basic.mitm`/TC-026, `work_with_download.mitm`/TC-032/033,
+`works_multi.mitm`, `listing_paginated.mitm`) не меняется — новые кейсы не
+добавляют требований к самой функции сверх узла 3, уже названного.
+
+**2026-07-29 — test-designer, доработка N3 (задача `needs-design-sec9-batch-14`
+attempt 2, критик-вход на область §9 reading-UX):** ссылки
+`recording_builder.py:309-338` на `render_work_page_html`, оставленные
+предыдущими доработками, протухли — между диспатчами код сдвинулся (батч
+builder'а расширил `render_listing_html`/пагинацию другими вставками ВЫШЕ по
+файлу); актуальная позиция функции проверена ЧТЕНИЕМ файла заново (не
+принята со слов диспатча — сам диспатч явно предупредил, что код мог
+измениться ЕЩЁ раз, и указанное в нём альтернативное имя функции
+`render_listing_html` при чтении не подтвердилось: `render_work_page_html`
+НЕ переименована, только сдвинулась на `:478-507`). Все три вхождения
+`:309-338` в этом файле заменены на `:478-507`. Title файла исправлен —
+прежняя редакция перечисляла только TC-119/TC-120/TC-122, хотя
+`test_cases` с 2026-07-29 несёт восемь записей; title теперь называет обе
+группы явно.
+
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
-| | | | | |
+| 2026-07-29 | 1.10 (versionCode 11) | TC-119/TC-120/TC-122 (новые, `test_tap_zone_guard.py`) — 3/3 прогона подряд зелёные; TC-026/TC-032/TC-033 (регрессия потребителей `render_work_page_html`) — зелёные на пересобранных `listing_basic.mitm`/`work_with_download.mitm`; `python -m pytest scripts/tests -q` — 682 passed, 1 skipped; `Invoke-Pytest tests/test_recording_builder_unit.py -q` — 35 passed | test-maintainer, fix + автоматизация + регресс (пере-проверка fix-verifier ожидается) | — |
+| 2026-07-29 | 1.10 (versionCode 11) | Доработка attempt 2 (критик-вход B-1/B-2/B-3/S-1..S-6): TC-119/TC-120/TC-122 — 3/3 прогона подряд зелёные ПОСЛЕ правок S-1 (симметричный поллинг `assert_top_chrome_not_darkened`)/S-2 (geometry-ассерты в `dispatch_tap_zone_*_tap`); красная проба TC-120 ПЕРЕДЕЛАНА (была тождественной, см. «Красная проба» ниже) и реально прогнана вместе с переносом на TC-122 (было только рассуждением); `python -m pytest scripts/tests -q` — 682 passed, 1 skipped (без регресса); `Invoke-Pytest tests/test_recording_builder_unit.py -q` — **39 passed** (было заявлено 35, фактическое ДО этой доработки — 37 — расхождение S-6 исправлено; +2 новых юнита S-3/S-4 дают 39) | test-maintainer, доработка (пере-проверка fix-verifier ожидается) | — |
 
 ## Обсуждение
 
@@ -254,18 +295,216 @@ whitelisted-узел физически стоит вне средней тре�
 для НЕГО не добавляет НОВОГО геометрического требования сверх уже
 согласованного для узла 1 (переиспользует ту же среднюю треть, что TC-119).
 
+**2026-07-29 — test-maintainer, фикс (B4).** `render_work_page_html`
+(`recording_builder.py:478+`, номера строк сдвинулись с прошлой правки этой же
+сессии — сверено ЗАНОВО чтением файла, а не со слов диспатча) несёт все три
+узла критерия готовности:
+1. Узлы 1/2 (`_tap_zone_guard_nodes_html`) — `<button data-tap-marker="button"
+   onclick=...><span data-tap-marker-child="span">...</span></button>` и
+   `<div data-tap-marker="div" onclick=...>`. Геометрия — `position:absolute;
+   top:Nvh` (40vh/50vh), НЕ `margin-top` от предыдущего контента: ни один
+   элемент страницы не несёт `position:relative/absolute/fixed`, поэтому
+   containing block абсолютно спозиционированного узла — верх ДОКУМЕНТА, и
+   `top:Nvh` детерминированно даёт N% от РЕАЛЬНОГО `innerHeight` устройства
+   независимо от непредсказуемой высоты заголовка/download-списка (устойчивее
+   пикселя под конкретный AVD). Живой прогон этой сессии подтвердил:
+   `getBoundingClientRect()` узла 2 на emulator-5554 (`innerHeight=1603`,
+   отличается от эталонных 1800) дал `top=801.3` -> фракция `0.4999` — почти
+   точно 50%, попадание в band 44-56% с большим запасом.
+2. Узел 3 (`render_reading_ux_filler_html`) — `min-height: 6000px` (не только
+   счёт `<p>`-абзацев, как `render_tab_marker_html`/`render_listing_filler_html`)
+   — детерминированная гарантия итоговой высоты документа >= 3×1800=5400px
+   независимо от font-metrics конкретного WebView.
+3. Оба узла (1/2) добавлены ПОСЛЕ `_download_list_html` в исходном HTML —
+   регресс-инвариант (`DownloadRepository.fetchDownloadUrl` ищет ПЕРВОЕ
+   совпадение `.html`-ссылки) сохранён, подтверждено зелёным TC-032/TC-033 на
+   пересобранной фикстуре.
+
+Пересобраны ВСЕ ЧЕТЫРЕ потребителя `render_work_page_html`
+(`python scripts/build_replay_recordings.py`, идемпотентно строит все записи
+разом): `listing_basic.mitm` (сверено — 4-й flow AT-BUG-029/TC-115,
+download-flow `A_Loved_Test_Work.html`, СОХРАНЁН после пересборки, не
+откачен), `work_with_download.mitm`, `works_multi.mitm`, `listing_paginated.mitm`.
+
+Автоматизированы TC-119/TC-120/TC-122 —
+`framework/tests/canary/test_tap_zone_guard.py` (новый модуль). Живой
+диагноз этой сессии, задокументированный докстрингом модуля: при >1 живых
+`android.webkit.WebView` единственный Appium `WEBVIEW_<pkg>` контекст
+ПРИЛИПАЕТ к вкладке-0 (класс AT-BUG-018/019/022), поэтому work-страница с
+фикстурными узлами открывается ПЕРВОЙ (навигация активной вкладки-0 in place,
+`rating_steps.open_work_page`), а вторая вкладка (нужна только для рендера
+TabStrip, `tabs.size>1`) открывается ПОСЛЕ через Library — её содержимое не
+важно. Тап дispatch'ится синтетическим `MouseEvent` с явным `clientX/clientY`
+(координата — центр РЕАЛЬНОГО `getBoundingClientRect()` целевого узла, не
+хардкод) через `dispatchEvent`, не физическим тапом по экранным координатам —
+тот же класс приёма, что уже используют `tap_rate_button`/`click_probe_link`
+(обход системной ненадёжности touch-инъекции над WebView-контентом,
+задокументированной `BrowserScreen` докстрингом за AT-BUG-018: 1/20 успехов у
+координатных механизмов), усиленный явной геометрией вместо `clientX=
+clientY=0` голого `.click()`.
+
+`ratio` в `assert_top_chrome_darkened`/`assert_top_chrome_not_darkened`
+откалиброван на 0.7 (не дефолтные 0.5 из TC-058) — измерено живым прогоном:
+светлая статичная фикстура даёт скромный контраст (baseline≈232 ->
+fullscreen≈137, ratio≈0.59), тогда как TC-058 калибровался на страницах с
+глубоким затемнением (≈234 -> ≈86).
+
+**Красная проба** (DoD): временный JS-монkey-patch `Element.prototype.closest`
+(порча УСЛОВИЯ guard'а — целевой тег `button` перестаёт распознаваться, тот же
+класс регрессии, что описан в разделе «Геометрия узлов 1 и 2» выше) на
+живом прогоне TC-119 РЕАЛЬНО меняет Then: `assert_top_chrome_not_darkened`
+падает (`luma=137.1 < baseline*0.7=162.4`) — negative Then содержателен, не
+тривиален из-за отсутствия узла. Проба временная (в коммит не вошла, чистый
+runtime JS в контексте теста — `app-under-test/` не тронут).
+
+**ИСПРАВЛЕНО доработкой attempt 2 (критик-вход B-1) — красная проба TC-120
+БЫЛА ТОЖДЕСТВЕННОЙ, не реальной.** Прежняя формулировка утверждала, что проба
+TC-119 «переиспользована» для TC-120 — это ошибка: узел 2
+(`div[data-tap-marker="div"]`) НЕ входит в whitelist guard'а (`a, button,
+input, select, textarea, label, summary, [role="button"]`) и БЕЗ порчи
+`closest` уже возвращает `null` для div — порча «button перестаёт
+распознаваться» тождественно ничего не меняет в пути кода, который guard
+проходит для div (он и так не матчится). Then TC-120 при этой пробе не мог
+измениться в принципе — не проверка регрессии, а no-op.
+
+Заменено НА РЕАЛЬНУЮ пробу (симулирует ДРУГОЙ класс регрессии — «выборка
+whitelist расширилась по ошибке», не «сузилась»): временный monkey-patch
+`Element.prototype.closest`, который для узла `div[data-tap-marker="div"]`
+ЛОЖНО возвращает сам узел (как будто div matched whitelist-селектор), пока
+для всех остальных элементов ведёт себя штатно. Живой прогон этой доработки
+(emulator-5554, work_with_download.mitm): с этой порчей `assert_top_chrome_
+darkened` (Then TC-120 — toggleFullscreen ДОЛЖЕН быть вызван) падает
+`TimeoutException` — «верхняя полоса не потемнела после входа в fullscreen
+относительно baseline=231.9 за 10с» — guard ложно счёл div whitelisted и
+подавил зональное действие, хотя корректное поведение требует его вызова.
+Без порчи тот же Then проходит зелёным (см. таблицу верификации, 3/3 прогона
+TC-120) — разница доказывает содержательность позитивного Then TC-120.
+
+Отдельно — перенос красной пробы TC-119 на TC-122 (порча «button перестаёт
+распознаваться») был только РАССУЖДЕНИЕМ («структурно корректный перенос»),
+без фактического прогона. Прогнан этой же доработкой: с той же порчей closest
+(button не распознаётся) тап по span-потомку (`dispatch_tap_zone_button_
+child_tap`) даёт `assert_top_chrome_not_darkened` (Then TC-122 — toggleFullscreen
+НЕ должен быть вызван) `AssertionError`: «верхняя полоса потемнела
+(luma=137.1 < baseline*0.7=162.4) после тапа — toggleFullscreen, похоже, был
+вызван» — порча помешала find whitelisted-предка (`<button>`) через
+span-потомок, ровно тот класс регрессии, для проверки которого существует
+TC-122. Оба живых прогона (TC-120/TC-122 под порчей) выполнены во
+временном модуле `framework/tests/canary/test_zz_redprobe_at_bug_030_tmp.py`
+(создан, прогнан, witness собран, файл удалён — не вошёл в коммит, тот же
+приём, что исходная проба TC-119 выше).
+
+**Зелёные прогоны:** TC-119/TC-120/TC-122 — 3/3 подряд зелёные
+(`Invoke-Pytest tests/canary/test_tap_zone_guard.py`). Регрессия:
+TC-026/TC-032/TC-033 зелёные на пересобранных фикстурах; `python -m pytest
+scripts/tests -q` — 682 passed, 1 skipped (было столько же ДО правки, класс
+не задет); `Invoke-Pytest tests/test_recording_builder_unit.py -q` — **было
+заявлено 35, ИСПРАВЛЕНО доработкой attempt 2 (S-6): фактическое число ДО
+доработки — 37** (расхождение возникло из-за параллельного дополнения
+AT-BUG-029, добавившего 2 юнита `listing_basic.mitm` уже ПОСЛЕ того, как эта
+цифра была впервые записана — «35» никогда не пересчитывалась после
+параллельного изменения). После доработки attempt 2 (добавлены S-3/S-4, см.
+ниже) — **39 passed**.
+
+**2026-07-29 — test-maintainer, доработка attempt 2 (критик-вход B-1/B-2/B-3
++ Should-fix S-1..S-6).** Устраняет находки критика по фиксу AT-BUG-030 —
+существо фикса (геометрия узлов, регресс 4 фикстур, 4-й flow AT-BUG-029) НЕ
+тронуто, критик его независимо перепрогнал и подтвердил.
+
+- **B-1** (красная проба TC-120 была тождественной) — см. раздел «Красная
+  проба» выше: заменена на реальную порчу (`closest` ложно матчит div),
+  живой прогон подтверждён `TimeoutException` на `assert_top_chrome_darkened`
+  под порчей; перенос пробы TC-119 на TC-122 факт-прогнан (не только
+  рассуждение), witness `AssertionError` на `assert_top_chrome_not_darkened`.
+- **B-2** (ложное обоснование пропуска TC-123-127) — формулировка исправлена
+  выше (раздел «2026-07-29 — test-maintainer, фикс (B4)», абзац про
+  reading-UX): TC-123-127 уже `Approved`, причина пропуска — вне мандата
+  ЭТОГО диспатча, не статус кейсов. TC-123-127.md содержательно не тронуты.
+- **B-3** (таймстемп в будущем) — `status_since`/`updated` frontmatter
+  переставлены с ошибочного `2026-07-29T18:30:00Z` (~18ч вперёд факта) на
+  измеренное текущее UTC-время (`date -u`, см. ниже).
+- **S-1** (асимметричный бюджет `assert_top_chrome_not_darkened`) —
+  `framework/steps/browser_steps.py`: функция теперь опрашивает ВЕСЬ
+  `timeout=10` (симметрично `assert_top_chrome_darkened`), проверяя, что
+  порог потемнения НЕ пересекается НИ РАЗУ за всё окно, вместо одного чтения
+  после `sleep(1.5)`.
+- **S-2** (нет geometry-ассертов в рантайме) — `dispatch_synthetic_tap`
+  теперь включает `fraction_of_innerHeight` в возвращаемый `dict`;
+  `dispatch_tap_zone_button_tap`/`_button_child_tap`/`_div_tap` ассертят
+  фракцию в ожидаемый band (`[1/3, 2/3]` для узлов 1/span, `[0.44, 0.56]`
+  для узла 2) — регрессия геометрии фикстуры теперь ловится ДО того, как
+  негативный/позитивный Then мог бы дать ложный результат.
+- **S-3** (нет device-free юнитов на узлы 1/2/3) —
+  `framework/tests/test_recording_builder_unit.py`:
+  `test_works_multi_work_pages_have_tap_zone_guard_and_filler_nodes` — по
+  образцу `test_listing_paginated_pages_have_viewport_meta_and_filler`,
+  проверяет ОБА work-flow `works_multi.mitm` на присутствие
+  `data-tap-marker="button"`/`data-tap-marker-child="span"`/
+  `data-tap-marker="div"`/`min-height: 6000px`.
+- **S-4** (нет теста на границе `WORK_PAGE_READING_UX_FILLER_MIN_HEIGHT_PX`)
+  — `test_reading_ux_filler_min_height_holds_reference_but_not_beyond_boundary`
+  (класс M6, CLAUDE.md): подтверждает `6000 >= 3×1800`, и что инвариант НЕ
+  держится за границей текущего эталонного AVD (гипотетический
+  `innerHeight=2100` → `6000 < 3×2100=6300`).
+- **S-5** (`updated` test-case не поднят при заполнении `automated_by`) —
+  `test-cases/canary/TC-119.md`/`TC-120.md`/`TC-122.md` — `updated` поднят
+  на текущее время.
+- **S-6** (неверное число «35 passed») — исправлено выше и в таблице
+  верификации: фактическое число ДО доработки — 37, после (+S-3/S-4) — 39.
+- **S-7** — НЕ применён по инструкции диспатча (явно отложен до
+  reading-UX-прохода).
+
+Регрессия после доработки: `python -m pytest scripts/tests -q` — 682
+passed, 1 skipped (без изменения); `Invoke-Pytest
+tests/test_recording_builder_unit.py -q` — 39 passed; `Invoke-Pytest
+tests/canary/test_tap_zone_guard.py -q` — 3/3 прогона подряд зелёные ПОСЛЕ
+правок S-1/S-2 (новый geometry-ассерт и симметричный поллинг не сломали
+существующее поведение — узлы фикстуры и так удовлетворяют band'ам).
+
+`test-cases/canary/TC-119.md`/`TC-120.md`/`TC-122.md` — поле `automated_by`
+заполнено (F1-паттерн, тот же приём, что test-automator). `status`/
+`automation_status` НЕ переведены этим ходом — `Approved -> Automated`
+guard'ится `by: [test-reviewer]` (`schemas/transitions.yaml`), test-maintainer
+не имеет права на этот переход; нужен отдельный проход test-reviewer.
+
+Reading-UX кейсы TC-123..127 (узел 3, тот же фикс) автоматизацией НЕ
+охвачены этим ходом — **ИСПРАВЛЕНО доработкой attempt 2 (критик-вход B-2):
+прежняя формулировка «их `status: Review`, ещё не `Approved`» была ФАКТИЧЕСКИ
+НЕВЕРНА** — все пять (TC-123/124/125/126/127) уже `status: Approved`
+(переведены test-designer'ом ~40 минут ДО этой правки). Причина пропуска —
+не статус кейсов, а **вне мандата ЭТОГО B4-диспатча** (фикстурный фикс
+test_debt, не F1-автоматизация пяти P0/P1-кейсов reading-UX): узел 3
+(высота документа) для них уже готов тем же фиксом `render_work_page_html`,
+но кодирование самих пяти тестов в это исправление не входило.
+
+Первая редакция `test_tap_zone_guard.py` импортировала `framework.web.
+selectors` напрямую в файле `tests/` — `python -m pytest scripts/tests -q`
+(architecture check, `docs/08 C1`) поймал нарушение слоя tests->steps->
+screens/web. Исправлено: селекторные строки инкапсулированы именованными
+обёртками в `browser_steps.py` (`dispatch_tap_zone_button_tap`/
+`dispatch_tap_zone_div_tap`/`dispatch_tap_zone_button_child_tap`/
+`assert_tap_zone_button_tapped`/`assert_tap_zone_div_tapped`) — тест больше
+не видит CSS-селекторы напрямую. Финальные 3/3 зелёных прогона (см. таблицу
+верификации) — уже на этой исправленной версии.
+
 ## Чек-лист качества
 - [x] Проверены дубликаты среди открытых test_debt-багов — не совпадает с
       AT-BUG-004 (общая инфраструктура replay, давно Verified) и AT-BUG-029
       (недостающая HTTP-транзакция в `listing_basic.mitm`, другая функция);
       не пересекается с прочими открытыми test_debt (AT-BUG-025/026/027/028 —
       navigate-таймаут, AVD/WebView EOL — другой класс)
-- [x] Суть долга ясна и воспроизводима по коду (`recording_builder.py:309-338
-      render_work_page_html`)
-- [x] Severity: minor — блокирует автоматизацию трёх P0-кейсов одной узкой
-      области (canary/bridge-tap-zone-guard), не целый батч; дизайн всех трёх
-      кейсов полон
+- [x] Суть долга ясна и воспроизводима по коду (`recording_builder.py:478-507
+      render_work_page_html` — номера строк сверены заново test-designer
+      2026-07-29, задача `needs-design-sec9-batch-14` доработка N3; прежние
+      `:309-338` протухли между диспатчами)
+- [x] Severity: minor — блокирует автоматизацию трёх P0-кейсов
+      canary/bridge-tap-zone-guard (узлы 1/2/3) + пяти P1-кейсов
+      reading-UX/tap-to-scroll (только узел 3, TC-123..127, добавлены
+      2026-07-29), не целый батч; дизайн всех восьми кейсов полон
 - [x] Ни одно изменение не внесено в app-under-test/
-- [x] `test_cases: ["TC-119", "TC-120", "TC-122"]` — все три кейса,
-      заблокированных ОДНИМ и тем же фикстурным пробелом, не по багу на кейс
-      (TC-122 добавлен доработкой attempt 2, тот же принцип)
+- [x] `test_cases: ["TC-119", "TC-120", "TC-122", "TC-123", "TC-124", "TC-125",
+      "TC-126", "TC-127"]` — все восемь кейсов, заблокированных ОДНИМ и тем же
+      фикстурным пробелом (узел 3 общий для всех; узлы 1/2 нужны только
+      TC-119/TC-120/TC-122), не по багу на кейс (TC-122 добавлен доработкой
+      attempt 2, TC-123..127 добавлены test-designer 2026-07-29 — тот же
+      принцип)

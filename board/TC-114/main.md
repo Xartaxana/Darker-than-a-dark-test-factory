@@ -2,7 +2,7 @@
 key: "TC-114"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Правка личного тега уже-Favorite работы через панель работы не скачивает файл повторно (edge vs level, :756)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-28T15:00:00Z"
-updated: "2026-07-28T15:00:00Z"
+created: "2026-07-28T22:03:50Z"
+updated: "2026-07-28T22:03:50Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Правка личного тега уже-Favorite работы через панель работы не скачивает файл повторно (edge vs level, :756)
 
 _Спроецировано из `test-cases/downloads/TC-114.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-114 — Панель: правка тега уже-Favorite работы не запускает повторное скачивание
 

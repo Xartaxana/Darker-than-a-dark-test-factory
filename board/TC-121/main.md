@@ -2,7 +2,7 @@
 key: "TC-121"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p0"
 summary: "Тап по whitelisted-ссылке БЕЗ собственного JS-обработчика в теле work-страницы не запускает зональное действие (whitelist по тегу, независимо от наличия обработчика, replay)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-28T19:00:00Z"
-updated: "2026-07-28T19:00:00Z"
+created: "2026-07-28T22:04:07Z"
+updated: "2026-07-28T22:04:07Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Тап по whitelisted-ссылке БЕЗ собственного JS-обработчика в теле work-страницы не запускает зональное действие (whitelist по тегу, независимо от наличия обработчика, replay)
 
 _Спроецировано из `test-cases/canary/TC-121.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-121 — Тап по ссылке скачивания (whitelisted тег, БЕЗ собственного обработчика) не запускает зональное действие
 

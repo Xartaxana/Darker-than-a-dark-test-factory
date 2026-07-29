@@ -2,7 +2,7 @@
 key: "TC-122"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-awaiting-review"
 priority: "p0"
 summary: "Тап по потомку (span) whitelisted-узла в теле work-страницы блокирует зональное действие через closest — семантика предка, не изолированной проверки target (replay)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-28T19:00:00Z"
-updated: "2026-07-28T19:00:00Z"
+created: "2026-07-29T00:35:29Z"
+updated: "2026-07-29T00:35:29Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Тап по потомку (span) whitelisted-узла в теле work-страницы блокирует зональное действие через closest — семантика предка, не изолированной проверки target (replay)
 
 _Спроецировано из `test-cases/canary/TC-122.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-122 — Тап по span внутри кнопки блокирует зону так же, как тап по самой кнопке (closest-семантика)
 
@@ -82,7 +82,20 @@ whitelisted-узел напрямую
 | Зона тапа | средняя треть viewport (обязательна для диагностической силы негативного Then — см. `bugs/AT-BUG-030.md`, раздел «Геометрия узлов 1 и 2») |
 | Ожидаемый Then | toggleFullscreen НЕ вызван; `onclick` кнопки вызван (пузырение от span к button) |
 
-## Заметки для автоматизации — БЛОКЕР (заведён test_debt-багом AT-BUG-030 в этом же ходе)
+## Заметки для автоматизации — БЛОКЕР СНЯТ (AT-BUG-030 -> Fixed, 2026-07-29, test-maintainer)
+Автоматизирован `framework/tests/canary/test_tap_zone_guard.py::
+test_tap_zone_guard_closest_semantics_on_descendant` — 3 зелёных прогона
+подряд. Красная проба ФАКТИЧЕСКИ ПРОГНАНА на самом TC-122 (доработка
+attempt 2 — прежде была только перенесена рассуждением с TC-119, не
+исполнена): временная порча `Element.prototype.closest`, ослепляющая её к
+`<button>` (span-потомок теряет whitelisted-предка) — под порчей
+`assert_top_chrome_not_darkened` (негативный Then) даёт `AssertionError`
+(«верхняя полоса потемнела», luma=137.1 < baseline·0.7=162.4), без порчи —
+зелёный. Полный witness — `bugs/AT-BUG-030.md`. `status`/`automation_status` НЕ переведены этим
+ходом (F1: `Approved -> Automated` — только test-reviewer); `automated_by`
+заполнен.
+
+## Заметки для автоматизации — БЛОКЕР (заведён test_debt-багом AT-BUG-030 в этом же ходе, историческая версия)
 - **Суть блокера:** фикстурный `<button>` из AT-BUG-030 (узел 1) сейчас
   проектируется БЕЗ дочернего `<span>` — без него нет способа гарантированно
   сделать `e.target` клика ОТЛИЧНЫМ от самого `<button>` (клик по «голому»

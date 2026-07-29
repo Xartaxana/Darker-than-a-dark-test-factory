@@ -39,14 +39,27 @@ def build_listing_basic() -> Path:
     `server_replay_extra=forward` увёл бы непокрытый TC-026 в живую сеть на
     несуществующий синтетический id — тест перестал бы быть self-contained
     replay-сценарием. Переиспользует `render_work_page_html`/`work.url`, тот же
-    приём, что `build_work_with_download`."""
+    приём, что `build_work_with_download`.
+
+    ЧЕТВЁРТЫЙ flow — сам скачиваемый `.html`-файл (`rb.download_url(first_work)`)
+    той же первой работы (`W.LOVED`) — `bugs/AT-BUG-029.md`, нужен TC-115: фоновый
+    OkHttp-вызов `DownloadRepository.downloadWork` (GET work-страницы + GET
+    `.html`), если он случится из-за edge-vs-level дефекта BUG-014 при правке
+    заметки уже-Favorite работы через bottom-sheet листинга, обязан РЕАЛЬНО
+    завершиться файлом — иначе `server_replay_extra=forward` уводит незаписанный
+    запрос в живую сеть, где синтетического download-пути нет, и негативный Then
+    кейса истинен независимо от того, сработал баг или нет. Тот же приём, что
+    `download_flow` в `build_work_with_download`."""
     html = rb.render_listing_html(ALL_WORKS)
     base_flow = rb.make_html_get_flow(rb.LISTING_BASIC_URL, html)
     filtered_flow = rb.make_html_get_flow(rb.LISTING_FILTERED_URL, html)
     first_work = ALL_WORKS[0]
     work_page_flow = rb.make_html_get_flow(first_work.url, rb.render_work_page_html(first_work))
+    download_flow = rb.make_html_get_flow(
+        rb.download_url(first_work), rb.render_downloaded_work_html(first_work)
+    )
     path = settings.RECORDINGS_DIR / rb.LISTING_BASIC_FILENAME
-    rb.write_flows(path, [base_flow, filtered_flow, work_page_flow])
+    rb.write_flows(path, [base_flow, filtered_flow, work_page_flow, download_flow])
     return path
 
 

@@ -2,7 +2,7 @@
 key: "TC-116"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p2"
 summary: "Смена рейтинга с Favorite на другой не запускает скачивание"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-28T15:00:00Z"
-updated: "2026-07-28T15:00:00Z"
+created: "2026-07-28T22:03:54Z"
+updated: "2026-07-28T22:03:54Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Смена рейтинга с Favorite на другой не запускает скачивание
 
 _Спроецировано из `test-cases/downloads/TC-116.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-116 — Переход Favorite → Kudosed не скачивает файл
 

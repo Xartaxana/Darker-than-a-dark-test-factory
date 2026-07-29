@@ -27,6 +27,18 @@ AT-BUG-005 (`framework/steps/saf_steps.py::saf_pick_folder`, блокер сня
 доказано зелёным `test_saf_infra_probe.py::test_saf_pick_download_folder`) — заметка в
 теле TC-038.md об отсутствии обходного пути устарела, см. правку кейса.
 
+TC-115 (правка заметки уже-Favorite работы через bottom-sheet ЛИСТИНГА не должна
+запускать повторное скачивание — edge-vs-level класс BUG-014, зеркало TC-114 через
+другой вход) использует `rb.LISTING_BASIC_FILENAME` (`listing_basic.mitm`), который
+теперь (AT-BUG-029, Fixed) несёт ЧЕТВЁРТЫЙ flow — сам `.html`-файл `W.LOVED` — рядом
+с уже существующими листингом/work-страницей той же работы: без этой транзакции
+фоновый `DownloadRepository.downloadWork`, ЕСЛИ он случится из-за живого BUG-014,
+ушёл бы в live-сеть и молча провалился, делая негативный Then теста ложно-зелёным
+независимо от того, сработал баг или нет (см. `bugs/AT-BUG-029.md`). BUG-014 сейчас
+`status: Open` в живом приложении — тест ожидаемо КРАСНЫЙ (download_oracle ловит
+реальный неожиданный файл) до фикса самого бага в app-under-test, это отдельная
+работа вне мандата этого test_debt-долга.
+
 TC-039 (Restore from backup сворачивает scanForOrphanedDownloads в один диалог)
 переиспользует тот же уникальный-subfolder приём (`_orphan_subfolder`/
 `_orphan_filename` — уже общие, не только для TC-038) и SAF-инфраструктуру
@@ -203,6 +215,64 @@ def test_manual_download_from_library_adds_local_file(replay, loved_work_seeded,
 
     # And работа появляется на вкладке FILES (Downloads) экрана Library
     library_steps.assert_work_in_files_tab(driver, work.title)
+
+
+# --- TC-115: правка заметки уже-Favorite работы через bottom-sheet листинга не
+# запускает повторное скачивание (edge-vs-level, BrowserViewModel.kt:862, зеркало
+# TC-114 через вход с листинга вместо панели work-page). `rb.LISTING_BASIC_FILENAME`
+# несёт (AT-BUG-029) листинг + work-страницу + сам `.html` работы `W.LOVED` — та же
+# запись, что использует TC-009/011/043/044/087/088/090/091.
+# НЕТ @pytest.mark.produces_download: `download_oracle` (autouse, conftest.py)
+# фиксирует ЛЮБОЙ неожиданный файл в download-директории как провал — если BUG-014
+# (сейчас `status: Open`) сработает, фоновый `DownloadRepository.downloadWork`
+# реально скачает файл через эту же replay-запись, и тест закономерно КРАСНЫЙ до
+# фикса бага в app-under-test (вне мандата этого test_debt-долга, bugs/AT-BUG-029.md).
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-115")
+@allure.title("Правка заметки уже-Favorite работы через bottom-sheet листинга не скачивает файл повторно")
+@pytest.mark.parametrize("replay", [rb.LISTING_BASIC_FILENAME], indirect=True)
+def test_edit_note_on_already_saved_work_via_listing_overlay_does_not_redownload(replay, loved_work_seeded, driver):
+    # Given работа W (LOVED) уже имеет рейтинг Favorite (SAVE), файл ещё не скачан
+    # (сидинг напрямую в Room — не через UI — downloadPath=null), тумблер
+    # Auto-download включён в Settings; та же гонка, что закрыта в TC-032 (см.
+    # докстринг): wait_app_ready (не wait_ui_ready) ПЕРЕД навигацией по Settings.
+    # Карточка на вкладке Library ещё показывает download-иконку — baseline.
+    work = loved_work_seeded
+    app_steps.wait_app_ready(driver)
+    saf_steps.open_settings_scrolled_to(driver, "Auto-download favorite works")
+    settings_steps.enable_auto_download(driver)
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_work_in_tab(driver, "SAVE", work.title)
+    library_steps.assert_download_icon_shown(driver, work.title)
+
+    # And открыта листинговая страница с блёрбом работы W — бейдж Rate-кнопки уже
+    # отражает Favorite (рейтинг проставлен сидингом, не этим UI-визитом); Rate-
+    # кнопкой открыт нативный bottom-sheet (RatingOverlay), Favorite показан выбранным
+    app_steps.open_tab(driver, "Browse")
+    browser_steps.open_listing(driver, rb.LISTING_BASIC_URL)
+    browser_steps.assert_rating_badge_visible(driver, work.ao3_id)
+    browser_steps.tap_rate_button(driver, work.ao3_id)
+
+    # When пользователь раскрывает поле комментария, вводит «re-save-note» и
+    # нажимает «Save note» (правка метаданных, рейтинг НЕ меняется — остаётся Favorite)
+    rating_steps.add_note_via_listing_overlay(driver, "re-save-note")
+
+    # Then комментарий «re-save-note» сохраняется (наблюдаемая суть операции) —
+    # поле сворачивается в превью с введённым текстом
+    rating_steps.assert_comment_collapsed_with_text(driver, "re-save-note")
+    rating_steps.dismiss_rating_overlay(driver)
+
+    # And повторное скачивание НЕ запускается — карточка работы W по-прежнему
+    # показывает download-иконку (не open-иконку) в Library, downloadPath остаётся
+    # пустым. Без @pytest.mark.produces_download: если BUG-014 сработает, оракул
+    # (download_oracle) поймает реально скачанный файл на teardown'е фикстуры и
+    # провалит тест — это и есть содержательная защита негативного Then.
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_work_in_tab(driver, "SAVE", work.title)
+    library_steps.assert_download_icon_shown(driver, work.title)
 
 
 # --- TC-037: ручной Scan for downloads показывает диалог даже при 0 файлов ---

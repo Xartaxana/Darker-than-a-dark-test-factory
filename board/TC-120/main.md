@@ -2,7 +2,7 @@
 key: "TC-120"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-awaiting-review"
 priority: "p0"
 summary: "Тап по НЕ-whitelisted узлу с собственным обработчиком в теле work-страницы запускает ОБА эффекта (guard-пробой, replay)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-28T16:00:00Z"
-updated: "2026-07-28T16:00:00Z"
+created: "2026-07-29T00:35:29Z"
+updated: "2026-07-29T00:35:29Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Тап по НЕ-whitelisted узлу с собственным обработчиком в теле work-страницы запускает ОБА эффекта (guard-пробой, replay)
 
 _Спроецировано из `test-cases/canary/TC-120.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-120 — Тап по не-whitelisted узлу со своим обработчиком запускает и зону, и обработчик (replay)
 
@@ -70,7 +70,19 @@ closest(...)` в whitelist тегов/role, не от наличия собст�
 | Зона тапа | средняя треть viewport |
 | Ожидаемый Then | toggleFullscreen ВЫЗВАН И собственный обработчик узла ВЫЗВАН — оба |
 
-## Заметки для автоматизации — БЛОКЕР (заведён test_debt-багом AT-BUG-030 в этом же ходе)
+## Заметки для автоматизации — БЛОКЕР СНЯТ (AT-BUG-030 -> Fixed, 2026-07-29, test-maintainer)
+Автоматизирован `framework/tests/canary/test_tap_zone_guard.py::
+test_tap_zone_guard_pierced_by_non_whitelisted_div` — 3 зелёных прогона подряд.
+Красная проба СОБСТВЕННАЯ (доработка attempt 2, критик-вход B-1 — проба на
+сиблинге TC-119 была тождественным преобразованием для НЕ-whitelisted div,
+признана недостаточной): временная порча `Element.prototype.closest`,
+заставляющая её ЛОЖНО матчить div как whitelisted-узел — под порчей
+`assert_top_chrome_darkened` (позитивный Then) даёт `TimeoutException`
+(«верхняя полоса не потемнела», baseline=231.9 за 10с), без порчи — зелёный.
+Полный witness — `bugs/AT-BUG-030.md`. `status`/`automation_status` НЕ переведены этим ходом
+(F1: `Approved -> Automated` — только test-reviewer); `automated_by` заполнен.
+
+## Заметки для автоматизации — БЛОКЕР (заведён test_debt-багом AT-BUG-030 в этом же ходе, историческая версия)
 - **Суть блокера:** тот же фикстурный пробел, что у сиблинга TC-119 (см. там),
   плюс отдельно — отсутствие НЕ-whitelisted интерактивного узла с собственным
   обработчиком. Один баг `bugs/AT-BUG-030.md` покрывает ОБА узла (button +

@@ -2,7 +2,7 @@
 key: "TC-113"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Включение тумблера Auto-download не скачивает задним числом ранее отмеченные Favorite-работы"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-28T15:00:00Z"
-updated: "2026-07-28T15:00:00Z"
+created: "2026-07-28T22:03:45Z"
+updated: "2026-07-28T22:03:45Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Включение тумблера Auto-download не скачивает задним числом ранее отмеченные Favorite-работы
 
 _Спроецировано из `test-cases/downloads/TC-113.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-113 — Ретроактивность: включение тумблера не скачивает старые Favorite
 

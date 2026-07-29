@@ -475,11 +475,84 @@ def _download_list_html(work: Work) -> str:
     </li>"""
 
 
+# --- Узлы 1/2 критерия готовности AT-BUG-030 (bridge-tap-zone-guard,
+# TC-119/120/122) — поведенческий контроль guard'а тап-зон
+# (`ao3_bridge.js:1152-1166`): узел 1 — whitelisted `<button>` со span-потомком
+# (closest-семантика, TC-122), узел 2 — НЕ whitelisted `<div onclick>`
+# (guard-пробой, TC-120). `position: absolute; top: Nvh` — намеренно НЕ
+# `margin-top` от предыдущего контента: НИ ОДИН элемент этой страницы не несёт
+# `position: relative/absolute/fixed` (`.preface`/`.wrapper`/`#workskin`/`#main`
+# все статичные), поэтому у абсолютно спозиционированного узла containing
+# block — initial containing block (верх ДОКУМЕНТА), и `top: Nvh`
+# детерминированно даёт N% от ТЕКУЩЕГО `innerHeight` устройства независимо от
+# непредсказуемой высоты предшествующего контента (заголовок/download-список)
+# — устойчивее фиксированного пикселя под конкретный AVD. Узел 1 — 40vh
+# (середина «средней трети» [33.3%, 66.7%] — диагностическая сила негативного
+# Then TC-119/TC-122, см. `bugs/AT-BUG-030.md` «Геометрия узлов 1 и 2»). Узел 2
+# — 50vh (середина измеренного рецепта CH-005 [44%, 56%] — геометрия здесь
+# определяет САМ ожидаемый Then TC-120, не только диагностику). Button без
+# padding/border у контента, span `display:block` во весь content-box кнопки —
+# доминирующая кликабельная область (критик-вход C2 TC-122: координата
+# автоматизации должна физически попадать в bounding rect span'а, не в padding
+# кнопки). Узлы добавляются ПОСЛЕ `_download_list_html` в исходном HTML (не
+# перед ней) — regression-требование AT-BUG-030: `DownloadRepository.
+# fetchDownloadUrl` ищет ПЕРВОЕ совпадение `.html`-ссылки, порядок относительно
+# неё не меняется.
+_TAP_ZONE_BUTTON_TOP_VH = 40
+_TAP_ZONE_DIV_TOP_VH = 50
+
+
+def _tap_zone_guard_nodes_html() -> str:
+    return f"""
+    <button data-tap-marker="button"
+            onclick="this.setAttribute('data-tapped', '1')"
+            style="position:absolute; top:{_TAP_ZONE_BUTTON_TOP_VH}vh; left:24px;
+                   width:200px; height:60px; margin:0; padding:0; border:1px solid #333;">
+      <span data-tap-marker-child="span"
+            style="display:block; width:100%; height:100%; margin:0; padding:0;">Tap target</span>
+    </button>
+    <div data-tap-marker="div"
+         onclick="this.setAttribute('data-tapped', '1')"
+         style="position:absolute; top:{_TAP_ZONE_DIV_TOP_VH}vh; left:24px;
+                width:200px; height:60px; background:#eee; border:1px solid #333;">Tap target (div)</div>"""
+
+
+# --- Узел 3 критерия готовности AT-BUG-030 — высота документа >= 3×innerHeight
+# эталонного AVD (`innerHeight=1800`, CH-005) — общее предусловие ЛЮБОГО кейса
+# тап-зон (`docs/01-test-strategy.md` §9: короткая страница не прокручивается,
+# "зона не сработала" неотличимо от "страница уже была на границе"), нужен и
+# TC-119/TC-120/TC-122 (canary), и TC-123..127 (reading-UX, доработка
+# test-designer 2026-07-29). `min-height` (не только количество коротких `<p>`,
+# как `render_tab_marker_html`/`render_listing_filler_html`) — гарантирует
+# ИТОГОВУЮ высоту документа независимо от точных font-metrics конкретного
+# WebView/устройства (line-height/margin браузера может отличаться между
+# окружениями — подсчёт по количеству абзацев такой гарантии не даёт); с
+# запасом выше 3×1800=5400px.
+WORK_PAGE_READING_UX_FILLER_MIN_HEIGHT_PX = 6000
+
+
+def render_reading_ux_filler_html(min_height_px: int = WORK_PAGE_READING_UX_FILLER_MIN_HEIGHT_PX) -> str:
+    paragraphs = "\n".join(
+        f"    <p>Filler paragraph {i} for reading-UX tap-to-scroll fixture "
+        f"(AT-BUG-030) — scroll padding, not real content.</p>"
+        for i in range(40)
+    )
+    return f'<div style="min-height: {min_height_px}px;">\n{paragraphs}\n    </div>'
+
+
 def render_work_page_html(work: Work) -> str:
     """Минимальная, но структурно-валидная work-страница AO3 (`#workskin`,
     `h2.title.heading`, `h3.byline.heading a[rel=author]` — сверено с Fragility note
     `PROJECT.md`) с валидной download-ссылкой (`li.download a[href*=".html"]`,
-    `_download_list_html`). Самодостаточна — без внешних `<script src>`/`<link>`."""
+    `_download_list_html`). Самодостаточна — без внешних `<script src>`/`<link>`.
+
+    AT-BUG-030: тело (`.wrapper`) несёт ТРИ дополнительных узла ПОСЛЕ исходного
+    `<p>`-филлера — узлы 1/2 (`_tap_zone_guard_nodes_html`, whitelisted `<button>`
+    + не-whitelisted `<div onclick>`) и узел 3 (`render_reading_ux_filler_html`,
+    высота >= 3×innerHeight) — нужны поведенческому контролю guard'а тап-зон
+    (TC-119/120/122) и reading-UX tap-to-scroll (TC-123..127). Все три — ПОСЛЕ
+    `_download_list_html` в исходном HTML (regression-требование: порядок
+    относительно download-ссылки не меняется, см. докстринг узлов 1/2 выше)."""
     title = html.escape(work.title)
     author = html.escape(work.author)
     fandom = html.escape(work.fandom)
@@ -499,6 +572,8 @@ def render_work_page_html(work: Work) -> str:
     </ul>
     <div class="wrapper">
       <p>Test fixture body for download-flow recording ({work.word_count} words).</p>
+      {_tap_zone_guard_nodes_html()}
+      {render_reading_ux_filler_html()}
     </div>
   </div>
 </div>

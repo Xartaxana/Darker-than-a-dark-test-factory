@@ -309,6 +309,158 @@ def assert_top_chrome_restored(driver, baseline: float, ratio: float = 0.5, time
     )
 
 
+# --- AT-BUG-030: поведенческий контроль guard'а тап-зон (bridge-tap-zone-guard,
+# TC-119/120/122). Тап дispatch'ится синтетическим `MouseEvent` через
+# `dispatchEvent`, не Selenium `.click()`/физическим нативным тапом — тот же
+# класс обхода, что уже используют `tap_rate_button`/`click_probe_link`
+# (JS DOM API вместо геометрической интерактивности), усиленный явным
+# `clientX`/`clientY`: голый `.click()` отдаёт `clientX=clientY=0` в событии,
+# недостаточно guard'у (`ao3_bridge.js:1156-1160`), который вычисляет треть
+# тапа именно из `e.clientY`. Координата берётся из РЕАЛЬНОГО
+# `getBoundingClientRect()` узла (центр) — honesty-тест читает фактическое
+# положение, заданное фикстурой (AT-BUG-030, `position:absolute; top:Nvh`),
+# а не хардкодит предположение о нём; если регрессия испортит геометрию
+# фикстуры, вычисленная координата уедет из требуемой трети/band вместе с ней
+# (тот же диагностический эффект, что описан в bugs/AT-BUG-030.md). `bubbles:
+# true` обязателен для `onclick`-атрибута самого узла (bubbling-фаза); guard
+# слушает `click` на `document` с `{capture:true}` — синтетический
+# `dispatchEvent` проходит capture-фазу независимо от `bubbles`, но `onclick`
+# узла — только с `bubbles:true`.
+@allure.step("When синтетически тапнут DOM-узел {css_selector} (координата — центр его РЕАЛЬНОГО bounding rect)")
+def dispatch_synthetic_tap(driver, css_selector: str) -> dict:
+    with contexts.in_webview(driver):
+        el = driver.find_element(AppiumBy.CSS_SELECTOR, css_selector)
+        rect = driver.execute_script(
+            "var r = arguments[0].getBoundingClientRect();"
+            "return {left: r.left, top: r.top, width: r.width, height: r.height, "
+            "innerHeight: window.innerHeight};",
+            el,
+        )
+        client_x = rect["left"] + rect["width"] / 2
+        client_y = rect["top"] + rect["height"] / 2
+        driver.execute_script(
+            "var ev = new MouseEvent('click', {bubbles: true, cancelable: true, "
+            "clientX: arguments[1], clientY: arguments[2], view: window});"
+            "arguments[0].dispatchEvent(ev);",
+            el, client_x, client_y,
+        )
+    # S-2 (доработка attempt 2, критик-вход B4): фракция включена В ВОЗВРАЩАЕМЫЙ
+    # dict, не только в текстовое allure-вложение — позволяет вызывающим
+    # steps-обёрткам (`dispatch_tap_zone_*_tap`) заассертить геометрию узла БЕЗ
+    # пересчёта.
+    rect["fraction_of_innerHeight"] = client_y / rect["innerHeight"]
+    allure.attach(
+        f"css_selector={css_selector!r} rect={rect!r} dispatched_clientY={client_y:.1f} "
+        f"fraction_of_innerHeight={rect['fraction_of_innerHeight']:.3f}",
+        name="tap-zone-guard-dispatch-geometry",
+        attachment_type=allure.attachment_type.TEXT,
+    )
+    return rect
+
+
+# S-2 (доработка attempt 2, критик-вход B4): geometry-ассерты в рантайме
+# отсутствовали — `dispatch_synthetic_tap` возвращал `rect`/
+# `fraction_of_innerHeight`, но ни один тест это не проверял. Для НЕГАТИВНЫХ
+# Then (TC-119, TC-122) это дыра: если регрессия испортит геометрию фикстуры
+# (узел уедет из средней трети), тест молча дал бы ложно-зелёный (см.
+# `bugs/AT-BUG-030.md`, раздел «Геометрия узлов 1 и 2» — диагностическая сила
+# негатива зависит от band). Band-границы совпадают с band'ами
+# `recording_builder._TAP_ZONE_BUTTON_TOP_VH`/`_TAP_ZONE_DIV_TOP_VH`.
+_TAP_ZONE_MIDDLE_THIRD_BAND = (1 / 3, 2 / 3)
+_TAP_ZONE_DIV_BAND = (0.44, 0.56)
+
+
+def _assert_tap_zone_geometry_band(rect: dict, band: tuple[float, float], node_label: str) -> None:
+    fraction = rect["fraction_of_innerHeight"]
+    low, high = band
+    assert low <= fraction <= high, (
+        f"{node_label}: fraction_of_innerHeight={fraction:.3f} вне ожидаемого band "
+        f"[{low:.3f}, {high:.3f}] — геометрия фикстуры уехала от заданной AT-BUG-030, "
+        f"диагностическая сила Then этого узла под угрозой (см. bugs/AT-BUG-030.md)"
+    )
+
+
+@allure.step("Then фикстурный узел {css_selector} несёт data-tapped=\"1\" (собственный обработчик клика сработал)")
+def assert_tap_marker_tapped(driver, css_selector: str, timeout: int | None = None) -> None:
+    """AT-BUG-030: опрашивает `data-tapped`, а не читает один раз — `dispatchEvent`
+    синхронен, но добавляет запас на тот же класс латентности WEBVIEW-round-trip,
+    что и остальные опросы этого модуля (`assert_blurb_hidden` и т.п.)."""
+    with contexts.in_webview(driver):
+        wait_until(
+            driver,
+            lambda d: d.execute_script(
+                "var el = document.querySelector(arguments[0]); "
+                "return el && el.getAttribute('data-tapped') === '1';",
+                css_selector,
+            ),
+            timeout=timeout or 5,
+            message=f"узел {css_selector} не получил data-tapped=\"1\" после синтетического тапа "
+                    f"— собственный обработчик клика не сработал",
+        )
+
+
+# Именованные обёртки над узлами AT-BUG-030 (docs/08 C1: локаторы/`framework.web`
+# запрещены прямым импортом в `tests/` — тесты вызывают только именованные
+# steps-функции, сам селектор остаётся инкапсулирован здесь).
+@allure.step("When синтетически тапнут фикстурный <button> (узел 1, AT-BUG-030)")
+def dispatch_tap_zone_button_tap(driver) -> dict:
+    rect = dispatch_synthetic_tap(driver, selectors.TAP_ZONE_BUTTON)
+    _assert_tap_zone_geometry_band(rect, _TAP_ZONE_MIDDLE_THIRD_BAND, "button (узел 1)")
+    return rect
+
+
+@allure.step("When синтетически тапнут вложенный <span>-потомок фикстурного <button> (узел 1, closest-семантика TC-122)")
+def dispatch_tap_zone_button_child_tap(driver) -> dict:
+    rect = dispatch_synthetic_tap(driver, selectors.TAP_ZONE_BUTTON_CHILD)
+    _assert_tap_zone_geometry_band(rect, _TAP_ZONE_MIDDLE_THIRD_BAND, "span (узел 1, потомок)")
+    return rect
+
+
+@allure.step("When синтетически тапнут фикстурный НЕ-whitelisted <div onclick> (узел 2, AT-BUG-030)")
+def dispatch_tap_zone_div_tap(driver) -> dict:
+    rect = dispatch_synthetic_tap(driver, selectors.TAP_ZONE_DIV)
+    _assert_tap_zone_geometry_band(rect, _TAP_ZONE_DIV_BAND, "div (узел 2)")
+    return rect
+
+
+@allure.step("Then фикстурный <button> получил data-tapped=\"1\"")
+def assert_tap_zone_button_tapped(driver) -> None:
+    assert_tap_marker_tapped(driver, selectors.TAP_ZONE_BUTTON)
+
+
+@allure.step("Then фикстурный <div> получил data-tapped=\"1\"")
+def assert_tap_zone_div_tapped(driver) -> None:
+    assert_tap_marker_tapped(driver, selectors.TAP_ZONE_DIV)
+
+
+@allure.step("Then верхняя полоса экрана НЕ потемнела относительно baseline (toggleFullscreen НЕ вызван)")
+def assert_top_chrome_not_darkened(
+    driver, baseline: float, ratio: float = 0.5, timeout: int = 10, poll_interval: float = 0.3,
+) -> None:
+    """Негативная сверка TC-119/TC-122 — доработка S-1 (attempt 2, критик-вход
+    B4): бюджет ТЕПЕРЬ СИММЕТРИЧЕН позитивной `assert_top_chrome_darkened` (тот
+    же `timeout=10`, не короткая settle-пауза с одним чтением). `wait_until`,
+    опрашивающий условие ДО достижения порога, тут неприменим (условие «не
+    потемнело» уже истинно с первого кадра, опрос завершился бы мгновенно,
+    ничего не гарантируя про поведение ПОСЛЕ клика) — вместо этого опрашиваем
+    ВЕСЬ бюджет и assert'им, что порог потемнения НЕ пересекается НИ РАЗУ за
+    всё окно, в котором мог бы случиться анимированный fullscreen-reflow
+    (прежняя редакция читала luma только один раз после короткой паузы 1.5с —
+    пропускала более позднее пересечение порога в оставшиеся ~8.5с бюджета
+    позитивной проверки)."""
+    threshold = baseline * ratio
+    deadline = time.time() + timeout
+    while True:
+        luma = BrowserScreen(driver).top_chrome_avg_luma()
+        assert luma >= threshold, (
+            f"верхняя полоса потемнела (luma={luma:.1f} < baseline*{ratio}={threshold:.1f}) "
+            f"после тапа — toggleFullscreen, похоже, был вызван, хотя guard должен был его подавить"
+        )
+        if time.time() >= deadline:
+            return
+        time.sleep(poll_interval)
+
+
 @allure.step("When лишние вкладки WebView закрыты (оставлена только активная)")
 def close_other_tabs(driver):
     BrowserScreen(driver).close_leftmost_tab()

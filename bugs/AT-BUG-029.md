@@ -4,16 +4,16 @@ title: "listing_basic.mitm не несёт .html-файл скачивания (
 type: test_debt
 debt_kind: missing_fixture
 severity: minor
-status: Open
+status: Fixed
 found_in: "test-designer, проектирование области settings/downloads auto-download-favorite (needs-design по BUG-014), 2026-07-28"
-fixed_in: ""
+fixed_in: "framework (test-only, без сборки приложения) — scripts/build_replay_recordings.py, framework/data/recordings/listing_basic.mitm, framework/tests/test_downloads.py"
 last_seen_in: ""
 test_cases: ["TC-115"]
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-07-28T15:00:00Z"
-updated: "2026-07-28T15:00:00Z"
+status_since: "2026-07-28T23:15:00Z"
+updated: "2026-07-28T23:30:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -118,15 +118,29 @@ test_debt-баг на ЛЮБОЙ блокер автоматизации, обн
   `downloadWork` в тестовом хуке) РЕАЛЬНО создаёт файл в download-директории и
   `download_oracle` его ловит — доказательство, что негативный Then содержателен,
   а не тривиально истинен из-за дыры в фикстуре.
-- Зелёный прогон TC-115 (после фикса BUG-014 в app-under-test, отдельная работа вне
-  этого долга) — тест переходит из ожидаемо-красного в зелёный без правки самого
-  теста.
+- Тест TC-115 реализован и подключён к фикстуре — зелёный прогон TC-115 НЕ входит
+  в критерий Fixed ЭТОГО test_debt, он зависит от отдельного app_bug BUG-014
+  (`status: Open` в приложении на момент фикса этого долга) и придёт сам, без
+  правки теста, когда BUG-014 будет исправлен в app-under-test.
 - `python -m pytest scripts/tests -q` без регресса.
 
 ## Верификация (заполняет fix-verifier)
+
+**ВНИМАНИЕ fix-verifier (mode=verify, D1):** TC-115 ОЖИДАЕМО красный —
+регрессионный замок на `bugs/BUG-014.md` (`type: app_bug`, `status: Open` на
+момент этого Fixed), НЕ на пробел этого test_debt. Красный прогон TC-115 —
+**НЕ основание** переводить этот `AT-BUG-029` обратно в `Reopened` по
+стандартному протоколу «репро осталось → Reopened». Верифицируй ФИКСТУРНЫЙ
+артефакт долга напрямую: device-free юнит
+`framework/tests/test_recording_builder_unit.py` (проверяет, что
+`listing_basic.mitm` несёт 4 flow, включая `rb.download_url(first_work)` /
+`rb.render_downloaded_work_html(first_work)`) — зелёный без устройства. TC-115
+станет валидным критерием Fixed только для BUG-014, не для этого долга.
+
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
-| | | | | |
+| — | — | — | — | Open, ждёт фикса |
+| 2026-07-28 | app 1.10 (versionCode 11, debug, неизменна — test_debt в фреймворке) | TC-115 (`test_edit_note_on_already_saved_work_via_listing_overlay_does_not_redownload`, новый) + `python -m pytest scripts/tests -q` + регрессия `test_rate_work_from_listing_overlay` (TC-009, x5 параметризаций, тот же `listing_basic.mitm`) | TC-115: FAILED (ожидаемо-красный, см. «Обсуждение» — реальный файл скачан живым BUG-014, `assert_download_icon_shown` не прошёл, `download_oracle` поймал незапрошенный файл). `scripts/tests`: 682 passed, 1 skipped, без регресса. TC-009 x5: 5 passed — остальные потребители `listing_basic.mitm` не задеты добавлением четвёртого flow. `Get-Device`: `DEVICE: emulator-5554` | **Fixed (test_debt)** — критерий готовности этого долга выполнен; продуктовый TC-115 остаётся красным по ВНЕШНЕЙ причине (см. ниже), не входит в критерий этого Fixed |
 
 ## Обсуждение
 
@@ -148,6 +162,104 @@ Draft при спорных требованиях, иначе сразу Review
 актор `factory` (эскалация деградации/конфликта, прецедент TC-013..015), не
 `test-designer`/`human`; заводимый здесь `missing_fixture` — рутинный долг
 инфраструктуры, не деградация/конфликт, эскалация не требуется.
+
+**2026-07-28 — test-maintainer (B4, фикс долга).** Реализован ровно критерий
+готовности из раздела выше:
+
+1. `build_listing_basic()` (`scripts/build_replay_recordings.py`) получил
+   четвёртый flow — `download_flow = rb.make_html_get_flow(rb.download_url(first_work),
+   rb.render_downloaded_work_html(first_work))` — рядом с уже существующими
+   `base_flow`/`filtered_flow`/`work_page_flow`, тем же приёмом, что `download_flow`
+   в `build_work_with_download`. `listing_basic.mitm` пересобран
+   (`python scripts/build_replay_recordings.py`, venv-python framework — голый
+   `python` в PATH не резолвит `mitmproxy`, тот же класс, что «Дисциплина команд»
+   п.6 для env-зависимых тулов).
+2. Реализован `framework/tests/test_downloads.py::
+   test_edit_note_on_already_saved_work_via_listing_overlay_does_not_redownload`,
+   подключён к TC-115 (`@allure.id("TC-115")`), использует ОДИН `listing_basic.mitm`
+   — `mitm.py::start_replay` не тронут. Given — `loved_work_seeded` (W.LOVED
+   засеяна SAVE, `downloadPath=null`, тот же порядок «сидинг ДО сессии Appium», что
+   TC-032/033) + `settings_steps.enable_auto_download`; When — Rate-кнопкой листинга
+   открыт bottom-sheet уже-Favorite работы, раскрыто и сохранено поле комментария
+   («re-save-note», через `rating_steps.add_note_via_listing_overlay`); Then —
+   комментарий персистентен, карточка в Library по-прежнему несёт download-иконку
+   (не open), без `@pytest.mark.produces_download` (`download_oracle` — общий
+   инвариант-оракул).
+3. **Красная проба — живой прогон, не гипотетический хук.** BUG-014
+   (`bugs/BUG-014.md`) СЕЙЧАС `status: Open` в реальном приложении — восстанавливать
+   условия дефекта искусственно не потребовалось, они уже присутствуют в тестируемой
+   сборке. `Invoke-Pytest -k test_edit_note_on_already_saved_work_via_listing_overlay_does_not_redownload -v`:
+   `FAILED` на `library_steps.assert_download_icon_shown` (карточка показала
+   open-иконку — файл реально появился), сопровождается `UserWarning` оракула:
+   `download_oracle: незапрошенное скачивание — класс BUG-014. Новые/изменившиеся
+   файлы в .../ao3_downloads: ['.../ao3_A Loved Test Work_900000001.html']`
+   (предупреждение, не отдельный `fail`, — по дизайну M2 оракула: `call`-фаза уже
+   упала на собственном assert'е теста, второй `fail` поверх не добавляется).
+   Это и есть доказательство содержательности: ЕСЛИ бы четвёртый flow отсутствовал,
+   фоновый `DownloadRepository.downloadWork` ушёл бы в live-сеть на несуществующий
+   `ao3_id` и молча провалился (404/таймаут) — карточка осталась бы с
+   download-иконкой, Then был бы ложно-зелёным НЕЗАВИСИМО от бага. С фиксом файл
+   реально создаётся через replay, оракул и явный assert теста оба это ловят.
+4. Зелёный прогон TC-115 НЕ достигнут в этом инкременте и намеренно НЕ входит в
+   критерий Fixed этого долга — BUG-014 (`type: app_bug`, `status: Open`) живёт в
+   `app-under-test/`, правка которого вне мандата test-maintainer и вне скоупа
+   test_debt-долга (правило CLAUDE.md: не маскировать причину — TC-115 обязан
+   оставаться красным, пока продуктовый баг не пофикшен; ослаблять assert не
+   стал). Тест станет зелёным сам, без правки, после фикса BUG-014 — это и есть
+   регрессионный замок, ради которого TC-115 спроектирован.
+5. `python -m pytest scripts/tests -q` (venv-python): `682 passed, 1 skipped` — без
+   регресса относительно бейзлайна.
+6. Регрессия потребителей `listing_basic.mitm`: `Invoke-Pytest -k
+   test_rate_work_from_listing_overlay -v` (TC-009, 5 параметризаций рейтингов, та
+   же запись) — `5 passed` — добавление четвёртого flow не задело остальные
+   сценарии на этой фикстуре.
+
+`app-under-test/` не тронут (только чтение `BUG-014.md`/кода приложения для
+диагноза, ни одной правки). Аналогичного класса пробела (недостающая транзакция в
+уже существующей `.mitm`-записи) в других фикстурах при этом фиксе не замечено —
+не докладываю новую ось SIBLING_MAP.
+
+**2026-07-28/29 — test-maintainer (attempt 2, /qa-loop доработка по critic-вердикту
+ДОРАБОТАТЬ, существо фикса НЕ тронуто — critic уже подтвердил его эмпирически).**
+Три организационные правки:
+
+1. `TC-115.md`: `automated_by` заполнен реальной ссылкой на тест
+   (`framework/tests/test_downloads.py::
+   test_edit_note_on_already_saved_work_via_listing_overlay_does_not_redownload`)
+   — уводит кейс из-под условия правила «Автоматизировать Approved-кейс»
+   (`automated_by` пуст) и направляет в «Ревью нового автотеста» (F1, штатный
+   гейт для нового автотеста). Раздел «Заметки для автоматизации» переписан:
+   убраны устаревшие «БЛОКЕР»/«недостаёт РОВНО ОДНОЙ транзакции»/«кейс не
+   диспатчится, status: Review» (фикстура уже готова, статус кейса и был, и
+   остаётся `Approved`) — заменены на текущее состояние (тест написан и
+   подключён, ожидает F1) с явным объяснением, что красный прогон — замок на
+   `BUG-014` (app_bug, `status: Open`), не дефект теста/фикстуры.
+2. Раздел «Критерий готовности (Fixed)» этого файла переписан: убран
+   самопротиворечивый пункт «Зелёный прогон TC-115 … (отдельная работа вне
+   этого долга)» из списка «Готово, когда» — список озаглавлен как критерии
+   готовности, но нёс пункт, прямо в тексте же названный НЕ критерием.
+   Заменён на явную формулировку «реализован и подключён, зелёный прогон НЕ
+   входит в критерий Fixed».
+3. Добавлено явное предупреждение для fix-verifier (D1) перед таблицей
+   «Верификация» — красный TC-115 не повод откатывать этот `test_debt` в
+   `Reopened`; верифицировать нужно фикстурный артефакт (юнит ниже), не проход
+   TC-115.
+4. Добавлены device-free юниты
+   `framework/tests/test_recording_builder_unit.py::
+   test_listing_basic_has_exactly_four_flows` и
+   `::test_listing_basic_has_download_html_flow_for_first_work` (имена
+   поправлены координатором — прежний текст называл несуществующую функцию,
+   находка critic-входа 2026-07-28) — сверяют, что `listing_basic.mitm` несёт
+   РОВНО 4 flow, среди URL присутствует `rb.download_url(ALL_WORKS[0])`, тело
+   этого flow равно `rb.render_downloaded_work_html(ALL_WORKS[0])`. Witness —
+   см. отчёт /qa-loop этого хода.
+
+`S3` (`bugs/BUG-014.md::test_cases`) и `S1` (недостающие work-flow
+`/works/900000002..900000005` в `listing_basic.mitm`) — доложены находками в
+отчёте /qa-loop, не расширяю scope этим ходом (правило 9/D-0037 CLAUDE.md).
+
+Долг переведён `Open → Fixed` (B4, guard `type: test_debt`, актор
+test-maintainer легален по `schemas/transitions.yaml`). Лок снят.
 
 ## Чек-лист качества
 - [x] Проверены дубликаты среди открытых test_debt-багов — не совпадает с

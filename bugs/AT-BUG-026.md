@@ -4,16 +4,16 @@ title: "qemu-system-x86_64.exe крашится (0xc0000005) mid-test на тя�
 type: test_debt
 debt_kind: broken_environment
 severity: major
-status: Fixed
+status: Verified
 found_in: "framework env, не зависит от сборки приложения; текущая тестируемая сборка 1.10 (versionCode 11), 6455af0cfc2c937e81975f59a250476c77aecb73"
 fixed_in: "framework, не сборка приложения: containment device-liveness guard (80d3d5e) + B3-(б) перенос счётчика в run-артефакт (коммит полного Lead 2026-07-28)"
 last_seen_in: "1.10 (versionCode 11)"
-test_cases: ["TC-082"]
+test_cases: ["TC-082", "TC-080"]
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-07-28T20:15:00Z"
-updated: "2026-07-28T20:15:00Z"
+status_since: "2026-07-28T22:44:00Z"
+updated: "2026-07-28T22:44:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -70,10 +70,16 @@ exception code 0xc0000005, модуль `unknown`; РЕАЛЬНЫЕ offset'ы р
 
 Тот же паттерн «тяжёлый live-рендер реальной страницы AO3» в
 `framework/tests/canary/test_ao3_selectors.py`:
-- **TC-082** `test_save_filter_button_idempotent_live` — подтверждённый крашер.
-- **TC-078** `test_main_pairing_checkbox_availability_live`, **TC-080**
-  `test_exclude_main_pairing_checkbox_availability_live` — та же
-  `SORT_FILTER_FORM_URL` через `open_live_sort_filter_form_relationship_ready`.
+- **TC-082** `test_save_filter_button_idempotent_live` — подтверждённый крашер
+  (2/2 прогонов 2026-07-22, см. `found_in`).
+- **TC-080** `test_exclude_main_pairing_checkbox_availability_live` —
+  БЫЛ кандидатом, теперь ПОДТВЕРЖДЁННЫЙ крашер: Event-Log-witness'ом D1-
+  верификации 2026-07-29 (`fix-verifier`, см. «## Обсуждение» ниже,
+  запись 2026-07-29 — `TimeCreated: 29.07.2026 0:20:14`, `0xc0000005`,
+  ровно 1 совпадает с `recoveries=1/2`), та же `SORT_FILTER_FORM_URL`
+  через `open_live_sort_filter_form_relationship_ready`.
+- **TC-078** `test_main_pairing_checkbox_availability_live` — та же
+  `SORT_FILTER_FORM_URL`, ОСТАЁТСЯ кандидатом (witness'а краша нет).
 - **TC-068/070/072/074/076** (`test_work_blurb…`, `test_rate_button_injected…`,
   `test_rate_button_badge…`, `test_note_button…`, `test_tag_button…`) —
   `open_live_listing(LIVE_LISTING_URL)`, тяжёлый live-листинг+интеракции.
@@ -133,7 +139,7 @@ OS-репо: детерминированную проверку заменяе�
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
-| | | | | (D1 fix-verifier — общим правилом, после Fixed) |
+| 2026-07-29T00:44:00Z | framework 80d3d5e (guard) + HEAD ae6dc99, сборка приложения 1.10 (versionCode 11) не менялась | ОДИН полный `-m p0` (45 тестов, w4-смок по решению Lead 2026-07-28) | Реальный краш+recovery произошёл В ЭТОМ прогоне (не искусственная проба) — см. «Обсуждение» ниже, дословный witness. `2 failed, 43 passed, 165 deselected in 1820.34s`, `PYTEST_EXIT=1`. Оба failed — честные (краш-тест сам, отдельный UI-фейл), НЕ каскад. | **PASS по критерию контейнмента** |
 
 ## Обсуждение
 
@@ -1384,3 +1390,204 @@ AT-BUG-026.md` (R3 — поправка формулировки B3, N3 — яв
 Остаток класса adb-обёрток (`force_stop`/`run_as`/`logcat_clear`/
 `set_night_mode`/`set_font_scale`) остаётся named-not-covered с картой
 рисков выше — отдельный точечный проход при первом живом инциденте.
+
+---
+
+**2026-07-29T00:44:00Z — fix-verifier (D1, mode=verify), Fixed -> Verified.**
+Отложенный w4 (ОДИН полный `-m p0`, гигиенический смок) — это и есть данный
+прогон, первый device-заход после реализации.
+
+**Окружение:** `Start-Emulator -WritableSystem` -> `Get-Device: DEVICE`
+подтверждён -> `Install-App` (первая попытка упала транзиентным
+`NullPointerException: StorageManager.getVolumes()` — известный
+storage/vold-race, задокументированный в этом же файле 2026-07-22/07-28;
+retry сразу дал `Success`, консистентно с находкой прошлых сессий) ->
+`Start-Appium`.
+
+**Прогон (`Invoke-Pytest -m p0`, 45 тестов, дефолтный GPU
+`swiftshader_indirect`, framework HEAD `ae6dc99` поверх guard-коммита
+`80d3d5e`) — дословный витнесс:**
+```
+collected 210 items / 165 deselected / 45 selected
+tests\canary\test_ao3_selectors.py ..............F..                     [ 37%]
+tests\test_backup_restore.py .                                           [ 40%]
+tests\test_library.py F.                                                 [ 44%]
+tests\test_performance.py ..                                             [ 48%]
+tests\test_rating.py ......                                              [ 62%]
+tests\test_rating_listing.py .....                                       [ 73%]
+tests\test_smoke.py .........                                            [ 93%]
+tests\test_visibility.py ...                                             [100%]
+FAILED tests/canary/test_ao3_selectors.py::test_exclude_main_pairing_checkbox_availability_live
+FAILED tests/test_library.py::test_change_rating_moves_work_between_tabs - As...
+ENV_ISSUE (AT-BUG-026): device-liveness guard recoveries this session = 1/2
+2 failed, 43 passed, 165 deselected, 2 warnings in 1820.34s (0:30:20)
+PYTEST_EXIT=1
+```
+
+**Разбор — это РЕАЛЬНЫЙ краш+recovery этого прогона, не искусственная
+проба:** `test_exclude_main_pairing_checkbox_availability_live` (TC-080)
+рухнул `WebDriverException: disconnected: not connected to DevTools` при
+`to_native()`-переключении контекста, сразу за этим — `adb.exe: device
+offline` в teardown того же теста (`in_webview` context manager, вторая
+попытка переключения контекста). Терминальная B3-(а) строка
+`ENV_ISSUE (AT-BUG-026): device-liveness guard recoveries this session =
+1/2` присутствует дословно, N=1 в пределах 0-2. Следующий тест по порядку
+исполнения (порядок определения в файле, не алфавитный)
+`test_exclude_main_pairing_checkbox_availability_
+replay[sort_filter_form.mitm]` дал WARN `AT-BUG-026 device-liveness
+guard: устройство отсутствовало, выполнено восстановление 1/2 за сессию
+(Start-Emulator -WritableSystem + переустановка mitm-CA)` и **PASSED** —
+recovery отработал, следующий тест зелёный. Каскада `no
+devices`-ошибок дальше НЕТ: сессия продолжилась ещё 30 тестов после
+TC-080 (2 хвостовых `canary`, `test_backup_restore`, `test_library`,
+`test_performance`, `test_rating`, `test_rating_listing`, `test_smoke`,
+`test_visibility`) — 29 зелёных + 1 красный (TC-016, см. ниже),
+закончилась штатно `PYTEST_EXIT=1` (не оборвана харнессом/таймаутом).
+
+**Крашащий тест остался честно FAILED** (спека: recovery спасает только
+ПОСЛЕДУЮЩИЕ, не сам крашнувшийся) — не замаскирован.
+`test_change_rating_moves_work_between_tabs` (TC-016, упал несколько
+тестов спустя после recovery) — `AssertionError: окно рейтинга не
+появилось на экране`, живой UI-тайминг, устройство в этот момент было
+живым и осталось живым после — НЕ device-liveness фейл в узком смысле
+(`ENV_ISSUE`-строка на нём не сработала, guard не вмешивался). Но
+**вклад пост-recovery окружения (settle-состояние WebView/Appium-сессии
+после недавнего восстановления) в этот конкретный отказ не исключён** —
+исключающий его одиночный прогон не снят, причинная независимость не
+проверялась. Кандидат в отдельный флейк-тикет, если симптом повторится
+на прогонах без recovery в анамнезе (тогда причина точно внешняя к
+этому багу).
+
+**Позитивный контроль Event Log (класс F-34, `Get-WinEvent
+-FilterHashtable @{LogName='Application'; Id=1000;
+StartTime=(Get-Date).AddHours(-1)}`, окно захватывает весь прогон
+00:14-00:44):** ровно 1 событие, `TimeCreated: 29.07.2026 0:20:14`,
+`Имя сбойного модуля: unknown`, `Код исключения: 0xc0000005` — тот же
+класс краха, что весь found_in этого бага, ровно 1 (соответствует
+recoveries=1/2 в терминальной строке, не больше и не меньше).
+`Get-Device` после прогона -> `DEVICE: emulator-5554` (устройство
+восстановлено и осталось живым до конца прогона и после).
+
+**Run-артефакт (п.4 DoD):** `runs/` не обновился этим прогоном (сырой
+`Invoke-Pytest`, не через test-runner-агента — прогон делал fix-verifier
+напрямую, не конвейерный test-runner-проход) — по инструкции диспатча
+(«если самостоятельно не создаёшь run-артефакт, зафиксируй витнесс
+терминальной строки в таблице верификации бага») фиксирую терминальную
+строку в таблице выше, отдельный run-артефакт не создаю.
+
+**Regression-гигиена:** `python scripts/validate_frontmatter.py` ->
+`ошибок 0, предупреждений 0`. `python -m pytest scripts/tests -q` ->
+`682 passed, 1 skipped` (было 675 passed/1 skipped на предыдущем снятии
+witness'а attempt 3 — рост от новых юнитов последующих сессий, не
+регресс).
+
+**Вердикт: критерий контейнмента выполнен буквально по духу спеки
+(докстринг DoD этого диспатча) — краш произошёл, guard восстановил
+окружение, WARN-атрибуция и `recoveries: N/M`-строка на месте, каскада
+не было, крашнувший тест остался честно красным.** Это even сильнее
+формального «0 крашей за прогон» — живой witness самого механизма
+внутри штатного гигиенического смока, не только в изолированных
+red-probe'ах предыдущих сессий (w1/w2/w3). `status: Fixed -> Verified`.
+
+**Дефекты-собратья (правило 9 CLAUDE.md, доклад без расширения scope):**
+- `test_change_rating_moves_work_between_tabs` (TC-016) упал
+  `AssertionError` на видимости RatingOverlay — НЕ новый инцидент этого
+  бага, но кандидат в собственный test_debt/флейк-тикет (окно рейтинга
+  не появилось за таймаут live-навигации); не завожу сам — вне мандата
+  D1-верификации, доклад для test-maintainer/test-automator.
+- Install-App транзиент (`StorageManager.getVolumes() NullPointerException`
+  сразу после `Start-Emulator -WritableSystem`) воспроизвёлся И В ЭТОЙ
+  сессии — тот же класс, что уже описан 2026-07-22/07-28
+  (`_verify_app_installed_with_retry` в `driver_factory.py` уже покрывает
+  этот путь ВНУТРИ guard'а/recovery, но НЕ покрывает первичный
+  `Install-App` до старта самого прогона, который делает `tasks.ps1`
+  напрямую, не через `driver_factory`) — тот же класс риска на новом
+  участке (bootstrap-инсталляция, не recovery-инсталляция); не чиню сам
+  (вне мандата D1, `tasks.ps1`/скрипты — не app-under-test, но и не
+  предмет этого бага), доклад для следующего касания `tasks.ps1`/
+  `Install-App`.
+- Побочная находка тулинга: 13 сторонних `node.exe`-процессов
+  (`D:\AI CRM\govard-crm`, vitest/tinypool) остались живы ПОСЛЕ
+  `Stop-NodeProcesses` в этой сессии — тот же известный риск AT-BUG-031
+  (широкий фильтр по имени), уже задокументирован, не чиню (не мой
+  мандат), подтверждаю присутствие как факт для трекинга.
+
+Cleanup: `Stop-NodeProcesses`, `adb emu kill`, `Get-Device` -> `NO
+DEVICE` подтверждено дважды. Lock снят.
+
+---
+
+**2026-07-28T23:01:26Z — fix-verifier (D1, mode=verify), attempt 2 —
+ДОРАБОТКА по вердикту critic (task_id `AT-BUG-026-d1verify`): B1/S1/S3/
+N1/N2/N3, текстовые правки. Witness attempt 1 (прогон, event-log,
+разбор краша) содержательно НЕ переснимался и НЕ менялся — правки ниже
+касаются формулировок/раскрытия/frontmatter, не факта прогона.**
+
+**B1 — раскрытие: `test_cases: ["TC-082"]` НЕ был покрыт этим прогоном;
+TC-080 — фактический live-крашер, принят как эквивалентное
+доказательство.** Связанный тест-кейс `TC-082`
+(`test_save_filter_button_idempotent_live`) демотирован
+`@pytest.mark.p0` → `@pytest.mark.p1` ещё 2026-07-22 («Попытка (б)»
+выше, этот же файл) — он не коллекционируется под `-m p0` и физически
+не мог быть частью witness'а этого D1-прогона (`Invoke-Pytest -m p0`,
+45 тестов); прежняя формулировка attempt 1 этого явно не проговаривала.
+Фактический подтверждённый live-крашер ЭТОГО прогона — **TC-080**
+(`test_exclude_main_pairing_checkbox_availability_live`), той же
+`SORT_FILTER_FORM_URL`/`sort_filter_form.mitm`-семьи, что и TC-082 (см.
+«Кандидаты того же класса» выше, обновлено этим же заходом — S3).
+
+**Решение (координатор, Sonnet-сессия, routing-log rejected-запись
+task_id `AT-BUG-026-d1verify` — ратифицирую формулировку здесь, в самом
+файле, не только в журнале):** TC-080-witness ПРИНИМАЕТСЯ как
+эквивалентное доказательство контейнмента для целей ЭТОЙ
+D1-верификации. Обоснование: критерий Fixed этого долга (см.
+«Критерий готовности», версия после решения Lead 2026-07-28) — не
+«TC-082 конкретно зелёный/красный», а «краш+recovery на тесте класса
+SORT_FILTER_FORM_URL/тяжёлый live-рендер обрабатывается guard'ом без
+каскада» (спека контейнмента, DoD w1-w4). TC-080 — прямой сиблинг того
+же паттерна (`open_live_sort_filter_form_relationship_ready`, тот же
+тяжёлый live-DOM), краш+recovery+честный FAILED+отсутствие каскада
+зафиксированы Event-Log-witness'ом этого прогона буквально так же, как
+ожидалось бы от TC-082. `test_cases` frontmatter расширен
+`["TC-082", "TC-080"]` (см. S3) — TC-080 признан релевантным этому
+багу ДОПОЛНИТЕЛЬНО к TC-082, не заменой.
+
+**S3.** Секция «Кандидаты того же класса» обновлена: TC-080 переведён
+из кандидата в ПОДТВЕРЖДЁННЫЙ крашер (witness этого прогона), TC-078
+остаётся кандидатом (witness'а краша нет).
+
+**S1.** Формулировка про TC-016 смягчена: было «НЕ device-liveness
+фейл ... честно не приписываю этому багу» (заявление причинной
+независимости без проверки) → теперь «вклад пост-recovery окружения не
+исключён (исключающий одиночный прогон не снят); кандидат в отдельный
+флейк-тикет, если симптом повторится».
+
+**N1.** `status_since`/`updated` во frontmatter поправлены с
+`2026-07-29T00:44:00Z` (фактически локальное время хоста, UTC+2,
+ошибочно под суффиксом `Z`) на корректный UTC `2026-07-28T22:44:00Z`.
+Витнесс-таблица «Верификация» и заголовок discussion-записи attempt 1
+(тот же `2026-07-29T00:44:00Z`) НЕ тронуты — часть содержания witness'а
+attempt 1, не переснимаю содержательно; ЗАМЕЧЕН тот же класс
+неоднозначности там (правило 9 CLAUDE.md, доклад без расширения
+scope) — унификация, если файл будет тронут ещё раз.
+
+**N2.** «ещё 27 тестов» после крашнувшего теста поправлено на
+фактические 30 (29 зелёных + 1 красный TC-016) — пересчитано по
+дословному прогресс-бару witness'а attempt 1 (`45 selected`, `2
+failed, 43 passed`; TC-080 — 15-й исполненный тест, после него 30
+тестов до конца прогона).
+
+**N3.** «Следующий по алфавитному порядку сиблинг-тест» поправлено на
+«следующий тест по порядку исполнения (порядок определения в файле, не
+алфавитный)» — pytest внутри файла коллекционирует тесты в порядке
+определения в исходнике, не по алфавиту; сама идентификация теста
+(`test_exclude_main_pairing_checkbox_availability_replay`) была верна,
+ошибочным было только обоснование порядка.
+
+`status` НЕ меняю (`Verified` остаётся — доработка текста прошлой
+D1-верификации, не переоткрытие вердикта). B2 (recoveries-run-
+артефакт) — вне мандата этого attempt, в очереди полного Lead
+(`docs/HANDOFF.md`), не трогаю. Никаких изменений в `app-under-test/`,
+эмулятор не поднимался (правки чисто текстовые, инструкция диспетча).
+
+Lock снят.

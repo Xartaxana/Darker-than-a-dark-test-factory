@@ -3,7 +3,8 @@
 `listing_paginated.mitm` (эксплораторная клетка «infinite scroll/пагинация»,
 `CH-005 mission_leftover`, ПЯТЬ страниц — доработка attempt 2, критик-вход B2)
 и `works_multi.mitm` (`CH-005 mission_leftover` Г7, live-push на старых
-вкладках).
+вкладках), плюс `listing_basic.mitm` (доработка attempt 2, критик-вход B3,
+`AT-BUG-029`, `Fixed` — недостающая `.html`-транзакция для TC-115).
 
 Парсинг СОБРАННЫХ `.mitm`-файлов через `mitmproxy.io.FlowReader` — симметрично
 тому, как `recording_builder.write_flows`/`FlowWriter` их пишет — без
@@ -221,6 +222,40 @@ def test_listing_paginated_all_blurb_works_have_recorded_work_pages(
         assert work.url in listing_paginated_recorded_urls
 
 
+# --- listing_basic.mitm (AT-BUG-029, доработка attempt 2 — B3 критик-входа) ---
+
+
+@pytest.fixture(scope="module")
+def listing_basic_flows():
+    path = settings.RECORDINGS_DIR / rb.LISTING_BASIC_FILENAME
+    assert path.exists(), (
+        f"фикстура не собрана — прогони python scripts/build_replay_recordings.py ({path})"
+    )
+    return _read_flows(path)
+
+
+@pytest.mark.p2
+@allure.id("recording-builder-listing-basic-has-four-flows")
+@allure.title("listing_basic.mitm: несёт РОВНО 4 flow (AT-BUG-029 — недостающая .html-транзакция добавлена)")
+def test_listing_basic_has_exactly_four_flows(listing_basic_flows):
+    assert len(listing_basic_flows) == 4
+
+
+@pytest.mark.p2
+@allure.id("recording-builder-listing-basic-has-download-html-flow")
+@allure.title("listing_basic.mitm: несёт GET rb.download_url(first_work), тело == rb.render_downloaded_work_html(first_work) (AT-BUG-029)")
+def test_listing_basic_has_download_html_flow_for_first_work(listing_basic_flows):
+    first_work = ALL_WORKS[0]
+    download_url = rb.download_url(first_work)
+
+    flow = next((f for f in listing_basic_flows if f.request.url == download_url), None)
+    assert flow is not None, (
+        f"недостаёт flow для {download_url} — AT-BUG-029 регрессировал бы "
+        "(фоновый DownloadRepository.downloadWork ушёл бы в live-сеть, TC-115 стал бы неинформативным)"
+    )
+    assert flow.response.get_text() == rb.render_downloaded_work_html(first_work)
+
+
 # --- works_multi.mitm ---
 
 _WORK_PATH_RE = re.compile(r"^/works/(\d+)$")
@@ -266,6 +301,55 @@ def test_works_multi_listing_contains_both_work_hrefs(works_multi_flows):
 def test_works_multi_urls_unique(works_multi_flows):
     urls = [f.request.url for f in works_multi_flows]
     assert len(urls) == len(set(urls))
+
+
+# --- AT-BUG-030 (доработка attempt 2, критик-вход B4, S-3): device-free юниты
+# на присутствие узлов 1/2/3 guard'а тап-зон (bridge-tap-zone-guard,
+# TC-119/120/122) в теле work-flow — по образцу
+# `test_listing_paginated_pages_have_viewport_meta_and_filler` (проверка
+# СОБРАННОЙ записи, не сырого вывода `render_work_page_html` напрямую).
+# `works_multi_flows` несёт ДВА независимых work-page flow — оба сверяются, не
+# только первый (симметрично `test_works_multi_has_two_distinct_work_page_flows`).
+
+
+@pytest.mark.p2
+@allure.id("recording-builder-works-multi-work-pages-have-tap-zone-guard-and-filler-nodes")
+@allure.title("works_multi.mitm: КАЖДАЯ work-страница несёт узлы 1 (button+span), 2 (div[onclick]), 3 (reading-UX филлер) (AT-BUG-030)")
+def test_works_multi_work_pages_have_tap_zone_guard_and_filler_nodes(works_multi_flows):
+    work_bodies = [
+        f.response.get_text()
+        for f in works_multi_flows
+        if _WORK_PATH_RE.match(urlparse(f.request.url).path)
+    ]
+    assert len(work_bodies) >= 2  # sanity — симметрично test_works_multi_has_two_distinct_work_page_flows
+    for body in work_bodies:
+        assert 'data-tap-marker="button"' in body
+        assert 'data-tap-marker-child="span"' in body
+        assert 'data-tap-marker="div"' in body
+        assert f"min-height: {rb.WORK_PAGE_READING_UX_FILLER_MIN_HEIGHT_PX}px" in body
+
+
+# --- AT-BUG-030 (доработка attempt 2, критик-вход B4, S-4): граница класса M6
+# (CLAUDE.md — «у КАЖДОГО введённого воркером лимита/границы (MAX_*, потолки
+# глубины/длины, отсечки) — тест НА границе и ЗА ней»). Тест НЕ трогает
+# устройство — чистая арифметика над самой константой, подтверждающая
+# документированный запас (`WORK_PAGE_READING_UX_FILLER_MIN_HEIGHT_PX=6000` >=
+# 3×1800=5400, ~11% запаса, `recording_builder.py` докстринг узла 3) и
+# показывающая, ГДЕ инвариант перестаёт держаться (за границей — больший
+# гипотетический `innerHeight`, не покрытый текущим эталонным AVD).
+@pytest.mark.p2
+@allure.id("recording-builder-reading-ux-filler-min-height-3x-boundary")
+@allure.title("WORK_PAGE_READING_UX_FILLER_MIN_HEIGHT_PX держит инвариант >=3xinnerHeight эталонного AVD (1800px), но НЕ держит его за границей большего innerHeight (M6)")
+def test_reading_ux_filler_min_height_holds_reference_but_not_beyond_boundary():
+    reference_inner_height = 1800  # CH-005: innerHeight вне fullscreen на эталонном AVD
+    assert rb.WORK_PAGE_READING_UX_FILLER_MIN_HEIGHT_PX >= 3 * reference_inner_height
+
+    # За границей: гипотетический больший innerHeight (2100, например планшетный
+    # AVD) — фиксированная константа 6000px больше НЕ покрывает 3xinnerHeight
+    # (6000 < 3*2100=6300) — инвариант держится ТОЛЬКО в пределах текущего
+    # эталонного AVD, не универсально.
+    larger_hypothetical_inner_height = 2100
+    assert rb.WORK_PAGE_READING_UX_FILLER_MIN_HEIGHT_PX < 3 * larger_hypothetical_inner_height
 
 
 # --- Негативные пробы формы (класс F-34, CLAUDE.md «Дисциплина команд» п.6):
