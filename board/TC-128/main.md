@@ -2,27 +2,27 @@
 key: "TC-128"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Тап по средней трети work-страницы переключает fullscreen (вход и выход)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:browser", "risk:R-11"]
+labels: ["test-case", "area:browser", "risk:R-11", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-29T10:27:26Z"
-updated: "2026-07-29T10:27:26Z"
+created: "2026-07-29T16:37:46Z"
+updated: "2026-07-29T16:37:46Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Тап по средней трети work-страницы переключает fullscreen (вход и выход)
 
 _Спроецировано из `test-cases/browser/TC-128.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-128 — Тап по средней трети work-страницы переключает fullscreen (вход и выход)
 
@@ -140,3 +140,106 @@ _Спроецировано из `test-cases/browser/TC-128.md` (источни�
 - [x] Кейс независим от порядка выполнения других кейсов
 - [x] Блокер автоматизации отсутствует
 - [x] Строка `Инвариант:` добавлена
+
+## Ревью автотеста (F1, test-reviewer, 2026-07-29) — ПРОЙДЕНО
+
+Вердикт: `Approved -> Automated`, `automation_status: active`. Чек-лист пройден
+целиком, блокирующих замечаний нет.
+
+1. **Архитектура (C1).** `python scripts/arch_check.py` — «ошибок 0,
+   предупреждений 0»; `ALLOWLIST` (`scripts/arch_check.py:80`) — пустое
+   множество, исключение «под себя» не добавлялось. Тест
+   (`framework/tests/test_reading_ux.py:106-135`) зовёт только именованные
+   steps-обёртки (`browser_steps.measure_top_chrome_luma`,
+   `dispatch_tap_zone_fullscreen_toggle_tap`, `assert_top_chrome_darkened`,
+   `assert_top_chrome_restored` + общий Given-хелпер модуля); ни локаторов, ни
+   `execute_script`, ни `driver_factory` в `tests/` не просачивается —
+   `execute_script` живёт в `browser_steps.dispatch_synthetic_viewport_tap`,
+   пиксельный прокси — в `screens/browser_screen.py::top_chrome_avg_luma`.
+   `sleep(` в тесте и в `steps/` отсутствует (негатив снят с позитивным
+   контролем тем же вызовом Grep по `framework/`: совпадения есть только в
+   `core/waits.py|adb.py|mitm.py|driver_factory.py` и в device-free
+   юнит-пробах); ожидания — `core.waits.wait_until` (`browser_steps.py:312`,
+   `:326`).
+2. **Traceability.** `@allure.id("TC-128")` == id кейса; `@pytest.mark.p1`
+   соответствует `priority: P1`; `@pytest.mark.replay` +
+   `@pytest.mark.parametrize("replay", [rb.WORK_WITH_DOWNLOAD_FILENAME],
+   indirect=True)` соответствуют заявленному в кейсе replay-режиму и
+   переиспользуемой фикстуре; `automated_by` указывает на существующую функцию —
+   собрана и прогнана pytest'ом по `-k`, node id совпал
+   (`[work_with_download.mitm]`).
+3. **Соответствие по смыслу + инвариант (C4).** Кейс несёт строку `Инвариант:`
+   (видимость `TabStrip` ≡ `tabs.size>1 ∧ ¬isFullscreen`; toggle через тап —
+   инволюция). Тест проверяет именно СВОЙСТВО инволюции, а не единичный пример:
+   `baseline_luma` МЕРЯЕТСЯ в прогоне (`:117`), затем два одинаковых тапа по
+   средней трети дают `luma < 0.7×baseline` (`:126`) и снова `luma >
+   0.7×baseline` (`:135`) — второй тап обязан вернуть наблюдаемое состояние к
+   исходному, порог считается ОТ baseline того же прогона, а не от абсолютной
+   константы стенда. Ослабления «элемент существует» нет: `assert_top_chrome_*`
+   требуют смены пиксельного состояния верхней полосы в обе стороны, причём
+   вторая проверка — строгое дополнение первой (пройти обе одним состоянием
+   невозможно, тавтологии нет). Given не предполагается, а проверяется
+   (`assert_tab_strip_visible`, `:52` хелпера) — «TabStrip виден до тапа»
+   зафиксирован. Вторая половина инварианта («независимо от ТОГО, каким входом
+   переключён `isFullscreen`») по замыслу кейса покрыта парой с TC-058 (иконка
+   side panel) через один и тот же прокси `top_chrome_avg_luma` — здесь
+   варьируется ровно вход, наблюдаемое свойство одно и то же. Зона тапа —
+   `_TAP_ZONE_MIDDLE_FRACTION = 0.5` (`browser_steps.py:563`), середина средней
+   трети, а не пограничное `1/3`/`2/3`, и удовлетворяет ветке `else`
+   `ao3_bridge.js:1161-1164`; координата пересчитывается из ТЕКУЩЕГО
+   `innerHeight` перед КАЖДЫМ тапом (`dispatch_synthetic_viewport_tap`) — ровно
+   то, что требуют «Заметки для автоматизации».
+4. **Фикстуры и данные.** Порядок сигнатуры `(loved_work_seeded, replay,
+   driver)` соблюдает контракт «сидинг ДО создания Appium-сессии»
+   (`framework/tests/conftest.py:211-220`: `clean_state()` + `seed_library`,
+   докстринг явно про этот порядок); `pm clear` в начале даёт и очистку за
+   собой, и сброс `tap_to_scroll` (тест включает тумблер сам,
+   `settings_steps.enable_tap_to_scroll`). Вторая вкладка открывается внутри
+   теста (Library → карточка работы), fullscreen выключается вторым тапом самого
+   сценария — состояние стенда не утекает наружу. Зависимости от TC-126/TC-127
+   или от порядка тестов нет: этот кейс не зависит ни от высоты документа, ни от
+   scroll-позиции.
+5. **Flake-риск.** Обе проверки полосы — поллящие `wait_until` (10с), а не
+   одноразовый снимок: анимированный reflow `hide/show(systemBars())` покрыт
+   явным ожиданием в ОБА направления (правка по ревью TC-058 2026-07-18,
+   `browser_steps.py:299-329`); гонки с Compose `AnimatedVisibility` и клика по
+   родителю текстового узла нет — тап синтетический, цель берётся
+   `document.elementFromPoint` из реальной геометрии. Видимость `TabStrip`
+   намеренно читается пикселями, а не accessibility-деревом (известный класс
+   WebView-a11y-регресса после полного цикла fullscreen, задокументирован в
+   `browser_screen.py:113-129`) — правильный выбор для кейса «вход И выход».
+   Живой AO3 не задействован (replay-фикстура с гарантированным teardown
+   прокси). Наблюдение без блокировки: `_TOP_CHROME_RATIO = 0.7`
+   (`test_reading_ux.py:38`) вместо дефолтных 0.5 — для «потемнения» это допуск
+   ЩЕДРЫЙ, но для «восстановления» (`luma > 0.7×baseline`) он строже дефолта, а
+   исторический замер TC-058 (`baseline≈234`, после выхода `≈174`, т.е. 0.74)
+   оставляет запас ~6%; при живом прогоне (`baseline=232.0`) тест зелёный и
+   красная проба чувствительна, поэтому это не замечание, а точка внимания на
+   случай будущих флейков «restored» на другой фикстуре/теме.
+6. **Независимое воспроизведение (зелёное).** Присутствие устройства сверено
+   канонической формой (`. env.ps1; . tasks.ps1; Get-Device` → `DEVICE:
+   emulator-5554`; эмулятор `ao3_test_api34` и Appium подняты предыдущими ревью
+   этого прохода, заново не поднимались). Прогон: `powershell -NoProfile
+   -ExecutionPolicy Bypass -Command ". D:\AO3_tests\scripts\tasks.ps1;
+   Invoke-Pytest -k test_tap_zone_middle_third_toggles_fullscreen -q"` →
+   `1 passed, 226 deselected in 47.95s`, `PYTEST_EXIT=0`.
+7. **Красная проба (умеет ли падать).** Порча ОДНА, на уровне проверяемого
+   условия When: `framework/steps/browser_steps.py:563`
+   `_TAP_ZONE_MIDDLE_FRACTION = 0.5` → `5 / 6` — тап уезжает в зону-сиблинг
+   (нижняя треть, tap-to-scroll вместо toggle fullscreen). Радиус порчи — ровно
+   этот кейс: константа используется единственным вызовом
+   `dispatch_tap_zone_fullscreen_toggle_tap` (Grep по `framework/`). Команда —
+   каноническая: `Invoke-Pytest -k test_tap_zone_middle_third_toggles_fullscreen
+   -q --no-header -x`. Результат: `1 failed`, `PYTEST_EXIT=1`; падение — на
+   содержательном ассерте Then первого перехода (`tests/test_reading_ux.py:126`
+   → `browser_steps.py:312`), текст указывает суть порчи: «верхняя полоса не
+   потемнела после входа в fullscreen относительно baseline=232.0 за 10с» —
+   названы и baseline прогона, и факт отсутствия перехода в fullscreen; это
+   осмысленное сообщение ожидания, не таймаут-мусор инфраструктуры (сессия,
+   Given, тап и измерение прокси отработали штатно). Проба доказывает, что
+   assert чувствителен именно к ЗОНЕ тапа, а не к «хоть какому-то» эффекту.
+   Порча откачена в том же ходе: `git checkout --
+   framework/steps/browser_steps.py`; после отката `git status --porcelain` и
+   `git diff --stat -- framework/` не показывают `framework/` вовсе (изменены
+   только этот кейс, кейсы TC-126/127 предыдущих ревью и журналы/состояние
+   конвейера).

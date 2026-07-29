@@ -2,27 +2,27 @@
 key: "TC-126"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Тап по верхней трети work-страницы скроллит вверх (tap-to-scroll ON)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:browser", "risk:R-11"]
+labels: ["test-case", "area:browser", "risk:R-11", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-29T10:27:26Z"
-updated: "2026-07-29T10:27:26Z"
+created: "2026-07-29T16:21:32Z"
+updated: "2026-07-29T16:21:32Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Тап по верхней трети work-страницы скроллит вверх (tap-to-scroll ON)
 
 _Спроецировано из `test-cases/browser/TC-126.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-126 — Тап по верхней трети work-страницы скроллит страницу вверх
 
@@ -97,3 +97,70 @@ innerHeight/3`, цель — неинтерактивный узел)
 - [x] Блокер автоматизации — существующий `bugs/AT-BUG-030.md`, кейс добавлен
       в его `test_cases` этим же ходом
 - [x] Строка `Инвариант:` добавлена
+
+## Ревью автотеста (F1, test-reviewer, 2026-07-29) — ПРОЙДЕНО
+
+Вердикт: `Approved -> Automated`, `automation_status: active`. Чек-лист пройден
+целиком, блокирующих замечаний нет.
+
+1. **Архитектура (C1).** `python scripts/arch_check.py` — «ошибок 0,
+   предупреждений 0»; `ALLOWLIST` (`scripts/arch_check.py:80`) пуст —
+   исключение «под себя» не добавлялось. Тест зовёт только именованные
+   steps-обёртки (`browser_steps.prescroll_past_tap_to_scroll_threshold`,
+   `dispatch_tap_to_scroll_up_tap`, `assert_tap_to_scroll_delta`), локаторы/
+   `execute_script`/`driver_factory` в `tests/` не просачиваются; `sleep` нет
+   ни в тесте, ни в задействованных шагах (ожидание — `core.waits.wait_until`,
+   41 вызов в `browser_steps.py`; негатив по `sleep(` снят с позитивным
+   контролем тем же вызовом grep).
+2. **Traceability.** `@allure.id("TC-126")` == id кейса; `@pytest.mark.p1`
+   соответствует `priority: P1`, `@pytest.mark.replay` — replay-режиму кейса;
+   `automated_by` указывает на существующую функцию (собрана и прогнана
+   pytest'ом по `-k`, node id совпал, `[work_with_download.mitm]`).
+3. **Соответствие по смыслу.** Then кейса («`scrollY` уменьшается примерно на
+   `0.95×innerHeight`») реализован ровно как свойство, а не как пример:
+   `assert_tap_to_scroll_delta` считает `expected_delta = direction ×
+   0.95 × innerHeight` от ИЗМЕРЕННОГО в прогоне `innerHeight` (на стенде
+   вышло `innerHeight=1603`, `dy=-1522.8px`, а не хардкод `-1710` из CH-005) с
+   допуском 15%; «элемент существует»-ослабления нет. Инвариант кейса (знак
+   `dy` — функция только зоны, `|dy|` одинакова) держится ПАРОЙ TC-126/TC-127
+   через один и тот же helper с разным `direction` — варьируется ровно одна
+   переменная (зона тапа). Given-предскролл проверен собственным assert'ом
+   (`scrollY > 0.95×innerHeight`), т.е. вырождение в границу `scrollY=0`
+   исключено, а не предположено.
+4. **Фикстуры и данные.** Порядок сигнатуры `(loved_work_seeded, replay,
+   driver)` соблюдает контракт «сидинг ДО создания Appium-сессии»
+   (`conftest.py:211-220`: `clean_state()` + `seed_library`); `pm clear` в
+   начале даёт и очистку за собой, и сброс настройки `tap_to_scroll`.
+   Зависимости от TC-127/порядка тестов нет — предскролл делается своим
+   `execute_script`, как и предписано «Заметками для автоматизации».
+5. **Flake-риск.** Ожидание дельты — явный `wait_until` (5с) вместо
+   одноразового чтения; тап — синтетический `MouseEvent` через
+   `document.elementFromPoint` (гонок с Compose `AnimatedVisibility` нет,
+   пиксельные прокси в этом кейсе не используются); живой AO3 не задействован
+   — `@pytest.mark.replay` + фикстура `replay` на `work_with_download.mitm` с
+   гарантированным teardown прокси.
+6. **Независимое воспроизведение (зелёное).** `powershell -NoProfile
+   -ExecutionPolicy Bypass -Command ". D:\AO3_tests\scripts\tasks.ps1;
+   Invoke-Pytest -k test_tap_zone_top_third_scrolls_up -q"` →
+   `1 passed, 226 deselected in 54.63s`, `PYTEST_EXIT=0` (эмулятор
+   `ao3_test_api34` поднят `Start-Emulator`, Appium — `Start-Appium`; до этого
+   `Get-Device` дал `NO DEVICE`, первый прогон честно упал на
+   `ConnectionRefusedError :4723` — не среда-деградация, а незапущенный Appium).
+7. **Красная проба (умеет ли падать).** Порча — уровня настройки приложения:
+   `framework/steps/settings_steps.py:51` временно `set_tap_to_scroll(False)`
+   (тумблер, от которого гейтится ВЕСЬ обработчик `ao3_bridge.js:1149`), одна
+   правка. Команда — та же каноническая (`Invoke-Pytest -k
+   test_tap_zone_top_third_scrolls_up -q --no-header -x`). Результат:
+   `1 failed`, `PYTEST_EXIT=1`, падение — на содержательном Then
+   (`tests/test_reading_ux.py:75` → `browser_steps.py:632`), текст указывает
+   суть: «scrollY не изменился на ожидаемую дельту -1522.8px (±228.4px)
+   относительно scrollY до тапа=2403 за 5с (текущий scrollY=2403)» —
+   таймаут-мусора нет, названы и ожидаемая величина, и фактическое отсутствие
+   скролла. Порча откачена в том же ходе: `git checkout --
+   framework/steps/settings_steps.py`, `git status --porcelain` больше не
+   показывает `framework/` (изменён только этот кейс + журналы конвейера).
+
+Замечание без блокировки (не меняет вердикт): строка «До готовности фикстуры
+кейс остаётся `status: Review`» в «Заметках для автоматизации» устарела —
+фикстура (узел 3 AT-BUG-030) готова, кейс автоматизирован; при следующем
+касании кейса строку стоит убрать.

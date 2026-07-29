@@ -2,27 +2,27 @@
 key: "TC-127"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Тап по нижней трети work-страницы скроллит вниз (tap-to-scroll ON)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:browser", "risk:R-11"]
+labels: ["test-case", "area:browser", "risk:R-11", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-29T10:27:26Z"
-updated: "2026-07-29T10:27:26Z"
+created: "2026-07-29T16:29:56Z"
+updated: "2026-07-29T16:29:56Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Тап по нижней трети work-страницы скроллит вниз (tap-to-scroll ON)
 
 _Спроецировано из `test-cases/browser/TC-127.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-127 — Тап по нижней трети work-страницы скроллит страницу вниз
 
@@ -55,7 +55,6 @@ _Спроецировано из `test-cases/browser/TC-127.md` (источни�
 ## Заметки для автоматизации
 - **Блокер общий с `bugs/AT-BUG-030.md`** (узел 3, высота документа) — кейс
   добавлен в `test_cases` AT-BUG-030 этим же ходом; узлы 1/2 не требуются.
-- До готовности фикстуры кейс остаётся `status: Review`.
 - Это наиболее прямой (не требует предварительного скролла) из пары
   TC-126/TC-127 — стартовая позиция `scrollY=0` естественна для свежезагруженной
   страницы, кандидат на переиспользование как предпосылка TC-126 (см. заметку
@@ -79,3 +78,81 @@ _Спроецировано из `test-cases/browser/TC-127.md` (источни�
 - [x] Блокер автоматизации — существующий `bugs/AT-BUG-030.md`, кейс добавлен
       в его `test_cases` этим же ходом
 - [x] Строка `Инвариант:` добавлена
+
+## Ревью автотеста (F1, test-reviewer, 2026-07-29) — ПРОЙДЕНО
+
+Вердикт: `Approved -> Automated`, `automation_status: active`. Чек-лист пройден
+целиком, блокирующих замечаний нет.
+
+1. **Архитектура (C1).** `python scripts/arch_check.py` — «ошибок 0,
+   предупреждений 0»; `ALLOWLIST` (`scripts/arch_check.py`) пуст — исключение
+   «под себя» не добавлялось. Тест (`framework/tests/test_reading_ux.py:83-103`)
+   зовёт только именованные steps-обёртки (`browser_steps.get_webview_scroll_y`,
+   `get_webview_inner_height`, `dispatch_tap_to_scroll_down_tap`,
+   `assert_tap_to_scroll_delta` + общий Given-хелпер модуля); локаторы,
+   `execute_script` и `driver_factory` в `tests/` не просачиваются. `sleep(` нет
+   ни в тесте, ни в `browser_steps.py` (негатив снят с позитивным контролем тем
+   же вызовом Grep: совпадения есть только в `core/` — `waits.py`, `adb.py`,
+   `mitm.py`, `driver_factory.py`); ожидание — `core.waits.wait_until`
+   (`browser_steps.py:632`).
+2. **Traceability.** `@allure.id("TC-127")` == id кейса; `@pytest.mark.p1`
+   соответствует `priority: P1`, `@pytest.mark.replay` — replay-режиму кейса
+   (`@pytest.mark.parametrize("replay", [rb.WORK_WITH_DOWNLOAD_FILENAME])`);
+   `automated_by` указывает на существующую функцию — собрана и прогнана
+   pytest'ом по `-k`, node id совпал (`[work_with_download.mitm]`).
+3. **Соответствие по смыслу.** Then кейса («`scrollY` увеличивается примерно на
+   `0.95×innerHeight`, не превышая максимальный скролл документа») реализован как
+   СВОЙСТВО, не как пример: `assert_tap_to_scroll_delta` считает
+   `expected_delta = direction × 0.95 × innerHeight` от ИЗМЕРЕННОГО в прогоне
+   `innerHeight` (на стенде `innerHeight=1603`, ожидаемая дельта `+1522.8px`, а
+   не хардкод `+1710` из CH-005), допуск 15%; ослабления «элемент существует»
+   нет. Верхняя граница Then («не превышая максимальный скролл») удерживается
+   тем же двусторонним допуском: клампинг у конца документа дал бы дельту меньше
+   ожидаемой и уронил тест; узел 3 AT-BUG-030 (высота >= 3×innerHeight) даёт
+   запас. Given (`scrollY = 0`) не предполагается, а проверяется собственным
+   assert'ом (`test_reading_ux.py:91-93`) — вырождение исключено. Инвариант кейса
+   (знак `dy` — функция ТОЛЬКО зоны, `|dy|` одинакова) держится ПАРОЙ
+   TC-126/TC-127 через один и тот же helper с разным `direction`: варьируется
+   ровно одна переменная — зона тапа (`_TAP_ZONE_TOP_THIRD_FRACTION = 1/6` vs
+   `_TAP_ZONE_BOTTOM_THIRD_FRACTION = 5/6`, середины третей, не границы).
+   Зона попадает в требование `ao3_bridge.js:1159` (`e.clientY >= third * 2`:
+   `5/6 > 2/3`).
+4. **Фикстуры и данные.** Порядок сигнатуры `(loved_work_seeded, replay,
+   driver)` соблюдает контракт «сидинг ДО создания Appium-сессии»
+   (`framework/tests/conftest.py:211-220`: `clean_state()` + `seed_library`);
+   `pm clear` в начале даёт и очистку за собой, и сброс настройки
+   `tap_to_scroll` (тест включает её сам через
+   `settings_steps.enable_tap_to_scroll`). Зависимости от TC-126/TC-128 или от
+   порядка тестов нет — стартовая позиция `scrollY=0` берётся из свежей
+   загрузки, предскролл не нужен.
+5. **Flake-риск.** Ожидание дельты — явный `wait_until` (5с) вместо одноразового
+   чтения; тап — синтетический `MouseEvent` через `document.elementFromPoint`
+   (координата пересчитывается из ТЕКУЩЕГО `innerHeight` непосредственно перед
+   диспатчем; гонок с Compose `AnimatedVisibility` нет, пиксельные прокси в этом
+   кейсе не используются); живой AO3 не задействован — `@pytest.mark.replay` +
+   фикстура `replay` на `work_with_download.mitm` с гарантированным teardown
+   прокси.
+6. **Независимое воспроизведение (зелёное).** `powershell -NoProfile
+   -ExecutionPolicy Bypass -Command ". D:\AO3_tests\scripts\tasks.ps1;
+   Invoke-Pytest -k test_tap_zone_bottom_third_scrolls_down -q"` →
+   `1 passed, 226 deselected in 51.28s`, `PYTEST_EXIT=0` (эмулятор
+   `ao3_test_api34` и Appium подняты предыдущим ревью прохода, присутствие
+   сверено `Get-Device` → `DEVICE: emulator-5554`).
+7. **Красная проба (умеет ли падать).** Порча — ОДНА, на уровне проверяемого
+   условия When и намеренно НЕ повторяет пробу TC-126 (там гасился тумблер
+   `tap_to_scroll`, что доказывает лишь «эффект вообще есть»): временно
+   `framework/steps/browser_steps.py:562` `_TAP_ZONE_BOTTOM_THIRD_FRACTION =
+   5 / 6` → `1 / 6`, т.е. тап уезжает в зону-сиблинг (верхняя треть). Константа
+   используется только `dispatch_tap_to_scroll_down_tap` (Grep по `framework/`) —
+   радиус порчи ровно этот кейс. Команда — каноническая (`Invoke-Pytest -k
+   test_tap_zone_bottom_third_scrolls_down -q --no-header -x`). Результат:
+   `1 failed`, `PYTEST_EXIT=1`; падение — на содержательном Then
+   (`tests/test_reading_ux.py:103` → `browser_steps.py:632`), текст указывает
+   суть порчи: «scrollY не изменился на ожидаемую дельту 1522.8px (±228.4px)
+   относительно scrollY до тапа=0 за 5с (текущий scrollY=0)» — названы и
+   ожидаемая величина, и фактическое отсутствие скролла (тап в верхнюю треть при
+   `scrollY=0` клампится в 0); таймаут-мусора нет. Проба заодно доказывает, что
+   assert чувствителен именно к ЗОНЕ, а не только к наличию скролла. Порча
+   откачена в том же ходе: `git checkout -- framework/steps/browser_steps.py`,
+   `git status --porcelain` больше не показывает `framework/` (изменены только
+   этот кейс, TC-126 и журналы/состояние конвейера).
