@@ -149,7 +149,11 @@ record→replay подключён к `framework/tests/conftest.py::replay` (fix
 `mitmdump`-прогоном (таких работ не существует на archiveofourown.org) — они
 собираются программно: `framework/data/recording_builder.py` (тот же `.mitm`-формат,
 HTML 1:1 повторяет проверенную разметку AO3) + генератор
-`python scripts/build_replay_recordings.py`. Базовая листинговая запись —
+`framework/.venv/Scripts/python.exe scripts/build_replay_recordings.py`
+(исправлено батчем мелочей D-0081, 2026-07-29: PATH-питон падает
+`ModuleNotFoundError: No module named 'mitmproxy'` — зависимости скрипта живут
+только в venv фреймворка, канон нужен venv-формой, как и остальные
+скрипты-обвязки этого репо). Базовая листинговая запись —
 `framework/data/recordings/listing_basic.mitm` (5 блёрбов, разблокирует
 TC-013/014/015/043/045). Остаток батча (TC-032/033 — запись download-flow;
 TC-012 — вариация с дублированным `ao3_id`) — в очереди, см. `bugs/AT-BUG-004.md`.

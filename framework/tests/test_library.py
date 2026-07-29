@@ -87,3 +87,39 @@ def test_library_card_shows_note_icon_and_tags(note_and_tags_work_seeded, driver
     # And та же карточка работы W показывает строку личных тегов «indicator-tag»
     # (оба индикатора наблюдаются одновременно на одной и той же карточке)
     library_steps.assert_work_tags_visible(driver, "PENDING", work.title, "indicator-tag")
+
+
+# --- B2 (misc-batch-lead-queue-0729, attempt 2, критик-вход): служебная проба,
+# НЕ автоматизация конкретного TC-xxx — доказывает card-scoped дискриминацию
+# `has_download_icon`/`has_open_icon` на ДВУХ карточках ОДНОЙ вкладки (см.
+# докстринг фикстуры `library_mixed_download_status_seeded` в conftest.py и
+# `_card_icon_locator` в `library_screen.py`). `@allure.id` намеренно НЕ формата
+# "TC-xxx" (тот же приём, что `test_saf_infra_probe.py`, см. его докстринг про
+# `scripts/arch_check.py` §Правило 2) — чтобы не создавать ложное впечатление
+# автоматизированного продуктового кейса.
+
+@pytest.mark.p2
+@allure.id("library-card-scoped-download-icon-discrimination-probe")
+@allure.title("Проба: has_download_icon/has_open_icon различают ДВЕ карточки одной вкладки (card-scoped, не screen-wide)")
+def test_download_open_icon_discriminates_between_two_cards(library_mixed_download_status_seeded, driver):
+    # Given одна вкладка Library (PENDING) содержит ДВЕ работы с РАЗНЫМ
+    # download-статусом: W.PENDING без файла (download-иконка), W.DISLIKED
+    # с уже «скачанным» файлом (open-иконка) — см. докстринг фикстуры
+    work_no_download, work_with_download = library_mixed_download_status_seeded
+    app_steps.wait_ui_ready(driver)
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_work_in_tab(driver, "PENDING", work_no_download.title)
+    library_steps.assert_work_in_tab(driver, "PENDING", work_with_download.title)
+
+    # Then baseline-корректность (уже покрыта другими кейсами по одной карточке,
+    # здесь — часть той же живой сверки): своя иконка на своей карточке видна
+    library_steps.assert_download_icon_shown(driver, work_no_download.title)
+    library_steps.assert_open_icon_shown(driver, work_with_download.title)
+
+    # And ДИСКРИМИНАЦИЯ (содержательная часть пробы): каждая карточка НЕ
+    # показывает иконку СОСЕДА, хотя та иконка реально присутствует на экране
+    # (на карточке соседа) — старый screen-wide `is_present(by_desc(...))`
+    # (до батча мелочей D-0081) нашёл бы её независимо от title и провалил бы
+    # именно эти две проверки
+    library_steps.assert_open_icon_not_shown(driver, work_no_download.title)
+    library_steps.assert_download_icon_not_shown(driver, work_with_download.title)

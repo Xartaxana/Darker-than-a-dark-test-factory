@@ -98,14 +98,14 @@ def open_work_in_browser(driver, title: str):
 def open_downloaded_file(driver, title: str):
     lib = LibraryScreen(driver)
     assert lib.has_work(title), f"работа «{title}» не найдена"
-    lib.tap_open_icon()
+    lib.tap_open_icon(title)
 
 
 @allure.step("When пользователь тапает download-иконку работы «{title}» (ручное скачивание)")
 def download_via_card(driver, title: str):
     lib = LibraryScreen(driver)
     assert lib.has_work(title), f"работа «{title}» не найдена"
-    lib.tap_download_icon()
+    lib.tap_download_icon(title)
 
 
 @allure.step("When long-press по карточке «{title}», в overlay выбрано «{action}»")
@@ -126,7 +126,7 @@ def delete_via_overlay(driver, title: str, action: str):
 def assert_download_icon_shown(driver, title: str):
     lib = LibraryScreen(driver)
     assert lib.has_work(title), f"работа «{title}» не найдена"
-    assert lib.has_download_icon(), f"download-иконка не появилась у «{title}»"
+    assert lib.has_download_icon(title), f"download-иконка не появилась у «{title}»"
 
 
 @allure.step("Then карточка «{title}» показывает open-иконку (файл скачан)")
@@ -136,7 +136,34 @@ def assert_open_icon_shown(driver, title: str, timeout: int | None = None):
     чем локальная фикстура (downloaded_work_seeded), где дефолта достаточно."""
     lib = LibraryScreen(driver)
     assert lib.has_work(title, timeout=timeout), f"работа «{title}» не найдена"
-    assert lib.has_open_icon(timeout=timeout), f"open-иконка не появилась у «{title}»"
+    assert lib.has_open_icon(title, timeout=timeout), f"open-иконка не появилась у «{title}»"
+
+
+@allure.step("Then карточка «{title}» НЕ показывает download-иконку (card-scoped дискриминация)")
+def assert_download_icon_not_shown(driver, title: str, timeout: int | None = None):
+    """Негатив-парник `assert_download_icon_shown` — нужен для доказательства
+    card-scoped дискриминации `_card_icon_locator` (B2, misc-batch-lead-queue-0729
+    attempt 2): на экране с НЕСКОЛЬКИМИ карточками разного download-статуса эта
+    проверка ловит регрессию к screen-wide поиску (старый баг, см. докстринг
+    `_card_icon_locator` в `library_screen.py`) — карточка «{title}» имеет
+    open-иконку у СОСЕДА, но своей download-иконки быть не должно."""
+    lib = LibraryScreen(driver)
+    assert lib.has_work(title), f"работа «{title}» не найдена"
+    assert not lib.has_download_icon(title, timeout=timeout if timeout is not None else 4), (
+        f"download-иконка неожиданно присутствует у «{title}» "
+        "(похоже на screen-wide утечку локатора с чужой карточки)"
+    )
+
+
+@allure.step("Then карточка «{title}» НЕ показывает open-иконку (card-scoped дискриминация)")
+def assert_open_icon_not_shown(driver, title: str, timeout: int | None = None):
+    """Негатив-парник `assert_open_icon_shown` — см. `assert_download_icon_not_shown`."""
+    lib = LibraryScreen(driver)
+    assert lib.has_work(title), f"работа «{title}» не найдена"
+    assert not lib.has_open_icon(title, timeout=timeout if timeout is not None else 4), (
+        f"open-иконка неожиданно присутствует у «{title}» "
+        "(похоже на screen-wide утечку локатора с чужой карточки)"
+    )
 
 
 # --- Фильтр-панель (TC-027/TC-028/TC-029) ---

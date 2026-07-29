@@ -30,7 +30,7 @@ AT-BUG-005 (`framework/steps/saf_steps.py::saf_pick_folder`, блокер сня
 TC-115 (правка заметки уже-Favorite работы через bottom-sheet ЛИСТИНГА не должна
 запускать повторное скачивание — edge-vs-level класс BUG-014, зеркало TC-114 через
 другой вход) использует `rb.LISTING_BASIC_FILENAME` (`listing_basic.mitm`), который
-теперь (AT-BUG-029, Fixed) несёт ЧЕТВЁРТЫЙ flow — сам `.html`-файл `W.LOVED` — рядом
+теперь (AT-BUG-029, Fixed) несёт восьмой из восьми flow — сам `.html`-файл `W.LOVED` — рядом
 с уже существующими листингом/work-страницей той же работы: без этой транзакции
 фоновый `DownloadRepository.downloadWork`, ЕСЛИ он случится из-за живого BUG-014,
 ушёл бы в live-сеть и молча провалился, делая негативный Then теста ложно-зелёным

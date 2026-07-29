@@ -40,6 +40,15 @@ class LibraryScreen(BaseScreen):
         return self.is_present(self.by_text(title),
                                timeout=timeout or 8)
 
+    # TODO(class: screen-wide card locator, misc-batch-lead-queue-0729 attempt 2,
+    # заодно-минор): `has_tags_text`/`has_note_icon` ниже ищут ПО ВСЕМУ экрану
+    # (`by_text_contains`/`by_desc` без title-скоупа) — тот же класс, что был
+    # у `has_download_icon`/`has_open_icon` ДО card-scoped фикса `_card_icon_locator`
+    # (батч мелочей D-0081, см. комментарий там же): на экране с НЕСКОЛЬКИМИ
+    # карточками с разными тегами/заметками эти методы могут подтвердить
+    # значение ЧУЖОЙ карточки. НЕ чинится в этом инкременте (вне минимального
+    # скоупа attempt 2 — вынесено в очередь координатора).
+
     # --- Личные теги на карточке (WorkCard, LibraryScreen.kt ~960:
     # `Text(work.tags.joinToString(" · "))`, рендерится только при непустых `tags`) ---
     def has_tags_text(self, text: str, timeout: int | None = None) -> bool:
@@ -68,18 +77,55 @@ class LibraryScreen(BaseScreen):
     # --- Иконки download/open на карточке (WorkCard в LibraryScreen.kt:
     # Icons.Default.Download contentDescription="Download", Icons.Default.Book
     # contentDescription="Open downloaded") ---
-    def has_download_icon(self, timeout: int | None = None) -> bool:
-        return self.is_present(self.by_desc("Download"), timeout=timeout or 8)
+    #
+    # Card-scoped (батч мелочей D-0081, 2026-07-29): раньше `by_desc(...)` искал
+    # ПО ВСЕМУ экрану — при НЕСКОЛЬКИХ работах на экране мог подтвердить иконку
+    # ЧУЖОЙ карточки (например, `assert_download_icon_shown` для работы X молча
+    # прошёл бы, найдя "Download" на карточке Y). Живой замер (emulator-5554,
+    # 2026-07-29, 2 работы с разным download-статусом — LOVED уже скачана,
+    # KUDOSED нет) подтвердил: старый `is_present(by_desc("Download"))` находит
+    # ЛЮБУЮ карточку с этой иконкой независимо от `title`. Все текущие
+    # потребители (TC-032/033/034/035/115) засевают ОДНУ работу за раз — риск
+    # ЛАТЕНТНЫЙ (не даёт красного сегодня), но реальный при будущем
+    # multi-work сценарии — тот же класс, что уже решён позиционно для
+    # `visible_card_y`/`topmost_visible_title` выше.
+    #
+    # Card-scoped дискриминация ИСПРАВЛЕННОГО локатора (ниже) отдельно проверена
+    # device-witness'ом на ДВУХ карточках ОДНОЙ вкладки (B2, misc-batch-lead-
+    # queue-0729 attempt 2, критик-вход — замер выше доказывал только СТАРЫЙ
+    # баг, не корректность фикса): `test_library.py::
+    # test_download_open_icon_discriminates_between_two_cards` (фикстура
+    # `library_mixed_download_status_seeded`, conftest.py) — 4 утверждения:
+    # своя иконка видна на своей карточке И НЕ видна иконка соседа, для ОБЕИХ
+    # карточек сразу.
+    #
+    # Скоуп — XPath от TextView заголовка вверх РОВНО на 2 предка-View до корня
+    # карточки (`ancestor::android.view.View[2]`), затем вниз до иконки по
+    # `content-desc`. Число «2» не эвристика — сверено по живому accessibility-
+    # дереву (`uiautomator dump` через Appium, emulator-5554): `WorkCard`
+    # (LibraryScreen.kt ~895-1010) — фиксированная Compose-разметка `Row(root)
+    # -> [Column(заголовок, combinedClickable), Row(иконки)]`; TextView
+    # заголовка — первый ребёнок `Column`, поэтому 1-й предок-View — сам
+    # `Column`, 2-й — корневой `Row` карточки (общий для Column и Row(иконки)).
+    def _card_icon_locator(self, title: str, desc: str):
+        return (
+            AppiumBy.XPATH,
+            f'//android.widget.TextView[@text="{title}"]'
+            f'/ancestor::android.view.View[2]//*[@content-desc="{desc}"]',
+        )
 
-    def has_open_icon(self, timeout: int | None = None) -> bool:
-        return self.is_present(self.by_desc("Open downloaded"), timeout=timeout or 8)
+    def has_download_icon(self, title: str, timeout: int | None = None) -> bool:
+        return self.is_present(self._card_icon_locator(title, "Download"), timeout=timeout or 8)
 
-    def tap_open_icon(self, timeout: int | None = None):
-        self.tap(self.by_desc("Open downloaded"), timeout=timeout)
+    def has_open_icon(self, title: str, timeout: int | None = None) -> bool:
+        return self.is_present(self._card_icon_locator(title, "Open downloaded"), timeout=timeout or 8)
+
+    def tap_open_icon(self, title: str, timeout: int | None = None):
+        self.tap(self._card_icon_locator(title, "Open downloaded"), timeout=timeout)
         return self
 
-    def tap_download_icon(self, timeout: int | None = None):
-        self.tap(self.by_desc("Download"), timeout=timeout)
+    def tap_download_icon(self, title: str, timeout: int | None = None):
+        self.tap(self._card_icon_locator(title, "Download"), timeout=timeout)
         return self
 
     # --- Пустая вкладка (LibraryScreen.kt EmptyState, TC-037) ---

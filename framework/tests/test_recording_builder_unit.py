@@ -8,9 +8,10 @@
 
 Парсинг СОБРАННЫХ `.mitm`-файлов через `mitmproxy.io.FlowReader` — симметрично
 тому, как `recording_builder.write_flows`/`FlowWriter` их пишет — без
-устройства/Appium. Требует, чтобы `python scripts/build_replay_recordings.py`
-уже отработал (файлы лежат в `settings.RECORDINGS_DIR`, коммитятся как
-остальные `.mitm`-фикстуры этого пакета).
+устройства/Appium. Требует, чтобы `framework/.venv/Scripts/python.exe
+scripts/build_replay_recordings.py` уже отработал (файлы лежат в
+`settings.RECORDINGS_DIR`, коммитятся как остальные `.mitm`-фикстуры этого
+пакета).
 
 Переопределяет `_ensure_app_installed` (тот же приём, что
 `test_seed_filter_profiles_unit.py`/`test_device_liveness_guard_unit.py`) —
@@ -110,7 +111,7 @@ def _pagination_hrefs_covered(html_body: str, page_url: str, recorded_urls: set[
 def listing_paginated_flows():
     path = settings.RECORDINGS_DIR / rb.LISTING_PAGINATED_FILENAME
     assert path.exists(), (
-        f"фикстура не собрана — прогони python scripts/build_replay_recordings.py ({path})"
+        f"фикстура не собрана — прогони framework/.venv/Scripts/python.exe scripts/build_replay_recordings.py ({path})"
     )
     return _read_flows(path)
 
@@ -229,16 +230,16 @@ def test_listing_paginated_all_blurb_works_have_recorded_work_pages(
 def listing_basic_flows():
     path = settings.RECORDINGS_DIR / rb.LISTING_BASIC_FILENAME
     assert path.exists(), (
-        f"фикстура не собрана — прогони python scripts/build_replay_recordings.py ({path})"
+        f"фикстура не собрана — прогони framework/.venv/Scripts/python.exe scripts/build_replay_recordings.py ({path})"
     )
     return _read_flows(path)
 
 
 @pytest.mark.p2
-@allure.id("recording-builder-listing-basic-has-four-flows")
-@allure.title("listing_basic.mitm: несёт РОВНО 4 flow (AT-BUG-029 — недостающая .html-транзакция добавлена)")
-def test_listing_basic_has_exactly_four_flows(listing_basic_flows):
-    assert len(listing_basic_flows) == 4
+@allure.id("recording-builder-listing-basic-has-eight-flows")
+@allure.title("listing_basic.mitm: несёт РОВНО 8 flow (2 листинга + 5 work-страниц + 1 .html-транзакция, батч D-0081)")
+def test_listing_basic_has_exactly_eight_flows(listing_basic_flows):
+    assert len(listing_basic_flows) == 8
 
 
 @pytest.mark.p2
@@ -256,6 +257,18 @@ def test_listing_basic_has_download_html_flow_for_first_work(listing_basic_flows
     assert flow.response.get_text() == rb.render_downloaded_work_html(first_work)
 
 
+@pytest.mark.p2
+@allure.id("recording-builder-listing-basic-all-blurb-works-have-recorded-work-pages")
+@allure.title("listing_basic.mitm: КАЖДАЯ работа ALL_WORKS несёт свой /works/<id> flow (латентный класс AT-BUG-029 — раньше только ALL_WORKS[0])")
+def test_listing_basic_all_blurb_works_have_recorded_work_pages(listing_basic_flows):
+    recorded_urls = {f.request.url for f in listing_basic_flows}
+    missing = [work.url for work in ALL_WORKS if work.url not in recorded_urls]
+    assert not missing, (
+        f"work-страницы не записаны для: {missing} — клик/long-press по этим блёрбам "
+        "листинга ушёл бы в live-forward (тот же класс, что AT-BUG-006/AT-BUG-029)"
+    )
+
+
 # --- works_multi.mitm ---
 
 _WORK_PATH_RE = re.compile(r"^/works/(\d+)$")
@@ -265,7 +278,7 @@ _WORK_PATH_RE = re.compile(r"^/works/(\d+)$")
 def works_multi_flows():
     path = settings.RECORDINGS_DIR / rb.WORKS_MULTI_FILENAME
     assert path.exists(), (
-        f"фикстура не собрана — прогони python scripts/build_replay_recordings.py ({path})"
+        f"фикстура не собрана — прогони framework/.venv/Scripts/python.exe scripts/build_replay_recordings.py ({path})"
     )
     return _read_flows(path)
 

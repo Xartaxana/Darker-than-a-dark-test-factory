@@ -202,15 +202,20 @@ function Stop-NodeProcesses {
     }
     $allNode = Get-CimInstance Win32_Process -Filter "Name='node.exe'" -ErrorAction SilentlyContinue
     $owned = @($allNode | Where-Object { $_.CommandLine -and $_.CommandLine -match [regex]::Escape($root) })
+    # Батч мелочей D-0081 (2026-07-29): раньше при 0 owned печатались ОБА
+    # сообщения ("No AO3 node processes found..." И "Stopped 0 AO3 node
+    # process(es)." следом) - одно сообщение на исход (if/else), функция и
+    # порядок Stop-Process/Start-Sleep не тронуты.
     if ($owned.Count -eq 0) {
         Write-Host "No AO3 node processes found (nothing to stop)." -ForegroundColor Yellow
-    }
-    foreach ($p in $owned) {
-        Write-Host "Stopping AO3 node process (PID $($p.ProcessId)): $($p.CommandLine)" -ForegroundColor Yellow
-        Stop-Process -Id $p.ProcessId -Force -ErrorAction SilentlyContinue
+    } else {
+        foreach ($p in $owned) {
+            Write-Host "Stopping AO3 node process (PID $($p.ProcessId)): $($p.CommandLine)" -ForegroundColor Yellow
+            Stop-Process -Id $p.ProcessId -Force -ErrorAction SilentlyContinue
+        }
+        Write-Host "Stopped $($owned.Count) AO3 node process(es)." -ForegroundColor Green
     }
     Start-Sleep 1
-    Write-Host "Stopped $($owned.Count) AO3 node process(es)." -ForegroundColor Green
 }
 
 function Wait-PackageServiceReady {

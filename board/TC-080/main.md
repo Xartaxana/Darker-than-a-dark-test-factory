@@ -3,7 +3,7 @@ key: "TC-080"
 project: "AO3"
 issueType: "test-case"
 status: "tc-automated"
-priority: "p0"
+priority: "p2"
 summary: "Чекбокс исключения main pairing инжектируется в exclude-фильтр формы Sort&Filter, доступен только при ровно одном выбранном relationship-теге (live)"
 assignee: "qa-agents"
 reporter: "qa-agents"
@@ -65,7 +65,18 @@ DOM-узел (`#exclude_relationship_tags` ≠ `#include_relationship_tags`).
   на include-версию).
 - Селектор `[data-ao3-excl-main-pairing-cb]` пока не в `selectors.py` —
   добавить при кодировании.
-- Маркер: `@pytest.mark.p0 @pytest.mark.live`.
+- Маркер (изменено батчем мелочей D-0081, 2026-07-29): `@pytest.mark.p2
+  @pytest.mark.live` (был `p0`). Приоритет демотирован P0 → P2 по
+  образцу TC-082 (`bugs/AT-BUG-026.md`): подтверждённый qemu-краш
+  (`0xc0000005`) под тяжёлым live-рендером этой страницы повторяемо
+  ронял ВЕСЬ эмулятор в блокирующем `-m p0` прогоне (witness — D1-
+  верификация fix-verifier, `bugs/AT-BUG-026.md`, `test_cases: ["TC-082",
+  "TC-080"]`). В отличие от TC-082 (демотирован в P1), TC-080 демотирован
+  сразу в P2 — решение Lead (см. `docs/HANDOFF.md` «Очередь для полного
+  Lead — РАЗОБРАНА 2026-07-29»). Идемпотентный/доступностный контракт
+  остаётся детерминированно покрыт сиблингом TC-081 (replay, остаётся
+  в `p0`) — риск-покрытие R-02 не теряется; теряется только «каждый
+  коммит обязан пережить LIVE-рендер этой тяжёлой страницы».
 - **GPU-конфиг live-прогона (AT-BUG-021, решение Lead 2026-07-19):**
   live-прогон только под `AO3_EMU_GPU=host` — полная заметка и
   обоснование в TC-078 (тот же live-путь `/tags/Fluff/works`);

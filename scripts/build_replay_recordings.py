@@ -6,8 +6,11 @@
 как AO3 поменяла реальную структуру `li.work.blurb` (сверять с
 `framework/web/selectors.py` и живым деревом, `python scripts/ui_snapshot.py`).
 
-Использование (из корня репозитория, как и любой скрипт обвязки):
-    python scripts/build_replay_recordings.py
+Использование (из корня репозитория): зависимости (`mitmproxy`) живут только в
+venv фреймворка — PATH-питон падает `ModuleNotFoundError: No module named
+'mitmproxy'` (эмпирически проверено батчем мелочей D-0081, 2026-07-29;
+исправлено также в `docs/environment-setup.md`):
+    framework/.venv/Scripts/python.exe scripts/build_replay_recordings.py
 """
 from __future__ import annotations
 
@@ -32,34 +35,43 @@ def build_listing_basic() -> Path:
     flow под ЭТОТ URL server-replay не находит совпадения и уходит в live-сеть
     (см. докстринг `LISTING_FILTERED_URL` в `recording_builder.py`).
 
-    ТРЕТИЙ flow — work-страница ПЕРВОЙ работы листинга (`ALL_WORKS[0]`, `LOVED`,
-    `href="/works/900000001"`) — TC-026 (`bugs/AT-BUG-018.md`, Fixed): long-press
-    по первой ссылке блёрба (`BLURB_TITLE` querySelector, тот же первый элемент)
-    открывает её в фоновой вкладке; без записанного flow под этим URL
-    `server_replay_extra=forward` увёл бы непокрытый TC-026 в живую сеть на
-    несуществующий синтетический id — тест перестал бы быть self-contained
-    replay-сценарием. Переиспользует `render_work_page_html`/`work.url`, тот же
-    приём, что `build_work_with_download`.
+    ТРЕТИЙ..СЕДЬМОЙ flow — work-страница КАЖДОЙ работы листинга (`ALL_WORKS`,
+    5 работ, `href="/works/900000001"`..`"/works/900000005"`) — доработка батча
+    мелочей D-0081 (2026-07-29, латентный класс AT-BUG-029: раньше был записан
+    ТОЛЬКО `ALL_WORKS[0]`, хотя блёрбы листинга ссылаются на ВСЕ 5 work-страниц
+    — клик/long-press по любому блёрбу КРОМЕ первого уходил в live-forward,
+    тот же класс покрытия URL, что AT-BUG-006/`build_works_multi`). Было:
+    один flow только для `ALL_WORKS[0]` (`LOVED`) — нужен TC-026
+    (`bugs/AT-BUG-018.md`, Fixed): long-press по первой ссылке блёрба
+    (`BLURB_TITLE` querySelector, тот же первый элемент) открывает её в фоновой
+    вкладке; без записанного flow под этим URL `server_replay_extra=forward`
+    увёл бы непокрытый TC-026 в живую сеть на несуществующий синтетический id.
+    Переиспользует `render_work_page_html`/`work.url`, тот же приём, что
+    `build_work_with_download`/`build_works_multi`.
 
-    ЧЕТВЁРТЫЙ flow — сам скачиваемый `.html`-файл (`rb.download_url(first_work)`)
-    той же первой работы (`W.LOVED`) — `bugs/AT-BUG-029.md`, нужен TC-115: фоновый
+    ПОСЛЕДНИЙ flow — сам скачиваемый `.html`-файл (`rb.download_url(first_work)`)
+    ПЕРВОЙ работы (`W.LOVED`) — `bugs/AT-BUG-029.md`, нужен TC-115: фоновый
     OkHttp-вызов `DownloadRepository.downloadWork` (GET work-страницы + GET
     `.html`), если он случится из-за edge-vs-level дефекта BUG-014 при правке
     заметки уже-Favorite работы через bottom-sheet листинга, обязан РЕАЛЬНО
     завершиться файлом — иначе `server_replay_extra=forward` уводит незаписанный
     запрос в живую сеть, где синтетического download-пути нет, и негативный Then
     кейса истинен независимо от того, сработал баг или нет. Тот же приём, что
-    `download_flow` в `build_work_with_download`."""
+    `download_flow` в `build_work_with_download`. Скачиваемый `.html` записан
+    только для первой работы (TC-115 завязан именно на неё) — остальные 4
+    работы несут только свою work-страницу, не download-транзакцию."""
     html = rb.render_listing_html(ALL_WORKS)
     base_flow = rb.make_html_get_flow(rb.LISTING_BASIC_URL, html)
     filtered_flow = rb.make_html_get_flow(rb.LISTING_FILTERED_URL, html)
     first_work = ALL_WORKS[0]
-    work_page_flow = rb.make_html_get_flow(first_work.url, rb.render_work_page_html(first_work))
+    work_page_flows = [
+        rb.make_html_get_flow(work.url, rb.render_work_page_html(work)) for work in ALL_WORKS
+    ]
     download_flow = rb.make_html_get_flow(
         rb.download_url(first_work), rb.render_downloaded_work_html(first_work)
     )
     path = settings.RECORDINGS_DIR / rb.LISTING_BASIC_FILENAME
-    rb.write_flows(path, [base_flow, filtered_flow, work_page_flow, download_flow])
+    rb.write_flows(path, [base_flow, filtered_flow, *work_page_flows, download_flow])
     return path
 
 

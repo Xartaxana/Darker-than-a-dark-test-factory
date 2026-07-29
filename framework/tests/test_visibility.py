@@ -6,7 +6,7 @@
 с их блёрбами не может быть записан живым mitmdump-прогоном — только сконструирован
 1:1 по проверенной разметке AO3 (`framework/data/recording_builder.py`,
 `framework/data/recordings/listing_basic.mitm`, генерируется
-`python scripts/build_replay_recordings.py`).
+`framework/.venv/Scripts/python.exe scripts/build_replay_recordings.py`).
 
 TC-013/014/015 доведены до автоматизации (visibility-батч 2026-07-18) — доказательство
 того, что replay-фикстура пригодна (см. критерий готовности инкремента в

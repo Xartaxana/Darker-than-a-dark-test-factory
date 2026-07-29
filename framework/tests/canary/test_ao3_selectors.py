@@ -364,7 +364,7 @@ def test_main_pairing_checkbox_availability_replay(clean_app, replay, driver):
     browser_steps.assert_relationship_checkbox_disabled(driver, "include")
 
 
-@pytest.mark.p0
+@pytest.mark.p2
 @pytest.mark.live
 @allure.id("TC-080")
 @allure.title("Чекбокс исключения main pairing инжектируется в exclude-фильтр формы Sort&Filter, доступен только при ровно одном выбранном relationship-теге (live)")

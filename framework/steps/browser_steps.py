@@ -15,7 +15,7 @@ from selenium.common.exceptions import (
 from framework.config import settings
 from framework.core import contexts
 from framework.core.navigate import navigate
-from framework.core.waits import wait_until
+from framework.core.waits import assert_holds_for, wait_until
 from framework.screens.browser_screen import BrowserScreen
 from framework.screens.navigation import BottomNav
 from framework.web import selectors
@@ -236,10 +236,30 @@ def assert_tab_strip_visible(driver, timeout: int | None = None):
         "TabStrip должен быть виден (tabs>1, не в fullscreen)"
 
 
-@allure.step("Then TabStrip скрыт (fullscreen активен)")
-def assert_tab_strip_hidden(driver, timeout: int = 3):
-    assert not BrowserScreen(driver).is_tab_strip_visible(timeout=timeout), \
-        "TabStrip должен быть скрыт в режиме fullscreen"
+@allure.step("Then TabStrip остаётся скрыт весь бюджет (fullscreen активен)")
+def assert_tab_strip_hidden(driver, timeout: int = 10, poll_interval: float = 0.3):
+    """Доработка (батч мелочей D-0081, 2026-07-29): был одноразовый
+    `is_tab_strip_visible(timeout=3)` — эффект (TabStrip неожиданно
+    появляется), пришедший ПОЗЖЕ единственного 3-секундного опроса, проскакивал
+    незамеченным. Теперь `assert_holds_for` держит негатив ВЕСЬ бюджет
+    (симметрично `assert_tab_strip_visible`/`assert_top_chrome_not_darkened`),
+    падая на ПЕРВОМ появлении полосы в любой момент окна. Каждый опрос —
+    мгновенный снимок (`timeout=0`), без вложенного ожидания — ЭТО стало верно
+    только с attempt 2 (2026-07-29): `framework/core/waits.py` схлопывал
+    falsy `timeout=0` в `DEFAULT_TIMEOUT` (`timeout or DEFAULT_TIMEOUT`), из-за
+    чего каждый снимок реально блокировался на ~20s (критик замерил: шаг
+    подорожал с ~3.2s до 20.02s одним внешним опросом) — исправлено на
+    `timeout if timeout is not None else DEFAULT_TIMEOUT` в самом `waits.py`,
+    не здесь (корень класса — там, не в вызывающем коде)."""
+    screen = BrowserScreen(driver)
+
+    def check() -> bool:
+        return not screen.is_tab_strip_visible(timeout=0)
+
+    assert_holds_for(
+        check, budget_s=timeout, interval_s=poll_interval,
+        msg="TabStrip должен быть скрыт в режиме fullscreen (обнаружен видимым в пределах бюджета)",
+    )
 
 
 @allure.step("Then измерена средняя яркость верхней полосы экрана (пиксельный прокси TabStrip, TC-058)")
@@ -443,22 +463,26 @@ def assert_top_chrome_not_darkened(
     опрашивающий условие ДО достижения порога, тут неприменим (условие «не
     потемнело» уже истинно с первого кадра, опрос завершился бы мгновенно,
     ничего не гарантируя про поведение ПОСЛЕ клика) — вместо этого опрашиваем
-    ВЕСЬ бюджет и assert'им, что порог потемнения НЕ пересекается НИ РАЗУ за
-    всё окно, в котором мог бы случиться анимированный fullscreen-reflow
-    (прежняя редакция читала luma только один раз после короткой паузы 1.5с —
-    пропускала более позднее пересечение порога в оставшиеся ~8.5с бюджета
-    позитивной проверки)."""
+    ВЕСЬ бюджет через `assert_holds_for` (батч мелочей D-0081, 2026-07-29:
+    ручная реализация обобщена в примитив `framework.core.waits.assert_holds_for`)
+    и assert'им, что порог потемнения НЕ пересекается НИ РАЗУ за всё окно, в
+    котором мог бы случиться анимированный fullscreen-reflow (прежняя редакция
+    читала luma только один раз после короткой паузы 1.5с — пропускала более
+    позднее пересечение порога в оставшиеся ~8.5с бюджета позитивной проверки)."""
     threshold = baseline * ratio
-    deadline = time.time() + timeout
-    while True:
+
+    def check() -> bool:
         luma = BrowserScreen(driver).top_chrome_avg_luma()
         assert luma >= threshold, (
             f"верхняя полоса потемнела (luma={luma:.1f} < baseline*{ratio}={threshold:.1f}) "
             f"после тапа — toggleFullscreen, похоже, был вызван, хотя guard должен был его подавить"
         )
-        if time.time() >= deadline:
-            return
-        time.sleep(poll_interval)
+        return True
+
+    assert_holds_for(
+        check, budget_s=timeout, interval_s=poll_interval,
+        msg=f"верхняя полоса потемнела относительно baseline*{ratio}",
+    )
 
 
 # --- TC-126/TC-127/TC-128: reading-UX tap-зоны (`ao3_bridge.js:1149-1164`,

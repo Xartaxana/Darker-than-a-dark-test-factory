@@ -423,6 +423,35 @@ def library_files_rating_seeded():
 
 
 @pytest.fixture()
+def library_mixed_download_status_seeded():
+    """B2 (misc-batch-lead-queue-0729, attempt 2, критик-вход) — device-witness
+    card-scoped дискриминации `has_download_icon`/`has_open_icon`
+    (`_card_icon_locator`, `library_screen.py`): раньше это утверждалось только
+    по факту XPath-скоупа (батч мелочей D-0081) — КАЖДЫЙ существующий
+    потребитель (TC-032/033/034/035/115/065) засеивает работы с ОДИНАКОВЫМ
+    download-статусом (все скачаны или ни одной), так что дискриминация между
+    РАЗНЫМИ статусами на одной вкладке ни разу не проверялась на живом дереве.
+
+    ДВЕ работы, ОДИН рейтинг (PENDING — одна вкладка): `W.PENDING` засеяна
+    БЕЗ downloadPath (`seed_library`, обычная карточка — download-иконка),
+    `W.DISLIKED` засеяна С downloadPath (`seed_downloaded_work`,
+    open-иконка) — рейтинг переопределён (не «естественный» DISLIKE), это
+    легитимно: `seed_downloaded_work` принимает рейтинг параметром независимо
+    от идентичности `Work` (тот же приём, что TC-064 в этом файле — синтетические
+    `Work` с рейтингом, не совпадающим с именем).
+
+    Порядок вызовов ОБЯЗАТЕЛЕН: `seed_library` ПЕРВЫМ кладёт baseline-строку
+    `W.PENDING` (downloadPath=null); `seed_downloaded_work` ВТОРЫМ пуллит УЖЕ
+    записанный baseline (см. `seed_db._pull_baseline`) и добавляет свою строку
+    `W.DISLIKED` рядом, не затирая первую (`INSERT OR REPLACE` бьёт по разным
+    `ao3Id`) — обратный порядок оставил бы только одну строку."""
+    app_steps.clean_state()
+    app_steps.seed_library([(W.PENDING, "PENDING")])
+    app_steps.seed_downloaded_work(W.DISLIKED, "PENDING", _DOWNLOADED_WORK_FIXTURE)
+    yield W.PENDING, W.DISLIKED
+
+
+@pytest.fixture()
 def comment_only_work():
     """Одна работа засеяна как comment-only (rating=NULL, непустой comment) —
     без обращения к AO3. Сидинг делается до создания сессии Appium (см.
@@ -637,7 +666,7 @@ def replay(request):
     flows_file = settings.RECORDINGS_DIR / flow_name
     assert flows_file.exists(), (
         f"replay-запись не найдена: {flows_file} "
-        f"(сгенерировать: python scripts/build_replay_recordings.py)"
+        f"(сгенерировать: framework/.venv/Scripts/python.exe scripts/build_replay_recordings.py)"
     )
     proxy_reachable_timeout = _proxy_reachable_timeout()
     try:

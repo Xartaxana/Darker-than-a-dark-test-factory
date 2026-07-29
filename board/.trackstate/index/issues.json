@@ -718,7 +718,7 @@
     "summary": "Чекбокс исключения main pairing инжектируется в exclude-фильтр формы Sort&Filter, доступен только при ровно одном выбранном relationship-теге (live)",
     "issueType": "test-case",
     "status": "tc-automated",
-    "priority": "p0",
+    "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
@@ -3762,6 +3762,8 @@
     "assignee": "qa-agents",
     "labels": [
       "bug",
+      "test_case:TC-114",
+      "test_case:TC-115",
       "sev:major"
     ],
     "updated": "2026-07-28T12:00:00Z",

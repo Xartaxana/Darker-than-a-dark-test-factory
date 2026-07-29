@@ -7,7 +7,7 @@ priority: "p1"
 summary: "Авто-скачивание Favorite срабатывает ретроактивно при правке тега ранее отмеченной работы"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["bug", "sev:major"]
+labels: ["bug", "test_case:TC-114", "test_case:TC-115", "sev:major"]
 components: []
 fixVersions: []
 watchers: []

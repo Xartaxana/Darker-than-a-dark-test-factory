@@ -15,8 +15,8 @@ scheme+method+path+query+host+port (без заголовков) — поэто�
 навигирует WebView (см. `LISTING_BASIC_URL`).
 
 Когда AO3 меняет разметку — чинить и здесь, и в `selectors.py`, затем
-перегенерировать записи ЭТИМ модулем (`python scripts/build_replay_recordings.py`),
-а не редактировать бинарный `.mitm` руками.
+перегенерировать записи ЭТИМ модулем (`framework/.venv/Scripts/python.exe
+scripts/build_replay_recordings.py`), а не редактировать бинарный `.mitm` руками.
 """
 from __future__ import annotations
 
