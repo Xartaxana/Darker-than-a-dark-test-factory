@@ -307,16 +307,17 @@
     "epicPath": null,
     "summary": "Тап по верхней трети work-страницы скроллит вверх (tap-to-scroll ON)",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:browser",
-      "risk:R-11"
+      "risk:R-11",
+      "automation:active"
     ],
-    "updated": "2026-07-29T10:27:26Z",
-    "resolution": null,
+    "updated": "2026-07-29T16:21:32Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -329,16 +330,17 @@
     "epicPath": null,
     "summary": "Тап по нижней трети work-страницы скроллит вниз (tap-to-scroll ON)",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:browser",
-      "risk:R-11"
+      "risk:R-11",
+      "automation:active"
     ],
-    "updated": "2026-07-29T10:27:26Z",
-    "resolution": null,
+    "updated": "2026-07-29T16:29:56Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -351,16 +353,17 @@
     "epicPath": null,
     "summary": "Тап по средней трети work-страницы переключает fullscreen (вход и выход)",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:browser",
-      "risk:R-11"
+      "risk:R-11",
+      "automation:active"
     ],
-    "updated": "2026-07-29T10:27:26Z",
-    "resolution": null,
+    "updated": "2026-07-29T16:37:46Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -817,7 +820,7 @@
       "area:canary",
       "risk:R-02"
     ],
-    "updated": "2026-07-28T22:03:22Z",
+    "updated": "2026-07-29T17:08:36Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -877,7 +880,7 @@
     "epicPath": null,
     "summary": "Тап по whitelisted-ссылке БЕЗ собственного JS-обработчика в теле work-страницы не запускает зональное действие (whitelist по тегу, независимо от наличия обработчика, replay)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
@@ -885,7 +888,7 @@
       "area:canary",
       "risk:R-02"
     ],
-    "updated": "2026-07-28T22:04:07Z",
+    "updated": "2026-07-29T17:20:31Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1175,7 +1178,7 @@
     "epicPath": null,
     "summary": "Тумблер Auto-download выключен — простановка Favorite не скачивает файл (off-путь)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1183,7 +1186,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-07-28T22:03:41Z",
+    "updated": "2026-07-29T18:55:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1197,7 +1200,7 @@
     "epicPath": null,
     "summary": "Включение тумблера Auto-download не скачивает задним числом ранее отмеченные Favorite-работы",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1205,7 +1208,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-07-28T22:03:45Z",
+    "updated": "2026-07-29T17:55:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1219,7 +1222,7 @@
     "epicPath": null,
     "summary": "Правка личного тега уже-Favorite работы через панель работы не скачивает файл повторно (edge vs level, :756)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1227,7 +1230,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-07-28T22:03:50Z",
+    "updated": "2026-07-29T18:40:00Z",
     "resolution": null,
     "children": [],
     "archived": false

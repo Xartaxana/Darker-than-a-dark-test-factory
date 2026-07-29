@@ -443,6 +443,18 @@ def dispatch_tap_zone_div_tap(driver) -> dict:
     return rect
 
 
+# TC-121: whitelisted <a> БЕЗ собственного onclick (реальная download-ссылка,
+# selectors.DOWNLOAD_HTML_LINK) — четвёртая ячейка 2×2-матрицы (whitelist=true,
+# обработчик=false), замыкающая её вместе с TC-119 (true,true) и TC-120
+# (false,true). Позиция тапа НЕ завязана на среднюю треть (guard's closest()
+# отсекает узел ДО вычисления третьей) — geometry-band ассерт здесь неуместен
+# (в отличие от `dispatch_tap_zone_button_tap`/`dispatch_tap_zone_div_tap`),
+# координата берётся из естественного положения ссылки в DOM.
+@allure.step("When синтетически тапнута download-ссылка HTML в теле work-страницы (li.download a[title=\"HTML\"], TC-121, whitelisted тег БЕЗ собственного onclick)")
+def dispatch_tap_zone_download_link_tap(driver) -> dict:
+    return dispatch_synthetic_tap(driver, selectors.DOWNLOAD_HTML_LINK)
+
+
 @allure.step("Then фикстурный <button> получил data-tapped=\"1\"")
 def assert_tap_zone_button_tapped(driver) -> None:
     assert_tap_marker_tapped(driver, selectors.TAP_ZONE_BUTTON)
@@ -451,6 +463,53 @@ def assert_tap_zone_button_tapped(driver) -> None:
 @allure.step("Then фикстурный <div> получил data-tapped=\"1\"")
 def assert_tap_zone_div_tapped(driver) -> None:
     assert_tap_marker_tapped(driver, selectors.TAP_ZONE_DIV)
+
+
+# TC-118: числовая проба ПРЕДПОСЫЛКИ guard'а тап-зон на живой work-странице
+# (bridge-tap-zone-guard, docs/01 §9 «Дополнение области», доработка attempt 2
+# B1/B2). ЕДИНЫЙ предикат, симметричный `ao3_bridge.js:1155` (не два изолированных
+# подсчёта тега/role) — селектор whitelist переиспользован из
+# `selectors.TAP_ZONE_GUARD_WHITELIST`, не продублирован строкой здесь.
+@allure.step("Then подсчитаны узлы тела work-страницы вне whitelist guard'а тап-зон с собственным атрибутным [onclick] (симметрично ao3_bridge.js:1155)")
+def assert_no_non_whitelisted_onclick_candidates(driver) -> int:
+    """TC-118: `Array.from(document.body.querySelectorAll('[onclick]')).filter(n =>
+    !n.closest(whitelist))` — единственная граница валидности: видит ТОЛЬКО
+    атрибутные `onclick`, не `addEventListener`/jQuery-обработчики (см. TC-118
+    Then/B3, решено владельцем 2026-07-28 — критерий сохранён с сужением до
+    этого класса). Возвращает N; при N > 0 узлы (первые 200 символов
+    `outerHTML` каждого) вложены в Allure как находка ДЛЯ test-strategist
+    (пере-оценка §5) — этот кейс баг по числу не заводит (non-goal, см. Then)."""
+    with contexts.in_webview(driver):
+        wait_until(
+            driver,
+            lambda d: d.execute_script("return document.readyState;") == "complete",
+            timeout=settings.WEBVIEW_LOAD_TIMEOUT,
+            message="work-страница не завершила загрузку (readyState != complete) — "
+                    "подсчёт кандидатов вне whitelist guard'а не выполнить надёжно",
+        )
+        result = driver.execute_script(
+            "return (function(whitelist) {"
+            "  var nodes = Array.from(document.body.querySelectorAll('[onclick]'))"
+            "    .filter(function(n) { return !n.closest(whitelist); });"
+            "  return {count: nodes.length, "
+            "          details: nodes.map(function(n) { return n.outerHTML.slice(0, 200); })};"
+            "})(arguments[0]);",
+            selectors.TAP_ZONE_GUARD_WHITELIST,
+        )
+    count = int(result["count"])
+    allure.attach(
+        f"count={count} details={result['details']!r}",
+        name="tc-118-non-whitelisted-onclick-candidates",
+        attachment_type=allure.attachment_type.TEXT,
+    )
+    assert count == 0, (
+        f"найдено {count} узл(ов) вне whitelist guard'а тап-зон с собственным "
+        f"атрибутным onclick на живой work-странице ({result['details']!r}) — "
+        f"предпосылка риска R-02 (guard-пробой, ao3_bridge.js:1155) предъявлена; "
+        f"баг по этому числу этим кейсом НЕ заводится (non-goal) — находка "
+        f"передаётся test-strategist'у на пере-оценку §5 docs/01-test-strategy.md"
+    )
+    return count
 
 
 @allure.step("Then верхняя полоса экрана НЕ потемнела относительно baseline (toggleFullscreen НЕ вызван)")

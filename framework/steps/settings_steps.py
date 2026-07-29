@@ -42,6 +42,20 @@ def enable_auto_download(driver):
     SettingsScreen(driver).set_auto_download(True)
 
 
+@allure.step("Then в Settings тумблер «Auto-download favorite works» показывает {expected}")
+def assert_auto_download_enabled(driver, expected: bool = True):
+    """TC-113 (attempt 2, критик-вход): `enable_auto_download`/`set_auto_download`
+    тапает тумблер УСЛОВНО (только если текущее состояние не совпадает с желаемым,
+    см. докстринг `SettingsScreen.set_auto_download`) и сам ничего не утверждает —
+    без явного assert'а непроизошедший переход OFF->ON тоже дал бы зелёный тест,
+    если остальные Then кейса от состояния тумблера не зависят. Читает тот же
+    `is_auto_download_checked`, что и `set_auto_download`."""
+    actual = SettingsScreen(driver).is_auto_download_checked()
+    assert actual == expected, (
+        f"тумблер «Auto-download favorite works» показывает {actual}, ожидали {expected}"
+    )
+
+
 @allure.step("Given в Settings включена опция «Tap to scroll (work pages)»")
 def enable_tap_to_scroll(driver):
     """AT-BUG-030/TC-119/120/122: `BrowserScreen.kt` реактивно (`LaunchedEffect

@@ -66,18 +66,18 @@
   },
   "TC-126": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-127": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-128": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-130": {
     "itype": "test-case",

@@ -483,3 +483,44 @@ def test_save_filter_button_idempotent_replay(clean_app, replay, driver):
     # тот же контракт идемпотентности, что TC-082, детерминированно на записанной
     # разметке (уже подтверждён вручную в AT-BUG-006, этот кейс формализует находку)
     browser_steps.assert_save_filter_button_present_once(driver)
+
+
+# --- bridge-tap-zone-guard (R-02, docs/01 §9 «Дополнение области» 2026-07-28):
+# TC-118 — числовая проба ПРЕДПОСЫЛКИ самого guard'а тап-зон (`ao3_bridge.js
+# :1152-1166`) на живой work-странице archiveofourown.org. Дёшево, без драйва
+# тапов: единый предикат, симметричный `ao3_bridge.js:1155`
+# (`selectors.TAP_ZONE_GUARD_WHITELIST` — не переизобретён здесь). Сиблинг —
+# TC-119/TC-120/TC-122 (`framework/tests/canary/test_tap_zone_guard.py`,
+# поведенческий контроль самого guard'а на known-фикстурных узлах, replay);
+# эта проба и они интерпретируются ВМЕСТЕ (проба без поведенческого контроля
+# неинформативна — см. TC-118 «Заметки для автоматизации»). ---
+
+@pytest.mark.p0
+@pytest.mark.live
+@allure.id("TC-118")
+@allure.title("Числовая проба предпосылки guard'а тап-зон: узлы вне whitelist с собственным onclick в теле живой work-страницы (live)")
+def test_no_non_whitelisted_onclick_candidates_on_live_work_page(driver):
+    # Given приложение запущено live, открыта произвольная реальная
+    # work-страница archiveofourown.org (`pathname ^/works/\d`) — единственное
+    # ФАКТИЧЕСКИ значимое предусловие guard'а (`ao3_bridge.js:1154`, сам guard
+    # проверяет только его). Общие предусловия тап-зон области (нижняя панель
+    # свёрнута, >=2 вкладки, высота документа >= 3×innerHeight) намеренно НЕ
+    # воспроизводятся здесь: Then этого кейса — статический DOM-подсчёт, тапов
+    # не делает и не проверяет скролл/fullscreen (TC-118 «Заметки для
+    # автоматизации», явная граница, не убрана молча).
+    app_steps.wait_ui_ready(driver)
+    browser_steps.open_live_listing(driver, browser_steps.LIVE_LISTING_URL)
+    work_id = browser_steps.assert_blurb_selector_matches_headings(driver, min_count=1)[0]
+    rating_steps.open_work_page(driver, work_id)
+
+    # When в JS-контексте страницы выполняется ЕДИНЫЙ подсчёт, симметричный
+    # предикату самого guard'а (`ao3_bridge.js:1155`): `[onclick]`-узлы
+    # `document.body`, отфильтрованные `!node.closest(whitelist)` — closest
+    # ищет ПРЕДКА, не сам узел; whitelist по role — ИМЕННО `[role="button"]`
+
+    # Then N == 0 закрывает риск R-02 ФАКТОМ для класса атрибутных onclick-
+    # обработчиков (текущая гипотеза, верифицируется эмпирически, не
+    # принимается как данность); N > 0 — предпосылка предъявлена, узлы
+    # прикладываются к Allure как находка ДЛЯ test-strategist (пере-оценка §5),
+    # баг по самому числу этим кейсом НЕ заводится (non-goal)
+    browser_steps.assert_no_non_whitelisted_onclick_candidates(driver)

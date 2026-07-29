@@ -32,6 +32,22 @@ def rate_current_work(driver, rating: str):
     overlay.choose(rating)
 
 
+@allure.step("When на странице работы в панели рейтинга раскрыт раздел тегов и добавлен личный тег «{tag}»")
+def add_tag_via_panel(driver, tag: str):
+    """TC-114 (edge-vs-level, зеркало TC-115 через встроенную панель work-page
+    вместо bottom-sheet листинга): панель `RatingMenu` — ОБЩИЙ composable с
+    bottom-sheet листинга (`add_tag_via_listing_overlay`), но, как и в
+    `rate_current_work`, спрятана за `AnimatedVisibility` нижней навигации на
+    вкладке Browse — раскрываем её тем же механизмом (`BottomNav.ensure_visible()`)
+    перед использованием `RatingOverlay`."""
+    BottomNav(driver).ensure_visible()
+    overlay = RatingOverlay(driver)
+    assert overlay.is_visible(), "меню рейтинга не появилось на странице работы"
+    overlay.toggle_tags()
+    overlay.enter_tag_input(tag)
+    overlay.confirm_tag_input()
+
+
 @allure.step("When в открывшемся с листинга bottom-sheet выбран рейтинг {rating}")
 def rate_via_listing_overlay(driver, rating: str):
     """Нативный `RatingOverlay` (bottom-sheet, ui/components/RatingOverlay.kt),

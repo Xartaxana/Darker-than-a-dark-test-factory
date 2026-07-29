@@ -39,6 +39,17 @@ TC-115 (правка заметки уже-Favorite работы через bott
 реальный неожиданный файл) до фикса самого бага в app-under-test, это отдельная
 работа вне мандата этого test_debt-долга.
 
+TC-114 (правка личного тега уже-Favorite работы через встроенную ПАНЕЛЬ work-page
+не должна запускать повторное скачивание — тот же edge-vs-level класс BUG-014, но
+ПЕРВОЕ место вызова предиката, `BrowserViewModel.kt:756-758` внутри `savePanelRating`,
+зеркало TC-115 через ВХОД С ПАНЕЛИ вместо листинга) использует
+`rb.WORK_WITH_DOWNLOAD_FILENAME` (`work_with_download.mitm`, та же запись, что
+TC-032/033) — несёт ОБЕ HTTP-транзакции (work-страница + сам `.html` для `W.LOVED`),
+нужные по той же причине, что и у TC-115: без реально завершающегося (не молча
+проваливающегося в live-сеть) скачивания негативный Then был бы ложно-зелёным
+независимо от наличия бага. BUG-014 сейчас `status: Open` — тест ожидаемо КРАСНЫЙ
+до фикса самого бага в app-under-test.
+
 TC-039 (Restore from backup сворачивает scanForOrphanedDownloads в один диалог)
 переиспользует тот же уникальный-subfolder приём (`_orphan_subfolder`/
 `_orphan_filename` — уже общие, не только для TC-038) и SAF-инфраструктуру
@@ -217,6 +228,52 @@ def test_manual_download_from_library_adds_local_file(replay, loved_work_seeded,
     library_steps.assert_work_in_files_tab(driver, work.title)
 
 
+# --- TC-112: тумблер Auto-download выключен — простановка Favorite НЕ скачивает
+# файл (off-инвариант, зеркало TC-032). `savePanelRating` (BrowserViewModel.kt:683-764)
+# вызывает `downloadWork()` только когда `rating == Rating.SAVE && autoDownloadSaved`
+# (:756-758) истинно; `autoDownloadSaved=false` — дефолт после `clean_state`, тумблер
+# явно не трогаем. `rb.WORK_WITH_DOWNLOAD_FILENAME` (та же запись, что TC-032/033/114)
+# нужна ИМЕННО потому, что это off-путь (attempt 2, критик-вход, 2026-07-29): с живой
+# навигацией гипотетическое нелегитимное скачивание (если бы предикат ошибочно
+# сработал) ушло бы на archiveofourown.org по синтетическому `ao3_id` W.LOVED
+# (900000001), который отдаёт живой HTTP 404 — `DownloadRepository` проглатывает
+# `IOException`, и все три Then (download-иконка/не-в-FILES/`download_oracle`)
+# остались бы истинными НЕЗАВИСИМО от того, сработал баг или нет (ложно-зелёный тест,
+# не способный упасть на собственной регрессии). С этой replay-записью гипотетическое
+# срабатывание предиката РЕАЛЬНО завершилось бы файлом — негативный Then содержателен.
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-112")
+@allure.title("Auto-download выключен — простановка Favorite не скачивает файл")
+@pytest.mark.parametrize("replay", [rb.WORK_WITH_DOWNLOAD_FILENAME], indirect=True)
+@pytest.mark.parametrize("placeholder_seeded_work", [W.LOVED], indirect=True)
+def test_favorite_rating_does_not_download_when_auto_download_off(replay, placeholder_seeded_work, driver):
+    # Given тумблер «Auto-download favorite works» выключен (дефолт после
+    # clean_state — не трогаем Settings вовсе), работа W засеяна как placeholder
+    # без рейтинга (полные title/author/fandom/wordCount — та же ветка
+    # "обновить существующую строку", что и TC-007), страница работы открыта через
+    # replay-прокси (`work_with_download.mitm`, см. докстринг блока выше)
+    work = placeholder_seeded_work
+    app_steps.wait_app_ready(driver)
+
+    # When пользователь через панель RatingMenu нажимает «Favorite» (SAVE)
+    rating_steps.open_work_page(driver, work.ao3_id)
+    rating_steps.rate_current_work(driver, "SAVE")
+
+    # Then рейтинг сохраняется — работа W появляется во вкладке FAVORITE
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_work_in_tab(driver, "SAVE", work.title)
+
+    # And карточка показывает download-иконку (НЕ open-иконку) — файл не скачан
+    library_steps.assert_download_icon_shown(driver, work.title)
+
+    # And работа НЕ появляется во вкладке FILES; отсутствие незапрошенного файла в
+    # download-директории дополнительно и независимо ловит autouse-оракул
+    # `download_oracle` (conftest.py) — тест не несёт @pytest.mark.produces_download
+    library_steps.assert_work_not_in_files_tab(driver, work.title)
+
+
 # --- TC-115: правка заметки уже-Favorite работы через bottom-sheet листинга не
 # запускает повторное скачивание (edge-vs-level, BrowserViewModel.kt:862, зеркало
 # TC-114 через вход с листинга вместо панели work-page). `rb.LISTING_BASIC_FILENAME`
@@ -273,6 +330,116 @@ def test_edit_note_on_already_saved_work_via_listing_overlay_does_not_redownload
     app_steps.open_tab(driver, "Library")
     library_steps.assert_work_in_tab(driver, "SAVE", work.title)
     library_steps.assert_download_icon_shown(driver, work.title)
+
+
+# --- TC-114: правка личного тега уже-Favorite работы через встроенную ПАНЕЛЬ
+# work-page не запускает повторное скачивание (edge-vs-level, BrowserViewModel.kt:756,
+# зеркало TC-115 через вход с панели вместо листинга). `rb.WORK_WITH_DOWNLOAD_FILENAME`
+# несёт обе HTTP-транзакции для `W.LOVED` (work-страница + сам `.html`), та же
+# запись, что использует TC-032/033.
+# НЕТ @pytest.mark.produces_download: `download_oracle` (autouse, conftest.py)
+# фиксирует ЛЮБОЙ неожиданный файл в download-директории как провал — если BUG-014
+# (сейчас `status: Open`) сработает, фоновый `DownloadRepository.downloadWork`
+# реально скачает файл через эту же replay-запись, и тест закономерно КРАСНЫЙ до
+# фикса бага в app-under-test.
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-114")
+@allure.title("Правка личного тега уже-Favorite работы через панель работы не скачивает файл повторно")
+@pytest.mark.parametrize("replay", [rb.WORK_WITH_DOWNLOAD_FILENAME], indirect=True)
+def test_edit_tag_on_already_saved_work_via_panel_does_not_redownload(replay, loved_work_seeded, driver):
+    # Given работа W (LOVED) уже имеет рейтинг Favorite (SAVE), файл ещё не скачан
+    # (сидинг напрямую в Room — не через UI — downloadPath=null), тумблер
+    # Auto-download включён в Settings; та же гонка, что закрыта в TC-032/TC-115 (см.
+    # докстринг модуля): wait_app_ready (не wait_ui_ready) ПЕРЕД навигацией по
+    # Settings. Карточка на вкладке Library ещё показывает download-иконку — baseline.
+    work = loved_work_seeded
+    app_steps.wait_app_ready(driver)
+    saf_steps.open_settings_scrolled_to(driver, "Auto-download favorite works")
+    settings_steps.enable_auto_download(driver)
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_work_in_tab(driver, "SAVE", work.title)
+    library_steps.assert_download_icon_shown(driver, work.title)
+
+    # And открыта страница работы W, встроенная панель RatingMenu раскрыта и уже
+    # показывает Favorite выбранным (рейтинг прочитан из Room при загрузке страницы,
+    # не проставлен этим UI-визитом)
+    app_steps.open_tab(driver, "Browse")
+    rating_steps.open_work_page(driver, work.ao3_id)
+
+    # When пользователь раскрывает раздел тегов панели и добавляет личный тег
+    # «re-save-probe» (правка метаданных, рейтинг НЕ меняется — остаётся Favorite)
+    rating_steps.add_tag_via_panel(driver, "re-save-probe")
+
+    # Then тег «re-save-probe» сохраняется среди выбранных (наблюдаемая суть операции)
+    rating_steps.assert_chip_visible(driver, "re-save-probe")
+
+    # And повторное скачивание НЕ запускается — карточка работы W по-прежнему
+    # показывает download-иконку (не open-иконку) в Library, downloadPath остаётся
+    # пустым. Без @pytest.mark.produces_download: если BUG-014 сработает, оракул
+    # (download_oracle) поймает реально скачанный файл на teardown'е фикстуры и
+    # провалит тест — это и есть содержательная защита негативного Then.
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_work_in_tab(driver, "SAVE", work.title)
+    library_steps.assert_download_icon_shown(driver, work.title)
+
+
+# --- TC-113: включение тумблера Auto-download НЕ скачивает задним числом уже
+# отмеченные Favorite-работы (ретроактивность). `setAutoDownloadSaved`
+# (BrowserViewModel.kt:522) синхронно и единолично присваивает `autoDownloadSaved`,
+# никакого пересканирования существующих SAVE-записей код не делает — регрессионный
+# замок инварианта, не ловля известного дефекта (владелец уже подтвердил это
+# поведение как корректное при репро BUG-014, см. TC-113.md).
+# `rb.WORK_WITH_DOWNLOAD_FILENAME` (та же запись, что TC-032/033/114) нужна по
+# тому же классу причин, что и TC-112/TC-114/TC-115 (attempt 2, критик-вход,
+# 2026-07-29): сценарий сам по себе не делает сетевого вызова — но если бы
+# включение тумблера ошибочно триггернуло пересканирование/downloadWork,
+# гипотетическое нелегитимное скачивание с live-навигацией ушло бы на
+# archiveofourown.org по синтетическому `ao3_id` `W.LOVED` (900000001), который
+# отдаёт живой HTTP 404 — `DownloadRepository` проглатывает `IOException`, и все
+# Then теста остались бы истинными НЕЗАВИСИМО от того, сработал баг или нет
+# (ложно-зелёный). С этой replay-записью гипотетическое срабатывание реально
+# завершилось бы файлом — негативный Then содержателен.
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-113")
+@allure.title("Включение тумблера Auto-download не скачивает задним числом ранее отмеченные Favorite-работы")
+@pytest.mark.parametrize("replay", [rb.WORK_WITH_DOWNLOAD_FILENAME], indirect=True)
+def test_enabling_auto_download_does_not_retroactively_download_favorites(replay, loved_work_seeded, driver):
+    # Given работа W (LOVED) уже имеет рейтинг Favorite (SAVE) и не скачана
+    # (сидинг напрямую в Room — не через UI — downloadPath=null, гарантировано
+    # фикстурой); тумблер «Auto-download favorite works» выключен (дефолт после
+    # clean_state). wait_app_ready (не wait_ui_ready) ПЕРЕД навигацией по Settings
+    # — та же гонка, что закрыта в TC-032/TC-115 (см. докстринги): Settings
+    # открывается ДО первого захода в Library, иначе `open_settings_scrolled_to`
+    # (внутри — `wait_ui_ready`, ищет `android.webkit.WebView` в дереве) таймаутит
+    # на нативном экране Library, где WebView-узла нет.
+    work = loved_work_seeded
+    app_steps.wait_app_ready(driver)
+
+    # When пользователь открывает Settings и включает тумблер «Auto-download
+    # saved works»
+    saf_steps.open_settings_scrolled_to(driver, "Auto-download favorite works")
+    settings_steps.enable_auto_download(driver)
+
+    # And тумблер реально подтверждён включённым (attempt 2, критик-вход) — без
+    # этого явного assert'а непроизошедший переход OFF->ON тоже дал бы зелёный
+    # тест, потому что остальные Then кейса от состояния тумблера не зависят
+    settings_steps.assert_auto_download_enabled(driver, True)
+
+    # Then работа W остаётся БЕЗ файла — карточка на вкладке FAVORITE по-прежнему
+    # показывает download-иконку (не open-иконку), downloadPath не выставлен
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_work_in_tab(driver, "SAVE", work.title)
+    library_steps.assert_download_icon_shown(driver, work.title)
+
+    # And работа W не появляется во вкладке FILES; отсутствие незапрошенного файла
+    # в download-директории дополнительно и независимо ловит autouse-оракул
+    # `download_oracle` (conftest.py) — тест не несёт @pytest.mark.produces_download
+    library_steps.assert_work_not_in_files_tab(driver, work.title)
 
 
 # --- TC-037: ручной Scan for downloads показывает диалог даже при 0 файлов ---

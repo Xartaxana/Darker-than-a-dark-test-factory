@@ -2,7 +2,7 @@
 key: "TC-121"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p0"
 summary: "Тап по whitelisted-ссылке БЕЗ собственного JS-обработчика в теле work-страницы не запускает зональное действие (whitelist по тегу, независимо от наличия обработчика, replay)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-28T22:04:07Z"
-updated: "2026-07-28T22:04:07Z"
+created: "2026-07-29T17:20:31Z"
+updated: "2026-07-29T17:20:31Z"
 archived: false
 resolution: null
 ---

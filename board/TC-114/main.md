@@ -2,7 +2,7 @@
 key: "TC-114"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Правка личного тега уже-Favorite работы через панель работы не скачивает файл повторно (edge vs level, :756)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-28T22:03:50Z"
-updated: "2026-07-28T22:03:50Z"
+created: "2026-07-29T18:40:00Z"
+updated: "2026-07-29T18:40:00Z"
 archived: false
 resolution: null
 ---
@@ -99,6 +99,25 @@ Library по-прежнему показывает download-иконку (не o
   AO3 kudos-кнопку при LIKE/SAVE (`BrowserViewModel.kt:859`/`1054`) — это отдельный
   открытый дефект BUG-015 (level-предикат на kudos), явно исключён из скоупа этой
   области per NON-GOALS диспатча; не путать assert'ы.
+- **Тест написан и подключён** (2026-07-29, test-automator):
+  `framework/tests/test_downloads.py::
+  test_edit_tag_on_already_saved_work_via_panel_does_not_redownload`
+  (`rating_steps.add_tag_via_panel`, новый шаг — обёртка по образцу
+  `rate_current_work`, `BottomNav(driver).ensure_visible()` перед раскрытием
+  раздела тегов панели). `automated_by` заполнен; ждёт штатного F1-ревью.
+  **Регрессионный замок: ожидаемо КРАСНЫЙ 3/3 прогона подряд**, одна и та же
+  сигнатура каждый раз — `download_oracle` (autouse, conftest.py) фиксирует
+  незапрошенный файл `.../ao3_downloads/ao3_A Loved Test Work_900000001.html`
+  (UserWarning «класс BUG-014»), последний Then (`library_steps.
+  assert_download_icon_shown`) падает на той же строке, потому что карточка
+  переключилась на open-иконку — файл реально скачался. Не setup/инфраструктурная
+  ошибка: весь Given/When (Settings-тумблер, панель, добавление тега, baseline
+  download-иконки) проходит каждый раз одинаково. Команда прогона:
+  `powershell -NoProfile -ExecutionPolicy Bypass -Command ". D:\AO3_tests\scripts\tasks.ps1;
+  Invoke-Pytest tests/test_downloads.py -k
+  test_edit_tag_on_already_saved_work_via_panel_does_not_redownload -v"` →
+  `1 failed, 11 deselected` / `PYTEST_EXIT=1` все три раза. Снимется сам при
+  фиксе `bugs/BUG-014.md` в `app-under-test/`, без правки теста.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»

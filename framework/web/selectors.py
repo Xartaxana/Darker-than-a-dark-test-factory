@@ -111,3 +111,21 @@ PROBE_LINK = "#probe-link"
 TAP_ZONE_BUTTON = '[data-tap-marker="button"]'
 TAP_ZONE_BUTTON_CHILD = '[data-tap-marker-child="span"]'
 TAP_ZONE_DIV = '[data-tap-marker="div"]'
+
+# TC-121: whitelisted `<a>` БЕЗ собственного onclick — реальная download-ссылка
+# work-страницы (`recording_builder._download_list_html`, TC-032/033), НЕ
+# фикстурный маркер AT-BUG-030 (узел уже существует, ничего заводить не нужно).
+# `title="HTML"` уникально среди 4 расширений (PDF/HTML/MOBI/EPUB) в
+# `li.download > ul.download-list`.
+DOWNLOAD_HTML_LINK = 'li.download a[title="HTML"]'
+
+# TC-118: whitelist самого guard'а тап-зон (`ao3_bridge.js:1155`,
+# `e.target.closest('a, button, input, select, textarea, label, summary,
+# [role="button"]')`) — СИММЕТРИЧНО скопирован сюда для JS-предиката числовой
+# пробы предпосылки (bridge-tap-zone-guard, docs/01 §9). Не переизобретать: guard
+# ищет ПРЕДКА через `closest`, не сам узел, и whitelist по role — ИМЕННО
+# `[role="button"]`, не любой `[role]` (доработка attempt 2 B1/B2 — предыдущая
+# версия пробы считала любой `[role]` кандидатом независимо от closest-предка и
+# наличия обработчика, ложноположительно засчитывая `role="main"/"navigation"`
+# реальной разметки AO3).
+TAP_ZONE_GUARD_WHITELIST = 'a, button, input, select, textarea, label, summary, [role="button"]'

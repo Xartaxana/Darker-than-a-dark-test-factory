@@ -2,7 +2,7 @@
 key: "TC-113"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Включение тумблера Auto-download не скачивает задним числом ранее отмеченные Favorite-работы"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-28T22:03:45Z"
-updated: "2026-07-28T22:03:45Z"
+created: "2026-07-29T17:55:00Z"
+updated: "2026-07-29T17:55:00Z"
 archived: false
 resolution: null
 ---
@@ -61,13 +61,39 @@ works»
   подтвердил это поведение как корректное при репро BUG-014 (см. «Actual»: «При
   включении тумблера: существующие Favorite-работы НЕ скачиваются (корректно)»).
 - Шаги: `app_steps.seed_library` (уже существует) → `settings_steps.
-  enable_auto_download` (уже существует, используется в TC-032) → переход в Library
-  → `library_steps.assert_work_in_tab("SAVE", ...)`/`assert_download_icon_shown`/
+  enable_auto_download` (уже существует, используется в TC-032) →
+  `settings_steps.assert_auto_download_enabled(driver, True)` (новый шаг,
+  добавлен attempt 2 — см. ниже) → переход в Library →
+  `library_steps.assert_work_in_tab("SAVE", ...)`/`assert_download_icon_shown`/
   `assert_work_not_in_files_tab` (все уже существуют).
-- Replay не требуется — тумблер включается ПОСЛЕ сидинга, никакого сетевого вызова в
-  сценарии нет (`downloadWork` не вызывается вообще: само включение тумблера не
-  триггерит ни одну из трёх точек предиката — нужен явный `applyRating`/
-  `savePanelRating`/`onRateWorkRequested`, которого в сценарии нет).
+- **Replay ОБЯЗАТЕЛЕН, вопреки первому впечатлению «тумблер включается ПОСЛЕ
+  сидинга — сети нет»** (attempt 2 доработки, критик-вход 2026-07-29, тот же
+  класс, что заметка TC-112/TC-114/TC-115): сценарий сам по себе действительно не
+  делает сетевого вызова (`downloadWork` не вызывается: само включение тумблера
+  не триггерит ни одну из трёх точек предиката — нужен явный `applyRating`/
+  `savePanelRating`/`onRateWorkRequested`, которого в сценарии нет) — но негативный
+  Then проверяет ОТСУТСТВИЕ эффекта ГИПОТЕТИЧЕСКОГО бага (ошибочное
+  пересканирование/скачивание при `setAutoDownloadSaved`), а не отсутствие
+  штатного поведения. Если бы такой баг существовал, гипотетическое
+  нелегитимное скачивание с live-навигацией ушло бы на archiveofourown.org по
+  синтетическому `ao3_id` работы `W.LOVED` (900000001), который отдаёт живой
+  HTTP 404 — `DownloadRepository` проглатывает `IOException`, и все Then
+  (download-иконка/не-в-FILES/`download_oracle`) остались бы истинными
+  НЕЗАВИСИМО от того, сработал баг или нет: тест физически не может упасть на
+  собственной регрессии (ложно-зелёный). `work_with_download.mitm` (та же
+  запись, что TC-032/033/114) несёт РЕАЛЬНУЮ download-транзакцию для `W.LOVED` —
+  с этой записью гипотетическое срабатывание завершилось бы настоящим файлом, и
+  `download_oracle`/UI-ассерты поймали бы его по-настоящему. Формулировка
+  «Replay не требуется» в предыдущей версии этого раздела была неверной и снята
+  этой правкой (по образцу обоснования в TC-112.md/TC-114.md).
+- **When (включение тумблера) должен быть явно подтверждён** (attempt 2,
+  второй блокер критика): `settings_steps.enable_auto_download` тапает тумблер
+  УСЛОВНО (только если текущее состояние не совпадает с желаемым) и сам ничего
+  не утверждает; остальные Then кейса от состояния тумблера не зависят вовсе —
+  без явного assert'а непроизошедший переход OFF→ON тоже дал бы зелёный тест.
+  Добавлен шаг `settings_steps.assert_auto_download_enabled(driver, True)`
+  (читает `SettingsScreen.is_auto_download_checked`) сразу после
+  `enable_auto_download`.
 - **Батарея правил-реакций:** это кейс «ретроактивность» (CLAUDE.md, калибровка №4).
 
 ## Чек-лист качества (test-designer проходит перед `Review`)

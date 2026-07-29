@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-28T22:03:22Z"
-updated: "2026-07-28T22:03:22Z"
+created: "2026-07-29T17:08:36Z"
+updated: "2026-07-29T17:08:36Z"
 archived: false
 resolution: null
 ---
@@ -144,6 +144,25 @@ JS-зарегистрированного обработчика.
   поведенческого контроля неинформативна — см. §9 docs/01).
 - Не путать с багом: находка N > 0 — это ВХОД для пере-оценки §5 test-strategist,
   не самостоятельный тикет от test-designer (явное non-goal этого диспатча).
+- **Попытка автоматизации 2026-07-29 (test-automator): реализовано, не подтверждено
+  прогоном — env fail-fast.** Тест написан
+  (`framework/tests/canary/test_ao3_selectors.py::
+  test_no_non_whitelisted_onclick_candidates_on_live_work_page`), локатор whitelist
+  вынесен в `framework/web/selectors.py::TAP_ZONE_GUARD_WHITELIST` (симметрично
+  `ao3_bridge.js:1155`, единый предикат, как требует Then), assert-функция —
+  `framework/steps/browser_steps.py::assert_no_non_whitelisted_onclick_candidates`.
+  2 прогона подряд (исходный + авто-rerun `pytest-rerunfailures`) упали
+  ИДЕНТИЧНЫМ env-классом (`ReadTimeoutError`/`TimeoutError` от Appium HTTP-канала
+  к сессии) на ОДНОМ И ТОМ ЖЕ шаге (`browser_steps.open_live_listing` ->
+  `contexts.in_webview`) — по docs/06 §5 это диагноз деградации среды, не 3
+  зелёных прогона добиваться дальше. Диагностика: `Get-Device` — устройство
+  присутствует; `adb ... dumpsys window` — приложение в фокусе (не крашнулось);
+  Appium `/status` отвечает `ready:true` за <1с — сам HTTP-сервер жив; таймаут
+  именно на уровне конкретной WebDriver-сессии (UiAutomator2/chromedriver канал
+  к устройству). `automated_by` НЕ заполнен (не подтверждено прогоном), `lock`
+  снят. Не блокер автоматизации (реализация не встретила недостатка
+  средств/фикстур) — `test_debt`-баг не заводится; это входной кандидат для
+  следующей попытки после восстановления среды (перезапуск Appium/эмулятора).
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»
