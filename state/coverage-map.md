@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-29T11:03:55Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-29T15:58:40Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -237,9 +237,9 @@ generated_at: 2026-07-29T11:03:55Z · генератор: `scripts/coverage_map.
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
-| P0 |  |  | 2 | 20 |  |
+| P0 |  |  | 2 | 19 |  |
 | P1 |  |  |  | 1 |  |
-| P2 |  |  |  |  |  |
+| P2 |  |  |  | 1 |  |
 | P3 |  |  |  |  |  |
 
 ### compatibility
