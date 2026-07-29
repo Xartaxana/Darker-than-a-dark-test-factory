@@ -49,6 +49,19 @@ def _factory_actors() -> set[str]:
     return set(groups.get("factory") or [])
 
 
+def _all_group_actors() -> set[str]:
+    """Все зарегистрированные акторы из ВСЕХ групп реестра (не только factory).
+
+    Введено 2026-07-29 вместе с группой lead: validate() собирал известных
+    акторов только из группы factory — вторая группа была бы молча
+    невалидируемой (тот же класс пробела, что незарегистрированный актор)."""
+    groups = (load().get("actors") or {}).get("groups") or {}
+    out: set[str] = set()
+    for members in groups.values():
+        out |= set(members or [])
+    return out
+
+
 def find(itype: str, frm: str, to: str) -> list[dict]:
     """Все правила матрицы, покрывающие переход frm→to (учитывая from: "*")."""
     out = []
@@ -122,8 +135,7 @@ def validate() -> list[str]:
     """Внутренняя целостность матрицы. Пусто = ок."""
     errors: list[str] = []
     data = load()
-    factory = _factory_actors()
-    known_actors = factory | {"human", "factory"}
+    known_actors = _all_group_actors() | {"human", "factory"}
 
     for itype, machine in (data.get("machines") or {}).items():
         sts = set(machine.get("statuses") or [])
@@ -160,10 +172,15 @@ def validate() -> list[str]:
             # Блокировка обязана оставлять след человеку
             if to == "Blocked" and "escalation" not in (t.get("effects") or []):
                 errors.append(f"{itype}: {frm}→Blocked без эффекта escalation")
-        # Терминальный статус: фабрика из него не выводит (только человек)
+        # Терминальный статус: фабрика из него не выводит (только человек).
+        # Исключение (2026-07-29, прецедент AT-BUG-031): переход с явной
+        # меткой rollback: true — откат ошибочно поставленного терминального
+        # статуса по критик-вердикту на приёмке; без метки не-human выход
+        # из терминального остаётся ошибкой матрицы.
         for term in machine.get("terminal") or []:
             for t in machine.get("transitions") or []:
-                if t.get("from") == term and set(t.get("by") or []) - {"human"}:
+                if (t.get("from") == term and set(t.get("by") or []) - {"human"}
+                        and not t.get("rollback")):
                     errors.append(f"{itype}: из терминального {term} есть не-human переход")
     return errors
 

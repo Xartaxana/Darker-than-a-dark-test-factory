@@ -32,6 +32,12 @@ actors:
               test-automator, test-designer, test-maintainer, test-strategist,
               test-reviewer, sla_sweep, board_inbound, stale_locks, build_watch,
               exploratory-tester, charter-designer]
+    # lead — Lead-сессия (координатор Fable-яруса) как актор переходов
+    # вне групп human/factory: добавлен 2026-07-29 вместе с переходом
+    # отката Verified->Fixed (актор был использован в переходе, но не
+    # зарегистрирован — поймано юнитом test_matrix_is_valid при прогоне
+    # батча misc-batch-lead-queue-0729: живой (в)-детектор сработал).
+    lead: [lead]
 
 # Эффекты ЛЮБОГО перехода: оба поля обновляются меткой момента перехода.
 always_effects: [status_since, updated]
@@ -40,7 +46,9 @@ machines:
   bug:
     initial: [Open]            # app_bug создаёт bug-reporter (docs/03 §1);
                                # test_debt (B4) — failure-analyst/test-maintainer
-    terminal: [Verified]       # выход — только ручное переоткрытие человеком
+    terminal: [Verified]       # выход — ручное переоткрытие человеком либо
+                               # откатный переход с явной меткой rollback: true
+                               # (исключение инварианта терминальности, 07-29)
     statuses: [Open, Reopened, Fixed, Verified, Rejected, Intended, Blocked]
     transitions:
       # --- действия человека (разработчика) ---
@@ -56,13 +64,15 @@ machines:
          ref: "D1: связанные TC зелёные на сборке новее found_in; только fix-verifier, человек НЕ закрывает баги мимо верификации"}
       - {from: Fixed,    to: Reopened, by: [fix-verifier], effects: [reopen_count+1],
          ref: "D1: репро жив на новой сборке"}
-      - {from: Verified, to: Fixed, by: [qa-loop, lead],
+      - {from: Verified, to: Fixed, by: [qa-loop, lead], rollback: true,
          ref: "откат ошибочной верификации по критик-вердикту на приёмке D1
            (прецедент AT-BUG-031 2026-07-29: Verified поставлен по device-free
            smoke, не исполнявшему тело функции; координатор откатил до
            повторной верификации). НЕ reopen (reopen_count не растёт): дефект
            ПРОЦЕДУРЫ верификации, не репро бага; причина отката — реплика в
-           Обсуждении с ссылкой на критик-вердикт"}
+           Обсуждении с ссылкой на критик-вердикт. rollback: true — явная
+           метка исключения из инварианта терминальности (валидатор пускает
+           не-human выход из terminal только с ней)"}
       # --- эскалации (эффект escalation = строка в state/escalations.md) ---
       - {from: Open,     to: Blocked, by: [human, factory], via_board: true, effects: [escalation],
          ref: "D6: продуктовый вопрос / конфликт борды / решение человека"}
