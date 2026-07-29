@@ -2,9 +2,9 @@
 D:\\Improving_AI\\Operating-System-for-LLMs tools/session_context.py's
 wiring block, lines ~602-895).
 
-Three independent, read-only checks:
+Four independent, read-only checks:
 
-    (a) git-channel     -- core.hooksPath resolves to <root>/.githooks AND
+    (a) git-channel      -- core.hooksPath resolves to <root>/.githooks AND
                             both required git hook files exist under it
                             (commit-msg, pre-commit) AND, on POSIX, carry
                             the executable bit (git silently ignores a
@@ -19,7 +19,15 @@ Three independent, read-only checks:
                             in .claude/settings.json (our pattern -- NOT
                             "tools/", the OS repo's pattern) names a file
                             that exists and imports cleanly.
-    (c) python-channel   -- shutil.which("python") finds an interpreter on
+    (c) skills-casing     -- every git-INDEX path under .claude/skills/
+                            whose basename, lowercased, equals "skill.md"
+                            is tracked as EXACTLY "SKILL.md" (task t-342,
+                            port from D:\\Improving_AI\\Operating-System-for-LLMs
+                            tools/wiring_check.py's skills_casing_channel(),
+                            2026-07-29). See skills_casing_channel()'s own
+                            docstring for the incident motive (Dog
+                            2026-07-25, sibling synk 2026-07-29).
+    (d) python-channel   -- shutil.which("python") finds an interpreter on
                             THIS process's PATH.
 
 Each channel turns its OWN known failure modes into WARNING detail
@@ -27,18 +35,39 @@ strings rather than raising; the whole combination is additionally
 wrapped in one outer try/except so a wiring-block failure degrades to a
 single WARNING line rather than blowing up SessionStart.
 
-Output: one line, always ASCII, always exit 0 (fail-open -- this check
-must never block session start):
+Output: one line, always ASCII:
 
     WIRING: OK (git hooks: commit-msg, pre-commit; harness hooks: N
-    importable; python: <path>)
+    importable; skills casing: M ok; python: <path>)
 
 or one or more:
 
     WIRING WARNING: <fact>
 
+CLI CONTRACT (task t-342, part B): main() with NO flag behaves BYTE-FOR-
+BYTE as before -- prints the line(s) above and always returns 0 (this is
+the SessionStart hook contract: a wiring-integrity check must never
+block session start, fail-open). main() with `--check` prints the same
+line(s) but returns 1 if at least one "WIRING WARNING:" line was printed
+(fail-CLOSED), 0 if the run was fully clean -- this is the mode a
+pre-commit-time caller (scripts/enforcement_probe.py) invokes to
+actually gate on wiring state; the plain no-flag mode stays the
+SessionStart printer and is unsuitable for that job on its own.
+
+AUTOFIX-FACT CARVE-OUT (task t-342, part B; class F3 of the HQ critic's
+tools/wiring_check.py review, 2026-07-29): a RESOLVED discrepancy
+(self-heal already fixed it) must not flip --check's exit code to 1.
+n/a HERE: this repo's git_hooks_channel() (below) has no self-heal /
+autofix logic of any kind -- every fact it returns is an open,
+unresolved WARNING. There is therefore no autofix-fact class to carve
+out of the --check failure set in this file; --check treats every
+"WIRING WARNING:" line as failing. If git_hooks_channel() ever grows a
+self-heal step (mirroring the OS original's VG-1), this carve-out must
+be revisited at that time, not assumed to still be n/a.
+
 Usage:
-    python scripts/wiring_check.py
+    python scripts/wiring_check.py            # SessionStart mode, exit 0 always
+    python scripts/wiring_check.py --check    # fail-closed mode, exit 1 on any warning
 """
 
 from __future__ import annotations
@@ -293,6 +322,74 @@ def harness_channel(root: Path):
     return warnings, len(ok_files)
 
 
+def skills_casing_channel(root: Path):
+    """(c) skills-casing channel (task t-342, port of
+    D:\\Improving_AI\\Operating-System-for-LLMs tools/wiring_check.py's
+    skills_casing_channel(), 2026-07-29): every git-INDEX path under
+    .claude/skills/ whose basename, lowercased, equals "skill.md" must be
+    tracked as EXACTLY "SKILL.md".
+
+    MOTIVE: on a case-insensitive filesystem (this Windows host), a
+    lowercase skill.md already committed to the index makes a later
+    `git add .../SKILL.md` SILENTLY no-op (git treats the path as "the
+    same file, unchanged casing" case-insensitively) while the command
+    itself reports success -- the file that is actually live on disk
+    never gets its correct-cased entry into the index. This is the exact
+    incident the sibling Dog deployment hit on 2026-07-25 and reported
+    again in its 2026-07-29 synk (D-0082, docs/tasks -- see the OS repo's
+    2026-07-29_dog-incoming-sync.md item 2).
+
+    Returns (warnings, ok_count), same shape as harness_channel() above:
+    warnings is a list of detail strings (empty = every skill.md-named
+    index path is correctly cased); ok_count is the number of
+    correctly-cased SKILL.md index entries found, used for the OK line's
+    "skills casing: M ok". Never raises: a git failure (missing binary,
+    timeout, non-zero exit -- e.g. run outside a git repo) folds into ONE
+    warning naming the check as unverifiable, the same subprocess idiom
+    (timeout=5, fold-to-one-warning) this file's own git_hooks_channel()
+    already uses for its `git ls-files -s` call."""
+    root = Path(root)
+    unverifiable = "skills casing not verifiable"
+
+    try:
+        result = subprocess.run(
+            ["git", "ls-files", "--", ".claude/skills/"],
+            cwd=str(root),
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except Exception as e:
+        detail = _ascii_sanitize(f"git ls-files failed ({type(e).__name__})", 120)
+        return [f"{detail} -- {unverifiable}"], 0
+
+    if result.returncode != 0:
+        detail = _ascii_sanitize(f"git ls-files exited {result.returncode}", 120)
+        return [f"{detail} -- {unverifiable}"], 0
+
+    warnings = []
+    ok_count = 0
+    for line in (result.stdout or "").splitlines():
+        path_str = line.strip()
+        if not path_str:
+            continue
+        basename = Path(path_str).name
+        if basename.lower() != "skill.md":
+            continue
+        if basename == "SKILL.md":
+            ok_count += 1
+            continue
+        path_safe = _ascii_sanitize(path_str, 150)
+        warnings.append(
+            f"skill file wrong case: {path_safe} -- on a case-insensitive"
+            " filesystem `git add .../SKILL.md` silently no-ops against an"
+            " already-tracked differently-cased skill.md (Dog 2026-07-25"
+            " incident, synk 2026-07-29)"
+        )
+
+    return warnings, ok_count
+
+
 def python_channel():
     """python-channel: shutil.which("python") on THIS process's PATH.
     LIMITATION (same as the OS original, deliberately not fixable here):
@@ -305,9 +402,9 @@ def python_channel():
 
 
 def wiring_lines(root: Path = None) -> list:
-    """Combines the three wiring-integrity channels into either a single
+    """Combines the four wiring-integrity channels into either a single
     'WIRING: OK (...)' line (everything wired) or one 'WIRING WARNING:
-    <fact>' line per discrepancy across all three channels. ALWAYS
+    <fact>' line per discrepancy across all four channels. ALWAYS
     returns at least one line and NEVER raises -- any internal exception
     collapses to a single WARNING line (spec requirement: this check must
     degrade gracefully, never block/crash SessionStart)."""
@@ -315,6 +412,7 @@ def wiring_lines(root: Path = None) -> list:
         root = Path(root) if root else REPO_ROOT
         git_warnings = git_hooks_channel(root)
         harness_warnings, importable_count = harness_channel(root)
+        skills_warnings, skills_ok_count = skills_casing_channel(root)
         python_path = python_channel()
     except Exception as e:
         return [
@@ -324,7 +422,7 @@ def wiring_lines(root: Path = None) -> list:
             )
         ]
 
-    warnings = list(git_warnings) + list(harness_warnings)
+    warnings = list(git_warnings) + list(harness_warnings) + list(skills_warnings)
     if not python_path:
         warnings.append("python not found on PATH")
 
@@ -332,7 +430,8 @@ def wiring_lines(root: Path = None) -> list:
         python_safe = _ascii_sanitize(python_path, 150)
         line = (
             "WIRING: OK (git hooks: commit-msg, pre-commit;"
-            f" harness hooks: {importable_count} files importable; python: {python_safe})"
+            f" harness hooks: {importable_count} files importable;"
+            f" skills casing: {skills_ok_count} ok; python: {python_safe})"
         )
         return [_ascii_sanitize(line, _WIRING_LINE_MAX_LEN)]
     return [
@@ -341,15 +440,32 @@ def wiring_lines(root: Path = None) -> list:
 
 
 def main(argv=None) -> int:
+    """See module docstring "CLI CONTRACT". No flag: prints the
+    wiring_lines() output and ALWAYS returns 0 (byte-for-byte the
+    original SessionStart-printer contract, untouched -- fail-open).
+    `--check`: same printed output, but returns 1 if any printed line
+    starts with "WIRING WARNING:", 0 otherwise (fail-closed probe mode,
+    task t-342 part B). *argv* defaults to sys.argv (the whole list,
+    including argv[0]) when not given, matching this file's own
+    `__main__` call below; the flag is looked up by membership, not
+    position, so both `main(sys.argv)` and a bare `main(["--check"])`
+    (as used by tests) work identically."""
     for _stream in (sys.stdout, sys.stderr):
         if hasattr(_stream, "reconfigure"):
             try:
                 _stream.reconfigure(encoding="utf-8", errors="replace")
             except (ValueError, OSError):
                 pass
-    for line in wiring_lines():
+    if argv is None:
+        argv = sys.argv
+    check_mode = "--check" in argv
+    lines = wiring_lines()
+    for line in lines:
         print(line)
-    return 0
+    if not check_mode:
+        return 0
+    has_warning = any(line.startswith("WIRING WARNING:") for line in lines)
+    return 1 if has_warning else 0
 
 
 if __name__ == "__main__":

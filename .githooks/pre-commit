@@ -2,3 +2,9 @@
 # task os-port-0722: cross-repo escape-allowlist check (adaptation of
 # D:\Improving_AI\Operating-System-for-LLMs tools/escape_check.py).
 python scripts/escape_check.py
+# t-342 (порт OS-репо 07-29, синк Dog: «чини против наблюдателя»):
+# staged-изменение файла enforcement-цепи обязано пройти наблюдателя
+# (scripts/wiring_check.py --check) до коммита; fail-closed. Выход из
+# тупика: наблюдатель читает РАБОЧЕЕ дерево — почини его там, и коммит
+# разблокируется (докстринг scripts/enforcement_probe.py).
+python scripts/enforcement_probe.py

@@ -264,6 +264,139 @@ def test_harness_channel_script_with_side_effect_print_is_swallowed(tmp_path, ca
 
 
 # ---------------------------------------------------------------------------
+# skills_casing_channel (task t-342, port of the HQ OS repo's
+# tools/wiring_check.py skills_casing_channel() -- Dog 2026-07-25 incident,
+# synk 2026-07-29).
+# ---------------------------------------------------------------------------
+
+def _track_skill(tmp_path, rel_skill_path, content="# skill\n"):
+    """Writes and `git add`s a file under .claude/skills/ at the given
+    repo-relative path (used to control the exact tracked CASING of the
+    basename, independent of the host filesystem's own case sensitivity)."""
+    p = tmp_path / rel_skill_path
+    _write(p, content)
+    _git("add", rel_skill_path, cwd=tmp_path)
+    return p
+
+
+def _init_bare_git_repo(tmp_path):
+    _git("init", "-q", cwd=tmp_path)
+    _git("config", "user.email", "a@b.c", cwd=tmp_path)
+    _git("config", "user.name", "t", cwd=tmp_path)
+    return tmp_path
+
+
+def test_skills_casing_channel_correct_case_no_warnings(tmp_path):
+    _init_bare_git_repo(tmp_path)
+    _track_skill(tmp_path, ".claude/skills/board/SKILL.md")
+    _track_skill(tmp_path, ".claude/skills/triage/SKILL.md")
+    warnings, ok_count = wc.skills_casing_channel(tmp_path)
+    assert warnings == []
+    assert ok_count == 2
+
+
+def test_skills_casing_channel_wrong_case_warns(tmp_path):
+    # Live index fixture ONLY -- the real .claude/skills/ index is never
+    # touched by this test (DoD к1: "фикстурой/моком -- ЖИВОЙ индекс не
+    # трогать").
+    _init_bare_git_repo(tmp_path)
+    _track_skill(tmp_path, ".claude/skills/board/skill.md")
+    warnings, ok_count = wc.skills_casing_channel(tmp_path)
+    assert ok_count == 0
+    assert len(warnings) == 1
+    assert "skill.md" in warnings[0]
+    assert "wrong case" in warnings[0]
+
+
+def test_skills_casing_channel_mixed_correct_and_wrong(tmp_path):
+    _init_bare_git_repo(tmp_path)
+    _track_skill(tmp_path, ".claude/skills/board/SKILL.md")
+    _track_skill(tmp_path, ".claude/skills/triage/skill.md")
+    warnings, ok_count = wc.skills_casing_channel(tmp_path)
+    assert ok_count == 1
+    assert len(warnings) == 1
+
+
+def test_skills_casing_channel_no_skills_dir_no_warnings(tmp_path):
+    _init_bare_git_repo(tmp_path)
+    (tmp_path / "foo.txt").write_text("x", encoding="utf-8")
+    _git("add", "foo.txt", cwd=tmp_path)
+    warnings, ok_count = wc.skills_casing_channel(tmp_path)
+    assert warnings == []
+    assert ok_count == 0
+
+
+def test_skills_casing_channel_non_skill_files_ignored(tmp_path):
+    _init_bare_git_repo(tmp_path)
+    _track_skill(tmp_path, ".claude/skills/board/reference.md")
+    _track_skill(tmp_path, ".claude/skills/board/SKILL.md")
+    warnings, ok_count = wc.skills_casing_channel(tmp_path)
+    assert warnings == []
+    assert ok_count == 1
+
+
+def test_skills_casing_channel_git_binary_missing_or_erroring(tmp_path, monkeypatch):
+    def _boom(*a, **kw):
+        raise FileNotFoundError("no git")
+    monkeypatch.setattr(wc.subprocess, "run", _boom, raising=True)
+    warnings, ok_count = wc.skills_casing_channel(tmp_path)
+    assert ok_count == 0
+    assert len(warnings) == 1
+    assert "not verifiable" in warnings[0]
+
+
+def test_skills_casing_channel_git_nonzero_exit_is_unverifiable(tmp_path):
+    # Not a git repo at all -- `git ls-files` exits non-zero.
+    warnings, ok_count = wc.skills_casing_channel(tmp_path)
+    assert ok_count == 0
+    assert len(warnings) == 1
+    assert "not verifiable" in warnings[0]
+
+
+def test_real_repo_skills_casing_all_correct():
+    # Live index control (command hygiene п.6): compute the expected count
+    # independently via the SAME `git ls-files` call/form, rather than
+    # hardcoding a number that would silently drift as skills are added.
+    result = subprocess.run(
+        ["git", "ls-files", "--", ".claude/skills/"],
+        cwd=str(wc.REPO_ROOT), capture_output=True, text=True,
+    )
+    expected_ok = sum(
+        1 for line in result.stdout.splitlines()
+        if Path(line.strip()).name == "SKILL.md"
+    )
+    assert expected_ok > 0  # sanity: the live repo actually has skills
+    warnings, ok_count = wc.skills_casing_channel(wc.REPO_ROOT)
+    assert warnings == []
+    assert ok_count == expected_ok
+
+
+# ---------------------------------------------------------------------------
+# wiring_lines: skills-casing is wired into the combined OK line / warnings.
+# ---------------------------------------------------------------------------
+
+def test_wiring_lines_ok_line_reports_skills_casing_count(tmp_path):
+    _init_repo_with_hooks(tmp_path)
+    _write(tmp_path / "scripts" / "good_hook.py", "VALUE = 1\n")
+    _settings(tmp_path, ["python scripts/good_hook.py"])
+    _track_skill(tmp_path, ".claude/skills/board/SKILL.md")
+    lines = wc.wiring_lines(tmp_path)
+    assert len(lines) == 1
+    assert lines[0].startswith("WIRING: OK (")
+    assert "skills casing: 1 ok" in lines[0]
+
+
+def test_wiring_lines_reports_skills_casing_warning(tmp_path):
+    _init_repo_with_hooks(tmp_path)
+    _write(tmp_path / "scripts" / "good_hook.py", "VALUE = 1\n")
+    _settings(tmp_path, ["python scripts/good_hook.py"])
+    _track_skill(tmp_path, ".claude/skills/board/skill.md")
+    lines = wc.wiring_lines(tmp_path)
+    assert all(l.startswith("WIRING WARNING:") for l in lines)
+    assert any("skill.md" in l and "wrong case" in l for l in lines)
+
+
+# ---------------------------------------------------------------------------
 # python_channel
 # ---------------------------------------------------------------------------
 
@@ -330,6 +463,67 @@ def test_main_exits_zero_even_when_everything_is_broken(tmp_path, monkeypatch):
     monkeypatch.setattr(wc, "REPO_ROOT", tmp_path, raising=True)
     code = wc.main([])
     assert code == 0
+
+
+# ---------------------------------------------------------------------------
+# --check mode (task t-342, part B): fail-CLOSED probe mode, vs. the
+# no-flag SessionStart printer which stays fail-open (regression, к2).
+# ---------------------------------------------------------------------------
+
+def test_main_no_flag_exit0_regardless_of_warnings_sessionstart_regression(
+    tmp_path, monkeypatch
+):
+    # Named regression test (DoD к2): the plain SessionStart contract --
+    # NO flag -- must exit 0 even on a fully broken tree, byte-for-byte the
+    # pre-t-342 behavior. Companion to the --check test right below, which
+    # exits 1 on the SAME broken tree.
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(wc, "REPO_ROOT", tmp_path, raising=True)
+    assert wc.main([]) == 0
+    assert wc.main(["--check"]) == 1
+
+
+def test_main_check_flag_exit1_when_warnings_present(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(wc, "REPO_ROOT", tmp_path, raising=True)
+    code = wc.main(["--check"])
+    assert code == 1
+
+
+def test_main_check_flag_exit0_when_fully_clean(tmp_path, monkeypatch):
+    _init_repo_with_hooks(tmp_path)
+    _write(tmp_path / "scripts" / "good_hook.py", "VALUE = 1\n")
+    _settings(tmp_path, ["python scripts/good_hook.py"])
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(wc, "REPO_ROOT", tmp_path, raising=True)
+    code = wc.main(["--check"])
+    assert code == 0
+
+
+def test_main_check_flag_position_independent(tmp_path, monkeypatch):
+    # The flag is recognized by membership, not position -- mirrors how
+    # `python scripts/wiring_check.py --check` puts it at argv[1] while a
+    # bare `main(["--check"])` (as used above) has it at index 0.
+    _init_repo_with_hooks(tmp_path)
+    _write(tmp_path / "scripts" / "good_hook.py", "VALUE = 1\n")
+    _settings(tmp_path, ["python scripts/good_hook.py"])
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(wc, "REPO_ROOT", tmp_path, raising=True)
+    assert wc.main(["scripts/wiring_check.py", "--check"]) == 0
+
+
+def test_cli_subprocess_check_flag_smoke_live_repo():
+    # Live, clean tree (real repo) -- --check must exit 0 (DoD verification
+    # run 3, "python scripts/wiring_check.py --check" from the repo root).
+    proc = subprocess.run(
+        [sys.executable, str(SCRIPT_PATH), "--check"],
+        cwd=str(SCRIPT_PATH.parent.parent),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+    assert proc.returncode == 0
+    assert proc.stdout.strip().startswith("WIRING: OK (")
 
 
 # ---------------------------------------------------------------------------
