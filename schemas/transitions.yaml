@@ -178,5 +178,10 @@ machines:
          ref: "протокол и follow-up заполнены"}
       - {from: "*", to: Blocked, by: [factory], effects: [escalation],
          ref: "критик FAIL по плану / деградация сессии"}
-      - {from: Blocked, to: Planned, by: [human],
-         ref: "человек/Lead разобрал причину блока"}
+      - {from: Blocked, to: Planned, by: [human, lead],
+         ref: "человек/Lead разобрал причину блока; актор lead добавлен 2026-07-31
+           (разбор ESC-010/012): ref с самого начала называл Lead, но списка by
+           он не достигал — Lead-разбор Blocked-чартера упирался в переход,
+           который сам же ref ему предписывает. Полный Lead (Fable) только;
+           деградированный координатор Blocked не снимает (CLAUDE.md,
+           'Деградация Lead' п.2)"}
