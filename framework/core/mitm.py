@@ -91,8 +91,76 @@ def is_ca_installed() -> bool:
     return f"{ca_hash}.0" in ls_cp.stdout
 
 
+# --- ESC-009: fail-fast проверка достижимости апстрима прокси->AO3 ---
+#
+# Диагноз (state/escalations.md ESC-009, «Корень 3», Lead Fable + critic
+# a9a831c9060df5aa5, 2026-07-30): хост имеет живой IPv6-адрес/маршрут, но
+# IPv6-ТРАНЗИТ — чёрная дыра. RFC 6724 предпочитает IPv6, `getaddrinfo`
+# отдаёт AAAA-записи первыми, mitmproxy пробует адреса ПОСЛЕДОВАТЕЛЬНО и
+# платит ~21с Windows TCP-connect-таймаута ЗА КАЖДЫЙ мёртвый IPv6-адрес
+# (замер: 2x21с на archiveofourown.org + 21с на ajax.googleapis.com).
+# `server_replay_extra=forward` тянет незаписанные URL с живого AO3 ->
+# суммарная задержка не укладывается в WEBVIEW_LOAD_TIMEOUT ->
+# `driver.get()` падает `ReadTimeoutError` через ~166с вместо мгновенной
+# диагностики среды. AT-BUG-017 (`wait_device_proxy_reachable`) проверяет
+# только плечо устройство->хост-прокси — это плечо прокси->upstream
+# оставалось непокрытым.
+UPSTREAM_CONNECT_BUDGET = 5.0  # сек — бюджет ОДНОЙ попытки connect() к апстриму
+
+
+def assert_upstream_fast(host: str = "archiveofourown.org", port: int = 443) -> None:
+    """Пробует соединиться с ПЕРВЫМ адресом резолва `host:port` (тот же
+    порядок, что использует резолвер ОС и, вслед за ним, mitmproxy) с
+    коротким собственным бюджетом (`UPSTREAM_CONNECT_BUDGET`, НЕ дефолтный
+    Windows TCP-таймаут ~21с). Недостижимость первого адреса за бюджет ->
+    явная `RuntimeError` с диагнозом ESC-009 — мгновенный явный отказ вместо
+    166-секундного `ReadTimeoutError` на первой replay-навигации теста."""
+    infos = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
+    family, _, _, _, sa = infos[0]
+    s = socket.socket(family, socket.SOCK_STREAM)
+    s.settimeout(UPSTREAM_CONNECT_BUDGET)
+    try:
+        s.connect(sa)
+    except OSError as exc:
+        family_name = "IPv6 (AAAA)" if family == socket.AF_INET6 else "IPv4 (A)"
+        raise RuntimeError(
+            f"ESC-009: первый по порядку резолва адрес {sa[0]} апстрима "
+            f"{host}:{port} ({family_name}) недостижим за "
+            f"{UPSTREAM_CONNECT_BUDGET}s. mitmproxy (server_replay_extra="
+            "forward) соединяется с апстримом ПОСЛЕДОВАТЕЛЬНО по адресам "
+            "резолва — мёртвый первый адрес (известный корень: мёртвый "
+            "IPv6-транзит хоста при живом IPv6-маршруте, RFC 6724 отдаёт "
+            "AAAA первыми) стоил бы ~21с реального TCP-таймаута КАЖДЫЙ раз, "
+            "суммарно не укладываясь в WEBVIEW_LOAD_TIMEOUT — вместо этого "
+            "мгновенный явный отказ. См. state/escalations.md ESC-009."
+        ) from exc
+    finally:
+        s.close()
+
+
 def _mitmdump() -> str:
     return str(settings.FRAMEWORK_ROOT / ".venv" / "Scripts" / "mitmdump.exe")
+
+
+def _assert_own_listener() -> None:
+    """Замок против ЧУЖОГО слушателя порта `_PORT` (ESC-009, живой
+    прецедент сессии 2026-07-30: mitmdump фикстуры умер сразу после старта
+    (Errno 10048 — порт уже занят чужим процессом), но `_wait_listening`
+    честно подтвердила «порт слушается» — это был ЧУЖОЙ mitmdump (например
+    критика, работающего параллельно), и тест прошёл ЗЕЛЁНЫМ по ЧУЖОЙ
+    записи вместо падения). `_wait_listening` доказывает только то, что
+    ПОРТ занят — не то, что это НАШ `_proc`. Зовётся сразу после
+    `_wait_listening` в `start_replay`/`start_record` (классовая
+    полнота — оба места поднимают mitmdump на тот же порт тем же
+    паттерном)."""
+    returncode = _proc.poll() if _proc is not None else None
+    if returncode is not None:
+        raise RuntimeError(
+            f"mitmdump завершился кодом {returncode} сразу после старта, но "
+            f"порт {_PORT} слушается — это ЧУЖОЙ процесс, тест пошёл бы по "
+            "чужой записи (прецедент: Errno 10048, сессия 2026-07-30, "
+            "ESC-009)."
+        )
 
 
 def _wait_listening(port: int, timeout: int) -> None:
@@ -131,6 +199,7 @@ def start_replay(flows_file: Path) -> None:
         "-q",
     ])
     _wait_listening(int(_PORT), _READY_TIMEOUT)
+    _assert_own_listener()
 
 
 def wait_device_proxy_reachable(timeout: float | None = None) -> None:
@@ -185,12 +254,20 @@ def wait_device_proxy_reachable(timeout: float | None = None) -> None:
 
 
 def start_record(flows_file: Path) -> None:
-    """Поднимает mitmdump на запись трафика в flows_file."""
+    """Поднимает mitmdump на запись трафика в flows_file.
+
+    ESC-009 (классовая полнота): раньше эта функция НЕ звала
+    `_wait_listening` вовсе (в отличие от `start_replay`) — вызывающий код
+    не имел гарантии, что порт реально поднят, ДО первой навигации записи;
+    и `_assert_own_listener()` — тот же замок против чужого слушателя, что
+    и в `start_replay` (одна поверхность отказа, два места запуска)."""
     global _proc
     _proc = subprocess.Popen([
         _mitmdump(), "--listen-host", "0.0.0.0", "--listen-port", _PORT,
         "-w", str(flows_file), "-q",
     ])
+    _wait_listening(int(_PORT), _READY_TIMEOUT)
+    _assert_own_listener()
 
 
 def stop() -> None:

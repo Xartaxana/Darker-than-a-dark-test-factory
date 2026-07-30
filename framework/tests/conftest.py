@@ -606,6 +606,24 @@ def _ensure_replay_ca() -> None:
     _ca_checked = True
 
 
+_upstream_checked = False  # ESC-009: fail-fast проверка апстрима — один раз на сессию
+
+
+def _ensure_upstream_fast() -> None:
+    """Предусловие replay-тестов (ESC-009): апстрим `mitm.assert_upstream_fast()`
+    (см. `framework/core/mitm.py` — диагноз «мёртвый IPv6-транзит хоста»)
+    проверяется РАЗ на сессию, тем же паттерном module-level кеша, что
+    `_ca_checked`/`_ensure_replay_ca()` (AT-BUG-011) чуть выше. Не связано с
+    device-liveness recovery (`_reset_ca_check`) — состояние сетевого
+    транзита хоста не меняется рестартом эмулятора, поэтому отдельный флаг
+    не сбрасывается тем хуком."""
+    global _upstream_checked
+    if _upstream_checked:
+        return
+    mitm.assert_upstream_fast()
+    _upstream_checked = True
+
+
 def _proxy_reachable_timeout() -> int | None:
     """N2 (критик-вход attempt 4): выбор таймаута ожидания достижимости
     прокси СО СТОРОНЫ УСТРОЙСТВА, вынесенный из тела фикстуры `replay` в
@@ -640,7 +658,11 @@ def replay(request):
     Подключение к conftest — часть AT-BUG-004, инкремент 1 (сам механизм record→replay
     доказан спайком B, до этой фикстуры не был подключён ни к одному тесту).
     Перед стартом проверяет присутствие CA (`_ensure_replay_ca`, AT-BUG-011) —
-    падает мгновенно и явно вместо таймаута, если среда поднята без CA.
+    падает мгновенно и явно вместо таймаута, если среда поднята без CA. Сразу
+    следом проверяет достижимость АПСТРИМА прокси->AO3 (`_ensure_upstream_fast`,
+    ESC-009) — плечо, непокрытое AT-BUG-017 (тот проверяет только
+    устройство->хост-прокси): без этой проверки мёртвый IPv6-транзит хоста
+    даёт не мгновенный отказ, а ~166с `ReadTimeoutError` на первой навигации.
     После `set_device_proxy()`+`start_replay()` ждёт достижимости прокси СО
     СТОРОНЫ УСТРОЙСТВА (`mitm.wait_device_proxy_reachable`, AT-BUG-017) — до
     `yield`: `start_replay()` подтверждает готовность только хост-порта, а
@@ -662,6 +684,7 @@ def replay(request):
     `_proxy_reachable_timeout()` (N2, критик-вход attempt 4) — device-free
     юнит-проба покрывает обе ветки без реального устройства."""
     _ensure_replay_ca()
+    _ensure_upstream_fast()
     flow_name = request.param
     flows_file = settings.RECORDINGS_DIR / flow_name
     assert flows_file.exists(), (
