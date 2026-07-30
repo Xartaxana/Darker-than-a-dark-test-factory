@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-30T17:34:58Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-30T17:47:21Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -23,7 +23,7 @@ generated_at: 2026-07-30T17:34:58Z · генератор: `scripts/coverage_map.
 | performance | 4 | 4 | designed-full |
 | rating | 14 | 14 | designed-full |
 | security | 6 | 6 | designed-full |
-| settings | 11 | 8 | partial |
+| settings | 11 | 10 | partial |
 | smoke | 5 | 5 | designed-full |
 | tabs | 10 | 6 | partial |
 | visibility | 6 | 6 | designed-full |
@@ -102,8 +102,8 @@ generated_at: 2026-07-30T17:34:58Z · генератор: `scripts/coverage_map.
 | settings-rating-visibility-filter | settings | visibility:TC-015[Automated], visibility:TC-095[Automated] |
 | settings-filter-display-mode | settings | visibility:TC-093[Automated] |
 | settings-panel-side | settings | нет кейсов |
-| settings-tap-to-scroll-toggle | settings | settings:TC-123[Automated], settings:TC-124[Automated], settings:TC-125[Approved] |
-| settings-infinite-scroll-toggle | settings | settings:TC-129[Approved], browser:TC-130[Automated] |
+| settings-tap-to-scroll-toggle | settings | settings:TC-123[Automated], settings:TC-124[Automated], settings:TC-125[Automated] |
+| settings-infinite-scroll-toggle | settings | settings:TC-129[Automated], browser:TC-130[Automated] |
 | settings-auto-download-favorite | settings | downloads:TC-112[Automated], downloads:TC-113[Automated] |
 | settings-download-folder-saf | settings | downloads:TC-038[Automated] |
 | settings-backup-export | settings | backup:TC-021[Automated] |
@@ -376,17 +376,17 @@ generated_at: 2026-07-30T17:34:58Z · генератор: `scripts/coverage_map.
 
 ### settings
 
-- coverage_status: **partial** (8/11 Automated)
+- coverage_status: **partial** (10/11 Automated)
 - риски: R-01, R-11
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-125 [P1, Approved], TC-129 [P1, Approved]
+- P0/P1 не в Automated: нет
 - автотесты (automated_by): framework/tests/test_infinite_scroll.py::test_infinite_scroll_off_keeps_native_pagination, framework/tests/test_reading_ux.py::test_tap_to_scroll_live_push_and_reload_persistence, framework/tests/test_reading_ux.py::test_tap_to_scroll_survives_kill_and_relaunch, framework/tests/test_reading_ux.py::test_tap_zone_disabled_no_effect_in_any_third, framework/tests/test_settings.py::test_cancel_clear_all_dialog_keeps_data, framework/tests/test_settings.py::test_clear_all_ratings_shows_confirmation_dialog, framework/tests/test_settings.py::test_system_theme_follows_os_dark_mode, framework/tests/test_settings.py::test_theme_dark_applies_instantly_without_recreating_activity, framework/tests/test_settings.py::test_webview_dark_mode_applies_instantly, framework/tests/test_settings.py::test_webview_follows_system_theme_without_in_app_toggle
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  |  |  |
-| P1 |  |  | 2 | 5 |  |
+| P1 |  |  |  | 7 |  |
 | P2 |  |  |  | 3 |  |
 | P3 |  |  |  |  | 1 |
 

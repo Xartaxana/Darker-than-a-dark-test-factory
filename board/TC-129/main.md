@@ -2,27 +2,27 @@
 key: "TC-129"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Infinite scroll: тумблер OFF — скролл к концу листинга не подгружает следующую страницу, нумерованная пагинация остаётся штатной"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:settings", "risk:R-11"]
+labels: ["test-case", "area:settings", "risk:R-11", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-28T23:03:06Z"
-updated: "2026-07-28T23:03:06Z"
+created: "2026-07-30T19:45:07Z"
+updated: "2026-07-30T19:45:07Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Infinite scroll: тумблер OFF — скролл к концу листинга не подгружает следующую страницу, нумерованная пагинация остаётся штатной
 
 _Спроецировано из `test-cases/settings/TC-129.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-129 — Infinite scroll OFF: скролл к концу листинга не подгружает следующую страницу
 
@@ -140,6 +140,71 @@ AO3 без вмешательства bridge
   этого кейса, не отдельного применения батареи). Идемпотентность/propagation
   — н-п: нет фонового состояния, разделяемого несколькими потребителями,
   каждая листинговая вкладка независима.
+
+## Ревью автотеста (F1, test-reviewer, 2026-07-30)
+
+**Вердикт: PASS** — `Approved -> Automated`, `automation_status: active`.
+
+- **Архитектура (п.1):** `python scripts/arch_check.py` — «ошибок 0,
+  предупреждений 0»; файл теста не в ALLOWLIST. Локаторы —
+  `framework/web/selectors.py` (`PAGINATION_NUMBERED_ITEMS`/
+  `PAGINATION_NEXT_LINK`), DOM-чтение — `framework/web/listing_page.py`,
+  шаги — `framework/steps/{browser,settings,app}_steps.py`; в тесте нет
+  ни локаторов, ни `driver.execute_script`, ни `sleep` (ожидания —
+  `core/waits`: `wait_until`, `assert_holds_for`).
+- **Traceability (п.2):** `@allure.id("TC-129")` == id кейса;
+  `@pytest.mark.p1` == `priority: P1`; `@pytest.mark.replay` соответствует
+  replay-фикстуре; `automated_by` указывает на существующую функцию
+  `test_infinite_scroll.py::test_infinite_scroll_off_keeps_native_pagination`;
+  `features: [settings-infinite-scroll-toggle]` есть в
+  `docs/feature-registry.yaml:385`.
+- **Соответствие кейсу (п.3):** ключевой нюанс порядка соблюдён —
+  тумблер выключается в Settings (`disable_infinite_scroll`) и сверяется
+  явным assert'ом (`assert_infinite_scroll_enabled(expected=False)`) ДО
+  `open_tab("Browse")`/`open_listing(...)`, то есть ДО загрузки листинга и
+  инъекции bridge-скрипта (гейт `ao3_bridge.js:530` сверен чтением кода —
+  вычисляется один раз при инъекции). Then'ы реализуют GWT по существу, а
+  не «элемент существует»: `assert_work_blurb_count_holds(1)` держит
+  негатив ВЕСЬ бюджет (8 с, `assert_holds_for`) — это форма ИНВАРИАНТА
+  («ни при какой прокрутке этой загрузки»), а не единичная выборка;
+  `assert_pagination_numbered_items_visible` проверяет `display != none`
+  именно у номерных пунктов, `.next`/`.previous` исключены селектором —
+  корректно, `ao3_bridge.js:542` не прячет `li.next` НИ В ОДНОМ состоянии
+  тумблера, поэтому свидетелем режима служат только номерные пункты;
+  `assert_webview_location_changed` дополнительно требует `page=2`, а не
+  любой смены location. Строка `Инвариант:` в кейсе присутствует.
+- **Фикстуры и данные (п.4):** сигнатура `(replay, clean_app, driver)` —
+  `pm clear` и подъём replay-прокси происходят ДО создания Appium-сессии
+  (порядок фикстур корректен, HANDOFF); teardown `replay` возвращает прокси
+  и глушит mitmdump в `finally`. Тест владеет своими данными, от порядка
+  других тестов не зависит; фикстура `listing_paginated.mitm` покрывает
+  все href пагинации (инвариант AT-BUG-006) — ухода на живой AO3 нет.
+- **Flake-риск (п.5):** ожидания явные, гонок с Compose-анимациями нет
+  (взаимодействие с пагинацией — в WebView через DOM API, не тап по
+  родителю текстового узла); `scroll_listing_to_bottom` ассертит
+  `scrollY > 0` и прикладывает геометрию в Allure — вакуумный негатив
+  («документ не выше вьюпорта») исключён на устройстве.
+- **Независимое воспроизведение (п.6):** прогон ревьюера на эмуляторе
+  конвейера (`Get-Device` -> `DEVICE: emulator-5554`),
+  `Invoke-Pytest -k test_infinite_scroll_off_keeps_native_pagination -q` ->
+  `1 passed ... PYTEST_EXIT=0` (47.53 s). Повторный прогон после отката
+  красной пробы — `1 passed ... PYTEST_EXIT=0` (46.78 s).
+- **Красная проба (п.7), witness:** порча на уровне ДАННЫХ (тестовый код
+  не менялся) — в page-1 flow `framework/data/recordings/
+  listing_paginated.mitm` вшит `<script>`, дописывающий по первому
+  scroll-событию второй `li[id^="work_"].work.blurb` (`work_90000001`),
+  т.е. ровно тот наблюдаемый эффект, который кейс обязан отвергать при
+  `infinite_scroll=OFF`. Команда: та же
+  `Invoke-Pytest -k test_infinite_scroll_off_keeps_native_pagination -q`.
+  Результат: `1 failed ... PYTEST_EXIT=1` (35.84 s), падение — на
+  СОДЕРЖАТЕЛЬНОМ ассерте Then `browser_steps.py:2193`
+  (`assert_work_blurb_count_holds`), текст указывает на суть порчи:
+  «на листинге 2 work-блёрбов, ожидали ровно 1 — фоновая подгрузка
+  (fetchAndAppend, ao3_bridge.js:557-615) сработала, хотя
+  infinite_scroll=OFF ...: ['900000001', '90000001']» — не таймаут-мусор.
+  Откат: `git checkout -- framework/data/recordings/listing_paginated.mitm`,
+  `git status --porcelain` по этому пути чист, зелёный прогон после отката
+  воспроизведён (см. п.6).
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»

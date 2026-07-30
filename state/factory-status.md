@@ -1,18 +1,18 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-30T17:34:57Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-07-30T17:47:18Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **686.0** (RUN-20260702-0300)
+- smoke: Closed · smoke_freshness_hours: **686.2** (RUN-20260702-0300)
 - regression: not_run
 - canary: not_run
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **1**
 - p0_automation_coverage: **100%** (37/37)
-- p1_automation_coverage: **91%** (64/70)
+- p1_automation_coverage: **94%** (66/70)
 - Test debt открыт: **0**
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
@@ -25,8 +25,8 @@ generated_at: 2026-07-30T17:34:57Z · генератор: `scripts/queue_snapsho
 
 ## Тест-кейсы (134)
 
-- Review: **4** · Approved: **2** · Automated: **127** · Blocked: **1**
-- автотесты (B3): active: **127**
+- Review: **4** · Automated: **129** · Blocked: **1**
+- автотесты (B3): active: **129**
 
 | Область | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
@@ -42,7 +42,7 @@ generated_at: 2026-07-30T17:34:57Z · генератор: `scripts/queue_snapsho
 | performance |  |  |  | 4 |  |
 | rating |  |  |  | 14 |  |
 | security |  |  |  | 6 |  |
-| settings |  |  | 2 | 8 | 1 |
+| settings |  |  |  | 10 | 1 |
 | smoke |  |  |  | 5 |  |
 | tabs |  | 4 |  | 6 |  |
 | visibility |  |  |  | 6 |  |
@@ -78,9 +78,9 @@ generated_at: 2026-07-30T17:34:57Z · генератор: `scripts/queue_snapsho
 - bugs_per_charter: **0.4**
 - new_tc_from_charters: **1**
 
-## Активные локи (1)
+## Активные локи (0)
 
-- TC-125 — `test-reviewer:2026-07-30T17:30:00Z`
+- нет
 
 ## Эскалации (5)
 

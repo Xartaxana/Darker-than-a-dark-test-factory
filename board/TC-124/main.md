@@ -2,27 +2,27 @@
 key: "TC-124"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Tap to scroll: включение тумблера применяется мгновенно к уже открытой work-странице (live-push) и переживает reload от смены темы"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:settings", "risk:R-11"]
+labels: ["test-case", "area:settings", "risk:R-11", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-30T15:10:00Z"
-updated: "2026-07-30T15:10:00Z"
+created: "2026-07-30T17:27:44Z"
+updated: "2026-07-30T17:27:44Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Tap to scroll: включение тумблера применяется мгновенно к уже открытой work-странице (live-push) и переживает reload от смены темы
 
 _Спроецировано из `test-cases/settings/TC-124.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-124 — Tap to scroll ON: включение тумблера действует без перезагрузки страницы и переживает reload темы
 
@@ -97,3 +97,93 @@ push (`LaunchedEffect(tapToScroll)`), а не переинъекцией при 
 - [x] Блокер автоматизации — существующий `bugs/AT-BUG-030.md`, кейс добавлен
       в его `test_cases` этим же ходом
 - [x] Строка `Инвариант:` добавлена (семейство TC-123..128)
+
+## Ревью автотеста (F1, test-reviewer, 2026-07-30) — PASS
+
+- **Архитектура (C1):** `python scripts/arch_check.py` → «ошибок 0,
+  предупреждений 0»; `ALLOWLIST` в `scripts/arch_check.py` пуст (исключений «под
+  себя» не заводилось). В теле теста нет ни локаторов/`find_element`, ни прямых
+  драйверных вызовов (`execute_script` в тесте отсутствует — вся работа с
+  WebView через `framework/steps/browser_steps.py`); `sleep` нет, ожидания —
+  `wait_until`/`assert_holds_for` из `framework/core/waits.py`.
+- **Traceability:** `@allure.id("TC-124")` == id кейса; `@pytest.mark.p1` ==
+  `priority: P1`; `@pytest.mark.replay` соответствует фактической
+  `replay`-фикстуре (`rb.WORK_WITH_DOWNLOAD_FILENAME`, живой AO3 не
+  задействован). `automated_by` указывает на существующую функцию
+  `test_reading_ux.py::test_tap_to_scroll_live_push_and_reload_persistence`;
+  `features: [settings-tap-to-scroll-toggle]` есть в
+  `docs/feature-registry.yaml:381`. Требования сверены по исходнику:
+  `BrowserScreen.kt:186-192` — `LaunchedEffect(tapToScroll) { for (wv in
+  webViews.values) wv.evaluateJavascript("window.__ao3TapToScroll=$enabled;") }`
+  (цикл по ВСЕМ живым WebView, БЕЗ reload/навигации); `:603` — та же инъекция в
+  `onPageFinished`; `LaunchedEffect(darkTheme)` (`:151-159`) действительно
+  вызывает `wv.reload()` для существующих WebView — механизм второго When
+  подтверждён кодом.
+- **Соответствие кейсу по смыслу (ключевой пункт этого кейса):** тест
+  доказывает ИМЕННО отсутствие reload на live-push шаге, а не «страница с уже
+  включённым тумблером скроллится». Маркер идентичности документа
+  (`browser_steps.mark_document_identity` — `window.__ao3TestDocMarker`,
+  uuid4) ставится ДО включения тумблера; после возврата на вкладку
+  `assert_document_identity_preserved` держит равенство весь бюджет
+  (`assert_holds_for`), то есть `window` не пересоздавался → эффект тапа мог
+  прийти только реактивным push. Симметрично второй When: смена темы
+  LIGHT→DARK, затем `wait_document_identity_changed` — позитивное
+  доказательство, что reload реально произошёл (иначе второй Then выродился бы
+  в повтор первого), и одновременно точка синхронизации перед предскроллом.
+  Оба Then — содержательные (`assert_tap_to_scroll_delta`: `|Δ − 0.95×
+  innerHeight| <= 15%`), не «элемент существует». Инвариант кейса (значение
+  флага на живом WebView всегда равно тумблеру, независимо от пути
+  синхронизации) покрыт обеими сторонами: один и тот же ассерт на двух
+  структурно разных путях + якорь, различающий эти пути. Предпосылки Given не
+  предполагаются, а сверяются: `assert_tap_to_scroll_enabled(expected=False)` до
+  включения, `assert_tap_to_scroll_enabled(expected=True)` сразу после
+  идемпотентного `set_tap_to_scroll`; тема пиннится к LIGHT, иначе
+  SYSTEM(=ночная) → DARK не изменил бы `darkTheme` и `reload()` не случился бы.
+  Предскролл к `S≈innerHeight` строго внутри окна `(0.95×innerHeight, maxScroll
+  − 0.95×innerHeight)` (собственный assert шага) исключает маскировку клампом у
+  границы документа.
+- **Фикстуры и данные:** сигнатура `(loved_work_seeded, replay, driver)` даёт
+  требуемый HANDOFF-порядок — `clean_state()` + `seed_library([(W.LOVED,
+  "SAVE")])` отрабатывают ДО создания Appium-сессии; `replay` поднимается до
+  запуска приложения и глушится в teardown независимо от исхода. Тест владеет
+  своими данными (`pm clear` в Given), от порядка других кейсов не зависит
+  (тумблер и тема выставляются явно, а не наследуются).
+- **Flake-риск:** оба «якоря» опрашивают состояние, а не читают один раз
+  (`assert_holds_for` на сохранности маркера, `wait_until` на его исчезновении и
+  на дельте скролла); координаты тапа пересчитываются от текущего
+  `innerWidth/innerHeight` перед диспатчем; Compose-анимаций в пути нет
+  (переключение вкладок нижней панели — те же `app_steps.open_tab`, что во всём
+  семействе TC-123/126/127/128). Остаточное наблюдение (НЕ блокер, зафиксировано
+  для test-runner): после reload маркер исчезает в момент пересоздания
+  документа, тогда как реинъекция флага происходит позже, в `onPageFinished`
+  (`BrowserScreen.kt:603`) — теоретически второй тап мог бы прийтись на окно
+  между этими событиями; практически окно закрывается собственным assert'ом
+  предскролла (требует уже свёрстанный документ высотой >= 3×innerHeight) и
+  несколькими WEBVIEW round-trip'ами между ними; в трёх прогонах этого ревью
+  гонка не наблюдалась.
+- **Независимое воспроизведение (п.6):** устройство сверено канонической формой
+  (`. env.ps1; . tasks.ps1; Get-Device` → `DEVICE: emulator-5554`). Прогон:
+  `powershell -NoProfile -ExecutionPolicy Bypass -Command ". D:\AO3_tests\scripts\tasks.ps1; Invoke-Pytest tests/test_reading_ux.py -k test_tap_to_scroll_live_push_and_reload_persistence -q"`
+  → `1 passed, 5 deselected in 86.27s`, `PYTEST_EXIT=0`; `device-liveness guard
+  recoveries = 0/2`, ни одного `ReadTimeoutError`/`TimeoutError` инфраструктурного
+  класса.
+- **Красная проба (п.7), две порчи, обе откачены:** `app-under-test/` не
+  трогался.
+  Проба №1 — порча на уровне состояния WebView: `window.__ao3TapToScroll=false`
+  сразу после якоря сохранности документа (симуляция НЕсработавшего live-push).
+  Та же команда → `1 failed`, `PYTEST_EXIT=1`, падение на СМЫСЛОВОМ ассерте
+  первого Then (`tests\test_reading_ux.py:343` →
+  `steps\browser_steps.py:750`): «scrollY не изменился на ожидаемую дельту
+  1522.8px (±228.4px) относительно scrollY до тапа=1602 (текущий scrollY=1602)»
+  — величина и адрес падения указывают ровно на суть порчи, не таймаут-мусор.
+  Проба №2 — целилась в тот самый якорь, что отличает TC-124 от тривиального
+  кейса: принудительный `location.reload()` ПЕРЕД
+  `assert_document_identity_preserved` (симуляция «эффект пришёл переинъекцией
+  при загрузке, а не live-push»). → `1 failed`, `PYTEST_EXIT=1`,
+  `steps\browser_steps.py:875 AssertionError: маркер идентичности документа
+  изменился: было '0d6808c7-da0d-4d89-a6a9-dca784846076', стало None — документ
+  WebView был пересоздан (неожиданный reload/навигация)`. Обе временные правки
+  откачены `git checkout -- framework/tests/test_reading_ux.py` в том же ходе;
+  после отката `git status --porcelain` не содержит ни одного пути `framework/`
+  — дифф тестового кода чист (файл побайтно тот же, на котором получен зелёный
+  прогон).

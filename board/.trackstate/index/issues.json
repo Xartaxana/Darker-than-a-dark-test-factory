@@ -1296,16 +1296,17 @@
     "epicPath": null,
     "summary": "Снятие рейтинга Favorite (deselect) не запускает скачивание",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:downloads",
-      "risk:R-05"
+      "risk:R-05",
+      "automation:active"
     ],
-    "updated": "2026-07-30T13:22:00Z",
-    "resolution": null,
+    "updated": "2026-07-30T17:06:44Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -2512,16 +2513,17 @@
     "epicPath": null,
     "summary": "Tap to scroll: тумблер OFF — тап ни по одной трети work-страницы не производит эффекта (негативный инвариант)",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:settings",
-      "risk:R-11"
+      "risk:R-11",
+      "automation:active"
     ],
-    "updated": "2026-07-30T14:10:00Z",
-    "resolution": null,
+    "updated": "2026-07-30T17:18:23Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -2534,16 +2536,17 @@
     "epicPath": null,
     "summary": "Tap to scroll: включение тумблера применяется мгновенно к уже открытой work-странице (live-push) и переживает reload от смены темы",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:settings",
-      "risk:R-11"
+      "risk:R-11",
+      "automation:active"
     ],
-    "updated": "2026-07-30T15:10:00Z",
-    "resolution": null,
+    "updated": "2026-07-30T17:27:44Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -2556,16 +2559,17 @@
     "epicPath": null,
     "summary": "Tap to scroll: значение тумблера и его эффект переживают kill+relaunch приложения",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:settings",
-      "risk:R-11"
+      "risk:R-11",
+      "automation:active"
     ],
-    "updated": "2026-07-30T16:50:00Z",
-    "resolution": null,
+    "updated": "2026-07-30T17:36:49Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -2578,16 +2582,17 @@
     "epicPath": null,
     "summary": "Infinite scroll: тумблер OFF — скролл к концу листинга не подгружает следующую страницу, нумерованная пагинация остаётся штатной",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:settings",
-      "risk:R-11"
+      "risk:R-11",
+      "automation:active"
     ],
-    "updated": "2026-07-28T23:03:06Z",
-    "resolution": null,
+    "updated": "2026-07-30T19:45:07Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -2839,6 +2844,94 @@
     ],
     "updated": "2026-07-21T13:08:00Z",
     "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-131",
+    "path": "board/TC-131/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Deep-link на потолке 10 вкладок не создаёт 11-ю, показывает диалог лимита, отклонённый URL безвозвратно теряется",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:tabs",
+      "risk:R-08"
+    ],
+    "updated": "2026-07-30T00:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-132",
+    "path": "board/TC-132/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Deep-link на единственную вкладку, уведённую с HOME_URL, создаёт вторую вкладку вместо переиспользования",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:tabs",
+      "risk:R-08"
+    ],
+    "updated": "2026-07-30T00:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-133",
+    "path": "board/TC-133/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Возврат в приложение из recents (без нового deep-link intent) не переоткрывает уже обработанный deep-link",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:tabs",
+      "risk:R-08"
+    ],
+    "updated": "2026-07-30T00:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-134",
+    "path": "board/TC-134/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Kill+relaunch приложения не переоткрывает уже обработанный deep-link",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:tabs",
+      "risk:R-08"
+    ],
+    "updated": "2026-07-30T00:00:00Z",
+    "resolution": null,
     "children": [],
     "archived": false
   },
@@ -3821,6 +3914,29 @@
       "sev:major"
     ],
     "updated": "2026-07-28T09:27:34Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-017",
+    "path": "board/BUG-017/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Быстрое закрытие вкладок → долгий парад снекбаров; подозрение на потерю Undo-токенов при задержке показа",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-023",
+      "test_case:TC-024",
+      "sev:minor"
+    ],
+    "updated": "2026-07-30T00:00:00Z",
     "resolution": null,
     "children": [],
     "archived": false

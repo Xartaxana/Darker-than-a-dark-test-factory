@@ -2,27 +2,27 @@
 key: "TC-123"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Tap to scroll: тумблер OFF — тап ни по одной трети work-страницы не производит эффекта (негативный инвариант)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:settings", "risk:R-11"]
+labels: ["test-case", "area:settings", "risk:R-11", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-30T14:10:00Z"
-updated: "2026-07-30T14:10:00Z"
+created: "2026-07-30T17:18:23Z"
+updated: "2026-07-30T17:18:23Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Tap to scroll: тумблер OFF — тап ни по одной трети work-страницы не производит эффекта (негативный инвариант)
 
 _Спроецировано из `test-cases/settings/TC-123.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-123 — Tap to scroll OFF: тап по любой трети work-страницы не скроллит и не переключает fullscreen
 
@@ -140,3 +140,66 @@ innerHeight ≠ S`, не замаскированное клампом к `maxSc
 - [x] Строка `Инвариант:` — область не входит формально в банк C4, но Then
       квантифицируется семейством TC-123..128 над двумя переменными (тумблер,
       зона) — тот же класс, что TC-119/TC-120
+
+## Ревью автотеста (F1, test-reviewer, 2026-07-30) — PASS
+
+- **Архитектура (C1):** `python scripts/arch_check.py` → «ошибок 0,
+  предупреждений 0»; исключений «под себя» в `ALLOWLIST` не заводилось. В теле
+  теста нет локаторов/`find_element`/прямых драйверных вызовов — вся работа
+  через `framework/steps/*`; `sleep` отсутствует, ожидания — `wait_until` и
+  `assert_holds_for` из `framework/core/waits.py`.
+- **Traceability:** `@allure.id("TC-123")` == id кейса; `@pytest.mark.p1`
+  соответствует `priority: P1`; `@pytest.mark.replay` — фактическому
+  использованию `replay`-фикстуры (живой AO3 не задействован).
+  `automated_by` указывает на существующую функцию
+  `test_reading_ux.py::test_tap_zone_disabled_no_effect_in_any_third`;
+  `features: [settings-tap-to-scroll-toggle]` есть в
+  `docs/feature-registry.yaml:381`. Требование сверено по исходнику:
+  `ao3_bridge.js:1153` — `if (!window.__ao3TapToScroll) return;` стоит ДО
+  вычисления `var third = window.innerHeight / 3` (:1156), то есть гейт
+  действительно единый на все три трети.
+- **Соответствие кейсу по смыслу (инвариант):** тест бьёт по ВСЕМ ТРЁМ третям
+  (`dispatch_tap_to_scroll_up_tap` 1/6, `dispatch_tap_zone_fullscreen_toggle_tap`
+  0.5, `dispatch_tap_to_scroll_down_tap` 5/6 — середины третей, не пограничные
+  значения), а не по одной — покрытие соответствует строке `Инвариант:` кейса.
+  Assert'ы проверяют СУТЬ, а не «элемент существует»: `assert_scroll_unchanged`
+  (равенство `scrollY == S` на всём бюджете) и `assert_top_chrome_not_darkened`
+  (порог luma держится всё окно 10с, симметрично позитивной
+  `assert_top_chrome_darkened` TC-128). Негатив защищён от вакуумной истинности
+  тремя якорями: предскролл к `S ≈ innerHeight` строго внутри окна
+  `(0.95×innerHeight, maxScroll − 0.95×innerHeight)` со своей сверкой (иначе
+  кламп у границы замаскировал бы сломанный гейт), сверка `pathname ^/works/\d`
+  (гейт :1154) и проверка `interactive is False` на каждом из трёх тапов (guard
+  :1155). Given-предпосылка тумблера OFF сверена явным
+  `assert_tap_to_scroll_enabled(expected=False)`, а не предположена по дефолту.
+- **Фикстуры и данные:** сигнатура `(loved_work_seeded, replay, driver)` даёт
+  верный порядок — `clean_state()` + `seed_library` отрабатывают ДО создания
+  Appium-сессии (требование HANDOFF); `replay` возвращает прокси и глушит
+  mitmdump в teardown независимо от исхода. Тест не зависит от порядка
+  выполнения других кейсов (тумблер не мутируется — используется дефолт после
+  `pm clear`, сверенный assert'ом).
+- **Flake-риск:** ожидания явные; оба негативных оракула опрашивают ВЕСЬ
+  бюджет (`assert_holds_for`), а не читают состояние один раз сразу после тапа —
+  позднее «докатывание» эффекта не проскочит. Координаты тапа пересчитываются
+  от текущего `innerWidth/innerHeight` перед каждым диспатчем; `baseline_luma`
+  снят в Given (до первого тапа), что закрывает дыру маскировки состояния
+  fullscreen.
+- **Зелёный прогон (п.6, независимое воспроизведение):**
+  `powershell -NoProfile -ExecutionPolicy Bypass -Command ". D:\AO3_tests\scripts\tasks.ps1; Invoke-Pytest tests/test_reading_ux.py -k test_tap_zone_disabled_no_effect_in_any_third -q"`
+  → `1 passed, 5 deselected in 70.34s`, `PYTEST_EXIT=0`
+  (устройство сверено заранее: `Get-Device` → `DEVICE: emulator-5554`).
+- **Красная проба (п.7), две порчи, обе откачены:** порча —
+  симуляция СЛОМАННОГО гейта на уровне состояния WebView (`window.
+  __ao3TapToScroll = true` при тумблере OFF), `app-under-test/` не трогался.
+  Проба №1 (порча перед первым тапом): `PYTEST_EXIT=1`, падение на смысловом
+  ассерте `assert_scroll_unchanged` — «scrollY изменился: было 1602, стало 79»
+  (дельта −1523 ≈ −0.95×innerHeight, подпись `scrollBy` из :1158), не
+  таймаут-мусор. Проба №2 (порча ПОСЛЕ верхней трети — целилась в самый слабый,
+  пиксельный оракул средней трети): `PYTEST_EXIT=1`, падение на
+  `assert_top_chrome_not_darkened` — «верхняя полоса потемнела (luma=137.1 <
+  baseline*0.7=162.5) после тапа — toggleFullscreen, похоже, был вызван»; в этом
+  же прогоне ассерт верхней трети прошёл штатно, что дополнительно показывает
+  неотавтологичность обоих предикатов. Обе временные правки откачены
+  `git checkout -- framework/tests/test_reading_ux.py`; после отката
+  `git status --porcelain` не содержит `framework/tests/test_reading_ux.py` —
+  дифф теста чист.

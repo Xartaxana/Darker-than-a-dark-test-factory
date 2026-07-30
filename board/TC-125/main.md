@@ -2,27 +2,27 @@
 key: "TC-125"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Tap to scroll: значение тумблера и его эффект переживают kill+relaunch приложения"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:settings", "risk:R-11"]
+labels: ["test-case", "area:settings", "risk:R-11", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-30T16:50:00Z"
-updated: "2026-07-30T16:50:00Z"
+created: "2026-07-30T17:36:49Z"
+updated: "2026-07-30T17:36:49Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Tap to scroll: значение тумблера и его эффект переживают kill+relaunch приложения
 
 _Спроецировано из `test-cases/settings/TC-125.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-125 — Tap to scroll ON переживает kill+relaunch приложения
 
@@ -96,6 +96,91 @@ work-страница; тап по нижней трети подтверждё�
 - Реплей-прокси (mitmproxy) должен пережить сам relaunch приложения — это
   инфраструктурный факт уже проверенных сценариев (TC-025 автоматизирован),
   не новый риск.
+
+## Ревью автотеста (F1, test-reviewer, 2026-07-30T17:36:49Z) — PASS
+
+Вердикт: **пройдено**, `Approved -> Automated`, `automation_status: active`.
+
+- **п.1 архитектура:** `python scripts/arch_check.py` -> `ошибок 0, предупреждений 0`;
+  файл теста не в ALLOWLIST, локаторов/driver-обвязки в `tests/` нет, шаги — в
+  `steps/` (`app_steps`/`browser_steps`/`settings_steps`/`library_steps`/
+  `rating_steps`), `sleep` отсутствует (только `core/waits`).
+- **п.2 traceability:** `@allure.id("TC-125")` == id кейса; `@pytest.mark.p1` ==
+  `priority: P1`; `@pytest.mark.replay` + indirect-фикстура `replay`
+  (`work_with_download.mitm`) — живого AO3 нет; `automated_by` указывает на
+  существующую функцию (`-k` собрал ровно 1 тест); `features:
+  [settings-tap-to-scroll-toggle]` есть в `docs/feature-registry.yaml:381`.
+- **п.3 соответствие GWT и инварианту:** Given (`tap_to_scroll = ON` через
+  Settings, work-страница как вкладка-0, >=2 вкладки, не fullscreen) —
+  `_given_tap_to_scroll_work_page_as_tab_zero_with_tabstrip`; baseline-тап ДО kill
+  проверен тем же содержательным ассертом дельты, что и после релонча; When —
+  `restart_app_via_adb` = `adb.force_stop()` + `am start -W`
+  (`framework/steps/app_steps.py:190-200`), НЕ `terminate_app`/`activate_app`
+  (реальная смерть процесса, как требует кейс); Then №1 — `assert_tap_to_scroll_
+  enabled(expected=True)` (UI-отображение из prefs, `SettingsScreen.kt:177`);
+  Then №2 — `assert_tap_to_scroll_delta(direction=1)`, то есть проверяется
+  ЭФФЕКТ (реальный скролл на ~0.95×innerHeight), а не «тумблер выглядит ON» и не
+  «элемент существует». Обе стороны инварианта (persist prefs -> UI + persist
+  prefs -> реинъекция `window.__ao3TapToScroll` при свежей загрузке) покрыты.
+- **п.4 фикстуры/данные:** порядок сигнатуры `(loved_work_seeded, replay, driver)`
+  — сидинг (`clean_state` + `seed_library`) ДО создания Appium-сессии, как требует
+  HANDOFF; replay-прокси снимается в teardown фикстуры; зависимости от порядка
+  других тестов нет.
+- **п.5 flake-риск:** все ожидания явные и опрашивающие (`wait_until` в
+  `assert_tap_to_scroll_delta`, `wait_webview_viewport_ready`, `wait_ui_ready`);
+  тап диспатчится по ПЕРЕСЧИТАННОЙ геометрии вьюпорта, без хардкода. Проверен
+  явный вопрос ревьюера TC-124 (гонка `wait_webview_viewport_ready` vs инъекция
+  `window.__ao3TapToScroll` в `onPageFinished`, `BrowserScreen.kt:603`) — разбор
+  ниже, отдельным пунктом; блокером не является.
+- **п.6 независимое воспроизведение (зелёное):**
+  `powershell -NoProfile -ExecutionPolicy Bypass -Command ". D:\AO3_tests\scripts\tasks.ps1;
+  Invoke-Pytest -k test_tap_to_scroll_survives_kill_and_relaunch -q"` ->
+  `1 passed, 242 deselected in 79.60s`, `PYTEST_EXIT=0`.
+- **п.7 красная проба (witness):** порча — на уровне ДАННЫХ, ровно того условия,
+  которое кейс объявляет инвариантом: во временной вставке в
+  `app_steps.restart_app_via_adb` между `force_stop()` и `am start` persisted-флаг
+  переписывался в мёртвом процессе
+  (`run-as ... sed -i 's/"tap_to_scroll" value="true"/..."false"/'
+  /data/data/com.example.ao3_wrapper/shared_prefs/ao3_settings.xml`, факт порчи
+  сверен обратным `cat`) — то есть симулировано «значение НЕ пережило kill».
+  Прогон той же канонической командой -> `1 failed`, `PYTEST_EXIT=1`, падение на
+  СОДЕРЖАТЕЛЬНОМ ассерте Then, не по таймауту:
+  `tests/test_reading_ux.py:462` -> `steps/settings_steps.py:76`
+  `AssertionError: тумблер «Tap to scroll (work pages)» показывает False, ожидали True`.
+  Откат порчи — `git checkout -- framework/steps/app_steps.py` тем же ходом,
+  `git status --porcelain` больше не показывает `framework/steps/app_steps.py`
+  (дифф фреймворка чист). `app-under-test/` не трогался.
+
+### Разбор гонки `wait_webview_viewport_ready` vs инъекция флага (вопрос ревьюера TC-124)
+
+`window.__ao3TapToScroll` ставится в `onPageFinished` (`BrowserScreen.kt:603`),
+сам bridge с тап-обработчиком — там же строкой 613; `wait_webview_viewport_ready`
+ждёт лишь `innerHeight > 0`, то есть формально НЕ является якорем факта инъекции.
+Тем не менее это не ложный PASS и практически не флейк:
+
+1. **Направление отказа безопасное.** Если бы тап пришёлся раньше инъекции, гейт
+   `ao3_bridge.js:1153` (или отсутствующий ещё обработчик) просто не дал бы
+   эффекта, `assert_tap_to_scroll_delta` отпросил бы 5 с и УПАЛ. Ложно-ЗЕЛЁНЫМ
+   этот тест от такой гонки стать не может — только ложно-красным; маскировки
+   продуктового бага нет.
+2. **Окно гонки закрыто содержательными шагами.** `BrowserScreen` в
+   `MainActivity.kt:470-489` рендерится ВСЕГДА («Browser is always rendered to
+   keep WebViews alive»), Library/Settings рисуются поверх — значит уход в
+   Settings и возврат в Browse не пересоздают WebView и не вызывают повторной
+   загрузки. Между релончем и тапом тест выполняет `wait_ui_ready`,
+   `open_tab("Settings")`, чтение тумблера, `open_tab("Browse")` и нативный
+   `swipe_close_tab(0)` — секунды UI-раундтрипов, тогда как replay-страница
+   отдаётся локальным mitm-прокси. Единственная загрузка вкладки `[1]`
+   завершается задолго до тапа.
+3. **`wait_webview_viewport_ready` дополнительно синхронизирует смену контекста.**
+   `contexts.webview_name` не кеширует и берёт первый `WEBVIEW`-контекст заново на
+   каждой итерации (`framework/core/contexts.py:14-18, 36-43`), поэтому пока
+   уничтоженный свайпом контекст вкладки-0 ещё числится в `driver.contexts`,
+   опрос видит `innerHeight == 0` и продолжает ждать; выход из ожидания означает,
+   что подобран уже живой контекст вкладки `[1]`.
+
+Итог: усиливать якорь до проверки самого флага не требуется (и это была бы
+проверка реализации, а не эффекта); замечание закрыто как неблокирующее.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»
