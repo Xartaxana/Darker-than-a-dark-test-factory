@@ -168,9 +168,12 @@ SORT_FILTER_FORM_URL = "https://archiveofourown.org/tags/Fluff/works"
 # Высота/скролл (доработка attempt 2, критик-вход B1): каждая страница несёт
 # `<meta name="viewport" content="width=device-width, initial-scale=1.0">` и 80
 # филлер-абзацев ПО ЭТАЛОНУ `render_tab_marker_html`/AT-BUG-015 (см. докстринг
-# там же). ЧЕСТНАЯ ГРАНИЦА: высота — по эталону, а не по измерению; device-замер
-# `scrollHeight`/`innerHeight` ИМЕННО этой фикстуры на эмуляторе НЕ СНЯТ — остаток
-# см. `docs/HANDOFF.md`.
+# там же). Device-замер СНЯТ первым device-прогоном фикстуры (TC-129,
+# 2026-07-30, эмулятор конвейера): `scrollY≈4341.7 innerHeight=798
+# scrollHeight=5104` — документ в 6.4 вьюпорта, скролл реален; замер
+# ассертится и прикладывается каждым прогоном
+# (`browser_steps.scroll_listing_to_bottom`, allure-attach), деталь — в
+# `test-cases/settings/TC-129.md` «Заметки для автоматизации».
 LISTING_PAGINATED_FILENAME = "listing_paginated.mitm"
 LISTING_PAGINATED_URL = "https://archiveofourown.org/works?ao3_companion_fixture=listing_paginated"
 LISTING_PAGINATED_PAGE_COUNT = 5
