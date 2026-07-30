@@ -65,6 +65,19 @@ def enable_tap_to_scroll(driver):
     SettingsScreen(driver).set_tap_to_scroll(True)
 
 
+@allure.step("Then в Settings тумблер «Tap to scroll (work pages)» показывает {expected}")
+def assert_tap_to_scroll_enabled(driver, expected: bool = True):
+    """TC-123: собственный Given кейса («tap_to_scroll = OFF, дефолт») сверяется
+    явным assert'ом, а не молчаливо предполагается — тот же класс, что
+    `assert_auto_download_enabled` (TC-113): без него негативный инвариант был
+    бы неотличим от кейса, где предпосылка тумблера случайно не выполнена
+    (например, состояние утекло из другого прогона)."""
+    actual = SettingsScreen(driver).is_tap_to_scroll_checked()
+    assert actual == expected, (
+        f"тумблер «Tap to scroll (work pages)» показывает {actual}, ожидали {expected}"
+    )
+
+
 @allure.step("Given в Settings включена опция «Infinite scroll (listing pages)»")
 def enable_infinite_scroll(driver):
     """TC-129/TC-130: дефолт ON (`infiniteScroll: Boolean = true`,
@@ -74,6 +87,28 @@ def enable_infinite_scroll(driver):
     на загрузке листинговой страницы — тумблер обязан быть установлен ДО перехода
     на неё, см. заметки TC-130)."""
     SettingsScreen(driver).set_infinite_scroll(True)
+
+
+@allure.step("Given в Settings выключена опция «Infinite scroll (listing pages)»")
+def disable_infinite_scroll(driver):
+    """TC-129: симметрично `enable_infinite_scroll` (TC-130) — гейт
+    `ao3_bridge.js:530` вычисляется ОДИН РАЗ при инъекции на загрузке
+    листинговой страницы, тумблер обязан быть выставлен ДО перехода на неё
+    (переключение после загрузки не действует ретроактивно — non-goal кейса)."""
+    SettingsScreen(driver).set_infinite_scroll(False)
+
+
+@allure.step("Then в Settings тумблер «Infinite scroll (listing pages)» показывает {expected}")
+def assert_infinite_scroll_enabled(driver, expected: bool = True):
+    """TC-129 (класс ложно-зелёных #2, CLAUDE.md): `set_infinite_scroll` тапает
+    тумблер УСЛОВНО (только если текущее состояние не совпадает с желаемым) и
+    сам ничего не утверждает — без явного assert'а непроизошедший переход
+    ON->OFF был бы неотличим от случая, где Given кейса случайно не выполнен.
+    Тот же приём, что `assert_tap_to_scroll_enabled`/`assert_auto_download_enabled`."""
+    actual = SettingsScreen(driver).is_infinite_scroll_checked()
+    assert actual == expected, (
+        f"тумблер «Infinite scroll (listing pages)» показывает {actual}, ожидали {expected}"
+    )
 
 
 @allure.step("When в Settings тумблер «Hide {rating_label} works» установлен в {enabled}")

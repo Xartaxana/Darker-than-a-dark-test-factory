@@ -1,19 +1,18 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-30T12:14:20Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-07-30T15:46:32Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **680.7** (RUN-20260702-0300)
+- smoke: Closed · smoke_freshness_hours: **684.2** (RUN-20260702-0300)
 - regression: not_run
 - canary: not_run
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **1**
-- p0_automation_coverage: **97%** (36/37)
-- p1_automation_coverage: **92%** (61/66)
-  - непокрытые P0: TC-118
+- p0_automation_coverage: **100%** (37/37)
+- p1_automation_coverage: **94%** (62/66)
 - Test debt открыт: **0**
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
@@ -26,17 +25,17 @@ generated_at: 2026-07-30T12:14:20Z · генератор: `scripts/queue_snapsho
 
 ## Тест-кейсы (130)
 
-- Approved: **8** · Automated: **121** · Blocked: **1**
-- автотесты (B3): active: **121**
+- Approved: **5** · Automated: **124** · Blocked: **1**
+- автотесты (B3): active: **124**
 
 | Область | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | accessibility |  |  |  | 3 |  |
 | backup |  |  |  | 1 |  |
-| browser |  |  | 1 | 12 |  |
-| canary |  |  | 1 | 22 |  |
+| browser |  |  |  | 13 |  |
+| canary |  |  |  | 23 |  |
 | compatibility |  |  |  | 3 |  |
-| downloads |  |  | 2 | 12 |  |
+| downloads |  |  | 1 | 13 |  |
 | errors |  |  |  | 1 |  |
 | filter-profiles |  |  |  | 5 |  |
 | library |  |  |  | 15 |  |
@@ -82,9 +81,10 @@ generated_at: 2026-07-30T12:14:20Z · генератор: `scripts/queue_snapsho
 
 - нет
 
-## Эскалации (4)
+## Эскалации (5)
 
 - [2026-07-21T08:57:20Z] **BUG-012** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-18T12:00:00Z | нужно: ответить в ## Обсуждение
 - [2026-07-21T08:57:20Z] **TC-020** [sla:blocked_any] — в Blocked с 2026-07-19T09:55:00Z (причина: product_decision) | нужно: разобрать причину и вывести из Blocked
 - [2026-07-21T22:43:25Z] **BUG-013** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-19T17:30:00Z | нужно: ответить в ## Обсуждение
 - [2026-07-24T05:10:04Z] **BUG-011** [sla:bug_open_major] — major-баг open с 2026-07-15T14:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
+- [2026-07-30T12:38:12Z] **BUG-016** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-28T12:00:00Z | нужно: ответить в ## Обсуждение

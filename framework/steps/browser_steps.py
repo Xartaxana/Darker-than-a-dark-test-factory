@@ -587,6 +587,30 @@ def get_webview_inner_height(driver) -> int:
         return int(driver.execute_script("return window.innerHeight;") or 0)
 
 
+@allure.step("Then WebView-контекст отдаёт ненулевые размеры вьюпорта (готов к execute_script)")
+def wait_webview_viewport_ready(driver, timeout: int | None = None) -> int:
+    """TC-125: после `am force-stop` + relaunch `wait_ao3_loaded` (current_url
+    содержит `archiveofourown.org`) может стать истинным РАНЬШЕ, чем
+    свежепересозданный после смерти процесса `android.webkit.WebView` реально
+    заляжет в layout — `webview_name()` (`framework/core/contexts.py`) берёт
+    ПЕРВЫЙ контекст, содержащий `WEBVIEW`, из `driver.contexts`, без гарантии,
+    что это именно полностью отрисованный instance; наблюдался `innerHeight ==
+    innerWidth == 0` (`document.elementFromPoint(0, 0)` промахивается мимо
+    любого узла) сразу после `wait_ao3_loaded`, хотя `current_url` уже был
+    верным. Опрашивает (не читает один раз) `window.innerHeight`, пока не
+    станет > 0 — тот же класс WEBVIEW-round-trip латентности, что остальные
+    опросы этого модуля."""
+    def _ready(_d):
+        with contexts.in_webview(_d):
+            return int(_d.execute_script("return window.innerHeight;") or 0) > 0
+
+    wait_until(
+        driver, _ready, timeout=timeout,
+        message="WebView не отдал ненулевой innerHeight после relaunch — контекст ещё не готов",
+    )
+    return get_webview_inner_height(driver)
+
+
 @allure.step(
     "When синтетически тапнута точка вьюпорта на высоте {y_fraction}×innerHeight "
     "(X — центр ширины, целевой DOM-узел — document.elementFromPoint)"
@@ -628,9 +652,12 @@ def dispatch_synthetic_viewport_tap(driver, y_fraction: float) -> dict:
             "}"
             "var ev = new MouseEvent('click', {bubbles: true, cancelable: true, "
             "clientX: clientX, clientY: clientY, view: window});"
+            "var interactive = !!target.closest('a, button, input, select, textarea, "
+            "label, summary, [role=\"button\"]');"
             "target.dispatchEvent(ev);"
             "return {found: true, innerHeight: innerHeight, innerWidth: innerWidth, "
-            "clientX: clientX, clientY: clientY, tagName: target.tagName};",
+            "clientX: clientX, clientY: clientY, tagName: target.tagName, "
+            "interactive: interactive};",
             y_fraction,
         )
     assert result.get("found"), (
@@ -640,7 +667,8 @@ def dispatch_synthetic_viewport_tap(driver, y_fraction: float) -> dict:
     allure.attach(
         f"y_fraction={y_fraction:.3f} innerHeight={result['innerHeight']} "
         f"innerWidth={result['innerWidth']} clientX={result['clientX']:.1f} "
-        f"clientY={result['clientY']:.1f} target_tag={result['tagName']!r}",
+        f"clientY={result['clientY']:.1f} target_tag={result['tagName']!r} "
+        f"interactive={result.get('interactive')!r}",
         name="viewport-tap-dispatch-geometry",
         attachment_type=allure.attachment_type.TEXT,
     )
@@ -728,6 +756,159 @@ def assert_tap_to_scroll_delta(
         ),
     )
     return get_webview_scroll_y(driver)
+
+
+# --- TC-123: tap_to_scroll=OFF — негативный инвариант (ни одна треть work-страницы
+# не производит эффекта). Единственный гейт `ao3_bridge.js:1153`
+# (`if (!window.__ao3TapToScroll) return;`) применяется ДО вычисления координаты
+# тапа, поэтому предскролл/negative-Then общие для всех трёх третей.
+
+@allure.step(
+    "Given work-страница предварительно проскроллена к позиции scrollY ≈ innerHeight "
+    "(строго не у края — предпосылка негативного инварианта TC-123)"
+)
+def prescroll_to_tap_zone_invariant_position(driver) -> int:
+    """TC-123: `S ≈ innerHeight`, строго внутри окна `(0.95×innerHeight, maxScroll −
+    0.95×innerHeight)` (`maxScroll = document.documentElement.scrollHeight - innerHeight`) —
+    иначе негативный Then («scrollY не меняется») был бы истинен и при
+    КОРРЕКТНО работающем гейте, и при СЛОМАННОМ: `scrollBy` от сломанного
+    (пропускающего) гейта клампился бы браузером обратно к границе (0 или
+    maxScroll), неотличимо от «гейт сработал» (см. TC-123 предусловия). Узел 3
+    AT-BUG-030 (высота документа >= 3×innerHeight) гарантирует
+    `maxScroll >= 2×innerHeight`, поэтому `innerHeight` всегда лежит в
+    допустимом окне с запасом. Возвращает фактический `scrollY` после
+    предскролла — окно сверяется собственным assert'ом, а не предполагается."""
+    with contexts.in_webview(driver):
+        metrics = driver.execute_script(
+            "return {innerHeight: window.innerHeight, "
+            "scrollHeight: document.documentElement.scrollHeight};"
+        )
+    inner_height = int(metrics["innerHeight"])
+    max_scroll = int(metrics["scrollHeight"]) - inner_height
+    target_px = round(inner_height)
+    scroll_webview_to(driver, target_px)
+    scroll_after = get_webview_scroll_y(driver)
+    low = 0.95 * inner_height
+    high = max_scroll - 0.95 * inner_height
+    allure.attach(
+        f"S={scroll_after} innerHeight={inner_height} maxScroll={max_scroll} "
+        f"window=({low:.1f}, {high:.1f})",
+        name="tap-zone-prescroll-geometry",
+        attachment_type=allure.attachment_type.TEXT,
+    )
+    assert low < scroll_after < high, (
+        f"предскролл scrollY={scroll_after} (target={target_px}) не попал строго "
+        f"внутрь окна ({low:.1f}, {high:.1f}) при innerHeight={inner_height}, "
+        f"maxScroll={max_scroll} — негативный Then TC-123 был бы неотличим от "
+        f"клампа к границе скролла"
+    )
+    return scroll_after
+
+
+@allure.step("Then window.scrollY остаётся равным {expected} (тап не произвёл эффекта, tap_to_scroll=OFF)")
+def assert_scroll_unchanged(driver, expected: int, timeout: int = 5, poll_interval: float = 0.3) -> None:
+    """TC-123: негативная сверка, симметричная `assert_top_chrome_not_darkened` —
+    опрашивает ВЕСЬ бюджет через `assert_holds_for`, а не читает `scrollY` один
+    раз сразу после тапа (тот же класс: условие «не изменился» уже истинно с
+    первого кадра, одноразовое чтение не отличило бы «гейт корректно подавил
+    эффект» от «эффект ещё не докатился» — держим негатив на всём бюджете)."""
+    def check() -> bool:
+        actual = get_webview_scroll_y(driver)
+        assert actual == expected, (
+            f"scrollY изменился: было {expected}, стало {actual} — тап произвёл эффект, "
+            f"хотя tap_to_scroll=OFF должен был подавить весь обработчик "
+            f"(ao3_bridge.js:1153, единый ранний return ДО вычисления третьей тапа)"
+        )
+        return True
+    assert_holds_for(
+        check, budget_s=timeout, interval_s=poll_interval,
+        msg=f"scrollY отклонился от ожидаемого {expected} (tap_to_scroll=OFF)",
+    )
+
+
+# --- TC-124: позитивный якорь пересоздания документа (rework attempt 2,
+# критик-вход B2'). `tap_to_scroll` синхронизируется с живым WebView ДВУМЯ
+# путями — реактивным push на уже открытую вкладку (`LaunchedEffect(tapToScroll)`,
+# BrowserScreen.kt:187-192, `evaluateJavascript`, БЕЗ reload/навигации) и
+# реинъекцией при (пере)загрузке (`onPageFinished`, BrowserScreen.kt:603). Без
+# независимого от самого тумблера сигнала эти два пути неотличимы: наблюдаемый
+# эффект тапа («страница скроллится») одинаков в обоих случаях. Маркер —
+# JS-поле на `window` ТЕКУЩЕГО документа: `reload()`/навигация пересоздают
+# `window` с нуля (маркер исчезает), `evaluateJavascript` на уже загруженный
+# документ его не трогает (маркер переживает) — то же различение, что
+# `assert_active_tab_url`/`assert_scroll_restored` делают для других гонок
+# этого модуля, только для факта «документ пересоздан», а не значения стейта.
+
+@allure.step("Given документ WebView помечен уникальным маркером идентичности")
+def mark_document_identity(driver) -> str:
+    """Возвращает маркер — вызывающий код сверяет его тем же значением через
+    `assert_document_identity_preserved`/`wait_document_identity_changed`."""
+    marker = str(uuid.uuid4())
+    with contexts.in_webview(driver):
+        driver.execute_script("window.__ao3TestDocMarker = arguments[0];", marker)
+    allure.attach(
+        marker, name="document-identity-marker-set", attachment_type=allure.attachment_type.TEXT,
+    )
+    return marker
+
+
+def _read_document_identity_marker(driver):
+    with contexts.in_webview(driver):
+        return driver.execute_script("return window.__ao3TestDocMarker;")
+
+
+@allure.step(
+    "Then документ WebView НЕ пересоздавался — маркер идентичности сохранился "
+    "({prev_marker})"
+)
+def assert_document_identity_preserved(
+    driver, prev_marker: str, timeout: int = 5, poll_interval: float = 0.3,
+) -> None:
+    """TC-124 (сценарий live-push): позитивно доказывает, что наблюдаемый
+    эффект тапа применился именно реактивным push (`LaunchedEffect(tapToScroll)`)
+    к уже открытому документу, а не переинъекцией при загрузке — без этого
+    ассерта сценарий «без reload» структурно неотличим от «reload произошёл
+    незаметно» (симметрично `assert_scroll_unchanged` — опрашивает весь
+    бюджет, а не читает один раз сразу после действия)."""
+    def check() -> bool:
+        actual = _read_document_identity_marker(driver)
+        assert actual == prev_marker, (
+            f"маркер идентичности документа изменился: было {prev_marker!r}, стало "
+            f"{actual!r} — документ WebView был пересоздан (неожиданный reload/"
+            f"навигация), хотя сценарий этого не предполагает"
+        )
+        return True
+    assert_holds_for(
+        check, budget_s=timeout, interval_s=poll_interval,
+        msg=f"маркер идентичности документа отклонился от {prev_marker!r}",
+    )
+
+
+@allure.step(
+    "Then документ WebView пересоздан — маркер идентичности исчез (reload "
+    "завершён)"
+)
+def wait_document_identity_changed(driver, prev_marker: str, timeout: int | None = None) -> None:
+    """TC-124 (сценарий theme-reload): точка синхронизации ПЕРЕД любым
+    дальнейшим взаимодействием со страницей (предскролл/тап) — опрашивает
+    маркер, пока `reload()` (BrowserScreen.kt `LaunchedEffect(darkTheme)`) не
+    пересоздаст документ и не сотрёт его. Служит одновременно (а) позитивным
+    доказательством, что reload реально произошёл (не только «тумблер всё ещё
+    ON», что могло бы быть истинно и без reload), и (б) гарантией, что
+    последующие `execute_script`-чтения видят уже финальный, полностью
+    пересозданный документ, а не устаревшее состояние старого (класс B2':
+    без этой точки синхронизации предскролл мог начаться ДО завершения
+    reload и оперировать над уже неактуальным scrollY)."""
+    wait_until(
+        driver,
+        lambda d: _read_document_identity_marker(d) != prev_marker,
+        timeout=timeout or settings.WEBVIEW_LOAD_TIMEOUT,
+        message=(
+            f"документ WebView не пересоздался за отведённый бюджет — маркер "
+            f"идентичности остаётся {prev_marker!r}, reload от смены темы, похоже, "
+            f"не произошёл"
+        ),
+    )
 
 
 @allure.step("When лишние вкладки WebView закрыты (оставлена только активная)")
@@ -1952,3 +2133,141 @@ def assert_rate_buttons_present_for(driver, work_ids: list[str]) -> None:
                 f"вновь подгруженный блёрб work_id={work_id}: Rate-кнопка не найдена "
                 f"(button_count={state['button_count']})"
             )
+
+
+# --- TC-129: infinite scroll OFF — скролл к концу листинга НЕ подгружает
+# следующую страницу, нумерованная пагинация остаётся штатной ---
+
+@allure.step("When листинг проскроллен до самого конца документа")
+def scroll_listing_to_bottom(driver) -> None:
+    """TC-129 (OFF-сторона): в отличие от `trigger_infinite_scroll_load`
+    (ON-сторона, прицельный минимальный скролл — риск зацепить каскад/эвикцию
+    окна на 5-страничной фикстуре), здесь скролл к самому низу документа
+    безопасен: при `infinite_scroll=OFF` гейт `ao3_bridge.js:530` не
+    подписывает `scroll`-листенер вовсе на этой загрузке страницы — скроллить
+    прицельно попросту не к чему.
+
+    Доработка attempt 2 (критик-вход Б1): `scrollTo` читается ОБРАТНО сразу
+    после вызова — фикстура листинга (`recording_builder.py::render_listing_
+    filler_html`) гарантирует высоту ТОЛЬКО количеством филлер-абзацев, БЕЗ
+    `min-height` (в отличие от work-страниц, где AT-BUG-030 добавил
+    `min-height: 6000px`); если на конкретном устройстве/вьюпорте документ
+    не выше вьюпорта, `scrollTo` клампится к 0, скролл не происходит вовсе, и
+    негативный Then (`assert_work_blurb_count_holds`) прошёл бы вакуумно
+    зелёным независимо от того, сломан ли гейт тумблера — тот же класс
+    ложно-зелёных #1 (CLAUDE.md), что уже разобран для `assert_work_blurb_
+    count_holds`, но на уровне достижимости самого скролла, а не эффекта.
+    Замер прикладывается в Allure — это первый device-прогон фикстуры,
+    подтверждающий (или опровергающий) прокручиваемость на живом WebView."""
+    with contexts.in_webview(driver):
+        result = driver.execute_script(
+            "window.scrollTo(0, document.body.scrollHeight);"
+            "return {y: window.scrollY, ih: window.innerHeight, "
+            "sh: document.body.scrollHeight};"
+        )
+    allure.attach(
+        f"scrollY={result['y']} innerHeight={result['ih']} "
+        f"scrollHeight={result['sh']}",
+        name="listing-scroll-to-bottom-geometry",
+        attachment_type=allure.attachment_type.TEXT,
+    )
+    assert result["y"] > 0, (
+        f"страница не прокрутилась (scrollY=0, innerHeight={result['ih']}, "
+        f"scrollHeight={result['sh']}) — негативный Then вакуумен: документ не "
+        f"выше вьюпорта, скролл к концу не мог произойти"
+    )
+
+
+@allure.step("Then на листинге весь бюджет остаётся ровно {expected} work-блёрб(ов) (li[id^='work_'])")
+def assert_work_blurb_count_holds(driver, expected: int, timeout: int = 8, poll_interval: float = 0.3) -> None:
+    """TC-129: негативный Then («подгрузки не произошло») — тот же класс, что
+    `assert_scroll_unchanged`/`assert_top_chrome_not_darkened`: одноразовое
+    чтение сразу после скролла не отличило бы «infinite_scroll корректно
+    выключен» от «фоновый fetch ещё не успел дописать DOM» (класс
+    ложно-зелёных #1, CLAUDE.md — негатив об отсутствии сетевого эффекта
+    держится ВЕСЬ бюджет, эффект достижим на этой replay-фикстуре, не уходит
+    на живой AO3/404)."""
+    def check() -> bool:
+        with contexts.in_webview(driver):
+            ids = ListingPage(driver).blurb_work_ids()
+        assert len(ids) == expected, (
+            f"на листинге {len(ids)} work-блёрбов, ожидали ровно {expected} — "
+            f"фоновая подгрузка (fetchAndAppend, ao3_bridge.js:557-615) сработала, "
+            f"хотя infinite_scroll=OFF должен был не подписать scroll-листенер вовсе: {ids}"
+        )
+        return True
+
+    assert_holds_for(
+        check, budget_s=timeout, interval_s=poll_interval,
+        msg=f"число work-блёрбов отклонилось от ожидаемых {expected}",
+    )
+
+
+@allure.step("Then нумерованная пагинация («1»/«2») остаётся видимой (infinite_scroll=OFF не прячет её)")
+def assert_pagination_numbered_items_visible(driver) -> None:
+    """TC-129: `ao3_bridge.js:541-545` прячет (`display:none`) КАЖДЫЙ `li`
+    пагинации, КРОМЕ `.next`/`.previous`, но ТОЛЬКО внутри гейта `:530`
+    (`infinite_scroll !== false`) — при OFF блок не выполняется вовсе,
+    нумерованные пункты обязаны остаться видимыми. «Next →» НАМЕРЕННО не
+    входит в эту проверку (критик-вход N5 TC-129): `:542` не прячет `li.next`
+    ни в одном состоянии тумблера — включение его сюда утверждало бы факт,
+    которого код не производит."""
+    with contexts.in_webview(driver):
+        items = ListingPage(driver).pagination_numbered_items_state()
+    assert items, "нумерованные пункты пагинации (не .next/.previous) не найдены в DOM"
+    hidden = [item for item in items if item["display"] == "none"]
+    assert not hidden, (
+        f"часть нумерованных пунктов пагинации скрыта (display:none), хотя infinite_scroll=OFF "
+        f"не должен прятать их (гейт ao3_bridge.js:530/541-545 выполняется только при ON): "
+        f"{hidden} (все пункты: {items})"
+    )
+
+
+@allure.step("When нажата ссылка «Next →» нумерованной пагинации")
+def tap_next_page_link(driver, before: tuple[str, str] | None = None, timeout: int | None = None) -> None:
+    """TC-129: клик по «Next →» — обычная разметка AO3 (`li.next a`, НЕ
+    инжектируется bridge, `ao3_bridge.js:539-540` намеренно оставляет
+    Prev/Next нативными ссылками) — тап через JS DOM API, тот же приём, что
+    `click_probe_link`/`tap_rate_button`.
+
+    Доработка attempt 2 (критик-вход Н2): ждём не `document.readyState`
+    (СТАРЫЙ документ уже `complete` ДО коммита навигации — фактический
+    no-op, гонка с самой навигацией), а РЕАЛЬНУЮ смену
+    `pathname`/`search` через `get_webview_location`. `before` опционален —
+    если не передан, снимается тем же вызовом (обратная совместимость для
+    вызывающих без снимка ДО клика)."""
+    if before is None:
+        before = get_webview_location(driver)
+    with contexts.in_webview(driver):
+        link = ListingPage(driver).next_page_link()
+        driver.execute_script(
+            "arguments[0].scrollIntoView({block: 'center'}); arguments[0].click();", link,
+        )
+    wait_until(
+        driver,
+        lambda d: get_webview_location(d) != before,
+        timeout=timeout or settings.WEBVIEW_LOAD_TIMEOUT,
+        message="страница 2 не завершила навигацию (pathname/search не изменились) после клика «Next →»",
+    )
+
+
+@allure.step("Then window.location.pathname/query WebView изменились (клик «Next →» — полная навигация)")
+def assert_webview_location_changed(driver, before: tuple[str, str]) -> None:
+    """TC-129: тап по «Next →» — штатная навигация AO3 без вмешательства
+    bridge, симметрично `assert_webview_location_unchanged` (TC-130, фоновый
+    fetch НЕ меняет location).
+
+    Доработка attempt 2 (критик-вход Н3): кейс требует навигации КОНКРЕТНО НА
+    СТРАНИЦУ 2, не любой смены location — href фикстуры детерминирован
+    (`recording_builder.py::build_listing_paginated`), поэтому `search`
+    обязан нести `page=2`."""
+    after = get_webview_location(driver)
+    assert after != before, (
+        f"window.location.pathname/query WebView не изменились после клика «Next →»: "
+        f"было {before}, стало {after} — ожидали полную навигацию на страницу 2"
+    )
+    _, search_after = after
+    assert "page=2" in search_after, (
+        f"после клика «Next →» query не несёт page=2 (стало {after}) — навигация "
+        f"произошла не на страницу 2 конкретно"
+    )

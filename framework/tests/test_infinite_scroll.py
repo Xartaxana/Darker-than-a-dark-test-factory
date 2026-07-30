@@ -6,16 +6,18 @@ browse-infinite-scroll + settings-infinite-scroll-toggle). Тумблер
 __ao3InfiniteScroll !== false && document.querySelector('li[id^="work_"].work.
 blurb')`) вычисляется ОДИН РАЗ при инъекции (`onPageFinished`, BrowserScreen.kt
 ~604/~613): тумблер, включённый ПОСЛЕ загрузки страницы, не подключит подписку
-scroll-листенера ретроактивно (см. TC-129, OFF-сторона — не автоматизирована в
-этом модуле).
+scroll-листенера ретроактивно (см. TC-129, OFF-сторона).
 
 `listing_paginated.mitm` (5 листинговых страниц, `page=1..5`, 1 work-блёрб на
 страницу, реальная разметка пагинации AO3) — единственная replay-фикстура,
 покрывающая пагинацию/infinite-scroll (см. `recording_builder.py`
 `LISTING_PAGINATED_FILENAME` докстринг за полным обоснованием B1/B2/F2/F3/F4).
 
-TC-130 (ON-сторона) единственный автоматизирован здесь — TC-129 (OFF, «скролл
-НЕ подгружает следующую страницу») остаётся Approved, следующий диспатч."""
+TC-129 (OFF-сторона) — скролл НЕ подгружает следующую страницу, нумерованная
+пагинация «1»/«2» остаётся видимой (`ao3_bridge.js:541-545` прячет её ТОЛЬКО
+внутри гейта `:530`, «Next →» намеренно исключён из этой проверки — `:542` не
+прячет `li.next` ни в одном состоянии тумблера), тап «Next →» — штатная
+навигация AO3."""
 from __future__ import annotations
 
 import allure
@@ -63,3 +65,51 @@ def test_infinite_scroll_on_loads_next_page_in_background(replay, clean_app, dri
     # инжектирована собственная Rate-кнопка — bridge остаётся живым для
     # подгруженного контента, не только для исходной страницы
     browser_steps.assert_rate_buttons_present_for(driver, new_ids)
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-129")
+@allure.title(
+    "Infinite scroll OFF: скролл к концу листинга не подгружает следующую "
+    "страницу, нумерованная пагинация остаётся штатной"
+)
+@pytest.mark.parametrize("replay", [rb.LISTING_PAGINATED_FILENAME], indirect=True)
+def test_infinite_scroll_off_keeps_native_pagination(replay, clean_app, driver):
+    # Given infinite_scroll = OFF установлен ДО перехода на листинг (гейт
+    # ao3_bridge.js:530 вычисляется один раз при инъекции — переключение
+    # ПОСЛЕ загрузки не действует ретроактивно, non-goal кейса), открыта
+    # страница 1 из 5 listing_paginated.mitm (ровно 1 li[id^="work_"],
+    # нумерованная пагинация «1, 2, Next →» видна)
+    app_steps.wait_ui_ready(driver)
+    app_steps.open_tab(driver, "Settings")
+    settings_steps.disable_infinite_scroll(driver)
+    settings_steps.assert_infinite_scroll_enabled(driver, expected=False)
+    app_steps.open_tab(driver, "Browse")
+    browser_steps.open_listing(driver, rb.LISTING_PAGINATED_URL)
+    ids_before = browser_steps.snapshot_work_blurb_ids(driver)
+    assert len(ids_before) == 1, (
+        f"Given TC-129 требует ровно 1 work-блёрб на странице 1 `listing_paginated.mitm`, "
+        f"фактически {len(ids_before)}: {ids_before}"
+    )
+
+    # When пользователь скроллит листинг до самого конца страницы (за
+    # пределы ol.work.index.group) — при OFF гейт :530 не подписал
+    # scroll-листенер вовсе на этой загрузке, доводить скролл до порога
+    # SCROLL_MARGIN незачем
+    browser_steps.scroll_listing_to_bottom(driver)
+
+    # Then новый work-блёрб не появляется — ol.work.index.group по-прежнему
+    # несёт РОВНО 1 li[id^="work_"] весь бюджет ожидания (эффект достижим на
+    # этой replay-фикстуре — page 2 реально записана, не уходит на живой AO3)
+    browser_steps.assert_work_blurb_count_holds(driver, 1)
+
+    # And нумерованная пагинация «1»/«2» остаётся видимой («Next →» не
+    # входит в эту проверку — :542 не прячет его ни в одном состоянии тумблера)
+    browser_steps.assert_pagination_numbered_items_visible(driver)
+
+    # And тап по ссылке «Next →» переводит на страницу 2 ПОЛНОЙ навигацией
+    # (смена pathname/query) — штатное поведение AO3 без вмешательства bridge
+    location_before = browser_steps.get_webview_location(driver)
+    browser_steps.tap_next_page_link(driver, before=location_before)
+    browser_steps.assert_webview_location_changed(driver, location_before)

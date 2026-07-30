@@ -2,7 +2,7 @@
 key: "TC-129"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Infinite scroll: тумблер OFF — скролл к концу листинга не подгружает следующую страницу, нумерованная пагинация остаётся штатной"
 assignee: "qa-agents"
@@ -102,15 +102,17 @@ AO3 без вмешательства bridge
   `scripts/build_replay_recordings.py::build_listing_paginated`) и несёт
   реальную разметку `ol.pagination li.next a` + филлер-контент **по эталону
   AT-BUG-015** (`recording_builder.py:168-173` — 80 филлер-абзацев на
-  страницу, тот же приём, что `render_tab_marker_html`). **Смягчено
-  доработкой attempt 2 (критик-вход N7):** высота — по эталону, НЕ по
-  измерению; device-замер `scrollHeight`/`innerHeight` ИМЕННО этой фикстуры
-  на эмуляторе НЕ СНЯТ (`recording_builder.py:171-173` — честная граница,
-  отмеченная самим кодом; остаток см. `docs/HANDOFF.md`). Прокручиваемость
-  доказана device-free юнитами `framework/tests/test_recording_builder_unit.py`
-  на уровне HTML-структуры (число филлер-абзацев/наличие блока), НЕ на уровне
-  фактического `scrollHeight` живого WebView — этот кейс, будучи первым
-  device-прогоном фикстуры, сам станет измерением, если исполнится. Прежнее
+  страницу, тот же приём, что `render_tab_marker_html`). **Замер СНЯТ
+  доработкой attempt 2 (критик-вход Б1):** `scroll_listing_to_bottom`
+  (`browser_steps.py`) теперь читает `window.scrollY`/`innerHeight`/
+  `document.body.scrollHeight` сразу после `scrollTo` и приложен через
+  `allure.attach`; фактический прогон на эмуляторе конвейера (2026-07-30)
+  дал `scrollY≈4341.7 innerHeight=798 scrollHeight=5104` — документ фикстуры
+  ЗАМЕТНО выше вьюпорта (5104 vs 798 px), скролл реально произошёл
+  (`scrollY > 0`), негативный Then (`assert_work_blurb_count_holds`) НЕ
+  вакуумен на этом устройстве/AVD. Прокручиваемость дополнительно доказана
+  device-free юнитами `framework/tests/test_recording_builder_unit.py`
+  на уровне HTML-структуры (число филлер-абзацев/наличие блока). Прежнее
   упоминание блокера в docs/01 §9 («нужна фикстура listing_paginated.mitm») —
   УСТАРЕЛО: фикстура собрана батчем builder'а 2026-07-28 ПОСЛЕ формулировки
   требования; новый test_debt-баг НЕ заводится (правило 4 воркфлоу

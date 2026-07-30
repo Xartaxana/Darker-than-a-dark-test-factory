@@ -376,16 +376,17 @@
     "epicPath": null,
     "summary": "Infinite scroll ON: скролл к концу листинга подгружает следующую страницу без навигации",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:browser",
-      "risk:R-11"
+      "risk:R-11",
+      "automation:active"
     ],
-    "updated": "2026-07-29T19:44:32Z",
-    "resolution": null,
+    "updated": "2026-07-30T12:54:46Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -812,16 +813,17 @@
     "epicPath": null,
     "summary": "Числовая проба предпосылки guard'а: узлы вне whitelist с собственным обработчиком в теле живой work-страницы (live)",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p0",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:canary",
-      "risk:R-02"
+      "risk:R-02",
+      "automation:active"
     ],
-    "updated": "2026-07-30T09:15:00Z",
-    "resolution": null,
+    "updated": "2026-07-30T13:40:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1271,16 +1273,17 @@
     "epicPath": null,
     "summary": "Смена рейтинга с Favorite на другой не запускает скачивание",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:downloads",
-      "risk:R-05"
+      "risk:R-05",
+      "automation:active"
     ],
-    "updated": "2026-07-29T22:55:13Z",
-    "resolution": null,
+    "updated": "2026-07-30T13:16:57Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1293,7 +1296,7 @@
     "epicPath": null,
     "summary": "Снятие рейтинга Favorite (deselect) не запускает скачивание",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -1301,7 +1304,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-07-28T22:03:58Z",
+    "updated": "2026-07-30T13:22:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2509,7 +2512,7 @@
     "epicPath": null,
     "summary": "Tap to scroll: тумблер OFF — тап ни по одной трети work-страницы не производит эффекта (негативный инвариант)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2517,7 +2520,7 @@
       "area:settings",
       "risk:R-11"
     ],
-    "updated": "2026-07-28T23:02:52Z",
+    "updated": "2026-07-30T14:10:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2531,7 +2534,7 @@
     "epicPath": null,
     "summary": "Tap to scroll: включение тумблера применяется мгновенно к уже открытой work-странице (live-push) и переживает reload от смены темы",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2539,7 +2542,7 @@
       "area:settings",
       "risk:R-11"
     ],
-    "updated": "2026-07-28T23:03:01Z",
+    "updated": "2026-07-30T15:10:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2553,7 +2556,7 @@
     "epicPath": null,
     "summary": "Tap to scroll: значение тумблера и его эффект переживают kill+relaunch приложения",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2575,7 +2578,7 @@
     "epicPath": null,
     "summary": "Infinite scroll: тумблер OFF — скролл к концу листинга не подгружает следующую страницу, нумерованная пагинация остаётся штатной",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [

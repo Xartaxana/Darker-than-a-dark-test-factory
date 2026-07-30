@@ -2,7 +2,7 @@
 key: "TC-125"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Tap to scroll: значение тумблера и его эффект переживают kill+relaunch приложения"
 assignee: "qa-agents"

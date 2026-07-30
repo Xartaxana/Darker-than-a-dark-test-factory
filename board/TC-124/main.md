@@ -2,7 +2,7 @@
 key: "TC-124"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Tap to scroll: включение тумблера применяется мгновенно к уже открытой work-странице (live-push) и переживает reload от смены темы"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-28T23:03:01Z"
-updated: "2026-07-28T23:03:01Z"
+created: "2026-07-30T15:10:00Z"
+updated: "2026-07-30T15:10:00Z"
 archived: false
 resolution: null
 ---

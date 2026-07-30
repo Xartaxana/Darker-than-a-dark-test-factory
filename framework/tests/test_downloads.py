@@ -510,6 +510,68 @@ def test_rating_change_from_favorite_to_kudosed_does_not_download(replay, loved_
     library_steps.assert_work_not_in_files_tab(driver, work.title)
 
 
+# --- TC-117: снятие рейтинга Favorite повторным тапом (deselect) не запускает
+# скачивание (BrowserViewModel.kt:691-737, savePanelRating, ветка `rating ==
+# null`: код структурно не содержит вызова downloadWork). Отличие от TC-116 —
+# другая код-ветка (`rating == null` вместо `existing != null`), закрывает
+# вторую половину группы 4 §9 (см. докстрины TC-116 выше и заметки TC-117.md).
+# `rb.WORK_WITH_DOWNLOAD_FILENAME` нужна по тому же классу причин, что
+# TC-112/113/114/115/116: сценарий сам по себе не делает сетевого вызова, но
+# негативный Then проверяет отсутствие эффекта ГИПОТЕТИЧЕСКОГО бага (например,
+# деселект ошибочно попадает в ветку `existing != null` из-за неверного
+# порядка присваивания/чтения `existing`, и предикат `:756` срабатывает на
+# устаревшем SAVE) — без реально завершающегося (не молча проваливающегося в
+# live-сеть) скачивания негативный Then был бы ложно-зелёным независимо от
+# того, сработал бы гипотетический баг или нет.
+
+@pytest.mark.p2
+@pytest.mark.replay
+@allure.id("TC-117")
+@allure.title("Снятие рейтинга Favorite повторным тапом (deselect) не скачивает файл")
+@pytest.mark.parametrize("replay", [rb.WORK_WITH_DOWNLOAD_FILENAME], indirect=True)
+def test_deselecting_favorite_rating_does_not_download(replay, loved_work_seeded, driver):
+    # Given работа W (LOVED) засеяна с рейтингом Favorite (SAVE), downloadPath=null,
+    # без комментария/тегов (сидинг напрямую в Room — не через UI, `loved_work_seeded`);
+    # тумблер Auto-download включён в Settings; та же гонка, что закрыта в
+    # TC-032/114/115/116 (см. докстринги): wait_app_ready (не wait_ui_ready) ПЕРЕД
+    # навигацией по Settings. Карточка на вкладке FAVORITE показывает download-иконку
+    # — baseline (файл ещё не скачан).
+    work = loved_work_seeded
+    app_steps.wait_app_ready(driver)
+    saf_steps.open_settings_scrolled_to(driver, "Auto-download favorite works")
+    settings_steps.enable_auto_download(driver)
+    settings_steps.assert_auto_download_enabled(driver, True)
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_work_in_tab(driver, "SAVE", work.title)
+    library_steps.assert_download_icon_shown(driver, work.title)
+
+    # And открыта страница работы W, встроенная панель RatingMenu раскрыта и уже
+    # показывает Favorite выбранным (рейтинг прочитан из Room при загрузке страницы,
+    # НЕ проставлен этим UI-визитом)
+    app_steps.open_tab(driver, "Browse")
+    rating_steps.open_work_page(driver, work.ao3_id)
+
+    # When пользователь повторно нажимает уже выбранную кнопку «Favorite» на панели —
+    # ЕДИНСТВЕННЫЙ тап этого сценария, общий toggle-механизм RatingOverlay.kt/
+    # RatingMenu превращает его в деселект (`rating-deselect-on-tap`), реальный
+    # проход через `savePanelRating`, ветка `rating == null` (:691-737). ВТОРОЙ тап
+    # здесь НЕДОПУСТИМ (см. заметки TC-117.md): увёл бы через `existing == null` в
+    # `pendingPanelSave`/`:1057` и дал бы реальное скачивание — противоположно Then.
+    rating_steps.rate_current_work(driver, "SAVE")
+
+    # Then рейтинг снят — работа без комментария/тегов/файла удаляется из Room
+    # ЦЕЛИКОМ (`RatingRepository.removeRating`, ветка `deleteById`) и исчезает из
+    # вкладки FAVORITE
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_work_not_in_tab(driver, "SAVE", work.title)
+
+    # And скачивание НЕ запускается ни на каком этапе — работа не появляется во
+    # вкладке FILES; отсутствие незапрошенного файла в download-директории
+    # дополнительно и независимо ловит autouse-оракул `download_oracle`
+    # (conftest.py) — тест не несёт @pytest.mark.produces_download
+    library_steps.assert_work_not_in_files_tab(driver, work.title)
+
+
 # --- TC-037: ручной Scan for downloads показывает диалог даже при 0 файлов ---
 
 @pytest.mark.p3

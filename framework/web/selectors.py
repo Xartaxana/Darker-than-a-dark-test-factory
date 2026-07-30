@@ -83,6 +83,21 @@ def blurb_by_work_id(work_id: str) -> str:
     return f"li#work_{work_id}.work.blurb"
 
 
+# TC-129: пагинация листинга (`render_pagination_html`, recording_builder.py —
+# `<ol class="pagination actions pagy">` с `li.previous`/`li.next`/безымянными
+# `li` для номеров страниц). `ao3_bridge.js:541-545` прячет (`display:none`)
+# КАЖДЫЙ `li`, КРОМЕ `.next`/`.previous`, но ТОЛЬКО когда гейт `:530`
+# (`infinite_scroll !== false`) истинен — при OFF блок вообще не выполняется,
+# нумерованные пункты остаются видимыми (см. `ListingPage.
+# pagination_numbered_items_state`). `.next`/`.previous` НАМЕРЕННО не входят в
+# этот селектор — `:542` не прячет их ни в одном состоянии тумблера (критик-вход
+# N5 TC-129), отдельная константа `PAGINATION_NEXT_LINK` — для клика по «Next →».
+PAGINATION_NUMBERED_ITEMS = (
+    "ol.pagination li:not(.next):not(.previous), .pagination li:not(.next):not(.previous)"
+)
+PAGINATION_NEXT_LINK = "ol.pagination li.next a, .pagination li.next a"
+
+
 # Инжектируется при открытии локально скачанного файла (BrowserScreen.kt
 # injectReaderCss/loadTabContent) — TC-034: мобильный viewport добавляется, только
 # если в сыром HTML его не было, id стиля стабилен ("ao3-reader-css").

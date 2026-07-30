@@ -2,7 +2,7 @@
 key: "TC-123"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Tap to scroll: тумблер OFF — тап ни по одной трети work-страницы не производит эффекта (негативный инвариант)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-28T23:02:52Z"
-updated: "2026-07-28T23:02:52Z"
+created: "2026-07-30T14:10:00Z"
+updated: "2026-07-30T14:10:00Z"
 archived: false
 resolution: null
 ---

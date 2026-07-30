@@ -2,35 +2,36 @@
 key: "TC-116"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p2"
 summary: "Смена рейтинга с Favorite на другой не запускает скачивание"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:downloads", "risk:R-05"]
+labels: ["test-case", "area:downloads", "risk:R-05", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-29T22:55:13Z"
-updated: "2026-07-29T22:55:13Z"
+created: "2026-07-30T13:16:57Z"
+updated: "2026-07-30T13:16:57Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Смена рейтинга с Favorite на другой не запускает скачивание
 
 _Спроецировано из `test-cases/downloads/TC-116.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-116 — Переход Favorite → Kudosed не скачивает файл
 
 ## Предусловия
 - Работа W засеяна с рейтингом SAVE (Favorite), `downloadPath=null`; тумблер
   Auto-download включён.
-- Открыта страница работы W `/works/{id}` (live-навигация, панель показывает
-  Favorite выбранным).
+- Открыта страница работы W `/works/{id}` (навигация через replay-запись
+  `work_with_download.mitm` — см. «Заметки для автоматизации», почему replay здесь
+  обязателен; панель показывает Favorite выбранным).
 
 ## Сценарий (Given-When-Then)
 
@@ -100,6 +101,74 @@ _Спроецировано из `test-cases/downloads/TC-116.md` (источн�
   та ветка, что названа в `requirements`.
 - **Батарея правил-реакций:** закрывает половину группы 4 §9 («SAVE → другой
   рейтинг не скачивает»); вторая половина («снятие рейтинга») — TC-117.
+
+## Ревью автотеста (F1, test-reviewer, 2026-07-30) — PASS
+
+Ревью проведено ПОСЛЕ починки ESC-009 (replay-навигация восстановлена): среда
+поднялась штатно, `Get-Device` → `DEVICE: emulator-5554`, ни одного
+`ReadTimeoutError`/`TimeoutError` на replay-плече. Устаревший витнесс прежней
+попытки (без строки `assert_auto_download_enabled`) НЕ использован — все прогоны
+ниже свои, на текущем коде теста.
+
+- **Архитектура (C1):** `python scripts/arch_check.py` → «ошибок 0,
+  предупреждений 0»; `ALLOWLIST` в `scripts/arch_check.py` пуст — исключения «под
+  себя» не заводились. Локаторы/`find_element` в тесте отсутствуют, вся работа —
+  через `steps/`; `sleep` в тесте нет.
+- **Traceability:** `@allure.id("TC-116")` == id кейса; `@pytest.mark.p2`
+  соответствует `priority: P2`; `@pytest.mark.replay` + `parametrize("replay",
+  [rb.WORK_WITH_DOWNLOAD_FILENAME])` соответствуют заявленной replay-записи;
+  `automated_by` резолвится в существующую функцию
+  `framework/tests/test_downloads.py::test_rating_change_from_favorite_to_kudosed_does_not_download`.
+- **Соответствие кейсу по смыслу:** Given — ТОЛЬКО сидинг (`loved_work_seeded` →
+  `seed_library([(W.LOVED, "SAVE")])`), тапа по «SAVE» на панели нет (проверено
+  построчно) — заявленная ветка `savePanelRating:756-758` (`existing != null`)
+  не обходится через `pendingPanelSave`/`:1057`; When — ровно один тап
+  `rating_steps.rate_current_work(driver, "LIKE")`; `settings_steps.
+  assert_auto_download_enabled(driver, True)` присутствует явным вызовом сразу
+  после `enable_auto_download`. Then реализован не «элемент существует», а сутью:
+  перемещение работы FAVORITE→KUDOSED (`assert_work_in_tab(LIKE)` +
+  `assert_work_not_in_tab(SAVE)`) и отсутствие скачивания тремя независимыми
+  каналами (download-иконка вместо open-иконки, отсутствие во вкладке FILES,
+  autouse-оракул `download_oracle` без `@pytest.mark.produces_download`). Строка
+  `Инвариант:` (C4) не требуется — область не комбинаторная (не фильтры/
+  сортировки/видимость/backup-restore/tabs/темы), кейс — единичное правило-реакция
+  на одном месте вызова предиката (тот же вывод, что у TC-112/113/115).
+- **Фикстуры и данные:** порядок в сигнатуре `(replay, loved_work_seeded, driver)`
+  верный — `clean_state()`+`seed_library` отрабатывают ДО создания Appium-сессии;
+  тест владеет своими данными, состояние чистится `clean_state()` следующего
+  прогона, зависимости от порядка/других тестов нет.
+- **Flake-риск:** `wait_app_ready` перед навигацией по Settings (закрытая гонка
+  TC-032/114/115); `rate_current_work` раскрывает панель через
+  `BottomNav.ensure_visible()` (гонка `AnimatedVisibility` на вкладке Browse);
+  явных `sleep` нет; живой AO3 не используется — вся навигация и само возможное
+  скачивание идут через replay-прокси. Три прогона по ~57 с без дрожания.
+- **Независимое воспроизведение (3 зелёных, свои):** `powershell -NoProfile
+  -ExecutionPolicy Bypass -Command ". D:\AO3_tests\scripts\tasks.ps1; Invoke-Pytest
+  tests/test_downloads.py -k test_rating_change_from_favorite_to_kudosed_does_not_download -v"`
+  → `1 passed ... in 57.87s` / `1 passed ... in 57.15s` (до пробы) и
+  `1 passed ... in 56.10s` (контрольный после отката порчи), все три
+  `PYTEST_EXIT=0`, `recoveries this session = 0/2`.
+- **Красная проба (мутационная, п.7):** порча выбрана бьющей ИМЕННО по негативному
+  Then («скачивание НЕ запускается»): в Given временно вставлены две строки
+  (`library_steps.download_via_card(driver, work.title)` +
+  `assert_open_icon_shown(..., timeout=_DOWNLOAD_OPEN_ICON_TIMEOUT)`) — реальное
+  скачивание тем же `DownloadRepository`/replay-путём, что у TC-033, то есть
+  ровно тот НАБЛЮДАЕМЫЙ эффект (файл в download-директории + заполненный
+  `downloadPath`), который дал бы гипотетический баг предиката; рейтинговая часть
+  Then при этом остаётся истинной, так что падение обязано прийти именно с
+  негативного Then. Прогон той же командой → `1 failed`, `PYTEST_EXIT=1`,
+  падение на `tests\test_downloads.py:508` (`library_steps.assert_download_icon_shown`
+  в блоке Then) с текстом `AssertionError: download-иконка не появилась у «A Loved
+  Test Work»`; независимо сработал и второй канал —
+  `download_oracle: незапрошенное скачивание — класс BUG-014 ... ['/sdcard/Android/
+  data/com.example.ao3_wrapper/files/ao3_downloads/ao3_A Loved Test Work_900000001.html']`
+  (как WARN, а не второй fail — штатное поведение оракула при уже упавшей
+  call-фазе). `app-under-test/` не трогался. Откат: `git checkout --
+  framework/tests/test_downloads.py`, `git status --porcelain` файла не показывает
+  (дифф чист), затем контрольный зелёный выше.
+- **Редакционная правка ревьюера:** в «Предусловиях» устаревшее «live-навигация»
+  заменено на навигацию через `work_with_download.mitm` — противоречило заметкам
+  (replay обязателен) и фактическому тесту; замечанием автору не считается.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»

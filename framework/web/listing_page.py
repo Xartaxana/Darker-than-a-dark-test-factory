@@ -168,3 +168,21 @@ class ListingPage(BasePage):
             if el.text.strip() == tag_text:
                 return el.get_attribute("data-ao3-tag-hl") is not None
         return False
+
+    def pagination_numbered_items_state(self) -> list[dict]:
+        """Нумерованные пункты пагинации (НЕ `.next`/`.previous`) — TC-129:
+        при `infinite_scroll=OFF` гейт `ao3_bridge.js:530` не выполняется,
+        блок `:541-545`, прячущий эти пункты, не запускается — они обязаны
+        остаться видимыми (`display != 'none'`)."""
+        els = self.css_all(selectors.PAGINATION_NUMBERED_ITEMS)
+        return [
+            {"text": el.text.strip(), "display": el.value_of_css_property("display")}
+            for el in els
+        ]
+
+    def next_page_link(self):
+        """Ссылка «Next →» (`li.next a`) — реальная разметка AO3, НЕ
+        инжектируется bridge; клик по ней — штатная навигация вне
+        вмешательства bridge (`ao3_bridge.js:539-540`: Prev/Next намеренно
+        оставлены нативными ссылками)."""
+        return self.wait_css(selectors.PAGINATION_NEXT_LINK)

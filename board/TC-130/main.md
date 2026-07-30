@@ -2,27 +2,27 @@
 key: "TC-130"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Infinite scroll ON: скролл к концу листинга подгружает следующую страницу без навигации"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:browser", "risk:R-11"]
+labels: ["test-case", "area:browser", "risk:R-11", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-29T19:44:32Z"
-updated: "2026-07-29T19:44:32Z"
+created: "2026-07-30T12:54:46Z"
+updated: "2026-07-30T12:54:46Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Infinite scroll ON: скролл к концу листинга подгружает следующую страницу без навигации
 
 _Спроецировано из `test-cases/browser/TC-130.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-130 — Infinite scroll ON: скролл к концу листинга подгружает следующую страницу без навигации
 
@@ -188,3 +188,124 @@ Prev/Next-навигации, которая переходит на новый 
 - [x] Строка `Инвариант:` добавлена
 - [x] Батарея правил-реакций оценена, неприменимые пункты — строкой «н-п:
       <причина>»
+
+## Ревью автотеста (F1, test-reviewer, 2026-07-30) — ПРОЙДЕНО
+
+Вердикт: `Approved -> Automated`, `automation_status: active`. Чек-лист пройден
+целиком, блокирующих замечаний нет. Все проверки — собственные, не пересказ
+witness автора.
+
+1. **Архитектура (C1).** `python scripts/arch_check.py` → «ошибок 0,
+   предупреждений 0»; `ALLOWLIST` (`scripts/arch_check.py:80`) — пустое
+   множество, исключение «под себя» не добавлялось. Тест
+   (`framework/tests/test_infinite_scroll.py:33-65`) зовёт только именованные
+   steps-обёртки (`app_steps.wait_ui_ready`/`open_tab`,
+   `settings_steps.enable_infinite_scroll`, `browser_steps.open_listing`/
+   `snapshot_work_blurb_ids`/`get_webview_location`/
+   `trigger_infinite_scroll_load`/
+   `assert_infinite_scroll_appended_new_unique_blurbs`/
+   `assert_webview_location_unchanged`/`assert_rate_buttons_present_for`); ни
+   локаторов, ни `execute_script`, ни `driver_factory` в `tests/` не
+   просачивается — `execute_script` живёт в `browser_steps.py:1850`/`:1893`,
+   CSS-селекторы блёрба/Rate-кнопки — в `framework/web/listing_page.py`
+   (`blurb_work_ids`, `rate_button_state`) поверх `web/selectors.py`. `sleep(` в
+   тесте и в вызванных шагах нет; единственное ожидание — `core.waits.wait_until`
+   (`browser_steps.py:1901`).
+2. **Traceability.** `@allure.id("TC-130")` == id кейса; `@pytest.mark.p1`
+   соответствует `priority: P1`; `@pytest.mark.replay` +
+   `@pytest.mark.parametrize("replay", [rb.LISTING_PAGINATED_FILENAME],
+   indirect=True)` соответствуют заявленному replay-режиму и фикстуре кейса;
+   `automated_by` указывает на существующую функцию — собрана и прогнана
+   pytest'ом по `-k`, node id совпал (`[listing_paginated.mitm]`).
+3. **Соответствие по смыслу + инвариант (C4).** Кейс несёт строку `Инвариант:`
+   (строго растущее объединение по страницам в пределах окна `PAGE_WINDOW=3`,
+   без подмены/дублей, без смены `pathname`/query). Тест проверяет именно
+   СВОЙСТВО множества, а не единичный пример из шагов: снимок `id` ДО скролла
+   (`:43`) → снимок ПОСЛЕ, затем три независимых предиката в
+   `assert_infinite_scroll_appended_new_unique_blurbs`
+   (`browser_steps.py:1924-1936`) — мощность `>= 2`, НЕПУСТАЯ разность множеств
+   «после \ до» (рост, не привязанный к номеру конкретной страницы — устойчив к
+   каскаду), и `len(ids_after) == len(set(ids_after))` (отсутствие дублей —
+   ровно `ao3_bridge.js:571`). Отдельным ассертом — отношение «фон, не
+   навигация»: `pathname`/`search` до/после идентичны
+   (`assert_webview_location_unchanged`, `:1857-1862`). And-условие про
+   Rate-кнопку проверяется на ВСЁМ diff-множестве
+   (`assert_rate_buttons_present_for`, цикл по `new_ids`), а не на позиционно
+   угаданном «втором» блёрбе — соответствует `ao3_bridge.js:570-581`, где
+   кнопка инжектируется на КАЖДЫЙ аппендящийся `li`. Given не предполагается, а
+   проверяется (`assert len(ids_before) == 1`, `:44`). Ослабления «элемент
+   существует» нет. Non-goal кейса (эвикция окна) тестом не затрагивается —
+   When намеренно даёт ровно один скролл-триггер.
+   Наблюдение БЕЗ блокировки (для будущей доработки, не замечание к приёмке):
+   часть инварианта «не подменяет уже показанные» проверяется КОСВЕННО — прямого
+   `set(ids_before) <= set(ids_after)` нет. В однократной подгрузке, которую
+   гарантирует When, подмена ловится счётчиком (`>= 2` стало бы `1`), поэтому
+   разрыва покрытия в рамках этого кейса нет; явный ассерт сохранности осознанно
+   не ставится, чтобы не конфликтовать с эвикцией при каскаде — это и есть
+   граница, вынесенная в non-goal.
+4. **Фикстуры и данные.** Порядок сигнатуры `(replay, clean_app, driver)`
+   соблюдает контракт «своё состояние — ДО создания Appium-сессии»
+   (`framework/tests/conftest.py:189-194`: `clean_app` = `pm clear` до
+   инстанцирования `driver`, `:148-186`); `pm clear` даёт и очистку за собой, и
+   сброс тумблера, который тест затем выставляет сам
+   (`settings_steps.enable_infinite_scroll`, идемпотентно, ДО перехода на
+   листинг — как требует гейт `ao3_bridge.js:530`). Живого AO3 нет: все 5
+   листинговых страниц и 5 work-страниц записаны в `listing_paginated.mitm`
+   (`scripts/build_replay_recordings.py::build_listing_paginated`), teardown
+   `replay` возвращает прокси независимо от исхода. Зависимости от порядка
+   тестов/других кейсов нет.
+5. **Flake-риск.** Ожидание подгрузки — явное поллящее
+   `wait_until(... len(blurb_work_ids) > min_blurb_count, timeout=40)`
+   (`browser_steps.py:1901-1909`) с осмысленным сообщением, а не одноразовый
+   снимок и не `sleep`. Скролл — синтетический `window.scrollTo` по вычисленной
+   из живой геометрии дельте с нижним ограничением `Math.max(1, …)`; гонок с
+   Compose `AnimatedVisibility` и кликов по родителю текстового узла нет (в
+   WebView-контексте вообще нет тапов по Compose-узлам, кроме переключения
+   вкладок Settings/Browse). Ассерты `>= 2` и diff-множества намеренно
+   устойчивы к каскаду scroll anchoring — главный источник недетерминизма этой
+   поверхности закрыт формулировкой, а не подавлением. Эмпирика: 3 независимых
+   прогона зелёные, разброс 32.05–41.64 с, ни одного rerun'а
+   (`--only-rerun ReadTimeoutError|MaxRetryError` не срабатывал).
+   Точка внимания без блокировки: `_INFINITE_SCROLL_MARGIN_PX = 400`
+   (`browser_steps.py:1838`) — зеркало `ao3_bridge.js:514`; сверено чтением
+   исходника при этом ревью (совпадает), в коде уже стоит явная памятка сверять
+   заново при правке.
+6. **Независимое воспроизведение (зелёное).** Присутствие устройства сверено
+   канонической формой: `. env.ps1; . tasks.ps1; Get-Device` → сначала
+   `NO DEVICE`, поэтому среда поднята своими руками —
+   `Start-Emulator -WritableSystem` (replay-runbook `docs/HANDOFF.md`: CA
+   стирается ребутом; вывод «CA visible in apex store: OK») + `Start-Appium`
+   («ready on :4723»), пакет `com.example.ao3_wrapper` присутствует. Прогоны
+   канонической формой `powershell -NoProfile -ExecutionPolicy Bypass -Command
+   ". D:\AO3_tests\scripts\tasks.ps1; Invoke-Pytest tests/test_infinite_scroll.py
+   -k test_infinite_scroll_on_loads_next_page_in_background -v"`:
+   (1) `1 passed in 41.64s`, `PYTEST_EXIT=0`;
+   (2) после отката красной пробы — `1 passed in 32.05s`, `PYTEST_EXIT=0`;
+   (3) `1 passed in 33.79s`, `PYTEST_EXIT=0`.
+7. **Красная проба (умеет ли падать).** Порча ОДНА и на уровне ДАННЫХ (не
+   тестового кода): `scripts/build_replay_recordings.py:145` временно лишил
+   страницу 1 фикстуры ссылки `next` (`next_url = … if (page < page_count and
+   page > 1) else None`), запись пересобрана
+   `framework/.venv/Scripts/python.exe scripts/build_replay_recordings.py`
+   (канон из докстринга скрипта; генератор детерминирован — `git status`
+   показал изменённым РОВНО `framework/data/recordings/listing_paginated.mitm`,
+   остальные 5 записей байт-в-байт прежние). Смысл порчи: `_effectiveNextUrl`
+   (`ao3_bridge.js:520-523`) становится `null` → scroll-листенер выходит
+   досрочно (`:549`) → фоновой подгрузки нет. Команда — та же каноническая.
+   Результат: `1 failed in 71.98s`, `PYTEST_EXIT=1`. Падение — не
+   инфраструктурное: сессия, Given-ассерт «ровно 1 блёрб» и снимок location
+   отработали штатно, тест упал на ожидании When
+   (`tests/test_infinite_scroll.py:53` → `browser_steps.py:1901`) с текстом,
+   называющим суть порчи: «после скролла число work-блёрбов не превысило 1 —
+   фоновая подгрузка (fetchAndAppend, ao3_bridge.js:557-615) не сработала».
+   Это осмысленное сообщение ожидания с указанием на конкретный сломанный
+   механизм, а не таймаут-мусор. Порча откачена в том же ходе:
+   `git checkout -- scripts/build_replay_recordings.py framework/data/recordings`
+   → `git status --porcelain` не показывает ни `scripts/`, ни `framework/`
+   (изменены только артефакты прохода: `logs/`, `state/`, этот кейс);
+   подтверждающий зелёный прогон после отката — п.6 (2).
+
+Дефекты-собратья (D-0043): аналогов найденного класса при ревью не замечено —
+`_INFINITE_SCROLL_MARGIN_PX` единственная зеркальная JS-константа в
+`browser_steps.py` и снабжена памяткой о сверке; блокирующих находок в
+не-ревьюируемых местах нет.
