@@ -55,6 +55,10 @@ tools: Read, Bash, Write, Edit
    Иначе → гони ТОЛЬКО перечисленные automated_by-пути затронутых областей
    (`pytest <file>::<func> ...`), `selection: {mode: impact, range: <from..to>,
    areas: [...]}`. smoke ВСЕГДА полный, селекция его не касается.
+   **Шов путей (Lead 2026-07-30):** `automated_by` в кейсах несёт префикс
+   `framework/` (требование схемы), а `Invoke-Pytest` ставит cwd=framework —
+   перед подстановкой в pytest СРЕЖЬ ведущий `framework/`
+   (`framework/tests/x.py::f` → `tests/x.py::f`), иначе путь не резолвится.
 3. Собери итоги: passed/failed/skipped/quarantined, длительность, каталог Allure.
    **Счётчик device-liveness guard'а (AT-BUG-026):** терминальная сводка pytest
    несёт строку «...recoveries this session = N/M» (печатается ВСЕГДА; при N>0
