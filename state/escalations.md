@@ -564,3 +564,13 @@ resolved при закрытии.
   живого интернета через `server_replay_extra=forward`) — в очередь
   Lead: направление «домашняя страница в фикстуры через
   recording_builder» после починки хоста.
+- Статус: **resolved 2026-07-30** — оператор применил вариант (б):
+  `netsh interface ipv6 set prefixpolicy ::ffff:0:0/96 60 4` → OK.
+  Верификация Lead: порядок резолва — IPv4 первыми (getaddrinfo:
+  104.20.8.2, 104.20.9.2, затем AAAA); `Invoke-Pytest
+  tests/test_replay_infra_probe.py -q` → **1 passed in 25.76s,
+  PYTEST_EXIT=0** (предсказание диагноза 20-30с подтверждено; guard
+  assert_upstream_fast прошёл молча — плечо здорово). Guards в mitm.py
+  закоммичены (71c3d24) и остаются постоянной защитой. Replay-очередь
+  разблокирована; отложенные срабатывания — в HANDOFF, следующий
+  /qa-loop проход.
