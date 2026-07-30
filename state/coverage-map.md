@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-30T15:46:39Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-30T17:34:58Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -16,16 +16,16 @@ generated_at: 2026-07-30T15:46:39Z · генератор: `scripts/coverage_map.
 | browser | 13 | 13 | designed-full |
 | canary | 23 | 23 | designed-full |
 | compatibility | 3 | 3 | designed-full |
-| downloads | 14 | 13 | partial |
+| downloads | 14 | 14 | designed-full |
 | errors | 1 | 1 | designed-full |
 | filter-profiles | 5 | 5 | designed-full |
 | library | 15 | 15 | designed-full |
 | performance | 4 | 4 | designed-full |
 | rating | 14 | 14 | designed-full |
 | security | 6 | 6 | designed-full |
-| settings | 11 | 6 | partial |
+| settings | 11 | 8 | partial |
 | smoke | 5 | 5 | designed-full |
-| tabs | 6 | 6 | designed-full |
+| tabs | 10 | 6 | partial |
 | visibility | 6 | 6 | designed-full |
 
 ## Риски (docs/01-test-strategy.md §5) → покрытие
@@ -39,7 +39,7 @@ generated_at: 2026-07-30T15:46:39Z · генератор: `scripts/coverage_map.
 | R-05 | TECH | downloads:TC-032, downloads:TC-033, downloads:TC-034, downloads:TC-035, downloads:TC-036, downloads:TC-037, downloads:TC-038, downloads:TC-039, downloads:TC-112, downloads:TC-113, downloads:TC-114, downloads:TC-115, downloads:TC-116, downloads:TC-117 |
 | R-06 | BUS | browser:TC-094, library:TC-027, library:TC-028, library:TC-029, library:TC-030, library:TC-031, library:TC-060, library:TC-061, library:TC-062, library:TC-063, library:TC-064, library:TC-065, visibility:TC-013, visibility:TC-014, visibility:TC-015, visibility:TC-092, visibility:TC-093, visibility:TC-095 |
 | R-07 | OPS | риск не покрыт дизайном |
-| R-08 | TECH | tabs:TC-022, tabs:TC-023, tabs:TC-024, tabs:TC-025, tabs:TC-026, tabs:TC-084 |
+| R-08 | TECH | tabs:TC-022, tabs:TC-023, tabs:TC-024, tabs:TC-025, tabs:TC-026, tabs:TC-084, tabs:TC-131, tabs:TC-132, tabs:TC-133, tabs:TC-134 |
 | R-11 | TECH | accessibility:TC-108, browser:TC-050, browser:TC-051, browser:TC-052, browser:TC-053, browser:TC-054, browser:TC-055, browser:TC-057, browser:TC-058, browser:TC-126, browser:TC-127, browser:TC-128, browser:TC-130, settings:TC-047, settings:TC-048, settings:TC-049, settings:TC-059, settings:TC-123, settings:TC-124, settings:TC-125, settings:TC-129 |
 | R-09 | BUS | filter-profiles:TC-040, filter-profiles:TC-041, filter-profiles:TC-042, filter-profiles:TC-085, filter-profiles:TC-086 |
 | R-10 | DATA | library:TC-089, rating:TC-043, rating:TC-044, rating:TC-045, rating:TC-056, rating:TC-087, rating:TC-088, rating:TC-090, rating:TC-091 |
@@ -60,8 +60,8 @@ generated_at: 2026-07-30T15:46:39Z · генератор: `scripts/coverage_map.
 | browse-tab-list-persistence | browse | tabs:TC-025[Automated] |
 | browse-tab-open-background-link | browse | tabs:TC-026[Automated] |
 | browse-tab-switch-active | browse | tabs:TC-084[Automated] |
-| browse-deep-link-new-tab | browse | нет кейсов |
-| browse-deep-link-reuse-home-tab | browse | нет кейсов |
+| browse-deep-link-new-tab | browse | tabs:TC-131[Review], tabs:TC-133[Review], tabs:TC-134[Review] |
+| browse-deep-link-reuse-home-tab | browse | tabs:TC-132[Review] |
 | browse-scroll-restore | browse | tabs:TC-025[Automated] |
 | browse-infinite-scroll | browse | browser:TC-130[Automated] |
 | browse-tap-to-scroll | browse | browser:TC-126[Automated], browser:TC-127[Automated] |
@@ -102,7 +102,7 @@ generated_at: 2026-07-30T15:46:39Z · генератор: `scripts/coverage_map.
 | settings-rating-visibility-filter | settings | visibility:TC-015[Automated], visibility:TC-095[Automated] |
 | settings-filter-display-mode | settings | visibility:TC-093[Automated] |
 | settings-panel-side | settings | нет кейсов |
-| settings-tap-to-scroll-toggle | settings | settings:TC-123[Approved], settings:TC-124[Approved], settings:TC-125[Approved] |
+| settings-tap-to-scroll-toggle | settings | settings:TC-123[Automated], settings:TC-124[Automated], settings:TC-125[Approved] |
 | settings-infinite-scroll-toggle | settings | settings:TC-129[Approved], browser:TC-130[Automated] |
 | settings-auto-download-favorite | settings | downloads:TC-112[Automated], downloads:TC-113[Automated] |
 | settings-download-folder-saf | settings | downloads:TC-038[Automated] |
@@ -141,7 +141,7 @@ generated_at: 2026-07-30T15:46:39Z · генератор: `scripts/coverage_map.
 | data-filterprofile-model | data | нет кейсов |
 | data-clear-all-ratings | data | smoke:TC-004[Automated], settings:TC-018[Automated], settings:TC-019[Automated], settings:TC-020[Blocked] |
 | background-download-repository | background | downloads:TC-032[Automated], downloads:TC-033[Automated] |
-| background-auto-download-trigger | background | downloads:TC-032[Automated], downloads:TC-112[Automated], downloads:TC-114[Automated], downloads:TC-115[Automated], downloads:TC-116[Automated], downloads:TC-117[Approved] |
+| background-auto-download-trigger | background | downloads:TC-032[Automated], downloads:TC-112[Automated], downloads:TC-114[Automated], downloads:TC-115[Automated], downloads:TC-116[Automated], downloads:TC-117[Automated] |
 | background-auto-kudos-trigger | background | нет кейсов |
 | nf-perf-cold-start-budget | non-functional | performance:TC-096[Automated] |
 | nf-perf-webview-first-load-budget | non-functional | performance:TC-097[Automated] |
@@ -156,14 +156,15 @@ generated_at: 2026-07-30T15:46:39Z · генератор: `scripts/coverage_map.
 | nf-a11y-content-labels | non-functional | accessibility:TC-106[Automated] |
 | nf-a11y-font-scaling | non-functional | accessibility:TC-107[Automated] |
 | nf-a11y-contrast-sanity | non-functional | accessibility:TC-108[Automated] |
+| nf-a11y-touch-target-size | non-functional | нет кейсов |
+| nf-a11y-contrast-computed | non-functional | нет кейсов |
+| nf-a11y-interactive-overlap | non-functional | нет кейсов |
 | nf-compat-api-level | non-functional | compatibility:TC-109[Automated] |
 | nf-compat-dark-light-matrix | non-functional | compatibility:TC-110[Automated] |
 | nf-compat-orientation | non-functional | compatibility:TC-111[Automated] |
 
 ## Фичи без единого кейса
 
-- browse-deep-link-new-tab (browse): Deep link открывает URL в НОВОЙ вкладке, если уже есть вкладки помимо одинокой AO3 root; на потолке MAX_TABS вкладка не создаётся, показывается диалог лимита, а отклонённый URL отбрасывается без очереди
-- browse-deep-link-reuse-home-tab (browse): Deep link переиспользует единственную вкладку на AO3 root, навигируя её вместо создания новой — только пока URL вкладки точно равен HOME_URL без слэша (окно до загрузки домашней страницы); иначе создаётся вторая вкладка
 - browse-tabstrip-indicators (browse): TabStrip: индикация активной вкладки, закрытие свайпом вверх, кнопка New tab
 - library-card-open-work (library): Тап по телу карточки Library открывает работу (URL) в браузерной вкладке
 - settings-font-slider (settings): Слайдер размера шрифта (7 ступеней, 100–190%)
@@ -175,6 +176,9 @@ generated_at: 2026-07-30T15:46:39Z · генератор: `scripts/coverage_map.
 - data-workrating-model (data): Room-сущность WorkRating (rating/comment/tags/fandom/author/wordCount/downloadPath)
 - data-filterprofile-model (data): Room-сущность FilterProfile (name/queryString)
 - background-auto-kudos-trigger (background): Автоклик кнопки kudos на странице работы AO3, когда рейтинг работы становится Kudosed (LIKE) или Favorite (SAVE)
+- nf-a11y-touch-target-size (non-functional): НФ-a11y: интерактивные цели нативного хрома (панели, тумблеры, чипы TabStrip, кнопки диалогов) не меньше 48dp по bounds accessibility-дерева (density измеряется, не хардкодится)
+- nf-a11y-contrast-computed (non-functional): НФ-a11y: вычисленный контраст DOM-контента WebView (инжектированные Rate/Note/бейджи bridge + ключевые узлы replay-страниц) держит WCAG-порог 4.5:1 / 3:1 через getComputedStyle
+- nf-a11y-interactive-overlap (non-functional): НФ-a11y: bounding-rect'ы интерактивных элементов нативного слоя не пересекаются (перекрытие = недостижимый интерактив) по bounds accessibility-дерева
 
 ## Области
 
@@ -260,7 +264,7 @@ generated_at: 2026-07-30T15:46:39Z · генератор: `scripts/coverage_map.
 
 ### downloads
 
-- coverage_status: **partial** (13/14 Automated)
+- coverage_status: **designed-full** (14/14 Automated)
 - риски: R-05
 - кейсы без risk: нет
 - P0/P1 не в Automated: нет
@@ -271,7 +275,7 @@ generated_at: 2026-07-30T15:46:39Z · генератор: `scripts/coverage_map.
 |---|---|---|---|---|---|
 | P0 |  |  |  |  |  |
 | P1 |  |  |  | 9 |  |
-| P2 |  |  | 1 | 3 |  |
+| P2 |  |  |  | 4 |  |
 | P3 |  |  |  | 1 |  |
 
 ### errors
@@ -372,17 +376,17 @@ generated_at: 2026-07-30T15:46:39Z · генератор: `scripts/coverage_map.
 
 ### settings
 
-- coverage_status: **partial** (6/11 Automated)
+- coverage_status: **partial** (8/11 Automated)
 - риски: R-01, R-11
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-123 [P1, Approved], TC-124 [P1, Approved], TC-125 [P1, Approved], TC-129 [P1, Approved]
+- P0/P1 не в Automated: TC-125 [P1, Approved], TC-129 [P1, Approved]
 - автотесты (automated_by): framework/tests/test_infinite_scroll.py::test_infinite_scroll_off_keeps_native_pagination, framework/tests/test_reading_ux.py::test_tap_to_scroll_live_push_and_reload_persistence, framework/tests/test_reading_ux.py::test_tap_to_scroll_survives_kill_and_relaunch, framework/tests/test_reading_ux.py::test_tap_zone_disabled_no_effect_in_any_third, framework/tests/test_settings.py::test_cancel_clear_all_dialog_keeps_data, framework/tests/test_settings.py::test_clear_all_ratings_shows_confirmation_dialog, framework/tests/test_settings.py::test_system_theme_follows_os_dark_mode, framework/tests/test_settings.py::test_theme_dark_applies_instantly_without_recreating_activity, framework/tests/test_settings.py::test_webview_dark_mode_applies_instantly, framework/tests/test_settings.py::test_webview_follows_system_theme_without_in_app_toggle
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  |  |  |
-| P1 |  |  | 4 | 3 |  |
+| P1 |  |  | 2 | 5 |  |
 | P2 |  |  |  | 3 |  |
 | P3 |  |  |  |  | 1 |
 
@@ -404,17 +408,17 @@ generated_at: 2026-07-30T15:46:39Z · генератор: `scripts/coverage_map.
 
 ### tabs
 
-- coverage_status: **designed-full** (6/6 Automated)
+- coverage_status: **partial** (6/10 Automated)
 - риски: R-08
 - кейсы без risk: нет
-- P0/P1 не в Automated: нет
+- P0/P1 не в Automated: TC-131 [P1, Review], TC-132 [P1, Review], TC-133 [P1, Review], TC-134 [P1, Review]
 - автотесты (automated_by): framework/tests/test_tabs.py::test_long_press_link_opens_background_tab_without_switching, framework/tests/test_tabs.py::test_max_tabs_limit_blocks_11th_tab, framework/tests/test_tabs.py::test_swipe_close_undo_restores_position, framework/tests/test_tabs.py::test_tabs_persist_url_and_scroll_after_restart, framework/tests/test_tabs.py::test_tap_inactive_tab_chip_activates_it, framework/tests/test_tabs.py::test_undo_history_evicts_oldest_after_six_closes
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  |  |  |
-| P1 |  |  |  | 5 |  |
+| P1 |  | 4 |  | 5 |  |
 | P2 |  |  |  |  |  |
 | P3 |  |  |  | 1 |  |
 

@@ -1,18 +1,18 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-30T15:46:32Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-07-30T17:34:57Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **684.2** (RUN-20260702-0300)
+- smoke: Closed · smoke_freshness_hours: **686.0** (RUN-20260702-0300)
 - regression: not_run
 - canary: not_run
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **1**
 - p0_automation_coverage: **100%** (37/37)
-- p1_automation_coverage: **94%** (62/66)
+- p1_automation_coverage: **91%** (64/70)
 - Test debt открыт: **0**
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
@@ -23,10 +23,10 @@ generated_at: 2026-07-30T15:46:32Z · генератор: `scripts/queue_snapsho
 - 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
 - smoke: passed · regression: not_run
 
-## Тест-кейсы (130)
+## Тест-кейсы (134)
 
-- Approved: **5** · Automated: **124** · Blocked: **1**
-- автотесты (B3): active: **124**
+- Review: **4** · Approved: **2** · Automated: **127** · Blocked: **1**
+- автотесты (B3): active: **127**
 
 | Область | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
@@ -35,21 +35,21 @@ generated_at: 2026-07-30T15:46:32Z · генератор: `scripts/queue_snapsho
 | browser |  |  |  | 13 |  |
 | canary |  |  |  | 23 |  |
 | compatibility |  |  |  | 3 |  |
-| downloads |  |  | 1 | 13 |  |
+| downloads |  |  |  | 14 |  |
 | errors |  |  |  | 1 |  |
 | filter-profiles |  |  |  | 5 |  |
 | library |  |  |  | 15 |  |
 | performance |  |  |  | 4 |  |
 | rating |  |  |  | 14 |  |
 | security |  |  |  | 6 |  |
-| settings |  |  | 4 | 6 | 1 |
+| settings |  |  | 2 | 8 | 1 |
 | smoke |  |  |  | 5 |  |
-| tabs |  |  |  | 6 |  |
+| tabs |  | 4 |  | 6 |  |
 | visibility |  |  |  | 6 |  |
 
-## Баги (7)
+## Баги (8)
 
-- Open: **7**
+- Open: **8**
 - BUG-001 [minor] Open — PROJECT.md расходится с кодом: подписи вкладок Library/меню рейтинга; несуществующий глобальный «Enable filtering»
 - BUG-011 [major] Open — Restore from backup пропускает работы молча, если файл с тем же ao3Id уже лежит в папке загрузок
 - BUG-012 [minor] Open — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
@@ -57,6 +57,7 @@ generated_at: 2026-07-30T15:46:32Z · генератор: `scripts/queue_snapsho
 - BUG-014 [major] Open — Авто-скачивание Favorite срабатывает ретроактивно при правке тега ранее отмеченной работы
 - BUG-015 [major] Open — Авто-клик kudos на AO3 срабатывает ретроактивно при правке тега ранее отмеченной работы
 - BUG-016 [major] Open — Undo закрытия вкладки на потолке 10 молча теряет вкладку и её снапшот
+- BUG-017 [minor] Open — Быстрое закрытие вкладок → долгий парад снекбаров; подозрение на потерю Undo-токенов при задержке показа
 
 ## Известные проблемы, known_issue (1)
 
@@ -72,14 +73,14 @@ generated_at: 2026-07-30T15:46:32Z · генератор: `scripts/queue_snapsho
 
 ## Exploratory
 
-- Done: **5**
+- Done: **5** · Blocked: **1**
 - charters_executed: **5**
 - bugs_per_charter: **0.4**
 - new_tc_from_charters: **1**
 
-## Активные локи (0)
+## Активные локи (1)
 
-- нет
+- TC-125 — `test-reviewer:2026-07-30T17:30:00Z`
 
 ## Эскалации (5)
 
