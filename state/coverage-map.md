@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-30T18:36:46Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-30T23:23:33Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -25,7 +25,7 @@ generated_at: 2026-07-30T18:36:46Z · генератор: `scripts/coverage_map.
 | security | 6 | 6 | designed-full |
 | settings | 11 | 10 | partial |
 | smoke | 5 | 5 | designed-full |
-| tabs | 10 | 6 | partial |
+| tabs | 11 | 6 | partial |
 | visibility | 6 | 6 | designed-full |
 
 ## Риски (docs/01-test-strategy.md §5) → покрытие
@@ -39,7 +39,7 @@ generated_at: 2026-07-30T18:36:46Z · генератор: `scripts/coverage_map.
 | R-05 | TECH | downloads:TC-032, downloads:TC-033, downloads:TC-034, downloads:TC-035, downloads:TC-036, downloads:TC-037, downloads:TC-038, downloads:TC-039, downloads:TC-112, downloads:TC-113, downloads:TC-114, downloads:TC-115, downloads:TC-116, downloads:TC-117 |
 | R-06 | BUS | browser:TC-094, library:TC-027, library:TC-028, library:TC-029, library:TC-030, library:TC-031, library:TC-060, library:TC-061, library:TC-062, library:TC-063, library:TC-064, library:TC-065, visibility:TC-013, visibility:TC-014, visibility:TC-015, visibility:TC-092, visibility:TC-093, visibility:TC-095 |
 | R-07 | OPS | риск не покрыт дизайном |
-| R-08 | TECH | tabs:TC-022, tabs:TC-023, tabs:TC-024, tabs:TC-025, tabs:TC-026, tabs:TC-084, tabs:TC-131, tabs:TC-132, tabs:TC-133, tabs:TC-134 |
+| R-08 | TECH | tabs:TC-022, tabs:TC-023, tabs:TC-024, tabs:TC-025, tabs:TC-026, tabs:TC-084, tabs:TC-131, tabs:TC-132, tabs:TC-133, tabs:TC-134, tabs:TC-135 |
 | R-11 | TECH | accessibility:TC-108, browser:TC-050, browser:TC-051, browser:TC-052, browser:TC-053, browser:TC-054, browser:TC-055, browser:TC-057, browser:TC-058, browser:TC-126, browser:TC-127, browser:TC-128, browser:TC-130, settings:TC-047, settings:TC-048, settings:TC-049, settings:TC-059, settings:TC-123, settings:TC-124, settings:TC-125, settings:TC-129 |
 | R-09 | BUS | filter-profiles:TC-040, filter-profiles:TC-041, filter-profiles:TC-042, filter-profiles:TC-085, filter-profiles:TC-086 |
 | R-10 | DATA | library:TC-089, rating:TC-043, rating:TC-044, rating:TC-045, rating:TC-056, rating:TC-087, rating:TC-088, rating:TC-090, rating:TC-091 |
@@ -60,8 +60,8 @@ generated_at: 2026-07-30T18:36:46Z · генератор: `scripts/coverage_map.
 | browse-tab-list-persistence | browse | tabs:TC-025[Automated] |
 | browse-tab-open-background-link | browse | tabs:TC-026[Automated] |
 | browse-tab-switch-active | browse | tabs:TC-084[Automated] |
-| browse-deep-link-new-tab | browse | tabs:TC-131[Review], tabs:TC-133[Review], tabs:TC-134[Review] |
-| browse-deep-link-reuse-home-tab | browse | tabs:TC-132[Review] |
+| browse-deep-link-new-tab | browse | tabs:TC-131[Approved], tabs:TC-133[Approved], tabs:TC-134[Approved] |
+| browse-deep-link-reuse-home-tab | browse | tabs:TC-132[Approved], tabs:TC-135[Approved] |
 | browse-scroll-restore | browse | tabs:TC-025[Automated] |
 | browse-infinite-scroll | browse | browser:TC-130[Automated] |
 | browse-tap-to-scroll | browse | browser:TC-126[Automated], browser:TC-127[Automated] |
@@ -408,17 +408,17 @@ generated_at: 2026-07-30T18:36:46Z · генератор: `scripts/coverage_map.
 
 ### tabs
 
-- coverage_status: **partial** (6/10 Automated)
+- coverage_status: **partial** (6/11 Automated)
 - риски: R-08
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-131 [P1, Review], TC-132 [P1, Review], TC-133 [P1, Review], TC-134 [P1, Review]
+- P0/P1 не в Automated: TC-131 [P1, Approved], TC-132 [P1, Approved], TC-133 [P1, Approved], TC-134 [P1, Approved], TC-135 [P1, Approved]
 - автотесты (automated_by): framework/tests/test_tabs.py::test_long_press_link_opens_background_tab_without_switching, framework/tests/test_tabs.py::test_max_tabs_limit_blocks_11th_tab, framework/tests/test_tabs.py::test_swipe_close_undo_restores_position, framework/tests/test_tabs.py::test_tabs_persist_url_and_scroll_after_restart, framework/tests/test_tabs.py::test_tap_inactive_tab_chip_activates_it, framework/tests/test_tabs.py::test_undo_history_evicts_oldest_after_six_closes
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  |  |  |
-| P1 |  | 4 |  | 5 |  |
+| P1 |  |  | 5 | 5 |  |
 | P2 |  |  |  |  |  |
 | P3 |  |  |  | 1 |  |
 

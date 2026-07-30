@@ -1,18 +1,28 @@
 ---
-id: TC-135
-title: Deep-link на холодном старте переиспользует единственную незагруженную home-вкладку (positive-reuse)
-area: tabs
-priority: P1
-risk: R-08
-status: Approved
-automated_by: ""
-automation_status: ""
-requirements: "BrowserViewModel.kt:637-644 (openOrNavigateDeepLink: tabs.size==1 && tabs[0].url==HOME_URL -> navigateActiveTabTo, ветка reuse); BrowserViewModel.kt:181-186 (init при пустых prefs кладёт ровно одну вкладку с HOME_URL без слэша); BrowserViewModel.kt:154-157 (_deepLinkChannel = Channel.BUFFERED — эмиссия до старта коллектора не теряется); MainActivity.kt:96-101 (onResume -> intent.dataString -> handleDeepLink, отрабатывает до сетевой загрузки home); MainActivity.kt:262-268 (коллектор deep-link-канала); AndroidManifest.xml:23,30-36 (singleTask + VIEW-фильтр на archiveofourown.org)"
-features: [browse-deep-link-reuse-home-tab]
-blocked_reason: ""
+key: "TC-135"
+project: "AO3"
+issueType: "test-case"
+status: "tc-approved"
+priority: "p1"
+summary: "Deep-link на холодном старте переиспользует единственную незагруженную home-вкладку (positive-reuse)"
+assignee: "qa-agents"
+reporter: "qa-agents"
+labels: ["test-case", "area:tabs", "risk:R-08"]
+components: []
+fixVersions: []
+watchers: []
+parent: null
+epic: null
+created: "2026-07-30T23:21:17Z"
 updated: "2026-07-30T23:21:17Z"
-lock: ""
+archived: false
+resolution: null
 ---
+
+# Deep-link на холодном старте переиспользует единственную незагруженную home-вкладку (positive-reuse)
+
+_Спроецировано из `test-cases/tabs/TC-135.md` (источник правды).
+Статус в нашей машине: **Approved**._
 
 # TC-135 — Холодный старт по VIEW-интенту: reuse единственной home-вкладки
 
