@@ -21,7 +21,7 @@ critic (проверка анти-дубля на гейте), Lead (калиб�
 | Прерывания ВНУТРИ операции | kill/home/rotate посреди смены темы | ✓ CH-002 |
 | Прерывания МЕЖДУ шагами пути | kill/home/rotate + релонч между фичами | ✓ CH-003 |
 | Перестановки/повторы шагов | вариация порядка, повтор шага дважды | ✓ CH-003 |
-| Смена настроек ПОСРЕДИ пути | 5 механизмов применения: JS live-push (hide_*, display mode, infinite scroll, tap-to-scroll, auto-apply) / theme-RELOAD / textZoom (font) / window-attr (brightness) / следующий-рендер (reset_brightness_on_start); карта — разведка ch-004-settings-recon | ✓ CH-004 частично: #1 (hide_disliked, filter_display_mode), #2 theme-reload, #3 textZoom. Остаток: #1 `tap_to_scroll` → план CH-005; #1 `infinite_scroll` — БЛОКЕР фикстур (нет пагинации в replay-записях, `_effectiveNextUrl=null`), кандидат после `listing_paginated.mitm`; #1 `auto_apply_filter`/`debug_copy_url` — кандидат; #4 brightness / #5 reset_brightness_on_start — БЛОКЕР инструмента (двухпальцевый W3C-жест не триггерит pointerInput) |
+| Смена настроек ПОСРЕДИ пути | 5 механизмов применения: JS live-push (hide_*, display mode, infinite scroll, tap-to-scroll, auto-apply) / theme-RELOAD / textZoom (font) / window-attr (brightness) / следующий-рендер (reset_brightness_on_start); карта — разведка ch-004-settings-recon | ✓ CH-004 частично: #1 (hide_disliked, filter_display_mode), #2 theme-reload, #3 textZoom. #1 `tap_to_scroll` → ✓ CH-005 (+scripted TC-123..128); #1 `infinite_scroll` — блокер фикстур СНЯТ 2026-07-30 (`listing_paginated.mitm` собрана, прямые пути закрыты scripted TC-129/130) → план CH-006 (вторичные контуры: эвикция окна, гейт на границе навигации); #1 `auto_apply_filter`/`debug_copy_url` — кандидат; #4 brightness / #5 reset_brightness_on_start — БЛОКЕР инструмента (двухпальцевый W3C-жест не триггерит pointerInput) |
 | Возмущение маршрута ВВОДА и геометрии | тап-зоны work-страницы (`tap_to_scroll`: верх/низ — скролл, середина — fullscreen; активны только на `pathname ^/works/\d`, `ao3_bridge.js:1154`) рядом с нативным хромом того же экрана (20-dp полоса-хэндл и раскрытая нижняя панель `BottomBar.kt:52,99-100`, TabStrip `MainActivity.kt:406-407`), от видимости которого зависит `window.innerHeight` → границы третей; переезд side panel (`panel_side` LEFT→RIGHT); fullscreen с двух входов; поворот при смещённой геометрии | план CH-005 |
 | Лимиты ресурсов | 10 вкладок (MAX_TABS), деградация на лимите, undo закрытия | план CH-005 (планировалось CH-004, сессией НЕ пройдено — пивот на replay-настройки; вход через deep-link, `browse-deep-link-*` 0 кейсов) |
 | Backup/restore ПОСРЕДИ сессии | не с чистого старта; смесь состояний prefs/данных | — (планировалось CH-004, НЕ пройдено — SAF тяжёлый; кандидат; фон — BUG-011 Open) |
@@ -68,10 +68,19 @@ critic (проверка анти-дубля на гейте), Lead (калиб�
   ни один журней не трогал зону downloads);
 - заметки (R-10) × backup/restore × длинный unicode-текст;
 - library-фильтр × visibility dim-режим × скролл;
-- visibility hide-set × infinite scroll (`checkPageDensity`,
+- **visibility hide-set × infinite scroll** (`checkPageDensity`,
   `ao3_bridge.js:617-629`: если ВСЕ работы страницы скрыты фильтром и есть
-  next — приложение само уходит на следующую страницу) — блокировано
-  отсутствием пагинированной replay-фикстуры.
+  next — приложение само уходит на следующую страницу) — блокер снят
+  2026-07-30 (`listing_paginated.mitm`: 1 блёрб/страницу — скрытие одной
+  работы опустошает страницу) → план CH-006, seed 2 (плотность-тур:
+  автопрыжок, каскад 2+ пустых страниц, back-история, гейт OFF);
+- **эвикция окна `PAGE_WINDOW=3` × пользовательское состояние блёрбов**
+  (rate/note на эвиктимой странице; явный non-goal TC-130) → план CH-006,
+  seed 1;
+- **downloads × reading-UX жесты** (тап-зоны на СКАЧАННОМ локальном файле:
+  гейт `pathname ^/works/\d` не матчит локальный путь — жест молча мёртв
+  на поверхности, где пользователь его ожидает; R-16-класс) → план CH-006,
+  seed 6 (бонус-проба).
 
 ## Оси-кандидаты (не подтверждены Lead'ом — предлагает charter-designer)
 
