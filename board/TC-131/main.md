@@ -2,19 +2,19 @@
 key: "TC-131"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Deep-link на потолке 10 вкладок не создаёт 11-ю, показывает диалог лимита, отклонённый URL безвозвратно теряется"
-assignee: "test-automator"
+assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:tabs", "risk:R-08", "wip:test-automator"]
+labels: ["test-case", "area:tabs", "risk:R-08"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-30T22:33:09Z"
-updated: "2026-07-30T22:33:09Z"
+created: "2026-07-30T23:50:55Z"
+updated: "2026-07-30T23:50:55Z"
 archived: false
 resolution: null
 ---
@@ -143,6 +143,29 @@ have 10 tabs open. Close some tabs before opening a new one.», кнопка «O
   чем изобретать новый.
 - Диалог лимита — тот же локатор/приём, что уже есть у TC-022
   (`assert_tab_limit_dialog_shown`), переиспользовать, не дублировать.
+
+**Фактическое поведение (test-automator, 2026-07-30).** Реализовано
+`framework/tests/test_tabs.py::test_deep_link_at_tab_limit_shows_dialog_and_drops_url`
+— переиспользует `app_steps.open_deep_link`/`wait_home_ready_for_deep_link`,
+`browser_steps.assert_tab_limit_dialog_shown`/`dismiss_tab_limit_dialog`
+(тот же локатор/приём, что TC-022) и `browser_steps.swipe_close_tab` (свайп-приём
+TC-023, не тап по чипу). Счёт вкладок/вхождений конкретного URL — по prefs
+`open_tabs_urls`, но НЕ substring-подсчётом `"url":"` (эта подстрока встречается
+ДВАЖДЫ на вкладку: раз в `TabSnapshot.url`, раз в единственной записи
+`historyEntries[0].url`, `HistoryEntry.kt` — substring-счёт переоценил бы число
+вкладок вдвое) — новые шаги `app_steps.wait_persisted_tab_count`/
+`assert_persisted_marker_count`/`assert_persisted_marker_absent_for` честно
+JSON-парсят массив `TabSnapshot` из XML `<string name="open_tabs_urls">`.
+Замок находки 4 CH-005 («нет отложенной очереди открытия») — через
+`core.waits.assert_holds_for` (весь бюджет 4с, не одно чтение сразу после
+закрытия вкладки), закрывает класс ложно-зелёного негатива «эффект просто ещё
+не докатился». Красная проба (attempt 1): подмена URL в последнем
+`assert_persisted_marker_absent_for` на `tab_marker_url(1)` (заведомо
+присутствующий, открыт дважды по Given) — тест упал содержательно
+(`AssertionError: URL '...ao3_tab_marker=1' появился в open_tabs_urls (2
+вхожд. из 9 вкладок)`), порча откачена. 3 зелёных прогона подряд +
+`test_tabs.py` целиком (7 passed). `arch_check` — 0/0.
+Блокера автоматизации не найдено — чек-лист test-designer подтверждён.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»
