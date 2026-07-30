@@ -141,9 +141,17 @@ function Install-MitmCA {
         throw "CA PEM не найден: $caPem - сначала запусти mitmdump (он генерирует CA при первом старте), затем повтори Install-MitmCA."
     }
     $env:ADB = "$env:ANDROID_HOME\platform-tools\adb.exe"
-    $bash = (Get-Command bash -ErrorAction SilentlyContinue).Source
-    if (-not $bash) { $bash = "C:\Program Files\Git\bin\bash.exe" }
-    if (-not (Test-Path $bash)) { throw "bash.exe не найден (ни в PATH, ни по фоллбэку C:\Program Files\Git\bin\bash.exe), Install-MitmCA требует git-bash." }
+    # git-bash ПЕРВЫМ, Get-Command — фолбэком (ESC-009, 2026-07-30): Get-Command bash
+    # на этом хосте резолвится в WSL-шим C:\Windows\system32\bash.exe, который при
+    # сломанной/отсутствующей WSL-дистрибуции падает "execvpe(/bin/bash) failed" —
+    # скрипт написан под git-bash (MSYS-пути, cygpath), WSL ему и не подходит.
+    $bash = "C:\Program Files\Git\bin\bash.exe"
+    if (-not (Test-Path $bash)) { $bash = (Get-Command bash -ErrorAction SilentlyContinue).Source }
+    if (-not $bash -or -not (Test-Path $bash)) { throw "bash.exe не найден (ни по каноническому пути C:\Program Files\Git\bin\bash.exe, ни в PATH), Install-MitmCA требует git-bash." }
+    # Проба живости резолвнутого bash ДО запуска скрипта: WSL-шим проходит Test-Path,
+    # но не исполняет ничего — ловим это здесь с внятным диагнозом, а не кодом 1 скрипта.
+    $probe = (& $bash -c "echo BASH_PROBE_OK" 2>&1) -join "`n"
+    if ($probe -notmatch "BASH_PROBE_OK") { throw "bash по пути $bash не исполняет команды (вероятно WSL-шим вместо git-bash): $probe" }
     & $bash "$root\scripts\install-mitm-ca.sh"
     $code = $LASTEXITCODE
     if ($code -ne 0) { throw "install-mitm-ca.sh завершился с кодом $code" }
