@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-30T23:34:57Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-31T00:26:34Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -412,7 +412,7 @@ generated_at: 2026-07-30T23:34:57Z · генератор: `scripts/coverage_map.
 - риски: R-08
 - кейсы без risk: нет
 - P0/P1 не в Automated: TC-131 [P1, Approved], TC-132 [P1, Approved], TC-133 [P1, Approved], TC-134 [P1, Approved], TC-135 [P1, Approved]
-- автотесты (automated_by): framework/tests/test_tabs.py::test_long_press_link_opens_background_tab_without_switching, framework/tests/test_tabs.py::test_max_tabs_limit_blocks_11th_tab, framework/tests/test_tabs.py::test_swipe_close_undo_restores_position, framework/tests/test_tabs.py::test_tabs_persist_url_and_scroll_after_restart, framework/tests/test_tabs.py::test_tap_inactive_tab_chip_activates_it, framework/tests/test_tabs.py::test_undo_history_evicts_oldest_after_six_closes
+- автотесты (automated_by): framework/tests/test_tabs.py::test_deep_link_after_home_loaded_creates_second_tab_not_reuse, framework/tests/test_tabs.py::test_deep_link_at_tab_limit_shows_dialog_and_drops_url, framework/tests/test_tabs.py::test_long_press_link_opens_background_tab_without_switching, framework/tests/test_tabs.py::test_max_tabs_limit_blocks_11th_tab, framework/tests/test_tabs.py::test_swipe_close_undo_restores_position, framework/tests/test_tabs.py::test_tabs_persist_url_and_scroll_after_restart, framework/tests/test_tabs.py::test_tap_inactive_tab_chip_activates_it, framework/tests/test_tabs.py::test_undo_history_evicts_oldest_after_six_closes
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |

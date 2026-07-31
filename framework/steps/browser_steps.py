@@ -1835,15 +1835,29 @@ def open_new_tab(driver) -> None:
 
 
 @allure.step("Then показан диалог «Tab limit reached» с упоминанием {expected_max} вкладок")
-def assert_tab_limit_dialog_shown(driver, expected_max: int = 10, timeout: int | None = None) -> None:
+def assert_tab_limit_dialog_shown(
+    driver, expected_max: int = 10, timeout: int | None = None,
+    expected_message: str | None = None,
+) -> None:
+    """`expected_message`, если задан (TC-131), сравнивается с текстом диалога
+    ПОБУКВЕННО (`==`), а не подстрокой — доказывает дословный текст целиком, не
+    только число вкладок. По умолчанию (TC-022 и любой другой существующий
+    вызывающий код) `expected_message=None` сохраняет прежнее поведение —
+    подстрочную проверку `"{expected_max} tabs open" in message`."""
     screen = BrowserScreen(driver)
     assert screen.tab_limit_dialog_visible(timeout=timeout), (
         "диалог «Tab limit reached» не появился при достижении MAX_TABS"
     )
     message = screen.tab_limit_dialog_message(timeout=timeout)
-    assert f"{expected_max} tabs open" in message, (
-        f"текст диалога лимита не упоминает «{expected_max} tabs open»: {message!r}"
-    )
+    if expected_message is not None:
+        assert message == expected_message, (
+            f"текст диалога лимита не совпадает дословно с ожидаемым: "
+            f"{message!r} != {expected_message!r}"
+        )
+    else:
+        assert f"{expected_max} tabs open" in message, (
+            f"текст диалога лимита не упоминает «{expected_max} tabs open»: {message!r}"
+        )
 
 
 @allure.step("Then диалог «Tab limit reached» НЕ появился")

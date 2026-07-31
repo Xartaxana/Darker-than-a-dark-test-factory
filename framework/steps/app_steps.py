@@ -4,6 +4,8 @@
 """
 from __future__ import annotations
 
+import json
+import re
 import shutil
 import tempfile
 from pathlib import Path
@@ -13,7 +15,7 @@ from appium.webdriver.common.appiumby import AppiumBy
 
 from framework.config import settings
 from framework.core import adb
-from framework.core.waits import wait_for, wait_until
+from framework.core.waits import assert_holds_for, wait_for, wait_until
 from framework.data import seed_db
 from framework.data.works import Work
 from framework.screens.browser_screen import BrowserScreen
@@ -184,6 +186,188 @@ def wait_tabs_persisted(sentinel: str, timeout: int = 10) -> None:
 
     wait_for(_check, timeout=timeout,
              message=f"вкладки с сентинелом {sentinel!r} не появились в {path}")
+
+
+_TABS_PREFS_PATH = f"/data/data/{settings.APP_PACKAGE}/shared_prefs/ao3_settings.xml"
+
+
+def _read_tabs_prefs_raw() -> str:
+    """Сырой XML SharedPreferences приложения (`run-as cat`) — та же цель файла,
+    что `wait_tabs_persisted`, вынесена отдельно для повторного использования
+    парсерами ниже (TC-131: нужен точный СЧЁТ вкладок/вхождений, не просто
+    присутствие сентинела)."""
+    return adb.run_as(f"cat {_TABS_PREFS_PATH}")
+
+
+def _parse_persisted_tabs(raw: str) -> list[dict]:
+    """Извлекает и JSON-парсит массив TabSnapshot из `open_tabs_urls`
+    (`BrowserViewModel.kt saveTabsToPrefs`/`TabSnapshot`). НЕ substring-подсчёт
+    `"url":"` — эта подстрока встречается ДВАЖДЫ на вкладку: раз в самом
+    `TabSnapshot.url`, раз в единственной записи её `historyEntries`
+    (`HistoryEntry.url`, `HistoryEntry.kt`) — наивный substring-счёт переоценил
+    бы число вкладок ровно в ~2 раза. Честный JSON-парсинг даёт точный список
+    объектов — длина списка == число вкладок, `item["url"]` — url КОНКРЕТНОЙ
+    вкладки (не её истории).
+
+    Текстовое содержимое `<string>`-тега SharedPreferences эскейпит только
+    `&`/`<`/`>` (не `"` — не значение атрибута), Gson-эскейп `=` -> `\\u003d`
+    внутри JSON штатно раскрывается самим `json.loads` (см. `wait_tabs_persisted`
+    за той же практикой, сверено на живом файле устройства при разведке
+    TC-025). Пустой список — валидный исход (файл ещё не создан/только что
+    после `pm clear`), не ошибка парсинга."""
+    m = re.search(r'name="open_tabs_urls"[^>]*>(.*?)</string>', raw, re.DOTALL)
+    if not m:
+        return []
+    text = m.group(1)
+    text = (
+        text.replace("&lt;", "<").replace("&gt;", ">")
+        .replace("&quot;", '"').replace("&apos;", "'")
+        .replace("&#10;", "\n").replace("&amp;", "&")
+    )
+    try:
+        return json.loads(text)
+    except (json.JSONDecodeError, TypeError):
+        return []
+
+
+@allure.step("Then в prefs open_tabs_urls зафиксировано РОВНО {expected_count} вкладок(и)")
+def wait_persisted_tab_count(expected_count: int, timeout: int = 10) -> None:
+    """TC-131: опрашивает (не читает один раз) точное число вкладок в
+    `open_tabs_urls` — тот же класс debounce/apply()-гонки, что закрывает
+    `wait_tabs_persisted`, только по ТОЧНОМУ счёту объектов (нужно доказать
+    «11-я вкладка НЕ создана», не просто «сентинел где-то есть/нет»)."""
+    holder: dict[str, int] = {}
+
+    def _check() -> bool:
+        holder["count"] = len(_parse_persisted_tabs(_read_tabs_prefs_raw()))
+        return holder["count"] == expected_count
+
+    wait_for(
+        _check, timeout=timeout,
+        message=(
+            f"число вкладок в open_tabs_urls не стало {expected_count} "
+            f"(последнее наблюдение: {holder.get('count')})"
+        ),
+    )
+
+
+@allure.step("Then вхождений URL {marker_url} в open_tabs_urls: {expected_count}")
+def assert_persisted_marker_count(
+    marker_url: str, expected_count: int, expected_total: int | None = None,
+) -> None:
+    """Мгновенная сверка (не опрос) — вызывающий код обязан САМ гарантировать
+    стабильность файла ДО вызова (напр. предшествующим `wait_persisted_tab_count`
+    на этом же снимке состояния) — TC-131: точное число вкладок с данным url
+    (0 — «URL безвозвратно потерян», не открыт ни в новой вкладке, ни поверх
+    существующей).
+
+    `expected_total`, если задан (critic-блокер B2, attempt 2): позитивный
+    якорь источника — доказывает, что `_read_tabs_prefs_raw()` реально прочитал
+    непустой/валидный prefs-файл, а не отдал `""`/битый JSON (`adb.shell`
+    отбрасывает returncode/stderr, `_parse_persisted_tabs` на пустом/битом
+    чтении молча возвращает `[]`, из-за чего `actual == 0 == expected_count`
+    прошёл бы ВАКУУМНО, не прочитав реального состояния устройства). По
+    умолчанию `None` не меняет поведение существующих вызовов."""
+    tabs = _parse_persisted_tabs(_read_tabs_prefs_raw())
+    if expected_total is not None:
+        assert len(tabs) == expected_total, (
+            f"общее число вкладок в open_tabs_urls: {len(tabs)}, ожидали "
+            f"{expected_total} (пустое/битое чтение prefs-файла даёт вакуумный "
+            f"ноль вхождений маркера — сигнал недостоверного снимка состояния)"
+        )
+    actual = sum(1 for t in tabs if t.get("url") == marker_url)
+    assert actual == expected_count, (
+        f"вхождений URL {marker_url!r} в open_tabs_urls: {actual} (всего вкладок "
+        f"в prefs: {len(tabs)}), ожидали {expected_count}"
+    )
+
+
+@allure.step(
+    "Then URL {marker_url} отсутствует в open_tabs_urls ВЕСЬ бюджет {budget_s}с "
+    "(нет отложенной очереди открытия)"
+)
+def assert_persisted_marker_absent_for(
+    marker_url: str, budget_s: float = 4.0, poll_interval: float = 0.5,
+    expected_total: int | None = None,
+) -> None:
+    """TC-131, регрессионный замок находки 4 CH-005: держит негатив ВЕСЬ бюджет
+    (`assert_holds_for`), а не одно чтение сразу после действия — доказывает
+    отсутствие ИМЕННО отложенной очереди открытия (в коде её нет,
+    `openOrNavigateDeepLink`/`openTab` вызываются только в момент самого
+    intent'а), а не «эффект просто ещё не докатился до момента, когда мы
+    посмотрели» (тот же класс, что `assert_top_chrome_not_darkened`/
+    `assert_scroll_unchanged` в `browser_steps.py`).
+
+    `expected_total`, если задан (critic-блокер B2, attempt 2): позитивный
+    якорь источника на КАЖДОЙ итерации опроса — без него `adb.shell` (по
+    отвалившемуся device/отказавшему `run-as`) молча отдаёт `""`, парсер на
+    пустом/битом чтении возвращает `[]`, и негатив «count==0» держится весь
+    бюджет, не прочитав ни одного реального состояния устройства."""
+    def _check() -> bool:
+        tabs = _parse_persisted_tabs(_read_tabs_prefs_raw())
+        if expected_total is not None:
+            assert len(tabs) == expected_total, (
+                f"общее число вкладок в open_tabs_urls: {len(tabs)}, ожидали "
+                f"{expected_total} (пустое/битое чтение prefs-файла даёт "
+                f"вакуумный негатив — сигнал недостоверного снимка состояния)"
+            )
+        count = sum(1 for t in tabs if t.get("url") == marker_url)
+        assert count == 0, (
+            f"URL {marker_url!r} появился в open_tabs_urls ({count} вхожд. из "
+            f"{len(tabs)} вкладок) — похоже на отложенную очередь открытия, "
+            f"которой не должно быть"
+        )
+        return True
+
+    assert_holds_for(
+        _check, budget_s=budget_s, interval_s=poll_interval,
+        msg=f"URL {marker_url!r} появился в open_tabs_urls в пределах {budget_s}s бюджета",
+    )
+
+
+@allure.step("Then вкладка на позиции {position} в open_tabs_urls несёт URL {expected_url}")
+def assert_persisted_tab_url_at(position: int, expected_url: str) -> None:
+    """TC-132: адресная сверка URL КОНКРЕТНОЙ позиции в open_tabs_urls — в
+    отличие от `assert_persisted_marker_count` (только счёт вхождений маркера
+    по всему списку), нужна доказать (а) вкладка 0 (бывшая единственная)
+    сохранила ИМЕННО прежнее содержимое без изменений, (б) вкладка на позиции 1
+    (новая) несёт ИМЕННО URL deep-link'а — а не просто «где-то в списке
+    появился URL». Порядок списка `TabSnapshot` соответствует порядку
+    `state.tabs` (`BrowserViewModel.kt saveTabsToPrefs`: `state.tabs.map { ... }`,
+    без сортировки/дедупликации) — позиция в JSON-массиве == позиция вкладки."""
+    tabs = _parse_persisted_tabs(_read_tabs_prefs_raw())
+    assert 0 <= position < len(tabs), (
+        f"позиция {position} вне диапазона: всего вкладок в prefs {len(tabs)}"
+    )
+    actual = tabs[position].get("url")
+    assert actual == expected_url, (
+        f"URL вкладки на позиции {position}: {actual!r}, ожидали {expected_url!r}"
+    )
+
+
+def _read_persisted_active_tab_index() -> int | None:
+    """Читает `active_tab_index` — int-preference, записываемый ТЕМ ЖЕ
+    `apply()`, что и `open_tabs_urls` (`saveTabsToPrefs`, BrowserViewModel.kt:
+    372-375) — атомарно консистентен со списком вкладок на момент чтения."""
+    raw = _read_tabs_prefs_raw()
+    m = re.search(r'name="active_tab_index"\s+value="(-?\d+)"', raw)
+    return int(m.group(1)) if m else None
+
+
+@allure.step("Then активная вкладка в prefs (active_tab_index) — позиция {expected_position}")
+def assert_persisted_active_tab_index(expected_position: int) -> None:
+    """TC-132: доказывает, КАКАЯ вкладка активна, БЕЗ похода в WEBVIEW-контекст.
+    Прямое чтение `current_url` для НЕ-нулевой активной вкладки ненадёжно:
+    chromedriver прилипает к вкладке-0 при >1 живой WebView (см. модульный
+    докстринг `test_tabs.py`), а свести число вкладок к одной (reduce-to-one,
+    `swipe_close_tab`) здесь разрушило бы вкладку 0, которую этот же кейс (TC-132)
+    обязан проверить как НЕТРОНУТУЮ. `active_tab_index` — то же самое
+    `apply()`-событие, что и `open_tabs_urls` (см. `_read_persisted_active_tab_index`),
+    поэтому не подвержен гонке отдельного чтения."""
+    actual = _read_persisted_active_tab_index()
+    assert actual == expected_position, (
+        f"active_tab_index в prefs: {actual}, ожидали {expected_position}"
+    )
 
 
 @allure.step("When приложение принудительно остановлено (adb) и запущено заново")

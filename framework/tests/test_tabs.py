@@ -317,6 +317,74 @@ def test_long_press_link_opens_background_tab_without_switching(replay, clean_ap
 
 @pytest.mark.p1
 @pytest.mark.replay
+@allure.id("TC-131")
+@allure.title("Deep-link на потолке 10 вкладок: диалог лимита и потеря отклонённого URL")
+@pytest.mark.parametrize("replay", [rb.TAB_MARKER_FILENAME], indirect=True)
+def test_deep_link_at_tab_limit_shows_dialog_and_drops_url(replay, clean_app, driver):
+    """TC-131: инвариант MAX_TABS=10 отрабатывает и для входа через deep-link
+    (не только кнопку «+», см. TC-022), И для случая, когда отклонённый URL —
+    заведомо НОВЫЙ (не дубль уже открытой вкладки, как в TC-022): проверка
+    `tabs.size >= MAX_TABS` (BrowserViewModel.kt:263) отсекает ДО сравнения по
+    URL, поэтому `openTab` возвращает `false` и НЕ вызывает `saveTabsToPrefs` —
+    marker8 не появляется в `open_tabs_urls` ни сразу, ни (регрессионный замок
+    находки 4 CH-005) спустя 4с после освобождения места закрытием одной
+    вкладки (в коде нет очереди отложенного открытия)."""
+    app_steps.wait_home_ready_for_deep_link(driver)
+
+    # Given открыто 10 вкладок (MAX_TABS): Home (стартовая) + marker1..marker7 +
+    # marker1 повтор + marker2 повтор — вариация рецепта CH-005 Seed 2
+    # (TC-131.md Предусловия), РЕЗЕРВИРУЮЩАЯ marker8 неоткрытым — он нужен When
+    # как заведомо новый URL, никогда не открывавшийся ни в одной вкладке
+    # (`openTab` не дедуплицирует URL, повтор штатно даёт отдельную вкладку).
+    for i in (1, 2, 3, 4, 5, 6, 7, 1, 2):
+        app_steps.open_deep_link(rb.tab_marker_url(i))
+        browser_steps.assert_tab_title_visible(driver, rb.tab_marker_title(i), timeout=15)
+
+    marker8_url = rb.tab_marker_url(8)
+    # Счёт вкладок и отсутствие marker8 — по prefs open_tabs_urls (НЕ по
+    # иконкам «Close tab»: при 10 вкладках LazyRow TabStrip виртуализирован, в
+    # a11y-дереве видно только ~4 иконки — ловушка из docs/01 §9).
+    app_steps.wait_persisted_tab_count(10, timeout=20)
+    app_steps.assert_persisted_marker_count(marker8_url, 0, expected_total=10)
+
+    # When в приложение отправлен deep-link на marker8 — маркер, НЕ открытый
+    # ни в одной из текущих 10 вкладок
+    app_steps.open_deep_link(marker8_url)
+
+    # Then показан диалог «Tab limit reached» с ДОСЛОВНЫМ текстом «You have 10
+    # tabs open. Close some tabs before opening a new one.» — тот же
+    # локатор/приём, что TC-022 (`assert_tab_limit_dialog_shown`), но со
+    # сверкой ПОБУКВЕННО (`expected_message`), а не подстрокой (critic-блокер
+    # B1, attempt 2: подстрочная сверка не различает смену второго
+    # предложения)
+    browser_steps.assert_tab_limit_dialog_shown(
+        driver, expected_max=10,
+        expected_message="You have 10 tabs open. Close some tabs before opening a new one.",
+    )
+
+    # And число вкладок в open_tabs_urls остаётся равным 10 (11-я вкладка НЕ
+    # создана), marker8 по-прежнему отсутствует (0 вхождений) — ветка отказа
+    # `openTab` (BrowserViewModel.kt:261-266) НЕ вызывает `saveTabsToPrefs`,
+    # файл этим отклонённым intent'ом не менялся
+    app_steps.wait_persisted_tab_count(10, timeout=5)
+    app_steps.assert_persisted_marker_count(marker8_url, 0, expected_total=10)
+
+    # And (регрессионный замок находки 4 CH-005) после нажатия «OK» и закрытия
+    # ЛЮБОЙ одной вкладки (стало 9) marker8 отсутствует в open_tabs_urls ни
+    # сразу, ни спустя 4с — в коде нет очереди отложенного открытия
+    # (`openOrNavigateDeepLink`/`openTab` вызываются только в момент самого
+    # intent'а). Закрытие — свайп-приём TC-023 (`browser_steps.swipe_close_tab`),
+    # НЕ тап по чипу (тап по родителю чипа способен сам закрыть вкладку);
+    # позиция 0 — среди РЕАЛЬНО СКОМПОНОВАННЫХ (не абсолютных) чипов,
+    # ограничения «кроме какой-то» нет — marker8 не открыт ни в одной вкладке.
+    browser_steps.dismiss_tab_limit_dialog(driver)
+    browser_steps.swipe_close_tab(driver, 0)
+    app_steps.wait_persisted_tab_count(9, timeout=10)
+    app_steps.assert_persisted_marker_absent_for(marker8_url, budget_s=4.0, expected_total=9)
+
+
+@pytest.mark.p1
+@pytest.mark.replay
 @allure.id("TC-084")
 @allure.title("Тап по чипу неактивной вкладки активирует её и переключает контент WebView")
 @pytest.mark.parametrize("replay", [rb.TAB_MARKER_FILENAME], indirect=True)
@@ -370,3 +438,54 @@ def test_tap_inactive_tab_chip_activates_it(replay, clean_app, driver):
     browser_steps.assert_tab_title_at_position(driver, 0, home_title)
     browser_steps.assert_tab_title_at_position(driver, 1, title1)
     browser_steps.assert_tab_title_at_position(driver, 2, title2)
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-132")
+@allure.title("Deep-link на «уведённую» с HOME_URL единственную вкладку создаёт вторую вместо переиспользования")
+@pytest.mark.parametrize("replay", [rb.TAB_MARKER_FILENAME], indirect=True)
+def test_deep_link_after_home_loaded_creates_second_tab_not_reuse(replay, clean_app, driver):
+    """TC-132: фиксирует ОТРИЦАТЕЛЬНУЮ ветку условия reuse
+    (`openOrNavigateDeepLink`, BrowserViewModel.kt:637-644): условие
+    `tabs.size==1 && tabs[0].url==HOME_URL` — сравнение точное строковое, БЕЗ
+    слэша. `onPageLoaded` домашней страницы штатно перезаписывает URL вкладки
+    на `HOME_URL + "/"` (СО слэшем) сразу по завершении загрузки —
+    `wait_home_ready_for_deep_link` (тот же приём, что TC-022..025) гарантирует,
+    что тест шлёт deep-link уже ПОСЛЕ этой перезаписи, т.е. окно, где reuse
+    формально возможен, уже закрыто обычным ходом событий ДО When. Парный
+    TC-135 (не автоматизирован здесь, не трогается) покрывает положительную
+    ветку через холодный старт."""
+    app_steps.wait_home_ready_for_deep_link(driver)
+
+    # Given открыта ровно 1 вкладка, домашняя страница ПОЛНОСТЬЮ догрузилась —
+    # её URL в prefs уже "https://archiveofourown.org/" (СО слэшем), что уже НЕ
+    # побайтово равно константе HOME_URL (без слэша) — reuse-ветка
+    # (BrowserViewModel.kt:639) больше не может сработать
+    app_steps.wait_persisted_tab_count(1, timeout=10)
+    home_loaded_url = browser_steps.HOME_URL + "/"
+    app_steps.assert_persisted_tab_url_at(0, home_loaded_url)
+
+    marker_url = rb.tab_marker_url(1)
+
+    # When в приложение отправлен deep-link на маркерную страницу фикстуры
+    app_steps.open_deep_link(marker_url)
+
+    # Then число вкладок становится 2 — НЕ переиспользование исходной вкладки
+    # (`navigateActiveTabTo`), а добавление НОВОЙ (`openTab`,
+    # BrowserViewModel.kt:261-269)
+    app_steps.wait_persisted_tab_count(2, timeout=15)
+
+    # And новая вкладка (позиция 1) становится активной и её содержимое
+    # соответствует URL deep-link'а. Активность доказана через
+    # `active_tab_index` — записан ТЕМ ЖЕ `apply()`, что и сам `open_tabs_urls`
+    # (`saveTabsToPrefs`), а не через WEBVIEW `current_url`: chromedriver
+    # прилипает к вкладке-0 при >1 живой WebView (см. модульный докстринг
+    # выше), прямое чтение НЕ-нулевой активной вкладки было бы ненадёжно без
+    # reduce-to-one, которое здесь разрушило бы проверяемую вкладку 0.
+    app_steps.assert_persisted_active_tab_index(1)
+    app_steps.assert_persisted_tab_url_at(1, marker_url)
+
+    # And вкладка 0 (бывшая единственная, ex-home) сохраняет своё прежнее
+    # содержимое без изменений — deep-link её НЕ тронул
+    app_steps.assert_persisted_tab_url_at(0, home_loaded_url)
