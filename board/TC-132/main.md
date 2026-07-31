@@ -2,19 +2,19 @@
 key: "TC-132"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Deep-link на единственную вкладку, уведённую с HOME_URL, создаёт вторую вкладку вместо переиспользования"
-assignee: "test-automator"
+assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:tabs", "risk:R-08", "wip:test-automator"]
+labels: ["test-case", "area:tabs", "risk:R-08"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-30T22:33:16Z"
-updated: "2026-07-30T22:33:16Z"
+created: "2026-07-31T00:04:23Z"
+updated: "2026-07-31T00:04:23Z"
 archived: false
 resolution: null
 ---
@@ -94,6 +94,26 @@ URL-нормализующее.
   введено ровно затем, чтобы из этого состояния ВЫЙТИ). Этот кейс (TC-132)
   остаётся фиксацией ОТРИЦАТЕЛЬНОЙ ветки условия — пара TC-132 + TC-135
   закрывает обе ветки `BrowserViewModel.kt:639`.
+
+**Фактическое поведение (test-automator, 2026-07-31).** Реализовано
+`framework/tests/test_tabs.py::test_deep_link_after_home_loaded_creates_second_tab_not_reuse`
+— переиспользует `app_steps.wait_home_ready_for_deep_link`/`app_steps.open_deep_link`
+и хелперы предыдущего инкремента (TC-131) `_parse_persisted_tabs`/
+`wait_persisted_tab_count`. Добавлены два новых шага `app_steps.py`:
+`assert_persisted_tab_url_at(position, url)` — адресная сверка URL КОНКРЕТНОЙ
+позиции в `open_tabs_urls` (не просто счёт вхождений, как
+`assert_persisted_marker_count`) — доказывает и «вкладка 0 не тронута», и
+«вкладка 1 несёт URL deep-link'а»; `assert_persisted_active_tab_index` — читает
+int-preference `active_tab_index`, записываемый ТЕМ ЖЕ `apply()`, что и
+`open_tabs_urls` (`saveTabsToPrefs`, BrowserViewModel.kt:372-375), — доказывает,
+какая вкладка активна, БЕЗ похода в WEBVIEW (chromedriver прилипает к
+вкладке-0 при >1 живой WebView; reduce-to-one здесь разрушило бы проверяемую
+вкладку 0). Красная проба (attempt 1): инверсия ожидаемого числа вкладок после
+deep-link (2 -> 1, имитация гипотетического бага «reuse вместо новой вкладки»)
+— тест упал содержательно (`TimeoutError: число вкладок в open_tabs_urls не
+стало 1`), порча откачена. 3 зелёных прогона подряд + `test_tabs.py` целиком
+(8 passed). `arch_check` — 0/0.
+Блокера автоматизации не найдено — чек-лист test-designer подтверждён.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»
