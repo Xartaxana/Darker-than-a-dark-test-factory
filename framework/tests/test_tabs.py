@@ -646,3 +646,95 @@ def test_kill_relaunch_without_deep_link_keeps_tabs_unchanged(replay, clean_app,
     # критиком на TC-131 attempt 1).
     app_steps.assert_persisted_marker_count(marker1_url, 1, expected_total=3)
     app_steps.assert_persisted_marker_count(marker2_url, 1, expected_total=3)
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-135")
+@allure.title("Холодный старт по VIEW-интенту переиспользует единственную незагруженную home-вкладку (positive-reuse)")
+@pytest.mark.parametrize("replay", [rb.TAB_MARKER_FILENAME], indirect=True)
+def test_cold_start_deep_link_reuses_single_home_tab(replay, clean_app, driver):
+    """TC-135: положительная ветка reuse-условия `openOrNavigateDeepLink`
+    (`tabs.size==1 && tabs[0].url==HOME_URL` побайтово, BrowserViewModel.kt:
+    637-644) — холодный старт САМИМ deep-link-интентом переиспользует
+    единственную ещё не догруженную home-вкладку (`navigateActiveTabTo`)
+    вместо создания второй. Парная отрицательная ветка — TC-132 (тёплый
+    старт ПОСЛЕ полной догрузки home создаёт вторую вкладку).
+
+    Критик-расследование (TC-135.md, «Предпосылка измерена», 2026-07-31)
+    воспроизвело ветку 11/11 живыми прогонами — первая попытка
+    автоматизации дала ложный негатив ИЗ-ЗА ОРАКУЛА (не бага приложения):
+    мгновенное чтение `open_tabs_urls` СРАЗУ после интента детерминированно
+    попадает в транзиентное окно 0.83-1.90с, где prefs ВРЕМЕННО несут
+    `HOME_URL` со слэшем — прерванная фоновая загрузка home всё равно
+    триггерит `onPageFinished`->`onPageLoaded`->`saveTabsToPrefs` БЕЗ
+    debounce (BrowserViewModel.kt:474-488), ДО того как реальный ответ на
+    маркер придёт и перезапишет prefs повторно (устойчиво к t+6.3..7.3с от
+    интента на измеренном эмуляторе). Правильный оракул — синхронизация ПО
+    СОДЕРЖИМОМУ (`wait_tabs_persisted` с сентинелом URL маркера), НЕ
+    `wait_persisted_tab_count(1)` — единица наступает уже В транзиентном
+    окне (первая запись с home, ДО persist ключа `open_tabs_urls` его
+    вообще нет — `BrowserViewModel.init` не пишет prefs, kt:181-215), этот
+    wait не отличает транзиент от целевого состояния, плюс независимое
+    подтверждение через РЕАЛЬНЫЙ WebView (`browser_steps.assert_active_tab_url`,
+    опрашивающий, не мгновенный)."""
+    # Given приложение остановлено, prefs пусты. Appium-сессия (`driver`)
+    # автозапускает приложение ОБЫЧНЫМ путём при создании сессии (autoLaunch
+    # по умолчанию — `capabilities.build_options` не выставляет
+    # `autoLaunch=false`) — это побочный эффект инфраструктуры сессии, не
+    # часть проверяемого сценария; шагом-обвязкой (`clean_state` — тот же
+    # `pm clear`, что `clean_app`) возвращаем устройство в буквальный Given
+    # («приложение НЕ запущено, prefs пусты») ПЕРЕД самим deep-link-интентом.
+    # Appium-сессия переживает этот mid-test `pm clear` не из-за
+    # `no_reset=True` (тот управляет сбросом на старте/выходе сессии) — а
+    # потому что UiAutomator2-сервер (`io.appium.uiautomator2.server`) живёт
+    # в ОТДЕЛЬНОМ пакете, не затрагиваемом очисткой AUT; тот же класс приёма,
+    # что `restart_app_via_adb` в TC-025/TC-134, только с полной очисткой prefs
+    # (не только force-stop): Given требует ИМЕННО «prefs отсутствуют»
+    # (`BrowserViewModel.init` кладёт свежую единственную HOME_URL-вкладку
+    # только при пустых prefs, kt:181-186 — на непустых prefs пошёл бы путь
+    # восстановления, а не создания, и reuse-условие сравнивалось бы уже не с
+    # константой).
+    app_steps.clean_state()
+
+    marker_url = rb.tab_marker_url(1)
+
+    # When приложение запускается САМИМ deep-link-интентом (холодный старт —
+    # процесс не был жив до этого вызова; НЕ используем
+    # `wait_home_ready_for_deep_link` перед этим — тот шаг существует ровно
+    # для того, чтобы УЙТИ из reuse-окна, здесь нужно окно, а не уход из него)
+    app_steps.open_deep_link(marker_url)
+
+    # Then содержимое единственной вкладки — маркерная страница, доказано
+    # синхронизацией ПО СОДЕРЖИМОМУ (не по счёту): опрос prefs до появления
+    # сентинела URL маркера (Gson экранирует символ `=` как юникод-escape
+    # внутри JSON, сверено на живом файле устройства — см.
+    # `wait_tabs_persisted`/TC-025).
+    # Таймаут 20с — с запасом над измеренным критиком окном персиста маркера
+    # (~6.3-7.3с от интента).
+    app_steps.wait_tabs_persisted(marker_url.replace("=", "\\u003d"), timeout=20)
+
+    # And число вкладок равно 1 — сработала ветка ПЕРЕИСПОЛЬЗОВАНИЯ
+    # (`navigateActiveTabTo`), новая вкладка НЕ создана. Проверка ПОСЛЕ
+    # content-sync (не вместо неё, см. докстринг выше) — здесь это финальная
+    # сверка количества на уже подтверждённом содержимым снимке, а не
+    # единственная синхронизация.
+    app_steps.wait_persisted_tab_count(1, timeout=5)
+    app_steps.assert_persisted_tab_url_at(0, marker_url)
+
+    # And содержимое единственной вкладки подтверждено ЕЩЁ И через РЕАЛЬНЫЙ
+    # WebView (не только prefs) — опрашивающий оракул (`assert_active_tab_url`),
+    # тот же приём, что уже используется для навигации-на-месте в
+    # `test_filter_profiles.py`/`test_side_panel.py`; при ровно одной вкладке
+    # прилипание chromedriver к вкладке-0 неприменимо (вкладка и так
+    # единственная).
+    browser_steps.assert_active_tab_url(driver, marker_url)
+    # Заметка для test-reviewer (F1, поле red_probe): приложенная красная
+    # проба (откат к мгновенному чтению без wait_tabs_persisted) поймала
+    # pre-first-persist ("всего вкладок в prefs 0" — до первой записи вовсе,
+    # BrowserViewModel.init её не делает), а не транзиентное окно с
+    # HOME_URL/, описанное в докстринге выше (то требует ~1с задержки перед
+    # мгновенным чтением, чтобы воспроизвести). Демонстрирует тот же
+    # надкласс (ценность content-sync), но не тот конкретный экземпляр.
+    # Мутация утверждения о reuse (1 vs 2 вкладки) отдельной пробой не
+    # проверялась (критик-вход, attempt 2, PASS).
