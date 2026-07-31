@@ -1,6 +1,6 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-31T00:26:33Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-07-31T00:28:24Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
@@ -78,9 +78,9 @@ generated_at: 2026-07-31T00:26:33Z · генератор: `scripts/queue_snapsho
 - bugs_per_charter: **0.4**
 - new_tc_from_charters: **1**
 
-## Активные локи (0)
+## Активные локи (1)
 
-- нет
+- TC-133 — `test-automator:2026-07-31T00:28:00Z`
 
 ## Эскалации (5)
 
