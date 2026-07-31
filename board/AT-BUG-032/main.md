@@ -2,7 +2,7 @@
 key: "AT-BUG-032"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p2"
 summary: "restart_app_via_adb / adb.force_stop не наблюдают реальную смерть процесса — TC-025 и test_reading_ux.py (персистентность через рестарт) не отличают холодный старт от no-op"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-31T12:15:00Z"
-updated: "2026-07-31T12:15:00Z"
+created: "2026-07-31T18:20:00Z"
+updated: "2026-07-31T18:20:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # restart_app_via_adb / adb.force_stop не наблюдают реальную смерть процесса — TC-025 и test_reading_ux.py (персистентность через рестарт) не отличают холодный старт от no-op
 
 _Спроецировано из `bugs/AT-BUG-032.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # AT-BUG-032 — restart_app_via_adb не доказывает, что процесс реально был убит
 
@@ -65,6 +65,7 @@ adb.shell(f"am start -W -n {settings.APP_PACKAGE}/{settings.APP_ACTIVITY}", time
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-07-31 | 1.10 (test_debt, фикс целиком во `framework/`, приложение не менялось) | TC-025 (`test_tabs.py::test_tabs_persist_url_and_scroll_after_restart`) + TC-125 (`test_reading_ux.py::test_tap_to_scroll_survives_kill_and_relaunch`, единственный из `test_cases` бага — TC-025; TC-125 прогнан дополнительно как второй затронутый фиксом кейс) | Код: обёртка `restart_app_via_adb_asserting_new_process` (`app_steps.py:465-520`) ассертит `pid_before is not None` (:512), `pid_after is not None` (:515) и `pid_after != pid_before` (:516); оба теста реально вызывают именно её (`test_tabs.py:254`, `test_reading_ux.py:457`), не голый `restart_app_via_adb`. Независимый зелёный прогон: `Invoke-Pytest tests/test_tabs.py::test_tabs_persist_url_and_scroll_after_restart tests/test_reading_ux.py::test_tap_to_scroll_survives_kill_and_relaunch` — `2 passed in 126.70s`, PYTEST_EXIT=0. Исключающая проба: `adb.force_stop()` временно превращён в no-op (`return` перед `shell(...)`), TC-025 прогнан заново — упал содержательно ИМЕННО на pid-проверке: `AssertionError: pid не изменился (2859) — am force-stop процесс НЕ убил (adb.shell отбрасывает returncode), релонч свёлся к доставке intent'а в живой процесс: холодный старт не состоялся` (`app_steps.py:516`); порча немедленно откачена, `git diff -- framework/core/adb.py` пуст после отката (подтверждено). `arch_check.py` и `validate_frontmatter.py` — 0 ошибок/0 предупреждений оба, прогнаны после отката порчи. `app-under-test/` не тронут. | Verified — все три пункта критерия готовности подтверждены живым прогоном (не пересказом): pid-ассерты в коде, зелёный независимый прогон обоих переведённых тестов, содержательное падение на исключающей пробе с откатом. Smoke p0 (49 passed) уже приложен test-maintainer'ом в «Обсуждении» attempt 1/2 на build 1.10 — не перегонялся повторно (точечная верификация двух конкретных TC, не полный regression-suite; run-артефакт не требуется — named-not-covered по правилам fix-verifier). |
 
 ## Обсуждение
 
@@ -153,3 +154,37 @@ Smoke без регресса: `Invoke-Smoke` (канонический прог
   сообщение assert'а) и `bugs/AT-BUG-032.md`.
 
 Статус переведён Open → Fixed (B4, guard `type: test_debt`), lock снят.
+
+**2026-07-31T18:20:00Z — fix-verifier (Sonnet), верификация D1:** это `type:
+test_debt`, но с реально существующими и привязанными кейсами (`test_cases:
+["TC-025"]`) — carve-out «DoD-демонстрация вместо TC» не применяется, гоняю
+факт-прогон обоих затронутых тестов напрямую (устройство подтверждено
+`Get-Device` → `emulator-5554`).
+
+Прошёл все 4 пункта DoD бага независимо:
+1. Код: `restart_app_via_adb_asserting_new_process` (`app_steps.py:511-520`)
+   реально ассертит pid до/после — прочитано глазами, не с чужих слов; оба
+   теста (`test_tabs.py:254`, `test_reading_ux.py:457`) реально зовут именно
+   её, `test_compatibility.py:129` (вне скоупа) остался на голом
+   `restart_app_via_adb` — соответствует заявленному в `fixed_in`.
+2. Независимый зелёный прогон обоих тестов одной командой — `2 passed in
+   126.70s`, PYTEST_EXIT=0.
+3. Исключающая проба: `force_stop()` временно no-op → TC-025 упал именно на
+   `assert pid_after != pid_before` (не вакуумно, не таймаутом на другом
+   шаге) → откат, `git diff -- framework/core/adb.py` пуст (`git status
+   --porcelain` подтверждает: файл не в списке изменённых).
+4. `arch_check.py`/`validate_frontmatter.py` — 0/0 после моих правок (правки
+   были только в `bugs/AT-BUG-032.md`, `framework/core/adb.py` не
+   изменился по сумме).
+
+Smoke (p0) не перегонял повторно — уже приложен зелёным (49 passed) в
+«Обсуждении» на этой же сборке 1.10 тем же ходом фикса; точечная
+D1-верификация двух TC регресс-суйта не требует. `app-under-test/` не
+трогал. Статус Fixed → Verified, `known_issue` уже был `"false"` (не
+трогаю), lock снят.
+
+**Дефекты-собратья (D-0043):** F3 (`seed_db.py`, 6 мест того же
+returncode-отбрасывающего `force_stop`) и F4 (`app_steps.restart_app` через
+Appium API, `test_side_panel.py:95`, TC-051) уже названы в очереди самим
+багом (раздел «Анализ») — не дублирую, подтверждаю, что они остаются вне
+скоупа этой верификации и по-прежнему не исполнены.

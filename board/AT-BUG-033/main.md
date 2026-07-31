@@ -2,7 +2,7 @@
 key: "AT-BUG-033"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p2"
 summary: "scripts/log_append.py: нет легального пути для второго delegated тем же агентом на task_id, когда первый был другой ПРИРОДЫ (расследование vs ревью диффа), не ретрай и не замена мёртвого воркера"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-31T11:20:00Z"
-updated: "2026-07-31T11:20:00Z"
+created: "2026-07-31T17:58:18Z"
+updated: "2026-07-31T17:58:18Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # scripts/log_append.py: нет легального пути для второго delegated тем же агентом на task_id, когда первый был другой ПРИРОДЫ (расследование vs ревью диффа), не ретрай и не замена мёртвого воркера
 
 _Спроецировано из `bugs/AT-BUG-033.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # AT-BUG-033 — log_append.py не легализует повторный critic-вход другой природы на переоткрытой задаче
 
@@ -94,6 +94,7 @@ AT-BUG-033»; после отката эта формулировка устар
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-07-31 | scripts/log_append.py @ HEAD (документный класс, сборка приложения не требуется) | `test_cases: []` (test_debt в обвязке — carve-out CLAUDE.md/протокола: id не существует) → замена: (1) `python -m pytest scripts/tests -q` полный набор, (2) живой прогон `append_routing()` в изолированном temp jsonl (не живой `logs/routing-log.jsonl`) на буквальном сценарии бага + красные пробы (в)/(г) | (1) `734 passed, 1 skipped` — сходится с witness фикса; (2) 6/6 живых проб зелёные: позитив (critic delegated→accepted→другой-агент delegated с `reopen:`-маркером→critic delegated снова без флагов — прошёл), негатив (без reopen-маркера — SystemExit дубль-паттерн), 4 красные пробы на путях (в)/(г) в (д)-доступном состоянии (фиктивный `--replaces-worker` — SystemExit; честный — прошёл и дописал маркер; `--attempt` без rejected — SystemExit дубль-паттерн, НЕ протёк через (д); `--replaces-worker`+`--attempt` вместе — SystemExit взаимоисключения); `validate_frontmatter.py`: 0 ошибок/0 предупреждений до и после правки | Verified |
 
 ## Обсуждение
 
@@ -334,3 +335,75 @@ test-design-auto-download-favorite-0728 x2); формы TC-131/TC-125/CH-007
 `app-under-test/` не тронут. Статус Open -> Fixed, лок снят. Приёмка:
 opus-класс результата — координатор Sonnet не принимает его сам
 (матрица D-0058), очередь полного Lead (basis=queued-to-lead).
+
+**2026-07-31T17:58:18Z — fix-verifier (Sonnet), mode=verify (D1):**
+
+Прочитан bugs/AT-BUG-033.md целиком, включая оговорку о периметре
+(B3 не блокирует Verified — независимо перепроверено ниже) и раздел
+«Открытый остаток B3». Код `scripts/log_append.py` сверен построчно:
+ветка (д) (`_reopened_via_flag_since_agent_last_delegated`, строки
+328-364) подключена как ПОСЛЕДНИЙ `elif` в цепочке (в)→(г)→(д)→дубль
+(строки 743-788), (в)/(г) исполняются раньше и не обходятся, ровно как
+описано в фиксе.
+
+**Carve-out применён (CLAUDE.md «Границы»):** `test_cases: []` штатен
+для `type: test_debt` в обвязке (`scripts/log_append.py` — не
+UI/pytest-TC поверхность). DoD в «Критерий готовности» описывает
+исполнимую демонстрацию буквально (сценарий critic→accepted→reopen→
+critic снова + регрессия (в)/(г)) — исполнено ЖИВЫМ прогоном
+`append_routing()` напрямую (импорт модуля, `ROUTING_LOG`/`ORCH_LOG`
+подменены на путь в scratchpad-каталоге сессии внутри собственного
+временного git-репо — реальная `_verify_environment` не стаблена),
+не чтением кода и не через pytest-фикстуру (та же дисциплина, что
+урок AT-BUG-031 attempt 1: dot-source/чтение не исполняет тело
+функции).
+
+1. `python -m pytest scripts/tests -q` (канонической формой через
+   `Invoke-Pytest ..\scripts\tests -q` из framework) →
+   `734 passed, 1 skipped` — совпадает с witness фикса дословно.
+2. Живой сценарий в изолированном `C:\Users\user\AppData\Local\Temp\
+   claude\...\scratchpad\bug033_verify\logrepo` (НЕ живой
+   `logs/routing-log.jsonl` — проверено git diff после прогона:
+   0 изменений от этого прогона; unrelated 3 строки в живом логе
+   принадлежат параллельным диспетчерским записям координатора,
+   сделанным ДО старта этой верификации):
+   - позитив — точный сценарий бага: `delegated critic (investigation)`
+     → `accepted by=fable basis=queued-to-lead` → `delegated
+     test-automator --reopen-task "..."` → `delegated critic` СНОВА,
+     без attempt/replaces-worker/rejected — прошёл (было бы
+     SystemExit до фикса);
+   - негатив — то же самое БЕЗ `reopen:`-маркера в notes между
+     повторными critic delegated на открытом (без accepted) task_id —
+     `SystemExit` дубль-паттерн, как ожидалось;
+   - красная проба (в)/(г) в (д)-доступном состоянии (после реального
+     reopen): фиктивный `--replaces-worker` — `SystemExit`
+     («фиктивная замена»); честный `--replaces-worker` — прошёл,
+     маркер `replaces_worker:<ref>` в notes записанной строки
+     присутствует; `--replaces-worker`+`--attempt` вместе —
+     `SystemExit` взаимоисключения; `--attempt 7` БЕЗ `rejected` —
+     `SystemExit` дубль-паттерн (НЕ протекает через (д) молча —
+     регрессия B1 не вернулась).
+   Итог: 6/6 проб зелёные, скрипт-харнесс —
+   `bug033_verify/run_scenario.py` в scratchpad сессии (временный,
+   не коммитится).
+3. `python scripts/validate_frontmatter.py` (из корня репо) — «ошибок
+   0, предупреждений 0» и до, и после правки frontmatter/таблицы
+   этого файла.
+
+**B3-оговорка перепроверена независимо, не только процитирована:**
+`_has_rejected(records, task_id)` (строки 297-322) действительно
+TASK-уровневая на HEAD (сигнатура без параметра `agent`, докстринг
+прямо фиксирует откат сужения) — критерий готовности AT-BUG-033
+формулирует его закрытым «по периметру», B3 явно выведен в
+`bugs/AT-BUG-034.md`; чтения кода достаточно (это НЕ демонстрация
+DoD, а сверка факта архитектуры, для которой pytest уже даёт witness
+через `test_b6_review_round_second_critic_entry_after_executor_rework_passes`
+и `test_b6_task_level_rejected_alone_does_not_legalize_without_attempt`
+в зелёном наборе выше). B3 не блокирует Verified — подтверждено.
+
+`app-under-test/` не тронут, устройство не использовалось (эмулятор
+занят параллельным fix-verifier AT-BUG-032). Аналогов класса рядом
+не замечено (баг узко про guard-ветку одного скрипта, соседний класс
+B3 уже поставлен в очередь как AT-BUG-034 самим фиксом — не дублирую).
+Статус: Fixed → Verified, `known_issue` остаётся `"false"` (не менялся
+— уже был false), лок снят.
