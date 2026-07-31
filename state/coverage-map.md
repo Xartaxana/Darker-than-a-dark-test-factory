@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-31T02:34:59Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-31T11:34:39Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -19,7 +19,7 @@ generated_at: 2026-07-31T02:34:59Z · генератор: `scripts/coverage_map.
 | downloads | 14 | 14 | designed-full |
 | errors | 1 | 1 | designed-full |
 | filter-profiles | 5 | 5 | designed-full |
-| library | 15 | 15 | designed-full |
+| library | 17 | 15 | partial |
 | performance | 4 | 4 | designed-full |
 | rating | 14 | 14 | designed-full |
 | security | 6 | 6 | designed-full |
@@ -39,7 +39,7 @@ generated_at: 2026-07-31T02:34:59Z · генератор: `scripts/coverage_map.
 | R-05 | TECH | downloads:TC-032, downloads:TC-033, downloads:TC-034, downloads:TC-035, downloads:TC-036, downloads:TC-037, downloads:TC-038, downloads:TC-039, downloads:TC-112, downloads:TC-113, downloads:TC-114, downloads:TC-115, downloads:TC-116, downloads:TC-117 |
 | R-06 | BUS | browser:TC-094, library:TC-027, library:TC-028, library:TC-029, library:TC-030, library:TC-031, library:TC-060, library:TC-061, library:TC-062, library:TC-063, library:TC-064, library:TC-065, visibility:TC-013, visibility:TC-014, visibility:TC-015, visibility:TC-092, visibility:TC-093, visibility:TC-095 |
 | R-07 | OPS | риск не покрыт дизайном |
-| R-08 | TECH | tabs:TC-022, tabs:TC-023, tabs:TC-024, tabs:TC-025, tabs:TC-026, tabs:TC-084, tabs:TC-131, tabs:TC-132, tabs:TC-133, tabs:TC-134, tabs:TC-135 |
+| R-08 | TECH | library:TC-136, library:TC-137, tabs:TC-022, tabs:TC-023, tabs:TC-024, tabs:TC-025, tabs:TC-026, tabs:TC-084, tabs:TC-131, tabs:TC-132, tabs:TC-133, tabs:TC-134, tabs:TC-135 |
 | R-11 | TECH | accessibility:TC-108, browser:TC-050, browser:TC-051, browser:TC-052, browser:TC-053, browser:TC-054, browser:TC-055, browser:TC-057, browser:TC-058, browser:TC-126, browser:TC-127, browser:TC-128, browser:TC-130, settings:TC-047, settings:TC-048, settings:TC-049, settings:TC-059, settings:TC-123, settings:TC-124, settings:TC-125, settings:TC-129 |
 | R-09 | BUS | filter-profiles:TC-040, filter-profiles:TC-041, filter-profiles:TC-042, filter-profiles:TC-085, filter-profiles:TC-086 |
 | R-10 | DATA | library:TC-089, rating:TC-043, rating:TC-044, rating:TC-045, rating:TC-056, rating:TC-087, rating:TC-088, rating:TC-090, rating:TC-091 |
@@ -89,7 +89,7 @@ generated_at: 2026-07-31T02:34:59Z · генератор: `scripts/coverage_map.
 | library-sort-author | library | library:TC-064[Automated] |
 | library-sort-rating-files | library | library:TC-065[Automated] |
 | library-sort-scroll-reset | library | library:TC-030[Automated], library:TC-063[Automated] |
-| library-card-open-work | library | нет кейсов |
+| library-card-open-work | library | library:TC-136[Review], library:TC-137[Review] |
 | library-card-download | library | downloads:TC-033[Automated] |
 | library-card-open-file | library | downloads:TC-034[Automated] |
 | library-card-delete-file | library | downloads:TC-035[Automated] |
@@ -166,7 +166,6 @@ generated_at: 2026-07-31T02:34:59Z · генератор: `scripts/coverage_map.
 ## Фичи без единого кейса
 
 - browse-tabstrip-indicators (browse): TabStrip: индикация активной вкладки, закрытие свайпом вверх, кнопка New tab
-- library-card-open-work (library): Тап по телу карточки Library открывает работу (URL) в браузерной вкладке
 - settings-font-slider (settings): Слайдер размера шрифта (7 ступеней, 100–190%)
 - settings-brightness-slider (settings): Слайдер яркости (overlay при v<0, reset-on-start)
 - settings-panel-side (settings): Позиция side panel Left/Right
@@ -312,17 +311,17 @@ generated_at: 2026-07-31T02:34:59Z · генератор: `scripts/coverage_map.
 
 ### library
 
-- coverage_status: **designed-full** (15/15 Automated)
-- риски: R-04, R-06, R-10
+- coverage_status: **partial** (15/17 Automated)
+- риски: R-04, R-06, R-08, R-10
 - кейсы без risk: TC-006
-- P0/P1 не в Automated: нет
+- P0/P1 не в Automated: TC-136 [P1, Review], TC-137 [P1, Review]
 - автотесты (automated_by): framework/tests/test_library.py::test_change_rating_moves_work_between_tabs, framework/tests/test_library.py::test_comment_only_not_in_any_rating_tab, framework/tests/test_library.py::test_library_card_shows_note_icon_and_tags, framework/tests/test_library.py::test_library_tab_labels, framework/tests/test_library_filters.py::test_library_filter_by_fandom, framework/tests/test_library_filters.py::test_library_filter_downloaded_only, framework/tests/test_library_filters.py::test_library_filter_freetext_search, framework/tests/test_library_filters.py::test_library_filter_tags_and_semantics, framework/tests/test_library_filters.py::test_library_filter_word_count_range, framework/tests/test_library_filters.py::test_library_sort_author_asc_blank_last, framework/tests/test_library_filters.py::test_library_sort_last_read_default, framework/tests/test_library_filters.py::test_library_sort_rating_files_tab_only, framework/tests/test_library_filters.py::test_library_sort_wordcount_asc_resets_scroll, framework/tests/test_library_filters.py::test_library_sort_wordcount_desc_resets_scroll, framework/tests/test_library_filters.py::test_library_sort_wordcount_null_last
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  | 2 |  |
-| P1 |  |  |  | 10 |  |
+| P1 |  | 2 |  | 10 |  |
 | P2 |  |  |  | 2 |  |
 | P3 |  |  |  | 1 |  |
 

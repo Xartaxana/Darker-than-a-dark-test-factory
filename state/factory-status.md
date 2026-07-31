@@ -1,19 +1,19 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-31T02:34:59Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-07-31T11:34:36Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **695.0** (RUN-20260702-0300)
+- smoke: Closed · smoke_freshness_hours: **704.0** (RUN-20260702-0300)
 - regression: not_run
 - canary: not_run
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **1**
 - p0_automation_coverage: **100%** (37/37)
-- p1_automation_coverage: **93%** (66/71)
-- Test debt открыт: **2** — AT-BUG-032, AT-BUG-033
+- p1_automation_coverage: **90%** (66/73)
+- Test debt открыт: **1** — AT-BUG-034
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
 - Untriaged: **0** · untriaged_failure_age: **0**
@@ -23,9 +23,9 @@ generated_at: 2026-07-31T02:34:59Z · генератор: `scripts/queue_snapsho
 - 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
 - smoke: passed · regression: not_run
 
-## Тест-кейсы (135)
+## Тест-кейсы (137)
 
-- Approved: **5** · Automated: **129** · Blocked: **1**
+- Review: **2** · Approved: **5** · Automated: **129** · Blocked: **1**
 - автотесты (B3): active: **129**
 
 | Область | Draft | Review | Approved | Automated | Blocked |
@@ -38,7 +38,7 @@ generated_at: 2026-07-31T02:34:59Z · генератор: `scripts/queue_snapsho
 | downloads |  |  |  | 14 |  |
 | errors |  |  |  | 1 |  |
 | filter-profiles |  |  |  | 5 |  |
-| library |  |  |  | 15 |  |
+| library |  | 2 |  | 15 |  |
 | performance |  |  |  | 4 |  |
 | rating |  |  |  | 14 |  |
 | security |  |  |  | 6 |  |
@@ -63,10 +63,11 @@ generated_at: 2026-07-31T02:34:59Z · генератор: `scripts/queue_snapsho
 
 - BUG-012 [minor] Open — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
 
-## Test debt (2)
+## Test debt (3)
 
-- AT-BUG-032 [missing_evidence] Open — restart_app_via_adb / adb.force_stop не наблюдают реальную смерть процесса — TC-025 и test_reading_ux.py (персистентность через рестарт) не отличают холодный старт от no-op
-- AT-BUG-033 [missing_fixture] Open — scripts/log_append.py: нет легального пути для второго delegated тем же агентом на task_id, когда первый был другой ПРИРОДЫ (расследование vs ревью диффа), не ретрай и не замена мёртвого воркера
+- AT-BUG-032 [missing_evidence] Fixed — restart_app_via_adb / adb.force_stop не наблюдают реальную смерть процесса — TC-025 и test_reading_ux.py (персистентность через рестарт) не отличают холодный старт от no-op
+- AT-BUG-033 [missing_fixture] Fixed — scripts/log_append.py: нет легального пути для второго delegated тем же агентом на task_id, когда первый был другой ПРИРОДЫ (расследование vs ревью диффа), не ретрай и не замена мёртвого воркера
+- AT-BUG-034 [missing_fixture] Open — scripts/log_append.py: нет легального пути для второго delegated критика на ОДИН И ТОТ ЖЕ открытый task_id (review1 → executor attempt2 → review2), когда review1 не был rejected, а вынес вердикт на чужой дифф
 
 ## Прогоны (1)
 
