@@ -476,7 +476,38 @@ def restart_app_via_adb_asserting_new_process(driver) -> None:
     (та доказывает «pid НЕ изменился» — процесс пережил переход; здесь
     наоборот доказывается, что процесс РЕАЛЬНО умер и пересоздался, семантика
     противоположная, поэтому переиспользование того ассерта было бы
-    некорректным)."""
+    некорректным).
+
+    AT-BUG-032 (test_debt, Fixed): та же дыра существовала у ДВУХ более старых
+    вызывающих `restart_app_via_adb` напрямую — `test_tabs.py` TC-025
+    (`test_tabs_persist_url_and_scroll_after_restart`) и `test_reading_ux.py`
+    TC-125 (`test_tap_to_scroll_survives_kill_and_relaunch`) — оба переведены на
+    ЭТУ обёртку единой точкой в `app_steps.py` (не разбросано по вызывающим
+    тестам поодиночке), чтобы класс не повторился в следующем новом тесте на
+    том же примитиве. `restart_app_via_adb` сам по себе НЕ удалён; единственный
+    оставшийся вызывающий — `test_compatibility.py:129` — НЕ переведён в рамках
+    этого бага (вне заявленного скоупа DoD — TC-025/TC-125), но здесь честно:
+    это НЕ структурная гарантия смерти процесса. Между `clean_state()` (:123) и
+    этим вызовом (:129) идёт `seed_with_comment()` (:124) →
+    `seed_db.ensure_db_initialized` (`framework/data/seed_db.py:50-65`),
+    который САМ делает `am start -W` (:54-57) и ЕЩЁ ОДИН `adb.force_stop()`
+    (:64 и :65) — тем же неконтролируемым returncode-отбрасывающим примитивом,
+    что и здесь. На момент вызова `restart_app_via_adb` в `test_compatibility.py`
+    мёртвость процесса структурно НИЧЕМ не гарантирована («`pm clear` сам
+    убивает процесс» — неверно: между `pm clear` и этой строкой процесс успевает
+    ожить внутри seed-пайплайна); `restart_app_via_adb` здесь фактически
+    используется как простой старт, а не как проверенный kill+relaunch. Класс
+    того же долга применительно к этому вызывающему — в очереди, см. AT-BUG-032.md
+    (заметки F3/F4), решение о диспетчеризации за Lead.
+    `perf_steps.measure_cold_start` (TC-096) сюда не относится вовсе — эта
+    функция НЕ вызывает `restart_app_via_adb`: у неё независимый путь
+    (`force_stop()` + `clear_app_data()` + `am start -W`, `perf_steps.py:33-38`)
+    со своей структурной защитой через `clear_app_data()`, которая ПРОВЕРЯЕТ
+    returncode и кидает `RuntimeError` при отказе (`adb.py:75-81`) — не через
+    `parse_am_start_metrics` (та лишь парсит `TotalTime` из вывода и падает
+    только при отсутствии самого поля; тёплый no-op старт по докстрингу
+    `adb.py:296-303` даёт `TotalTime: 0`, что парсится штатно и тёплый старт не
+    ловит)."""
     pid_before = adb.pidof_app()
     assert pid_before is not None, "процесс не найден ДО force-stop — убивать нечего"
     restart_app_via_adb(driver)
@@ -485,5 +516,5 @@ def restart_app_via_adb_asserting_new_process(driver) -> None:
     assert pid_after != pid_before, (
         f"pid не изменился ({pid_before}) — am force-stop процесс НЕ убил "
         "(adb.shell отбрасывает returncode), релонч свёлся к доставке intent'а в "
-        "ЖИВОЙ процесс: холодный старт TC-134 не состоялся"
+        "ЖИВОЙ процесс: холодный старт не состоялся"
     )

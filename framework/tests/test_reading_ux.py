@@ -451,8 +451,10 @@ def test_tap_to_scroll_survives_kill_and_relaunch(loved_work_seeded, replay, dri
 
     # When приложение убито (`adb shell am force-stop`) и перезапущено (без
     # очистки данных) — реплей-прокси (mitmproxy) переживает сам relaunch
-    # приложения, тот же инфраструктурный факт, что уже проверен TC-025
-    app_steps.restart_app_via_adb(driver)
+    # приложения, тот же инфраструктурный факт, что уже проверен TC-025; pid-
+    # проверка (AT-BUG-032) доказывает реальную смерть процесса, а не no-op
+    # force-stop с доставкой intent'а живому инстансу
+    app_steps.restart_app_via_adb_asserting_new_process(driver)
     app_steps.wait_ui_ready(driver)
 
     # Then тумблер «Tap to scroll (work pages)» в Settings по-прежнему

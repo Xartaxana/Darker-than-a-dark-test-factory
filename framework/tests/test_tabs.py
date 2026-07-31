@@ -249,8 +249,9 @@ def test_tabs_persist_url_and_scroll_after_restart(replay, clean_app, driver):
     app_steps.wait_tabs_persisted(rb.tab_marker_url(2).replace("=", "\\u003d"))
 
     # When приложение принудительно останавливается через adb force-stop и
-    # запускается заново
-    app_steps.restart_app_via_adb(driver)
+    # запускается заново — pid-проверка (AT-BUG-032) доказывает реальную смерть
+    # процесса, а не no-op force-stop с доставкой intent'а живому инстансу
+    app_steps.restart_app_via_adb_asserting_new_process(driver)
     app_steps.wait_ui_ready(driver)
 
     # Then после перезапуска обе вкладки присутствуют в strip в исходном порядке —
