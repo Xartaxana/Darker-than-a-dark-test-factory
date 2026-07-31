@@ -3788,6 +3788,28 @@
     "archived": false
   },
   {
+    "key": "AT-BUG-032",
+    "path": "board/AT-BUG-032/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "restart_app_via_adb / adb.force_stop не наблюдают реальную смерть процесса — TC-025 и test_reading_ux.py (персистентность через рестарт) не отличают холодный старт от no-op",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-025",
+      "sev:minor"
+    ],
+    "updated": "2026-07-31T01:05:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "BUG-001",
     "path": "board/BUG-001/main.md",
     "parent": null,
