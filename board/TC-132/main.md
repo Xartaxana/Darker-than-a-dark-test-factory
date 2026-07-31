@@ -2,27 +2,27 @@
 key: "TC-132"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Deep-link на единственную вкладку, уведённую с HOME_URL, создаёт вторую вкладку вместо переиспользования"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:tabs", "risk:R-08"]
+labels: ["test-case", "area:tabs", "risk:R-08", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-31T00:04:23Z"
-updated: "2026-07-31T00:04:23Z"
+created: "2026-07-31T18:12:23Z"
+updated: "2026-07-31T18:12:23Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Deep-link на единственную вкладку, уведённую с HOME_URL, создаёт вторую вкладку вместо переиспользования
 
 _Спроецировано из `test-cases/tabs/TC-132.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-132 — Deep-link на «уведённую» с HOME_URL единственную вкладку создаёт вторую
 
@@ -114,6 +114,45 @@ deep-link (2 -> 1, имитация гипотетического бага «re
 стало 1`), порча откачена. 3 зелёных прогона подряд + `test_tabs.py` целиком
 (8 passed). `arch_check` — 0/0.
 Блокера автоматизации не найдено — чек-лист test-designer подтверждён.
+
+## Ревью автотеста (F1, test-reviewer, 2026-07-31T18:12:23Z) — ПРОЙДЕНО
+
+Ревью батчем 5 кейсов области tabs (TC-131..135, один файл
+`framework/tests/test_tabs.py`). Общий witness батча (Get-Device →
+`DEVICE: emulator-5554`; `Invoke-Pytest tests/test_tabs.py -v` → **11 passed
+in 391.91s, PYTEST_EXIT=0**, включая регресс старых TC-022..026/084;
+`arch_check` 0/0 при пустом ALLOWLIST; `validate_frontmatter` 0/0; сверка
+заявленных красных текстов с фактическими ассертами кода) записан в
+`test-cases/tabs/TC-131.md`, раздел «Ревью автотеста», и не дублируется здесь.
+
+**По этому кейсу.**
+- Traceability: `@allure.id("TC-132")` == id кейса; `@pytest.mark.p1` ==
+  `priority: P1`; `automated_by` указывает на существующую
+  `test_deep_link_after_home_loaded_creates_second_tab_not_reuse`
+  (`test_tabs.py:449`).
+- Соответствие по смыслу (п.3): инвариант «reuse строго при `tabs.size==1 И
+  tabs[0].url` побайтово == `HOME_URL` без слэша» проверяется как СВОЙСТВО:
+  тест сначала ДОКАЗЫВАЕТ отклонение предпосылки (`assert_persisted_tab_url_at(0,
+  HOME_URL + "/")` — та самая штатная перезапись со слэшем), и только потом
+  фиксирует следствие (2 вкладки, активна позиция 1, вкладка 1 несёт URL
+  deep-link'а, вкладка 0 НЕ тронута). Это сильнее, чем «вкладок стало две»:
+  проверяется и причина, и сохранность соседа.
+- Красная проба (п.7): моя собственная порча (TC-135, см. там) уронила ИМЕННО
+  `wait_persisted_tab_count` — тот же шаг, который несёт ключевой ассерт этого
+  кейса (`test_tabs.py:478`), и текст падения оказался буквально тем, что автор
+  заявил для красной пробы TC-132 («число вкладок в open_tabs_urls не стало
+  N»). Свидетельство «умеет падать» для этого ассерта получено мной напрямую.
+- Флейк-риск (п.5): активность вкладки читается из `active_tab_index` того же
+  `apply()`, что и `open_tabs_urls` (не из WEBVIEW — обход прилипания
+  chromedriver к вкладке-0 без разрушающего reduce-to-one); все ожидания явные;
+  живой AO3 не используется.
+- Ссылка на парный TC-135 в заметках актуальна: обе ветки условия
+  `BrowserViewModel.kt:639` закрыты, зависимости этого теста от TC-135 в коде
+  нет (тесты независимы, что подтверждено одиночным `-k` прогоном TC-135).
+
+Не блокирующие замечания батча (класс мёртвой диагностики
+`wait_persisted_tab_count`) — в `test-cases/tabs/TC-131.md`; они касаются
+общего шага и этого кейса тоже.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»

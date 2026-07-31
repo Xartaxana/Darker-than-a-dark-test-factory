@@ -2,27 +2,27 @@
 key: "TC-133"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Возврат в приложение из recents (без нового deep-link intent) не переоткрывает уже обработанный deep-link"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:tabs", "risk:R-08"]
+labels: ["test-case", "area:tabs", "risk:R-08", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-31T01:20:00Z"
-updated: "2026-07-31T01:20:00Z"
+created: "2026-07-31T18:12:23Z"
+updated: "2026-07-31T18:12:23Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Возврат в приложение из recents (без нового deep-link intent) не переоткрывает уже обработанный deep-link
 
 _Спроецировано из `test-cases/tabs/TC-133.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-133 — Возврат из recents не переоткрывает уже обработанный deep-link
 
@@ -122,6 +122,47 @@ TC-133). Закрыто ДВУМЯ наблюдаемыми: (1) `send_app_to_ba
 attempt 1, не переделывалась. Полный `test_tabs.py` — 10 passed (включая
 TC-134, приземлившийся параллельным диспатчем — не тронут). `arch_check` —
 0/0. `validate_frontmatter` — 0/0. Блокера автоматизации не найдено.
+
+## Ревью автотеста (F1, test-reviewer, 2026-07-31T18:12:23Z) — ПРОЙДЕНО
+
+Ревью батчем 5 кейсов области tabs (TC-131..135, один файл
+`framework/tests/test_tabs.py`). Общий witness батча (Get-Device →
+`DEVICE: emulator-5554`; `Invoke-Pytest tests/test_tabs.py -v` → **11 passed
+in 391.91s, PYTEST_EXIT=0**, включая регресс старых TC-022..026/084;
+`arch_check` 0/0 при пустом ALLOWLIST; `validate_frontmatter` 0/0) записан в
+`test-cases/tabs/TC-131.md` и не дублируется здесь.
+
+**По этому кейсу.**
+- Traceability: `@allure.id("TC-133")` == id кейса; `@pytest.mark.p1` ==
+  `priority: P1`; `automated_by` указывает на существующую
+  `test_background_resume_without_deep_link_keeps_tabs_unchanged`
+  (`test_tabs.py:500`).
+- Соответствие по смыслу (п.3): инвариант «возврат на передний план БЕЗ
+  intent'а с непустым dataString не меняет множество вкладок» проверяется как
+  свойство множества (число + URL каждой позиции + ровно по 1 вхождению каждого
+  маркера), с позитивным якорем `expected_total=3` в КАЖДОМ чтении prefs — то
+  есть негатив не может пройти вакуумно на пустом/битом `run-as cat`.
+- Ключевая проверка When (то, из-за чего кейс вообще отличается от TC-134)
+  реализована честно: `capture_app_pid` / `assert_app_pid_unchanged`
+  (`app_steps.py:173-197`) сверяет pid НА РАВЕНСТВО, а
+  `send_app_to_background` дожидается `query_app_state < 4` — тихо не
+  сработавший HOME и подмена сценария холодным перезапуском исключены. Это
+  ровно то, чего требовал critic-блокер B3, и оно на месте.
+- Красная проба (п.7): заявленный автором текст падения
+  (`AssertionError: pid процесса изменился: было '17040', стало '17202'`)
+  сверен с фактическим ассертом `app_steps.py:193-197` — совпадает дословно
+  (порча «замена ухода в фон на реальный `restart_app_via_adb`»
+  содержательна: бьёт именно в различающую TC-133/TC-134 наблюдаемую).
+  Собственная красная проба батча выполнена на TC-135 и уронила общий
+  prefs-оракул `wait_persisted_tab_count`, которым пользуется и этот тест
+  (`test_tabs.py:554`).
+- Флейк-риск (п.5): нет фиксированных пауз, нет обращения к живому AO3
+  (replay `tab_markers.mitm`), гонка HOME↔`am start` закрыта ожиданием
+  состояния приложения, а не sleep'ом.
+
+Не блокирующие замечания батча (мёртвая диагностика
+`wait_persisted_tab_count`, `app_steps.py:311-328`) — в
+`test-cases/tabs/TC-131.md`; касаются общего шага и этого кейса тоже.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»

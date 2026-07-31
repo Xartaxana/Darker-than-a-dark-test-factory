@@ -2,27 +2,27 @@
 key: "TC-134"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Kill+relaunch приложения не переоткрывает уже обработанный deep-link"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:tabs", "risk:R-08"]
+labels: ["test-case", "area:tabs", "risk:R-08", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-31T02:10:00Z"
-updated: "2026-07-31T02:10:00Z"
+created: "2026-07-31T18:12:23Z"
+updated: "2026-07-31T18:12:23Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Kill+relaunch приложения не переоткрывает уже обработанный deep-link
 
 _Спроецировано из `test-cases/tabs/TC-134.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-134 — Kill+relaunch не переоткрывает уже обработанный deep-link
 
@@ -133,6 +133,50 @@ B2 (переоткрытие маркера, из attempt 1) перепрогн�
 passed зафиксировано в отчёте агента отдельно. `arch_check` — 0/0.
 `validate_frontmatter` — 0/0. Блокера автоматизации не найдено — чек-лист
 test-designer подтверждён.
+
+## Ревью автотеста (F1, test-reviewer, 2026-07-31T18:12:23Z) — ПРОЙДЕНО
+
+Ревью батчем 5 кейсов области tabs (TC-131..135, один файл
+`framework/tests/test_tabs.py`). Общий witness батча (Get-Device →
+`DEVICE: emulator-5554`; `Invoke-Pytest tests/test_tabs.py -v` → **11 passed
+in 391.91s, PYTEST_EXIT=0**, включая регресс старых TC-022..026/084;
+`arch_check` 0/0 при пустом ALLOWLIST; `validate_frontmatter` 0/0) записан в
+`test-cases/tabs/TC-131.md` и не дублируется здесь.
+
+**По этому кейсу.**
+- Traceability: `@allure.id("TC-134")` == id кейса; `@pytest.mark.p1` ==
+  `priority: P1`; `automated_by` указывает на существующую
+  `test_kill_relaunch_without_deep_link_keeps_tabs_unchanged`
+  (`test_tabs.py:576`).
+- Соответствие по смыслу (п.3): инвариант «холодный старт без непустого
+  `dataString` не добавляет вкладок сверх восстановленных» проверяется как
+  свойство множества (3 вкладки, URL по позициям, ровно по 1 вхождению каждого
+  маркера) с якорем `expected_total=3` в каждом чтении; персистентность не
+  переутверждается, а обеспечивается предварительным `wait_tabs_persisted` с
+  Gson-эскейпом `=` → `=` (учтён 500мс debounce `scheduleSave` — иначе
+  force-stop потерял бы состояние и тест мерил бы не то).
+- When наблюдаем: `restart_app_via_adb_asserting_new_process`
+  (`app_steps.py:465-520`) требует СМЕНЫ pid — семантика обратная TC-133, и
+  переиспользование чужого ассерта корректно отклонено автором. Тихий отказ
+  `force_stop` (returncode `adb.shell` отбрасывается) больше не выдаёт себя за
+  kill+relaunch.
+- Красная проба (п.7): оба заявленных автором текста сверены с фактическими
+  ассертами дословно — `AssertionError: общее число вкладок в open_tabs_urls:
+  4, ожидали 3` == `app_steps.py:350-354`; `pid не изменился (23865) — am
+  force-stop процесс НЕ убил…` == `app_steps.py:516-520`. Порча «реально
+  отправить deep-link после релонча» содержательна (бьёт в эффект
+  гипотетического бага, а не ослабляет ассерт). Собственная красная проба
+  батча (TC-135) уронила общий prefs-оракул, используемый и здесь.
+- Флейк-риск (п.5): `am start -W` + `wait_ui_ready` + опрашивающие проверки
+  prefs, фиксированных пауз нет; живой AO3 не используется.
+- Полезный побочный факт этого инкремента: тот же класс дыры был закрыт и у
+  старых вызывающих `restart_app_via_adb` (TC-025, TC-125) единой точкой в
+  `app_steps.py` — фикс класса, а не экземпляра (AT-BUG-032); остаток по
+  `test_compatibility.py:129` честно назван в докстринге и стоит в очереди.
+
+Не блокирующие замечания батча (мёртвая диагностика
+`wait_persisted_tab_count`, `app_steps.py:311-328`) — в
+`test-cases/tabs/TC-131.md`; касаются общего шага и этого кейса тоже.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»

@@ -2,27 +2,27 @@
 key: "TC-135"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
 summary: "Deep-link на холодном старте переиспользует единственную незагруженную home-вкладку (positive-reuse)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:tabs", "risk:R-08"]
+labels: ["test-case", "area:tabs", "risk:R-08", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-31T05:00:00Z"
-updated: "2026-07-31T05:00:00Z"
+created: "2026-07-31T18:12:23Z"
+updated: "2026-07-31T18:12:23Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Deep-link на холодном старте переиспользует единственную незагруженную home-вкладку (positive-reuse)
 
 _Спроецировано из `test-cases/tabs/TC-135.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-135 — Холодный старт по VIEW-интенту: reuse единственной home-вкладки
 
@@ -138,6 +138,79 @@ pending-эффекта), и эмпирически (контрольный пр�
 `test_filter_profiles.py`/`test_side_panel.py`) — не мгновенное чтение prefs.
 Таймаут — не менее 15-20с (маркер персистится ~7с от интента на измеренном
 эмуляторе).
+
+## Ревью автотеста (F1, test-reviewer, 2026-07-31T18:12:23Z) — ПРОЙДЕНО
+
+Ревью батчем 5 кейсов области tabs (TC-131..135). Общий witness батча
+(Get-Device → `DEVICE: emulator-5554`; `Invoke-Pytest tests/test_tabs.py -v` →
+**11 passed in 391.91s, PYTEST_EXIT=0**; `arch_check` 0/0 при пустом
+ALLOWLIST; `validate_frontmatter` 0/0) — в `test-cases/tabs/TC-131.md`.
+СОБСТВЕННАЯ красная проба батча выполнена ИМЕННО на этом кейсе — witness ниже.
+
+**По этому кейсу.**
+- Traceability: `@allure.id("TC-135")` == id кейса; `@pytest.mark.p1` ==
+  `priority: P1`; `automated_by` указывает на существующую
+  `test_cold_start_deep_link_reuses_single_home_tab` (`test_tabs.py:657`).
+- Соответствие по смыслу (п.3): инвариант «ветка reuse достижима штатным
+  пользовательским путём — холодным стартом по внешней ссылке» проверяется
+  тройкой ассертов на СВОЙСТВО, а не на пример: содержимое (сентинел URL
+  маркера в prefs, content-sync), количество (`ровно 1 вкладка` — то самое
+  «reuse, а не openTab»), адресность (`assert_persisted_tab_url_at(0,
+  marker)`), плюс независимое подтверждение через РЕАЛЬНЫЙ WebView
+  (`assert_active_tab_url`). Оракул не ослаблен: порядок «сначала синхронизация
+  по содержимому, потом счёт» — прямое следствие критик-расследования
+  транзиентного окна 0.83–1.90с, а не способ стать зелёным (счёт == 1
+  проверяется полноценно, что и доказала красная проба ниже).
+- Given реализован как буквальный `pm clear` mid-test (`app_steps.clean_state`)
+  — сидинг/сброс данных выполняется ДО отправки интента и не полагается на
+  состояние других тестов; Appium-сессия переживает очистку AUT (UiAutomator2 —
+  отдельный пакет). Независимость подтверждена одиночным `-k` прогоном.
+- Флейк-риск (п.5): фиксированных пауз нет, таймауты (20с на персист маркера)
+  взяты с запасом над ИЗМЕРЕННЫМ окном ~6.3–7.3с; живой AO3 не используется
+  (replay `tab_markers.mitm`).
+
+### Красная проба (независимая, test-reviewer, 2026-07-31T18:12:23Z)
+
+Автор честно отметил в коде (`test_tabs.py`, комментарий у конца теста), что
+его собственная проба попала в НАДкласс (pre-first-persist), а мутация самого
+утверждения о reuse (1 vs 2 вкладки) отдельной пробой не проверялась — именно
+этот пробел я и закрыл.
+
+- **Что портил:** предпосылку ОКРУЖЕНИЯ, а не ассерт. Вместо буквального Given
+  («приложение остановлено, prefs пусты») тест получал ТЁПЛЫЙ старт с уже
+  ПОЛНОСТЬЮ догруженной home: единственная строка `app_steps.clean_state()`
+  временно заменена на `app_steps.wait_home_ready_for_deep_link(driver)` —
+  тем самым воспроизводится состояние TC-132, где reuse-ветка не должна
+  срабатывать и приложение обязано создать ВТОРУЮ вкладку.
+- **Команда:** `powershell -NoProfile -ExecutionPolicy Bypass -Command
+  ". D:\AO3_tests\scripts\tasks.ps1; Invoke-Pytest tests/test_tabs.py -k
+  test_cold_start_deep_link_reuses_single_home_tab -v"`.
+- **Результат:** `1 failed, 10 deselected in 26.99s`, `PYTEST_EXIT=1`. Падение
+  — на СОДЕРЖАТЕЛЬНОМ шаге Then (`test_tabs.py:723`,
+  `app_steps.wait_persisted_tab_count(1, timeout=5)`), после успешно
+  пройденной content-sync:
+  `TimeoutError: число вкладок в open_tabs_urls не стало 1 (последнее
+  наблюдение: None) (after 5s)`. Суть порчи текст называет верно (вкладок
+  оказалось не 1 — сработала ветка `openTab`, а не `navigateActiveTabTo`);
+  «последнее наблюдение: None» — отдельный дефект диагностики, см. замечание
+  ниже.
+- **Откат:** `git checkout -- framework/tests/test_tabs.py`; после отката
+  `git status` не показывает `framework/` вовсе — дифф чист, тестовый код
+  ревьюером не изменён.
+
+**Не блокирующее замечание (test_debt, класс мёртвой диагностики).**
+`framework/steps/app_steps.py:311-328` — сообщение `wait_persisted_tab_count`
+формируется f-строкой В МОМЕНТ ВЫЗОВА `wait_for`, до первого опроса, поэтому
+`holder.get('count')` всегда `None`: «последнее наблюдение» не работает ни
+разу (наблюдено вживую в красной пробе выше — при фактически прочитанных 2
+вкладках). Тест падает осмысленно, п.7 выполнен, но диагностика вводит
+триаж в заблуждение («None» читается как «prefs не прочитан»). Обход по
+сиблингам внутренней оси `framework/steps/`: других экземпляров нет,
+корректный образец того же приёма уже есть в `settings_steps.py:285-297`
+(ожидание в `try/except TimeoutError` + `assert` с чтением после ожидания).
+Второе (косметическое): комментарий-заметка для test-reviewer в теле теста
+(`test_tabs.py`, конец функции) после этой пробы устарел — при следующем
+касании файла его стоит снять.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»
