@@ -1,19 +1,19 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-31T02:03:20Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-07-31T02:23:29Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **694.5** (RUN-20260702-0300)
+- smoke: Closed · smoke_freshness_hours: **694.8** (RUN-20260702-0300)
 - regression: not_run
 - canary: not_run
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **1**
 - p0_automation_coverage: **100%** (37/37)
 - p1_automation_coverage: **93%** (66/71)
-- Test debt открыт: **1** — AT-BUG-032
+- Test debt открыт: **2** — AT-BUG-032, AT-BUG-033
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
 - Untriaged: **0** · untriaged_failure_age: **0**
@@ -63,9 +63,10 @@ generated_at: 2026-07-31T02:03:20Z · генератор: `scripts/queue_snapsho
 
 - BUG-012 [minor] Open — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
 
-## Test debt (1)
+## Test debt (2)
 
 - AT-BUG-032 [missing_evidence] Open — restart_app_via_adb / adb.force_stop не наблюдают реальную смерть процесса — TC-025 и test_reading_ux.py (персистентность через рестарт) не отличают холодный старт от no-op
+- AT-BUG-033 [missing_fixture] Open — scripts/log_append.py: нет легального пути для второго delegated тем же агентом на task_id, когда первый был другой ПРИРОДЫ (расследование vs ревью диффа), не ретрай и не замена мёртвого воркера
 
 ## Прогоны (1)
 
@@ -78,9 +79,9 @@ generated_at: 2026-07-31T02:03:20Z · генератор: `scripts/queue_snapsho
 - bugs_per_charter: **0.4**
 - new_tc_from_charters: **1**
 
-## Активные локи (1)
+## Активные локи (0)
 
-- TC-135 — `test-automator:2026-07-31T02:06:00Z`
+- нет
 
 ## Эскалации (5)
 

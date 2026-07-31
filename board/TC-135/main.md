@@ -2,19 +2,19 @@
 key: "TC-135"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Deep-link на холодном старте переиспользует единственную незагруженную home-вкладку (positive-reuse)"
-assignee: "test-automator"
+assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:tabs", "risk:R-08", "wip:test-automator"]
+labels: ["test-case", "area:tabs", "risk:R-08"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-31T02:05:00Z"
-updated: "2026-07-31T02:05:00Z"
+created: "2026-07-31T05:00:00Z"
+updated: "2026-07-31T05:00:00Z"
 archived: false
 resolution: null
 ---

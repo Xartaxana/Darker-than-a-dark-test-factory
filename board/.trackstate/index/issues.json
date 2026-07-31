@@ -2944,16 +2944,15 @@
     "epicPath": null,
     "summary": "Deep-link на холодном старте переиспользует единственную незагруженную home-вкладку (positive-reuse)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
-    "assignee": "test-automator",
+    "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:tabs",
-      "risk:R-08",
-      "wip:test-automator"
+      "risk:R-08"
     ],
-    "updated": "2026-07-31T02:05:00Z",
+    "updated": "2026-07-31T05:00:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3805,6 +3804,27 @@
       "sev:minor"
     ],
     "updated": "2026-07-31T01:05:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-033",
+    "path": "board/AT-BUG-033/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "scripts/log_append.py: нет легального пути для второго delegated тем же агентом на task_id, когда первый был другой ПРИРОДЫ (расследование vs ревью диффа), не ретрай и не замена мёртвого воркера",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:minor"
+    ],
+    "updated": "2026-07-31T02:25:00Z",
     "resolution": null,
     "children": [],
     "archived": false
