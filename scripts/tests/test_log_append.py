@@ -1180,6 +1180,210 @@ def test_b6_task_level_rejected_alone_does_not_legalize_without_attempt(logs):
     assert len(routing.read_text(encoding="utf-8").splitlines()) == 3
 
 
+# AT-BUG-034 (Добавление 8, 2026-07-31): B3 закрыт отдельным признаком
+# поверх _has_rejected (_agent_has_own_rejected /
+# _new_version_signal_since_agent_last_delegated), НЕ сужением самой
+# _has_rejected (сужение доказанно ломает штатный поток -- B6, см. блок
+# тестов выше). Позитив штатного раунда (сигнал 1: delegated исполнителя)
+# уже пинится
+# test_b6_review_round_second_critic_entry_after_executor_rework_passes;
+# тесты ниже закрывают недостающее: негатив B3, границу анкера "последний
+# delegated ИМЕННО этого agent" (не любая точка истории) и сигнал 2
+# (rejected(agent='lead') -- Lead-tier rework без своего delegated,
+# найден ОБЯЗАТЕЛЬНОЙ replay-гарантией на живом logs/routing-log.jsonl:
+# CH-006/CH-007, критик-на-план).
+
+def test_b3_second_critic_entry_without_executor_rework_between_is_dup_pattern(logs):
+    # НЕЛЕГАЛЬНО (B3): critic review1 -> rejected ИСПОЛНИТЕЛЯ -> critic
+    # снова с --attempt N СРАЗУ, БЕЗ нового delegated исполнителя между
+    # первым и вторым входом критика -- никакой новой версии диффа не
+    # появилось, это просто повторный вход в тот же цикл на тот же
+    # артефакт. Ни own-rejected (rejected не критика), ни new-version
+    # (нет delegated исполнителя после review1) не выполнены -- падает в
+    # обычный дубль-паттерн, как и любой другой неоснованный повтор.
+    routing, _ = logs
+    la.append_routing("delegated", "test-automator", model="sonnet",
+                      task_id="t-001", worker_ref="wr-1")
+    la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                      worker_ref="wr-c1", category="diff-review")  # review1
+    la.append_routing("rejected", "test-automator", model="sonnet", by="opus",
+                      task_id="t-001", attempt=1, failure_class="spec")
+    with pytest.raises(SystemExit, match="дубль"):
+        la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                          attempt=2, worker_ref="wr-c2")  # review2 без rework -- B3
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 3
+
+
+def test_b3_stale_rework_signal_from_earlier_round_does_not_legalize_next_round(logs):
+    # Граница анкера: new-version-сигнал ИЗ ПРЕДЫДУЩЕГО раунда не
+    # переносится вперёд на следующий раунд без СВОЕГО нового rework.
+    # Раунд 1 (легально, ЗА границей по счёту "новая версия есть"):
+    # review1 -> rejected исполнителя -> исполнитель делает rework ->
+    # review2 критика -- проходит (ровно признак этого фикса).
+    # Раунд 2 (НА границе, недостаточно): ещё один rejected исполнителя
+    # ПОСЛЕ review2, но БЕЗ нового delegated исполнителя между review2 и
+    # review3 -- анкер "последний delegated ИМЕННО критика" сдвинулся на
+    # review2, старый rework-сигнал (до review2) больше не считается --
+    # review3 обязан упасть в дубль-паттерн.
+    routing, _ = logs
+    la.append_routing("delegated", "test-automator", model="sonnet",
+                      task_id="t-001", worker_ref="wr-1")
+    la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                      worker_ref="wr-c1", category="diff-review")  # review1
+    la.append_routing("rejected", "test-automator", model="sonnet", by="opus",
+                      task_id="t-001", attempt=1, failure_class="spec")
+    la.append_routing("delegated", "test-automator", model="sonnet",
+                      task_id="t-001", attempt=2, worker_ref="wr-2")  # rework 1
+    la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                      attempt=2, worker_ref="wr-c2", category="diff-review")  # review2, легально
+    la.append_routing("rejected", "test-automator", model="sonnet", by="opus",
+                      task_id="t-001", attempt=2, failure_class="spec")  # ещё вердикт ДОРАБОТАТЬ
+    # НЕТ нового delegated test-automator здесь -- rework 2 не произошёл.
+    with pytest.raises(SystemExit, match="дубль"):
+        la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                          attempt=3, worker_ref="wr-c3")  # review3 без rework 2 -- B3
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 6
+
+
+def test_b3_self_retry_still_legal_without_any_other_agent_delegated_between(logs):
+    # Не-регресс (в): классический self-retry (rejected и повторный
+    # delegated -- ОДИН И ТОТ ЖЕ agent) остаётся легальным БЕЗ delegated
+    # другого agent между -- own-rejected сам по себе достаточен, признак
+    # AT-BUG-034 не требует rework-сигнала для этого пути (иначе обычный
+    # ретрай builder/test-maintainer сломался бы).
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr-1")
+    la.append_routing("rejected", "builder", model="sonnet", by="opus",
+                      task_id="t-001", attempt=1, failure_class="capability")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      attempt=2, worker_ref="wr-2")
+    rec = json.loads(routing.read_text(encoding="utf-8").splitlines()[-1])
+    assert rec["agent"] == "builder"
+    assert rec["attempt"] == 2
+
+
+def test_b3_new_delegated_of_different_agent_after_own_rejected_not_required(logs):
+    # Не-регресс: свой rejected остаётся ДОСТАТОЧНЫМ основанием сам по
+    # себе даже если между ним и повторным delegated того же agent
+    # затесался delegated ТРЕТЬЕГО agent (напр. критик успел войти на
+    # расследование чего-то ещё на этом task_id) -- own-rejected и
+    # new-version -- это ИЛИ, не совместное условие.
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr-1")
+    la.append_routing("rejected", "builder", model="sonnet", by="opus",
+                      task_id="t-001", attempt=1, failure_class="capability")
+    la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                      worker_ref="wr-c1", category="diff-review")
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      attempt=2, worker_ref="wr-2")
+    rec = json.loads(routing.read_text(encoding="utf-8").splitlines()[-1])
+    assert rec["agent"] == "builder"
+    assert rec["attempt"] == 2
+
+
+def test_b3_lead_self_fix_rejected_signal_legalizes_review_round(logs):
+    # Сигнал 2 признака AT-BUG-034 (найден replay-гарантией на живом
+    # journal, живой прецедент CH-006/CH-007 «критик-на-план»): критик
+    # отклоняет диф, автором которого выступает сам Lead (agent='lead') --
+    # Lead правит немедленно БЕЗ отдельного delegated (правило 8
+    # CLAUDE.md, Lead-tier работа событий пропуска не требует). rejected
+    # на agent='lead' САМ ПО СЕБЕ легализует повторный critic-вход --
+    # own-rejected здесь ложно (rejected не критика), но new-version-сигнал
+    # (2) истинен без единой delegated-строки исполнителя между раундами.
+    routing, _ = logs
+    la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                      worker_ref="wr-c1", category="qa-pipeline")  # review1
+    la.append_routing("rejected", "lead", model="fable", by="fable",
+                      task_id="t-001", attempt=1, failure_class="spec",
+                      notes="critic review1: FAIL, правки внесены Lead немедленно")
+    # НЕТ delegated lead/кого-либо между -- Lead исполнил правки сам,
+    # без строки в журнале (Lead-tier работа, правило 8).
+    la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                      attempt=2, worker_ref="wr-c2", category="qa-pipeline")  # review2
+    lines = routing.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 3
+    rec = json.loads(lines[-1])
+    assert rec["agent"] == "critic"
+    assert rec["attempt"] == 2
+
+
+def test_b3_stale_lead_self_fix_signal_from_earlier_round_does_not_legalize_next_round(logs):
+    # Граница анкера для сигнала 2 (симметрично сигналу 1): rejected(lead)
+    # ИЗ ПРЕДЫДУЩЕГО раунда не легализует раунд N+2 без СВОЕГО нового
+    # сигнала -- анкер "последний delegated ИМЕННО критика" сдвигается на
+    # review2, старый rejected(lead) (до review2) больше не в окне.
+    routing, _ = logs
+    la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                      worker_ref="wr-c1", category="qa-pipeline")  # review1
+    la.append_routing("rejected", "lead", model="fable", by="fable",
+                      task_id="t-001", attempt=1, failure_class="spec")
+    la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                      attempt=2, worker_ref="wr-c2", category="qa-pipeline")  # review2, легально
+    # review2 тоже FAIL, но на этот раз БЕЗ нового rejected(lead) вовсе --
+    # критик просто повторно ссылается на устаревший rejected(lead) раунда 1.
+    with pytest.raises(SystemExit, match="дубль"):
+        la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                          attempt=3, worker_ref="wr-c3")  # review3 -- B3
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 3
+
+
+def test_b3_escalated_to_fable_signal_legalizes_review_round(logs):
+    # Сигнал 3 (найден replay-гарантией, живой прецедент CH-007 attempt 3):
+    # исполнитель (не reviewer) эскалирует НА ПОЛНОГО LEAD (model='fable',
+    # правило 6 -- 2 rejected того же агента -> эскалация обязательна).
+    # Lead чинит работу немедленно, БЕЗ delegated (правило 8). Критик
+    # входит на ПЕРВУЮ проверку Lead-фикса -- ещё нет ни rejected(lead)
+    # (Lead ещё не проверялся), ни delegated исполнителя, только
+    # escalated(model=fable) -- этого достаточно для легализации.
+    routing, _ = logs
+    la.append_routing("delegated", "charter-designer", model="opus",
+                      task_id="t-001", worker_ref="wr-cd1")
+    la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                      worker_ref="wr-c1", category="qa-pipeline")  # review1
+    la.append_routing("rejected", "charter-designer", model="opus", by="sonnet",
+                      task_id="t-001", attempt=1, failure_class="spec")
+    la.append_routing("delegated", "charter-designer", model="opus",
+                      task_id="t-001", attempt=2, worker_ref="wr-cd2")
+    la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                      attempt=2, worker_ref="wr-c2", category="qa-pipeline")  # review2
+    la.append_routing("rejected", "charter-designer", model="opus", by="sonnet",
+                      task_id="t-001", attempt=2, failure_class="spec")
+    la.append_routing("escalated", "charter-designer", model="fable",
+                      task_id="t-001", by="sonnet")  # правило 6: эскалация на Lead
+    # Lead чинит немедленно, без delegated -- следующий вход критика
+    # проверяет Lead-фикс НАПРЯМУЮ, без rejected(lead) вовсе.
+    la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                      attempt=3, worker_ref="wr-c3", category="qa-pipeline")  # review3
+    lines = routing.read_text(encoding="utf-8").splitlines()
+    rec = json.loads(lines[-1])
+    assert rec["agent"] == "critic"
+    assert rec["attempt"] == 3
+
+
+def test_b3_stale_escalated_signal_from_earlier_round_does_not_legalize_next_round(logs):
+    # Граница анкера для сигнала 3: escalated(model=fable) ИЗ ПРЕДЫДУЩЕГО
+    # раунда не легализует раунд N+2 без СВОЕГО нового сигнала -- анкер
+    # "последний delegated ИМЕННО критика" сдвигается на review, идущий
+    # ПОСЛЕ escalated, старый escalated больше не в окне для review N+1.
+    routing, _ = logs
+    la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                      worker_ref="wr-c1", category="qa-pipeline")  # review1
+    la.append_routing("rejected", "test-automator", model="sonnet", by="opus",
+                      task_id="t-001", attempt=1, failure_class="spec")
+    la.append_routing("escalated", "test-automator", model="fable",
+                      task_id="t-001", by="opus")
+    la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                      attempt=2, worker_ref="wr-c2", category="qa-pipeline")  # review2, легально
+    # review2 тоже FAIL, но без НОВОГО escalated/rejected(lead)/delegated
+    # исполнителя -- критик просто снова ссылается на старую эскалацию.
+    with pytest.raises(SystemExit, match="дубль"):
+        la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                          attempt=3, worker_ref="wr-c3")  # review3 -- B3
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 4
+
+
 # Порт-батч штаба: защита от «тихо-успешен вне среды» (_verify_environment).
 # Тесты ниже НЕ используют стаб из фикстуры `logs` -- проверяют функцию
 # напрямую на реальной файловой структуре tmp_path.

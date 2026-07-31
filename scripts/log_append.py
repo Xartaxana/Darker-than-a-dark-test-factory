@@ -132,25 +132,67 @@ OS-репо не покрывали случай, когда тот же agent (
 проходил через (д) без --attempt, ломая счётчик попыток правила 6.
 Легально без --attempt/rejected/--replaces-worker.
 
-Соседний класс (B3, тот же критик-вердикт) -- ОТКРЫТ, здесь НЕ закрыт
-(явный пункт очереди: bugs/AT-BUG-033.md, раздел «Открытый остаток B3»,
-и bugs/AT-BUG-034.md): второй критик-вход внутри ОДНОГО открытого цикла
-(review1 → rejected ИСПОЛНИТЕЛЯ → исполнитель attempt 2 → критик
-review2, БЕЗ accepted между) проходит через ветку (в) на ЧУЖОМ
-rejected, потому что _has_rejected -- TASK-уровневая. Attempt 2 сузил её
-до пары (task_id, agent); критик-вход раунда 2 (2026-07-31, находка B6)
-сужение ОТКАТИЛ: реплей исторического logs/routing-log.jsonl через этот
-же guard дал 12 delegated, которые сужение переворачивает OK -> BLOCKED
-(at-bug-025, TC-125, TC-129, TC-131, TC-133, TC-134, CH-006 x2,
-CH-007 x3, needs-design-tabs-deep-link) -- и все 12 суть штатный поток
-фабрики «критик-вход раунда N после rework исполнителя», а не
-злоупотребление: rejected по вердикту критика пишется на ИСПОЛНИТЕЛЯ,
-своего rejected у критика нет и не должно быть. Эталон OS-репо
-(tools/journal_validator.py, правило 9: retry_ok = valid_attempt and
-task_id in rejected_tasks) тоже task-уровневый -- откат возвращает
-паритет с эталоном. Остаток класса (отличить легальный review-раунд от
-заимствования чужого rejected требует ОТДЕЛЬНОГО признака, а не сужения
-(в)) ведётся как AT-BUG-034; молча не оставлен.
+Соседний класс (B3, тот же критик-вердикт) БЫЛ открыт здесь (второй
+критик-вход внутри ОДНОГО открытого цикла проходил через ветку (в) на
+ЧУЖОМ rejected, потому что _has_rejected -- TASK-уровневая). Attempt 2
+AT-BUG-033 сузил её до пары (task_id, agent); критик-вход раунда 2
+(2026-07-31, находка B6) сужение ОТКАТИЛ: реплей исторического
+logs/routing-log.jsonl через этот же guard дал 12 delegated, которые
+сужение переворачивает OK -> BLOCKED (at-bug-025, TC-125, TC-129,
+TC-131, TC-133, TC-134, CH-006 x2, CH-007 x3,
+needs-design-tabs-deep-link) -- и все 12 суть штатный поток фабрики
+«критик-вход раунда N после rework исполнителя», а не злоупотребление:
+rejected по вердикту критика пишется на ИСПОЛНИТЕЛЯ, своего rejected у
+критика нет и не должно быть. Эталон OS-репо (tools/journal_validator.py,
+правило 9: retry_ok = valid_attempt and task_id in rejected_tasks) тоже
+task-уровневый -- откат вернул паритет с эталоном, но НЕ различал
+легальный review-раунд от заимствования чужого rejected -- остаток
+ведён как bugs/AT-BUG-034.md.
+
+Добавление 8 (AT-BUG-034, 2026-07-31) -- ЗАКРЫВАЕТ B3 отдельным
+признаком, НЕ сужая (в) во второй раз (сужение доказанно ломает штатный
+поток -- см. Добавление 7 выше). `_has_rejected` остаётся TASK-уровневой
+как есть (проверка "rejected где-то на задаче существует"). Поверх неё
+добавлена вторая, независимая проверка -- легален ли КОНКРЕТНО этот
+повторный вход:
+  - `_agent_has_own_rejected(records, task_id, agent)` -- истинно, если
+    среди rejected есть хотя бы один, принадлежащий ИМЕННО делегируемому
+    agent (классический self-retry: исполнитель отклонён и делегируется
+    сам на себя) -- легален как раньше, без дополнительных условий;
+  - иначе `_new_version_signal_since_agent_last_delegated(records,
+    task_id, agent)` -- истинно, если между ПРЕДЫДУЩИМ delegated именно
+    этого agent и ТЕКУЩИМ вызовом появилась новая версия объекта ревью,
+    распознаваемая ЛЮБЫМ из ТРЁХ сигналов: (1) НОВЫЙ delegated ДРУГОГО
+    agent (исполнитель получил attempt N+1, залогировано явно); (2)
+    НОВЫЙ rejected, принадлежащий agent='lead' (Lead-tier работа не
+    несёт своего delegated по правилу 8 CLAUDE.md -- когда автор
+    отклонённого артефакта сам Lead, rework происходит немедленно БЕЗ
+    отдельной delegated-строки; rejected(lead) сам по себе и есть
+    сигнал); (3) НОВЫЙ escalated с model='fable' (эскалация на полного
+    Lead правилом 6 -- следующий review этого reviewer'а уже проверяет
+    Lead-фикс, ДАЖЕ ДО первого rejected(lead), т.к. это первая проверка
+    после хэндофа). Пути (2)/(3) обнаружены ОБЯЗАТЕЛЬНОЙ
+    replay-гарантией DoD (не гипотетически): без них живой реплей
+    переворачивал 4 записи (CH-006 attempt 4/5 -- путь (2); CH-007
+    attempt 3/4 -- путь (3) для attempt 3, путь (2) для attempt 4;
+    критик-на-план, где Lead правит чартер по вердикту напрямую)
+    OK -> BLOCKED. Легальный review-раунд: `delegated critic` (review1) →
+    `rejected <исполнитель|lead>` ИЛИ `escalated ... model=fable` →
+    [`delegated <исполнитель> --attempt N` ИЛИ ничего, если исполнитель --
+    Lead] → `delegated critic --attempt N` (review2) -- проходит, ровно
+    как 12+4 исторических случая.
+  - B3 (нелегально): `delegated critic` (review1) → `rejected
+    <исполнитель>` → `delegated critic --attempt N` СРАЗУ, БЕЗ нового
+    delegated исполнителя, БЕЗ rejected(lead) и БЕЗ escalated(fable)
+    между -- ни own-rejected, ни new-version не выполнены -- падает в
+    обычный дубль-паттерн (г), как любой другой неоснованный повторный
+    вход.
+Признак строго анкерован на ПОСЛЕДНИЙ delegated ИМЕННО reviewer'а (не на
+последний rejected и не на первый delegated в истории) -- стейл
+new-version-сигнал ИЗ ПРЕДЫДУЩЕГО раунда не легализует раунд N+2 без
+собственного нового сигнала rework (граница проверена тестом:
+review1→rework→review2 легален, но review2→(ещё один rejected, без
+нового rework)→review3 -- уже нет).
 
 Кросс-деплойный пункт (правило 4б CLAUDE.md, докладывается явно, не
 исполняется здесь): эталонный `Improving_AI/Operating-System-for-LLMs/
@@ -158,6 +200,13 @@ tools/journal_validator.py` тоже должен научиться прини�
 (д)-строки (delegated поверх открытого task_id тем же agent, notes без
 attempt/replaces_worker/rejected) -- носитель цели (их
 CURRENT_CONTEXT.md) не в этом репо, координатор решает диспетчинг.
+То же касается Добавления 8 (AT-BUG-034): их правило 9 (`retry_ok =
+valid_attempt and task_id in rejected_tasks`) не несёт ни анкера
+«сигнал строго после последнего delegated ревьюера», ни трёх сигналов
+new-version -- легальные по-нашему строки review-раунда их валидатор
+примет (retry_ok шире нашего), но их собственный журнал остаётся
+уязвим к классу B3; кандидат в их очередь, пункт передаётся тем же
+каналом (их CURRENT_CONTEXT.md).
 
 Использование:
   python scripts/log_append.py routing --event delegated \
@@ -315,11 +364,99 @@ def _has_rejected(records: list[dict], task_id: str) -> bool:
     task-уровневый -- откат возвращает паритет с эталоном.
 
     Остаток B3 (легальный review-раунд здесь неотличим от заимствования
-    чужого rejected) НЕ закрыт и ведётся явным пунктом: bugs/AT-BUG-033.md
-    («Открытый остаток B3») и bugs/AT-BUG-034.md. Закрывать его сужением
-    (в) нельзя -- нужен отдельный признак раунда."""
+    чужого rejected) закрыт ОТДЕЛЬНЫМ признаком поверх этой функции, не
+    сужением её самой -- см. `_agent_has_own_rejected` и
+    `_new_version_signal_since_agent_last_delegated` ниже
+    (Добавление 8, AT-BUG-034)."""
     return any(r.get("task_id") == task_id and r.get("event") == "rejected"
                for r in records)
+
+
+def _agent_has_own_rejected(records: list[dict], task_id: str,
+                             agent: str) -> bool:
+    """AT-BUG-034: истинно, если среди rejected-записей task_id есть хотя
+    бы одна, принадлежащая ИМЕННО делегируемому `agent` (классический
+    self-retry -- исполнитель сам был отклонён и делегируется снова сам на
+    себя). Не путать с task-уровневой `_has_rejected` выше -- та лишь
+    подтверждает, что rejected СУЩЕСТВУЕТ где-то на задаче (любого agent),
+    эта -- что он принадлежит именно этому agent. Self-retry легален без
+    доп. условий -- в отличие от review-раунда (см.
+    `_new_version_signal_since_agent_last_delegated`), где rejected
+    принадлежит ЧУЖОМУ agent (исполнителю, не reviewer'у)."""
+    return any(r.get("task_id") == task_id and r.get("event") == "rejected"
+               and r.get("agent") == agent for r in records)
+
+
+def _new_version_signal_since_agent_last_delegated(
+        records: list[dict], task_id: str, agent: str) -> bool:
+    """AT-BUG-034: признак штатного review-раунда, ОТДЕЛЬНЫЙ от (в)/(г)/(д)
+    (не путать с `_reopened_via_flag_since_agent_last_delegated` выше --
+    та ищет буквальный маркер "reopen: <причина>" настоящего
+    --reopen-task; эта функция не завязана на флаг вовсе).
+
+    Легальный раунд: reviewer (`agent`) входит на task_id повторно,
+    опираясь на ЧУЖОЙ rejected (rejected написан на исполнителя, не на
+    reviewer'а -- reviewer не был неправ, поэтому `_agent_has_own_rejected`
+    для него ложно), и между ПРЕДЫДУЩИМ delegated этого reviewer'а и
+    текущим вызовом появилась новая версия объекта ревью. Признак
+    анкерован на ПОСЛЕДНИЙ delegated ИМЕННО этого agent -- сигнал ИЗ
+    БОЛЕЕ РАННЕГО раунда (до этого delegated) не засчитывается: каждый
+    новый review-вход обязан иметь СВОЙ сигнал rework после предыдущего
+    входа reviewer'а, иначе стейл-сигнал легализовал бы бесконечную
+    цепочку без rework (см. тест на границе, AT-BUG-034).
+
+    Новая версия распознаётся ТРЕМЯ способами (проверено прогоном на
+    ЖИВОМ logs/routing-log.jsonl, не только гипотетически -- пункты (2) и
+    (3) добавлены ИМЕННО потому, что первая версия (1)-only переворачивала
+    реальные записи OK -> BLOCKED, обнаружено обязательной
+    replay-гарантией DoD AT-BUG-034):
+      (1) НОВЫЙ delegated ДРУГОГО agent появился в окне -- исполнитель
+          получил attempt N+1 и это залогировано (типовой случай:
+          test-maintainer/builder/charter-designer);
+      (2) rejected, принадлежащий agent='lead', появился в окне --
+          Lead-tier работа НЕ несёт своего delegated-события (правило 8
+          CLAUDE.md: «Lead-tier работа ... событий пропуска не
+          требует»), поэтому когда критик отклоняет диф, автором
+          которого выступает сам Lead (частый паттерн критик-на-план,
+          где Lead правит чартер немедленно по вердикту, а на СЛЕДУЮЩЕМ
+          критик-раунде вердикт снова FAIL), rework происходит БЕЗ
+          отдельной delegated-строки -- rejected(lead) САМ ПО СЕБЕ и есть
+          сигнал новой версии (живой прецедент: CH-006 attempt 4/5 --
+          Lead правит по rejected(lead) attempt 3/4 напрямую);
+      (3) escalated с model='fable' появился в окне -- эскалация ИМЕННО
+          на полного Lead (правило 6 CLAUDE.md: 2 rejected одного агента
+          → эскалация обязательна) означает, что работу дальше делает
+          Lead, и это ПЕРВЫЙ критик-раунд после хэндофа -- rejected(lead)
+          ещё не успел появиться (Lead ещё не проверялся), но эскалация
+          на fable -- уже достаточный сигнал, что автор сменился и rework
+          предстоит без своего delegated (живой прецедент: CH-007
+          attempt 3 -- escalated(charter-designer, model=fable) → Lead
+          чинит чартер немедленно → critic review3 напрямую, без
+          rejected(lead) вовсе, т.к. это первая проверка Lead-фикса).
+
+    Нелегальный случай (B3, AT-BUG-033 «Открытый остаток B3»): reviewer
+    подаёт --attempt N повторно, опираясь на тот же чужой rejected, но БЕЗ
+    ни (1), ни (2), ни (3) между первым и вторым входом -- никакой новой
+    версии не появилось, это просто повторный вход в тот же цикл на тот
+    же артефакт. Такой вызов не находит здесь True и падает в обычный
+    дубль-паттерн (г) ниже -- ровно то поведение, которого не хватало."""
+    last_idx: int | None = None
+    for i, r in enumerate(records):
+        if (r.get("task_id") == task_id and r.get("event") == "delegated"
+                and r.get("agent") == agent):
+            last_idx = i
+    if last_idx is None:
+        return False
+    for r in records[last_idx + 1:]:
+        if r.get("task_id") != task_id:
+            continue
+        if r.get("event") == "delegated" and r.get("agent") != agent:
+            return True
+        if r.get("event") == "rejected" and r.get("agent") == "lead":
+            return True
+        if r.get("event") == "escalated" and r.get("model") == "fable":
+            return True
+    return False
 
 
 REOPEN_NOTE_RE = re.compile(r"(?:^|;\s*)reopen:\s*\S")
@@ -741,11 +878,27 @@ def append_routing(event: str, agent: str, *, model: str = "",
                             "требует attempt>=2 + rejected; --replaces-worker "
                             "легализует делегирование без вердикта)")
                     valid_attempt = attempt >= 2
+                    review_round_ok = False
                     if valid_attempt and _has_rejected(records, task_id):
                         # (в) легальный ретрай/review-раунд после rejected на
                         # этом task_id (TASK-уровень, паритет с эталоном
                         # OS-репо; сужение до собственного rejected агента
                         # откачено -- находка B6, докстринг _has_rejected).
+                        # AT-BUG-034 (Добавление 8): TASK-уровневого
+                        # существования rejected недостаточно самого по
+                        # себе -- легально либо (а) свой rejected
+                        # (self-retry), либо (б) чужой rejected И новый
+                        # delegated ДРУГОГО agent появился после последнего
+                        # delegated ИМЕННО этого agent (штатный
+                        # review-раунд, "новая версия объекта"). Без
+                        # обоих -- B3: заимствование чужого rejected без
+                        # rework, падает в дубль-паттерн ниже.
+                        review_round_ok = (
+                            _agent_has_own_rejected(records, task_id, agent)
+                            or _new_version_signal_since_agent_last_delegated(
+                                records, task_id, agent)
+                        )
+                    if review_round_ok:
                         pass
                     elif replaces_worker:
                         prior_refs = _prior_worker_refs(records, task_id)
