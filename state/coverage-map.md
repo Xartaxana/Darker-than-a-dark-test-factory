@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-07-31T11:34:39Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-07-31T19:01:52Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -21,11 +21,11 @@ generated_at: 2026-07-31T11:34:39Z · генератор: `scripts/coverage_map.
 | filter-profiles | 5 | 5 | designed-full |
 | library | 17 | 15 | partial |
 | performance | 4 | 4 | designed-full |
-| rating | 14 | 14 | designed-full |
+| rating | 21 | 14 | partial |
 | security | 6 | 6 | designed-full |
 | settings | 11 | 10 | partial |
 | smoke | 5 | 5 | designed-full |
-| tabs | 11 | 6 | partial |
+| tabs | 11 | 11 | designed-full |
 | visibility | 6 | 6 | designed-full |
 
 ## Риски (docs/01-test-strategy.md §5) → покрытие
@@ -48,7 +48,7 @@ generated_at: 2026-07-31T11:34:39Z · генератор: `scripts/coverage_map.
 | R-14 | COMPAT | compatibility:TC-109, compatibility:TC-110, compatibility:TC-111 |
 | R-15 | SEC | security:TC-100, security:TC-101, security:TC-102, security:TC-103, security:TC-104, security:TC-105 |
 | R-16 | BUS | риск не покрыт дизайном |
-| R-17 | BUS | риск не покрыт дизайном |
+| R-17 | BUS | rating:TC-138, rating:TC-139, rating:TC-140, rating:TC-141, rating:TC-142, rating:TC-143, rating:TC-144 |
 
 ## Фичи → покрытие
 
@@ -60,8 +60,8 @@ generated_at: 2026-07-31T11:34:39Z · генератор: `scripts/coverage_map.
 | browse-tab-list-persistence | browse | tabs:TC-025[Automated] |
 | browse-tab-open-background-link | browse | tabs:TC-026[Automated] |
 | browse-tab-switch-active | browse | tabs:TC-084[Automated] |
-| browse-deep-link-new-tab | browse | tabs:TC-131[Approved], tabs:TC-133[Approved], tabs:TC-134[Approved] |
-| browse-deep-link-reuse-home-tab | browse | tabs:TC-132[Approved], tabs:TC-135[Approved] |
+| browse-deep-link-new-tab | browse | tabs:TC-131[Automated], tabs:TC-133[Automated], tabs:TC-134[Automated] |
+| browse-deep-link-reuse-home-tab | browse | tabs:TC-132[Automated], tabs:TC-135[Automated] |
 | browse-scroll-restore | browse | tabs:TC-025[Automated] |
 | browse-infinite-scroll | browse | browser:TC-130[Automated] |
 | browse-tap-to-scroll | browse | browser:TC-126[Automated], browser:TC-127[Automated] |
@@ -142,7 +142,7 @@ generated_at: 2026-07-31T11:34:39Z · генератор: `scripts/coverage_map.
 | data-clear-all-ratings | data | smoke:TC-004[Automated], settings:TC-018[Automated], settings:TC-019[Automated], settings:TC-020[Blocked] |
 | background-download-repository | background | downloads:TC-032[Automated], downloads:TC-033[Automated] |
 | background-auto-download-trigger | background | downloads:TC-032[Automated], downloads:TC-112[Automated], downloads:TC-114[Automated], downloads:TC-115[Automated], downloads:TC-116[Automated], downloads:TC-117[Automated] |
-| background-auto-kudos-trigger | background | нет кейсов |
+| background-auto-kudos-trigger | background | rating:TC-138[Review], rating:TC-139[Review], rating:TC-140[Review], rating:TC-141[Review], rating:TC-142[Review], rating:TC-143[Review], rating:TC-144[Review] |
 | nf-perf-cold-start-budget | non-functional | performance:TC-096[Automated] |
 | nf-perf-webview-first-load-budget | non-functional | performance:TC-097[Automated] |
 | nf-stability-no-crash-anr | non-functional | performance:TC-098[Automated] |
@@ -174,7 +174,6 @@ generated_at: 2026-07-31T11:34:39Z · генератор: `scripts/coverage_map.
 - bridge-scroll-reporting (ao3-bridge): Отчёт позиции скролла и прогресса чтения (глава/%) в Kotlin
 - data-workrating-model (data): Room-сущность WorkRating (rating/comment/tags/fandom/author/wordCount/downloadPath)
 - data-filterprofile-model (data): Room-сущность FilterProfile (name/queryString)
-- background-auto-kudos-trigger (background): Автоклик кнопки kudos на странице работы AO3, когда рейтинг работы становится Kudosed (LIKE) или Favorite (SAVE)
 - nf-a11y-touch-target-size (non-functional): НФ-a11y: интерактивные цели нативного хрома (панели, тумблеры, чипы TabStrip, кнопки диалогов) не меньше 48dp по bounds accessibility-дерева (density измеряется, не хардкодится)
 - nf-a11y-contrast-computed (non-functional): НФ-a11y: вычисленный контраст DOM-контента WebView (инжектированные Rate/Note/бейджи bridge + ключевые узлы replay-страниц) держит WCAG-порог 4.5:1 / 3:1 через getComputedStyle
 - nf-a11y-interactive-overlap (non-functional): НФ-a11y: bounding-rect'ы интерактивных элементов нативного слоя не пересекаются (перекрытие = недостижимый интерактив) по bounds accessibility-дерева
@@ -343,17 +342,17 @@ generated_at: 2026-07-31T11:34:39Z · генератор: `scripts/coverage_map.
 
 ### rating
 
-- coverage_status: **designed-full** (14/14 Automated)
-- риски: R-04, R-10
+- coverage_status: **partial** (14/21 Automated)
+- риски: R-04, R-10, R-17
 - кейсы без risk: нет
-- P0/P1 не в Automated: нет
+- P0/P1 не в Automated: TC-138 [P1, Review], TC-139 [P1, Review], TC-140 [P1, Review], TC-141 [P1, Review], TC-142 [P1, Review], TC-143 [P1, Review], TC-144 [P1, Review]
 - автотесты (automated_by): framework/tests/test_rating.py::test_deselect_rating_on_work_page_panel, framework/tests/test_rating.py::test_rate_work_from_work_page_panel, framework/tests/test_rating_listing.py::test_add_freeform_tag_persists, framework/tests/test_rating_listing.py::test_apply_ratings_syncs_duplicate_blurbs, framework/tests/test_rating_listing.py::test_clear_note_removes_comment, framework/tests/test_rating_listing.py::test_comment_only_visible_on_listing_and_absent_from_rating_tabs, framework/tests/test_rating_listing.py::test_listing_rate_button_updates_without_reload, framework/tests/test_rating_listing.py::test_matching_personal_tag_highlighted_on_listing, framework/tests/test_rating_listing.py::test_note_button_opens_overlay_with_expanded_comment, framework/tests/test_rating_listing.py::test_panel_rating_updates_without_reload, framework/tests/test_rating_listing.py::test_personal_tags_do_not_affect_visibility, framework/tests/test_rating_listing.py::test_rate_work_from_listing_overlay, framework/tests/test_rating_listing.py::test_save_note_persists_comment, framework/tests/test_rating_listing.py::test_tap_selected_chip_removes_tag
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  | 3 |  |
-| P1 |  |  |  | 7 |  |
+| P1 |  | 7 |  | 7 |  |
 | P2 |  |  |  | 3 |  |
 | P3 |  |  |  | 1 |  |
 
@@ -407,17 +406,17 @@ generated_at: 2026-07-31T11:34:39Z · генератор: `scripts/coverage_map.
 
 ### tabs
 
-- coverage_status: **partial** (6/11 Automated)
+- coverage_status: **designed-full** (11/11 Automated)
 - риски: R-08
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-131 [P1, Approved], TC-132 [P1, Approved], TC-133 [P1, Approved], TC-134 [P1, Approved], TC-135 [P1, Approved]
+- P0/P1 не в Automated: нет
 - автотесты (automated_by): framework/tests/test_tabs.py::test_background_resume_without_deep_link_keeps_tabs_unchanged, framework/tests/test_tabs.py::test_cold_start_deep_link_reuses_single_home_tab, framework/tests/test_tabs.py::test_deep_link_after_home_loaded_creates_second_tab_not_reuse, framework/tests/test_tabs.py::test_deep_link_at_tab_limit_shows_dialog_and_drops_url, framework/tests/test_tabs.py::test_kill_relaunch_without_deep_link_keeps_tabs_unchanged, framework/tests/test_tabs.py::test_long_press_link_opens_background_tab_without_switching, framework/tests/test_tabs.py::test_max_tabs_limit_blocks_11th_tab, framework/tests/test_tabs.py::test_swipe_close_undo_restores_position, framework/tests/test_tabs.py::test_tabs_persist_url_and_scroll_after_restart, framework/tests/test_tabs.py::test_tap_inactive_tab_chip_activates_it, framework/tests/test_tabs.py::test_undo_history_evicts_oldest_after_six_closes
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  |  |  |
-| P1 |  |  | 5 | 5 |  |
+| P1 |  |  |  | 10 |  |
 | P2 |  |  |  |  |  |
 | P3 |  |  |  | 1 |  |
 

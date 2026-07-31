@@ -2251,6 +2251,160 @@
     "archived": false
   },
   {
+    "key": "TC-138",
+    "path": "board/TC-138/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Первый переход рейтинга в Kudosed через листинг при открытой вкладке работы отправляет kudos ровно один раз (позитивная граница)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:rating",
+      "risk:R-17"
+    ],
+    "updated": "2026-07-31T21:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-139",
+    "path": "board/TC-139/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Правка личного тега уже-Kudosed/Favorite работы через листинг повторно отправляет kudos (edge vs level, ядро BUG-015, :856)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:rating",
+      "risk:R-17"
+    ],
+    "updated": "2026-07-31T21:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-140",
+    "path": "board/TC-140/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Простановка Kudosed через листинг без открытой вкладки работы не отправляет kudos (граница отсутствия вкладки, :857-858)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:rating",
+      "risk:R-17"
+    ],
+    "updated": "2026-07-31T21:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-141",
+    "path": "board/TC-141/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Правка личного тега уже-Favorite работы через панель work-страницы не отправляет kudos (асимметрия путей, :743-758)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:rating",
+      "risk:R-17"
+    ],
+    "updated": "2026-07-31T21:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-142",
+    "path": "board/TC-142/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Смена рейтинга через листинг с Kudosed на Read не отправляет kudos",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:rating",
+      "risk:R-17"
+    ],
+    "updated": "2026-07-31T21:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-143",
+    "path": "board/TC-143/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Снятие рейтинга Kudosed (deselect) через листинг не отправляет kudos",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:rating",
+      "risk:R-17"
+    ],
+    "updated": "2026-07-31T21:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-144",
+    "path": "board/TC-144/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Первое сохранение LIKE/SAVE через встроенную панель work-страницы (запись ещё не в Room) отправляет kudos ровно один раз — панельная позитивная граница, позитивный контроль TC-141",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:rating",
+      "risk:R-17"
+    ],
+    "updated": "2026-07-31T21:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "TC-100",
     "path": "board/TC-100/main.md",
     "parent": null,
@@ -2900,16 +3054,17 @@
     "epicPath": null,
     "summary": "Deep-link на потолке 10 вкладок не создаёт 11-ю, показывает диалог лимита, отклонённый URL безвозвратно теряется",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:tabs",
-      "risk:R-08"
+      "risk:R-08",
+      "automation:active"
     ],
-    "updated": "2026-07-30T23:50:55Z",
-    "resolution": null,
+    "updated": "2026-07-31T18:12:23Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -2922,16 +3077,17 @@
     "epicPath": null,
     "summary": "Deep-link на единственную вкладку, уведённую с HOME_URL, создаёт вторую вкладку вместо переиспользования",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:tabs",
-      "risk:R-08"
+      "risk:R-08",
+      "automation:active"
     ],
-    "updated": "2026-07-31T00:04:23Z",
-    "resolution": null,
+    "updated": "2026-07-31T18:12:23Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -2944,16 +3100,17 @@
     "epicPath": null,
     "summary": "Возврат в приложение из recents (без нового deep-link intent) не переоткрывает уже обработанный deep-link",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:tabs",
-      "risk:R-08"
+      "risk:R-08",
+      "automation:active"
     ],
-    "updated": "2026-07-31T01:20:00Z",
-    "resolution": null,
+    "updated": "2026-07-31T18:12:23Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -2966,16 +3123,17 @@
     "epicPath": null,
     "summary": "Kill+relaunch приложения не переоткрывает уже обработанный deep-link",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:tabs",
-      "risk:R-08"
+      "risk:R-08",
+      "automation:active"
     ],
-    "updated": "2026-07-31T02:10:00Z",
-    "resolution": null,
+    "updated": "2026-07-31T18:12:23Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -2988,16 +3146,17 @@
     "epicPath": null,
     "summary": "Deep-link на холодном старте переиспользует единственную незагруженную home-вкладку (positive-reuse)",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:tabs",
-      "risk:R-08"
+      "risk:R-08",
+      "automation:active"
     ],
-    "updated": "2026-07-31T05:00:00Z",
-    "resolution": null,
+    "updated": "2026-07-31T18:12:23Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -3839,7 +3998,7 @@
     "epicPath": null,
     "summary": "restart_app_via_adb / adb.force_stop не наблюдают реальную смерть процесса — TC-025 и test_reading_ux.py (персистентность через рестарт) не отличают холодный старт от no-op",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -3847,8 +4006,8 @@
       "test_case:TC-025",
       "sev:minor"
     ],
-    "updated": "2026-07-31T12:15:00Z",
-    "resolution": null,
+    "updated": "2026-07-31T18:20:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -3861,15 +4020,15 @@
     "epicPath": null,
     "summary": "scripts/log_append.py: нет легального пути для второго delegated тем же агентом на task_id, когда первый был другой ПРИРОДЫ (расследование vs ревью диффа), не ретрай и не замена мёртвого воркера",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-07-31T11:20:00Z",
-    "resolution": null,
+    "updated": "2026-07-31T17:58:18Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -3882,14 +4041,66 @@
     "epicPath": null,
     "summary": "scripts/log_append.py: нет легального пути для второго delegated критика на ОДИН И ТОТ ЖЕ открытый task_id (review1 → executor attempt2 → review2), когда review1 не был rejected, а вынес вердикт на чужой дифф",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-07-31T10:47:00Z",
+    "updated": "2026-07-31T18:20:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-035",
+    "path": "board/AT-BUG-035/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "render_work_page_html не несёт узел #kudo_submit ни в одной replay-фикстуре — блокирует автоматизацию всей области rating/bridge auto-kudos (TC-138..144, ядро BUG-015)",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-138",
+      "test_case:TC-139",
+      "test_case:TC-140",
+      "test_case:TC-141",
+      "test_case:TC-142",
+      "test_case:TC-143",
+      "test_case:TC-144",
+      "sev:minor"
+    ],
+    "updated": "2026-07-31T21:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-036",
+    "path": "board/AT-BUG-036/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "app_steps.wait_persisted_tab_count: диагностика «последнее наблюдение» мертва — f-строка message вычисляется до первого опроса, holder всегда None",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-131",
+      "test_case:TC-135",
+      "test_case:TC-136",
+      "sev:minor"
+    ],
+    "updated": "2026-07-31T18:18:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4018,9 +4229,16 @@
     "assignee": "qa-agents",
     "labels": [
       "bug",
+      "test_case:TC-138",
+      "test_case:TC-139",
+      "test_case:TC-140",
+      "test_case:TC-141",
+      "test_case:TC-142",
+      "test_case:TC-143",
+      "test_case:TC-144",
       "sev:major"
     ],
-    "updated": "2026-07-28T12:00:01Z",
+    "updated": "2026-07-31T21:00:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4058,15 +4276,78 @@
     "summary": "Быстрое закрытие вкладок → долгий парад снекбаров; подозрение на потерю Undo-токенов при задержке показа",
     "issueType": "bug",
     "status": "bug-open",
-    "priority": "p2",
+    "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "test_case:TC-023",
       "test_case:TC-024",
-      "sev:minor"
+      "sev:major"
     ],
-    "updated": "2026-07-30T00:00:00Z",
+    "updated": "2026-07-31T19:35:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-018",
+    "path": "board/BUG-018/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "DOM-ссылка «Next →» указывает на уже показанную страницу; тап уводит назад",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:major"
+    ],
+    "updated": "2026-07-31T19:30:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-019",
+    "path": "board/BUG-019/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Back после автопрыжка плотности не выводит назад — ловушка + рост истории",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:major"
+    ],
+    "updated": "2026-07-31T19:30:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-020",
+    "path": "board/BUG-020/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Простановка DISLIKE уводит пользователя со страницы; автонавигация live-push под открытым bottom-sheet",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:major"
+    ],
+    "updated": "2026-07-31T19:30:00Z",
     "resolution": null,
     "children": [],
     "archived": false
