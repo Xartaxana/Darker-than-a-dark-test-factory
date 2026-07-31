@@ -96,6 +96,69 @@ task_id, ОТКРЫТЫМ на момент записи (последнее lif
 т.е. пересечение _OPEN_DISPATCH_LIFECYCLE_CANDIDATES с ROUTING_EVENTS,
 -- delegated) -- иначе SystemExit ДО записи строки.
 
+Добавление 7 (AT-BUG-033, 2026-07-31, attempt 2 после критик-вердикта
+2026-07-31T11:05:00Z) — третье легальное основание для повторного
+`delegated` того же agent на открытый task_id: (д) новая итерация
+жизненного цикла. Ветки (в) ретрай и (г) --replaces-worker эталона
+OS-репо не покрывали случай, когда тот же agent (типично critic)
+делегируется на task_id ДВАЖДЫ по РАЗНЫМ причинам в рамках жизненного
+цикла, прошедшего close+reopen: сначала расследование неясного бага
+(правило 3б CLAUDE.md, вердикт queued-to-lead, accepted), затем
+кто-то переоткрывает задачу (--reopen-task) для повторной попытки, и
+итоговый дифф по правилу 3а снова требует СВОЙ критик-вход приёмки на
+тот же task_id. Это не ретрай (прошлый вход не был rejected) и не
+замена мёртвого воркера (прошлый воркер жив и уже принят) --
+`--replaces-worker` тут была бы содержательной ложью.
+
+Порядок исполнения (фикс B1): (в)/(г) исполняются ВСЕГДА первыми
+(взаимоисключение --attempt/--replaces-worker, честный/фиктивный
+--replaces-worker, дописывание маркера в notes); (д) -- ПОСЛЕДНИЙ
+фолбэк вместо терминального raise, применяется ТОЛЬКО когда ни
+--attempt, ни --replaces-worker не переданы -- первая версия сделала
+(д) ранним `elif` перед (в)/(г), который глушил их целиком (критик
+поймал прогоном: фиктивный --replaces-worker проходил, честный не
+дописывал маркер, --attempt накручивался без rejected).
+
+Признак легальности (фикс B2): между предыдущим delegated этого agent
+на task_id и текущим вызовом лежит delegated-событие (любого agent) с
+маркером "reopen: <причина>" в notes -- этот маркер пишется ТОЛЬКО
+настоящим --reopen-task (см. гейт "нужен --reopen-task" выше), больше
+нигде программно не генерируется. Первая версия проверяла просто
+"было ли accepted-событие после последнего delegated этого agent",
+опираясь на ложную посылку "единственный способ вернуться в открытое
+состояние после accepted -- --reopen-task" -- `defect_found` и поздний
+`rejected` тоже открывают задачу (признанное отличие AO3 от эталона,
+см. CLAUDE.md), так что обычный ретрай после позднего rejected
+проходил через (д) без --attempt, ломая счётчик попыток правила 6.
+Легально без --attempt/rejected/--replaces-worker.
+
+Соседний класс (B3, тот же критик-вердикт) -- ОТКРЫТ, здесь НЕ закрыт
+(явный пункт очереди: bugs/AT-BUG-033.md, раздел «Открытый остаток B3»,
+и bugs/AT-BUG-034.md): второй критик-вход внутри ОДНОГО открытого цикла
+(review1 → rejected ИСПОЛНИТЕЛЯ → исполнитель attempt 2 → критик
+review2, БЕЗ accepted между) проходит через ветку (в) на ЧУЖОМ
+rejected, потому что _has_rejected -- TASK-уровневая. Attempt 2 сузил её
+до пары (task_id, agent); критик-вход раунда 2 (2026-07-31, находка B6)
+сужение ОТКАТИЛ: реплей исторического logs/routing-log.jsonl через этот
+же guard дал 12 delegated, которые сужение переворачивает OK -> BLOCKED
+(at-bug-025, TC-125, TC-129, TC-131, TC-133, TC-134, CH-006 x2,
+CH-007 x3, needs-design-tabs-deep-link) -- и все 12 суть штатный поток
+фабрики «критик-вход раунда N после rework исполнителя», а не
+злоупотребление: rejected по вердикту критика пишется на ИСПОЛНИТЕЛЯ,
+своего rejected у критика нет и не должно быть. Эталон OS-репо
+(tools/journal_validator.py, правило 9: retry_ok = valid_attempt and
+task_id in rejected_tasks) тоже task-уровневый -- откат возвращает
+паритет с эталоном. Остаток класса (отличить легальный review-раунд от
+заимствования чужого rejected требует ОТДЕЛЬНОГО признака, а не сужения
+(в)) ведётся как AT-BUG-034; молча не оставлен.
+
+Кросс-деплойный пункт (правило 4б CLAUDE.md, докладывается явно, не
+исполняется здесь): эталонный `Improving_AI/Operating-System-for-LLMs/
+tools/journal_validator.py` тоже должен научиться принимать легальные
+(д)-строки (delegated поверх открытого task_id тем же agent, notes без
+attempt/replaces_worker/rejected) -- носитель цели (их
+CURRENT_CONTEXT.md) не в этом репо, координатор решает диспетчинг.
+
 Использование:
   python scripts/log_append.py routing --event delegated \
       --agent builder --model sonnet --task-id t-042 \
@@ -232,8 +295,73 @@ def _prior_worker_refs(records: list[dict], task_id: str) -> set[str]:
 
 
 def _has_rejected(records: list[dict], task_id: str) -> bool:
+    """TASK-уровневая проверка: есть ли rejected ГДЕ-ЛИБО на этом task_id
+    (любого agent). Уровень выбран СОЗНАТЕЛЬНО, не по недосмотру.
+
+    AT-BUG-033 attempt 2 сузил проверку до пары (task_id, agent) под
+    находкой B3 («критик занимает чужой rejected своим --attempt»).
+    Критик-вход раунда 2 (2026-07-31, находка B6) сужение ОТКАТИЛ:
+    реплей исторического logs/routing-log.jsonl через этот guard дал 12
+    delegated, которые сужение переворачивает OK -> BLOCKED, и все 12 --
+    штатный поток фабрики: критик review1 выносит вердикт ДОРАБОТАТЬ,
+    rejected записывается на ИСПОЛНИТЕЛЯ (критик не ошибался, своего
+    rejected у него нет), исполнитель делает attempt N, критику нужен
+    review N на ТОМ ЖЕ открытом task_id с --attempt N. Сужение делает
+    этот штатный поток нежурналируемым вовсе (ни (в), ни (г), ни (д) не
+    подходят) -- ровно тот дефект, которым заведён AT-BUG-034.
+
+    Эталон OS-репо (tools/journal_validator.py, правило 9:
+    retry_ok = valid_attempt and task_id in rejected_tasks) тоже
+    task-уровневый -- откат возвращает паритет с эталоном.
+
+    Остаток B3 (легальный review-раунд здесь неотличим от заимствования
+    чужого rejected) НЕ закрыт и ведётся явным пунктом: bugs/AT-BUG-033.md
+    («Открытый остаток B3») и bugs/AT-BUG-034.md. Закрывать его сужением
+    (в) нельзя -- нужен отдельный признак раунда."""
     return any(r.get("task_id") == task_id and r.get("event") == "rejected"
                for r in records)
+
+
+REOPEN_NOTE_RE = re.compile(r"(?:^|;\s*)reopen:\s*\S")
+
+
+def _reopened_via_flag_since_agent_last_delegated(records: list[dict],
+                                                    task_id: str,
+                                                    agent: str) -> bool:
+    """AT-BUG-033 attempt 2 (фикс B2): тот же agent легально делегируется
+    на task_id ВТОРОЙ раз по РАЗНОЙ причине (не ретрай, не замена мёртвого
+    воркера), если между его предыдущим delegated и текущим вызовом лежит
+    РЕАЛЬНЫЙ `--reopen-task`, а не просто "было хоть какое-то accepted".
+
+    Прежняя версия (`_reopened_since_agent_last_delegated`) проверяла
+    только наличие accepted ПОСЛЕ последнего delegated этого agent,
+    опираясь на посылку "единственный способ вернуться в открытое
+    состояние после accepted -- --reopen-task". Посылка эмпирически
+    ложна: `defect_found` и поздний `rejected` ТОЖЕ открывают задачу
+    (признанное отличие AO3 от эталона OS-репо, CLAUDE.md «Журнал
+    маршрутизации») -- `_last_lifecycle_event` смотрит последнее событие
+    ЛЮБОГО типа, не именно reopen. Из-за этого обычный ретрай того же
+    агента после позднего rejected проходил БЕЗ --attempt, ломая счётчик
+    попыток правила 6 (critic-вердикт B2).
+
+    Признак здесь строже и соответствует факту: есть delegated-событие
+    этого task_id (любого agent) ПОСЛЕ последнего delegated ЭТОГО agent,
+    чьи notes несут маркер "reopen: <причина>" -- этот маркер дописывается
+    ТОЛЬКО append_routing при настоящем --reopen-task (строки выше, гейт
+    "task_id уже закрыт, нужен --reopen-task"), больше нигде в коде эта
+    подстрока не генерируется программно."""
+    last_agent_delegated_idx: int | None = None
+    for i, r in enumerate(records):
+        if (r.get("task_id") == task_id and r.get("event") == "delegated"
+                and r.get("agent") == agent):
+            last_agent_delegated_idx = i
+    if last_agent_delegated_idx is None:
+        return False
+    for r in records[last_agent_delegated_idx + 1:]:
+        if (r.get("task_id") == task_id and r.get("event") == "delegated"
+                and REOPEN_NOTE_RE.search(r.get("notes") or "")):
+            return True
+    return False
 
 
 # Добавление 6: closes-phantom:<task_id> -- машиночитаемое закрытие
@@ -584,7 +712,20 @@ def append_routing(event: str, agent: str, *, model: str = "",
                 notes = f"{notes}; {reopen_note}" if notes else reopen_note
             else:
                 # D-0058 (порт OS-репо), задача ОТКРЫТА (последнее событие
-                # не accepted): continuation/retry/replaces_worker-ветки.
+                # не accepted): continuation/retry/replaces_worker/reopen-
+                # ветки. AT-BUG-033 attempt 2 (фикс B1, критик-вердикт
+                # 2026-07-31T11:05:00Z): ветка (д) была ранним `elif` ПЕРЕД
+                # (в)/(г) и глушила их целиком (фиктивный --replaces-worker
+                # проходил, честный не дописывал маркер, взаимоисключение
+                # attempt/replaces-worker снималось, attempt накручивался
+                # без rejected). Порядок восстановлен: (в)/(г) исполняются
+                # ВСЕГДА первыми (включая проверку взаимоисключения флагов
+                # и фиктивного --replaces-worker); (д) -- ПОСЛЕДНИЙ
+                # фолбэк, применяется ТОЛЬКО когда НИ --attempt, НИ
+                # --replaces-worker не переданы вовсе -- иначе --attempt N
+                # без своего rejected тихо проходил бы через (д) даже в
+                # состоянии, где (д) в принципе применима (регрессия
+                # счётчика попыток правила 6, отдельно от посылки B2).
                 prior_agents = _prior_delegated_agents(records, task_id)
                 if agent not in prior_agents:
                     pass  # (б) continuation другим ярусом — легально
@@ -601,7 +742,11 @@ def append_routing(event: str, agent: str, *, model: str = "",
                             "легализует делегирование без вердикта)")
                     valid_attempt = attempt >= 2
                     if valid_attempt and _has_rejected(records, task_id):
-                        pass  # (в) легальный ретрай после rejected
+                        # (в) легальный ретрай/review-раунд после rejected на
+                        # этом task_id (TASK-уровень, паритет с эталоном
+                        # OS-репо; сужение до собственного rejected агента
+                        # откачено -- находка B6, докстринг _has_rejected).
+                        pass
                     elif replaces_worker:
                         prior_refs = _prior_worker_refs(records, task_id)
                         if replaces_worker not in prior_refs:
@@ -614,17 +759,33 @@ def append_routing(event: str, agent: str, *, model: str = "",
                         marker = f"replaces_worker:{replaces_worker}"
                         if marker not in notes:
                             notes = f"{notes}; {marker}" if notes else marker
+                    elif (not attempt
+                          and _reopened_via_flag_since_agent_last_delegated(
+                              records, task_id, agent)):
+                        # (д) AT-BUG-033: новая итерация жизненного цикла --
+                        # ни --attempt, ни --replaces-worker не заданы (иначе
+                        # они обязаны разрешиться выше -- это и гарантирует,
+                        # что --attempt без rejected НЕ проходит тихо через
+                        # (д)), и между предыдущим delegated этого agent и
+                        # текущим вызовом лежит РЕАЛЬНЫЙ --reopen-task (см.
+                        # докстринг хелпера). Не ретрай (прошлый вход не был
+                        # rejected) и не замена мёртвого воркера (тот воркер
+                        # жив/принят) -- легально без attempt/rejected/
+                        # replaces-worker.
+                        pass
                     else:
                         # (в) не выполнены условия ретрая, replaces_worker
-                        # не задан -> (г) дубль-паттерн
+                        # не задан, (д) не применима -> (г) дубль-паттерн
                         raise SystemExit(
                             f"повторный delegated тем же agent={agent!r} по "
                             f"task_id={task_id!r} без --attempt >=2 и "
-                            "существующего rejected по этому task_id — "
-                            "запрещённый дубль-паттерн (класс t-029, D-0060); "
-                            "легальная альтернатива — --replaces-worker "
-                            "<прежний worker_ref> при замене умершего "
-                            "воркера без вердикта")
+                            "существующего rejected по этому "
+                            "task_id — запрещённый дубль-паттерн (класс "
+                            "t-029, D-0060); легальная альтернатива — "
+                            "--replaces-worker <прежний worker_ref> при "
+                            "замене умершего воркера без вердикта, либо "
+                            "новая итерация жизненного цикла после "
+                            "настоящего --reopen-task (AT-BUG-033)")
     ok, env_msg = _verify_environment(require_dir=ROUTING_LOG.parent)
     if not ok:
         raise SystemExit(env_msg)

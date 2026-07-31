@@ -923,6 +923,263 @@ def test_replaces_worker_ignored_when_not_applicable_branch(logs):
     assert "replaces_worker" not in rec.get("notes", "")
 
 
+# AT-BUG-033: третье легальное основание (ветка "д") -- тот же agent
+# делегируется на task_id ДВАЖДЫ по разным причинам в рамках жизненного
+# цикла, прошедшего close+reopen (не ретрай, не замена мёртвого воркера).
+
+def test_reopen_cycle_legalizes_second_delegated_same_agent_diff_review(logs):
+    # Прецедент бага: critic сначала расследует неясный баг (правило 3б,
+    # accepted basis=queued-to-lead), задача переоткрывается ДРУГИМ agent
+    # (test-automator), вторая попытка даёт дифф, которому по правилу 3а
+    # снова нужен свой критик-вход приёмки -- на ТОТ ЖЕ task_id. Легально
+    # БЕЗ --attempt/rejected/--replaces-worker.
+    routing, _ = logs
+    la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                      worker_ref="wr-critic-1", category="investigation")
+    la.append_routing("accepted", "critic", model="opus", by="fable",
+                      task_id="t-001", basis="queued-to-lead",
+                      witness="investigation: неясный баг расследован, TC-135 подтверждён")
+    la.append_routing("delegated", "test-automator", model="sonnet", task_id="t-001",
+                      worker_ref="wr-auto-2",
+                      reopen_task="повторная попытка автоматизации после расследования")
+    # test-automator даёт builder-дифф, который ЕЩЁ НЕ принят (правило 3а
+    # требует критик-вход ДО приёмки) -- задача остаётся ОТКРЫТОЙ (последнее
+    # событие -- delegated test-automator), никакого accepted между reopen
+    # и вторым critic-delegated ещё нет.
+    # critic снова делегирован на t-001 -- теперь diff-review (правило 3а),
+    # НЕ ретрай прошлого расследования и не замена мёртвого воркера.
+    la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                      worker_ref="wr-critic-3", category="diff-review")
+    lines = routing.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 4
+    rec = json.loads(lines[-1])
+    assert rec["agent"] == "critic"
+    assert rec["worker_ref"] == "wr-critic-3"
+    assert "attempt" not in rec
+    assert "replaces_worker" not in rec.get("notes", "")
+
+
+def test_reopen_cycle_without_accepted_between_still_dup_pattern(logs):
+    # Отрицательный контроль: если между двумя delegated этого agent НЕТ
+    # accepted (например, только rejected-ретраи), ветка "д" не срабатывает
+    # -- обычный дубль-паттерн по-прежнему требует --attempt/rejected или
+    # --replaces-worker (регрессия существующих путей "в"/"г").
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr-1")
+    la.append_routing("rejected", "builder", model="sonnet", by="opus",
+                      task_id="t-001", attempt=1, failure_class="capability")
+    with pytest.raises(SystemExit, match="дубль"):
+        la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                          worker_ref="wr-2")
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 2
+
+
+def test_reopen_cycle_stale_accepted_from_earlier_cycle_not_enough(logs):
+    # Отрицательный контроль: accepted СТАРОГО цикла не легализует
+    # ТРЕТИЙ delegated того же agent, если у ЕГО ВТОРОГО (более позднего)
+    # delegated своего accepted+reopen ещё не было -- нужен accepted
+    # ПОСЛЕ ПОСЛЕДНЕГО delegated именно этого agent, не любой accepted
+    # где-то раньше в истории task_id.
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr-1")
+    la.append_routing("accepted", "builder", model="sonnet", by="opus",
+                      task_id="t-001", witness="pytest -q -> passed")  # цикл 1 закрыт
+    la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                      worker_ref="wr-critic",
+                      reopen_task="переоткрыто для повторной попытки")  # цикл 2 открыт
+    # builder снова участвует в цикле 2 -- легально: accepted цикла 1
+    # лежит ПОСЛЕ builder's первого (на тот момент единственного) delegated.
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr-2")
+    # цикл 2 НЕ закрывается accepted -- builder эскалирует, задача остаётся
+    # открытой без нового accepted.
+    la.append_routing("escalated", "builder", model="sonnet", task_id="t-001")
+    # третий delegated builder: prior_agents содержит builder, последний
+    # delegated builder -- это wr-2 (цикл 2); после НЕГО никакого accepted
+    # нет (только escalated) -- дубль-паттерн, стейл accepted цикла 1 не
+    # должен просачиваться вперёд.
+    with pytest.raises(SystemExit, match="дубль"):
+        la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                          worker_ref="wr-3")
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 5
+
+
+# AT-BUG-033 attempt 2 (критик-вердикт 2026-07-31T11:05:00Z, B1/B2) +
+# критик-вход раунда 2 (B6): ветка "д" была ранним elif, глушившим (в)/(г)
+# целиком; хелпер легализовал случай по ложной посылке ("любой accepted"
+# вместо "настоящий --reopen-task"). Соседний класс B3 (второй критик-вход
+# без accepted между) НЕ закрыт: сужение (в) под него ломало штатный
+# review-раунд (12 исторических delegated) и откачено, остаток ведётся
+# как AT-BUG-034. Тесты ниже воспроизводят находки критика И пинят
+# итоговое поведение.
+
+def _real_reopen_cycle(la_module, routing):
+    """Хелпер сценария: critic расследует (accepted, задача закрыта),
+    затем test-automator НАСТОЯЩИМ --reopen-task переоткрывает её --
+    задача открыта, prior_agents={critic, test-automator}, последний
+    delegated -- test-automator (несёт маркер "reopen: ..." в notes)."""
+    la_module.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                             worker_ref="wr-critic-1", category="investigation")
+    la_module.append_routing("accepted", "critic", model="opus", by="fable",
+                             task_id="t-001", basis="queued-to-lead",
+                             witness="investigation: неясный баг расследован")
+    la_module.append_routing("delegated", "test-automator", model="sonnet",
+                             task_id="t-001", worker_ref="wr-auto-2",
+                             reopen_task="повторная попытка автоматизации после расследования")
+
+
+def test_b1_fictitious_replaces_worker_still_rejected_in_reopened_state(logs):
+    # B1: в (д)-состоянии (после НАСТОЯЩЕГО --reopen-task) фиктивный
+    # --replaces-worker обязан по-прежнему отклоняться -- ветка (д) не
+    # должна проходить мимо проверки фиктивной замены.
+    routing, _ = logs
+    _real_reopen_cycle(la, routing)
+    with pytest.raises(SystemExit, match="replaces-worker"):
+        la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                          worker_ref="wr-critic-3",
+                          replaces_worker="wr-NEVER-EXISTED")
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 3
+
+
+def test_b1_honest_replaces_worker_passes_and_appends_marker_in_reopened_state(logs):
+    # B1: в (д)-состоянии честный --replaces-worker (совпадающий с реальным
+    # прежним worker_ref) обязан пройти И дописать маркер replaces_worker:
+    # в notes -- прежний баг проходил (elif "д" срабатывал раньше), но
+    # маркер молча терялся (единственный носитель для journal_validator.py).
+    routing, _ = logs
+    _real_reopen_cycle(la, routing)
+    la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                      worker_ref="wr-critic-3",
+                      replaces_worker="wr-critic-1")
+    rec = json.loads(routing.read_text(encoding="utf-8").splitlines()[-1])
+    assert rec["worker_ref"] == "wr-critic-3"
+    assert "replaces_worker:wr-critic-1" in rec["notes"]
+    assert "attempt" not in rec
+
+
+def test_b1_replaces_worker_and_attempt_together_still_rejected_in_reopened_state(logs):
+    # B1: взаимоисключение --replaces-worker/--attempt обязано срабатывать
+    # и в (д)-состоянии, а не только когда (д) неприменима.
+    routing, _ = logs
+    _real_reopen_cycle(la, routing)
+    with pytest.raises(SystemExit, match="взаимоисключающие"):
+        la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                          worker_ref="wr-critic-3",
+                          replaces_worker="wr-critic-1", attempt=2)
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 3
+
+
+def test_b1_attempt_without_rejected_still_rejected_in_reopened_state(logs):
+    # B1: --attempt без существующего (своего) rejected обязан отклоняться,
+    # даже когда (д)-условие (настоящий reopen) выполнено -- (д) применяется
+    # ТОЛЬКО когда --attempt вовсе не передан.
+    routing, _ = logs
+    _real_reopen_cycle(la, routing)
+    with pytest.raises(SystemExit, match="дубль"):
+        la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                          worker_ref="wr-critic-3", attempt=7)
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 3
+
+
+def test_b2_real_reopen_task_marker_legalizes_second_delegated_same_agent(logs):
+    # B2 позитив: после НАСТОЯЩЕГО --reopen-task (маркер "reopen: ..." в
+    # notes какого-то delegated) повторный delegated того же agent легален
+    # без attempt/rejected/replaces-worker -- изолированный минимальный
+    # сценарий (без builder-диффа между), фокусирующийся именно на признаке.
+    routing, _ = logs
+    _real_reopen_cycle(la, routing)
+    la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                      worker_ref="wr-critic-3", category="diff-review")
+    rec = json.loads(routing.read_text(encoding="utf-8").splitlines()[-1])
+    assert rec["agent"] == "critic"
+    assert "attempt" not in rec
+    assert "replaces_worker" not in rec.get("notes", "")
+
+
+def test_b2_accepted_without_real_reopen_task_does_not_legalize_via_branch_d(logs):
+    # B2 регрессия: accepted БЕЗ настоящего --reopen-task (здесь -- поздний
+    # rejected ПОСЛЕ accepted, признанный AO3-механизм переоткрытия, CLAUDE.md
+    # «Журнал маршрутизации») НЕ должен легализовать повторный delegated
+    # того же agent через ветку (д) -- старая посылка ("любой accepted
+    # достаточен") была эмпирически ложной именно на этом сценарии.
+    routing, _ = logs
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      worker_ref="wr-1")
+    la.append_routing("accepted", "builder", model="sonnet", by="opus",
+                      task_id="t-001", witness="pytest -q -> passed")
+    la.append_routing("rejected", "builder", model="sonnet", by="opus",
+                      task_id="t-001", attempt=1, failure_class="capability")
+    # задача снова "открыта" для гейта delegated (последнее событие --
+    # rejected, не accepted), но БЕЗ настоящего --reopen-task -- обычный
+    # повторный delegated builder без --attempt по-прежнему дубль-паттерн.
+    with pytest.raises(SystemExit, match="дубль"):
+        la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                          worker_ref="wr-2")
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 3
+    # обычный путь (в) по-прежнему работает: attempt>=2 + свой rejected.
+    la.append_routing("delegated", "builder", model="sonnet", task_id="t-001",
+                      attempt=2, worker_ref="wr-2")
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 4
+
+
+def test_b6_review_round_second_critic_entry_after_executor_rework_passes(logs):
+    # B6 (критик-вход раунда 2 по AT-BUG-033, 2026-07-31): ШТАТНЫЙ поток
+    # фабрики -- критик review1 выносит вердикт ДОРАБОТАТЬ (rejected по
+    # вердикту записывается на ИСПОЛНИТЕЛЯ; критик не ошибался, своего
+    # rejected у него нет), исполнитель делает attempt 2, критику нужен
+    # review2 на ТОМ ЖЕ открытом task_id. Проходит веткой (в) с --attempt N
+    # на TASK-уровневом rejected. Реплей исторического
+    # logs/routing-log.jsonl: 12 таких delegated (at-bug-025, TC-125,
+    # TC-129, TC-131, TC-133, TC-134, CH-006 x2, CH-007 x3,
+    # needs-design-tabs-deep-link) сужение _has_rejected до (task_id, agent)
+    # переворачивало в BLOCKED -- регресс-пин отката сужения.
+    # ИЗВЕСТНЫЙ ОСТАТОК (B3, bugs/AT-BUG-034.md): тем же основанием критик
+    # формально может "занять" чужой rejected и вне честного раунда --
+    # отличить раунд от заимствования сужением (в) НЕЛЬЗЯ (этот тест и
+    # есть доказательство), нужен отдельный признак раунда.
+    routing, _ = logs
+    la.append_routing("delegated", "test-automator", model="sonnet",
+                      task_id="t-001", worker_ref="wr-1")
+    la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                      worker_ref="wr-c1", category="diff-review")  # review1, (б)
+    la.append_routing("rejected", "test-automator", model="sonnet", by="opus",
+                      task_id="t-001", attempt=1, failure_class="spec")
+    la.append_routing("delegated", "test-automator", model="sonnet",
+                      task_id="t-001", attempt=2, worker_ref="wr-2")  # (в), свой rejected
+    # review2 того же критика в том же открытом цикле -- обязан пройти.
+    la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                      attempt=2, worker_ref="wr-c2", category="diff-review")
+    lines = routing.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 5
+    rec = json.loads(lines[-1])
+    assert rec["agent"] == "critic"
+    assert rec["worker_ref"] == "wr-c2"
+    assert rec["attempt"] == 2
+
+
+def test_b6_task_level_rejected_alone_does_not_legalize_without_attempt(logs):
+    # Граница отката (на границе и за ней): TASK-уровневый rejected сам по
+    # себе НЕ легализует повторный delegated -- --attempt >=2 остаётся
+    # обязательным (attempt отсутствует / attempt=1 -> дубль-паттерн).
+    routing, _ = logs
+    la.append_routing("delegated", "test-automator", model="sonnet",
+                      task_id="t-001", worker_ref="wr-1")
+    la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                      worker_ref="wr-c1", category="diff-review")
+    la.append_routing("rejected", "test-automator", model="sonnet", by="opus",
+                      task_id="t-001", attempt=1, failure_class="spec")
+    with pytest.raises(SystemExit, match="дубль"):
+        la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                          worker_ref="wr-c2")  # без --attempt
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 3
+    with pytest.raises(SystemExit, match="дубль"):
+        la.append_routing("delegated", "critic", model="opus", task_id="t-001",
+                          attempt=1, worker_ref="wr-c2")  # attempt=1 < 2
+    assert len(routing.read_text(encoding="utf-8").splitlines()) == 3
+
+
 # Порт-батч штаба: защита от «тихо-успешен вне среды» (_verify_environment).
 # Тесты ниже НЕ используют стаб из фикстуры `logs` -- проверяют функцию
 # напрямую на реальной файловой структуре tmp_path.
