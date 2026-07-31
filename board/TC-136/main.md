@@ -1,0 +1,176 @@
+---
+key: "TC-136"
+project: "AO3"
+issueType: "test-case"
+status: "tc-review"
+priority: "p1"
+summary: "Тап по телу карточки Library открывает работу в новой активной вкладке Browse"
+assignee: "qa-agents"
+reporter: "qa-agents"
+labels: ["test-case", "area:library", "risk:R-08"]
+components: []
+fixVersions: []
+watchers: []
+parent: null
+epic: null
+created: "2026-07-31T02:00:00Z"
+updated: "2026-07-31T02:00:00Z"
+archived: false
+resolution: null
+---
+
+# Тап по телу карточки Library открывает работу в новой активной вкладке Browse
+
+_Спроецировано из `test-cases/library/TC-136.md` (источник правды).
+Статус в нашей машине: **Review**._
+
+# TC-136 — Тап по телу карточки Library открывает работу в новой активной вкладке Browse
+
+## Предусловия
+- Фикстура `loved_work_seeded` (`conftest.py`): работа `W.LOVED`
+  (`ao3_id=900000001`, `url=https://archiveofourown.org/works/900000001`)
+  засеяна в Room с рейтингом SAVE (Favorite) ДО старта сессии Appium —
+  чистые данные (`clean_state()` внутри фикстуры), без обращения к живому
+  AO3 для сидинга.
+- Replay-режим, фикстура `work_with_download.mitm` (`rb.WORK_WITH_DOWNLOAD_FILENAME`)
+  — несёт HTML-страницу именно `W.LOVED.url`; тот же файл уже используется
+  вместе с `loved_work_seeded`/`library_steps.open_work_in_browser` в
+  `test_reading_ux.py` (TC-126/127/128) и `test_tap_zone_guard.py` (canary)
+  — комбинация проверена живыми прогонами, не гипотеза этого кейса.
+- Приложение стартует на экране Browse (default `selectedTab = AppTab.BROWSE`,
+  `MainActivity.kt:235`) с ровно ОДНОЙ вкладкой (стартовая Home). Пользователь
+  переходит на экран Library через нижнюю навигацию ДО When — это часть Given,
+  не Then.
+- Ни одна другая вкладка Browse не открыта — `openTab` добавляет вкладку к уже
+  существующей одной (Home), не заменяет её (`BrowserViewModel.kt:268`,
+  `tabs = current.tabs + tab`) — счёт вкладок 1→2 наблюдаем однозначно.
+
+## Сценарий (Given-When-Then)
+
+**Given** приложение запущено с засеянной работой `W.LOVED` (Favorite), открыт
+экран Library, вкладка Favorite активна, карточка работы «A Loved Test Work»
+видна в списке
+**And** открыта ровно 1 вкладка Browse (стартовая Home) — TabStrip ещё скрыт
+(`tabs.size == 1`)
+
+**When** пользователь тапает по телу карточки работы (не по иконкам
+download/open-file — они отдельные `IconButton` и не занимают область карточки,
+задействованную `combinedClickable`)
+
+**Then** число вкладок Browse становится 2 (persisted `open_tabs_urls`
+подтверждает +1 к предыдущему счёту)
+**And** экран переключается на Browse (TabStrip становится видим — рендерится
+только при `tabs.size > 1` и активном экране Browse)
+**And** активная (новая) вкладка загружает URL работы —
+`https://archiveofourown.org/works/900000001`; сверка ПОБАЙТОВАЯ
+(`assert_persisted_tab_url_at` сравнивает `==`, `app_steps.py:420`)
+**And** нижняя навигация свёрнута (`navExpanded = false`,
+`MainActivity.kt:332`) — наблюдаемо как отсутствие пунктов
+Browse/Library/Settings на экране (панель скрыта за ручкой-пилюлей)
+
+**Инвариант:** `openTab(url, background=false)` НИЖЕ потолка `MAX_TABS=10`
+ВСЕГДА добавляет новую вкладку к существующему множеству и делает именно её
+активной, независимо от того, с какого экрана (Library/Settings) пришёл вызов
+— тот же код-путь, что кнопка «+»/deep-link (`browse-deep-link-new-tab`), но с
+другим триггером входа (тап по карточке, не `am start`/UI-кнопка TabStrip).
+Граничная противоположность этого инварианта (потолок 10 — вкладка НЕ
+создаётся) покрыта отдельным кейсом TC-137 той же фичи `library-card-open-work`
+(решение test-strategist по `browse-deep-link-new-tab`, docs/feature-registry.yaml:
+негативная ветка потолка — часть ТОЙ ЖЕ фичи входа, не отдельный механизм).
+
+## Проверяемые данные
+| Параметр | Значение |
+|---|---|
+| Работа | `W.LOVED`, `ao3_id=900000001`, `url=https://archiveofourown.org/works/900000001` |
+| Вкладок Browse до/после | 1 / 2 |
+| Активная вкладка после | новая (index последней), URL = URL работы |
+
+## Заметки для автоматизации
+- Готовый шаг `library_steps.open_work_in_browser(driver, title)`
+  (`framework/steps/library_steps.py:91`) уже тапает по карточке через
+  `LibraryScreen.open_work` (`self.tap(self.by_text(title))`) — реализован и
+  используется в `test_reading_ux.py`/`test_side_panel.py`/
+  `test_tap_zone_guard.py`, но ни один из этих тестов не ассертит САМ факт
+  открытия/URL/счёт вкладок как Then (используют его только как побочный шаг
+  Given для своих сценариев) — этот кейс первый, где именно навигация является
+  предметом проверки. Для оракулов URL/счёта/активности вкладки все
+  примитивы существуют и доказанно работают (единственный реальный блокер —
+  у Then про нижнюю навигацию, см. отдельный пункт заметок ниже):
+  - `library_steps.open_work_in_browser` — тап по карточке;
+  - `app_steps.wait_persisted_tab_count(2, timeout=...)` (`app_steps.py:311`) —
+    точный счёт вкладок из prefs `open_tabs_urls`, тот же приём, что TC-131;
+  - `app_steps.assert_persisted_tab_url_at(1, work.url)` +
+    `app_steps.assert_persisted_active_tab_index(1)` (`app_steps.py:406/435`,
+    тот же приём, что TC-132) — доказывают URL и активность именно НОВОЙ
+    вкладки (позиция 1: вкладка 0 — Home, вкладка 1 — новая) из
+    персистентных prefs. **НЕ** `browser_steps.assert_active_tab_url(driver,
+    work.url)` — critic-блокер attempt 1 (TC-132 докстринг
+    `assert_persisted_active_tab_index`, `app_steps.py:436-443`):
+    chromedriver детерминированно прилипает к вкладке-0 при чтении
+    `driver.current_url`/`execute_script` внутри `contexts.in_webview`, когда
+    живых WebView больше одной, поэтому оракул на живом контексте дал бы
+    ложный негатив на КОРРЕКТНОМ поведении (проверял бы содержимое
+    Home-вкладки, а не новой). Ссылка на `test_reading_ux.py`/
+    `test_tap_zone_guard.py` как на прецедент работоспособности
+    `assert_active_tab_url` для НОВОЙ вкладки была misread предыдущей
+    попытки: там work-страница кладётся на вкладку-0 ДО перехода в Library
+    (`rating_steps.open_work_page` первым шагом), а `open_work_in_browser`
+    там лишь создаёт ВТОРУЮ вкладку для рендера TabStrip — содержимое
+    только что открытой вкладки там никогда не читается;
+  - `browser_steps.assert_tab_strip_visible(driver)` — подтверждение перехода
+    на экран Browse (TabStrip — часть Browse-композable, не Library).
+- Порядок: `app_steps.wait_ui_ready` → `app_steps.open_tab(driver, "Library")`
+  → `library_steps.assert_work_in_tab(driver, "SAVE", work.title)` (подтвердить
+  Given) → `library_steps.open_work_in_browser(driver, work.title)` → Then-блок.
+- `replay` через `@pytest.mark.parametrize("replay", [rb.WORK_WITH_DOWNLOAD_FILENAME],
+  indirect=True)` — НЕ живая сеть (правило дисциплины: синтетический `ao3_id`
+  на живом AO3 отдал бы 404 — фикстура обязательна, не опциональна).
+- **Блокер автоматизации (единственный; critic, round 3): у Then «нижняя
+  навигация свёрнута» нет публичного примитива.** Видимость нижней навигации
+  определяет только `BottomNav._nav_visible()`
+  (`framework/screens/navigation.py:24-25`) — ПРИВАТНЫЙ метод, вызываемый
+  лишь изнутри самого `navigation.py:67`; публичного шага-обёртки в
+  `framework/steps/` нет (проверено регистронезависимым поиском по
+  `framework/` шаблоном `nav_visible|nav_collapsed|nav_expanded|bottom_nav`:
+  три вхождения — `navigation.py:24`, `navigation.py:67` и имя теста
+  `test_smoke.py:31`). Нужен НОВЫЙ маленький шаг фреймворка (например
+  `app_steps.assert_bottom_nav_collapsed(driver)` поверх публичного метода
+  `BottomNav`) — писать код фреймворка вне scope дизайна кейса, это работа
+  test-automator/builder. Формулировка attempt 2 «тот же локатор
+  `BottomNav._nav_visible()` ... отдельного нового локатора не требуется»
+  снята: приватный метод чужого класса — не готовый примитив, и такая
+  формулировка маскировала блокер.
+
+**Attempt 2 (test-designer, 2026-07-31), фикс по вердикту critic.**
+Устранён 1 блокер приёмки attempt 1: оракул URL/активности новой вкладки
+(`browser_steps.assert_active_tab_url(driver, work.url)`) давал бы ложный
+негатив на корректном поведении — chromedriver детерминированно прилипает к
+вкладке-0 при чтении живого WebView-контекста, когда живых вкладок больше
+одной. Заменён на persisted-чтение prefs (`assert_persisted_tab_url_at(1,
+work.url)` + `assert_persisted_active_tab_index(1)`, тот же приём TC-132).
+Ссылка на `test_reading_ux.py`/`test_tap_zone_guard.py` как на прецедент
+работоспособности старого оракула была misread — там читается вкладка-0
+(work уже открыт ДО перехода в Library), не только что созданная вкладка.
+
+**Round 3 (critic, 2026-07-31).** Снята противоречивая оговорка «побайтово
+(без учёта хвостового слэша)» — сверка строгая, слэш дописывается только
+корневому адресу (живой дамп prefs). Честно назван единственный блокер
+автоматизации: Then «нижняя навигация свёрнута» не имеет публичного
+примитива (`BottomNav._nav_visible` приватный).
+
+## Чек-лист качества (test-designer проходит перед `Review`)
+- [x] Один сценарий — один кейс; нет «и ещё проверить...»
+- [x] Given описывает полное состояние, воспроизводимое фикстурами
+      (`loved_work_seeded` + `work_with_download.mitm`)
+- [x] Then проверяет наблюдаемое поведение (счёт вкладок, URL, видимость
+      TabStrip/нав-панели), а не внутренние поля `BrowserViewModel`
+- [x] Указаны приоритет (P1), область (library) и источник требования
+      (MainActivity.kt/BrowserViewModel.kt/LibraryScreen.kt со строками)
+- [x] Кейс независим от порядка выполнения других кейсов (свежий `clean_state`
+      внутри `loved_work_seeded`)
+- [x] Блокер автоматизации НАЗВАН в заметках — он есть, один: у Then «нижняя
+      навигация свёрнута» нет публичного примитива (только приватный
+      `BottomNav._nav_visible`), нужен новый маленький шаг фреймворка;
+      остальные примитивы существуют и уже используются в других тестах
+- [x] Кейс комбинаторной области (tabs-ёмкость, ∩R-08) называет инвариант
+      строкой `Инвариант:`

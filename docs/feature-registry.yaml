@@ -312,8 +312,28 @@ features:
   #   - overlay «Delete work» → viewModel.deleteWork (стр.315, 352-357) — TC-036.
   # inventoried_at_commit не тронут (код не переинвентаризирован — только
   # гранулярность существующей записи по правилу шапки).
+  # Уточнение формулировки test-designer 2026-07-31 (needs-design docs/01 §9,
+  # заведено test-strategist 2026-07-28 — потерянная нить дробления
+  # library-card-actions 2026-07-18): title дополнен потолком MAX_TABS по
+  # тому же прецеденту, что browse-deep-link-new-tab (см. запись выше, комментарий
+  # ~строка 121-129) — негативная ветка отказа на потолке принадлежит ТОЙ ЖЕ
+  # фиче входа (её граница), не отдельному механизму; дробление на отдельный id
+  # увело бы кейс потолка от кейса штатного открытия. Проверено чтением кода
+  # (`MainActivity.kt:329-333`, `onOpenWork` вызывает `openTab` и БЕЗУСЛОВНО
+  # переключает `selectedTab = AppTab.BROWSE`, игнорируя Boolean-результат —
+  # т.е. экран переключается на Browse даже при отказе на потолке). id/screen/
+  # source не меняются, дробления нет. Покрыта TC-136 (штатный вход, ниже
+  # потолка) и TC-137 (потолок 10, диалог лимита, экран всё равно
+  # переключается) — обе новые, назначены той же фиче.
+  # Правка test-designer 2026-07-31 (critic-вход, attempt 2): тот же
+  # безусловный паттерн (`openTab`/`openOrNavigateDeepLink` + безусловный
+  # `selectedTab = AppTab.BROWSE`) стоит ещё у ДВУХ call-site'ов — deep-link
+  # LaunchedEffect (MainActivity.kt:264-266, TC-131) и `onOpenFile` (иконка
+  # «открыть скачанный файл», ТА ЖЕ карточка Library, MainActivity.kt:520-524,
+  # БЕЗ покрытия кейсом — доклад аналога в TC-137.md). TC-137 переформулирован:
+  # свойство общее для трёх call-site'ов, не уникальное для этой фичи.
   - id: library-card-open-work
-    title: "Тап по телу карточки Library открывает работу (URL) в браузерной вкладке"
+    title: "Тап по телу карточки Library открывает работу (URL) в новой активной вкладке Browse; на потолке MAX_TABS=10 вкладка не создаётся, показывается диалог лимита, но экран всё равно переключается на Browse"
     screen: library
     source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
   - id: library-card-download
