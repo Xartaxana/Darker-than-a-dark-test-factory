@@ -2900,16 +2900,15 @@
     "epicPath": null,
     "summary": "Возврат в приложение из recents (без нового deep-link intent) не переоткрывает уже обработанный deep-link",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
-    "assignee": "test-automator",
+    "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:tabs",
-      "risk:R-08",
-      "wip:test-automator"
+      "risk:R-08"
     ],
-    "updated": "2026-07-30T22:33:24Z",
+    "updated": "2026-07-31T00:45:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2925,11 +2924,12 @@
     "issueType": "test-case",
     "status": "tc-approved",
     "priority": "p1",
-    "assignee": "qa-agents",
+    "assignee": "test-automator",
     "labels": [
       "test-case",
       "area:tabs",
-      "risk:R-08"
+      "risk:R-08",
+      "wip:test-automator"
     ],
     "updated": "2026-07-30T22:33:29Z",
     "resolution": null,

@@ -5,9 +5,9 @@ issueType: "test-case"
 status: "tc-approved"
 priority: "p1"
 summary: "Kill+relaunch приложения не переоткрывает уже обработанный deep-link"
-assignee: "qa-agents"
+assignee: "test-automator"
 reporter: "qa-agents"
-labels: ["test-case", "area:tabs", "risk:R-08"]
+labels: ["test-case", "area:tabs", "risk:R-08", "wip:test-automator"]
 components: []
 fixVersions: []
 watchers: []

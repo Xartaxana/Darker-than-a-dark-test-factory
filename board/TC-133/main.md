@@ -2,19 +2,19 @@
 key: "TC-133"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Возврат в приложение из recents (без нового deep-link intent) не переоткрывает уже обработанный deep-link"
-assignee: "test-automator"
+assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:tabs", "risk:R-08", "wip:test-automator"]
+labels: ["test-case", "area:tabs", "risk:R-08"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-30T22:33:24Z"
-updated: "2026-07-30T22:33:24Z"
+created: "2026-07-31T00:45:00Z"
+updated: "2026-07-31T00:45:00Z"
 archived: false
 resolution: null
 ---
@@ -82,6 +82,31 @@ Activity БЕЗ флага `-d` (тот же операционный приём
 - Перед первым deep-link'ом дождаться загрузки home
   (`app_steps.wait_home_ready_for_deep_link`) — тот же класс гонки, что в
   TC-022..025/131/132.
+
+**Фактическое поведение (test-automator, 2026-07-31).** Реализовано
+`framework/tests/test_tabs.py::test_background_resume_without_deep_link_keeps_tabs_unchanged`
+— переиспользует `app_steps.wait_home_ready_for_deep_link`/`open_deep_link`/
+`wait_persisted_tab_count`/`assert_persisted_tab_url_at`/`assert_persisted_marker_count`
+(последние два уже в дереве, из TC-131/TC-132). Добавлены два новых шага
+`app_steps.py`: `send_app_to_background` (`adb shell input keyevent
+KEYCODE_HOME` — процесс не завершается) и
+`bring_app_to_foreground_without_deep_link` (`am start -n
+<package>/<activity>` БЕЗ `-d`, тривиальная композиция по образцу
+`open_deep_link`/`restart_app_via_adb`). Оба класса ложно-зелёного негатива
+(докстринг диспатча) закрыты: (1) достижимость эффекта гипотетического бага
+— красная проба реально ОТПРАВЛЯЕТ intent с `-d` (не просто ослабляет
+ассерт), доказывая, что тест ловит настоящее переоткрытие, а не различие
+синтаксиса вызова; (2) позитивный якорь источника — `expected_total=3`
+передан в КАЖДЫЙ вызов `assert_persisted_marker_count` после возврата, и
+набор/порядок из 3 URL зафиксирован через `assert_persisted_tab_url_at` ДО
+возврата (снимок для сравнения) И ПОСЛЕ. Красная проба: временная замена
+`bring_app_to_foreground_without_deep_link()` на `open_deep_link(marker1_url)`
+(симуляция гипотетического бага «возврат из фона переоткрывает последний
+маркер») — тест упал содержательно (`TimeoutError: число вкладок в
+open_tabs_urls не стало 3`, реально стало 4 — marker1 задублировался), порча
+откачена. 3 зелёных прогона подряд целевого теста + `test_tabs.py` целиком
+(9 passed, включая TC-131/132, код которых не тронут). `arch_check` — 0/0.
+Блокера автоматизации не найдено — чек-лист test-designer подтверждён.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»
