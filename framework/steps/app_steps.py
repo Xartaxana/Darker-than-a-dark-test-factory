@@ -169,6 +169,83 @@ def open_deep_link(url: str) -> None:
     adb.shell(f'am start -a android.intent.action.VIEW -d "{url}" {settings.APP_PACKAGE}')
 
 
+@allure.step("Then текущий pid процесса приложения зафиксирован")
+def capture_app_pid() -> str:
+    """TC-133 (critic-блокер B3, attempt 2): снимок pid ДО ухода в фон — для
+    последующей сверки НА РАВЕНСТВО с pid ПОСЛЕ возврата на передний план
+    (`assert_app_pid_unchanged`). `assert_process_alive` доказывает лишь «жив
+    хоть какой-то процесс приложения» — этого недостаточно: если процесс убит
+    СИСТЕМОЙ, пока приложение в фоне, и поднят холодно тем же `am start -n`
+    (вкладки восстанавливаются из prefs), `assert_process_alive` тоже пройдёт,
+    хотя это уже сценарий TC-134 (`force_stop`), а не TC-133 (простой возврат
+    живого процесса). Только сверка pid ДО/ПОСЛЕ различает эти два сценария."""
+    pid = adb.pidof_app()
+    assert pid is not None, "процесс приложения не найден (pidof пуст) до ухода в фон"
+    return pid
+
+
+@allure.step("Then pid процесса приложения не изменился (тот же процесс): было {pid_before}")
+def assert_app_pid_unchanged(pid_before: str) -> None:
+    """TC-133: pid ПОСЛЕ возврата на передний план обязан побайтово совпасть с
+    `pid_before` (см. `capture_app_pid`) — иначе процесс был перезапущен
+    (системой в фоне или иначе), а не просто ушёл в фон и вернулся."""
+    pid_after = adb.pidof_app()
+    assert pid_after == pid_before, (
+        f"pid процесса изменился: было {pid_before!r}, стало {pid_after!r} — "
+        f"процесс НЕ пережил уход в фон (похоже на смерть+холодный перезапуск, "
+        f"сценарий TC-134), а не простой возврат живого процесса (TC-133)"
+    )
+
+
+@allure.step("When приложение отправлено в фон (HOME, процесс не завершается)")
+def send_app_to_background(driver) -> None:
+    """TC-133: `adb shell input keyevent KEYCODE_HOME` уводит Activity в фон
+    (`onPause`/`onStop`), в отличие от `restart_app_via_adb` (`am force-stop`,
+    реальная смерть процесса) — процесс и его in-memory состояние
+    (`deepLinkHandled`, список открытых вкладок) остаются живыми, ничего не
+    сбрасывается.
+
+    Critic-блокер B3 (attempt 2): само по себе отправление keyevent'а не
+    наблюдаемо — `adb.shell` глотает returncode/stderr (см. докстринг
+    `assert_persisted_marker_count`), поэтому тихо не сработавший HOME (сценарий
+    б критика) неотличим от штатного успешного ухода в фон, если не дождаться
+    ЭФФЕКТА. Дожидаемся `driver.query_app_state(APP_PACKAGE) < 4` (Appium
+    `ApplicationState`: 4 == `RUNNING_IN_FOREGROUND`) — приложение реально
+    покинуло передний план. Это же закрывает гонку между HOME и последующим
+    `am start` в `bring_app_to_foreground_without_deep_link` (без ожидания
+    `am start` мог прийти раньше, чем система обработала HOME)."""
+    adb.shell("input keyevent KEYCODE_HOME")
+    wait_for(
+        lambda: driver.query_app_state(settings.APP_PACKAGE) < 4,
+        timeout=10,
+        message=(
+            "приложение не покинуло передний план после KEYCODE_HOME "
+            "(query_app_state осталось RUNNING_IN_FOREGROUND=4) — похоже на "
+            "тихо не сработавший HOME"
+        ),
+    )
+
+
+@allure.step("When приложение возвращено на передний план БЕЗ нового deep-link intent'а")
+def bring_app_to_foreground_without_deep_link() -> None:
+    """TC-133: `am start -n <package>/<activity>` БЕЗ флага `-d` — в отличие от
+    `open_deep_link` (шлёт `-a android.intent.action.VIEW -d "<url>"`, непустой
+    `dataString`), этот intent несёт ПУСТОЙ `dataString`. `MainActivity` объявлен
+    `launchMode="singleTask"` с intent-filter на `archiveofourown.org`
+    (AndroidManifest.xml, см. докстринг `open_deep_link`) — компонентный intent
+    без `-d`, посланный уже запущенному процессу (`singleTask`), тоже матчится
+    через `onNewIntent`->`onResume`, а не перезапускает Activity/процесс — что и
+    доказывает `assert_app_pid_unchanged` рядом с вызовом этого шага (TC-133,
+    critic-блокер B3), а не предполагает недоказанным путём. Отличие от
+    deep-link intent'а — только в том, что `intent.dataString` у этого intent'а
+    `null`, поэтому `handleDeepLink`/`openOrNavigateDeepLink` не вызываются
+    вовсе на этом событии (MainActivity.kt:96-101: `if (!deepLinkHandled) { ...;
+    intent.dataString?.let { handleDeepLink } }` — `dataString` пуст, `let` не
+    выполняется) — это подтверждают Then-шаги теста (набор вкладок не меняется),
+    а не сам этот intent-вызов."""
+    adb.shell(f"am start -n {settings.APP_PACKAGE}/{settings.APP_ACTIVITY}")
+
+
 @allure.step("Then вкладки сохранены в SharedPreferences (сентинел «{sentinel}» найден)")
 def wait_tabs_persisted(sentinel: str, timeout: int = 10) -> None:
     """Опрашивает файл SharedPreferences приложения (`ao3_settings.xml`, через
@@ -381,4 +458,32 @@ def restart_app_via_adb(driver) -> None:
     adb.shell(
         f"am start -W -n {settings.APP_PACKAGE}/{settings.APP_ACTIVITY}",
         timeout=settings.ADB_LAUNCH_TIMEOUT,
+    )
+
+
+@allure.step("When приложение убито и перезапущено — смена pid процесса доказана")
+def restart_app_via_adb_asserting_new_process(driver) -> None:
+    """TC-134 (critic-блокер B1, attempt 2): `restart_app_via_adb` сам по себе
+    ничего не наблюдает — `adb.shell` отбрасывает returncode (см. докстринг
+    `assert_persisted_marker_count`), поэтому тихий отказ `force_stop`
+    (device busy/permission/отвал adb) неотличим от штатного kill+relaunch:
+    `am start -W` без `-d`, посланный уже ЖИВОМУ `singleTask`-процессу, просто
+    доставляет пустой intent через `onNewIntent` (см. докстринг
+    `bring_app_to_foreground_without_deep_link`) — `dataString` пуст что при
+    реальной смерти, что при несработавшем force-stop, поэтому все Then этого
+    теста читают неизменившееся состояние ОБОИХ путей одинаково зелёным, не
+    различив их. Обратная проверка к TC-133 `assert_app_pid_unchanged`
+    (та доказывает «pid НЕ изменился» — процесс пережил переход; здесь
+    наоборот доказывается, что процесс РЕАЛЬНО умер и пересоздался, семантика
+    противоположная, поэтому переиспользование того ассерта было бы
+    некорректным)."""
+    pid_before = adb.pidof_app()
+    assert pid_before is not None, "процесс не найден ДО force-stop — убивать нечего"
+    restart_app_via_adb(driver)
+    pid_after = adb.pidof_app()
+    assert pid_after is not None, "процесс не поднялся после am start -W"
+    assert pid_after != pid_before, (
+        f"pid не изменился ({pid_before}) — am force-stop процесс НЕ убил "
+        "(adb.shell отбрасывает returncode), релонч свёлся к доставке intent'а в "
+        "ЖИВОЙ процесс: холодный старт TC-134 не состоялся"
     )

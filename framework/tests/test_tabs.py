@@ -489,3 +489,160 @@ def test_deep_link_after_home_loaded_creates_second_tab_not_reuse(replay, clean_
     # And вкладка 0 (бывшая единственная, ex-home) сохраняет своё прежнее
     # содержимое без изменений — deep-link её НЕ тронул
     app_steps.assert_persisted_tab_url_at(0, home_loaded_url)
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-133")
+@allure.title("Возврат из recents (без нового deep-link intent) не переоткрывает уже обработанный deep-link")
+@pytest.mark.parametrize("replay", [rb.TAB_MARKER_FILENAME], indirect=True)
+def test_background_resume_without_deep_link_keeps_tabs_unchanged(replay, clean_app, driver):
+    """TC-133: `deepLinkHandled`/`intent.dataString` защищают от повторной
+    обработки deep-link'а не только при холодном перезапуске (TC-134,
+    `force_stop`), но и при простом возврате из фона ЖИВОГО процесса
+    (`onNewIntent`->`onResume` с intent'ом БЕЗ `dataString`,
+    MainActivity.kt:88-101) — marker1/marker2 не переоткрываются повторно,
+    набор/порядок 3 вкладок не меняется."""
+    app_steps.wait_home_ready_for_deep_link(driver)
+
+    home_url = browser_steps.HOME_URL + "/"
+    marker1_url = rb.tab_marker_url(1)
+    marker2_url = rb.tab_marker_url(2)
+
+    # Given открыто 3 вкладки: 0 — Home (полностью догружена), 1 — marker1
+    # (deep-link), 2 — marker2 (deep-link, последний обработанный —
+    # deepLinkHandled==true для него)
+    app_steps.wait_persisted_tab_count(1, timeout=10)
+    app_steps.assert_persisted_tab_url_at(0, home_url)
+
+    app_steps.open_deep_link(marker1_url)
+    app_steps.wait_persisted_tab_count(2, timeout=15)
+    app_steps.open_deep_link(marker2_url)
+    app_steps.wait_persisted_tab_count(3, timeout=15)
+
+    # Позитивный якорь источника ДО возврата — набор/порядок URL, с которым
+    # будет сравниваться состояние ПОСЛЕ возврата (урок TC-131: негативный
+    # Then без предварительно зафиксированного позитивного снимка неотличим
+    # от вакуумного прохода на пустом/битом чтении prefs).
+    app_steps.assert_persisted_tab_url_at(0, home_url)
+    app_steps.assert_persisted_tab_url_at(1, marker1_url)
+    app_steps.assert_persisted_tab_url_at(2, marker2_url)
+
+    # Снимок pid ДО ухода в фон (critic-блокер B3, attempt 2): единственное,
+    # что отличает TC-133 от TC-134 (кейс сам предупреждает об этом,
+    # TC-133.md:68-71) — предпосылка «процесс жив», а не просто «есть какой-то
+    # процесс с этим именем» (тот прошёл бы и на холодном перезапуске).
+    pid_before = app_steps.capture_app_pid()
+
+    # When приложение отправлено в фон (не убито) и возвращено на передний
+    # план БЕЗ отправки нового deep-link intent'а — `am start` на компонент
+    # Activity БЕЗ флага `-d` (в отличие от `open_deep_link`, который явно
+    # шлёт `-a android.intent.action.VIEW -d <url>`). `send_app_to_background`
+    # сама дожидается фактического ухода с переднего плана (query_app_state) —
+    # закрывает гонку между HOME и последующим `am start`.
+    app_steps.send_app_to_background(driver)
+    app_steps.bring_app_to_foreground_without_deep_link()
+    app_steps.wait_ui_ready(driver)
+
+    # Сверка pid ПОСЛЕ возврата — доказывает, что это ТОТ ЖЕ процесс, а не
+    # холодный перезапуск, восстановивший вкладки из prefs (сценарий TC-134).
+    app_steps.assert_app_pid_unchanged(pid_before)
+
+    # Then число вкладок остаётся 3 — позитивный якорь `wait_persisted_tab_count`
+    # доказывает, что снимок реально прочитан (не вакуумно пуст)
+    app_steps.wait_persisted_tab_count(3, timeout=10)
+
+    # And набор URL и их порядок — теми же, что до возврата
+    app_steps.assert_persisted_tab_url_at(0, home_url)
+    app_steps.assert_persisted_tab_url_at(1, marker1_url)
+    app_steps.assert_persisted_tab_url_at(2, marker2_url)
+
+    # And ни marker1, ни marker2 НЕ переоткрылись повторно (нет дубликата
+    # вкладки с тем же URL) — ровно по 1 вхождению каждого маркера;
+    # `expected_total=3` — позитивный якорь ДЛЯ КАЖДОГО вызова (не только
+    # первого): доказывает, что каждое отдельное чтение prefs реально
+    # застало непустой/валидный снимок, а не вакуумный `[]` на отвалившемся
+    # adb/run-as (класс дефекта, отклонённый критиком на TC-131 attempt 1).
+    app_steps.assert_persisted_marker_count(marker1_url, 1, expected_total=3)
+    app_steps.assert_persisted_marker_count(marker2_url, 1, expected_total=3)
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-134")
+@allure.title("Kill+relaunch приложения не переоткрывает уже обработанный deep-link")
+@pytest.mark.parametrize("replay", [rb.TAB_MARKER_FILENAME], indirect=True)
+def test_kill_relaunch_without_deep_link_keeps_tabs_unchanged(replay, clean_app, driver):
+    """TC-134: `deepLinkHandled`/`intent.dataString` защищают от повторной
+    обработки deep-link'а не только при простом возврате из фона живого
+    процесса (TC-133), но и после РЕАЛЬНОЙ смерти процесса
+    (`adb shell am force-stop` + `am start -W` БЕЗ `-d`, тот же приём, что
+    TC-025) — `deepLinkHandled` пересоздаётся в `false` вместе с процессом, но
+    `intent.dataString` intent'а релонча пуст, поэтому `handleDeepLink` не
+    вызывается вовсе: marker1/marker2 не переоткрываются повторно,
+    набор/порядок 3 вкладок не меняется. Различие от TC-133: там процесс
+    остаётся живым (background/foreground через HOME), здесь — реальная
+    смерть процесса (`force_stop`); общий защитный механизм проверяется через
+    разные жизненные циклы, отдельными кейсами."""
+    app_steps.wait_home_ready_for_deep_link(driver)
+
+    home_url = browser_steps.HOME_URL + "/"
+    marker1_url = rb.tab_marker_url(1)
+    marker2_url = rb.tab_marker_url(2)
+
+    # Given открыто 3 вкладки: 0 — Home (полностью догружена), 1 — marker1
+    # (deep-link), 2 — marker2 (deep-link, последний обработанный —
+    # deepLinkHandled==true для него)
+    app_steps.wait_persisted_tab_count(1, timeout=10)
+    app_steps.assert_persisted_tab_url_at(0, home_url)
+
+    app_steps.open_deep_link(marker1_url)
+    app_steps.wait_persisted_tab_count(2, timeout=15)
+    app_steps.open_deep_link(marker2_url)
+    app_steps.wait_persisted_tab_count(3, timeout=15)
+
+    # Позитивный якорь источника ДО kill+relaunch — набор/порядок URL, с
+    # которым будет сравниваться состояние ПОСЛЕ релонча (урок TC-131:
+    # негативный Then без предварительно зафиксированного позитивного снимка
+    # неотличим от вакуумного прохода на пустом/битом чтении prefs).
+    app_steps.assert_persisted_tab_url_at(0, home_url)
+    app_steps.assert_persisted_tab_url_at(1, marker1_url)
+    app_steps.assert_persisted_tab_url_at(2, marker2_url)
+
+    # Подтверждение реальной записи на диск ДО убийства процесса — опрос
+    # самого файла SharedPreferences (не UI): `saveTabsToPrefs` дебаунсит
+    # запись на 500мс после последнего изменения (`scheduleSave`,
+    # BrowserViewModel.kt), `force_stop` до истечения этого окна теряет
+    # несохранённое состояние безвозвратно (тот же класс, что TC-025). Gson
+    # эскейпит `=` в URL как юникод-escape внутри JSON (сверено на живом
+    # файле устройства при разведке TC-025) — сентинел собран под фактический
+    # формат записи.
+    app_steps.wait_tabs_persisted(marker2_url.replace("=", "\\u003d"))
+
+    # When процесс приложения принудительно убит (`adb shell am force-stop`,
+    # реальная смерть процесса — ДОКАЗАНА сменой pid, не только вызовом
+    # force-stop, см. критик-блокер B1 attempt 2) и запущен заново БЕЗ
+    # deep-link intent'а (`am start -W` на компонент Activity без `-d`)
+    app_steps.restart_app_via_adb_asserting_new_process(driver)
+    app_steps.wait_ui_ready(driver)
+
+    # Then после релонча снова 3 вкладки — позитивный якорь
+    # `wait_persisted_tab_count` доказывает, что снимок реально прочитан (не
+    # вакуумно пуст)
+    app_steps.wait_persisted_tab_count(3, timeout=20)
+
+    # And в исходном порядке, URL каждой совпадают с теми, что были до
+    # убийства процесса
+    app_steps.assert_persisted_tab_url_at(0, home_url)
+    app_steps.assert_persisted_tab_url_at(1, marker1_url)
+    app_steps.assert_persisted_tab_url_at(2, marker2_url)
+
+    # And ни marker1, ни marker2 НЕ переоткрылись повторно доп. вкладкой
+    # (нет дубликата вкладки с тем же URL) — ровно по 1 вхождению каждого
+    # маркера, счёт остаётся ровно 3 (не 4/5); `expected_total=3` — позитивный
+    # якорь ДЛЯ КАЖДОГО вызова (не только первого): доказывает, что каждое
+    # отдельное чтение prefs реально застало непустой/валидный снимок, а не
+    # вакуумный `[]` на отвалившемся adb/run-as (класс дефекта, отклонённый
+    # критиком на TC-131 attempt 1).
+    app_steps.assert_persisted_marker_count(marker1_url, 1, expected_total=3)
+    app_steps.assert_persisted_marker_count(marker2_url, 1, expected_total=3)
