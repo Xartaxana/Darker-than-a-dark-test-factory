@@ -15,9 +15,12 @@ def test_mechanism_paths_filters_ao3_prefixes_with_boundary():
     staged = ["CLAUDE.md", ".claude/agents/scout.md",
               ".claude/skills/qa-loop/SKILL.md", "schemas/agent-output.json",
               "state/rules.yaml", "scripts/log_append.py", "framework/conftest.py"]
+    # 2026-07-31: log_append.py ВНУТРИ невода (журнальный гейт — механизм
+    # по D-0065; до этого стоял здесь негативным примером — граница
+    # сдвинута сознательно, находка critic при ревью AT-BUG-033).
     assert mg.mechanism_paths(staged) == [
         "CLAUDE.md", ".claude/agents/scout.md", ".claude/skills/qa-loop/SKILL.md",
-        "schemas/agent-output.json", "state/rules.yaml"]
+        "schemas/agent-output.json", "state/rules.yaml", "scripts/log_append.py"]
     # F-D: файловые префиксы матчатся точно.
     assert mg.mechanism_paths(["CLAUDE.md.bak", "state/rules.yaml.orig"]) == []
     # D-0065 OS-репо: самозащита цепочки; прочие scripts/ вне (D-0055).
@@ -25,6 +28,10 @@ def test_mechanism_paths_filters_ao3_prefixes_with_boundary():
                                ".githooks/commit-msg"]) == [
         "scripts/mechanism_gate.py", ".githooks/commit-msg"]
     assert mg.mechanism_paths(["scripts/board_sync.py"]) == []
+    # Граница невода вокруг журнального гейта: сам файл — механизм,
+    # его тесты — нет.
+    assert mg.mechanism_paths(["scripts/tests/test_log_append.py"]) == []
+    assert mg.mechanism_paths(["scripts/log_append.py.bak"]) == []
     # 2026-07-23: срез карты — вход гейта, тихая правка = обход осей.
     assert mg.mechanism_paths(["state/sibling-map.snapshot.md"]) == [
         "state/sibling-map.snapshot.md"]
