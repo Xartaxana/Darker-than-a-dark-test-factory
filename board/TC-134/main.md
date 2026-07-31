@@ -2,19 +2,19 @@
 key: "TC-134"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Kill+relaunch приложения не переоткрывает уже обработанный deep-link"
-assignee: "test-automator"
+assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:tabs", "risk:R-08", "wip:test-automator"]
+labels: ["test-case", "area:tabs", "risk:R-08"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-30T22:33:29Z"
-updated: "2026-07-30T22:33:29Z"
+created: "2026-07-31T00:51:29Z"
+updated: "2026-07-31T00:51:29Z"
 archived: false
 resolution: null
 ---
@@ -83,6 +83,30 @@ SharedPreferences — отсутствие `deepLinkHandled` (пересозда
 - Перед первым deep-link'ом (создание вкладок 1/2 в Given) дождаться загрузки home
   (`app_steps.wait_home_ready_for_deep_link`) — тот же класс гонки, что в
   TC-022..025/131/132/133.
+
+**Фактическое поведение (test-automator, 2026-07-31).** Реализовано
+`framework/tests/test_tabs.py::test_kill_relaunch_without_deep_link_keeps_tabs_unchanged`
+— переиспользует ГОТОВЫЕ шаги `app_steps.wait_home_ready_for_deep_link`/
+`open_deep_link`/`wait_persisted_tab_count`/`assert_persisted_tab_url_at`/
+`assert_persisted_marker_count`/`wait_tabs_persisted`/`restart_app_via_adb`/
+`wait_ui_ready` (все уже в дереве из TC-025/131/132/133); новых шагов в
+`app_steps.py` не добавлено — весь путь уже покрыт. Структура теста —
+прямой аналог TC-133 с заменой `send_app_to_background`+
+`bring_app_to_foreground_without_deep_link` на `wait_tabs_persisted` (сентинел
+на диск перед убийством процесса) + `restart_app_via_adb` (реальная смерть
+процесса). Оба класса ложно-зелёного негатива (докстринг диспатча) закрыты:
+(1) достижимость эффекта гипотетического бага — красная проба реально
+ОТПРАВЛЯЕТ `open_deep_link(marker1_url)` СРАЗУ ПОСЛЕ релонча (не просто
+ослабляет ассерт), симулируя баг «релонч почему-то переоткрывает последний
+маркер»; тест упал содержательно (`AssertionError: общее число вкладок в
+open_tabs_urls: 4, ожидали 3`), порча откачена; (2) позитивный якорь
+источника — `expected_total=3` передан в КАЖДЫЙ вызов
+`assert_persisted_marker_count` после релонча, набор/порядок 3 URL
+зафиксирован через `assert_persisted_tab_url_at` ДО kill+relaunch И ПОСЛЕ.
+3 зелёных прогона подряд целевого теста + полный `test_tabs.py` (10 passed,
+361.65s, включая 9 существующих тестов, код которых не тронут). `arch_check`
+— 0/0. Блокера автоматизации не найдено — чек-лист test-designer
+подтверждён.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»

@@ -293,3 +293,4 @@ qa-orchestrator. Скрипты pre_steps (stale_locks и др.) тоже пиш
 | 2026-07-31T00:20:17Z | Автоматизировать Approved-кейс | test-automator | TC-131 | success attempt 2: B1/B2 исправлены (expected_message/expected_total параметры), red probe оба содержательны, полный test_tabs.py 8 passed (TC-132 не тронут), arch_check/validate_frontmatter 0/0; уходит на узкий критик-вход attempt 2 |
 | 2026-07-31T00:27:01Z | Автоматизировать Approved-кейс | test-automator | TC-131 | accepted (critic attempt 2 PASS, basis=critic) - B1/B2 закрыты |
 | 2026-07-31T00:27:01Z | Автоматизировать Approved-кейс | test-automator | TC-132 | accepted (basis=critic, де-факто дважды сверен как сосед TC-131) |
+| 2026-07-31T00:53:34Z | Автоматизировать Approved-кейс | test-automator | TC-134 | success: 3x green + red probe + full-module 10 passed + arch_check/validate_frontmatter 0/0; уходит на critic-вход с вопросом про верификацию смерти процесса (класс, поднятый критиком на TC-133) |
