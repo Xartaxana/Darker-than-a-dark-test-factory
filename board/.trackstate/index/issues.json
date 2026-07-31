@@ -2924,14 +2924,13 @@
     "issueType": "test-case",
     "status": "tc-awaiting-review",
     "priority": "p1",
-    "assignee": "test-automator",
+    "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:tabs",
-      "risk:R-08",
-      "wip:test-automator"
+      "risk:R-08"
     ],
-    "updated": "2026-07-31T00:51:29Z",
+    "updated": "2026-07-31T02:10:00Z",
     "resolution": null,
     "children": [],
     "archived": false
