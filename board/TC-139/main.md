@@ -2,9 +2,9 @@
 key: "TC-139"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
-summary: "Правка личного тега уже-Kudosed/Favorite работы через листинг повторно отправляет kudos (edge vs level, ядро BUG-015, :856)"
+summary: "Правка личного тега уже-Kudosed/Favorite работы через листинг НЕ отправляет kudos повторно (ожидаемо-красный до фикса BUG-015; edge vs level, :856)"
 assignee: "qa-agents"
 reporter: "qa-agents"
 labels: ["test-case", "area:rating", "risk:R-17"]
@@ -13,18 +13,18 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-31T21:00:00Z"
-updated: "2026-07-31T21:00:00Z"
+created: "2026-08-01T15:59:07Z"
+updated: "2026-08-01T15:59:07Z"
 archived: false
 resolution: null
 ---
 
-# Правка личного тега уже-Kudosed/Favorite работы через листинг повторно отправляет kudos (edge vs level, ядро BUG-015, :856)
+# Правка личного тега уже-Kudosed/Favorite работы через листинг НЕ отправляет kudos повторно (ожидаемо-красный до фикса BUG-015; edge vs level, :856)
 
 _Спроецировано из `test-cases/rating/TC-139.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
-# TC-139 — Ядро BUG-015: правка тега уже-Kudosed работы через листинг повторно кликает kudos
+# TC-139 — Правка тега уже-Kudosed работы через листинг НЕ кликает kudos повторно (ожидаемо-красный замок BUG-015)
 
 ## Предусловия
 - Приложение запущено, режим replay (`listing_basic.mitm`, после фикса

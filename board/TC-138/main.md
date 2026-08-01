@@ -2,7 +2,7 @@
 key: "TC-138"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Первый переход рейтинга в Kudosed через листинг при открытой вкладке работы отправляет kudos ровно один раз (позитивная граница)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-31T21:00:00Z"
-updated: "2026-07-31T21:00:00Z"
+created: "2026-08-01T15:51:41Z"
+updated: "2026-08-01T15:51:41Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Первый переход рейтинга в Kudosed через листинг при открытой вкладке работы отправляет kudos ровно один раз (позитивная граница)
 
 _Спроецировано из `test-cases/rating/TC-138.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-138 — Позитивная граница: первый переход в Kudosed при открытой вкладке работы шлёт kudos один раз
 

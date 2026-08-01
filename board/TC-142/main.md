@@ -2,7 +2,7 @@
 key: "TC-142"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Смена рейтинга через листинг с Kudosed на Read не отправляет kudos"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-31T21:00:00Z"
-updated: "2026-07-31T21:00:00Z"
+created: "2026-08-01T15:56:37Z"
+updated: "2026-08-01T15:56:37Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Смена рейтинга через листинг с Kudosed на Read не отправляет kudos
 
 _Спроецировано из `test-cases/rating/TC-142.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-142 — Переход Kudosed → Read через листинг не кликает kudos
 

@@ -2,7 +2,7 @@
 key: "TC-136"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Тап по телу карточки Library открывает работу в новой активной вкладке Browse"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-31T02:00:00Z"
-updated: "2026-07-31T02:00:00Z"
+created: "2026-08-01T15:50:12Z"
+updated: "2026-08-01T15:50:12Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Тап по телу карточки Library открывает работу в новой активной вкладке Browse
 
 _Спроецировано из `test-cases/library/TC-136.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-136 — Тап по телу карточки Library открывает работу в новой активной вкладке Browse
 

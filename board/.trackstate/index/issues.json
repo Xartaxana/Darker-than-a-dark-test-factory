@@ -1801,7 +1801,7 @@
     "epicPath": null,
     "summary": "Тап по телу карточки Library открывает работу в новой активной вкладке Browse",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1809,7 +1809,7 @@
       "area:library",
       "risk:R-08"
     ],
-    "updated": "2026-07-31T02:00:00Z",
+    "updated": "2026-08-01T15:50:12Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1823,15 +1823,15 @@
     "epicPath": null,
     "summary": "Тап по карточке Library на потолке 10 вкладок не открывает работу — диалог лимита, активная вкладка не меняется, экран всё равно переключается на Browse",
     "issueType": "test-case",
-    "status": "tc-review",
-    "priority": "p1",
+    "status": "tc-awaiting-review",
+    "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:library",
       "risk:R-08"
     ],
-    "updated": "2026-07-31T02:00:00Z",
+    "updated": "2026-08-01T15:58:21Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2259,7 +2259,7 @@
     "epicPath": null,
     "summary": "Первый переход рейтинга в Kudosed через листинг при открытой вкладке работы отправляет kudos ровно один раз (позитивная граница)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2267,7 +2267,7 @@
       "area:rating",
       "risk:R-17"
     ],
-    "updated": "2026-07-31T21:00:00Z",
+    "updated": "2026-08-01T15:51:41Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2279,9 +2279,9 @@
     "epic": null,
     "parentPath": null,
     "epicPath": null,
-    "summary": "Правка личного тега уже-Kudosed/Favorite работы через листинг повторно отправляет kudos (edge vs level, ядро BUG-015, :856)",
+    "summary": "Правка личного тега уже-Kudosed/Favorite работы через листинг НЕ отправляет kudos повторно (ожидаемо-красный до фикса BUG-015; edge vs level, :856)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2289,7 +2289,7 @@
       "area:rating",
       "risk:R-17"
     ],
-    "updated": "2026-07-31T21:00:00Z",
+    "updated": "2026-08-01T15:59:07Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2303,15 +2303,15 @@
     "epicPath": null,
     "summary": "Простановка Kudosed через листинг без открытой вкладки работы не отправляет kudos (граница отсутствия вкладки, :857-858)",
     "issueType": "test-case",
-    "status": "tc-review",
-    "priority": "p1",
+    "status": "tc-approved",
+    "priority": "p3",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:rating",
       "risk:R-17"
     ],
-    "updated": "2026-07-31T21:00:00Z",
+    "updated": "2026-08-01T15:59:13Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2325,7 +2325,7 @@
     "epicPath": null,
     "summary": "Правка личного тега уже-Favorite работы через панель work-страницы не отправляет kudos (асимметрия путей, :743-758)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2333,7 +2333,7 @@
       "area:rating",
       "risk:R-17"
     ],
-    "updated": "2026-07-31T21:00:00Z",
+    "updated": "2026-08-01T15:54:39Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2347,7 +2347,7 @@
     "epicPath": null,
     "summary": "Смена рейтинга через листинг с Kudosed на Read не отправляет kudos",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2355,7 +2355,7 @@
       "area:rating",
       "risk:R-17"
     ],
-    "updated": "2026-07-31T21:00:00Z",
+    "updated": "2026-08-01T15:56:37Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2369,7 +2369,7 @@
     "epicPath": null,
     "summary": "Снятие рейтинга Kudosed (deselect) через листинг не отправляет kudos",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2377,7 +2377,7 @@
       "area:rating",
       "risk:R-17"
     ],
-    "updated": "2026-07-31T21:00:00Z",
+    "updated": "2026-08-01T15:59:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2391,7 +2391,7 @@
     "epicPath": null,
     "summary": "Первое сохранение LIKE/SAVE через встроенную панель work-страницы (запись ещё не в Room) отправляет kudos ровно один раз — панельная позитивная граница, позитивный контроль TC-141",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2399,7 +2399,7 @@
       "area:rating",
       "risk:R-17"
     ],
-    "updated": "2026-07-31T21:00:00Z",
+    "updated": "2026-08-01T15:56:58Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4041,15 +4041,15 @@
     "epicPath": null,
     "summary": "scripts/log_append.py: нет легального пути для второго delegated критика на ОДИН И ТОТ ЖЕ открытый task_id (review1 → executor attempt2 → review2), когда review1 не был rejected, а вынес вердикт на чужой дифф",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-07-31T18:20:00Z",
-    "resolution": null,
+    "updated": "2026-08-01T16:20:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -4062,7 +4062,7 @@
     "epicPath": null,
     "summary": "render_work_page_html не несёт узел #kudo_submit ни в одной replay-фикстуре — блокирует автоматизацию всей области rating/bridge auto-kudos (TC-138..144, ядро BUG-015)",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -4076,7 +4076,7 @@
       "test_case:TC-144",
       "sev:minor"
     ],
-    "updated": "2026-07-31T21:00:00Z",
+    "updated": "2026-08-01T16:39:52Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4090,7 +4090,7 @@
     "epicPath": null,
     "summary": "app_steps.wait_persisted_tab_count: диагностика «последнее наблюдение» мертва — f-строка message вычисляется до первого опроса, holder всегда None",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -4100,7 +4100,7 @@
       "test_case:TC-136",
       "sev:minor"
     ],
-    "updated": "2026-07-31T18:18:00Z",
+    "updated": "2026-08-01T22:26:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4166,7 +4166,7 @@
       "test_case:TC-020",
       "sev:minor"
     ],
-    "updated": "2026-07-21T15:39:44Z",
+    "updated": "2026-08-01T22:05:00Z",
     "resolution": null,
     "children": [],
     "archived": false

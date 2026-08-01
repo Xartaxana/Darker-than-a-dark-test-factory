@@ -1,19 +1,19 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-01T15:28:13Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-01T23:05:48Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **731.9** (RUN-20260702-0300)
+- smoke: Closed · smoke_freshness_hours: **739.5** (RUN-20260702-0300)
 - regression: not_run
 - canary: not_run
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **1**
 - p0_automation_coverage: **100%** (37/37)
-- p1_automation_coverage: **89%** (71/80)
-- Test debt открыт: **2** — AT-BUG-035, AT-BUG-036
+- p1_automation_coverage: **91%** (71/78)
+- Test debt открыт: **0**
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
 - Untriaged: **0** · untriaged_failure_age: **0**
@@ -25,7 +25,7 @@ generated_at: 2026-08-01T15:28:13Z · генератор: `scripts/queue_snapsho
 
 ## Тест-кейсы (144)
 
-- Review: **9** · Automated: **134** · Blocked: **1**
+- Approved: **9** · Automated: **134** · Blocked: **1**
 - автотесты (B3): active: **134**
 
 | Область | Draft | Review | Approved | Automated | Blocked |
@@ -38,9 +38,9 @@ generated_at: 2026-08-01T15:28:13Z · генератор: `scripts/queue_snapsho
 | downloads |  |  |  | 14 |  |
 | errors |  |  |  | 1 |  |
 | filter-profiles |  |  |  | 5 |  |
-| library |  | 2 |  | 15 |  |
+| library |  |  | 2 | 15 |  |
 | performance |  |  |  | 4 |  |
-| rating |  | 7 |  | 14 |  |
+| rating |  |  | 7 | 14 |  |
 | security |  |  |  | 6 |  |
 | settings |  |  |  | 10 | 1 |
 | smoke |  |  |  | 5 |  |
@@ -66,11 +66,10 @@ generated_at: 2026-08-01T15:28:13Z · генератор: `scripts/queue_snapsho
 
 - BUG-012 [minor] Open — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
 
-## Test debt (3)
+## Test debt (2)
 
-- AT-BUG-034 [missing_fixture] Fixed — scripts/log_append.py: нет легального пути для второго delegated критика на ОДИН И ТОТ ЖЕ открытый task_id (review1 → executor attempt2 → review2), когда review1 не был rejected, а вынес вердикт на чужой дифф
-- AT-BUG-035 [missing_fixture] Open — render_work_page_html не несёт узел #kudo_submit ни в одной replay-фикстуре — блокирует автоматизацию всей области rating/bridge auto-kudos (TC-138..144, ядро BUG-015)
-- AT-BUG-036 [flaky_test] Open — app_steps.wait_persisted_tab_count: диагностика «последнее наблюдение» мертва — f-строка message вычисляется до первого опроса, holder всегда None
+- AT-BUG-035 [missing_fixture] Fixed — render_work_page_html не несёт узел #kudo_submit ни в одной replay-фикстуре — блокирует автоматизацию всей области rating/bridge auto-kudos (TC-138..144, ядро BUG-015)
+- AT-BUG-036 [flaky_test] Fixed — app_steps.wait_persisted_tab_count: диагностика «последнее наблюдение» мертва — f-строка message вычисляется до первого опроса, holder всегда None
 
 ## Прогоны (1)
 
@@ -78,19 +77,20 @@ generated_at: 2026-08-01T15:28:13Z · генератор: `scripts/queue_snapsho
 
 ## Exploratory
 
-- Planned: **1** · Done: **6**
-- charters_executed: **6**
+- Done: **7**
+- charters_executed: **7**
 - bugs_per_charter: **1.0**
-- new_tc_from_charters: **5**
+- new_tc_from_charters: **10**
 
 ## Активные локи (0)
 
 - нет
 
-## Эскалации (5)
+## Эскалации (6)
 
 - [2026-07-21T08:57:20Z] **BUG-012** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-18T12:00:00Z | нужно: ответить в ## Обсуждение
 - [2026-07-21T08:57:20Z] **TC-020** [sla:blocked_any] — в Blocked с 2026-07-19T09:55:00Z (причина: product_decision) | нужно: разобрать причину и вывести из Blocked
 - [2026-07-21T22:43:25Z] **BUG-013** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-19T17:30:00Z | нужно: ответить в ## Обсуждение
 - [2026-07-24T05:10:04Z] **BUG-011** [sla:bug_open_major] — major-баг open с 2026-07-15T14:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
 - [2026-07-30T12:38:12Z] **BUG-016** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-28T12:00:00Z | нужно: ответить в ## Обсуждение
+- [2026-08-01T16:01:07Z] **BUG-017** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-30T00:00:00Z | нужно: ответить в ## Обсуждение

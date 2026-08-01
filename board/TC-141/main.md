@@ -2,7 +2,7 @@
 key: "TC-141"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Правка личного тега уже-Favorite работы через панель work-страницы не отправляет kudos (асимметрия путей, :743-758)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-31T21:00:00Z"
-updated: "2026-07-31T21:00:00Z"
+created: "2026-08-01T15:54:39Z"
+updated: "2026-08-01T15:54:39Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Правка личного тега уже-Favorite работы через панель work-страницы не отправляет kudos (асимметрия путей, :743-758)
 
 _Спроецировано из `test-cases/rating/TC-141.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-141 — Асимметрия путей: панель work-страницы не кликает kudos даже там, где листинг кликает (баг)
 

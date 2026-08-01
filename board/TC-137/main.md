@@ -2,8 +2,8 @@
 key: "TC-137"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
-priority: "p1"
+status: "tc-awaiting-review"
+priority: "p2"
 summary: "Тап по карточке Library на потолке 10 вкладок не открывает работу — диалог лимита, активная вкладка не меняется, экран всё равно переключается на Browse"
 assignee: "qa-agents"
 reporter: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-31T02:00:00Z"
-updated: "2026-07-31T02:00:00Z"
+created: "2026-08-01T15:58:21Z"
+updated: "2026-08-01T15:58:21Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Тап по карточке Library на потолке 10 вкладок не открывает работу — диалог лимита, активная вкладка не меняется, экран всё равно переключается на Browse
 
 _Спроецировано из `test-cases/library/TC-137.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-137 — Тап по карточке Library на потолке 10 вкладок: диалог лимита, вкладка не создаётся, но экран всё равно переключается на Browse
 

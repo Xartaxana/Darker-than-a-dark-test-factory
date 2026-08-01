@@ -2,8 +2,8 @@
 key: "TC-140"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
-priority: "p1"
+status: "tc-approved"
+priority: "p3"
 summary: "Простановка Kudosed через листинг без открытой вкладки работы не отправляет kudos (граница отсутствия вкладки, :857-858)"
 assignee: "qa-agents"
 reporter: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-31T21:00:00Z"
-updated: "2026-07-31T21:00:00Z"
+created: "2026-08-01T15:59:13Z"
+updated: "2026-08-01T15:59:13Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Простановка Kudosed через листинг без открытой вкладки работы не отправляет kudos (граница отсутствия вкладки, :857-858)
 
 _Спроецировано из `test-cases/rating/TC-140.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-140 — Граница: без открытой вкладки работы kudos не отправляется вовсе
 

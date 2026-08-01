@@ -1,0 +1,466 @@
+[00:45:12] === SEED1 setup done
+[00:45:12]     ROOM[t0 seeded] n=4: {"900000001": {"comment": "note A original", "fandom": "Fandom Alpha", "rating": "SAVE", "tags": ["fluff", "тег с пробелом"], "word_count": 4200}, "900000002": {"comment": "note B original", "fandom": "Fandom Beta", "rating": "LIKE", "tags": ["angst"], "word_count": 1500}, "900000003": {"comment": null, "fandom": "Fandom Gamma", "rating": "READ", "tags": null, "word_count": 800}, "900000004": {"comment": null, "fandom": "Fandom Delta", "rating": "PENDING", "tags": null, "word_count": 12000}}
+[00:45:12]     PROFILES[t0 seeded]: [{"name": "CH007 fluff search", "queryString": "work_search%5Bquery%5D=fluff"}, {"name": "CH007 winter search", "queryString": "work_search%5Bquery%5D=winter"}]
+[00:45:12]     PREFS[t0 after clean_state]: 
+[00:45:22] --- STEP: wait_app_ready
+[00:45:27]     OK: wait_app_ready
+[00:45:27] --- STEP: Settings -> Back up
+[00:45:40]     OK: Settings -> Back up
+[00:45:40] --- STEP: tap Back up
+[00:45:40]     OK: tap Back up
+[00:45:40] --- STEP: SAF save
+[00:45:50]     TEXTS[Backup created]: ['Backup created', 'Backed up 4 works, 2 filters.', 'OK']
+[00:45:50] SHOT 01_s1_backup_created.png
+[00:45:51]     OK: SAF save
+[00:45:51]     LS[backup] /sdcard/Download/ch007_seed1.json: -rw-rw---- 1 u0_a136 media_rw 1984 2026-08-01 22:45 /sdcard/Download/ch007_seed1.json
+[00:45:51]     BACKUP JSON RAW: {
+  "version": 2,
+  "works": [
+    {
+      "ao3Id": "900000001",
+      "title": "A Loved Test Work",
+      "author": "seed_author_a",
+      "url": "https:\/\/archiveofourown.org\/works\/900000001",
+      "rating": "SAVE",
+      "comment": "note A original",
+      "fandom": "Fandom Alpha",
+      "wordCount": 4200,
+      "tags": [
+        "fluff",
+        "С‚РµРі СЃ РїСЂРѕР±РµР»РѕРј"
+      ],
+      "timestamp": 1785624311322,
+      "downloadFile": null
+    },
+    {
+      "ao3Id": "900000002",
+      "title": "A Kudosed Test Work",
+      "author": "seed_author_b",
+      "url": "https:\/\/archiveofourown.org\/works\/900000002",
+      "rating": "LIKE",
+      "comment": "note B original",
+      "fandom": "Fandom Beta",
+      "wordCount": 1500,
+      "tags": [
+        "angst"
+      ],
+      "timestamp": 1785624311322,
+      "downloadFile": null
+    },
+    {
+      "ao3Id": "900000003",
+      "title": "A Read Test Work",
+      "author": "seed_author_c",
+      "url": "https:\/\/archiveofourown.org\/works\/900000003",
+      "rating": "READ",
+      "comment": null,
+      "fandom": "Fandom Gamma",
+      "wordCount": 800,
+      "tags": null,
+      "timestamp": 1785624311322,
+      "downloadFile": null
+    },
+    {
+      "ao3Id": "900000004",
+      "title": "A Pending Test Work",
+      "author": "seed_author_d",
+      "url": "https:\/\/archiveofourown.org\/works\/900000004",
+      "rating": "PENDING",
+      "comment": null,
+      "fandom": "Fandom Delta",
+      "wordCount": 12000,
+      "tags": null,
+      "timestamp": 1785624311322,
+      "downloadFile": null
+    }
+  ],
+  "filterProfiles": [
+    {
+      "id": "0e9927cd-4e93-43bf-856c-6c1db1b5ed82",
+      "name": "CH007 winter search",
+      "queryString": "work_search%5Bquery%5D=winter",
+      "timestamp": 1785624311856
+    },
+    {
+      "id": "0ac0e91d-33d3-438b-b642-f2eea501a037",
+      "name": "CH007 fluff search",
+      "queryString": "work_search%5Bquery%5D=fluff",
+      "timestamp": 1785624311856
+    }
+  ]
+}
+[00:45:51]     BACKUP TOP KEYS: ['filterProfiles', 'version', 'works']
+[00:45:51]     BACKUP works[0] keys: ['ao3Id', 'author', 'comment', 'downloadFile', 'fandom', 'rating', 'tags', 'timestamp', 'title', 'url', 'wordCount']
+[00:45:51]     BACKUP works ids: ['900000001', '900000002', '900000003', '900000004']
+[00:45:51]     BACKUP profiles: [{'id': '0e9927cd-4e93-43bf-856c-6c1db1b5ed82', 'name': 'CH007 winter search', 'queryString': 'work_search%5Bquery%5D=winter', 'timestamp': 1785624311856}, {'id': '0ac0e91d-33d3-438b-b642-f2eea501a037', 'name': 'CH007 fluff search', 'queryString': 'work_search%5Bquery%5D=fluff', 'timestamp': 1785624311856}]
+[00:45:51] --- STEP: open Browse
+[00:45:52]     OK: open Browse
+[00:45:52] --- STEP: open listing
+[00:45:54]     OK: open listing
+[00:45:54] SHOT 02_s1_listing_before.png
+[00:45:54] --- STEP: tap rate A
+[00:45:55]     OK: tap rate A
+[00:45:55] --- STEP: A: rating -> Kudosed
+[00:45:56]     OK: A: rating -> Kudosed
+[00:45:56]     TEXTS[s1 overlay A open]: ['A Loved Test Work', 'seed_author_a', 'Download', 'Favorite', 'Kudosed', 'Read', 'Pending', 'Dislike', 'note A original', 'Saved tags (2)', 'Expand panel']
+[00:45:56] --- STEP: A: раскрыть превью заметки
+[00:45:57]     OK: A: раскрыть превью заметки
+[00:45:57] --- STEP: A: note -> changed
+[00:45:57]     OK: A: note -> changed
+[00:45:58] SHOT 03_s1_overlay_A_changed.png
+[00:45:58] --- STEP: dismiss overlay
+[00:45:58]     OK: dismiss overlay
+[00:45:58] --- STEP: tap rate E
+[00:45:59]     OK: tap rate E
+[00:45:59] --- STEP: E: rating -> Pending
+[00:46:00]     OK: E: rating -> Pending
+[00:46:00] --- STEP: dismiss overlay
+[00:46:00]     OK: dismiss overlay
+[00:46:00]     ROOM[t1 after listing edits] n=5: {"900000001": {"comment": "note A originalnote A CHANGED after backup", "fandom": "Fandom Alpha", "rating": "LIKE", "tags": ["fluff", "тег с пробелом"], "word_count": 4200}, "900000002": {"comment": "note B original", "fandom": "Fandom Beta", "rating": "LIKE", "tags": ["angst"], "word_count": 1500}, "900000003": {"comment": null, "fandom": "Fandom Gamma", "rating": "READ", "tags": null, "word_count": 800}, "900000004": {"comment": null, "fandom": "Fandom Delta", "rating": "PENDING", "tags": null, "word_count": 12000}, "900000005": {"comment": null, "fandom": "Fandom Eps", "rating": "PENDING", "tags": null, "word_count": 300}}
+[00:46:00] --- STEP: open Library
+[00:46:05]     OK: open Library
+[00:46:05] --- STEP: open LIKE tab
+[00:46:06]     OK: open LIKE tab
+[00:46:06] SHOT 04_s1_library_like_tab.png
+[00:46:06] --- STEP: delete work B
+[00:46:09]     OK: delete work B
+[00:46:10]     ROOM[t2 after delete B] n=4: {"900000001": {"comment": "note A originalnote A CHANGED after backup", "fandom": "Fandom Alpha", "rating": "LIKE", "tags": ["fluff", "тег с пробелом"], "word_count": 4200}, "900000003": {"comment": null, "fandom": "Fandom Gamma", "rating": "READ", "tags": null, "word_count": 800}, "900000004": {"comment": null, "fandom": "Fandom Delta", "rating": "PENDING", "tags": null, "word_count": 12000}, "900000005": {"comment": null, "fandom": "Fandom Eps", "rating": "PENDING", "tags": null, "word_count": 300}}
+[00:46:10] --- STEP: Settings -> profiles
+[00:46:14]     OK: Settings -> profiles
+[00:46:14] --- STEP: rename P1
+[00:46:17]     OK: rename P1
+[00:46:17] --- STEP: delete P2
+[00:46:18]     OK: delete P2
+[00:46:18]     PROFILES[t3 after profile edits]: [{"name": "P1 RENAMED locally", "queryString": "work_search%5Bquery%5D=winter"}]
+[00:46:19] SHOT 05_s1_profiles_after_edit.png
+[00:46:19] --- STEP: scroll to Theme
+[00:46:44]     OK: scroll to Theme
+[00:46:44] --- STEP: theme DARK
+[00:46:44]     OK: theme DARK
+[00:46:44] --- STEP: scroll to tap-to-scroll
+[00:46:46]     OK: scroll to tap-to-scroll
+[00:46:46] --- STEP: tap_to_scroll ON
+[00:46:47]     OK: tap_to_scroll ON
+[00:46:47] --- STEP: scroll to infinite scroll
+[00:46:48]     OK: scroll to infinite scroll
+[00:46:48] --- STEP: infinite scroll OFF
+[00:46:49]     OK: infinite scroll OFF
+[00:46:49]     PREFS[t4 before restore]: <?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <string name="theme_mode">DARK</string>
+    <int name="active_tab_index" value="0" />
+    <boolean name="infinite_scroll" value="false" />
+    <boolean name="tap_to_scroll" value="true" />
+    <string name="open_tabs_urls">[{&quot;historyEntries&quot;:[{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/&quot;},{&quot;scrollY&quot;:593,&quot;url&quot;:&quot;https://archiveofourown.org/works?ao3_companion_fixture\u003dlisting_basic&quot;}],&quot;historyIndex&quot;:1,&quot;scrollY&quot;:593,&quot;url&quot;:&quot;https://archiveofourown.org/works?ao3_companion_fixture\u003dlisting_basic&quot;}]</string>
+</map>
+[00:46:49]     ROOM[t4 BEFORE restore] n=4: {"900000001": {"comment": "note A originalnote A CHANGED after backup", "fandom": "Fandom Alpha", "rating": "LIKE", "tags": ["fluff", "тег с пробелом"], "word_count": 4200}, "900000003": {"comment": null, "fandom": "Fandom Gamma", "rating": "READ", "tags": null, "word_count": 800}, "900000004": {"comment": null, "fandom": "Fandom Delta", "rating": "PENDING", "tags": null, "word_count": 12000}, "900000005": {"comment": null, "fandom": "Fandom Eps", "rating": "PENDING", "tags": null, "word_count": 300}}
+[00:46:50]     PROFILES[t4 BEFORE restore]: [{"name": "P1 RENAMED locally", "queryString": "work_search%5Bquery%5D=winter"}]
+[00:46:50] --- STEP: Settings -> Restore
+[00:46:55]     OK: Settings -> Restore
+[00:46:55] --- STEP: tap Restore
+[00:46:55]     OK: tap Restore
+[00:46:55] --- STEP: SAF pick file (restore #1)
+[00:47:03]     TEXTS[Backup restored #1]: ['Backup restored', 'Restored 1 works, 1 filters (3 works already existed).', 'OK']
+[00:47:04] SHOT 06_s1_restore1_dialog.png
+[00:47:04]     OK: SAF pick file (restore #1)
+[00:47:04]     ROOM[t5 AFTER restore #1] n=5: {"900000001": {"comment": "note A originalnote A CHANGED after backup", "fandom": "Fandom Alpha", "rating": "LIKE", "tags": ["fluff", "тег с пробелом"], "word_count": 4200}, "900000002": {"comment": "note B original", "fandom": "Fandom Beta", "rating": "LIKE", "tags": ["angst"], "word_count": 1500}, "900000003": {"comment": null, "fandom": "Fandom Gamma", "rating": "READ", "tags": null, "word_count": 800}, "900000004": {"comment": null, "fandom": "Fandom Delta", "rating": "PENDING", "tags": null, "word_count": 12000}, "900000005": {"comment": null, "fandom": "Fandom Eps", "rating": "PENDING", "tags": null, "word_count": 300}}
+[00:47:05]     PROFILES[t5 AFTER restore #1]: [{"name": "CH007 fluff search", "queryString": "work_search%5Bquery%5D=fluff"}, {"name": "P1 RENAMED locally", "queryString": "work_search%5Bquery%5D=winter"}]
+[00:47:05]     PREFS[t5 AFTER restore #1]: <?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <string name="theme_mode">DARK</string>
+    <int name="active_tab_index" value="0" />
+    <boolean name="infinite_scroll" value="false" />
+    <boolean name="tap_to_scroll" value="true" />
+    <string name="open_tabs_urls">[{&quot;historyEntries&quot;:[{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/&quot;},{&quot;scrollY&quot;:593,&quot;url&quot;:&quot;https://archiveofourown.org/works?ao3_companion_fixture\u003dlisting_basic&quot;}],&quot;historyIndex&quot;:1,&quot;scrollY&quot;:593,&quot;url&quot;:&quot;https://archiveofourown.org/works?ao3_companion_fixture\u003dlisting_basic&quot;}]</string>
+</map>
+[00:47:05] --- STEP: Settings -> Restore (2)
+[00:47:05]     OK: Settings -> Restore (2)
+[00:47:05] --- STEP: tap Restore (2)
+[00:47:05]     OK: tap Restore (2)
+[00:47:05] --- STEP: SAF pick file (restore #2)
+[00:47:13]     TEXTS[Backup restored #2]: ['Backup restored', 'Restored 0 works, 0 filters (4 works already existed).', 'OK']
+[00:47:13] SHOT 07_s1_restore2_dialog.png
+[00:47:14]     OK: SAF pick file (restore #2)
+[00:47:14]     ROOM[t6 AFTER restore #2] n=5: {"900000001": {"comment": "note A originalnote A CHANGED after backup", "fandom": "Fandom Alpha", "rating": "LIKE", "tags": ["fluff", "тег с пробелом"], "word_count": 4200}, "900000002": {"comment": "note B original", "fandom": "Fandom Beta", "rating": "LIKE", "tags": ["angst"], "word_count": 1500}, "900000003": {"comment": null, "fandom": "Fandom Gamma", "rating": "READ", "tags": null, "word_count": 800}, "900000004": {"comment": null, "fandom": "Fandom Delta", "rating": "PENDING", "tags": null, "word_count": 12000}, "900000005": {"comment": null, "fandom": "Fandom Eps", "rating": "PENDING", "tags": null, "word_count": 300}}
+[00:47:15]     PROFILES[t6 AFTER restore #2]: [{"name": "CH007 fluff search", "queryString": "work_search%5Bquery%5D=fluff"}, {"name": "P1 RENAMED locally", "queryString": "work_search%5Bquery%5D=winter"}]
+[00:47:15] --- STEP: open Library
+[00:47:15]     OK: open Library
+[00:47:15] SHOT 08_s1_library_after_restore.png
+[00:47:15] === SEED1 diff before/after keys: before=['900000001', '900000003', '900000004', '900000005'] after=['900000001', '900000002', '900000003', '900000004', '900000005']
+[00:49:47] === SEED2 round a: title='Зимняя песнь 🙂🎧 длинный-заголовок-длинный-заголовок-длинный-заголовок-длинный-заголовок-длинный-заголовок-хвост ✂️ конец' subdir=ch007_dl_a_7b15c0dc
+[00:49:52]     ROOM[s2a t0 seeded] n=3: {"900000001": {"comment": "многострочная\nзаметка 🙂\nтретья строка", "fandom": "Fandom Alpha", "rating": "SAVE", "tags": ["тег с пробелом", "🙂", ""], "word_count": 4200}, "900000002": {"comment": null, "fandom": "Fandom Beta", "rating": "LIKE", "tags": ["fluff"], "word_count": 1500}, "900000003": {"comment": null, "fandom": "Fandom Gamma", "rating": "READ", "tags": null, "word_count": 800}}
+[00:50:00] --- STEP: wait_app_ready
+[00:50:04]     OK: wait_app_ready
+[00:50:04] --- STEP: Settings -> Pick
+[00:50:15]     OK: Settings -> Pick
+[00:50:15] --- STEP: tap Pick
+[00:50:16]     OK: tap Pick
+[00:50:16] --- STEP: SAF pick folder
+[00:50:21]     OK: SAF pick folder
+[00:50:22]     TEXTS[s2a after folder pick]: ['SAVED AO3 FILTERS', 'Auto-apply on navigation', 'Append the active AO3 filter to listing pages automatically', 'No saved AO3 filters', 'DATA', 'Auto-download favorite works', 'Download HTML when rating a work as Favorite', 'Download folder', 'ch007_dl_a_7b15c0dc', 'Pick', 'Reset', 'Scan for downloads', 'Re-link .html files in the folder above that the app lost track of', 'Scan', 'Back up data', 'Save ratings, personal tags, and filters to a backup file', 'Back up', 'Restore from backup', 'Load ratings, personal tags, and filters from a backup file', 'Restore', 'Fetch missing metadata', 'All metadata up to date', 'Fetch', 'DEBUG', 'Show copy-URL button', 'Clear all ratings', 'Permanently delete all work ratings', 'Clear…', 'Settings', 'Browse', 'Library']
+[00:50:23] SHOT 01_s2a_after_folder_pick.png
+[00:50:23] --- STEP: open Library
+[00:50:24]     OK: open Library
+[00:50:25] SHOT 02_s2a_library_light.png
+[00:50:25] --- STEP: open FAVORITE tab
+[00:50:25]     OK: open FAVORITE tab
+[00:50:25]     TEXTS[s2a library card]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'Зимняя песнь &#128578;&#127911; длинный-заголовок-длинный-заголовок-длинный-заголовок-длинный-заголовок-длинный-заголовок-хвост ✂️ конец', 'seed_author_a', 'Fandom Alpha · 4,200 words', 'тег с пробелом · &#128578; · ', 'View note', 'Download', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[00:50:25] --- STEP: download via card icon
+[00:50:26]     OK: download via card icon
+[00:50:32]     LS[s2a after download] /sdcard/Download/ch007_dl_a_7b15c0dc: total 8
+-rw-rw---- 1 u0_a136 media_rw 339 2026-08-01 22:50 ao3_Р—РёРјРЅСЏСЏ РїРµСЃРЅСЊ рџ™‚рџЋ§ РґР»РёРЅРЅС‹Р№-Р·Р°РіРѕР»РѕРІРѕРє-РґР»РёРЅРЅС‹Р№-Р·Р°РіРѕР»РѕРІРѕРє-РґР»РёРЅРЅС‹Р№-Р·Р°РіРѕР»РѕРІРѕРє-РґР»РёРЅРЅС‹Р№-_900000001.html
+[00:50:32]     FILENAMES: 'ao3_Р—РёРјРЅСЏСЏ РїРµСЃРЅСЊ рџ™‚рџЋ§ РґР»РёРЅРЅС‹Р№-Р·Р°РіРѕР»РѕРІРѕРє-РґР»РёРЅРЅС‹Р№-Р·Р°РіРѕР»РѕРІРѕРє-РґР»РёРЅРЅС‹Р№-Р·Р°РіРѕР»РѕРІРѕРє-РґР»РёРЅРЅС‹Р№-_900000001.html'
+[00:50:32]     FILE BODY (first 400): '<!DOCTYPE html>\n<html lang="en">\n<head><meta charset="utf-8"><title>A Loved Test Work</title></head>\n<body>\n<div id="preface">\n  <h1>A Loved Test Work</h1>\n  <h3 class="byline">seed_author_a</h3>\n</div>\n<div id="chapters">\n  <div class="userstuff">\n    <p>Downloaded fixture body for A Loved Test Work.</p>\n  </div>\n</div>\n</body>\n</html>\n'
+[00:50:32]     FILE BODY len=339
+[00:50:33] SHOT 03_s2a_after_download.png
+[00:50:33]     TEXTS[s2a after download]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'Зимняя песнь &#128578;&#127911; длинный-заголовок-длинный-заголовок-длинный-заголовок-длинный-заголовок-длинный-заголовок-хвост ✂️ конец', 'seed_author_a', 'Fandom Alpha · 4,200 words', 'тег с пробелом · &#128578; · ', 'View note', 'Open downloaded', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[00:50:33] --- STEP: Settings -> Back up
+[00:50:39]     OK: Settings -> Back up
+[00:50:39] --- STEP: tap Back up
+[00:50:39]     OK: tap Back up
+[00:50:39] --- STEP: SAF save
+[00:50:48]     TEXTS[s2a Backup created]: ['Backup created', 'Backed up 3 works, 0 filters.', 'OK']
+[00:50:49]     OK: SAF save
+[00:50:49]     BACKUP JSON: {
+  "version": 2,
+  "works": [
+    {
+      "ao3Id": "900000001",
+      "title": "Р—РёРјРЅСЏСЏ РїРµСЃРЅСЊ рџ™‚рџЋ§ РґР»РёРЅРЅС‹Р№-Р·Р°РіРѕР»РѕРІРѕРє-РґР»РёРЅРЅС‹Р№-Р·Р°РіРѕР»РѕРІРѕРє-РґР»РёРЅРЅС‹Р№-Р·Р°РіРѕР»РѕРІРѕРє-РґР»РёРЅРЅС‹Р№-Р·Р°РіРѕР»РѕРІРѕРє-РґР»РёРЅРЅС‹Р№-Р·Р°РіРѕР»РѕРІРѕРє-С…РІРѕСЃС‚ вњ‚пёЏ РєРѕРЅРµС†",
+      "author": "seed_author_a",
+      "url": "https:\/\/archiveofourown.org\/works\/900000001",
+      "rating": "SAVE",
+      "comment": "РјРЅРѕРіРѕСЃС‚СЂРѕС‡РЅР°СЏ\nР·Р°РјРµС‚РєР° рџ™‚\nС‚СЂРµС‚СЊСЏ СЃС‚СЂРѕРєР°",
+      "fandom": "Fandom Alpha",
+      "wordCount": 4200,
+      "tags": [
+        "С‚РµРі СЃ РїСЂРѕР±РµР»РѕРј",
+        "рџ™‚",
+        ""
+      ],
+      "timestamp": 1785624592437,
+      "downloadFile": "primary%3ADownload%2Fch007_dl_a_7b15c0dc%2Fao3_%D0%97%D0%B8%D0%BC%D0%BD%D1%8F%D1%8F%20%D0%BF%D0%B5%D1%81%D0%BD%D1%8C%20%F0%9F%99%82%F0%9F%8E%A7%20%D0%B4%D0%BB%D0%B8%D0%BD%D0%BD%D1%8B%D0%B9-%D0%B7%D0%B0%D0%B3%D0%BE%D0%BB%D0%BE%D0%B2%D0%BE%D0%BA-%D0%B4%D0%BB%D0%B8%D0%BD%D0%BD%D1%8B%D0%B9-%D0%B7%D0%B0%D0%B3%D0%BE%D0%BB%D0%BE%D0%B2%D0%BE%D0%BA-%D0%B4%D0%BB%D0%B8%D0%BD%D0%BD%D1%8B%D0%B9-%D0%B7%D0%B0%D0%B3%D0%BE%D0%BB%D0%BE%D0%B2%D0%BE%D0%BA-%D0%B4%D0%BB%D0%B8%D0%BD%D0%BD%D1%8B%D0%B9-_900000001.html"
+    },
+    {
+      "ao3Id": "900000002",
+      "title": "Р¤РѕРЅ рџЋ€ СЂР°Р±РѕС‚Р° СЃ СЌРјРѕРґР·Рё",
+      "author": "seed_author_b",
+      "url": "https:\/\/archiveofourown.org\/works\/900000002",
+      "rating": "LIKE",
+      "comment": null,
+      "fandom": "Fand
+[00:50:49] --- STEP: Clear all ratings
+[00:50:51]     OK: Clear all ratings
+[00:50:52]     ROOM[s2a after clear all] n=0: {}
+[00:50:52]     LS[s2a after clear all] /sdcard/Download/ch007_dl_a_7b15c0dc: total 8
+-rw-rw---- 1 u0_a136 media_rw 339 2026-08-01 22:50 ao3_Р—РёРјРЅСЏСЏ РїРµСЃРЅСЊ рџ™‚рџЋ§ РґР»РёРЅРЅС‹Р№-Р·Р°РіРѕР»РѕРІРѕРє-РґР»РёРЅРЅС‹Р№-Р·Р°РіРѕР»РѕРІРѕРє-РґР»РёРЅРЅС‹Р№-Р·Р°РіРѕР»РѕРІРѕРє-РґР»РёРЅРЅС‹Р№-_900000001.html
+[00:50:52] --- STEP: open Browse
+[00:50:53]     OK: open Browse
+[00:50:53] --- STEP: open listing
+[00:50:54]     OK: open listing
+[00:50:54] --- STEP: tap rate bg1
+[00:50:55]     OK: tap rate bg1
+[00:50:55] --- STEP: bg1 -> Kudosed
+[00:50:56]     OK: bg1 -> Kudosed
+[00:50:56] --- STEP: dismiss
+[00:50:56]     OK: dismiss
+[00:50:56] --- STEP: tap rate target
+[00:50:57]     OK: tap rate target
+[00:50:57] --- STEP: target -> Favorite (ветка Б)
+[00:50:57]     OK: target -> Favorite (ветка Б)
+[00:50:57] --- STEP: dismiss
+[00:50:57]     OK: dismiss
+[00:50:58]     ROOM[s2a BEFORE restore (branch_b=True)] n=2: {"900000001": {"comment": null, "fandom": "Fandom Alpha", "rating": "SAVE", "tags": null, "word_count": 4200}, "900000002": {"comment": null, "fandom": "Fandom Beta", "rating": "LIKE", "tags": null, "word_count": 1500}}
+[00:50:58] --- STEP: Settings -> Restore
+[00:51:07]     OK: Settings -> Restore
+[00:51:07] --- STEP: tap Restore
+[00:51:08]     OK: tap Restore
+[00:51:08] --- STEP: SAF pick file
+[00:51:15]     TEXTS[s2a Backup restored]: ['Backup restored', 'Restored 1 works, 0 filters (2 works already existed). Also relinked 1 and added 0 downloaded file(s).', 'OK']
+[00:51:16] SHOT 04_s2a_restore_dialog.png
+[00:51:17]     OK: SAF pick file
+[00:51:17]     ROOM[s2a AFTER restore] n=3: {"900000001": {"comment": null, "fandom": "Fandom Alpha", "rating": "SAVE", "tags": null, "word_count": 4200}, "900000002": {"comment": null, "fandom": "Fandom Beta", "rating": "LIKE", "tags": null, "word_count": 1500}, "900000003": {"comment": null, "fandom": "Fandom Gamma", "rating": "READ", "tags": null, "word_count": 800}}
+[00:51:17] --- STEP: open Library
+[00:51:17]     OK: open Library
+[00:51:17] --- STEP: open FAVORITE tab
+[00:51:18]     OK: open FAVORITE tab
+[00:51:18] SHOT 05_s2a_library_after_restore.png
+[00:51:18]     TEXTS[s2a library after restore]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'A Loved Test Work', 'seed_author_a', 'Fandom Alpha · 4,200 words', 'Open downloaded', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[00:51:18] --- STEP: open FILES tab
+[00:51:19]     OK: open FILES tab
+[00:51:19] SHOT 06_s2a_files_tab.png
+[00:51:19]     TEXTS[s2a files tab]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'A Loved Test Work', 'seed_author_a', 'Fandom Alpha · 4,200 words', 'Open downloaded', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[00:51:19]     LS[s2a end] /sdcard/Download/ch007_dl_a_7b15c0dc: total 8
+-rw-rw---- 1 u0_a136 media_rw 339 2026-08-01 22:50 ao3_Р—РёРјРЅСЏСЏ РїРµСЃРЅСЊ рџ™‚рџЋ§ РґР»РёРЅРЅС‹Р№-Р·Р°РіРѕР»РѕРІРѕРє-РґР»РёРЅРЅС‹Р№-Р·Р°РіРѕР»РѕРІРѕРє-РґР»РёРЅРЅС‹Р№-Р·Р°РіРѕР»РѕРІРѕРє-РґР»РёРЅРЅС‹Р№-_900000001.html
+[00:51:19] --- STEP: open Browse
+[00:51:20]     OK: open Browse
+[00:51:20] --- STEP: tap rate target
+[00:51:21]     OK: tap rate target
+[00:51:21] --- STEP: Save note #1
+[00:51:22]     OK: Save note #1
+[00:51:22] --- STEP: Save note #2
+[00:51:44]     FAIL: Save note #2: TimeoutException: Message: не найден элемент: ('-android uiautomator', 'new UiSelector().className("android.widget.EditText").instance(0)')
+Stacktrace:
+NoSuchElementError: An element could not be located on the page using the given search parameters.
+    at AndroidUiautomator2Driver.findElOrEls (D:\AO3_tests\tools\appium\node_modules\appium-uiautomator2-driver\node_modules\appium-android-driver\build\lib\commands\f
+[00:51:44]         at async AndroidUiautomator2Driver.findElOrElsWithProcessing (D:\AO3_tests\tools\appium\node_modules\@appium\base-driver\build\lib\basedriver\commands\find.js:12:16)
+[00:51:44] --- STEP: Save note #3
+[00:52:07]     FAIL: Save note #3: TimeoutException: Message: не найден элемент: ('-android uiautomator', 'new UiSelector().className("android.widget.EditText").instance(0)')
+Stacktrace:
+NoSuchElementError: An element could not be located on the page using the given search parameters.
+    at AndroidUiautomator2Driver.findElOrEls (D:\AO3_tests\tools\appium\node_modules\appium-uiautomator2-driver\node_modules\appium-android-driver\build\lib\commands\f
+[00:52:07]         at async AndroidUiautomator2Driver.findElOrElsWithProcessing (D:\AO3_tests\tools\appium\node_modules\@appium\base-driver\build\lib\basedriver\commands\find.js:12:16)
+[00:52:07] --- STEP: Save note #4
+[00:52:30]     FAIL: Save note #4: TimeoutException: Message: не найден элемент: ('-android uiautomator', 'new UiSelector().className("android.widget.EditText").instance(0)')
+Stacktrace:
+NoSuchElementError: An element could not be located on the page using the given search parameters.
+    at AndroidUiautomator2Driver.findElOrEls (D:\AO3_tests\tools\appium\node_modules\appium-uiautomator2-driver\node_modules\appium-android-driver\build\lib\commands\f
+[00:52:30]         at async AndroidUiautomator2Driver.findElOrElsWithProcessing (D:\AO3_tests\tools\appium\node_modules\@appium\base-driver\build\lib\basedriver\commands\find.js:12:16)
+[00:52:30] --- STEP: Save note #5
+[00:52:53]     FAIL: Save note #5: TimeoutException: Message: не найден элемент: ('-android uiautomator', 'new UiSelector().className("android.widget.EditText").instance(0)')
+Stacktrace:
+NoSuchElementError: An element could not be located on the page using the given search parameters.
+    at AndroidUiautomator2Driver.findElOrEls (D:\AO3_tests\tools\appium\node_modules\appium-uiautomator2-driver\node_modules\appium-android-driver\build\lib\commands\f
+[00:52:53]         at async AndroidUiautomator2Driver.findElOrElsWithProcessing (D:\AO3_tests\tools\appium\node_modules\@appium\base-driver\build\lib\basedriver\commands\find.js:12:16)
+[00:52:53]     TEXTS[s2a after 5x save note]: ['A Loved Test Work', 'seed_author_a', 'Already downloaded', 'Favorite', 'Kudosed', 'Read', 'Pending', 'Dislike', 'series note 0', 'Add tags', 'Expand panel']
+[00:52:53] SHOT 07_s2a_after_5x_save_note.png
+[00:52:53] --- STEP: dismiss
+[00:52:53]     OK: dismiss
+[00:52:53]     ROOM[s2a after 5x save note] n=3: {"900000001": {"comment": "series note 0", "fandom": "Fandom Alpha", "rating": "SAVE", "tags": null, "word_count": 4200}, "900000002": {"comment": null, "fandom": "Fandom Beta", "rating": "LIKE", "tags": null, "word_count": 1500}, "900000003": {"comment": null, "fandom": "Fandom Gamma", "rating": "READ", "tags": null, "word_count": 800}}
+[00:52:53] --- STEP: open Library
+[00:52:58]     OK: open Library
+[00:52:58] --- STEP: open FAVORITE tab
+[00:52:59]     OK: open FAVORITE tab
+[00:52:59] --- STEP: delete downloaded file
+[00:53:19]     FAIL: delete downloaded file: TimeoutException: Message: не найден элемент: ('-android uiautomator', 'new UiSelector().text("Зимняя песнь 🙂🎧 длинный-заголовок-длинный-заголовок-длинный-заголовок-длинный-заголовок-длинный-заголовок-хвост ✂️ конец")')
+Stacktrace:
+NoSuchElementError: An element could not be located on the page using the given search parameters.
+    at AndroidUiautomator2Driver.findElOrEls (D:\AO3_tests\tools\appium\node_modules\ap
+[00:53:19]         at async AndroidUiautomator2Driver.findElOrElsWithProcessing (D:\AO3_tests\tools\appium\node_modules\@appium\base-driver\build\lib\basedriver\commands\find.js:12:16)
+[00:53:19]     LS[s2a after delete file] /sdcard/Download/ch007_dl_a_7b15c0dc: total 8
+-rw-rw---- 1 u0_a136 media_rw 339 2026-08-01 22:50 ao3_Р—РёРјРЅСЏСЏ РїРµСЃРЅСЊ рџ™‚рџЋ§ РґР»РёРЅРЅС‹Р№-Р·Р°РіРѕР»РѕРІРѕРє-РґР»РёРЅРЅС‹Р№-Р·Р°РіРѕР»РѕРІРѕРє-РґР»РёРЅРЅС‹Р№-Р·Р°РіРѕР»РѕРІРѕРє-РґР»РёРЅРЅС‹Р№-_900000001.html
+[00:53:19] --- STEP: 4 fast taps on Download
+[00:53:19]     fast tap 1 ok
+[00:53:20]     fast tap 2 ok
+[00:53:31]     fast tap 3 -> StaleElementReferenceException: Message: The element 'By.AndroidUiAutomator: new UiSelector().description("Download")' does not exist in DOM anymore; Fo
+[00:53:42]     fast tap 4 -> StaleElementReferenceException: Message: The element 'By.AndroidUiAutomator: new UiSelector().description("Download")' does not exist in DOM anymore; Fo
+[00:53:42]     OK: 4 fast taps on Download
+[00:53:52]     LS[s2a after 4 fast taps] /sdcard/Download/ch007_dl_a_7b15c0dc: total 16
+-rw-rw---- 1 u0_a136 media_rw 339 2026-08-01 22:53 ao3_A Loved Test Work_900000001.html
+-rw-rw---- 1 u0_a136 media_rw 339 2026-08-01 22:50 ao3_Р—РёРјРЅСЏСЏ РїРµСЃРЅСЊ рџ™‚рџЋ§ РґР»РёРЅРЅС‹Р№-Р·Р°РіРѕР»РѕРІРѕРє-РґР»РёРЅРЅС‹Р№-Р·Р°РіРѕР»РѕРІРѕРє-РґР»РёРЅРЅС‹Р№-Р·Р°РіРѕР»РѕРІРѕРє-РґР»РёРЅРЅС‹Р№-_900000001.html
+[00:53:52]     FILENAMES after fast taps: 'ao3_A Loved Test Work_900000001.html\nao3_Р—РёРјРЅСЏСЏ РїРµСЃРЅСЊ рџ™‚рџЋ§ РґР»РёРЅРЅС‹Р№-Р·Р°РіРѕР»РѕРІРѕРє-РґР»РёРЅРЅС‹Р№-Р·Р°РіРѕР»РѕРІРѕРє-РґР»РёРЅРЅС‹Р№-Р·Р°РіРѕР»РѕРІРѕРє-РґР»РёРЅРЅС‹Р№-_900000001.html'
+[00:53:52] SHOT 08_s2a_after_fast_taps.png
+[00:53:53]     ROOM[s2a end] n=3: {"900000001": {"comment": "series note 0", "fandom": "Fandom Alpha", "rating": "SAVE", "tags": null, "word_count": 4200}, "900000002": {"comment": null, "fandom": "Fandom Beta", "rating": "LIKE", "tags": null, "word_count": 1500}, "900000003": {"comment": null, "fandom": "Fandom Gamma", "rating": "READ", "tags": null, "word_count": 800}}
+[00:55:46] --- STEP: wait_app_ready
+[00:55:50]     OK: wait_app_ready
+[00:55:50] --- STEP: Settings -> Pick
+[00:56:01]     OK: Settings -> Pick
+[00:56:01] --- STEP: tap Pick
+[00:56:03]     OK: tap Pick
+[00:56:03] --- STEP: SAF pick folder
+[00:56:07]     OK: SAF pick folder
+[00:56:07] --- STEP: open Library
+[00:56:09]     OK: open Library
+[00:56:09] --- STEP: open FAVORITE
+[00:56:10]     OK: open FAVORITE
+[00:56:10] --- STEP: download via card
+[00:56:10]     OK: download via card
+[00:56:18]     LS[r1 after download] /sdcard/Download/ch007_r1_e90756b2: total 8
+-rw-rw---- 1 u0_a136 media_rw 339 2026-08-01 22:56 ao3_A Loved Test Work_900000001.html
+[00:56:18]     DLPATH[r1 after download]: {"900000001": {"title": "A Loved Test Work", "downloadPath": "content://com.android.externalstorage.documents/tree/primary%3ADownload%2Fch007_r1_e90756b2/document/primary%3ADownload%2Fch007_r1_e90756b2%2Fao3_A%20Loved%20Test%20Work_900000001.html", "rating": "SAVE", "comment": null}}
+[00:56:19]     TEXTS[r1 card after download]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'A Loved Test Work', 'seed_author_a', 'Fandom Alpha · 4,200 words', 'Open downloaded', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[00:56:19] === R1 cycle 1: правка заметки через overlay листинга
+[00:56:19] --- STEP: open Browse
+[00:56:19]     OK: open Browse
+[00:56:19] --- STEP: open listing
+[00:56:21]     OK: open listing
+[00:56:21] --- STEP: tap rate
+[00:56:22]     OK: tap rate
+[00:56:22]     TEXTS[r1 c1 overlay before save]: ['A Loved Test Work', 'seed_author_a', 'Already downloaded', 'Favorite', 'Kudosed', 'Read', 'Pending', 'Dislike', 'Add a note', 'Add tags', 'Expand panel']
+[00:56:22] --- STEP: save note
+[00:56:23]     OK: save note
+[00:56:23]     TEXTS[r1 c1 overlay after save]: ['A Loved Test Work', 'seed_author_a', 'Already downloaded', 'Favorite', 'Kudosed', 'Read', 'Pending', 'Dislike', 'series note 1', 'Add tags', 'Expand panel']
+[00:56:24] SHOT 01_r1_c1_overlay_after_save.png
+[00:56:24] --- STEP: dismiss
+[00:56:24]     OK: dismiss
+[00:56:24]     DLPATH[r1 c1 after save note]: {"900000001": {"title": "A Loved Test Work", "downloadPath": null, "rating": "SAVE", "comment": "series note 1"}}
+[00:56:24] --- STEP: open Library
+[00:56:29]     OK: open Library
+[00:56:29] --- STEP: open FAVORITE
+[00:56:30]     OK: open FAVORITE
+[00:56:30]     TEXTS[r1 c1 card after save note]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'A Loved Test Work', 'seed_author_a', 'Fandom Alpha · 4,200 words', 'View note', 'Download', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[00:56:31] SHOT 02_r1_c1_card_after_save_note.png
+[00:56:31]     LS[r1 c1 folder] /sdcard/Download/ch007_r1_e90756b2: total 8
+-rw-rw---- 1 u0_a136 media_rw 339 2026-08-01 22:56 ao3_A Loved Test Work_900000001.html
+[00:56:31] === R1 cycle 2: правка заметки через overlay листинга
+[00:56:31] --- STEP: open Browse
+[00:56:31]     OK: open Browse
+[00:56:31] --- STEP: open listing
+[00:56:32]     OK: open listing
+[00:56:32] --- STEP: tap rate
+[00:56:33]     OK: tap rate
+[00:56:33]     TEXTS[r1 c2 overlay before save]: ['A Loved Test Work', 'seed_author_a', 'Download', 'Favorite', 'Kudosed', 'Read', 'Pending', 'Dislike', 'series note 1', 'Add tags', 'Expand panel']
+[00:56:33] --- STEP: save note
+[00:56:56]     FAIL: save note: TimeoutException: Message: не найден элемент: ('-android uiautomator', 'new UiSelector().className("android.widget.EditText").instance(0)')
+Stacktrace:
+NoSuchElementError: An element could not be located on the page using the given search parameters.
+    at AndroidUiautomator2Driver.findElOrEls (D:\AO3_tests\tools\appium\node_modules\appium-uiautomator2-driver\node_modules\appium-android-driver\build\lib\commands\f
+[00:56:56]         at async AndroidUiautomator2Driver.findElOrElsWithProcessing (D:\AO3_tests\tools\appium\node_modules\@appium\base-driver\build\lib\basedriver\commands\find.js:12:16)
+[00:56:56]     TEXTS[r1 c2 overlay after save]: ['A Loved Test Work', 'seed_author_a', 'Download', 'Favorite', 'Kudosed', 'Read', 'Pending', 'Dislike', 'series note 1', 'Add tags', 'Expand panel']
+[00:56:56] SHOT 03_r1_c2_overlay_after_save.png
+[00:56:56] --- STEP: dismiss
+[00:56:56]     OK: dismiss
+[00:56:57]     DLPATH[r1 c2 after save note]: {"900000001": {"title": "A Loved Test Work", "downloadPath": null, "rating": "SAVE", "comment": "series note 1"}}
+[00:56:57] --- STEP: open Library
+[00:57:03]     OK: open Library
+[00:57:03] --- STEP: open FAVORITE
+[00:57:04]     OK: open FAVORITE
+[00:57:04]     TEXTS[r1 c2 card after save note]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'A Loved Test Work', 'seed_author_a', 'Fandom Alpha · 4,200 words', 'View note', 'Download', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[00:57:04] SHOT 04_r1_c2_card_after_save_note.png
+[00:57:04]     LS[r1 c2 folder] /sdcard/Download/ch007_r1_e90756b2: total 8
+-rw-rw---- 1 u0_a136 media_rw 339 2026-08-01 22:56 ao3_A Loved Test Work_900000001.html
+[00:57:04] --- STEP: open Browse
+[00:57:05]     OK: open Browse
+[00:57:05] --- STEP: tap rate
+[00:57:05]     OK: tap rate
+[00:57:05] --- STEP: add tag
+[00:57:07]     OK: add tag
+[00:57:07] --- STEP: dismiss
+[00:57:07]     OK: dismiss
+[00:57:07]     DLPATH[r1 after add tag]: {"900000001": {"title": "A Loved Test Work", "downloadPath": null, "rating": "SAVE", "comment": "series note 1"}}
+[00:57:07] --- STEP: open Library
+[00:57:12]     OK: open Library
+[00:57:12] --- STEP: open FAVORITE
+[00:57:13]     OK: open FAVORITE
+[00:57:14]     TEXTS[r1 card after add tag]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'A Loved Test Work', 'seed_author_a', 'Fandom Alpha · 4,200 words', 'r1-tag', 'View note', 'Download', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[00:57:14] SHOT 05_r1_card_after_add_tag.png
+[00:57:14]     LS[r1 end] /sdcard/Download/ch007_r1_e90756b2: total 8
+-rw-rw---- 1 u0_a136 media_rw 339 2026-08-01 22:56 ao3_A Loved Test Work_900000001.html
+[00:57:52]     LS[bad] /sdcard/Download/ch007_probe_bad.html: -rw-rw---- 1 u0_a136 media_rw 1913 2026-07-08 15:43 /sdcard/Download/ch007_probe_bad.html
+[00:57:52]     LS[empty] /sdcard/Download/ch007_probe_empty.json: -rw-rw---- 1 u0_a136 media_rw 0 2026-08-01 22:57 /sdcard/Download/ch007_probe_empty.json
+[00:57:53]     ROOM[s4 before] n=1: {"900000001": {"comment": "seed4 note", "fandom": "Fandom Alpha", "rating": "SAVE", "tags": null, "word_count": 4200}}
+[00:58:00] --- STEP: wait_app_ready
+[00:58:05]     OK: wait_app_ready
+[00:58:05] --- STEP: Settings -> Restore
+[00:58:20]     OK: Settings -> Restore
+[00:58:20] --- STEP: tap Restore
+[00:58:21]     OK: tap Restore
+[00:58:21] --- STEP: SAF pick bad html
+[00:58:29]     TEXTS[restore BAD html]: ['Restore failed', 'Value &lt;!DOCTYPE of type java.lang.String cannot be converted to JSONObject', 'OK']
+[00:58:29] SHOT 01_s4_bad_html.png
+[00:58:30]     OK: SAF pick bad html
+[00:58:30] SHOT 02_s4_after_bad.png
+[00:58:31]     TEXTS[after bad html dismiss]: ['SAVED AO3 FILTERS', 'Auto-apply on navigation', 'Append the active AO3 filter to listing pages automatically', 'No saved AO3 filters', 'DATA', 'Auto-download favorite works', 'Download HTML when rating a work as Favorite', 'Download folder', 'App storage (default)', 'Pick', 'Scan for downloads', 'Re-link .html files in the folder above that the app lost track of', 'Scan', 'Back up data', 'Save ratings, personal tags, and filters to a backup file', 'Back up', 'Restore from backup', 'Load ratings, personal tags, and filters from a backup file', 'Restore', 'Fetch missing metadata', 'All metadata up to date', 'Fetch', 'DEBUG', 'Show copy-URL button', 'Clear all ratings', 'Permanently delete all work ratings', 'Clear…', 'Settings', 'Browse', 'Library']
+[00:58:31]     ROOM[s4 after bad html] n=1: {"900000001": {"comment": "seed4 note", "fandom": "Fandom Alpha", "rating": "SAVE", "tags": null, "word_count": 4200}}
+[00:58:31] --- STEP: Settings -> Restore (2)
+[00:58:32]     OK: Settings -> Restore (2)
+[00:58:32] --- STEP: tap Restore (2)
+[00:58:32]     OK: tap Restore (2)
+[00:58:32] --- STEP: SAF pick empty json
+[00:58:40]     TEXTS[restore EMPTY json]: ['Restore failed', 'End of input at character 0 of ', 'OK']
+[00:58:40] SHOT 03_s4_empty_json.png
+[00:58:41]     OK: SAF pick empty json
+[00:58:41] SHOT 04_s4_after_empty.png
+[00:58:42]     TEXTS[after empty json dismiss]: ['SAVED AO3 FILTERS', 'Auto-apply on navigation', 'Append the active AO3 filter to listing pages automatically', 'No saved AO3 filters', 'DATA', 'Auto-download favorite works', 'Download HTML when rating a work as Favorite', 'Download folder', 'App storage (default)', 'Pick', 'Scan for downloads', 'Re-link .html files in the folder above that the app lost track of', 'Scan', 'Back up data', 'Save ratings, personal tags, and filters to a backup file', 'Back up', 'Restore from backup', 'Load ratings, personal tags, and filters from a backup file', 'Restore', 'Fetch missing metadata', 'All metadata up to date', 'Fetch', 'DEBUG', 'Show copy-URL button', 'Clear all ratings', 'Permanently delete all work ratings', 'Clear…', 'Settings', 'Browse', 'Library']
+[00:58:42]     ROOM[s4 after empty json] n=1: {"900000001": {"comment": "seed4 note", "fandom": "Fandom Alpha", "rating": "SAVE", "tags": null, "word_count": 4200}}
+[00:58:42] === SEED4 room unchanged: True

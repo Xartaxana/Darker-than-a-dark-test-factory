@@ -2,7 +2,7 @@
 key: "AT-BUG-034"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p2"
 summary: "scripts/log_append.py: нет легального пути для второго delegated критика на ОДИН И ТОТ ЖЕ открытый task_id (review1 → executor attempt2 → review2), когда review1 не был rejected, а вынес вердикт на чужой дифф"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-31T18:20:00Z"
-updated: "2026-07-31T18:20:00Z"
+created: "2026-08-01T16:20:00Z"
+updated: "2026-08-01T16:20:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # scripts/log_append.py: нет легального пути для второго delegated критика на ОДИН И ТОТ ЖЕ открытый task_id (review1 → executor attempt2 → review2), когда review1 не был rejected, а вынес вердикт на чужой дифф
 
 _Спроецировано из `bugs/AT-BUG-034.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # AT-BUG-034 — log_append.py не легализует второй review-раунд критика в рамках одного открытого цикла приёмки
 
@@ -76,6 +76,7 @@ _Спроецировано из `bugs/AT-BUG-034.md` (источник прав
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
 | 2026-07-31 | scripts/log_append.py @ рабочее дерево (документный класс, сборка приложения не требуется) | `test_cases: []` (test_debt в обвязке — carve-out CLAUDE.md/протокола: id не существует) → замена: (1) `python -m pytest scripts/tests -q` полный набор, (2) обязательная replay-гарантия на живом `logs/routing-log.jsonl` (не гипотетический сценарий) | (1) `742 passed, 1 skipped` (канонической формой, `Invoke-Pytest ..\scripts\tests -q` из framework); (2) реплей исторических `delegated` через HEAD-версию `scripts/log_append.py` (git show HEAD, т.е. состояние ДО этого фикса) и версию с фиксом, изолированный харнесс в scratchpad сессии (`at034_replay/replay.py`, живой journal НЕ модифицирован — только читался/копировался): **0 переворотов OK → BLOCKED, 0 переворотов BLOCKED → OK**, HEAD BLOCKED == NEW BLOCKED. Проза остатка уточнена критик-раундом (R-4): «528 delegated» — ВСЕ delegated журнала на момент прогона; записи БЕЗ `task_id` (14 шт. на контрольном реплее критика) guard'ом вообще не рассматриваются и в счёт BLOCKED попасть не могут — через guard реплеено 516; фактический остаток BLOCKED — отсутствующий `--worker-ref` (D-0076) у старых записей и несколько настоящих дубль/закрытых кейсов, НЕ «bootstrap без task_id». Контрольный реплей критика: 516 delegated, HEAD BLOCKED 53 == NEW 53, флипы 0/0; строгий второй проход (синтетический worker_ref, guard достигается всеми) — HEAD 8 == NEW 8, флипы 0/0 | pending fix-verifier |
+| 2026-08-01 | scripts/log_append.py @ HEAD (commit 9a160c7; сам фикс — b37c3d8, не тронут коммитами между ним и HEAD — `git log b37c3d8..HEAD -- scripts/log_append.py` пуст); документный класс, сборка приложения (state/app-under-test.yaml: version_name 1.10 / version_code 11 / built_at 2026-07-02) верификации не блокирует | `test_cases: []` (carve-out, обвязка) → независимый повтор fix-verifier обеих замен критерия: (1) полный `scripts/tests`; (2) собственный НЕЗАВИСИМЫЙ replay-харнесс (не переиспользован harness test-maintainer/критика — написан заново в scratchpad этой сессии, `at034v/replay.py`), сравнивающий `git show 441d322:scripts/log_append.py` (состояние строго ДО фикса) и `git show HEAD:scripts/log_append.py` (== рабочее дерево) на СВЕЖЕМ снимке живого `logs/routing-log.jsonl` (1126 строк на 2026-08-01, живой файл только читался/копировался, не менялся); (3)/(4) `validate_frontmatter.py` и `arch_check.py` | (1) `783 passed, 1 skipped`, `PYTEST_EXIT=0` (канонической формой `Invoke-Pytest ..\scripts\tests -q`; рост 742→783 — новые тесты из коммитов после AT-BUG-034, не регресс, 0 failed); (2) харнесс монкипатчит `_verify_environment`/`_append_line`/`_check_tier_measurement` в no-op и на каждом историческом `delegated` с `task_id` пишет `records[:i]` в scratch-файл, вызывает `append_routing(...)` с полями записи (synthetic non-empty `worker_ref` одинаково для обеих версий — не источник флипа) и ловит `SystemExit`→BLOCKED/иначе→OK: **524 delegated-с-task_id реплеено, OLD(441d322) OK=516 BLOCKED=8, NEW(HEAD) OK=516 BLOCKED=8, flips OK→BLOCKED=0, flips BLOCKED→OK=0, errors=0** — числа сходятся с контрольным «строгим вторым проходом» критика от 2026-07-31 (516/8/8, флипы 0/0), рост с 516 до 524 delegated — 8 новых записей журнала, накопленных между 2026-07-31 и 2026-08-01 (не расхождение методики); (3) `validate_frontmatter: ошибок 0, предупреждений 0`; (4) `arch_check: ошибок 0, предупреждений 0` | **Verified** — все пункты критерия готовности подтверждены дословным независимым прогоном |
 
 ## Обсуждение
 
@@ -157,3 +158,47 @@ witness AT-BUG-033). Replay-гарантия (см. таблицу верифи�
 координатору с осевым блоком, эта сессия не коммитит. Статус:
 Open → Fixed, лок снят. Верификация (Fixed → Verified) — за
 fix-verifier по гайду B4 (сборка приложения не нужна).
+
+**2026-08-01T16:20:00Z — fix-verifier (Sonnet), верификация (mode=verify, D1):**
+
+Carve-out CLAUDE.md подтверждён: `type: test_debt`, `debt_kind:
+missing_fixture`, `test_cases: []` — долг в обвязке (routing-log
+gate), кейсов не существует в принципе. Заменил замену прогона кейсов
+исполнением DoD-демонстрации из «Критерий готовности» дословно (не
+чтением кода — живым прогоном): `git log b37c3d8..HEAD --
+scripts/log_append.py` пуст, т.е. фикс не тронут после приёмки, HEAD
+== версия фикса.
+
+1. `python -m pytest scripts/tests -q` (канонической формой
+   `Invoke-Pytest`) — `783 passed, 1 skipped`, `PYTEST_EXIT=0`.
+2. REPLAY-ГАРАНТИЯ переисполнена НЕЗАВИСИМО, а не принята на слово
+   таблицы test-maintainer/критика: написал свой харнесс с нуля
+   (scratchpad сессии `at034v/replay.py`), извлёк `git show
+   441d322:scripts/log_append.py` (HEAD ДО фикса) и `git show
+   HEAD:scripts/log_append.py`, взял read-only снимок живого
+   `logs/routing-log.jsonl` (1126 строк) и прогнал каждый исторический
+   `delegated` с `task_id` через обе версии гейта на префиксе истории
+   `records[:i]`. Результат: 524 delegated-с-task_id, OLD OK=516/
+   BLOCKED=8, NEW OK=516/BLOCKED=8, **flips OK→BLOCKED=0,
+   flips BLOCKED→OK=0, errors=0**. Числа сходятся с «строгим вторым
+   проходом» критика от 2026-07-31 (516/8/8) — рост delegated 516→524
+   объясняется 8 записями журнала, накопленными за прошедшие сутки
+   работы фабрики, не расхождением методики.
+3. `python scripts/validate_frontmatter.py` → `ошибок 0,
+   предупреждений 0`.
+4. `python scripts/arch_check.py` → `ошибок 0, предупреждений 0`.
+
+Все пункты критерия готовности (полный `scripts/tests` зелёный,
+не-регресс путей (в)/(г)/(д), обязательная replay-гарантия 0
+переворотов OK→BLOCKED) подтверждены дословным witness'ом этой сессии,
+не пересказом. Статус: Fixed → Verified, `known_issue` уже был
+`"false"` (не менялся). Открытые остатки R-1..R-3 (см. раздел выше) —
+сознательно НЕ закрываются этим вердиктом, carve-out по тексту самого
+бага («продвижение в код — по evidence рецидива, не заранее»); не
+пересматриваю их scope.
+
+Дефекты-собратья (правило D-0043): не обнаружено новых — соседний
+класс уже поименован в самом баге (AT-BUG-033) и учтён остатками
+R-1..R-3.
+
+Лок снят (`lock: ""`).

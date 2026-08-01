@@ -391,13 +391,13 @@
   },
   "TC-136": {
     "itype": "test-case",
-    "artifact_status": "Review",
-    "board_status": "Review"
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
   "TC-137": {
     "itype": "test-case",
-    "artifact_status": "Review",
-    "board_status": "Review"
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
   "TC-096": {
     "itype": "test-case",
@@ -491,38 +491,38 @@
   },
   "TC-138": {
     "itype": "test-case",
-    "artifact_status": "Review",
-    "board_status": "Review"
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
   "TC-139": {
     "itype": "test-case",
-    "artifact_status": "Review",
-    "board_status": "Review"
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
   "TC-140": {
     "itype": "test-case",
-    "artifact_status": "Review",
-    "board_status": "Review"
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
   "TC-141": {
     "itype": "test-case",
-    "artifact_status": "Review",
-    "board_status": "Review"
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
   "TC-142": {
     "itype": "test-case",
-    "artifact_status": "Review",
-    "board_status": "Review"
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
   "TC-143": {
     "itype": "test-case",
-    "artifact_status": "Review",
-    "board_status": "Review"
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
   "TC-144": {
     "itype": "test-case",
-    "artifact_status": "Review",
-    "board_status": "Review"
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
   "TC-100": {
     "itype": "test-case",
@@ -881,18 +881,18 @@
   },
   "AT-BUG-034": {
     "itype": "bug",
-    "artifact_status": "Fixed",
-    "board_status": "Fixed"
+    "artifact_status": "Verified",
+    "board_status": "Verified"
   },
   "AT-BUG-035": {
     "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
+    "artifact_status": "Fixed",
+    "board_status": "Fixed"
   },
   "AT-BUG-036": {
     "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
+    "artifact_status": "Fixed",
+    "board_status": "Fixed"
   },
   "BUG-001": {
     "itype": "bug",

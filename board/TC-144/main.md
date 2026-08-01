@@ -2,7 +2,7 @@
 key: "TC-144"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Первое сохранение LIKE/SAVE через встроенную панель work-страницы (запись ещё не в Room) отправляет kudos ровно один раз — панельная позитивная граница, позитивный контроль TC-141"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-31T21:00:00Z"
-updated: "2026-07-31T21:00:00Z"
+created: "2026-08-01T15:56:58Z"
+updated: "2026-08-01T15:56:58Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Первое сохранение LIKE/SAVE через встроенную панель work-страницы (запись ещё не в Room) отправляет kudos ровно один раз — панельная позитивная граница, позитивный контроль TC-141
 
 _Спроецировано из `test-cases/rating/TC-144.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-144 — Позитивная граница панельного пути: первое сохранение LIKE/SAVE через панель работы шлёт kudos один раз
 
