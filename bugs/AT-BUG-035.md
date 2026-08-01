@@ -4,16 +4,16 @@ title: "render_work_page_html не несёт узел #kudo_submit ни в од
 type: test_debt
 debt_kind: missing_fixture
 severity: minor
-status: Open
+status: Fixed
 found_in: "test-designer, проектирование области rating/bridge: авто-клик kudos (needs-design по bugs/BUG-015.md), 2026-07-31"
-fixed_in: ""
+fixed_in: "framework (test-only, без сборки приложения) — framework/data/recording_builder.py, framework/data/recordings/{listing_basic,work_with_download,works_multi,listing_paginated}.mitm, framework/tests/test_recording_builder_unit.py"
 last_seen_in: ""
 test_cases: ["TC-138", "TC-139", "TC-140", "TC-141", "TC-142", "TC-143", "TC-144"]
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-07-31T00:00:00Z"
-updated: "2026-07-31T21:00:00Z"
+status_since: "2026-08-01T16:39:52Z"
+updated: "2026-08-01T16:39:52Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -165,6 +165,7 @@ TC-084, TC-119/120/122..127) — вставка НЕ должна сдвигат
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
 | — | — | — | — | Open, ждёт фикса |
+| 2026-08-01 | 1.10 (versionCode 11), фикс не требует пересборки приложения (test_debt) | Долг (не TC-138..144, см. критерий готовности): device-free юнит `framework/tests/test_recording_builder_unit.py` (4 новых теста) + `python -m pytest scripts/tests -q` + живой смок TC-009 (x5)/TC-119/TC-120/TC-121/TC-122 — 3 прогона подряд | Все зелёные, без регресса | test-maintainer: Fixed, ждёт fix-verifier (переход Fixed→Verified не входит в мой guard) |
 
 ## Обсуждение
 
@@ -218,6 +219,66 @@ download, badge-sync) при этом проектировании не заме
   позитивный контроль негатива `TC-141` на том же панельном механизме.
 - Заголовок бага (`TC-138..143`) и упоминания «шести кейсов»/«трёх мест» по
   тексту приведены к фактическим семи кейсам/двум местам этим же ходом.
+
+**2026-08-01 — test-maintainer, фикс (B4).** Дословно по критерию готовности:
+
+1. **Узел `#kudo_submit`.** Добавлена `_kudo_submit_html()`
+   (`framework/data/recording_builder.py`, рядом с `_tap_zone_guard_nodes_html`)
+   — ТОЧНО код-сниппет из этого бага (инкрементный `data-kudo-clicked`, не
+   константа; `return false` против навигации по фиктивному `href="#"`).
+   Вызов вставлен в `render_work_page_html()` СИБЛИНГОМ
+   `<ul class="work navigation actions">` — между закрывающим `</ul>` и
+   `<div class="wrapper">`, НЕ внутрь `<ul>` (валидность вложенности, критик-
+   ревью нит 5 из этого же бага).
+2. **Пересборка записей.** `python scripts/build_replay_recordings.py`
+   (через `framework/.venv/Scripts/python.exe`, env.ps1) — пересобрал ВСЕ 6
+   фикстур; git-диффом изменились ровно 4, несущие work-страницы:
+   `listing_basic.mitm`, `work_with_download.mitm`, `works_multi.mitm`,
+   `listing_paginated.mitm` (`tab_markers.mitm`/`listing_duplicate_work.mitm`
+   байт-идентичны — ожидаемо, они не используют затронутый путь код).
+3. **Место вставки.** Проверено ДВУМЯ новыми юнитами
+   (`test_render_work_page_html_kudo_submit_is_sibling_not_nested`): узел
+   ОТСУТСТВУЕТ внутри блока `<ul>...</ul>` и стоит строго МЕЖДУ `</ul>` и
+   `<div class="wrapper">` в исходном HTML — порядок/индексы
+   `_download_list_html` (внутри `<ul>`, полностью предшествует) и
+   tap-zone-guard/reading-UX узлов (`AT-BUG-030`, внутри `.wrapper`, идут
+   строго после) не сдвинуты.
+4. **Новый device-free юнит.** `framework/tests/test_recording_builder_unit.py`
+   — 4 новых теста (секция «AT-BUG-035»): присутствие узла в отрендеренном
+   HTML (`render_work_page_html` напрямую) и в СОБРАННОЙ записи
+   (`works_multi.mitm`, обе work-страницы), место вставки (п.3 выше) и
+   ИНКРЕМЕНТНОСТЬ счётчика — `_run_kudo_onclick` реально исполняет (`eval`,
+   узкий JS→Python транслятор `this.`→`node.`, `||`→`or`) ТЕКСТ `onclick`,
+   извлечённый regex'ом из отрендеренного HTML (не переписанную вручную
+   копию формулы): два вызова подряд дают `"1"`, затем `"2"`, не `"1"` оба
+   раза — witness: `powershell -NoProfile -ExecutionPolicy Bypass -Command
+   ". D:\AO3_tests\scripts\tasks.ps1; Invoke-Pytest
+   tests/test_recording_builder_unit.py -q"` → `44 passed in 0.26s
+   PYTEST_EXIT=0` (было 40 тестов до фикса, +4 новых).
+5. **Регрессия.** `D:/AO3_tests/framework/.venv/Scripts/python.exe -m pytest
+   scripts/tests -q` → `783 passed, 1 skipped in 23.36s` (skip не связан с
+   этим фиксом). `framework/tests` собираются штатно (`--collect-only`
+   подтверждён отдельно).
+6. **Живой смок на эмуляторе.** Канонический подъём (`env.ps1` → `tasks.ps1`
+   → `Start-Emulator -WritableSystem` → `Install-App` [первая попытка упала
+   транзиентным `StorageManager.getVolumes()` NPE сразу после boot, устройство
+   осталось живым по `Get-Device`, повторная попытка — `Success`; тот же
+   класс, что известные транзиентные гонки системных сервисов сразу после
+   `boot_completed=1`, не деградация среды] → `Start-Appium`). Прогнан TC-009
+   (все 5 параметризаций рейтинга, `LISTING_BASIC_FILENAME`) и
+   TC-119/120/121/122 (`tap-zone-guard`, `WORK_WITH_DOWNLOAD_FILENAME`) — оба
+   набора используют пересобранные фикстуры с новым узлом. **3 прогона
+   подряд, все зелёные:** run1 `5 passed, 11 deselected in 154.66s`
+   (только TC-009) + отдельно `4 passed in 193.90s` (tap-zone-guard); run2 и
+   run3 (объединённый вызов обеих сюит) — `9 passed, 11 deselected in
+   348.24s` и `9 passed, 11 deselected in 344.26s`. Порядок/локаторы
+   существующих assert'ов (download-ссылка, tap-zone узлы 1/2, TabStrip,
+   RatingOverlay) не пострадали. Appium (`Stop-NodeProcesses`) и эмулятор
+   (`adb emu kill`) погашены по завершении.
+
+Ни TC-138..144 не запускались как критерий Fixed (см. «Критерий готовности» —
+формально не требуется, это отдельная работа test-automator).
+`app-under-test/` не тронут — `git status` подтверждает пусто.
 
 ## Чек-лист качества
 - [x] Проверены дубликаты среди открытых test_debt-багов — не совпадает с

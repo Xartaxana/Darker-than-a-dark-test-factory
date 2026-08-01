@@ -478,3 +478,139 @@ def test_pagination_hrefs_covered_predicate_catches_uncovered_href_in_second_blo
 
     # Then: непокрытый href из ВТОРОГО блока обязан быть найден -> covered=False
     assert _pagination_hrefs_covered(html_two_blocks, _PAGE_URL, recorded_urls) is False
+
+
+# --- AT-BUG-035: `#kudo_submit` — наблюдаемость авто-клика kudos
+# (`bugs/AT-BUG-035.md`). Узел — СИБЛИНГ `<ul class="work navigation actions">`
+# (не внутри неё — валидность вложенности), с ИНКРЕМЕНТНЫМ (не константным)
+# счётчиком `data-kudo-clicked`, читаемым `driver.execute_script`.
+
+_KUDO_ONCLICK_RE = re.compile(r'<a[^>]*id="kudo_submit"[^>]*onclick="([^"]*)"')
+
+
+class _FakeKudoNode:
+    """Минимальная эмуляция DOM `this` узла `#kudo_submit` — без node/JS-движка
+    (критерий готовности AT-BUG-035 явно допускает «JS-среду юнита ИЛИ
+    эквивалентную эмуляцию»)."""
+
+    def __init__(self) -> None:
+        self._attrs: dict[str, str] = {}
+
+    def getAttribute(self, name: str):  # noqa: N802 - имя JS DOM API
+        return self._attrs.get(name)
+
+    def setAttribute(self, name: str, value: str) -> None:  # noqa: N802
+        self._attrs[name] = value
+
+
+def _js_number(x) -> float | int:
+    """Эмуляция JS `Number(...)` для узкого домена этого выражения:
+    `null`/`""`/`False` -> `0`; иначе строка с целым числом (или само число) ->
+    `int`."""
+    if x is None or x == "" or x is False:
+        return 0
+    return int(x)
+
+
+def _js_string(x) -> str:
+    return str(x)
+
+
+def _run_kudo_onclick(js_snippet: str, node: _FakeKudoNode) -> None:
+    """Выполняет РЕАЛЬНЫЙ текст `onclick`, извлечённый regex'ом из
+    отрендеренного HTML (не переписанную вручную копию формулы) — переводит
+    узкое JS-подмножество, которое несёт `_kudo_submit_html`
+    (`this.` -> `node.`, `||` -> `or`), в Python-выражение и исполняет `eval`.
+    Узкий транслятор — рассчитан именно на форму этого выражения, не общий
+    JS-интерпретатор; ловит регресс формулы (например, откат на
+    атрибут-константу) так же надёжно, как реальный JS-движок, потому что
+    исполняет буквально извлечённый текст, а не собственный пересказ."""
+    for stmt in (s.strip() for s in js_snippet.split(";") if s.strip()):
+        if stmt.startswith("return"):
+            continue
+        py_expr = (
+            stmt.replace("this.getAttribute", "node.getAttribute")
+            .replace("this.setAttribute", "node.setAttribute")
+            .replace("||", " or ")
+        )
+        eval(  # noqa: S307 - узкий, контролируемый namespace, не пользовательский ввод
+            py_expr, {"node": node, "Number": _js_number, "String": _js_string}
+        )
+
+
+def _extract_kudo_onclick(body: str) -> str:
+    m = _KUDO_ONCLICK_RE.search(body)
+    assert m is not None, "узел #kudo_submit с onclick не найден в отрендеренном HTML"
+    return m.group(1)
+
+
+@pytest.mark.p2
+@allure.id("recording-builder-work-page-has-kudo-submit-node")
+@allure.title("render_work_page_html: несёт узел #kudo_submit (AT-BUG-035)")
+def test_render_work_page_html_has_kudo_submit_node():
+    work = ALL_WORKS[0]
+    body = rb.render_work_page_html(work)
+    assert 'id="kudo_submit"' in body
+    assert 'class="kudos"' in body
+
+
+@pytest.mark.p2
+@allure.id("recording-builder-work-page-kudo-submit-is-sibling-of-navigation-actions-ul")
+@allure.title("render_work_page_html: #kudo_submit — СИБЛИНГ ul.work.navigation.actions, не внутри неё (AT-BUG-035)")
+def test_render_work_page_html_kudo_submit_is_sibling_not_nested():
+    work = ALL_WORKS[0]
+    body = rb.render_work_page_html(work)
+
+    ul_start = body.index('<ul class="work navigation actions"')
+    ul_end = body.index("</ul>", ul_start) + len("</ul>")
+    ul_block = body[ul_start:ul_end]
+    # Then: узел НЕ внутри <ul> (валидность вложенности — критик-ревью нит 5)
+    assert 'id="kudo_submit"' not in ul_block
+
+    kudo_start = body.index('id="kudo_submit"')
+    wrapper_start = body.index('<div class="wrapper">')
+    # И: порядок в исходном HTML — </ul> ... #kudo_submit ... <div class="wrapper">
+    # (regression-требование AT-BUG-030: не сдвигает _download_list_html внутри
+    # <ul>, ни tap-zone-guard/reading-UX узлы внутри .wrapper).
+    assert ul_end < kudo_start < wrapper_start
+
+
+@pytest.mark.p2
+@allure.id("recording-builder-work-page-kudo-submit-onclick-increments-not-constant")
+@allure.title("render_work_page_html: onclick #kudo_submit — ИНКРЕМЕНТНЫЙ счётчик data-kudo-clicked, не константа (B2, AT-BUG-035)")
+def test_render_work_page_html_kudo_submit_onclick_is_incremental_counter():
+    work = ALL_WORKS[0]
+    body = rb.render_work_page_html(work)
+    onclick_js = _extract_kudo_onclick(body)
+    assert "data-kudo-clicked" in onclick_js
+
+    node = _FakeKudoNode()
+    # Given: baseline — атрибута ещё нет (Number(null||0) == 0)
+    assert node.getAttribute("data-kudo-clicked") is None
+
+    # When: первый клик (реальный извлечённый JS-текст, не пересказ)
+    _run_kudo_onclick(onclick_js, node)
+    # Then: "1" — не совпадает с гипотетической атрибут-константой обеих проб
+    assert node.getAttribute("data-kudo-clicked") == "1"
+
+    # When: второй клик подряд
+    _run_kudo_onclick(onclick_js, node)
+    # Then: "2" — отличим от одинарного клика (TC-138/TC-144 различают "ровно
+    # один" от "два"; атрибут-константа '1' дала бы "1" оба раза — B2, critic attempt2)
+    assert node.getAttribute("data-kudo-clicked") == "2"
+
+
+@pytest.mark.p2
+@allure.id("recording-builder-work-pages-in-collected-recordings-have-kudo-submit-node")
+@allure.title("works_multi.mitm: КАЖДАЯ work-страница несёт узел #kudo_submit (AT-BUG-035, собранная запись)")
+def test_works_multi_work_pages_have_kudo_submit_node(works_multi_flows):
+    work_bodies = [
+        f.response.get_text()
+        for f in works_multi_flows
+        if _WORK_PATH_RE.match(urlparse(f.request.url).path)
+    ]
+    assert len(work_bodies) >= 2  # sanity — симметрично тесту AT-BUG-030 выше
+    for body in work_bodies:
+        assert 'id="kudo_submit"' in body
+        onclick_js = _extract_kudo_onclick(body)
+        assert "data-kudo-clicked" in onclick_js

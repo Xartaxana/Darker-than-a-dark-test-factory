@@ -520,6 +520,41 @@ def _tap_zone_guard_nodes_html() -> str:
                 width:200px; height:60px; background:#eee; border:1px solid #333;">Tap target (div)</div>"""
 
 
+# --- Узел `#kudo_submit` (AT-BUG-035) — наблюдаемость авто-клика kudos
+# (`bugs/BUG-015.md`, `docs/01-test-strategy.md` §9). `BrowserViewModel.kt`
+# (`applyRating:859`, `onRateWorkRequested/pendingPanelSave:1054`) выполняет
+# `evalJs(tabId, "var b=document.getElementById('kudo_submit');if(b)b.click();")`
+# — без узла `#kudo_submit` в фикстуре клик — no-op, а негативные Then (TC-139..
+# 143) вакуумно-истинны независимо от того, сработал ли предикат приложения
+# (тот же класс ложно-зелёного, что `AT-BUG-029`). Приём — тот же, что
+# `_tap_zone_guard_nodes_html` (`onclick`, пишущий факт клика в атрибут DOM,
+# читаемый `driver.execute_script` через `framework/core/contexts.py::in_webview`),
+# но с ИНКРЕМЕНТНЫМ счётчиком, не константой (B2, critic attempt2,
+# `bugs/AT-BUG-035.md`): `TC-138`/`TC-144` различают «ровно один клик» от «два
+# клика» — атрибут-константа `'1'` не отличила бы одно от другого. Baseline
+# (атрибута нет) читается как `0` (`Number(null||0)`), первый клик даёт `"1"`,
+# гипотетический повторный клик — `"2"`. `return false` — предотвращает переход
+# по фиктивному `href="#"` в синтетической фикстуре (реальный AO3-узел —
+# кнопка/ссылка с собственным JS, не имеющим значения для проверяемого
+# поведения нашего приложения).
+#
+# Место — СИБЛИНГ `<ul class="work navigation actions">`, НЕ внутрь неё
+# (критик-ревью нит 5, `bugs/AT-BUG-035.md`): `<p>` внутри `<ul>` — невалидная
+# вложенность. Вставка ПОСЛЕ закрывающего `</ul>` и ДО `<div class="wrapper">`
+# не сдвигает порядок/индексы узлов `_download_list_html` (внутри `<ul>`,
+# полностью предшествует новому узлу) и tap-zone-guard/reading-UX узлов
+# (`AT-BUG-030`, внутри `.wrapper`, идут строго ПОСЛЕ) — оба regression-
+# требования держатся.
+def _kudo_submit_html() -> str:
+    return (
+        '<p class="kudos"><a href="#" id="kudo_submit" role="button" '
+        "onclick=\"this.setAttribute('data-kudo-clicked', "
+        "String(1+Number(this.getAttribute('data-kudo-clicked')||0)));"
+        'return false;">'
+        "Give Kudos</a></p>"
+    )
+
+
 # --- Узел 3 критерия готовности AT-BUG-030 — высота документа >= 3×innerHeight
 # эталонного AVD (`innerHeight=1800`, CH-005) — общее предусловие ЛЮБОГО кейса
 # тап-зон (`docs/01-test-strategy.md` §9: короткая страница не прокручивается,
@@ -555,7 +590,12 @@ def render_work_page_html(work: Work) -> str:
     высота >= 3×innerHeight) — нужны поведенческому контролю guard'а тап-зон
     (TC-119/120/122) и reading-UX tap-to-scroll (TC-123..127). Все три — ПОСЛЕ
     `_download_list_html` в исходном HTML (regression-требование: порядок
-    относительно download-ссылки не меняется, см. докстринг узлов 1/2 выше)."""
+    относительно download-ссылки не меняется, см. докстринг узлов 1/2 выше).
+
+    AT-BUG-035: `#kudo_submit` (`_kudo_submit_html`) — СИБЛИНГ
+    `<ul class="work navigation actions">`, между ней и `<div class="wrapper">`
+    — не меняет порядок/индексы ни `_download_list_html` (внутри `<ul>`), ни
+    tap-zone-guard/reading-UX узлов (внутри `.wrapper`, идут строго после)."""
     title = html.escape(work.title)
     author = html.escape(work.author)
     fandom = html.escape(work.fandom)
@@ -573,6 +613,7 @@ def render_work_page_html(work: Work) -> str:
     <ul class="work navigation actions" role="navigation">
       {_download_list_html(work)}
     </ul>
+    {_kudo_submit_html()}
     <div class="wrapper">
       <p>Test fixture body for download-flow recording ({work.word_count} words).</p>
       {_tap_zone_guard_nodes_html()}
