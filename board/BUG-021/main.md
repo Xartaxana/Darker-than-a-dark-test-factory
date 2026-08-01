@@ -1,0 +1,155 @@
+---
+key: "BUG-021"
+project: "AO3"
+issueType: "bug"
+status: "bug-open"
+priority: "p1"
+summary: "Правка заметки скачанной работы через overlay листинга обнуляет downloadPath в Room"
+assignee: "qa-agents"
+reporter: "qa-agents"
+labels: ["bug", "test_case:TC-115", "test_case:TC-114", "run:CH-007", "sev:major"]
+components: []
+fixVersions: []
+watchers: []
+parent: null
+epic: null
+created: "2026-08-02T00:00:00Z"
+updated: "2026-08-02T00:00:00Z"
+archived: false
+resolution: null
+---
+
+# Правка заметки скачанной работы через overlay листинга обнуляет downloadPath в Room
+
+_Спроецировано из `bugs/BUG-021.md` (источник правды).
+Статус в нашей машине: **Open**._
+
+# BUG-021 — Правка заметки скачанной работы через overlay листинга обнуляет downloadPath
+
+## Окружение
+- Версия: 1.10 (versionCode 11), commit 63f6aac, собрана 2026-07-02
+- Эмулятор: emulator-5554, API 34
+- Режим: replay (listing_basic.mitm)
+- Тема: светлая
+
+## Шаги воспроизведения (Given-When-Then)
+
+**Given**
+- Работа скачана из карточки Library (ao3_id 900000001, фикстурный заголовок)
+- Карточка показывает **open-иконку** (работа помечена как скачанная)
+- Room содержит `downloadPath = "content://…/ao3_A Loved Test Work_900000001.html"`
+- Файл лежит на диске в SAF-подпапке загрузок
+- Тумблер `auto_download_saved` **выключен** (prefs сверены — ключа нет)
+
+**When**
+- Тап по рейтинг-кнопке на карточке Library (появляется RatingOverlay)
+- Тап по полю заметки → ввод текста («series note 1»)
+- Тап «Save note» (кнопка на overlay) → сохранение без выбора рейтинга
+
+**Then (ожидалось)**
+- Заметка сохраняется в Room (поле `comment`)
+- **Связь «строка ↔ файл» сохраняется:** `downloadPath` остаётся в Room
+- Карточка продолжает показывать **open-иконку**
+- Overlay продолжает показывать «Already downloaded»
+
+**Actual (фактически)**
+- Заметка сохранена (comment видна)
+- **`downloadPath` обнулен в Room** (`downloadPath: null`)
+- Карточка Library снова показывает **Download-иконку** (приложение считает работу нескачанной)
+- Overlay переобозначен: кнопка теперь подписана **«Download»** вместо «Already downloaded»
+- Файл остаётся на диске в подпапке (сирота)
+- **При повторном скачивании** создаётся **ВТОРОЙ файл** с пересобранным именем (`ao3_A Loved Test Work_900000001.html`)
+- Папка загрузок теперь содержит 2 файла (оба на диске, оба потеря пользовательских данных)
+
+## Частота
+**Всегда, 100%:** Воспроизведено 2 раза независимо в эксплораторном чартере (CH-007, пункты 2.11 и 3.2), плюс 3-е косвенное наблюдение (смена подписи кнопки overlay в 3.3).
+
+## Артефакты
+
+### Скриншоты
+- Карточка Library **после сохранения заметки** (Download-иконка вместо open-иконки): `exploratory-charters/attachments/CH-007/02_r1_c1_card_after_save_note.png`
+- Overlay **после сохранения заметки** (кнопка подписана «Download» вместо «Already downloaded»): `exploratory-charters/attachments/CH-007/03_r1_c2_overlay_after_save.png`
+- **Два файла в папке загрузок** после повторного скачивания: `exploratory-charters/attachments/CH-007/08_s2a_after_fast_taps.png`
+
+### Session-log
+- Полный лог репро: `exploratory-charters/attachments/CH-007/session-log.txt`
+  - Фигура **DLPATH[r1 after download]**: `downloadPath = content://…/ao3_A Loved Test Work_900000001.html` ✓
+  - Фигура **DLPATH[r1 c1 after save note]**: `downloadPath: null` ✗
+
+### Код репро
+- Драйвер сессии: `exploratory-charters/attachments/CH-007/test_ch007_probe.py`
+  - Пункт репро: `test_r1_save_note_vs_downloadpath` (круг 1 пробы R1, пункты 3.1–3.2)
+  - Запуск: `Invoke-Pytest exploratory-charters/attachments/CH-007/test_ch007_probe.py::test_r1_save_note_vs_downloadpath`
+
+## Анализ корневой причины
+
+### Место в коде (BrowserViewModel.kt)
+
+Метод `applyRating` (`:797-866`) обрабатывает сохранение рейтинга/заметки/тегов из RatingOverlay листинга. **Критическая ошибка на строках 807–813:**
+
+```kotlin
+fun applyRating(rating: Rating?, comment: String?, tags: List<String>? = null, dismiss: Boolean = true) {
+    val work = _uiState.value.pendingWork ?: return
+    // ...
+    if (rating == null) {  // Пользователь сохранил ТОЛЬКО заметку (рейтинг не выбран)
+        val savedComment = comment?.ifBlank { null }
+        when {
+            savedComment != null || savedTags != null -> {
+                repo.upsertWorkRating(WorkRating(  // ← СТРОКА 807
+                    ao3Id = workId, 
+                    title = work.title, 
+                    author = work.author,
+                    url = "https://archiveofourown.org/works/$workId",
+                    rating = null, 
+                    timestamp = System.currentTimeMillis(),
+                    fandom = work.fandom, 
+                    wordCount = work.wordCount,
+                    comment = savedComment, 
+                    tags = savedTags,
+                    // ↑ downloadPath ОТСУТСТВУЕТ!
+                ))
+```
+
+**Проблема:** Код создаёт **НОВЫЙ** WorkRating объект, подтягивая только поля, которые есть на странице (title, author, fandom, wordCount). **Не указанные поля** (включая `downloadPath`) получают **значения по умолчанию** — для nullable полей это **`null`**.
+
+Room `upsert` на существующую запись **ПЕРЕЗАПИСЫВАЕТ** все колонки новыми значениями. Результат: `downloadPath` затирается с существующего значения (`content://…`) на `null`.
+
+### Класс дефекта
+
+**Идентичный класс BUG-014 и BUG-015:** Сохранение строки из overlay/панели пересобирает `work_ratings` запись из данных, доступных на странице, **забывая о полях, которых на странице нет:**
+- BUG-014: правка тега на SAVE/LIKE запускает скачивание (edge-vs-level ретроактивности)
+- BUG-015: правка тега запускает kudos-клик (edge-vs-level)
+- **BUG-021** (эта находка): правка заметки обнуляет downloadPath (потеря связи файл-строка)
+
+**Дополнительные места того же класса, требующие проверки:**
+- (а) Дверь **панели work-страницы** (`add_tag_via_panel` / `savePanelRating`, `:683-764`) — наблюдается то же пересобирание при rating != null (`:746-752`)
+- (б) Поле **`title`** — наблюдалась замена локального заголовка скрейпом при пере-рейтинге (CH-007, п.2.9) — при существующей строке это тот же риск затирания
+
+### Почему это баг приложения, а не теста
+
+1. **Воспроизведено в чистом состоянии:** `clean_state` → пере-сев Room → скачивание → сохранение заметки
+2. **Состояние до/после сверено с Room напрямую:** `seed_db.read_download_paths()` показывает переход `content://…` → `null`
+3. **Файл существует на диске:** Подтверждено `adb shell ls` и `adb shell cat` (содержимое совпадает с фикстурным эталоном)
+4. **Ожидаемое поведение по коду:** `upsertWorkRating` должен был либо обновить только поля (comment, timestamp), либо сохранить существующие (downloadPath)
+5. **Ожидаемое поведение по UX:** Правка заметки — это операция над одним полем (`comment`), не пересборка строки; связь «файл на диске» ↔ «запись Room» должна пережить любую правку, которая файл не затрагивает
+
+## Верификация (заполняет fix-verifier)
+| Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
+|---|---|---|---|---|
+
+## Обсуждение
+
+**[qa @ 2026-08-02T10:00:00Z]**
+
+Находка сформулирована на основе эксплораторного чартера CH-007, follow-up раздел «bug-reporter». Драйвер воспроизведения готов и может быть запущен немедленно для верификации. Класс дефекта закрыт двумя другими открытыми багами (BUG-014, BUG-015); при фиксе этого бага рекомендуется проверить сиблинги на идентичную проблему.
+
+Awaiting: dev
+
+## Чек-лист качества
+- [x] Проверены дубликаты среди открытых багов — совпадений не найдено; сравнено с BUG-014 (ретроактивное скачивание), BUG-015 (kudos-клик), BUG-011 (race скана) — диагностика другая
+- [x] Репро-шаги воспроизводят проблему на чистом состоянии (clean_state → seed → download → save-note)
+- [x] Severity обоснована влиянием: **major** — молчаливая потеря пользовательских данных (связь файла с записью); пользователь теряет следы скачивания, повторное скачивание создаёт дублирующийся файл на диске
+- [x] Приложены скриншоты (до/после), session-log с дословным состоянием Room, указана точная версия (1.10 / versionCode 11 / commit 63f6aac)
+- [x] Ни одного изменения в коде приложения не внесено; чтение только
+- [x] Найдено конкретное место в коде (BrowserViewModel.kt:807–813, метод applyRating)
+- [x] Идентифицирован класс дефекта (пересборка строки Row из данных страницы, потеря полей вне страницы); указаны сиблинги и места для проверки

@@ -1,12 +1,12 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-01T23:05:48Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-01T23:10:12Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **739.5** (RUN-20260702-0300)
+- smoke: Closed · smoke_freshness_hours: **739.6** (RUN-20260702-0300)
 - regression: not_run
 - canary: not_run
 - Открытые blocker/critical: **0**
@@ -47,9 +47,9 @@ generated_at: 2026-08-01T23:05:48Z · генератор: `scripts/queue_snapsho
 | tabs |  |  |  | 11 |  |
 | visibility |  |  |  | 6 |  |
 
-## Баги (11)
+## Баги (12)
 
-- Open: **11**
+- Open: **12**
 - BUG-001 [minor] Open — PROJECT.md расходится с кодом: подписи вкладок Library/меню рейтинга; несуществующий глобальный «Enable filtering»
 - BUG-011 [major] Open — Restore from backup пропускает работы молча, если файл с тем же ao3Id уже лежит в папке загрузок
 - BUG-012 [minor] Open — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
@@ -61,6 +61,7 @@ generated_at: 2026-08-01T23:05:48Z · генератор: `scripts/queue_snapsho
 - BUG-018 [major] Open — DOM-ссылка «Next →» указывает на уже показанную страницу; тап уводит назад
 - BUG-019 [major] Open — Back после автопрыжка плотности не выводит назад — ловушка + рост истории
 - BUG-020 [major] Open — Простановка DISLIKE уводит пользователя со страницы; автонавигация live-push под открытым bottom-sheet
+- BUG-021 [major] Open — Правка заметки скачанной работы через overlay листинга обнуляет downloadPath в Room
 
 ## Известные проблемы, known_issue (1)
 

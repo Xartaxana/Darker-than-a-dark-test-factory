@@ -4353,6 +4353,30 @@
     "archived": false
   },
   {
+    "key": "BUG-021",
+    "path": "board/BUG-021/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Правка заметки скачанной работы через overlay листинга обнуляет downloadPath в Room",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-115",
+      "test_case:TC-114",
+      "run:CH-007",
+      "sev:major"
+    ],
+    "updated": "2026-08-02T00:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "RUN-20260702-0300",
     "path": "board/RUN-20260702-0300/main.md",
     "parent": null,
