@@ -55,6 +55,15 @@ AUT_PATH = REPO / "state" / "app-under-test.yaml"
 # re.sub по любому "^---$" задел бы их.
 FRONTMATTER_RE = re.compile(r"^---\r?\n(.*?)\r?\n---\r?\n", re.DOTALL)
 
+# Строка существующего поля gitlab_issue внутри тела frontmatter (не EOL —
+# он захватывается отдельно/остаётся нетронутым при replace). Шаблон
+# docs/templates/bug-report.md с 2026-08-01 кладёт пустой плейсхолдер
+# 'gitlab_issue: ""' в КАЖДЫЙ новый bug-файл -- writeback обязана ЗАМЕНИТЬ
+# эту строку, а не слепо вставлять вторую (BUG-021 живьём: две строки
+# 'gitlab_issue:' -> невалидный YAML, PyYAML.safe_load молча берёт
+# последнее значение без ошибки -- баг маскировался, но портил данные).
+GITLAB_ISSUE_LINE_RE = re.compile(r"^gitlab_issue:[^\r\n]*", re.MULTILINE)
+
 TITLE_MAX = 255
 
 # Маппинг статуса фабрики в GitLab issue state (правило спеки; словарь GitLab
@@ -240,10 +249,12 @@ def is_app_bug(meta: dict) -> bool:
 
 
 def writeback_gitlab_issue(path: Path, iid: int) -> None:
-    """Вставляет строку 'gitlab_issue: <iid>' ПЕРЕД закрывающим '---'
-    frontmatter; остальной файл байт-в-байт нетронут (никакого yaml-dump).
-    Поле `updated` НЕ трогается (sync-метаданные — не содержательная правка,
-    спека раздела Writeback).
+    """Если в frontmatter УЖЕ есть строка 'gitlab_issue: <...>' (шаблонный
+    плейсхолдер или предыдущий iid) — заменяет ТОЛЬКО эту строку на
+    'gitlab_issue: <iid>'. Иначе вставляет новую строку ПЕРЕД закрывающим
+    '---' frontmatter (прежнее поведение). Остальной файл в обоих случаях
+    байт-в-байт нетронут (никакого yaml-dump). Поле `updated` НЕ трогается
+    (sync-метаданные — не содержательная правка, спека раздела Writeback).
 
     БАЙТОВЫЙ ввод/вывод (read_bytes/write_bytes) намеренно, НЕ read_text/
     write_text: text-режим Path.read_text/write_text открывает файл с
@@ -251,8 +262,10 @@ def writeback_gitlab_issue(path: Path, iid: int) -> None:
     перегоняет ВСЕ окончания строк файла на '\\n', даже если исходный файл
     был CRLF (BUG-013 воспроизведение критика: вставка 18 байт -> рост
     файла на 161 при 8 из 11 целевых bugs/*.md LF и 3 CRLF). Вставляемый
-    eol выбирается по факту, какой символ стоит сразу после конца
-    frontmatter-тела в САМОМ файле (m.end(1)) — не глобальная перегонка."""
+    eol (insert-ветка) выбирается по факту, какой символ стоит сразу после
+    конца frontmatter-тела в САМОМ файле (m.end(1)) — не глобальная
+    перегонка; replace-ветка EOL не трогает вовсе (заменяется только
+    содержимое строки ДО EOL, сам EOL остаётся в 'хвосте' файла как был)."""
     raw = path.read_bytes()
     try:
         text = raw.decode("utf-8")
@@ -261,9 +274,17 @@ def writeback_gitlab_issue(path: Path, iid: int) -> None:
     m = FRONTMATTER_RE.match(text)
     if not m:
         raise BugSyncError(f"{path.name}: битый frontmatter при writeback")
-    insert_at = m.end(1)
-    eol = "\r\n" if text[insert_at:].startswith("\r\n") else "\n"
-    new_text = text[:insert_at] + f"{eol}gitlab_issue: {iid}" + text[insert_at:]
+
+    body_start, body_end = m.start(1), m.end(1)
+    field_match = GITLAB_ISSUE_LINE_RE.search(text[body_start:body_end])
+    if field_match is not None:
+        abs_start = body_start + field_match.start()
+        abs_end = body_start + field_match.end()
+        new_text = text[:abs_start] + f"gitlab_issue: {iid}" + text[abs_end:]
+    else:
+        insert_at = body_end
+        eol = "\r\n" if text[insert_at:].startswith("\r\n") else "\n"
+        new_text = text[:insert_at] + f"{eol}gitlab_issue: {iid}" + text[insert_at:]
     path.write_bytes(new_text.encode("utf-8"))
 
 

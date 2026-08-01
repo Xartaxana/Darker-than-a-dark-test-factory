@@ -222,6 +222,96 @@ def test_writeback_is_byte_exact_insert_lf_and_crlf(bugs_dir, eol):
         assert after.replace(b"\r\n", b"").count(b"\n") == 0
 
 
+# --- writeback: поле УЖЕ есть в frontmatter (шаблонный плейсхолдер
+# 'gitlab_issue: ""' с 2026-08-01, docs/templates/bug-report.md) -> REPLACE,
+# не INSERT второй строки (BUG-021 живьём: до фикса получалось 2 ключа
+# 'gitlab_issue:' -> невалидный YAML, PyYAML.safe_load молча брал последнее
+# значение без ошибки -- баг маскировался, но порча данных росла с каждым
+# новым багом).
+
+@pytest.mark.parametrize("eol", ["\n", "\r\n"], ids=["LF", "CRLF"])
+@pytest.mark.parametrize("existing_value", ['""', "5"],
+                         ids=["placeholder-empty", "old-iid"])
+def test_writeback_replaces_existing_field_no_duplicate(bugs_dir, eol, existing_value):
+    lines = [
+        "---",
+        "id: BUG-160",
+        'title: "Заголовок"',
+        "severity: major",
+        "status: Open",
+        f"gitlab_issue: {existing_value}",
+        'updated: "2026-08-01T00:00:00Z"',
+        "---",
+        "",
+        "# Тело",
+        "",
+        "Текст перед горизонтальной линией.",
+        "",
+        "---",
+        "",
+        "Текст после горизонтальной линии в теле.",
+        "",
+    ]
+    raw_text = eol.join(lines)
+    p = bugs_dir / "BUG-160.md"
+    p.write_bytes(raw_text.encode("utf-8"))
+    before = p.read_bytes()
+
+    gs.writeback_gitlab_issue(p, 12)
+    after = p.read_bytes()
+
+    text = before.decode("utf-8")
+    m = gs.FRONTMATTER_RE.match(text)
+    assert m is not None
+    field_match = gs.GITLAB_ISSUE_LINE_RE.search(text[m.start(1):m.end(1)])
+    assert field_match is not None
+    abs_start_bytes = len(text[:m.start(1) + field_match.start()].encode("utf-8"))
+    abs_end_bytes = len(text[:m.start(1) + field_match.end()].encode("utf-8"))
+
+    assert after == before[:abs_start_bytes] + b"gitlab_issue: 12" + before[abs_end_bytes:]
+
+    after_text = after.decode("utf-8")
+    m2 = gs.FRONTMATTER_RE.match(after_text)
+    assert m2.group(1).count("gitlab_issue:") == 1   # ровно одно поле -- нет дубля
+
+    meta, _body = gs.load_bug(p)
+    assert meta.get("gitlab_issue") == 12
+
+
+def test_writeback_repro_bug021_double_field_before_fix(bugs_dir):
+    """Живой репро BUG-021.md (заведён bug-reporter'ом ПОСЛЕ правки шаблона
+    2026-08-01): frontmatter уже несёт пустой плейсхолдер 'gitlab_issue: ""'.
+    До фикса writeback слепо вставляла ВТОРУЮ строку 'gitlab_issue: <iid>'
+    перед закрывающим '---' -> 2 ключа в frontmatter. После фикса -- ровно
+    один, со значением iid."""
+    text = (
+        "---\n"
+        "id: BUG-021\n"
+        'title: "Правка заметки скачанной работы через overlay листинга '
+        'обнуляет downloadPath в Room"\n'
+        "type: app_bug\n"
+        "severity: major\n"
+        "status: Open\n"
+        'gitlab_issue: ""\n'
+        'updated: "2026-08-02T00:00:00Z"\n'
+        "---\n"
+        "\n# BUG-021 — Правка заметки скачанной работы\n"
+    )
+    p = bugs_dir / "BUG-021.md"
+    p.write_bytes(text.encode("utf-8"))
+
+    gs.writeback_gitlab_issue(p, 12)
+
+    after_text = p.read_bytes().decode("utf-8")
+    m = gs.FRONTMATTER_RE.match(after_text)
+    assert m is not None
+    assert m.group(1).count("gitlab_issue:") == 1
+    assert "gitlab_issue: 12" in m.group(1)
+
+    meta, _body = gs.load_bug(p)
+    assert meta.get("gitlab_issue") == 12
+
+
 def test_second_run_is_idempotent_zero_create(bugs_dir):
     p = _write_bug(bugs_dir, "BUG-061", status="Open")
     meta, body = gs.load_bug(p)
