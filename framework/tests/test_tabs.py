@@ -32,7 +32,7 @@ import pytest
 
 from framework.data import recording_builder as rb
 from framework.data import works as W
-from framework.steps import app_steps, browser_steps
+from framework.steps import app_steps, browser_steps, library_steps
 
 
 @pytest.mark.p1
@@ -739,3 +739,75 @@ def test_cold_start_deep_link_reuses_single_home_tab(replay, clean_app, driver):
     # надкласс (ценность content-sync), но не тот конкретный экземпляр.
     # Мутация утверждения о reuse (1 vs 2 вкладки) отдельной пробой не
     # проверялась (критик-вход, attempt 2, PASS).
+
+
+@pytest.mark.p2
+@allure.id("TC-137")
+@allure.title(
+    "Тап по карточке Library на потолке 10 вкладок не открывает работу — "
+    "диалог лимита, активная вкладка не меняется, экран всё равно переключается на Browse"
+)
+def test_library_card_open_at_tab_limit_shows_dialog_and_switches_screen(loved_work_seeded, driver):
+    """TC-137: третий (после TC-022 «+» и TC-131 deep-link) вход в границу
+    MAX_TABS=10 — тап по телу карточки Library (`onOpenWork`,
+    MainActivity.kt:329-333). Отличие от TC-022/TC-131: `onOpenWork`
+    БЕЗУСЛОВНО переключает экран на Browse (`selectedTab = AppTab.BROWSE`,
+    `navExpanded = false`) НЕЗАВИСИМО от Boolean-результата `openTab` — Then
+    фиксирует ОБА факта (диалог + переключение экрана, И неизменность
+    активной вкладки/состава вкладок); порядок проверок фиксирован (диалог
+    первым, до TabStrip/prefs — модальный диалог перекрывает TabStrip)."""
+    work = loved_work_seeded
+
+    # Given открыто 10 вкладок Browse (MAX_TABS) — рецепт TC-022: стартовая
+    # Home-вкладка (index 0) + 1 deep-link на HOME_URL (TabStrip ещё скрыт при
+    # tabs.size==1 — кнопки «New tab» физически нет) + 8 тапов «New tab»
+    # (background=false — каждый делает новую вкладку активной, поэтому после
+    # 8-го тапа активна index 9). Каждый промежуточный тап не должен
+    # преждевременно упереться в диалог лимита.
+    app_steps.wait_home_ready_for_deep_link(driver)
+    app_steps.open_deep_link(browser_steps.HOME_URL)
+    browser_steps.assert_tab_strip_visible(driver, timeout=10)
+    for _ in range(8):
+        browser_steps.open_new_tab(driver)
+        browser_steps.assert_tab_limit_dialog_not_shown(driver)
+
+    # Given пользователь на экране Library — карточка работы W (засеяна
+    # `loved_work_seeded`, рейтинг SAVE) видна на дефолтной первой вкладке
+    # Favorite.
+    app_steps.open_tab(driver, "Library")
+
+    # When пользователь тапает по телу карточки работы «A Loved Test Work»
+    library_steps.open_work_in_browser(driver, work.title)
+
+    # Then показан диалог «Tab limit reached» с ДОСЛОВНЫМ текстом — проверяется
+    # и ЗАКРЫВАЕТСЯ ПЕРВЫМ (фиксированный порядок Then: модальный диалог
+    # перекрывает TabStrip, шаги, которым нужен доступ к полосе вкладок,
+    # обязаны идти после dismiss_tab_limit_dialog)
+    browser_steps.assert_tab_limit_dialog_shown(
+        driver, expected_max=10,
+        expected_message="You have 10 tabs open. Close some tabs before opening a new one.",
+    )
+    browser_steps.dismiss_tab_limit_dialog(driver)
+
+    # And экран тем не менее переключился на Browse (TabStrip стал видим) —
+    # `onOpenWork` выполняет `selectedTab = AppTab.BROWSE`/`navExpanded = false`
+    # БЕЗУСЛОВНО, независимо от результата `openTab` (MainActivity.kt:329-333);
+    # пользователь больше не видит список Library.
+    browser_steps.assert_tab_strip_visible(driver)
+
+    # And число вкладок остаётся 10, URL работы отсутствует во ВСЕХ вкладках
+    # ВЕСЬ бюджет ожидания — синхронизированный негатив (регрессионный замок
+    # находки 4 CH-005, тот же приём TC-131), НЕ пара
+    # wait_persisted_tab_count + assert_persisted_marker_count: тот счёт уже
+    # был 10 ДО тапа и не служит синхронизацией отказа.
+    app_steps.assert_persisted_marker_absent_for(
+        work.url, budget_s=4.0, poll_interval=0.5, expected_total=10)
+
+    # And активная вкладка осталась позицией 9 — `openTab` вернул `false` ДО
+    # присвоения `activeTabIndex` (BrowserViewModel.kt:263-266), индекс не
+    # сдвинулся ни к несуществующей 11-й вкладке, ни к какой-либо другой.
+    # Вместе с проверкой выше это доказывает «контент активной вкладки не
+    # переключился на работу» без побайтовой сверки URL вкладки 9 с
+    # литералом HOME_URL (в prefs он нормализован до адреса СО слэшем —
+    # см. TC-137.md Предусловия/класс дефекта B1).
+    app_steps.assert_persisted_active_tab_index(9)
