@@ -26,6 +26,9 @@ resolution_comment: "" # обоснование человека, если за�
 known_issue: "false"   # true — подтверждён, релиз идёт с ним (docs/06 D14, дедуп + digest)
 blocked_reason: ""     # environment | missing_fixture | product_decision | dev_answer | permissions (docs/06 B5) — заполнить при status: Blocked
 lock: ""
+gitlab_issue: ""       # МАШИННОЕ поле: iid issue в GitLab-проекте приложения (только app_bug);
+                       # пишет scripts/gitlab_sync.py (writeback после создания issue) —
+                       # руками не заполнять и не править
 ---
 
 # BUG-000 — {Название}

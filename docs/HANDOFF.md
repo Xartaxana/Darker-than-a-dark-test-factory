@@ -576,7 +576,9 @@ BUG-014/BUG-015/BUG-016 (все major) — передать разработчи
 всеми шестью вердиктами, проведено c8e8000. Прежние: включение
 heartbeat/дата репетиции, BUG-013 — передать или WontFix (окно
 <100мс, minor; верификация — только со свежим witness prefs-ридов),
-GitLab-токен (Этап 4 п.8), Get-Date в allowlist (висит с
+~~GitLab-токен (Этап 4 п.8)~~ — РЕШЁН 2026-08-01 (оператор положил
+PAT в env `GITLAB_TOKEN`; механизм — scripts/gitlab_sync.py, задача
+gitlab-bugs-publish), Get-Date в allowlist (висит с
 калибровки №2).
 
 ## Как поднять окружение (в новом окне)
@@ -656,6 +658,21 @@ reachability guard в `mitm.wait_device_proxy_reachable`, тест не долж
   — кандидат в тот же класс при касании.
 
 ## Открытые хвосты (вне текущей очереди)
+
+- **Остаток класса «EOL-перегон у писателей frontmatter» (вердикт
+  critic N4 gitlab-bugs-publish, 2026-08-01; правило 9 — остаток явно
+  в очередь):** `board_sync.approve_test_case/set_priority/set_severity`
+  и `board_inbound._replace_field`/writeback используют
+  `read_text`/`write_text` (newline=None) — запись молча перегоняет
+  окончания строк ВСЕГО файла; сейчас маскируется `core.autocrlf=true`,
+  на клоне с autocrlf=false/Linux даст полнофайловые диффы. Класс
+  ПРЕДсуществует, этим диффом не внесён; образец фикса —
+  `scripts/gitlab_sync.py::writeback_gitlab_issue` (read_bytes/
+  write_bytes + eol по факту). Чинить батчем при следующем касании
+  этих файлов. **Новая ось для SIBLING_MAP (внутр. AO3): «писатель
+  frontmatter/markdown-артефакта обязан быть байтово-точным по EOL»
+  — внести в OS-репо отдельным коммитом** (пока не внесена — эта
+  строка и есть носитель по правилу 9).
 
 - **ИСХОДЯЩЕЕ В OS 2026-07-31 (кросс-деплойный пункт, правило 4б —
   живёт здесь, потому что носитель ЭТОГО репо; передать их Lead при

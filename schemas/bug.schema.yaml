@@ -45,3 +45,7 @@ fields:
   type: { enum: [app_bug, test_debt] }
   debt_kind: { enum: [flaky_test, slow_test, missing_fixture, weak_locator,
                       obsolete_test_case, missing_evidence, broken_environment] }
+  # N3 (docs/tasks/2026-08-01_gitlab-bugs-publish.md): iid GitLab Issue,
+  # writeback после первого sync (scripts/gitlab_sync.py). Только BUG-*
+  # (app_bug) публикуются в GitLab; поле не имеет смысла у AT-BUG-*.
+  gitlab_issue: { pattern: "^\\d+$" }
