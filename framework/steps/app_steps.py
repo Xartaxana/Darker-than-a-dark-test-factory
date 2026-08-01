@@ -312,19 +312,51 @@ def wait_persisted_tab_count(expected_count: int, timeout: int = 10) -> None:
     """TC-131: опрашивает (не читает один раз) точное число вкладок в
     `open_tabs_urls` — тот же класс debounce/apply()-гонки, что закрывает
     `wait_tabs_persisted`, только по ТОЧНОМУ счёту объектов (нужно доказать
-    «11-я вкладка НЕ создана», не просто «сентинел где-то есть/нет»)."""
+    «11-я вкладка НЕ создана», не просто «сентинел где-то есть/нет»).
+
+    Диагностика при таймауте обязана нести ФАКТИЧЕСКОЕ последнее прочитанное
+    значение, а не None (AT-BUG-036: `message=` для `wait_for` — обычная
+    строка, вычисляется в момент ВЫЗОВА, до первого опроса; f-строка,
+    подставленная прямо в аргумент, замораживает `holder` пустым). Приём —
+    как в `settings_steps.assert_filter_profile_count`: ждать в
+    `try/except TimeoutError`, читать `holder["count"]` для сообщения ПОСЛЕ
+    того, как опрос уже случился (ленивое вычисление).
+
+    ВАЖНО (AT-BUG-036, attempt 2 — critic-фикс): `except TimeoutError: pass`
+    глотал исходное исключение целиком — вместе с ним терялся контекст
+    `wait_for` (`; last error: ...`), на который матчит зарегистрированный
+    fail-fast-детектор среды (`TimeoutError`/`ReadTimeoutError` на одном
+    шаге, класс AT-BUG-009: например зависший adb). Если `_check` не
+    сделала НИ ОДНОГО успешного наблюдения (predicate падает на КАЖДОМ
+    опросе — `holder` пуст), диагностировать «последнее наблюдение»
+    нечего: исходный `TimeoutError` пробрасывается ЦЕЛИКОМ (сохраняет и
+    тип исключения, и `; last error: ...`-контекст). Если хотя бы одно
+    наблюдение было (predicate читала prefs успешно, просто счёт не
+    совпал) — падение честное `AssertionError` с последним наблюдением;
+    причина `wait_for` (если исключение всё же было поймано на каком-то
+    из опросов) дописывается к сообщению отдельно, не теряется."""
     holder: dict[str, int] = {}
+    wait_err: TimeoutError | None = None
 
     def _check() -> bool:
         holder["count"] = len(_parse_persisted_tabs(_read_tabs_prefs_raw()))
         return holder["count"] == expected_count
 
-    wait_for(
-        _check, timeout=timeout,
-        message=(
-            f"число вкладок в open_tabs_urls не стало {expected_count} "
-            f"(последнее наблюдение: {holder.get('count')})"
-        ),
+    try:
+        wait_for(_check, timeout=timeout, message="число вкладок в open_tabs_urls не сошлось")
+    except TimeoutError as exc:
+        wait_err = exc
+        if "count" not in holder:
+            # Опрос НИ РАЗУ не смог прочитать/распарсить prefs (например,
+            # adb завис — AT-BUG-009): наблюдения нет, диагностировать
+            # нечего. Пробрасываем исходный TimeoutError целиком — тип
+            # исключения и "; last error: ..."-контекст доходят до
+            # fail-fast-детектора среды без искажения.
+            raise
+    assert holder.get("count") == expected_count, (
+        f"число вкладок в open_tabs_urls не стало {expected_count} "
+        f"(последнее наблюдение: {holder.get('count')})"
+        + (f"; ожидание прервано: {wait_err}" if wait_err is not None else "")
     )
 
 
