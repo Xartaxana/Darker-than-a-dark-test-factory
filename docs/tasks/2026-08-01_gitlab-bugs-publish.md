@@ -24,8 +24,8 @@ critical+/blocker, ждало токена).
 | N2 | Развилки оператора: скоуп / закрытые / токен | оператор | done (см. шапку) |
 | N3 | builder: scripts/gitlab_sync.py + тесты + аддитивное поле схемы. owns: scripts/gitlab_sync.py, scripts/tests/test_gitlab_sync.py, schemas/bug.schema.yaml | builder (sonnet) | attempt 1 rejected (2 блокера критика: EOL-writeback, устойчивость батча); attempt 2 in flight (delegated 14:54: фиксы + labels add/remove + 4 рекомендации) |
 | N4 | critic-вход приёмки N3 (правило 3а: схема данных + новый скрипт >100 строк) | critic (opus) | done (ДОРАБОТАТЬ, accepted 14:53; после attempt 2 — контрольная сверка фиксов за Lead, полный второй критик-круг не требуется при точечном дифф-ответе на блокеры) |
-| N5 | Lead: приёмка, механизменный коммит (Rule-10 блок, tier: fable), встройка детектора --check в session-handoff, отметка docs/09 п.8 | Lead (fable) | queued |
-| N6 | Живая миграция 11 BUG-* (нужен GITLAB_TOKEN от оператора), сверка issues в GitLab, writeback gitlab_issue, коммит bugs/ | Lead (fable) | queued (блокирован env-токеном) |
+| N5 | Lead: приёмка, механизменный коммит (Rule-10 блок, tier: fable), встройка детектора --check в session-handoff, отметка docs/09 п.8 | Lead (fable) | done (коммит aa7f5da механизм + follow-up коммит миграции; docs/09 п.8 [X]) |
+| N6 | Живая миграция 11 BUG-* (нужен GITLAB_TOKEN от оператора), сверка issues в GitLab, writeback gitlab_issue, коммит bugs/ | Lead (fable) | done 2026-08-01 (11 created; 2-й прогон 11 × unchanged; --check exit 0; adopt-поиск живьём находит BUG-011 iid=2; 2 невалидных токена оператора отсеяны диагностикой /user до прогона) |
 
 Статус узла двигается тем же ходом, что его журнальное событие
 (routing-log, task_id gitlab-bugs-publish).
