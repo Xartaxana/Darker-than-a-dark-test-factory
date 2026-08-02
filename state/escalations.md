@@ -762,6 +762,18 @@ resolved при закрытии.
 
 ## ESC-013 — CH-008 Blocked, критик-гейт FAIL по плану
 
+- Статус: **resolved 2026-08-02** (полный Lead, Fable). CH-008
+  Blocked→Planned, `plan_review: critic:PASS:2026-08-02T09:54:38Z`
+  (критик, раунд 2 continuation). История: builder применил правки 1-6
+  (attempt 1) → критик-вход раунда 2 нашёл 4 блокера УЖЕ В САМИХ
+  правках раунда 1 (B1: baseline A/C не сеются хелперами seed_db; B2:
+  C без tags=[] уводит Clear note в :807 — дубль BUG-021; B3: подпробы
+  3a/3b без пере-сева; B4: ярлык строки 6) → rework Lead по
+  продиктованным фиксам + 3 однострочника → PASS с независимой
+  трассировкой Kotlin (включая скрытые ловушки: onDispose панели,
+  достижимость панели при downloadPath). Журнал: task_id
+  ch008-plan-fixes-0802 (rejected spec-класс → dispatch_skipped →
+  accepted с witness). Исполнение чартера — очередь /qa-loop.
 - Артефакт: `exploratory-charters/CH-008.md` (status: Blocked, plan_review: `critic:FAIL:2026-08-02T02:19:25Z`)
 - С какого времени: 2026-08-02T02:19:25Z
 - Причина: критик-вход гейта Proposed→Planned вернул FAIL. Блокеры (полный
