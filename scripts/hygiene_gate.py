@@ -8,6 +8,20 @@ python scripts/log_append.py» (CLAUDE.md, «Дисциплина команд»
 NON-GOALS этой задачи (спека: "расширение на другие классы -- НЕ твоя
 задача"), не портированы.
 
+v3 (2026-08-02, permission-audit сессии 25, полный Lead): класс
+«cd-префикс к СОБСТВЕННОМУ корню репо» продвинут из NON-GOALS в
+warn-детект ПО EVIDENCE УТЕЧКИ (правило 10г): ~70 вызовов за сутки
+формы `cd D:/AO3_tests && python scripts/...` -- правило CLAUDE.md
+«Дисциплина команд» п.2 («не префиксовать cd: cwd и так корень»)
+держалось «на дисциплине» и текло, каждый такой вызов ломал
+совпадение с allowlist и давал permission-запрос при давно
+разрешённой команде. Детект НАРОЧНО узкий: только точный корень
+AO3_tests (обе формы слешей + msys `/d/`), только когда за cd идёт
+цепочка (`&&`/`;`) -- каноническая форма ЧУЖОГО репо
+(`cd /d/Improving_AI/Operating-System-for-LLMs && git ...`,
+CLAUDE.md п.1) и cd в ПОДкаталог (framework и т.п.) не матчятся
+(подкаталог -- 2 вызова за сутки, evidence на класс не набран).
+
 АДАПТАЦИЯ К AO3 (отличия от референса):
 
 1. Два журнала, не один: у штаба единственный routing-log; здесь
@@ -142,6 +156,21 @@ MSG_JOURNAL_BYPASS = (
     "(CLAUDE.md, «Дисциплина команд» п.4)"
 )
 
+# v3: cd-префикс к собственному корню репо. Матч только точного корня
+# (D:/AO3_tests | D:\AO3_tests | /d/AO3_tests, опц. кавычки, опц.
+# хвостовой слеш) и только с цепочкой дальше (&&/;) -- голый `cd`
+# без продолжения и cd в подкаталог/чужой репо не матчятся.
+CD_SELF_PREFIX_RE = re.compile(
+    r"^\s*cd\s+[\"']?(?:/d/AO3_tests|D:[/\\]AO3_tests)[\"']?[/\\]?\s*(?:&&|;)",
+    re.IGNORECASE,
+)
+
+MSG_CD_SELF_PREFIX = (
+    "cwd уже корень репо -- cd-префикс ломает совпадение с allowlist "
+    "и даёт permission-запрос на давно разрешённой команде "
+    "(CLAUDE.md, «Дисциплина команд» п.2); вызывай команду без cd"
+)
+
 
 def _has_journal_substring(command_lower: str) -> bool:
     return any(s in command_lower for s in JOURNAL_SUBSTRINGS)
@@ -199,10 +228,15 @@ def decide(payload: dict) -> tuple[int, dict | None]:
     if not isinstance(command, str) or not command:
         return 0, None
 
-    if not _is_journal_bypass(command):
+    warnings = []
+    if _is_journal_bypass(command):
+        warnings.append(MSG_JOURNAL_BYPASS)
+    if CD_SELF_PREFIX_RE.search(command):
+        warnings.append(MSG_CD_SELF_PREFIX)
+    if not warnings:
         return 0, None
 
-    context = "Командная гигиена (WARN, не блокирует): " + MSG_JOURNAL_BYPASS
+    context = "Командная гигиена (WARN, не блокирует): " + "; ".join(warnings)
     # Ключа permissionDecision здесь НЕТ НАМЕРЕННО -- warn не трогает
     # permission-путь (см. докстринг модуля / B1 референса).
     return 0, {

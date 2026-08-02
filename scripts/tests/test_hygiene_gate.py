@@ -580,3 +580,61 @@ def test_echo_json_v2_true_positive_exit0_with_stdout_json():
     hso = data["hookSpecificOutput"]
     assert "permissionDecision" not in hso
     assert hygiene_gate.MSG_JOURNAL_BYPASS in hso["additionalContext"]
+
+
+# --- v3: класс «cd-префикс к собственному корню репо» (2026-08-02) ---
+# Границы (правило 11): матч точного корня в обеих формах слешей и msys,
+# с обоими разделителями цепочки; НЕ-матч -- чужой репо (каноническая
+# форма OS), подкаталог, голый cd без цепочки, команда без cd.
+
+
+def _decide_ctx(command: str) -> str | None:
+    code, output = hygiene_gate.decide(_bash_payload(command))
+    assert code == 0
+    if output is None:
+        return None
+    return output["hookSpecificOutput"]["additionalContext"]
+
+
+def test_v3_cd_self_prefix_forward_slash_triggers():
+    ctx = _decide_ctx("cd D:/AO3_tests && python scripts/log_append.py open-dispatches")
+    assert ctx is not None and hygiene_gate.MSG_CD_SELF_PREFIX in ctx
+
+
+def test_v3_cd_self_prefix_msys_and_semicolon_triggers():
+    ctx = _decide_ctx("cd /d/AO3_tests ; python scripts/validate_frontmatter.py")
+    assert ctx is not None and hygiene_gate.MSG_CD_SELF_PREFIX in ctx
+
+
+def test_v3_cd_self_prefix_backslash_case_insensitive_triggers():
+    ctx = _decide_ctx('cd "d:\AO3_tests" && git status')
+    assert ctx is not None and hygiene_gate.MSG_CD_SELF_PREFIX in ctx
+
+
+def test_v3_cd_other_repo_canonical_form_not_triggered():
+    ctx = _decide_ctx(
+        "cd /d/Improving_AI/Operating-System-for-LLMs && git log --oneline -3"
+    )
+    assert ctx is None
+
+
+def test_v3_cd_subdirectory_not_triggered():
+    ctx = _decide_ctx(
+        "cd /d/AO3_tests/framework && .venv/Scripts/python.exe -m pytest -q"
+    )
+    assert ctx is None
+
+
+def test_v3_bare_cd_without_chain_not_triggered():
+    assert _decide_ctx("cd D:/AO3_tests") is None
+
+
+def test_v3_plain_command_not_triggered():
+    assert _decide_ctx("python scripts/log_append.py open-dispatches") is None
+
+
+def test_v3_both_classes_join_in_one_context():
+    ctx = _decide_ctx("cd D:/AO3_tests && echo x > logs/routing-log.jsonl")
+    assert ctx is not None
+    assert hygiene_gate.MSG_JOURNAL_BYPASS in ctx
+    assert hygiene_gate.MSG_CD_SELF_PREFIX in ctx
