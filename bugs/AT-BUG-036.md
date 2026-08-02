@@ -4,7 +4,7 @@ title: "app_steps.wait_persisted_tab_count: диагностика «после�
 type: test_debt
 debt_kind: flaky_test
 severity: minor
-status: Fixed
+status: Verified
 found_in: "test-reviewer, F1-ревью батча tabs TC-131..135 (2026-07-31): в собственной красной пробе ревьюера падение честное (TimeoutError на содержательном Then), но текст диагностики — «не стало 1 (последнее наблюдение: None)» при фактически прочитанных 2 вкладках: f-строка параметра message= вычисляется в момент ВЫЗОВА wait_for, до первого опроса, поэтому holder.get('count') в ней всегда None."
 fixed_in: "test-maintainer (Sonnet), 2026-08-01, attempt 2: `framework/steps/app_steps.py::wait_persisted_tab_count` — `except TimeoutError as exc: wait_err = exc`; если `holder` пуст (ни одного успешного наблюдения — predicate падал на КАЖДОМ опросе), исходный `TimeoutError` пробрасывается ЦЕЛИКОМ (сохраняет тип исключения и `; last error: ...`-контекст `wait_for` для fail-fast-детектора среды, AT-BUG-009); иначе `assert` несёт фактическое последнее наблюдение + причину `wait_err`, если она была. Закреплено device-free юнитом `framework/tests/test_wait_persisted_tab_count_diagnostics_unit.py` (обе ветки). Попутно исправлена неверная формулировка N1 в записи discussion attempt 1 (ошибочно утверждала, что `None` возникает при нечитаемом prefs — на деле `_parse_persisted_tabs` глотает ошибки парсинга и возвращает `0`, `None` — только при исключении в самом опросе)."
 last_seen_in: "1.10"
@@ -12,8 +12,8 @@ test_cases: ["TC-131", "TC-135", "TC-136"]
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-08-01T22:20:47Z"
-updated: "2026-08-01T22:26:00Z"
+status_since: "2026-08-02T02:34:00Z"
+updated: "2026-08-02T02:34:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -41,7 +41,9 @@ lock: ""
 
 ## Затронутые вызывающие
 
-Все тесты, использующие `wait_persisted_tab_count` с ненулевым ожиданием (Grep по `framework/`): `test_tabs.py` (TC-131, TC-135 и соседи), заметки автоматизации TC-136. Обход сиблингов внутренней оси `framework/steps/` выполнен ревьюером при F1: других экземпляров класса «f-строка диагностики вычисляется до опроса» не найдено.
+Все тесты, использующие `wait_persisted_tab_count` с ненулевым ожиданием (Grep по `framework/`): `test_tabs.py` (TC-131, TC-135 и соседи), заметки автоматизации TC-136.
+
+**Поправка приёмки (координатор, 2026-08-02, критик-вход D1 fix-verifier).** Формулировка выше («обход сиблингов... других экземпляров не найдено», внесённая ревьюером при F1) была НЕПОЛНОЙ: критик-вход при D1-верификации нашёл ещё один экземпляр того же класса — `framework/steps/browser_steps.py:750-757` (`assert_tap_to_scroll_delta`): `get_webview_scroll_y(driver)` вычисляется как аргумент вызова ДО входа в `wait_until`, то есть до единственного последующего опроса; при таймауте текст падения несёт пред-опросное значение scrollY под подписью «текущий», что уводит триаж тем же образом, что и исходный дефект этого бага (здесь мягче — не `None`, а устаревшее число). Заведён отдельным test_debt-багом `bugs/AT-BUG-039.md` (не добавлено строкой в `bugs/AT-BUG-037.md` — тот файл был локом test-maintainer в момент этой правки, правило 4: не трогать чужие незакоммиченные пути). Класс «f-строка диагностики вычисляется до опроса» по всей поверхности `message=` у `wait_for`/`wait_until` в `framework/` — критик прошёл её целиком (перечень в его вердикте), других неучтённых экземпляров, кроме этого, нет.
 
 ## Критерий готовности (Fixed)
 
@@ -54,6 +56,7 @@ lock: ""
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
 | 2026-08-01 | 1.10 (не зависит от сборки приложения) | TC-135 (`test_cold_start_deep_link_reuses_single_home_tab`) + device-free `test_wait_persisted_tab_count_diagnostics_unit.py` (2 пробы) + красная проба обеих веток `wait_persisted_tab_count` | PASSED (см. дословный witness в discussion attempt 2) | test-maintainer, самопрогон (fix-verifier не запускался отдельным проходом в рамках этого B4-диспатча) |
+| 2026-08-02 | 1.10 (не зависит от сборки приложения) | (1) `framework/tests/test_wait_persisted_tab_count_diagnostics_unit.py` (2 пробы, device-free) — прогнан независимо; (2) TC-135 `test_tabs.py::test_cold_start_deep_link_reuses_single_home_tab` — прогнан независимо на живом эмуляторе (свежий `Start-Emulator -WritableSystem` → `Install-App` → `Start-Appium`); TC-131/TC-136 отдельно не прогонялись — используют тот же `wait_persisted_tab_count`/`assert_persisted_marker_count` без изменения сигнатуры, покрыты тем же диффом, что уже прогнан TC-135 + юнитом (не молчаливый пропуск: явно называю, что не гонял) | (1) `Invoke-Pytest tests/test_wait_persisted_tab_count_diagnostics_unit.py -v` → `2 passed in 2.49s`, `PYTEST_EXIT=0`; (2) `Invoke-Pytest tests/test_tabs.py -k test_cold_start_deep_link_reuses_single_home_tab -v` → `tests/test_tabs.py::test_cold_start_deep_link_reuses_single_home_tab[tab_markers.mitm] PASSED [100%]`, `1 passed, 11 deselected in 27.30s`, `PYTEST_EXIT=0`; (3) `python scripts/arch_check.py` → `ошибок 0, предупреждений 0`; `python scripts/validate_frontmatter.py` → `ошибок 0, предупреждений 0` | fix-verifier (Sonnet), независимая верификация: дифф прочитан построчно и сверен с описанием attempt 2 (`except TimeoutError as exc: wait_err = exc`, `raise` при пустом `holder`, `assert` с `wait_err` в сообщении) — совпадает буквально; окружение поднято/погашено этим ходом (`Get-Device` до → `NO DEVICE`, после → `NO DEVICE`); `status: Fixed → Verified` |
 
 ## Обсуждение
 
@@ -113,6 +116,54 @@ N4 — нет регрессионного device-free юнита на саму 
 (критик attempt 2 подтвердил: «кода менять не нужно, прогонов не нужно» —
 запись в очередь достаточна). Следующий B4-проход по любому из них — новая
 задача, отдельный диспатч.
+
+**2026-08-02T02:34:00Z — fix-verifier (Sonnet), независимая верификация (mode=verify, D1):**
+Строка test-maintainer в таблице выше явно помечена «самопрогон, fix-verifier
+не запускался отдельным проходом» — эта запись её не заменяет, а добавляет
+первую фактически независимую верификацию.
+
+1. Прочитал bugs/AT-BUG-036.md целиком (frontmatter + всё «Обсуждение»,
+   attempt 1/2, critic-разбор, N1-N6).
+2. Сверил `framework/steps/app_steps.py::wait_persisted_tab_count`
+   построчно с описанием attempt 2: `except TimeoutError as exc: wait_err
+   = exc`, `if "count" not in holder: raise` (пустой holder — исходный
+   TimeoutError пробрасывается целиком), `assert holder.get("count") ==
+   expected_count` с f-строкой, читающей `holder.get("count")` ПОСЛЕ
+   опроса, плюс приписка `wait_err` в тексте. Дифф в коде совпадает с
+   диффом, описанным в записи test-maintainer, буквально.
+3. Device-free: `Invoke-Pytest tests/test_wait_persisted_tab_count_diagnostics_unit.py -v`
+   — прогнал независимо (не переиспользовал вывод test-maintainer):
+   `2 passed in 2.49s`, `PYTEST_EXIT=0`. Обе пробы (readable-timeout →
+   реальное наблюдение `1` в тексте, не `None`; падающий на каждом опросе
+   predicate → пробрасывается исходный `TimeoutError` с `AT-BUG-009`/
+   `last error` в тексте) — зелёные.
+4. Живой смок: канонический подъём (`Start-Emulator -WritableSystem` →
+   `Get-Device` → `Install-App` → `Start-Appium`; первый `Install-App`
+   упал `NullPointerException` в `StorageManagerService.allocateBytes`
+   на стороне system server — транзиентный глюк свежесозданного
+   писабл-система AVD, НЕ повторяющийся идентичный env-класс фейл, ко
+   второй попытке `Install-App` прошёл `Success`; это разовый сбой, не
+   деградация среды по правилу fail-fast — 2 попытки одного и того же
+   класса не набралось). TC-135
+   (`Invoke-Pytest tests/test_tabs.py -k test_cold_start_deep_link_reuses_single_home_tab -v`):
+   `1 passed, 11 deselected in 27.30s`, `PYTEST_EXIT=0`. Окружение
+   погашено этим же ходом (`Stop-NodeProcesses` + `adb emu kill`),
+   `Get-Device` после → `NO DEVICE`.
+5. `python scripts/arch_check.py` → `ошибок 0, предупреждений 0`;
+   `python scripts/validate_frontmatter.py` → `ошибок 0, предупреждений 0`.
+6. TC-131/TC-136 из `test_cases` отдельно НЕ прогонялись этим ходом —
+   называю явно, не молчу: оба используют тот же изменённый
+   `wait_persisted_tab_count` (и `assert_persisted_marker_count`, не
+   тронутый этим диффом) без изменения сигнатуры/семантики вызова;
+   покрытие того же самого diff-пути уже дают TC-135 (живой прогон) и
+   device-free юнит (обе ветки diagnostics-логики напрямую, без
+   привязки к конкретному вызывающему тесту) — TC-131/TC-136 не несут
+   дополнительного пути кода сверх уже прогнанного.
+
+Итог: фикс attempt 2 подтверждён независимым прогоном — device-free юнит
+зелёный, живой TC-135 зелёный, arch_check/validate_frontmatter 0/0, код
+соответствует описанию. `status: Fixed → Verified`, `known_issue` остаётся
+`"false"` (был уже корректен), лок снят.
 
 **2026-08-01T22:05:00Z — test-maintainer (Sonnet), фикс (B4):**
 

@@ -126,6 +126,23 @@ def open_tab(driver, tab: str):
     BottomNav(driver).open(tab)
 
 
+@allure.step("Then нижняя навигация свёрнута (панель не видна за ручкой-пилюлей)")
+def assert_bottom_nav_collapsed(driver) -> None:
+    """TC-136: доказывает `navExpanded = false` (MainActivity.kt:332) — после
+    безусловного перехода на Browse (`onOpenWork`, MainActivity.kt:329-333)
+    нижняя навигация свёрнута за ручкой-пилюлей, наблюдаемо как отсутствие
+    пунктов Browse/Library/Settings на экране. Использует НОВУЮ публичную
+    обёртку `BottomNav.is_visible()` (`framework/screens/navigation.py`) —
+    прежде видимость определял только приватный `_nav_visible()`, вызываемый
+    исключительно изнутри `navigation.py`; отдельного локатора эта обёртка не
+    вводит, только делает существующую проверку доступной шагам (единственный
+    блокер автоматизации TC-136, снят test-automator'ом)."""
+    assert not BottomNav(driver).is_visible(), (
+        "нижняя навигация неожиданно видна (ожидали свёрнутое состояние "
+        "navExpanded=false сразу после перехода на Browse через карточку Library)"
+    )
+
+
 @allure.step("When приложение перезапущено")
 def restart_app(driver):
     driver.terminate_app("com.example.ao3_wrapper")
