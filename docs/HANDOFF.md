@@ -473,18 +473,14 @@ reachability guard в `mitm.wait_device_proxy_reachable`, тест не долж
 
 ## Открытые хвосты (вне текущей очереди)
 
-- **Невод MECHANISM_PREFIXES не покрывает enforcement-скрипты кроме
-  log_append/mechanism_gate (находка Lead 2026-08-02 при коммите
-  детектора дублей ключей, класс тот же, что закрыт для log_append.py
-  07-31):** `scripts/validate_frontmatter.py` (preflight-гейт каждого
-  прохода), `scripts/transitions.py` (машина статусов),
-  `scripts/arch_check.py`, `scripts/agent_output.py`,
-  `scripts/evidence.py`, `scripts/wiring_check.py` и соседи — машинные
-  проверки, меняющие обязанности (D-0065), но их правки проходят гейт
-  без осевого блока. Сегодняшний коммит cd0ccca нёс блок добровольно.
-  Решение о расширении невода (и где граница: гейты vs генераторы) —
-  отдельный механизменный ход полного Lead с правилом 10 на само
-  расширение; не молча.
+- **Невод MECHANISM_PREFIXES — РАСШИРЕН 2026-08-02 полным Lead:**
+  граница задекларирована в самом неводе (mechanism_gate.py): гейты/
+  валидаторы на пути исполнения — в неводе (добавлены
+  validate_frontmatter, transitions, arch_check, agent_output, evidence,
+  wiring_check, hygiene_gate, escape_check, critic_verdict_check,
+  enforcement_probe); генераторы/свиперы/локи — вне (их дефекты —
+  баги конвейера, прецедент AT-BUG-038/040/041). Детектор утечки —
+  чек 8 калибровки OS (аудит распознавания механизмов).
 
 - **Остатки critic-входа gitlab_sync writeback-фикса (2026-08-02, ПРИНЯТЬ
   0 блокеров, task_id gitlab-bugs-publish):** R1 — replace стирает инлайн-

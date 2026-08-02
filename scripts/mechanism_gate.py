@@ -122,6 +122,25 @@ MECHANISM_PREFIXES = (
     # без осевого блока. Тесты scripts/tests/ намеренно НЕ в списке.
     "scripts/log_append.py",
     ".githooks/",
+    # 2026-08-02 (закрытие хвоста HANDOFF «невод не покрывает
+    # enforcement-скрипты», полный Lead): граница невода для scripts/ —
+    # ГЕЙТЫ/ВАЛИДАТОРЫ, чей отказ или пропуск меняет, что обязано
+    # случиться (стоят на пути исполнения прохода/коммита/сессии:
+    # preflight, машина статусов, схемы выходов, хуки). Генераторы,
+    # свиперы и локи (queue_snapshot, coverage_map, board_*, sla_sweep,
+    # stale_locks, gitlab_sync, build_watch, loop_lock и пр.) — ВНЕ
+    # невода: артефакты производят, обязанностей не меняют, их дефекты
+    # трекаются багами конвейера (прецедент AT-BUG-038/040/041).
+    "scripts/validate_frontmatter.py",
+    "scripts/transitions.py",
+    "scripts/arch_check.py",
+    "scripts/agent_output.py",
+    "scripts/evidence.py",
+    "scripts/wiring_check.py",
+    "scripts/hygiene_gate.py",
+    "scripts/escape_check.py",
+    "scripts/critic_verdict_check.py",
+    "scripts/enforcement_probe.py",
     # 2026-07-23: срез карты осей — вход этого же гейта; тихая правка
     # среза = обход полноты осевого блока, поэтому сам срез механизмен.
     MAP_SNAPSHOT_REL,
