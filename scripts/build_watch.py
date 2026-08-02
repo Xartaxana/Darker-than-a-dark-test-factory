@@ -91,16 +91,31 @@ def _read_field(text: str, field: str) -> str | None:
 
 def _rewrite_field(text: str, field: str, value: str) -> str:
     """Заменяет значение поля, сохраняя хвостовой комментарий; нет поля — добавляет
-    после source_commit (или в конец файла)."""
-    pattern = re.compile(rf'(?m)^{field}:\s*[^#\n]*(?P<comment>#.*)?$')
+    после source_commit (или в конец файла).
+
+    AT-BUG-041: границы полей — [^#\\r\\n]* / [^\\r\\n]* + lookahead (?=\\r?\\n|$),
+    НЕ [^#\\n]*/.*$. '.' в (?m)-режиме матчит '\\r' (не матчит только '\\n'), а
+    класс [^#\\n] тоже его не исключает — жадный старый паттерн поглощал
+    завершающий '\\r' строки в тело матча и терял его при замене на строке БЕЗ
+    хвостового комментария (доказано эмпирически: 'version_code: 11\\r\\n' ->
+    'version_code: 99\\n' на старом паттерне). Тот же образец границы, что уже
+    закрыт в board_sync.py/board_inbound.py/gitlab_sync.py/stale_locks.py."""
+    pattern = re.compile(rf'(?m)^{field}:\s*[^#\r\n]*(?P<comment>#[^\r\n]*)?(?=\r?\n|$)')
     m = pattern.search(text)
     if m:
         comment = f"   {m.group('comment')}" if m.group("comment") else ""
         return pattern.sub(f"{field}: {value}{comment}", text, count=1)
-    anchor = re.search(r"(?m)^(source_commit:.*)$", text)
+    # AT-BUG-041: поля НЕТ в файле (типично coalesced_commits — его нет и в
+    # реальном state/app-under-test.yaml по состоянию на 2026-08-02, эта
+    # ветка исполняется на КАЖДОМ реальном вызове update_aut) — новая строка
+    # вставляется со стилем EOL самого файла (по факту, как _file_eol в
+    # board_inbound.py), а не хардкодным '\n', иначе первая же вставка заводит
+    # постоянно смешанный EOL в файле, который до неё был однородным.
+    eol = "\r\n" if "\r\n" in text else "\n"
+    anchor = re.search(r"(?m)^(source_commit:[^\r\n]*)", text)
     if anchor:
-        return text.replace(anchor.group(1), f"{anchor.group(1)}\n{field}: {value}", 1)
-    return text.rstrip("\n") + f"\n{field}: {value}\n"
+        return text.replace(anchor.group(1), f"{anchor.group(1)}{eol}{field}: {value}", 1)
+    return text.rstrip("\r\n") + f"{eol}{field}: {value}{eol}"
 
 
 def detect_new_commits() -> dict | None:
@@ -181,7 +196,12 @@ def _append_orch_log(outcome: str) -> None:
 
 
 def update_aut(tip: str, coalesced: list[str], apk_sha: str) -> None:
-    text = AUT_PATH.read_text(encoding="utf-8")
+    # AT-BUG-041 (сиблинг AT-BUG-038/040, класс 1 — EOL-перегон): read_bytes/
+    # write_bytes вместо read_text/write_text. Text-режим (newline=None)
+    # молча перегоняет ВСЕ окончания строк файла при КАЖДОЙ записи (на
+    # Windows LF -> CRLF), даже если правится набор отдельных полей —
+    # доказано критиком на копии реального (чисто-LF) app-under-test.yaml.
+    text = AUT_PATH.read_bytes().decode("utf-8")
     vname, vcode = read_app_versions()
     text = _rewrite_field(text, "source_commit", tip)
     text = _rewrite_field(text, "coalesced_commits",
@@ -194,7 +214,7 @@ def update_aut(tip: str, coalesced: list[str], apk_sha: str) -> None:
     text = _rewrite_field(text, "built_at", f'"{_utcnow_s()}"')
     text = _rewrite_field(text, "smoke_status", "not_run")
     text = _rewrite_field(text, "regression_status", "not_run")
-    AUT_PATH.write_text(text, encoding="utf-8")
+    AUT_PATH.write_bytes(text.encode("utf-8"))
 
 
 def watch(*, dry: bool = False) -> int:

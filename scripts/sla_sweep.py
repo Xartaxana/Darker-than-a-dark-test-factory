@@ -287,9 +287,24 @@ def apply_pingpong_block(src: Path, now: datetime.datetime, *, dry: bool) -> str
 
 def rewrite_registry(wanted: dict, now: datetime.datetime, *, dry: bool) -> tuple[list[str], list[str]]:
     """Обновляет escalations.md. Возвращает (added, removed) как 'KEY(rule)'."""
+    # AT-BUG-041 (сиблинг AT-BUG-038/040, класс 1 — EOL-перегон): read_bytes/
+    # write_bytes вместо read_text/write_text. Text-режим транслирует EOL в
+    # обе стороны (read_text: CRLF -> LF на чтении; write_text: LF ->
+    # os.linesep на записи) при КАЖДОМ проходе, даже когда часть строк
+    # реестра просто переносится без изменений (kept). str.splitlines
+    # (keepends=True) корректно распознаёт и сохраняет и '\n', и '\r\n' —
+    # менять остальную логику не требуется.
     stamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
-    old_lines = (ESCALATIONS_PATH.read_text(encoding="utf-8").splitlines(keepends=True)
-                 if ESCALATIONS_PATH.exists() else [])
+    text = ESCALATIONS_PATH.read_bytes().decode("utf-8") if ESCALATIONS_PATH.exists() else ""
+    # attempt 2 (критик-вход приёмки): НОВЫЙ контент (добавленные строки,
+    # догенерированный header) обязан брать EOL-стиль САМОГО файла по факту,
+    # не хардкод '\n' — иначе первая же эскалация после этого фикса заводит
+    # перманентно смешанный EOL в файле, который до неё оставался однородным
+    # (живой state/escalations.md сегодня: 820 CRLF / 0 bare-LF). Тот же
+    # образец, что board_inbound._file_eol (AT-BUG-038) и уже применённый
+    # здесь же для build_watch._rewrite_field (ветка «поля нет»).
+    eol = "\r\n" if "\r\n" in text else "\n"
+    old_lines = text.splitlines(keepends=True)
 
     kept: list[str] = []
     satisfied: set[tuple[str, str]] = set()
@@ -311,17 +326,18 @@ def rewrite_registry(wanted: dict, now: datetime.datetime, *, dry: bool) -> tupl
     for (key, rule), msg in sorted(wanted.items()):
         if (key, rule) in satisfied:
             continue
-        new_lines.append(f"- [{stamp}] **{key}** [sla:{rule}] — {msg}\n")
+        new_lines.append(f"- [{stamp}] **{key}** [sla:{rule}] — {msg}{eol}")
         added.append(f"{key}({rule})")
 
     if not added and not removed:
         return [], []
-    content = "".join(kept) if kept else ESCALATIONS_HEADER
+    header = ESCALATIONS_HEADER if eol == "\n" else ESCALATIONS_HEADER.replace("\n", eol)
+    content = "".join(kept) if kept else header
     if kept and not any(l.startswith("#") for l in kept):
-        content = ESCALATIONS_HEADER + content
+        content = header + content
     content += "".join(new_lines)
     if not dry:
-        ESCALATIONS_PATH.write_text(content, encoding="utf-8")
+        ESCALATIONS_PATH.write_bytes(content.encode("utf-8"))
     return added, removed
 
 

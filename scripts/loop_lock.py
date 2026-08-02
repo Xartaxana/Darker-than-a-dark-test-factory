@@ -81,8 +81,13 @@ DEFAULT_SLA_PATH = REPO / "state" / "sla.yaml"
 DEFAULT_LOCK_STALE_H = sla_utils.DEFAULT_LOCK_STALE_H
 REAP_ESCALATION_THRESHOLD = 2
 
+# AT-BUG-041: [^\r\n]* вместо .*$ — под '$' в (?m)-режиме '.' всё же матчит
+# '\r' (не матчит только '\n'), так что жадный '.*$' на CRLF-файле поглощал
+# бы завершающий '\r' строки в тело матча и терял его при замене (та же
+# граница, что уже закрыта в board_sync.py/board_inbound.py/gitlab_sync.py/
+# stale_locks.py после AT-BUG-038/040 — образец _LOCK_FIELD_RE).
 LOOP_LINE_RE = re.compile(
-    r"(?m)^- \[(?P<ts>[^\]]+)\] \*\*(?P<key>LOOP-\d+)\*\* \[loop:reaped\] — .*$")
+    r"(?m)^- \[(?P<ts>[^\]]+)\] \*\*(?P<key>LOOP-\d+)\*\* \[loop:reaped\] — [^\r\n]*")
 LOOP_KEY_RE = re.compile(r"LOOP-(\d+)")
 
 ESCALATIONS_HEADER = (
@@ -117,9 +122,20 @@ def load_lock_stale_hours(sla_path: Path) -> float:
 
 
 def _atomic_write_text(path: Path, text: str) -> None:
+    """Атомарная запись через tmp+rename.
+
+    AT-BUG-041 (сиблинг AT-BUG-038/040, класс 1 — EOL-перегон): write_bytes
+    вместо write_text. Text-режим (newline=None) транслирует '\\n' в
+    os.linesep при КАЖДОЙ записи (на Windows — CRLF), включая партиальную
+    правку существующего файла в _write_loop_escalation (та функция читает
+    исходный контент байтово — см. её докстринг/тело — так что здесь '\\n'
+    в тексте уже означает буквальный '\\n' исходного файла, а не место для
+    ОС-специфичной трансляции); для freshly-сгенерированного JSON
+    (lock/reaps) поведение то же — байт-в-байт, без сюрприза для platform-
+    зависимого EOL."""
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(path.name + ".tmp")
-    tmp.write_text(text, encoding="utf-8")
+    tmp.write_bytes(text.encode("utf-8"))
     os.replace(tmp, path)
 
 
@@ -171,9 +187,23 @@ def _reset_reap_counter(reaps_path: Path) -> None:
 
 
 def _write_loop_escalation(escalations_path: Path, count: int, now: datetime.datetime) -> str:
-    """Дописывает/обновляет ОДНУ открытую LOOP-эскалацию. Возвращает её ключ."""
+    """Дописывает/обновляет ОДНУ открытую LOOP-эскалацию. Возвращает её ключ.
+
+    AT-BUG-041 (класс 1 — EOL-перегон): чтение read_bytes/decode вместо
+    read_text — text-режим на чтении уже транслирует CRLF -> LF
+    (universal newlines), что вместе с write_text на записи и давало
+    полный перегон EOL реестра эскалаций при партиальной правке одной
+    LOOP-строки.
+
+    attempt 2 (критик-вход приёмки): НОВЫЙ контент (добавляемая строка при
+    первом появлении LOOP-эскалации, добивка перевода строки перед ней)
+    обязан брать EOL-стиль САМОГО файла по факту, не хардкод '\\n' — тот же
+    образец и аргумент, что sla_sweep.rewrite_registry / board_inbound.
+    _file_eol (AT-BUG-038); ветка «обновление УЖЕ существующей LOOP-N-строки
+    на месте» (m matched) EOL не трогает вовсе — уже верно."""
     stamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
-    text = escalations_path.read_text(encoding="utf-8") if escalations_path.exists() else ""
+    text = escalations_path.read_bytes().decode("utf-8") if escalations_path.exists() else ""
+    eol = "\r\n" if "\r\n" in text else "\n"
     msg = (f"{count} проходов подряд умерли с локом — фабрика систематически "
            f"падает, нужен разбор человеком")
 
@@ -188,8 +218,8 @@ def _write_loop_escalation(escalations_path: Path, count: int, now: datetime.dat
         if not text:
             text = ESCALATIONS_HEADER
         elif not text.endswith("\n"):
-            text += "\n"
-        new_text = text + f"- [{stamp}] **{key}** [loop:reaped] — {msg}\n"
+            text += eol
+        new_text = text + f"- [{stamp}] **{key}** [loop:reaped] — {msg}{eol}"
 
     _atomic_write_text(escalations_path, new_text)
     return key
