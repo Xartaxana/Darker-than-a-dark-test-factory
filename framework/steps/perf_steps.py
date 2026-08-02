@@ -136,7 +136,22 @@ def wait_memory_settled(timeout: int = 30, stable_ratio: float = 0.05) -> int:
     вкладок (см. `MEMORY_RECOVERY_FRACTION` за эмпирикой негативного
     контроля). Settle ОБОИХ замеров (peak и after_close) устраняет этот шум
     из обеих сторон разности — учитывается только память, реально удерживаемая
-    живыми вкладками, не шум GC вокруг момента замера."""
+    живыми вкладками, не шум GC вокруг момента замера.
+
+    AT-BUG-037 (N2а — строже N2/`settings_steps.assert_filter_profile_count`,
+    приём-образец `app_steps.wait_persisted_tab_count`, AT-BUG-036 attempt 2):
+    `except TimeoutError: pass` терял исходное исключение целиком, а
+    `return readings[-1]` на ПУСТОМ `readings` (predicate падает на КАЖДОМ
+    опросе — например, зависший `adb.total_pss_kb()`) давал `IndexError`,
+    маскируя деградацию среды под баг фреймворка. Если `readings` пуст —
+    диагностировать «последнее наблюдение» нечего, исходный `TimeoutError`
+    пробрасывается целиком (сохраняет тип и `; last error: ...`-контекст для
+    fail-fast-детектора AT-BUG-009). Если хотя бы одно наблюдение было —
+    возвращаем последнее прочитанное значение (best-effort settle, как и
+    раньше); функция возвращает `int`, поэтому причина обрыва (если была)
+    здесь не встраивается в сообщение (нет строки-носителя, в отличие от
+    `assert`-веток N2/N2 в других шагах) — она просто не поднимается, раз
+    осмысленное наблюдение уже есть."""
     readings: list[int] = []
 
     def _settled() -> bool:
@@ -149,7 +164,13 @@ def wait_memory_settled(timeout: int = 30, stable_ratio: float = 0.05) -> int:
     try:
         wait_for(_settled, timeout=timeout, message="TOTAL PSS не стабилизировался")
     except TimeoutError:
-        pass
+        if not readings:
+            # Опрос ни разу не смог прочитать TOTAL PSS (например, adb
+            # завис — AT-BUG-009): наблюдения нет, диагностировать нечего.
+            # Пробрасываем исходный TimeoutError целиком — тип исключения и
+            # "; last error: ..."-контекст доходят до fail-fast-детектора
+            # среды без искажения.
+            raise
     return readings[-1]
 
 

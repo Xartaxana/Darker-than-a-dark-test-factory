@@ -280,9 +280,21 @@ def assert_filter_profile_count(driver, name: str, expected: int, timeout: int |
     описывает для `pendingNavigationUrl`). `SettingsScreen.count_filter_profile_occurrences`
     делает разовое `find_elements` без ожидания — одноразовое чтение сразу после
     `rename_filter_profile` было бы гонкой; здесь опрашиваем, пока счётчик не
-    совпадёт с ожидаемым или не истечёт таймаут."""
+    совпадёт с ожидаемым или не истечёт таймаут.
+
+    AT-BUG-037 (N2, приём — образец `app_steps.wait_persisted_tab_count`, AT-BUG-036
+    attempt 2): `except TimeoutError: pass` терял исходное исключение целиком, вместе
+    с ним — контекст `wait_for` (`; last error: ...`), на который матчит
+    зарегистрированный fail-fast-детектор среды (AT-BUG-009). Если предикат ни разу
+    не смог прочитать дерево (`last["value"]` так и остался `None` — например,
+    зависший driver-вызов), диагностировать «последнее наблюдение» нечего — исходный
+    `TimeoutError` пробрасывается целиком. Если хотя бы одно наблюдение было
+    (счётчик читался, просто не совпал) — честный `AssertionError` с фактическим
+    последним значением; причина `wait_for` (если исключение всё же было поймано на
+    каком-то из опросов) дописывается к сообщению отдельно, не теряется."""
     screen = SettingsScreen(driver)
     last: dict[str, int | None] = {"value": None}
+    wait_err: TimeoutError | None = None
 
     def _matches() -> bool:
         last["value"] = screen.count_filter_profile_occurrences(name)
@@ -290,10 +302,18 @@ def assert_filter_profile_count(driver, name: str, expected: int, timeout: int |
 
     try:
         wait_for(_matches, timeout=timeout, message=f"количество строк с именем «{name}» не сошлось")
-    except TimeoutError:
-        pass
+    except TimeoutError as exc:
+        wait_err = exc
+        if last["value"] is None:
+            # Опрос ни разу не смог прочитать счётчик (например, driver-вызов
+            # завис) — наблюдения нет, диагностировать нечего. Пробрасываем
+            # исходный TimeoutError целиком — тип исключения и
+            # "; last error: ..."-контекст доходят до fail-fast-детектора
+            # среды без искажения.
+            raise
     assert last["value"] == expected, (
         f"ожидали {expected} строк(и) с именем «{name}» в Settings, реально {last['value']}"
+        + (f"; ожидание прервано: {wait_err}" if wait_err is not None else "")
     )
 
 
