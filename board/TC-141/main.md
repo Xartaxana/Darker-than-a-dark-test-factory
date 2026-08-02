@@ -2,27 +2,27 @@
 key: "TC-141"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p1"
 summary: "Правка личного тега уже-Favorite работы через панель work-страницы не отправляет kudos (асимметрия путей, :743-758)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:rating", "risk:R-17"]
+labels: ["test-case", "area:rating", "risk:R-17", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-01T15:54:39Z"
-updated: "2026-08-01T15:54:39Z"
+created: "2026-08-02T05:51:51Z"
+updated: "2026-08-02T05:51:51Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Правка личного тега уже-Favorite работы через панель work-страницы не отправляет kudos (асимметрия путей, :743-758)
 
 _Спроецировано из `test-cases/rating/TC-141.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-141 — Асимметрия путей: панель work-страницы не кликает kudos даже там, где листинг кликает (баг)
 
@@ -65,8 +65,10 @@ BUG-015) — асимметрия путей задокументирована 
 | Replay | `rb.WORK_WITH_DOWNLOAD_FILENAME` (`work_with_download.mitm`) |
 
 ## Заметки для автоматизации
-- **БЛОКЕР (test_debt) — общий для области:** `bugs/AT-BUG-035.md`; `automated_by`
-  пуст. Обоснование общее для всех семи кейсов — см. TC-138
+- **Блокер снят (test-automator, 2026-08-02):** `bugs/AT-BUG-035.md` Fixed→Verified;
+  `automated_by`: `framework/tests/test_rating.py::test_edit_tag_on_already_saved_work_via_panel_does_not_click_kudos`.
+  3 стабильных зелёных прогона, критик-вход PASS. Историческая формулировка
+  ниже — см. TC-138
   (`test_cases: [TC-138..TC-144]`). Здесь фикс касается
   `render_work_page_html`, которую использует и `build_work_with_download` —
   один и тот же фикс закрывает узел на ОБЕИХ базовых записях (`listing_basic.mitm`
@@ -116,3 +118,44 @@ BUG-015) — асимметрия путей задокументирована 
 - [x] Область не комбинаторная — строка `Инвариант:` не требуется
 - [x] Область содержит правило-реакцию — батарея адресована по каждому пункту
       (асимметрия путей — предмет кейса; остальные — «н-п» с обоснованием выше)
+
+## Ревью автотеста (F1, test-reviewer 2026-08-02)
+
+Полный чек-лист F1 пройден, `Approved → Automated`, `automation_status: active`.
+
+- **Архитектура (п.1):** `arch_check.py` → 0 ошибок/0 предупреждений; локаторов
+  и `execute_script` в `tests/` нет — чтение узла инкапсулировано
+  `browser_steps.assert_kudo_submit_click_count_holds`, добавление тега —
+  `rating_steps.add_tag_via_panel`; `sleep` отсутствует.
+- **Traceability (п.2):** `@allure.id("TC-141")` == id; маркер `p1` ==
+  `priority: P1`; replay-параметр `work_with_download.mitm` == запись из
+  Предусловий; `automated_by` резолвится.
+- **Соответствие кейсу (п.3):** Then реализован обеими половинами — суть
+  операции (`assert_chip_visible("panel-kudos-probe")`) и негатив клика
+  (`..._holds(0)` весь бюджет, а не одиночное чтение). Ассерт бьёт по ТОЙ ЖЕ
+  единственной work-вкладке, где узел физически доступен, то есть фиксирует
+  асимметрию путей как есть; ослабления «элемент существует» нет.
+- **Фикстуры и данные (п.4):** `(replay, loved_work_seeded, driver)` — сидинг
+  SAVE через `clean_state()`+`seed_library` выполняется ДО создания
+  Appium-сессии (`driver` последний в сигнатуре), что и требует HANDOFF;
+  данные свои, порядок-независимо.
+- **Flake-риск (п.5):** одна WebView-вкладка (sticky-context не возникает),
+  живого AO3 нет, ожидания явные.
+- **Зелёное воспроизведение (п.6, независимое):** среда канонически поднята;
+  `Invoke-Pytest tests/test_tabs.py::… tests/test_rating.py::test_edit_tag_on_already_saved_work_via_panel_does_not_click_kudos
+  tests/test_rating.py::test_first_panel_save_clicks_kudos_once -q` →
+  `3 passed in 111.02s`, `PYTEST_EXIT=0`.
+- **Красная проба (п.7, 2026-08-02T05:51:51Z) — ЖИВОЕ подтверждение
+  не-вакуумности негатива, уровень ДАННЫХ:** временный
+  `data-kudo-clicked="1"` в разметке `#kudo_submit`
+  (`recording_builder._kudo_submit_html`) + пересборка записей
+  (`framework/.venv/Scripts/python.exe scripts/build_replay_recordings.py`) —
+  порча покрыла и `work_with_download.mitm` (тот же `render_work_page_html`).
+  Прогон вместе с остальными негативами области → `4 failed in 171.36s`,
+  `PYTEST_EXIT=1`; для ЭТОГО теста падение на строке `test_rating.py:144`:
+  `AssertionError: data-kudo-clicked неожиданно = 1, ожидали стабильно 0 весь
+  бюджет 3.0с`. Значит оракул на реальном устройстве действительно читает узел
+  со страницы работы и способен упасть (структурный -1-сентинел подтверждён
+  живым поведением). Порча откачена тем же ходом
+  (`git checkout -- framework/data/recording_builder.py` + пересборка), дифф
+  чист.

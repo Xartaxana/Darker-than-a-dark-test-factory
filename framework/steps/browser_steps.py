@@ -420,6 +420,66 @@ def assert_tap_marker_tapped(driver, css_selector: str, timeout: int | None = No
         )
 
 
+def _kudo_submit_click_count(driver) -> int:
+    """AT-BUG-035: читает `data-kudo-clicked` узла `#kudo_submit` как число
+    (инкрементный счётчик, не константа) — `-1`, если узел структурно
+    отсутствует (не должно случаться после Verified-фикса, но так негатив не
+    станет вакуумно-истинным на отсутствующем узле, а честно провалится на
+    сравнении с 0/1, см. класс `AT-BUG-029`/калибровка Lead 2026-07-30)."""
+    return driver.execute_script(
+        "var el = document.querySelector(arguments[0]); "
+        "return el ? Number(el.getAttribute('data-kudo-clicked') || 0) : -1;",
+        selectors.KUDO_SUBMIT,
+    )
+
+
+@allure.step("Then узел #kudo_submit несёт data-kudo-clicked=\"{expected}\" (счётчик клика, TC-138/144)")
+def assert_kudo_submit_click_count(driver, expected: int, timeout: int | None = None) -> None:
+    """Позитивная сверка (TC-138/TC-144): опрашивает, пока инкрементный счётчик
+    `#kudo_submit` (AT-BUG-035, `bugs/BUG-015.md`) не достигнет `expected` —
+    годится, когда клик УЖЕ должен был случиться синхронно внутри
+    `applyRating`/`onRateWorkRequested` (`evalJs`), но чтение требует запаса на
+    WEBVIEW round-trip (тот же класс латентности, что `assert_rating_badge_visible`).
+    ДЛЯ НЕГАТИВНОГО Then («клика не было») эта функция НЕ годится — условие «уже
+    `expected`» истинно с первого кадра и не докажет отсутствия эффекта,
+    случившегося ПОЗЖЕ; используйте `assert_kudo_submit_click_count_holds`
+    (симметрично `assert_top_chrome_not_darkened` vs `assert_top_chrome_darkened`)."""
+    with contexts.in_webview(driver):
+        wait_until(
+            driver,
+            lambda d: _kudo_submit_click_count(d) == expected,
+            timeout=timeout or 6,
+            message=f"узел #kudo_submit не показал data-kudo-clicked={expected} (счётчик клика) "
+                    f"в отведённое время",
+        )
+
+
+@allure.step("Then узел #kudo_submit держит data-kudo-clicked=\"{expected}\" стабильно {budget_s}с (не удваивается/не появляется отложенно)")
+def assert_kudo_submit_click_count_holds(
+    driver, expected: int, budget_s: float = 3.0, poll_interval: float = 0.4,
+) -> None:
+    """Опрашивает ВЕСЬ бюджет `budget_s` (`framework.core.waits.assert_holds_for`),
+    а не читает один раз — тот же приём, что `assert_top_chrome_not_darkened`
+    (докстринг там же за полным обоснованием класса «негатив, у которого условие
+    уже истинно с первого кадра»). Основное применение — НЕГАТИВНЫЙ Then
+    (TC-139/140/141/142/143: «клика не было»), но также покрывает позитивное
+    «ровно один клик, не два» (TC-138/144), если вызвать ПОСЛЕ
+    `assert_kudo_submit_click_count(driver, expected)` (сначала дождаться
+    `expected`, затем убедиться, что он не растёт дальше)."""
+    with contexts.in_webview(driver):
+        def check() -> bool:
+            actual = _kudo_submit_click_count(driver)
+            assert actual == expected, (
+                f"data-kudo-clicked неожиданно = {actual}, ожидали стабильно {expected} "
+                f"весь бюджет {budget_s}с — подозрение на (повторный/отложенный) kudos-клик"
+            )
+            return True
+        assert_holds_for(
+            check, budget_s=budget_s, interval_s=poll_interval,
+            msg=f"узел #kudo_submit не удержал data-kudo-clicked={expected} весь бюджет {budget_s}с",
+        )
+
+
 # Именованные обёртки над узлами AT-BUG-030 (docs/08 C1: локаторы/`framework.web`
 # запрещены прямым импортом в `tests/` — тесты вызывают только именованные
 # steps-функции, сам селектор остаётся инкапсулирован здесь).

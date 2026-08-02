@@ -2,27 +2,27 @@
 key: "TC-140"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p3"
 summary: "Простановка Kudosed через листинг без открытой вкладки работы не отправляет kudos (граница отсутствия вкладки, :857-858)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:rating", "risk:R-17"]
+labels: ["test-case", "area:rating", "risk:R-17", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-01T15:59:13Z"
-updated: "2026-08-01T15:59:13Z"
+created: "2026-08-02T05:51:51Z"
+updated: "2026-08-02T05:51:51Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Простановка Kudosed через листинг без открытой вкладки работы не отправляет kudos (граница отсутствия вкладки, :857-858)
 
 _Спроецировано из `test-cases/rating/TC-140.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-140 — Граница: без открытой вкладки работы kudos не отправляется вовсе
 
@@ -65,8 +65,10 @@ W (без рейтинга); никакой work-вкладки W не откр�
 | Открытые вкладки в момент When | только листинг (без work-вкладки W) |
 
 ## Заметки для автоматизации
-- **БЛОКЕР (test_debt) — общий для области:** `bugs/AT-BUG-035.md`; `automated_by`
-  пуст. Обоснование общее для всех семи кейсов — см. TC-138
+- **Блокер снят (test-automator, 2026-08-02):** `bugs/AT-BUG-035.md` Fixed→Verified;
+  `automated_by`: `framework/tests/test_rating_listing.py::test_rate_kudosed_via_listing_without_open_work_tab_does_not_click_kudos`.
+  3 стабильных зелёных прогона, критик-вход PASS. Историческая формулировка
+  ниже — см. TC-138
   (`test_cases: [TC-138..TC-144]`).
 - **Наблюдаемость негативного Then — специфика этого кейса.** В отличие от
   TC-139/141/142/143, здесь НЕТ вкладки, на которой можно наблюдать «клика не
@@ -111,3 +113,44 @@ W (без рейтинга); никакой work-вкладки W не откр�
 - [x] Область не комбинаторная — строка `Инвариант:` не требуется
 - [x] Область содержит правило-реакцию — батарея адресована по каждому пункту
       (граница вкладки — предмет кейса; остальные — «н-п» с обоснованием выше)
+
+## Ревью автотеста (F1, test-reviewer 2026-08-02)
+
+Полный чек-лист F1 пройден, `Approved → Automated`, `automation_status: active`.
+
+- **Архитектура (п.1):** `arch_check.py` → 0 ошибок/0 предупреждений; селектор
+  `#kudo_submit` — только в `framework/web/selectors.py`, тест зовёт именованный
+  шаг `browser_steps.assert_kudo_submit_click_count_holds`; `sleep` нет.
+- **Traceability (п.2):** `@allure.id("TC-140")` == id; маркер `p3` ==
+  `priority: P3` (единственный P3 области — сверено отдельно); replay-маркер и
+  запись `listing_basic.mitm` соответствуют Given; `automated_by` резолвится.
+- **Соответствие кейсу (п.3):** тест держит сценарий ОДНОВКЛАДОЧНЫМ, как
+  предписано (`rating_steps.open_work_page` — навигация in-place, НЕ
+  `long_press_work_link`); Then реализован обеими половинами — рейтинг сохранён
+  (бейдж + вкладка Kudosed Library) и на свежезагруженной work-странице
+  `#kudo_submit` НЕ несёт атрибут, причём оракул удерживает отсутствие ВЕСЬ
+  бюджет (`..._holds(0)`, 3 с), а не читает один раз — именно то, что требует
+  негатив «эффекта не было, в т.ч. отложенно».
+- **Фикстуры и данные (п.4):** `(clean_app, replay, driver)` — `pm clear` до
+  Appium-сессии; работа не сеется (по кейсу — без рейтинга); независимость от
+  порядка подтверждена прогонами в разных батчах.
+- **Flake-риск (п.5):** живого AO3 нет; sticky-context риска нет по построению
+  (одна WebView); ожидания явные.
+- **Зелёное воспроизведение (п.6, независимое):** среда поднята канонически
+  (`DEVICE: emulator-5554`); `Invoke-Pytest` по 4 листинговым тестам области →
+  `4 passed in 181.38s`, `PYTEST_EXIT=0`.
+- **Красная проба (п.7, 2026-08-02T05:51:51Z) — ЖИВОЕ подтверждение
+  не-вакуумности негатива, уровень ДАННЫХ:** в
+  `recording_builder._kudo_submit_html` временно добавлен
+  `data-kudo-clicked="1"` прямо в разметку узла (отравленный baseline —
+  имитация «клик состоялся»), записи пересобраны
+  `framework/.venv/Scripts/python.exe scripts/build_replay_recordings.py`.
+  Прогон
+  `Invoke-Pytest tests/test_rating_listing.py::test_rate_kudosed_via_listing_without_open_work_tab_does_not_click_kudos … -q`
+  → `4 failed in 171.36s`, `PYTEST_EXIT=1`; падение ИМЕННО на ассерте Then:
+  `AssertionError: data-kudo-clicked неожиданно = 1, ожидали стабильно 0 весь
+  бюджет 3.0с — подозрение на (повторный/отложенный) kudos-клик`
+  (`browser_steps.py:472`). Это доказывает на РЕАЛЬНОМ устройстве, что оракул
+  действительно доходит до узла и читает его значение (не -1/не вакуум). Порча
+  откачена тем же ходом (`git checkout -- framework/data/recording_builder.py`
+  + пересборка записей), дифф `framework/data/` чист.

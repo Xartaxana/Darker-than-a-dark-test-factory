@@ -2,27 +2,27 @@
 key: "TC-143"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p1"
 summary: "Снятие рейтинга Kudosed (deselect) через листинг не отправляет kudos"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:rating", "risk:R-17"]
+labels: ["test-case", "area:rating", "risk:R-17", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-01T15:59:00Z"
-updated: "2026-08-01T15:59:00Z"
+created: "2026-08-02T05:51:51Z"
+updated: "2026-08-02T05:51:51Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Снятие рейтинга Kudosed (deselect) через листинг не отправляет kudos
 
 _Спроецировано из `test-cases/rating/TC-143.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-143 — Снятие рейтинга Kudosed повторным тапом через листинг не кликает kudos
 
@@ -62,8 +62,10 @@ position=0)`) — идиома reduce-to-one (тот же приём, что TC-
 | Открытые вкладки | Tab A (листинг), Tab B (work-страница W) |
 
 ## Заметки для автоматизации
-- **БЛОКЕР (test_debt) — общий для области:** `bugs/AT-BUG-035.md`; `automated_by`
-  пуст. Обоснование общее — см. TC-138 (семь кейсов области, один тикет
+- **Блокер снят (test-automator, 2026-08-02):** `bugs/AT-BUG-035.md` Fixed→Verified;
+  `automated_by`: `framework/tests/test_rating_listing.py::test_deselect_kudosed_via_listing_does_not_click_kudos`.
+  3 стабильных зелёных прогона, критик-вход PASS. Историческая формулировка
+  ниже — см. TC-138 (семь кейсов области, один тикет
   `test_cases: [TC-138..TC-144]`).
 - Деселект через листинговый bottom-sheet — ОДИН вызов
   `rating_steps.rate_via_listing_overlay(driver, "LIKE")` по уже выбранной кнопке
@@ -104,3 +106,37 @@ position=0)`) — идиома reduce-to-one (тот же приём, что TC-
 - [x] Область не комбинаторная — строка `Инвариант:` не требуется
 - [x] Область содержит правило-реакцию — батарея адресована по каждому пункту
       (граница деселекта — предмет кейса; остальные — «н-п» с обоснованием выше)
+
+## Ревью автотеста (F1, test-reviewer 2026-08-02)
+
+Полный чек-лист F1 пройден, `Approved → Automated`, `automation_status: active`.
+
+- **Архитектура (п.1):** `arch_check.py` → 0 ошибок/0 предупреждений; локаторы и
+  driver-примитивы в `tests/` отсутствуют, всё через именованные шаги; `sleep`
+  нет.
+- **Traceability (п.2):** `@allure.id("TC-143")` == id; маркер `p1` ==
+  `priority: P1`; replay-запись `listing_basic.mitm` == Предусловия;
+  `automated_by` резолвится.
+- **Соответствие кейсу (п.3):** When — РОВНО ОДИН вызов
+  `rate_via_listing_overlay(driver, "LIKE")` по уже выбранной кнопке (деселект),
+  без второго тапа, как прямо предписано заметками; Then проверяет суть снятия
+  рейтинга через `assert_work_not_in_tab(driver, "LIKE", …)` (исчезновение
+  строки), а негатив клика — `..._holds(0)` весь бюджет на Tab B после
+  reduce-to-one. Ослабления до «элемент существует» нет.
+- **Фикстуры и данные (п.4):** `(replay, kudosed_work_seeded, driver)` — сидинг
+  LIKE + `clean_state()` ДО создания Appium-сессии; тест владеет данными и не
+  зависит от соседей.
+- **Flake-риск (п.5):** живого AO3 нет; чтение WebView — только после закрытия
+  вкладки-0; ожидания явные с бюджетами.
+- **Зелёное воспроизведение (п.6, независимое):** `Invoke-Pytest` по 4
+  листинговым тестам области → `4 passed in 181.38s`, `PYTEST_EXIT=0`.
+- **Красная проба (п.7, 2026-08-02T05:51:51Z) — ЖИВОЕ подтверждение
+  не-вакуумности негатива, уровень ДАННЫХ:** временный
+  `data-kudo-clicked="1"` в разметке `#kudo_submit` + пересборка записей
+  (`framework/.venv/Scripts/python.exe scripts/build_replay_recordings.py`).
+  Прогон → `4 failed in 171.36s`, `PYTEST_EXIT=1`; ЭТОТ тест упал на
+  `tests/test_rating_listing.py:594`:
+  `AssertionError: data-kudo-clicked неожиданно = 1, ожидали стабильно 0 весь
+  бюджет 3.0с — подозрение на (повторный/отложенный) kudos-клик`. Порча
+  откачена тем же ходом (`git checkout -- framework/data/recording_builder.py`
+  + пересборка), дифф `framework/data/` чист.

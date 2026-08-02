@@ -2,27 +2,27 @@
 key: "TC-142"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p1"
 summary: "Смена рейтинга через листинг с Kudosed на Read не отправляет kudos"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:rating", "risk:R-17"]
+labels: ["test-case", "area:rating", "risk:R-17", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-01T15:56:37Z"
-updated: "2026-08-01T15:56:37Z"
+created: "2026-08-02T05:51:51Z"
+updated: "2026-08-02T05:51:51Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Смена рейтинга через листинг с Kudosed на Read не отправляет kudos
 
 _Спроецировано из `test-cases/rating/TC-142.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-142 — Переход Kudosed → Read через листинг не кликает kudos
 
@@ -63,8 +63,10 @@ WebView, chromedriver переподключается к ней. На Tab B у�
 | Открытые вкладки | Tab A (листинг), Tab B (work-страница W) |
 
 ## Заметки для автоматизации
-- **БЛОКЕР (test_debt) — общий для области:** `bugs/AT-BUG-035.md`; `automated_by`
-  пуст. Обоснование общее — см. TC-138 (семь кейсов области, один тикет
+- **Блокер снят (test-automator, 2026-08-02):** `bugs/AT-BUG-035.md` Fixed→Verified;
+  `automated_by`: `framework/tests/test_rating_listing.py::test_change_rating_kudosed_to_read_via_listing_does_not_click_kudos`.
+  3 стабильных зелёных прогона, критик-вход PASS. Историческая формулировка
+  ниже — см. TC-138 (семь кейсов области, один тикет
   `test_cases: [TC-138..TC-144]`).
 - Смена рейтинга через листинговый bottom-sheet — `rating_steps.
   rate_via_listing_overlay(driver, "READ")` (готовый шаг). **Тап ОДИН, по кнопке
@@ -105,3 +107,40 @@ WebView, chromedriver переподключается к ней. На Tab B у�
 - [x] Область содержит правило-реакцию — батарея адресована по каждому пункту
       (граница значения предиката — предмет кейса; остальные — «н-п» с
       обоснованием выше)
+
+## Ревью автотеста (F1, test-reviewer 2026-08-02)
+
+Полный чек-лист F1 пройден, `Approved → Automated`, `automation_status: active`.
+
+- **Архитектура (п.1):** `arch_check.py` → 0 ошибок/0 предупреждений; в
+  `tests/` только именованные шаги (`rate_via_listing_overlay`,
+  `swipe_close_tab`, `assert_kudo_submit_click_count_holds`), селектор — в
+  `framework/web/selectors.py`; `sleep` нет.
+- **Traceability (п.2):** `@allure.id("TC-142")` == id; маркер `p1` ==
+  `priority: P1`; replay-запись `listing_basic.mitm` == Предусловия;
+  `automated_by` резолвится.
+- **Соответствие кейсу (п.3):** When — ОДИН тап по кнопке «Read» (не по уже
+  выбранной «Kudosed», что было бы деселектом TC-143); Then проверяет суть
+  смены рейтинга ПЕРЕМЕЩЕНИЕМ работы во вкладку Read Library (не «бейдж
+  изменился где-то») и негатив клика — `..._holds(0)` весь бюджет на Tab B
+  после reduce-to-one.
+- **Фикстуры и данные (п.4):** `(replay, kudosed_work_seeded, driver)` — новая
+  фикстура делает `clean_state()`+сидинг LIKE ДО создания Appium-сессии
+  (`driver` последний); сама фикстура — точная копия обоснования
+  `loved_work_seeded`, ревью её порядка отдельно сверено.
+- **Flake-риск (п.5):** чтение Tab B идёт строго ПОСЛЕ уничтожения прилипшей
+  вкладки-0 — гонка chromedriver снята конструкцией; живого AO3 нет.
+- **Зелёное воспроизведение (п.6, независимое):** `Invoke-Pytest` по 4
+  листинговым тестам области → `4 passed in 181.38s`, `PYTEST_EXIT=0`
+  (среда: `Start-Emulator -WritableSystem` → `DEVICE: emulator-5554` →
+  `Install-App` → `Start-Appium`).
+- **Красная проба (п.7, 2026-08-02T05:51:51Z) — ЖИВОЕ подтверждение
+  не-вакуумности негатива, уровень ДАННЫХ:** временный
+  `data-kudo-clicked="1"` в разметке узла (`_kudo_submit_html`) + пересборка
+  записей. Прогон → `4 failed in 171.36s`, `PYTEST_EXIT=1`; ЭТОТ тест упал на
+  `tests/test_rating_listing.py:557`:
+  `AssertionError: data-kudo-clicked неожиданно = 1, ожидали стабильно 0 весь
+  бюджет 3.0с — подозрение на (повторный/отложенный) kudos-клик`. Оракул
+  доказанно доходит до Tab B через reduce-to-one и читает реальное значение.
+  Порча откачена тем же ходом (`git checkout` + пересборка записей), дифф
+  `framework/data/` чист.

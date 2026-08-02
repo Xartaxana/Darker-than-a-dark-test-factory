@@ -2,7 +2,7 @@
 key: "TC-139"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Правка личного тега уже-Kudosed/Favorite работы через листинг НЕ отправляет kudos повторно (ожидаемо-красный до фикса BUG-015; edge vs level, :856)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-01T15:59:07Z"
-updated: "2026-08-01T15:59:07Z"
+created: "2026-08-02T06:20:00Z"
+updated: "2026-08-02T06:20:00Z"
 archived: false
 resolution: null
 ---
@@ -115,6 +115,23 @@ WebView, chromedriver переподключается к ней. Повторн
     сборки — предмет самого дефекта, не отдельной проверки.
   - propagation — **н-п**: см. TC-138 (единственный потребитель — конкретная
     work-вкладка).
+
+## Результат автоматизации (test-automator, 2026-08-02)
+
+Кейс закодирован
+(`framework/tests/test_rating_listing.py::test_edit_tag_on_already_kudosed_work_via_listing_does_not_reclick_kudos`)
+и прогнан **3 раза подряд — СТАБИЛЬНО КРАСНЫЙ все 3 раза**, каждый раз с
+идентичным фактом: `data-kudo-clicked` = `"1"` вместо ожидаемого `"0"`
+(`AssertionError` на `browser_steps.assert_kudo_submit_click_count_holds(driver,
+0)`). Это ОЖИДАЕМЫЙ результат данного кейса (регрессионный замок незачиненного
+`bugs/BUG-015.md`, см. «ОЖИДАЕМОЕ ПАДЕНИЕ на текущей сборке» выше) — **не
+дефект теста и не повод чинить оракул под зелёный**. Позитивный контроль
+(`TC-138`, тот же прогон, та же WEBVIEW/reduce-to-one механика) зелёный все 3
+раза — подтверждает, что узел `#kudo_submit`, счётчик клика и chromedriver-
+реконнект работоспособны, и красный TC-139 — честный сигнал бага, а не дыра в
+фикстуре/механике чтения. Статус кейса намеренно ОСТАЁТСЯ `Approved` (F1-гейт
+перевода в `Automated`/`automation_status: active` — за test-reviewer, не за
+test-automator); `automated_by` заполнен.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»

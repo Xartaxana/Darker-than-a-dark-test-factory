@@ -23,8 +23,9 @@ from __future__ import annotations
 import allure
 import pytest
 
+from framework.data import recording_builder as rb
 from framework.data import works as W
-from framework.steps import app_steps, library_steps, rating_steps
+from framework.steps import app_steps, browser_steps, library_steps, rating_steps
 
 
 @pytest.mark.p0
@@ -91,3 +92,89 @@ def test_deselect_rating_on_work_page_panel(loved_work_seeded, driver):
     # наблюдаемое подтверждение deselect (rating сброшен в null)
     app_steps.open_tab(driver, "Library")
     library_steps.assert_work_not_in_tab(driver, "SAVE", work.title)
+
+
+# --- TC-141/144: rating/bridge — авто-клик kudos через ВСТРОЕННУЮ панель
+# work-страницы (`RatingMenu`), в отличие от листингового bottom-sheet
+# (`test_rating_listing.py::TC-138..143`). `BrowserViewModel.kt` несёт ДВЕ
+# отдельные ветки панельного механизма сохранения:
+# - `savePanelRating`, `existing != null` (`:743-758`, запись УЖЕ в Room) —
+#   структурно НЕ содержит вызова с kudos (TC-141, асимметрия путей, ядро
+#   `bugs/BUG-015.md`);
+# - `onRateWorkRequested`/`pendingPanelSave` (`:1053-1054`, запись ЕЩЁ НЕ в
+#   Room, первое сохранение) — кликает kudos (TC-144, позитивный контроль
+#   негатива TC-141, без него зелёный TC-141 неотличим от «панель физически не
+#   может кликнуть узел»).
+# Обе используют `rb.WORK_WITH_DOWNLOAD_FILENAME` (та же запись, что TC-032/033/
+# 114/115) — единственная work-страница остаётся вкладкой-0/единственной живой
+# WebView на протяжении сценария, sticky-context блокер `AT-BUG-022`
+# (см. `test_rating_listing.py`) здесь не возникает по построению.
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-141")
+@allure.title("Правка личного тега уже-Favorite работы через панель work-страницы не отправляет kudos (асимметрия путей)")
+@pytest.mark.parametrize("replay", [rb.WORK_WITH_DOWNLOAD_FILENAME], indirect=True)
+def test_edit_tag_on_already_saved_work_via_panel_does_not_click_kudos(replay, loved_work_seeded, driver):
+    # Given работа W (LOVED) уже имеет рейтинг Favorite (SAVE), засеяна напрямую
+    # в Room, без личных тегов; открыта её work-страница, встроенная панель
+    # RatingMenu уже показывает Favorite выбранным (рейтинг прочитан из Room при
+    # загрузке); узел #kudo_submit на той же странице без data-kudo-clicked
+    # (baseline инструментированного узла фикстуры)
+    work = loved_work_seeded
+    app_steps.wait_app_ready(driver)
+    rating_steps.open_work_page(driver, work.ao3_id)
+
+    # When пользователь раскрывает раздел тегов ВСТРОЕННОЙ панели (не bottom-sheet
+    # листинга) и добавляет личный тег «panel-kudos-probe» (правка метаданных,
+    # рейтинг НЕ меняется, остаётся Favorite) — идёт веткой savePanelRating,
+    # existing != null (`:743-758`), тот же вход, что TC-114 для авто-скачивания
+    rating_steps.add_tag_via_panel(driver, "panel-kudos-probe")
+
+    # Then тег «panel-kudos-probe» сохраняется среди выбранных
+    rating_steps.assert_chip_visible(driver, "panel-kudos-probe")
+
+    # And узел #kudo_submit на ТОЙ ЖЕ (единственной открытой) work-вкладке НЕ
+    # получает data-kudo-clicked — ветка `:743-758` структурно не содержит
+    # вызова с kudos (асимметрия путей КАК ЕСТЬ, не решение — то же по смыслу
+    # действие через листинг, TC-139, кликает: баг, ядро BUG-015). Держим
+    # отсутствие клика весь бюджет, не читаем один раз (негатив защищает от
+    # гипотетического бага смешения веток panel/listing)
+    browser_steps.assert_kudo_submit_click_count_holds(driver, 0)
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-144")
+@allure.title("Первое сохранение LIKE/SAVE через встроенную панель work-страницы (запись ещё не в Room) отправляет kudos ровно один раз")
+@pytest.mark.parametrize("replay", [rb.WORK_WITH_DOWNLOAD_FILENAME], indirect=True)
+def test_first_panel_save_clicks_kudos_once(clean_app, replay, driver):
+    # Given приложение с чистыми данными; в Room НЕТ ни одной записи для W —
+    # первое касание этой работы (критично: НЕ сидить заранее — любой сидинг
+    # создал бы строку WorkRating и увёл бы сценарий в ветку savePanelRating/
+    # existing != null, TC-141, а не pendingPanelSave, предмет ЭТОГО кейса).
+    # Открыта единственная вкладка — work-страница W (IN-PLACE); узел
+    # #kudo_submit ещё без data-kudo-clicked (baseline)
+    work = W.LOVED
+    app_steps.wait_app_ready(driver)
+    rating_steps.open_work_page(driver, work.ao3_id)
+
+    # When пользователь раскрывает встроенную панель RatingMenu и выбирает
+    # рейтинг «Kudosed» (LIKE) — первое в жизни работы сохранение через панель
+    # (ветка onRateWorkRequested/pendingPanelSave, `:1053-1054`, НЕ savePanelRating)
+    rating_steps.rate_current_work(driver, "LIKE")
+
+    # Then рейтинг сохранён: панель показывает «Kudosed» выбранным без
+    # перезагрузки страницы, работа появляется на вкладке Kudosed экрана Library
+    # (новая строка WorkRating создана — переход «записи не было -> запись
+    # появилась», отличающий эту ветку от TC-141)
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_work_in_tab(driver, "LIKE", work.title)
+
+    # And на ТОЙ ЖЕ (единственной) work-вкладке узел #kudo_submit получает
+    # data-kudo-clicked="1" — ровно один клик; повторное чтение после паузы
+    # даёт то же «1», не «2» (инкрементный счётчик, та же механика, что TC-138)
+    app_steps.open_tab(driver, "Browse")
+    browser_steps.assert_kudo_submit_click_count(driver, 1)
+    browser_steps.assert_kudo_submit_click_count_holds(driver, 1)

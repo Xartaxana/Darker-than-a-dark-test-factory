@@ -221,6 +221,18 @@ def loved_work_seeded():
 
 
 @pytest.fixture()
+def kudosed_work_seeded():
+    """Работа LOVED засеяна с рейтингом LIKE (Kudosed) до старта сессии Appium —
+    тот же порядок и то же обоснование, что `loved_work_seeded` (см. её
+    докстринг). Нужна для области rating/bridge: авто-клик kudos
+    (TC-139/142/143, docs/01-test-strategy.md §9) — негативы, стартующие из
+    уже-Kudosed состояния, без личных тегов."""
+    app_steps.clean_state()
+    app_steps.seed_library([(W.LOVED, "LIKE")])
+    yield W.LOVED
+
+
+@pytest.fixture()
 def placeholder_seeded_work(request):
     """Работа `request.param` засеяна как placeholder БЕЗ рейтинга (rating=None), но
     с полными title/author/fandom/wordCount — до старта сессии Appium (тот же порядок,

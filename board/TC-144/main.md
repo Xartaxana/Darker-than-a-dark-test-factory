@@ -2,27 +2,27 @@
 key: "TC-144"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p1"
 summary: "Первое сохранение LIKE/SAVE через встроенную панель work-страницы (запись ещё не в Room) отправляет kudos ровно один раз — панельная позитивная граница, позитивный контроль TC-141"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:rating", "risk:R-17"]
+labels: ["test-case", "area:rating", "risk:R-17", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-01T15:56:58Z"
-updated: "2026-08-01T15:56:58Z"
+created: "2026-08-02T05:51:51Z"
+updated: "2026-08-02T05:51:51Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Первое сохранение LIKE/SAVE через встроенную панель work-страницы (запись ещё не в Room) отправляет kudos ровно один раз — панельная позитивная граница, позитивный контроль TC-141
 
 _Спроецировано из `test-cases/rating/TC-144.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-144 — Позитивная граница панельного пути: первое сохранение LIKE/SAVE через панель работы шлёт kudos один раз
 
@@ -69,9 +69,11 @@ W; в Room нет ни одной записи для W (первое касан
 | Открытые вкладки | одна — work-страница W (in-place) |
 
 ## Заметки для автоматизации
-- **БЛОКЕР (test_debt) — общий для области:** `bugs/AT-BUG-035.md` (узел
-  `#kudo_submit` отсутствует во всех фикстурах); `automated_by` пуст.
-  Обоснование общее для всех семи кейсов области — см. TC-138
+- **Блокер снят (test-automator, 2026-08-02):** `bugs/AT-BUG-035.md` Fixed→Verified
+  (узел `#kudo_submit` теперь инструментирован во всех фикстурах); `automated_by`:
+  `framework/tests/test_rating.py::test_first_panel_save_clicks_kudos_once`.
+  3 стабильных зелёных прогона, критик-вход PASS. Историческая формулировка
+  ниже — см. TC-138
   (`test_cases: [TC-138..TC-144]`, тикет расширен ЭТИМ кейсом при заведении).
 - Открытие work-страницы IN-PLACE — `rating_steps.open_work_page(driver,
   work_id)` (см. `framework/screens/browser_screen.py::open_work` —
@@ -134,3 +136,45 @@ W; в Room нет ни одной записи для W (первое касан
 - [x] Область содержит правило-реакцию — батарея адресована по каждому пункту
       (edge — единственно возможный режим этого call site и предмет кейса;
       остальные — «н-п» с обоснованием выше)
+
+## Ревью автотеста (F1, test-reviewer 2026-08-02)
+
+Полный чек-лист F1 пройден, `Approved → Automated`, `automation_status: active`.
+
+- **Архитектура (п.1):** `arch_check.py` → 0 ошибок/0 предупреждений; тест
+  зовёт только именованные шаги (`open_work_page`, `rate_current_work`,
+  `assert_kudo_submit_click_count(_holds)`), селектор инкапсулирован в
+  `framework/web/selectors.py`; `sleep` нет.
+- **Traceability (п.2):** `@allure.id("TC-144")` == id; маркер `p1` ==
+  `priority: P1`; replay-запись `work_with_download.mitm` — из допустимых по
+  Предусловиям; `automated_by` резолвится.
+- **Соответствие кейсу (п.3):** ключевое требование кейса «НЕ сидить работу
+  заранее» соблюдено буквально — фикстура `clean_app` (только `pm clear`), без
+  `seed_library`, поэтому исполняется именно ветка `pendingPanelSave`, а не
+  `savePanelRating`. Then «рейтинг сохранён» проверяется СИЛЬНОЙ формой —
+  появлением работы на вкладке Kudosed Library (доказательство создания новой
+  строки `WorkRating`, то есть перехода «записи не было → появилась»); «ровно
+  один клик» — парой `assert_kudo_submit_click_count(1)` +
+  `..._holds(1)` («1, не 2»). Не-блокирующее замечание: подпункт Then «панель
+  показывает Kudosed выбранным» напрямую не ассертится — Library-оракул строго
+  сильнее по сути (состояние в Room), ослабления проверки нет.
+- **Фикстуры и данные (п.4):** `(clean_app, replay, driver)` — очистка ДО
+  создания Appium-сессии; тест владеет своими данными, порядок-независим.
+- **Flake-риск (п.5):** одна WebView-вкладка (in-place навигация) — sticky-
+  context блокер AT-BUG-022 не возникает по построению; живого AO3 нет.
+- **Зелёное воспроизведение (п.6, независимое):** среда поднята канонически
+  (`Start-Emulator -WritableSystem` → `Get-Device`: `DEVICE: emulator-5554` →
+  `Install-App` → `Start-Appium`);
+  `Invoke-Pytest tests/test_tabs.py::… tests/test_rating.py::… -q` →
+  `3 passed in 111.02s`, `PYTEST_EXIT=0`.
+- **Красная проба (п.7, 2026-08-02T05:51:51Z), уровень ДАННЫХ:** в
+  `recording_builder._kudo_submit_html` временно убран инкремент из `onclick`
+  (узел на месте, но клик не пишет `data-kudo-clicked`), записи пересобраны
+  `framework/.venv/Scripts/python.exe scripts/build_replay_recordings.py`.
+  Прогон
+  `Invoke-Pytest tests/test_rating_listing.py::test_first_kudosed_… tests/test_rating.py::test_first_panel_save_clicks_kudos_once -q`
+  → `2 failed in 88.50s`, `PYTEST_EXIT=1`; падение по сути порчи:
+  `TimeoutException: узел #kudo_submit не показал data-kudo-clicked=1 (счётчик
+  клика) в отведённое время`. Порча откачена тем же ходом
+  (`git checkout -- framework/data/recording_builder.py` + пересборка записей),
+  дифф `framework/data/` чист.

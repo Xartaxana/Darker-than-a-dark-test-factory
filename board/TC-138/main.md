@@ -2,27 +2,27 @@
 key: "TC-138"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-automated"
 priority: "p1"
 summary: "Первый переход рейтинга в Kudosed через листинг при открытой вкладке работы отправляет kudos ровно один раз (позитивная граница)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:rating", "risk:R-17"]
+labels: ["test-case", "area:rating", "risk:R-17", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-01T15:51:41Z"
-updated: "2026-08-01T15:51:41Z"
+created: "2026-08-02T05:51:51Z"
+updated: "2026-08-02T05:51:51Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Первый переход рейтинга в Kudosed через листинг при открытой вкладке работы отправляет kudos ровно один раз (позитивная граница)
 
 _Спроецировано из `test-cases/rating/TC-138.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
 # TC-138 — Позитивная граница: первый переход в Kudosed при открытой вкладке работы шлёт kudos один раз
 
@@ -68,10 +68,12 @@ Fixed после B2-фикса, иначе двойной клик неотли�
 | Открытые вкладки | Tab A (листинг), Tab B (work-страница W) |
 
 ## Заметки для автоматизации
-- **БЛОКЕР (test_debt):** узел `#kudo_submit` отсутствует ВО ВСЕХ текущих replay-
-  фикстурах — `render_work_page_html` (`framework/data/recording_builder.py:546-585`)
-  не рендерит его вовсе (сверено чтением: единственные упоминания «kudos» в модуле —
-  статичный счётчик `<dd class="kudos">0</dd>`, не интерактивный узел). Без узла
+- **Блокер снят (test-automator, 2026-08-02):** узел `#kudo_submit` теперь
+  инструментирован в `render_work_page_html` (`framework/data/recording_builder.py`,
+  `bugs/AT-BUG-035.md` Fixed→Verified) инкрементным счётчиком `data-kudo-clicked`.
+  `automated_by` заполнен: `framework/tests/test_rating_listing.py::test_first_kudosed_via_listing_with_open_work_tab_clicks_kudos_once`.
+  3 стабильных зелёных прогона, критик-вход PASS.
+  Историческая формулировка ниже — то, чем блокер БЫЛ, до чтения не влияет. Без узла
   `document.getElementById('kudo_submit')` в приложении вернёт `null`, `if(b)b.click()`
   молча не выполнится НЕЗАВИСИМО от того, сработал ли level-предикат — то есть Then
   этого и всех остальных кейсов области (TC-139..144) был бы либо невозможен
@@ -134,3 +136,48 @@ Fixed после B2-фикса, иначе двойной клик неотли�
       строка `Инвариант:` не требуется
 - [x] Область содержит правило-реакцию — батарея адресована по каждому пункту
       (edge — предмет кейса; остальные — «н-п» с обоснованием выше)
+
+## Ревью автотеста (F1, test-reviewer 2026-08-02)
+
+Полный чек-лист F1 пройден, `Approved → Automated`, `automation_status: active`.
+
+- **Архитектура (п.1):** `arch_check.py` → «ошибок 0, предупреждений 0»,
+  ALLOWLIST не трогался. Селектор `#kudo_submit` живёт в
+  `framework/web/selectors.py::KUDO_SUBMIT` и инкапсулирован шагами
+  `browser_steps.assert_kudo_submit_click_count(_holds)`; в `tests/` ни
+  локаторов, ни `execute_script`, ни `sleep` (ожидания — `wait_until`/
+  `assert_holds_for`).
+- **Traceability (п.2):** `@allure.id("TC-138")` == id; маркер `p1` ==
+  `priority: P1`; `@pytest.mark.replay` + indirect-parametrize
+  `listing_basic.mitm` соответствуют Given; `automated_by` резолвится.
+- **Соответствие кейсу (п.3):** реализованы обе половины Then — сохранение
+  рейтинга (бейдж на Tab A в штатном sticky-контексте + работа на вкладке
+  Kudosed Library) и «ровно один клик»: `assert_kudo_submit_click_count(1)`
+  (дождаться единицы) + `..._holds(1)` (удержать весь бюджет — «1, не 2»).
+  Разделение позитивного и holds-оракула корректно: для «клик был» одиночного
+  чтения мало, для «не удвоился» — обязателен бюджет. Механика чтения Tab B —
+  reduce-to-one (`swipe_close_tab(0)`), как предписано кейсом.
+- **Фикстуры и данные (п.4):** `(clean_app, replay, driver)` — `pm clear` ДО
+  создания Appium-сессии; сидинг намеренно отсутствует (работа без рейтинга —
+  предмет edge-ветки), тест ни от кого не зависит.
+- **Flake-риск (п.5):** живого AO3 нет (replay-запись, инструментированный узел
+  фикстуры), ожидания явные и с бюджетами; порядок Then фиксирован так, что
+  чтение WebView идёт ПОСЛЕ закрытия прилипшей вкладки-0 — гонка
+  chromedriver-контекста снята по конструкции, а не таймингом.
+- **Зелёное воспроизведение (п.6, независимое):** среда поднята канонически
+  (`Start-Emulator -WritableSystem` → `Get-Device`: `DEVICE: emulator-5554` →
+  `Install-App` → `Start-Appium`); `Invoke-Pytest` по 4 листинговым тестам
+  области → `4 passed in 181.38s`, `PYTEST_EXIT=0`.
+- **Красная проба (п.7, 2026-08-02T05:51:51Z), уровень ДАННЫХ, «проба B»
+  (позитивы области):** в `recording_builder._kudo_submit_html` временно убран
+  инкремент из `onclick` (узел остаётся на странице, но клик перестаёт писать
+  `data-kudo-clicked`), записи пересобраны
+  `framework/.venv/Scripts/python.exe scripts/build_replay_recordings.py`.
+  Прогон `Invoke-Pytest tests/test_rating_listing.py::test_first_kudosed_… \
+  tests/test_rating.py::test_first_panel_save_clicks_kudos_once -q` →
+  `2 failed in 88.50s`, `PYTEST_EXIT=1`; текст падения по сути порчи:
+  `TimeoutException: узел #kudo_submit не показал data-kudo-clicked=1 (счётчик
+  клика) в отведённое время`. Порча откачена тем же ходом
+  (`git checkout -- framework/data/recording_builder.py` + повторная сборка
+  записей), `git status framework/data/` чист — сборка детерминирована
+  (проверено контрольной пересборкой ДО пробы).

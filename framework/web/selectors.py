@@ -134,6 +134,15 @@ TAP_ZONE_DIV = '[data-tap-marker="div"]'
 # `li.download > ul.download-list`.
 DOWNLOAD_HTML_LINK = 'li.download a[title="HTML"]'
 
+# AT-BUG-035: узел `#kudo_submit` — фикстурный маркер (СИБЛИНГ `<ul class="work
+# navigation actions">` в `render_work_page_html`, НЕ часть реальной разметки
+# AO3, тот же класс, что PROBE_LINK/TAP_ZONE_* выше), инструментированный
+# инкрементным счётчиком клика (`data-kudo-clicked`, не константа) — единственный
+# способ наблюдать `evalJs(...).click()` авто-клика kudos
+# (`BrowserViewModel.kt` `applyRating:859`/`onRateWorkRequested:1054`,
+# `bugs/BUG-015.md`, TC-138..144).
+KUDO_SUBMIT = "#kudo_submit"
+
 # TC-118: whitelist самого guard'а тап-зон (`ao3_bridge.js:1155`,
 # `e.target.closest('a, button, input, select, textarea, label, summary,
 # [role="button"]')`) — СИММЕТРИЧНО скопирован сюда для JS-предиката числовой

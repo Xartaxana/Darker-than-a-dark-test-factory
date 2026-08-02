@@ -378,3 +378,217 @@ def test_tap_selected_chip_removes_tag(replay, tagged_work_seeded, driver):
     rating_steps.open_tags_section(driver)
     rating_steps.assert_chip_absent(driver, "Angst")
     rating_steps.assert_chip_visible(driver, "Fluff")
+
+
+# --- TC-138..143: rating/bridge — авто-клик kudos через листинговый вход
+# (`BrowserViewModel.kt::applyRating`, `:856-861`, bugs/BUG-015.md,
+# bugs/AT-BUG-035.md Verified — узел `#kudo_submit` инструментирован
+# инкрементным счётчиком клика, `framework/data/recording_builder.py`). Given
+# TC-138/139/142/143 повторяет схему TC-026 (`test_tabs.py`): Tab A (листинг,
+# вкладка-0) + Tab B (work-страница W, открытая в фон `long_press_work_link`) —
+# chromedriver прилипает к вкладке-0 (`browser_screen.py:319-329`), поэтому
+# читать `#kudo_submit` Tab B можно только идиомой reduce-to-one: сначала
+# наблюдения на Tab A (sticky-context, дефолт), ЗАТЕМ `swipe_close_tab(driver,
+# position=0)` закрывает Tab A — Tab B остаётся единственной живой WebView,
+# chromedriver переподключается к ней (см. `browser_steps.assert_kudo_submit_
+# click_count`/`_holds`, докстринги).
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-138")
+@allure.title("Первый переход рейтинга в Kudosed через листинг при открытой вкладке работы шлёт kudos ровно один раз")
+@pytest.mark.parametrize("replay", [rb.LISTING_BASIC_FILENAME], indirect=True)
+def test_first_kudosed_via_listing_with_open_work_tab_clicks_kudos_once(clean_app, replay, driver):
+    # Given приложение с чистыми данными; открыты Tab A (листинг с блёрбом W без
+    # рейтинга — вкладка-0) и Tab B (work-страница W, открытая в фон long-press-ом
+    # по ссылке блёрба, тот же приём, что TC-026); на Tab B узел #kudo_submit ещё
+    # без data-kudo-clicked (baseline инструментированного узла фикстуры)
+    work = W.LOVED
+    app_steps.wait_home_ready_for_deep_link(driver)
+    browser_steps.open_listing(driver, rb.LISTING_BASIC_URL)
+    browser_steps.long_press_work_link(driver, work.title)
+    browser_steps.assert_tab_strip_visible(driver, timeout=10)
+
+    # When на Tab A (по-прежнему активной — long-press не переключает активную
+    # вкладку, см. TC-026) пользователь Rate-кнопкой W открывает нативный
+    # bottom-sheet и выбирает рейтинг «Kudosed» (LIKE)
+    browser_steps.tap_rate_button(driver, work.ao3_id)
+    rating_steps.rate_via_listing_overlay(driver, "LIKE")
+
+    # Then рейтинг сохранён: бейдж «Kudosed» появляется у блёрба W на Tab A без
+    # перезагрузки (штатный sticky-контекст — Tab A это вкладка-0), работа
+    # отображается на вкладке Kudosed экрана Library
+    browser_steps.assert_rating_badge_visible(driver, work.ao3_id)
+    rating_steps.dismiss_rating_overlay(driver)
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_work_in_tab(driver, "LIKE", work.title)
+
+    # And ПОСЛЕ проверки бейджа Tab A закрывается — идиома reduce-to-one
+    # (`browser_steps.swipe_close_tab(driver, position=0)`, обоснование
+    # `browser_screen.py:319-329`): Tab B остаётся единственной живой WebView,
+    # уничтожение прилипшей цели форсирует chromedriver переподключиться к ней.
+    # На Tab B узел #kudo_submit получает data-kudo-clicked="1" — ровно один
+    # клик; повторное чтение после паузы даёт то же «1», не «2» (инкрементный
+    # счётчик, не константа, AT-BUG-035)
+    app_steps.open_tab(driver, "Browse")
+    browser_steps.swipe_close_tab(driver, 0)
+    browser_steps.assert_kudo_submit_click_count(driver, 1)
+    browser_steps.assert_kudo_submit_click_count_holds(driver, 1)
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-139")
+@allure.title("Правка личного тега уже-Kudosed работы через листинг НЕ отправляет kudos повторно (ожидаемо-красный BUG-015)")
+@pytest.mark.parametrize("replay", [rb.LISTING_BASIC_FILENAME], indirect=True)
+def test_edit_tag_on_already_kudosed_work_via_listing_does_not_reclick_kudos(replay, kudosed_work_seeded, driver):
+    # Given работа W уже имеет рейтинг Kudosed (LIKE), личных тегов нет; открыты
+    # Tab A (листинг, блёрб W с бейджем Kudosed) и Tab B (work-страница W, в
+    # фоне, тот же приём, что TC-138) — нужна, чтобы условие `:857-858` могло
+    # сработать, если бы гипотетический баг ошибочно кликал; на Tab B
+    # #kudo_submit без data-kudo-clicked (baseline)
+    work = kudosed_work_seeded
+    app_steps.wait_home_ready_for_deep_link(driver)
+    browser_steps.open_listing(driver, rb.LISTING_BASIC_URL)
+    browser_steps.assert_rating_badge_visible(driver, work.ao3_id)
+    browser_steps.long_press_work_link(driver, work.title)
+    browser_steps.assert_tab_strip_visible(driver, timeout=10)
+
+    # When на Tab A пользователь Rate-кнопкой открывает bottom-sheet, раскрывает
+    # раздел тегов и добавляет личный тег «re-save-kudos-probe» (правка
+    # метаданных; рейтинг НЕ меняется, остаётся Kudosed) — тот же приём, что
+    # TC-090/TC-114
+    browser_steps.tap_rate_button(driver, work.ao3_id)
+    rating_steps.add_tag_via_listing_overlay(driver, "re-save-kudos-probe")
+
+    # Then тег «re-save-kudos-probe» сохраняется среди выбранных
+    rating_steps.assert_chip_visible(driver, "re-save-kudos-probe")
+    rating_steps.dismiss_rating_overlay(driver)
+
+    # And ПОСЛЕ этого Tab A закрывается (reduce-to-one, тот же приём, что
+    # TC-138) — повторного клика по kudos НЕ должно быть, на Tab B
+    # #kudo_submit должен ОСТАТЬСЯ без data-kudo-clicked. ОЖИДАЕМОЕ ПАДЕНИЕ на
+    # текущей сборке (прецедент TC-048: кейс пишется по спеке, не по факту
+    # сборки) — по коду (`:856-861`) applyRating кликает kudos при ЛЮБОМ
+    # сохранении через листинг уже-Kudosed/Favorite работы независимо от того,
+    # менялся ли рейтинг; реально data-kudo-clicked="1" появится. Красный
+    # результат триажится как APP_BUG/BUG-015, не как расхождение теста со
+    # спекой (см. test-cases/rating/TC-139.md)
+    app_steps.open_tab(driver, "Browse")
+    browser_steps.swipe_close_tab(driver, 0)
+    browser_steps.assert_kudo_submit_click_count_holds(driver, 0)
+
+
+@pytest.mark.p3
+@pytest.mark.replay
+@allure.id("TC-140")
+@allure.title("Простановка Kudosed через листинг без открытой вкладки работы не отправляет kudos")
+@pytest.mark.parametrize("replay", [rb.LISTING_BASIC_FILENAME], indirect=True)
+def test_rate_kudosed_via_listing_without_open_work_tab_does_not_click_kudos(clean_app, replay, driver):
+    # Given приложение с чистыми данными; открыта ТОЛЬКО листинговая вкладка с
+    # блёрбом W без рейтинга — никакой work-вкладки W не открыто (единственная
+    # вкладка на протяжении всего сценария)
+    work = W.LOVED
+    app_steps.wait_ui_ready(driver)
+    browser_steps.open_listing(driver, rb.LISTING_BASIC_URL)
+
+    # When пользователь Rate-кнопкой W открывает bottom-sheet и выбирает рейтинг
+    # «Kudosed» (LIKE)
+    browser_steps.tap_rate_button(driver, work.ao3_id)
+    rating_steps.rate_via_listing_overlay(driver, "LIKE")
+
+    # Then рейтинг сохраняется — бейдж «Kudosed» появляется у блёрба W, работа
+    # отображается на вкладке Kudosed Library (запись в Room и обновление бейджа
+    # не зависят от наличия открытой work-вкладки — это отдельный, безусловный путь)
+    browser_steps.assert_rating_badge_visible(driver, work.ao3_id)
+    rating_steps.dismiss_rating_overlay(driver)
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_work_in_tab(driver, "LIKE", work.title)
+
+    # And наблюдаемое доказательство отсутствия клика (единственно возможное в
+    # момент, когда для клика физически не было вкладки): пользователь ПОСЛЕ
+    # этого открывает work-страницу W IN-PLACE (`rating_steps.open_work_page` —
+    # НЕ `long_press_work_link`, которая создала бы вторую вкладку и без нужды
+    # втянула бы кейс в sticky-context блокер B1, см. заметки TC-140.md) — на
+    # СВЕЖЕЗАГРУЖЕННОЙ странице #kudo_submit НЕ несёт data-kudo-clicked: открытие
+    # вкладки уже ПОСЛЕ факта не могло получить клик, который случился бы в
+    # момент простановки рейтинга (если бы случился)
+    app_steps.open_tab(driver, "Browse")
+    rating_steps.open_work_page(driver, work.ao3_id)
+    browser_steps.assert_kudo_submit_click_count_holds(driver, 0)
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-142")
+@allure.title("Смена рейтинга через листинг с Kudosed на Read не отправляет kudos")
+@pytest.mark.parametrize("replay", [rb.LISTING_BASIC_FILENAME], indirect=True)
+def test_change_rating_kudosed_to_read_via_listing_does_not_click_kudos(replay, kudosed_work_seeded, driver):
+    # Given работа W имеет рейтинг Kudosed (LIKE); открыты Tab A (листинг, бейдж
+    # Kudosed) и Tab B (work-страница W, в фоне, тот же приём, что TC-138/139)
+    work = kudosed_work_seeded
+    app_steps.wait_home_ready_for_deep_link(driver)
+    browser_steps.open_listing(driver, rb.LISTING_BASIC_URL)
+    browser_steps.assert_rating_badge_visible(driver, work.ao3_id)
+    browser_steps.long_press_work_link(driver, work.title)
+    browser_steps.assert_tab_strip_visible(driver, timeout=10)
+
+    # When на Tab A пользователь Rate-кнопкой открывает bottom-sheet и выбирает
+    # рейтинг «Read» (смена рейтинга, НЕ правка метаданных — реальный переход на
+    # значение вне множества {LIKE, SAVE}). Тап ОДИН, по кнопке «Read», не по
+    # уже выбранной «Kudosed» (тап по уже выбранной кнопке деселектит её —
+    # предмет TC-143, не этот кейс)
+    browser_steps.tap_rate_button(driver, work.ao3_id)
+    rating_steps.rate_via_listing_overlay(driver, "READ")
+
+    # Then рейтинг меняется на Read — работа W перемещается из вкладки Kudosed
+    # во вкладку Read экрана Library
+    rating_steps.dismiss_rating_overlay(driver)
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_work_in_tab(driver, "READ", work.title)
+
+    # And ПОСЛЕ этого Tab A закрывается (reduce-to-one, тот же приём, что
+    # TC-138/139) — на Tab B #kudo_submit НЕ получает data-kudo-clicked: новое
+    # сохраняемое значение (READ) не входит в предикат `:856`, evalJs с
+    # kudos-кликом структурно не строится для этого вызова
+    app_steps.open_tab(driver, "Browse")
+    browser_steps.swipe_close_tab(driver, 0)
+    browser_steps.assert_kudo_submit_click_count_holds(driver, 0)
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-143")
+@allure.title("Снятие рейтинга Kudosed (deselect) через листинг не отправляет kudos")
+@pytest.mark.parametrize("replay", [rb.LISTING_BASIC_FILENAME], indirect=True)
+def test_deselect_kudosed_via_listing_does_not_click_kudos(replay, kudosed_work_seeded, driver):
+    # Given работа W имеет рейтинг Kudosed (LIKE); открыты Tab A (листинг, бейдж
+    # Kudosed) и Tab B (work-страница W, в фоне, тот же приём, что TC-138/139/142)
+    work = kudosed_work_seeded
+    app_steps.wait_home_ready_for_deep_link(driver)
+    browser_steps.open_listing(driver, rb.LISTING_BASIC_URL)
+    browser_steps.assert_rating_badge_visible(driver, work.ao3_id)
+    browser_steps.long_press_work_link(driver, work.title)
+    browser_steps.assert_tab_strip_visible(driver, timeout=10)
+
+    # When на Tab A пользователь Rate-кнопкой открывает bottom-sheet и повторно
+    # нажимает уже выбранную кнопку «Kudosed» (deselect — общий toggle-механизм
+    # RatingOverlay.kt, тот же приём, что TC-117 для панели, но здесь через
+    # листинговый путь applyRating)
+    browser_steps.tap_rate_button(driver, work.ao3_id)
+    rating_steps.rate_via_listing_overlay(driver, "LIKE")
+
+    # Then рейтинг снят — работа W исчезает из вкладки Kudosed экрана Library
+    rating_steps.dismiss_rating_overlay(driver)
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_work_not_in_tab(driver, "LIKE", work.title)
+
+    # And ПОСЛЕ этого Tab A закрывается (reduce-to-one, тот же приём, что
+    # TC-138/139/142) — на Tab B #kudo_submit НЕ получает data-kudo-clicked:
+    # ветка rating == null (`:803-838`) завершается return@launch (:837) ДО
+    # того, как код доходит до строки :856 — evalJs с kudos структурно
+    # недостижим для этого сохранения
+    app_steps.open_tab(driver, "Browse")
+    browser_steps.swipe_close_tab(driver, 0)
+    browser_steps.assert_kudo_submit_click_count_holds(driver, 0)
