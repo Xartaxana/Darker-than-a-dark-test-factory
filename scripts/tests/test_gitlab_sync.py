@@ -312,6 +312,70 @@ def test_writeback_repro_bug021_double_field_before_fix(bugs_dir):
     assert meta.get("gitlab_issue") == 12
 
 
+# --- GITLAB_ISSUE_LINE_RE: форма ключа (R3 остатка critic-входа
+# writeback-фикса, 2026-08-02, HANDOFF.md — расширение до `^gitlab_issue[ \t]*:`;
+# `[ \t]*`, не `\s*` — критик-вход раунда 2, N4: `\s` поглощал перевод строки).
+# Границы (правило 11 CLAUDE.md): матч на форме БЕЗ пробела, С одним пробелом,
+# С НЕСКОЛЬКИМИ пробелами перед ':' — и НЕ-матч на похожем по префиксу ключе
+# и на ключе, отделённом от ':' переводом строки.
+
+@pytest.mark.parametrize("line", [
+    "gitlab_issue: 5",
+    "gitlab_issue : 5",
+    "gitlab_issue  : 5",
+], ids=["no-space", "one-space", "two-spaces"])
+def test_gitlab_issue_line_re_matches_optional_space_before_colon(line):
+    m = gs.GITLAB_ISSUE_LINE_RE.match(line)
+    assert m is not None
+    assert m.group(0) == line
+
+
+def test_gitlab_issue_line_re_does_not_match_similar_prefixed_key():
+    # 'gitlab_issue_x:' начинается с 'gitlab_issue', но это ДРУГОЕ поле —
+    # символ сразу после 'gitlab_issue' обязан быть пробелом или ':'.
+    assert gs.GITLAB_ISSUE_LINE_RE.match("gitlab_issue_x: 5") is None
+
+
+def test_gitlab_issue_line_re_does_not_cross_line_boundary():
+    # N4 (критик-вход раунда 2): `\s*` поглощал перевод строки —
+    # 'gitlab_issue\n: 5' матчился через строку; `[ \t]*` не должен.
+    assert gs.GITLAB_ISSUE_LINE_RE.search("gitlab_issue\n: 5") is None
+
+
+def test_writeback_ignores_matching_line_outside_frontmatter_body(tmp_path):
+    """Контракт GITLAB_ISSUE_LINE_RE — только срез ТЕЛА frontmatter
+    (text[body_start:body_end] в writeback_gitlab_issue), не весь файл: строка
+    'gitlab_issue: ...' в ТЕЛЕ bug-файла (после закрывающего '---') не входит
+    в область поиска и не должна быть тронута/спутана с полем frontmatter."""
+    text = (
+        "---\n"
+        "id: BUG-170\n"
+        'title: "Заголовок"\n'
+        "severity: major\n"
+        "status: Open\n"
+        'updated: "2026-08-02T00:00:00Z"\n'
+        "---\n"
+        "\n# Тело\n\n"
+        "gitlab_issue: 999 (это НЕ поле frontmatter, просто текст в теле)\n"
+    )
+    p = tmp_path / "BUG-170.md"
+    p.write_text(text, encoding="utf-8")
+
+    gs.writeback_gitlab_issue(p, 12)
+
+    after_text = p.read_text(encoding="utf-8")
+    m = gs.FRONTMATTER_RE.match(after_text)
+    assert m is not None
+    assert "gitlab_issue: 12" in m.group(1)          # вставлено во frontmatter
+    # тело после frontmatter не тронуто -- строка "gitlab_issue: 999 ..." жива
+    assert "gitlab_issue: 999 (это НЕ поле frontmatter, просто текст в теле)" \
+        in after_text
+
+    meta, body = gs.load_bug(p)
+    assert meta.get("gitlab_issue") == 12
+    assert "gitlab_issue: 999" in body
+
+
 def test_second_run_is_idempotent_zero_create(bugs_dir):
     p = _write_bug(bugs_dir, "BUG-061", status="Open")
     meta, body = gs.load_bug(p)
