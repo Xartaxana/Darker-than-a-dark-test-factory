@@ -1943,3 +1943,17 @@ true` + актор `lead` в реестре transitions; конвенция line
 регрессионный замок, card-scoped иконки Library с device-witness
 дискриминации 2 карточек, listing_basic 8 flows, канон venv-python
 6/6, Stop-NodeProcesses один месседж).
+
+## доп.10: ретрофит red_probe закрыт (2026-08-02, сессия 25, полный Lead)
+
+Пункт «ретрофит 28 Automated-кейсов» доп.10 Этапа 4 закрыт по факту:
+долг выработан штатными F1-батчами конвейера (test-reviewer ставит
+`red_probe` при каждом ревью; последние — батч 7 кейсов TC-136 +
+kudos 2026-08-02). Замер закрытия — НЕ снапшот, а независимый пересчёт
+Lead по test-cases/ (F-30): 142 кейса `status: Automated`, 0 без
+непустого `red_probe`; счётчик снапшота factory-status подтверждает
+(«Automated без red_probe: 0»). Единственный Approved без пробы —
+TC-139, намеренный red-lock на BUG-015 (не Automated, вне скоупа
+ретрофита). Живым в доп.10 остаётся ярус 2: периодическая репетиция
+seeded defects с метрикой `seeded_defect_kill_rate` — после механики
+репетиции тёмного дня (docs/11).
