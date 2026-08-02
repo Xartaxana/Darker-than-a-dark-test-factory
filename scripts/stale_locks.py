@@ -53,6 +53,13 @@ DEFAULT_LOCK_STALE_H = sla_utils.DEFAULT_LOCK_STALE_H
 
 LOCK_RE = re.compile(r"^(?P<agent>[A-Za-z0-9_-]+):(?P<ts>\d{4}-\d{2}-\d{2}T[0-9:.]+Z?)$")
 
+# AT-BUG-040 (сиблинг AT-BUG-038): поиск СТРОГО в теле frontmatter, значение
+# без хвостового `\r`/переноса строки ([^\r\n]*, не жадный \s*.*$) — иначе
+# \s* многострочного (?m)-режима матчит переносы строк и поглощает СОСЕДНЕЕ
+# поле frontmatter целиком (доказанный data-loss: lock: "" на пустом значении
+# + соседний extra_field — extra_field уничтожался).
+_LOCK_FIELD_RE = re.compile(r"(?m)^lock:[^\r\n]*")
+
 
 def _utcnow() -> datetime.datetime:
     return datetime.datetime.now(datetime.timezone.utc)
@@ -112,12 +119,16 @@ def _completion_recorded(artifact_name: str, lock_value: str) -> bool:
 
 
 def _clear_lock(src: Path, *, dry: bool) -> bool:
-    text = src.read_text(encoding="utf-8")
-    new, n = re.subn(r'(?m)^lock:\s*.*$', 'lock: ""', text, count=1)
+    # AT-BUG-040: read_bytes/write_bytes (text-режим перегоняет ВСЕ окончания
+    # строк файла при каждой записи, доказано на чисто-LF артефакте) + замена
+    # СТРОГО в теле frontmatter (bs._subn_frontmatter_field — тот же образец,
+    # что gitlab_sync.py/board_sync.py после AT-BUG-038), не по всему тексту.
+    text = src.read_bytes().decode("utf-8")
+    new, n = bs._subn_frontmatter_field(text, _LOCK_FIELD_RE, 'lock: ""', count=1)
     if n == 0:
         return False
     if not dry:
-        src.write_text(new, encoding="utf-8")
+        src.write_bytes(new.encode("utf-8"))
     return True
 
 

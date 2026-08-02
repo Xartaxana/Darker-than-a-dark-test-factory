@@ -265,7 +265,12 @@ def collect_wanted(now: datetime.datetime, thr: dict) -> tuple[dict, list]:
 
 
 def apply_pingpong_block(src: Path, now: datetime.datetime, *, dry: bool) -> str:
-    text = src.read_text(encoding="utf-8")
+    # AT-BUG-040 (сиблинг AT-BUG-038, класс 1): read_bytes/write_bytes — text-режим
+    # (read_text/write_text) молча перегоняет ВСЕ окончания строк файла при КАЖДОЙ
+    # записи, даже если правится одно поле (доказано: CRLF count 16 на чисто-LF
+    # артефакте). bi._rewrite_field/_set_field уже ограничены телом frontmatter
+    # (класс 2 унаследован из AT-BUG-038) — здесь замыкается только точка I/O.
+    text = src.read_bytes().decode("utf-8")
     stamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
     new, changed = bi._rewrite_field(text, "status", "Blocked")
     if not changed:
@@ -276,7 +281,7 @@ def apply_pingpong_block(src: Path, now: datetime.datetime, *, dry: bool) -> str
     # обсуждение с разработчиком (D8/D4), это и есть product_decision.
     new = bi._set_field(new, "blocked_reason", "product_decision")
     if not dry:
-        src.write_text(new, encoding="utf-8")
+        src.write_bytes(new.encode("utf-8"))
     return f"  [BLOCK] {src.name}: pingpong → Blocked{' (dry-run)' if dry else ''}"
 
 
