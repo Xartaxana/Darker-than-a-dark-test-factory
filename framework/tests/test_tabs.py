@@ -811,3 +811,71 @@ def test_library_card_open_at_tab_limit_shows_dialog_and_switches_screen(loved_w
     # литералом HOME_URL (в prefs он нормализован до адреса СО слэшем —
     # см. TC-137.md Предусловия/класс дефекта B1).
     app_steps.assert_persisted_active_tab_index(9)
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-136")
+@allure.title("Тап по телу карточки Library открывает работу в новой активной вкладке Browse")
+@pytest.mark.parametrize("replay", [rb.WORK_WITH_DOWNLOAD_FILENAME], indirect=True)
+def test_library_card_open_work_opens_new_active_browse_tab(loved_work_seeded, replay, driver):
+    """TC-136: позитивная ветка `onOpenWork` (MainActivity.kt:329-333) — тап по
+    телу карточки работы Library НИЖЕ потолка MAX_TABS добавляет НОВУЮ вкладку
+    Browse (не заменяет существующую единственную Home-вкладку), делает её
+    активной, переключает экран на Browse и сворачивает нижнюю навигацию.
+    Сестринский кейс TC-137 покрывает противоположную (граничную) ветку —
+    потолок 10 вкладок, где `openTab` возвращает `false` и ничего из этого не
+    происходит с составом/активностью вкладок (хотя экран всё равно
+    переключается — тот же безусловный код-путь).
+
+    Оракулы URL/активности новой вкладки — ТОЛЬКО persisted prefs
+    (`assert_persisted_tab_url_at`/`assert_persisted_active_tab_index`), НЕ
+    `browser_steps.assert_active_tab_url`: при >1 живой WebView chromedriver
+    детерминированно прилипает к вкладке-0, что дало бы ложный негатив на
+    корректном поведении (см. докстринг `assert_persisted_active_tab_index`,
+    тот же приём TC-132/TC-137)."""
+    work = loved_work_seeded
+
+    # Given приложение запущено, пользователь на экране Library, вкладка
+    # Favorite активна, карточка работы видна — открыта ровно 1 вкладка Browse
+    # (стартовая Home), TabStrip ещё скрыт (порядок шагов — буквально из
+    # TC-136.md «Заметки для автоматизации»).
+    app_steps.wait_ui_ready(driver)
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_work_in_tab(driver, "SAVE", work.title)
+
+    # Явный якорь «открыта ровно 1 вкладка Browse» ДО When (A2, critic
+    # attempt 1) — делает последующий Then про счёт вкладок дельтой (+1),
+    # как буквально написано в Given/Then кейса (TC-136.md:43-44/50-51), а не
+    # голой абсолютной проверкой «стало 2».
+    app_steps.wait_persisted_tab_count(1, timeout=10)
+
+    # When пользователь тапает по телу карточки работы (не по иконкам
+    # download/open-file — они отдельные IconButton вне области combinedClickable)
+    library_steps.open_work_in_browser(driver, work.title)
+
+    # Then число вкладок Browse становится 2 (persisted open_tabs_urls
+    # подтверждает +1 к предыдущему счёту 1)
+    app_steps.wait_persisted_tab_count(2, timeout=15)
+
+    # And экран переключается на Browse (TabStrip становится видим — рендерится
+    # только при tabs.size>1 и активном экране Browse)
+    browser_steps.assert_tab_strip_visible(driver)
+
+    # And активная (новая) вкладка загружает URL работы — сверка ПОБАЙТОВАЯ по
+    # позиции 1 (вкладка 0 — Home, вкладка 1 — новая), И именно она активна
+    app_steps.assert_persisted_tab_url_at(1, work.url)
+    app_steps.assert_persisted_active_tab_index(1)
+
+    # And нижняя навигация свёрнута (navExpanded=false) — наблюдаемо как
+    # отсутствие пунктов Browse/Library/Settings на экране (панель скрыта за
+    # ручкой-пилюлей); единственный блокер автоматизации кейса снят новым
+    # публичным шагом app_steps.assert_bottom_nav_collapsed поверх нового
+    # BottomNav.is_visible(). Красная проба (critic-блокер B1, attempt 2):
+    # вставка `BottomNav(driver).ensure_visible()` непосредственно перед этим
+    # ассертом дала `AssertionError` («нижняя навигация неожиданно видна») —
+    # оракул доказанно способен падать, не вакуумно истинен на известном
+    # ложно-негативном режиме WebView-accessibility-провайдера
+    # (`browser_screen.py:113-129`). Проба выполнена и откачена, в дереве не
+    # остаётся.
+    app_steps.assert_bottom_nav_collapsed(driver)

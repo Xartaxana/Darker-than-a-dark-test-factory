@@ -21,8 +21,20 @@ SETTINGS = "Settings"
 
 
 class BottomNav(BaseScreen):
-    def _nav_visible(self) -> bool:
-        return self.is_present(self.by_text(LIBRARY), timeout=3)
+    def _nav_visible(self, timeout: int = 3) -> bool:
+        return self.is_present(self.by_text(LIBRARY), timeout=timeout)
+
+    def is_visible(self, timeout: int = 3) -> bool:
+        """Публичная обёртка над `_nav_visible` (TC-136): единственная точка
+        снаружи класса для чтения текущего состояния панели (развёрнута/
+        свёрнута за ручкой-пилюлей). Приватный метод не переименован и не
+        тронут — только добавлена тонкая обёртка поверх него, тот же приём,
+        что публичный `BrowserScreen.is_tab_strip_visible` поверх собственных
+        внутренних деталей. `timeout` прокидывается в `_nav_visible` (A1,
+        critic attempt 1) — форма негатива `assert_holds_for(..., timeout=0)`
+        (уже используемая в репо, `browser_steps.py:240-263`) достижима через
+        этот примитив без похода к приватному методу."""
+        return self._nav_visible(timeout)
 
     _NONE_FOUND = object()  # сентинел «список стабилен, кандидатов нет» (не ретраить)
 
