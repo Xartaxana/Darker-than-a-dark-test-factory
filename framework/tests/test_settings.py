@@ -11,6 +11,7 @@ from __future__ import annotations
 import allure
 import pytest
 
+from framework.data import recording_builder as rb
 from framework.steps import (
     app_steps,
     browser_steps,
@@ -207,48 +208,155 @@ def test_cancel_clear_all_dialog_keeps_data(seeded_library, driver):
 
 
 @pytest.mark.p3
-@pytest.mark.live
+@pytest.mark.replay
 @allure.id("TC-020")
-@allure.title("Clear all ratings сбрасывает бейджи на открытых страницах AO3 без перезагрузки")
-@pytest.mark.skip(
-    reason=(
-        "Then кейса не воспроизводится на реальном приложении (witness "
-        "2026-07-18, device emulator-5554): SettingsViewModel.confirmClearAll() "
-        "(SettingsScreen.kt:501-504) вызывает ТОЛЬКО repo.clearAllRatings() — "
-        "не зовёт BrowserViewModel.refreshActiveTabRating/broadcastRatingChange "
-        "(они вызываются лишь из applyRating/savePanelRating, см. "
-        "BrowserViewModel.kt:767-789,868-878), поэтому currentPageRating "
-        "открытой work-страницы (RatingMenu-панель) остаётся прежним без "
-        "reload/повторной навигации (onPageLoaded, BrowserViewModel.kt:463-509 "
-        "— единственное место, где currentPageRating перечитывается из БД). "
-        "Прогон: baseline(selected)=134.2, luma после Clear all + возврата на "
-        "Browse НЕ поднялась выше 178.9 за 10с — кнопка осталась в выбранном "
-        "виде. Кейс's заметки для автоматизации сами предвидели этот сценарий "
-        "('если по факту требуется reload — расхождение с PROJECT.md/§9, "
-        "эскалировать через bug-reporter, не подгонять Then под предположение') "
-        "— test-automator продуктовые баги не заводит (CLAUDE.md), поэтому "
-        "TC-020.md остаётся Approved БЕЗ automated_by; тест написан и оставлен "
-        "skip-помеченным как witness находки для триажа (test-runner/"
-        "bug-reporter решают APP_BUG vs TEST_BUG)."
-    )
+@allure.title(
+    "Бейджи открытых вкладок сохраняют состояние до перезагрузки страницы; "
+    "после reload — сброшены"
 )
-def test_clear_all_ratings_resets_open_work_page_badge(loved_work_seeded, driver):
+@pytest.mark.parametrize("replay", [rb.WORKS_MULTI_FILENAME], indirect=True)
+def test_clear_all_ratings_badge_persists_without_reload(loved_work_seeded, replay, driver):
+    """Автоматизирует ТОЛЬКО Then (а) кейса (см. TC-020.md) — наблюдаемый факт:
+    badge остаётся выбранным сразу после Clear all ratings, без перезагрузки
+    страницы (причина не утверждается здесь — R2, критик D5 2026-08-02; см.
+    `bugs/BUG-012.md`/`bugs/AT-BUG-042.md` за анализом возможных причин). Это
+    подтверждённое, стабильно зелёное Intended-поведение (BUG-012, решение
+    владельца 2026-08-02).
+
+    Переведён с `@pytest.mark.live` на `@pytest.mark.replay` (координатор,
+    2026-08-03, устранение ESC-015/R-03): сценарий не проверяет НИЧЕГО из
+    реального содержимого страницы AO3 — бейдж/панель управляются Room, не
+    DOM; `works_multi.mitm` уже несёт work-страницу `W.LOVED`
+    (`ALL_WORKS[0]`, `recording_builder.render_work_page_html`, тот же URL,
+    что `work.url`/`BrowserScreen.open_work`), `server_replay_reuse=true`
+    отдаёт ОДИН И ТОТ ЖЕ ответ на повторные запросы — то же самое нужно для
+    Then (б) (см. соседнюю функцию) при `reload()`.
+
+    Then (б) («после перезагрузки бейдж отражает очищенное состояние») —
+    отдельная функция ниже (`test_clear_all_ratings_badge_resets_after_reload`;
+    там reload делается ДО возврата на Browse — это ОБХОД дефекта приложения
+    `BUG-022`, а не порядок из пользовательского сценария, см. её докстринг)."""
     # Given работа W засеяна с рейтингом Loved (SAVE), её страница /works/{id} открыта
     # на вкладке Browse — встроенная панель RatingMenu отражает выбранный рейтинг
     # «Favorite» (Loved), Settings ещё не открыт (мультитаб: WebView-вкладка остаётся
-    # открытой при навигации между Browse и Settings)
+    # открытой при навигации между Browse и Settings). wait_ui_ready (не
+    # wait_app_ready) — домашняя страница HOME_URL НЕ записана в
+    # works_multi.mitm, ждать её загрузки означало бы уйти в live (тот же
+    # приём, что test_rating_listing.py::test_rate_work_from_listing_overlay).
     work = loved_work_seeded
-    app_steps.wait_app_ready(driver)
+    app_steps.wait_ui_ready(driver)
     rating_steps.open_work_page(driver, work.ao3_id)
-    selected_luma = rating_steps.capture_panel_rating_baseline(driver, "SAVE")
+    # R1 (критик D5): якорь Given — baseline обязан соответствовать ВЫБРАННОМУ
+    # состоянию, иначе тест был бы ложно-зелёным на сломанном Given. Шаг
+    # ОПРАШИВАЕТ (onPageLoaded читает Room асинхронно) и возвращает осевшее
+    # значение — baseline берём именно его, не ранний снимок.
+    baseline_luma = rating_steps.capture_panel_rating_baseline(driver, "SAVE")
+    selected_luma = settings_steps.assert_baseline_indicates_selected(driver, "SAVE", baseline_luma)
 
     # When пользователь переходит в Settings и подтверждает диалог «Clear all ratings»
     app_steps.open_tab(driver, "Settings")
     settings_steps.clear_all_ratings(driver)
 
-    # Then при возврате на вкладку с открытой страницей работы W бейдж «Loved» исчез
-    # (панель RatingMenu показывает отсутствие рейтинга) — без ручной перезагрузки
-    # страницы пользователем, тот же прокси (цвет кнопки рейтинга), что TC-009/TC-010
+    # Then (а) — наблюдаемый факт (BUG-012, Intended, 2026-08-02): при возврате
+    # на вкладку с открытой страницей работы W, БЕЗ перезагрузки, бейдж «Loved»
+    # ОСТАЁТСЯ визуально выбранным (весь бюджет assert_holds_for, не
+    # одноразовый снимок — B6, критик D5). Причина НЕ утверждается здесь (R2):
+    # владелец продукта принял это как задуманное поведение независимо от
+    # того, каким именно внутренним механизмом оно объясняется.
+    app_steps.open_tab(driver, "Browse")
+    settings_steps.assert_panel_rating_still_selected(driver, "SAVE", selected_luma)
+
+
+@pytest.mark.p3
+@pytest.mark.replay
+@allure.id("TC-020")
+@allure.title(
+    "После перезагрузки страницы работы бейдж отражает очищенный рейтинг (Then б)"
+)
+@pytest.mark.parametrize("replay", [rb.WORKS_MULTI_FILENAME], indirect=True)
+def test_clear_all_ratings_badge_resets_after_reload(loved_work_seeded, replay, driver):
+    """Порядок шагов ЗДЕСЬ — reload ДО возврата на Browse — это ОБХОД
+    ПОДТВЕРЖДЁННОГО ДЕФЕКТА ПРИЛОЖЕНИЯ `BUG-022`, а не оптимизация и не
+    пользовательская последовательность из кейса.
+
+    ЧЕСТНО О ГРАНИЦЕ ПРОВЕРЯЕМОГО (критик D5, финальный раунд 2026-08-03):
+    пользователь в жизни делает «возврат на Browse -> reload». В ЭТОМ порядке
+    на текущей сборке ожидание кейса НЕ выполняется — `BUG-022`
+    (`WorkRatingPanel` dispose-save воскрешает удалённую запись ещё на самом
+    возврате, ДО того как reload успевает что-либо перечитать). Данный тест
+    НЕ проверяет пользовательский порядок и не должен трактоваться как его
+    замок: он проверяет ровно то, что в этой сборке проверяемо, — что
+    перезагрузка страницы работы ПЕРЕЧИТЫВАЕТ рейтинг из Room и панель
+    отражает очищенное состояние. Регрессионный замок пользовательского
+    порядка появится при фиксе `BUG-022` и будет носителем ТОГО бага, не
+    этого кейса (решение Lead, развязка TC-020 <-> BUG-022; см.
+    `test-cases/settings/TC-020.md`, блок «Границы проверяемого»).
+
+    Механизм обхода (`AT-BUG-042` R8, подтверждён различающим замером
+    `ao3Id|rating|timestamp`, НЕ COUNT): воскресшая строка появляется ИМЕННО в
+    момент возврата на вкладку Browse, с `rating=SAVE` (никогда `READ` —
+    `onWorkFinished` auto-mark структурно исключён на этой фикстуре:
+    `works_multi.mitm` не несёт `<div id="chapters">`; на живой странице
+    слушатель существует, но пишет `READ`). Источник — транзитный mount+dispose
+    `WorkRatingPanel` во время exit-анимации `AnimatedVisibility` на возврате
+    (`onSelect` ставит `navExpanded=false` одновременно с `selectedTab=BROWSE`,
+    `MainActivity.kt:426-429`/`BottomBar.kt:99-105`): dispose захватывает
+    СТУХШЕЕ `latestRating=SAVE`, если `currentPageRating` к этому моменту ещё
+    не обнулён (`BUG-012` Intended — обнуляется только `onPageLoaded`).
+
+    Почему обход работает: `BrowserScreen` (и его WebView) композится
+    БЕЗУСЛОВНО независимо от `selectedTab` (`MainActivity.kt:471-472`,
+    "Browser is always rendered to keep WebViews alive"), поэтому
+    `window.location.reload()` срабатывает и с экрана Settings, ДО возврата на
+    Browse. `onPageLoaded` обнуляет `currentPageRating`
+    (`BrowserViewModel.kt:463-509`) — когда мы ПОТОМ возвращаемся на Browse,
+    транзитный dispose захватывает `latestRating=null`, и `onSave` не
+    вызывается вовсе (guard `latestRating != null`, `BottomBar.kt:159-167`) —
+    воскрешения не происходит. Подтверждено различающим замером: строка
+    остаётся ПУСТОЙ на каждом чекпоинте после reload (в т.ч. сразу после
+    возврата на Browse).
+
+    Переведён с `@pytest.mark.live` на `@pytest.mark.replay` (координатор,
+    2026-08-03, устранение ESC-015/R-03) — см. докстринг соседней функции за
+    обоснованием."""
+    # Given работа W засеяна с рейтингом Loved (SAVE), её страница /works/{id}
+    # открыта на вкладке Browse — панель RatingMenu отражает выбранный рейтинг
+    work = loved_work_seeded
+    app_steps.wait_ui_ready(driver)
+    rating_steps.open_work_page(driver, work.ao3_id)
+    # R1 (критик D5): якорь Given — baseline обязан соответствовать ВЫБРАННОМУ
+    # состоянию, иначе тест был бы ложно-зелёным на сломанном Given. Шаг
+    # ОПРАШИВАЕТ (onPageLoaded читает Room асинхронно) и возвращает осевшее
+    # значение — baseline берём именно его, не ранний снимок.
+    baseline_luma = rating_steps.capture_panel_rating_baseline(driver, "SAVE")
+    selected_luma = settings_steps.assert_baseline_indicates_selected(driver, "SAVE", baseline_luma)
+
+    # When пользователь переходит в Settings и подтверждает диалог «Clear all ratings»
+    app_steps.open_tab(driver, "Settings")
+    settings_steps.clear_all_ratings(driver)
+
+    # And якорь состояния БД: очистка ДЕЙСТВИТЕЛЬНО опустошила work_ratings к
+    # моменту перезагрузки — иначе провал Then (б) не различал бы «панель не
+    # перечитала Room» и «в Room по-прежнему лежит рейтинг» (BUG-022-класс);
+    # сырые строки ao3Id|rating|timestamp, не COUNT — только значение rating
+    # различает конкурирующих писателей.
+    settings_steps.assert_rating_rows_empty()
+
+    # When пользователь перезагружает страницу работы — ЗДЕСЬ, ПОКА мы ещё на
+    # Settings: ОБХОД дефекта приложения BUG-022 (в пользовательском порядке
+    # «возврат на Browse -> reload» ожидание кейса на текущей сборке НЕ
+    # выполняется), см. докстринг. Реальный WebView reload
+    # (window.location.reload()), НЕ повторная навигация на тот же URL:
+    # красный прогон 2026-08-02 показал, что Chromium не триггерит
+    # onPageFinished на навигации к уже открытому URL, см. docstring
+    # `settings_steps.reload_active_webview_page`.
+    settings_steps.reload_active_webview_page(driver)
+
+    # Then (б) при возврате на Browse панель RatingMenu отражает очищенное
+    # состояние (бейдж «Loved» исчез) — onPageLoaded перечитал
+    # currentPageRating из Room ДО того, как транзитный dispose на возврате
+    # мог бы захватить стухшее значение (обход R8 выше), тот же luma-прокси,
+    # что TC-009/TC-010
     app_steps.open_tab(driver, "Browse")
     rating_steps.assert_panel_rating_deselected(driver, "SAVE", selected_luma)
 

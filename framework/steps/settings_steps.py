@@ -3,10 +3,13 @@ from __future__ import annotations
 
 import allure
 
-from framework.core import adb
-from framework.core.waits import wait_for
+from framework.config import settings
+from framework.core import adb, contexts
+from framework.core.waits import assert_holds_for, wait_for, wait_until
 from framework.data import seed_db
 from framework.screens.base_screen import BaseScreen
+from framework.screens.navigation import BottomNav
+from framework.screens.rating_overlay import RatingOverlay
 from framework.screens.settings_screen import SettingsScreen
 
 
@@ -139,6 +142,149 @@ def clear_all_ratings(driver):
     s.confirm_clear_all()
 
 
+@allure.step("Then baseline-замер соответствует ВЫБРАННОМУ состоянию кнопки {rating} (якорь Given)")
+def assert_baseline_indicates_selected(driver, rating: str, selected_baseline_luma: float,
+                                       deselected_threshold: float = 178.9,
+                                       timeout: float = 10.0) -> float:
+    """R1 (критик D5, 2026-08-02): якорь Given. Без него `selected_baseline_luma`,
+    случайно снятая с уже НЕвыбранной/дефолтной кнопки (например, seed-фикстура
+    не успела применить рейтинг до открытия страницы работы), была бы
+    неотличима от настоящего выбранного состояния — тест дал бы ложно-зелёный
+    результат на сломанном Given (порог деселекта заведомо не превышался бы,
+    раз baseline с самого начала был «уже светлый»). Историческая калибровка
+    (test-automator 2026-07-18, TC-009/TC-010/TC-020): выбранный `ratingAccent`
+    тёмный, luma заметно НИЖЕ порога деселекта `≈178.9`.
+
+    ОПРОС, а не одноразовый снимок (критик D5, финальный раунд 2026-08-03):
+    цвет кнопки становится «выбранным» не в момент открытия страницы, а когда
+    `onPageLoaded` АСИНХРОННО перечитает рейтинг из Room
+    (`BrowserViewModel.kt:463-509`, корутина) и `animateColorAsState` доиграет
+    переход в `ratingAccent` (180мс tween). Жёсткий assert сразу после
+    `capture_panel_rating_baseline` падал бы на всяком прогоне, где Given
+    установлен ВЕРНО, но не успел проявиться к первому кадру, — это ложно-красный
+    того же класса, что описан у `rating_steps.assert_rating_button_selected`
+    (опрашивающий сиблинг, тот же luma-прокси того же `RatingMenu`). Здесь опрос
+    в ту же сторону (кнопка ТЕМНЕЕТ до порога), поэтому:
+
+    - если первичный замер уже ниже порога — возвращаем его немедленно, лишних
+      чтений дерева не делаем;
+    - иначе опрашиваем `button_avg_luma` до `timeout` и возвращаем ОСЕВШЕЕ
+      значение — именно оно, а не ранний (ещё светлый) снимок, обязано служить
+      baseline'ом последующих Then: baseline, снятый до конца анимации, завысил
+      бы порог деселекта `selected_baseline_luma / ratio` и ослабил бы обе
+      парные проверки;
+    - если за весь бюджет кнопка так и не потемнела — `AssertionError` (Given
+      кейса действительно сломан).
+
+    Если ни одного УСПЕШНОГО перечитывания не случилось (драйвер-вызов завис —
+    `last error` внутри `wait_for`), исходный `TimeoutError` пробрасывается
+    целиком: тип и контекст нужны зарегистрированному fail-fast-детектору среды
+    (AT-BUG-009), подменять его собственным `AssertionError` нельзя (тот же
+    приём, что в `assert_filter_profile_count`)."""
+    if selected_baseline_luma < deselected_threshold:
+        return selected_baseline_luma
+
+    overlay = RatingOverlay(driver)
+    observed: list[float] = []
+
+    def _settled() -> bool:
+        luma = overlay.button_avg_luma(rating)
+        observed.append(luma)
+        return luma < deselected_threshold
+
+    try:
+        wait_for(
+            _settled, timeout=timeout,
+            message=f"кнопка рейтинга {rating} не пришла в выбранное состояние",
+        )
+    except TimeoutError:
+        if not observed:
+            # Ни одного успешного перечитывания — наблюдения нет, диагностировать
+            # нечего; пробрасываем исходный TimeoutError без искажения.
+            raise
+
+    settled = observed[-1] if observed else selected_baseline_luma
+    assert settled < deselected_threshold, (
+        f"baseline luma={settled:.1f} (первичный замер {selected_baseline_luma:.1f}, "
+        f"опрос {timeout:.0f}с, наблюдения: {[round(v, 1) for v in observed]}) НЕ ниже "
+        f"порога деселекта {deselected_threshold:.1f} — похоже, Given кейса не установил "
+        f"кнопку рейтинга в выбранное состояние (рейтинг SAVE не применился до измерения "
+        f"baseline)"
+    )
+    return settled
+
+
+@allure.step("Then панель рейтинга на странице работы ВСЁ ЕЩЁ отражает выбор {rating} (без reload)")
+def assert_panel_rating_still_selected(driver, rating: str, selected_baseline_luma: float, ratio: float = 0.75,
+                                        budget_s: float = 10.0, interval_s: float = 0.5):
+    """Наблюдаемый факт (без утверждения причины — R2, критик D5 2026-08-02):
+    непосредственно после Clear all ratings, БЕЗ reload, кнопка рейтинга
+    `{rating}` остаётся визуально выбранной. Симметрична
+    `rating_steps.assert_panel_rating_deselected` (тот же luma-прокси кнопки,
+    тот же `ratio`/порог деселекта), но проверяет ОТСУТСТВИЕ перехода —
+    негативное утверждение.
+
+    Негативные утверждения держат ВЕСЬ бюджет, не читают один снимок
+    (`waits.assert_holds_for`, докстринг `waits.py:46-74`, B6 критик D5):
+    одноразовое чтение сразу после возврата на вкладку не отличило бы
+    «стабильно выбрано» от «уже начало меняться, просто не успели прочитать
+    именно в этот момент» — опрос всего бюджета ловит отложенный переход,
+    который случился бы позже первого снимка.
+
+    Бюджет 10с = таймаут парной ПОЗИТИВНОЙ проверки
+    `rating_steps.assert_panel_rating_deselected` (критик D5, финальный раунд
+    2026-08-03: прежние 4с здесь были короче парных 10с там). Асимметрия
+    делала негативное утверждение слабее позитивного: переход, случившийся на
+    6-й секунде, парная проверка ЗАСЧИТАЛА бы как «панель отразила очистку», а
+    этот шаг уже не наблюдал бы его и дал бы зелёный «состояние удержано» —
+    два шага противоречили бы друг другу на одном и том же явлении. Окно
+    наблюдения обеих сторон обязано совпадать; сокращать его можно только
+    замером, показывающим, что переход физически не может прийти позже, — такого
+    замера нет (BUG-012 Intended означает «перехода нет вовсе», а не «он быстрый»).
+    Цена: +6с к прогону Then (а) — приемлемо для P3-кейса."""
+    BottomNav(driver).ensure_visible()
+    threshold = selected_baseline_luma / ratio
+
+    def _still_selected() -> bool:
+        luma = RatingOverlay(driver).button_avg_luma(rating)
+        assert luma <= threshold, (
+            f"кнопка рейтинга {rating} неожиданно посветлела до {luma:.1f} (порог "
+            f"деселекта {threshold:.1f}, baseline выбранного={selected_baseline_luma:.1f}) "
+            f"после Clear all ratings БЕЗ reload"
+        )
+        return True
+
+    assert_holds_for(
+        _still_selected, budget_s=budget_s, interval_s=interval_s,
+        msg=f"кнопка рейтинга {rating} не удержала выбранное состояние весь бюджет {budget_s}с",
+    )
+
+
+@allure.step("When страница работы перезагружена (WebView reload)")
+def reload_active_webview_page(driver, timeout: int | None = None):
+    """Настоящий reload документа WebView (`window.location.reload()`) — НЕ
+    повторная навигация на тот же URL. Эмпирически подтверждено (красный
+    прогон TC-020, 2026-08-02): повторный вызов `BrowserScreen.open_work`/
+    `navigate()` (Selenium `driver.get(url)`) на уже открытый URL НЕ
+    триггерит `WebViewClient.onPageFinished` — Chromium трактует навигацию
+    на идентичный URL как no-op, `BrowserViewModel.onPageLoaded` не
+    вызывается, `currentPageRating` не перечитывается (второй Then кейса
+    ложно не срабатывал бы на такой «псевдо-перезагрузке»). Пул-ту-рефреш
+    приложения (`SwipeRefreshLayout.setOnRefreshListener { webView.reload()
+    }`, `app-under-test/.../BrowserScreen.kt:553`) вызывает ИМЕННО
+    `WebView.reload()` — `window.location.reload()` из JS даёт тот же эффект
+    (полноценная навигация с сетевым запросом, `onPageFinished` срабатывает
+    штатно, см. `onPageFinished`, `BrowserScreen.kt:575-614`)."""
+    with contexts.in_webview(driver, timeout):
+        driver.execute_script("window.location.reload();")
+        wait_until(
+            driver,
+            lambda d: d.execute_script("return document.readyState;") == "complete",
+            timeout=timeout if timeout is not None else settings.WEBVIEW_LOAD_TIMEOUT,
+            message="страница работы не завершила reload (document.readyState != complete)",
+        )
+
+
 # --- TC-018/TC-019: диалог подтверждения Clear all ratings отдельно от полного
 # цикла (`clear_all_ratings` выше, используется TC-004) — открытие/отмена/тексты
 # проверяются по отдельности, без побочного эффекта подтверждения. ---
@@ -185,6 +331,41 @@ def assert_ratings_present():
     if "NOSQLITE" in out or out == "":
         return
     assert out not in ("0", ""), f"ожидали >0 рейтингов в БД (диалог ещё не подтверждён), получили: {out}"
+
+
+@allure.step("Then читаем сырые строки work_ratings (различающий замер)")
+def read_rating_rows() -> str:
+    """Возвращает сырой вывод `SELECT ao3Id, rating, timestamp FROM work_ratings`
+    — различающий замер, НЕ `COUNT` (критик D5, 2026-08-02): `COUNT` не отличает
+    конкурирующих писателей — `WorkRatingPanel`'s `onDispose` re-save (стухшее
+    значение, обычно `SAVE`) от `onWorkFinished` auto-READ
+    (`BrowserViewModel.kt:1198-1224` + `ao3_bridge.js:1114-1147`, срабатывает на
+    scroll-restore независимо от Clear all/dispose). Используется точечно в
+    диагностике `AT-BUG-042` — не возвращает `NOSQLITE`-деградацию отдельным
+    типом (вызывающий код сам решает, что делать с пустым/`NOSQLITE` выводом)."""
+    return adb.run_as(
+        'sh -c "sqlite3 databases/ao3_ratings.db '
+        '\\"SELECT ao3Id, rating, timestamp FROM work_ratings\\" 2>/dev/null || echo NOSQLITE"'
+    ).strip()
+
+
+@allure.step("Then таблица work_ratings пуста (сырые строки, различающий замер)")
+def assert_rating_rows_empty():
+    """Якорь состояния БД для TC-020 Then (б): подтверждает, что к моменту
+    перезагрузки страницы `Clear all ratings` ДЕЙСТВИТЕЛЬНО опустошил
+    `work_ratings`. Без него провал Then (б) не различал бы «панель не
+    перечитала Room» и «в Room по-прежнему лежит рейтинг» — а это два разных
+    дефекта (BUG-012-класс против BUG-022-класса).
+
+    Отличие от `assert_no_ratings` (`COUNT`): при провале печатает САМИ строки
+    `ao3Id|rating|timestamp` — единственное, что различает конкурирующих
+    писателей (`SAVE` = dispose-save панели, `BUG-022`; `READ` = `onWorkFinished`
+    auto-mark), см. докстринг `read_rating_rows`. Та же деградация к UI-слою на
+    образах без бинаря `sqlite3`, что у `assert_no_ratings`."""
+    out = read_rating_rows()
+    if "NOSQLITE" in out:
+        return
+    assert out == "", f"ожидали пустую work_ratings после Clear all ratings, в БД строки: {out!r}"
 
 
 @allure.step("Then в БД приложения нет ни одного рейтинга")
