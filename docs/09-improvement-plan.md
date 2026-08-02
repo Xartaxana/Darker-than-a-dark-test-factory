@@ -82,8 +82,12 @@ commit-status D2 — не подключаем. Сверки ревью (§1 о�
 - [X] **Этап 1 — runtime-фундамент** (2026-07-07): A1 диспетчеризация с
   верхнего уровня, A2 исполняемые pre_steps, A4 генерируемый
   factory-status, A3 doctor, G3 схемы frontmatter.
-  - [ ] хвост: сверить allowlist новых скриптов при следующем
-    /permission-audit (вероятно давно закрыт)
+  - [X] хвост: allowlist новых скриптов сверен /permission-audit
+    2026-08-02 — вся обвязка покрыта `Bash(python scripts/*)`
+    (settings.json:44); запросы по скриптам шли не от пробела
+    allowlist, а от cd-префикса нарушителей (закрыто hygiene_gate v3,
+    62f01db). Нарратив аудита — 09-history.md §«permission-audit
+    2026-08-02»
 - [X] **Этап 2 — исполняемые контракты** (2026-07-07): C3/F3 статусные
   машины кодом, B1/B2/B5 ветки workflow, B3/B4 lifecycle + test debt,
   C2 evidence, F2 agent-output, F1 test-reviewer, C1 arch_check
