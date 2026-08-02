@@ -13,6 +13,7 @@
 """
 from __future__ import annotations
 
+import datetime
 import json
 import re
 import shutil
@@ -136,6 +137,49 @@ def _parse_frontmatter(text: str) -> tuple[dict, str]:
     return meta, body
 
 
+# --- Writeback frontmatter (AT-BUG-038: EOL-перегон + отсутствие границы) --
+#
+# Образец — scripts/gitlab_sync.py::writeback_gitlab_issue: read_bytes/
+# write_bytes (БАЙТОВЫЙ режим — read_text/write_text транслируют EOL всего
+# файла на universal-newlines при КАЖДОЙ записи, даже если меняется одно
+# поле — воспроизведено в bugs/AT-BUG-038.md) + поиск СТРОГО в теле
+# frontmatter (между открывающим и закрывающим '---'), не по всему файлу.
+# ОТДЕЛЬНЫЙ regex от _parse_frontmatter выше: тот — терпимый ридер для
+# обхода артефактов (fallback на построчный парсинг), этот — точная граница
+# для записи, симметричная gitlab_sync.FRONTMATTER_RE.
+FRONTMATTER_RE = re.compile(r"^---\r?\n(.*?)\r?\n---\r?\n", re.DOTALL)
+
+
+def _frontmatter_body_span(text: str) -> tuple[int, int] | None:
+    """(start, end) среза ТЕЛА frontmatter, либо None — frontmatter
+    отсутствует/битый (нет закрывающего '---')."""
+    m = FRONTMATTER_RE.match(text)
+    if not m:
+        return None
+    return m.start(1), m.end(1)
+
+
+def _subn_frontmatter_field(text: str, pattern: re.Pattern, replacement: str,
+                             count: int = 1) -> tuple[str, int]:
+    """re.subn СТРОГО в теле frontmatter (не во всём файле, класс 2
+    AT-BUG-038). Возвращает (новый_текст, число_замен); 0 замен — либо
+    frontmatter битый, либо искомая строка не найдена в его теле —
+    вызывающий код решает, отказ это или легальный no-op (совпадает со
+    старым поведением re.subn на всём файле)."""
+    span = _frontmatter_body_span(text)
+    if span is None:
+        return text, 0
+    start, end = span
+    new_body, n = pattern.subn(replacement, text[start:end], count=count)
+    if n == 0:
+        return text, 0
+    return text[:start] + new_body + text[end:], n
+
+
+def _utc_stamp() -> str:
+    return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def _iter_artifacts():
     """Возвращает (issue_type, meta, body, source_path) для каждого артефакта."""
     for area, itype in (("test-cases", "test-case"), ("bugs", "bug"), ("runs", "run")):
@@ -232,14 +276,15 @@ def approve_test_case(key: str) -> tuple[bool, str]:
             continue
         if str(meta.get("status")) != "Review":
             return False, f"{key}: статус «{meta.get('status')}», ожидался Review"
-        text = src.read_text(encoding="utf-8")
-        new_text = re.sub(r"(?m)^status:\s*Review\s*$", "status: Approved", text, count=1)
-        if new_text == text:
+        text = src.read_bytes().decode("utf-8")
+        new_text, n = _subn_frontmatter_field(
+            text, re.compile(r"(?m)^status:[ \t]*Review[ \t]*(?=\r?\n|$)"), "status: Approved")
+        if n == 0:
             return False, f"{key}: не нашёл строку status: Review в файле"
-        import datetime
-        stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-        new_text = re.sub(r'(?m)^updated:.*$', f'updated: "{stamp}"', new_text, count=1)
-        src.write_text(new_text, encoding="utf-8")
+        stamp = _utc_stamp()
+        new_text, _ = _subn_frontmatter_field(
+            new_text, re.compile(r'(?m)^updated:[^\r\n]*'), f'updated: "{stamp}"')
+        src.write_bytes(new_text.encode("utf-8"))
         return True, f"{key}: Review → Approved"
     return False, f"{key}: не найден среди test-case"
 
@@ -254,14 +299,15 @@ def set_priority(key: str, priority: str) -> tuple[bool, str]:
             continue
         if itype == "bug":
             return False, f"{key}: у багов приоритет выводится из severity, не редактируется напрямую"
-        text = src.read_text(encoding="utf-8")
-        new_text, n_subs = re.subn(r"(?m)^priority:\s*P[0-3]\s*$", f"priority: {priority}", text, count=1)
+        text = src.read_bytes().decode("utf-8")
+        new_text, n_subs = _subn_frontmatter_field(
+            text, re.compile(r"(?m)^priority:[ \t]*P[0-3][ \t]*(?=\r?\n|$)"), f"priority: {priority}")
         if n_subs == 0:
             return False, f"{key}: не нашёл строку priority: PN в файле"
-        import datetime
-        stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-        new_text = re.sub(r'(?m)^updated:.*$', f'updated: "{stamp}"', new_text, count=1)
-        src.write_text(new_text, encoding="utf-8")
+        stamp = _utc_stamp()
+        new_text, _ = _subn_frontmatter_field(
+            new_text, re.compile(r'(?m)^updated:[^\r\n]*'), f'updated: "{stamp}"')
+        src.write_bytes(new_text.encode("utf-8"))
         return True, f"{key}: priority → {priority}"
     return False, f"{key}: не найден среди test-case"
 
@@ -284,17 +330,18 @@ def set_severity(key: str, severity: str) -> tuple[bool, str]:
             continue
         if itype == "test-case":
             return False, f"{key}: у тест-кейсов severity нет — редактируй priority"
-        text = src.read_text(encoding="utf-8")
+        text = src.read_bytes().decode("utf-8")
         # re.subn (не сравнение new_text == text): ставить значение в то же,
         # что уже есть, — легальный no-op апдейт, а не "не нашёл строку"
         # (класс закрыт так же в set_priority выше).
-        new_text, n_subs = re.subn(r"(?m)^severity:\s*[A-Za-z]+\s*$", f"severity: {severity}", text, count=1)
+        new_text, n_subs = _subn_frontmatter_field(
+            text, re.compile(r"(?m)^severity:[ \t]*[A-Za-z]+[ \t]*(?=\r?\n|$)"), f"severity: {severity}")
         if n_subs == 0:
             return False, f"{key}: не нашёл строку severity: <значение> в файле"
-        import datetime
-        stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-        new_text = re.sub(r'(?m)^updated:.*$', f'updated: "{stamp}"', new_text, count=1)
-        src.write_text(new_text, encoding="utf-8")
+        stamp = _utc_stamp()
+        new_text, _ = _subn_frontmatter_field(
+            new_text, re.compile(r'(?m)^updated:[^\r\n]*'), f'updated: "{stamp}"')
+        src.write_bytes(new_text.encode("utf-8"))
         return True, f"{key}: severity → {severity}"
     return False, f"{key}: не найден среди test-case/bug"
 

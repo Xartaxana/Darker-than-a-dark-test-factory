@@ -191,37 +191,91 @@ def classify(ts: TicketState) -> Action:
 
 
 # --- Применение (ядро §3, §4) ---------------------------------------------
+#
+# AT-BUG-038 (класс EOL-перегон + отсутствие границы frontmatter): образец —
+# scripts/gitlab_sync.py::writeback_gitlab_issue. Байтовый ввод/вывод
+# (read_bytes/write_bytes) вместо read_text/write_text — text-режим
+# (newline=None) молча перегоняет ВСЕ окончания строк файла при КАЖДОЙ
+# записи, даже если правится одно поле. Поиск полей ограничен ТЕЛОМ
+# frontmatter (между открывающим и закрывающим '---'), не всем файлом —
+# иначе совпадающий текст в теле артефакта (например, в ## Обсуждение)
+# рисковал быть задет.
+FRONTMATTER_RE = re.compile(r"^---\r?\n(.*?)\r?\n---\r?\n", re.DOTALL)
+
+
+def _frontmatter_body_span(text: str) -> tuple[int, int] | None:
+    """(start, end) среза ТЕЛА frontmatter, либо None — frontmatter
+    отсутствует/битый (нет закрывающего '---')."""
+    m = FRONTMATTER_RE.match(text)
+    if not m:
+        return None
+    return m.start(1), m.end(1)
+
+
+def _file_eol(text: str) -> str:
+    """EOL-стиль файла ПО ФАКТУ (первое найденное вхождение '\\r\\n') — для
+    НОВОГО контента, у которого нет своей исходной строки (append_discussion:
+    добавляемые строки берут стиль остального файла, существующие строки не
+    трогаются вовсе)."""
+    return "\r\n" if "\r\n" in text else "\n"
+
 
 def _rewrite_field(text: str, field: str, value: str) -> tuple[str, bool]:
-    """Заменяет строку `field: ...` во frontmatter. Возвращает (текст, изменено)."""
-    pat = re.compile(rf"(?m)^{re.escape(field)}:\s*.*$")
-    if pat.search(text):
-        return pat.sub(f'{field}: {value}', text, count=1), True
-    return text, False
+    """Заменяет строку `field: ...` СТРОГО в теле frontmatter. Возвращает
+    (текст, изменено). Значение ищем БЕЗ хвостового `\\r` (`[^\\r\\n]*`, не
+    `\\s*$`) — иначе жадный `\\s*` поглощает завершающий `\\r` CRLF-строки, и
+    подстановка стирает его, переводя эту конкретную строку на голый `\\n`
+    (AT-BUG-038)."""
+    span = _frontmatter_body_span(text)
+    if span is None:
+        return text, False
+    start, end = span
+    pat = re.compile(rf"(?m)^{re.escape(field)}:[^\r\n]*")
+    m = pat.search(text[start:end])
+    if not m:
+        return text, False
+    abs_start, abs_end = start + m.start(), start + m.end()
+    return text[:abs_start] + f"{field}: {value}" + text[abs_end:], True
 
 
 def _set_field(text: str, field: str, value: str) -> str:
-    """Заменяет строку `field: ...`, а если её нет — ВСТАВЛЯЕТ сразу после `status:`.
+    """Заменяет строку `field: ...`, а если её нет — ВСТАВЛЯЕТ сразу после
+    `status:` СТРОГО в теле frontmatter.
 
     Нужно для старых артефактов без status_since/reopen_count (созданы до шаблона
-    docs/06): без вставки SLA-sweep не увидит время перехода."""
+    docs/06): без вставки SLA-sweep не увидит время перехода. EOL вставляемой
+    строки берётся ПО ФАКТУ (символ сразу после конца строки `status:` в
+    исходном тексте), не жёсткий '\\n' — иначе CRLF-файл получает одну
+    LF-строку внутри (тот же приём, что gitlab_sync.writeback_gitlab_issue)."""
     new, changed = _rewrite_field(text, field, value)
     if changed:
         return new
+    span = _frontmatter_body_span(text)
+    if span is None:
+        return text
+    start, end = span
     # Вставляем после строки status: (она всегда есть во frontmatter артефакта).
-    return re.sub(r"(?m)^(status:\s*.*)$", rf"\1\n{field}: {value}", text, count=1)
+    m = re.compile(r"(?m)^status:[^\r\n]*").search(text[start:end])
+    if not m:
+        return text
+    insert_at = start + m.end()
+    eol = "\r\n" if text[insert_at:insert_at + 2] == "\r\n" else "\n"
+    return text[:insert_at] + f"{eol}{field}: {value}" + text[insert_at:]
 
 
 def _bump_reopen_count(text: str) -> str:
-    m = re.search(r"(?m)^reopen_count:\s*(\d+)\s*$", text)
-    if m:
-        return re.sub(r"(?m)^reopen_count:\s*\d+\s*$",
-                      f"reopen_count: {int(m.group(1)) + 1}", text, count=1)
+    span = _frontmatter_body_span(text)
+    if span is not None:
+        start, end = span
+        m = re.compile(r"(?m)^reopen_count:[ \t]*(\d+)[ \t]*(?=\r?\n|$)").search(text[start:end])
+        if m:
+            abs_start, abs_end = start + m.start(), start + m.end()
+            return text[:abs_start] + f"reopen_count: {int(m.group(1)) + 1}" + text[abs_end:]
     return _set_field(text, "reopen_count", "1")  # старый артефакт без поля
 
 
 def apply_status(src: Path, new_status: str, *, dry: bool) -> str:
-    text = src.read_text(encoding="utf-8")
+    text = src.read_bytes().decode("utf-8")
     stamp = _utcnow()
     new, changed = _rewrite_field(text, "status", new_status)
     if not changed:
@@ -232,7 +286,7 @@ def apply_status(src: Path, new_status: str, *, dry: bool) -> str:
     if new_status == "Reopened":
         new = _bump_reopen_count(new)
     if not dry:
-        src.write_text(new, encoding="utf-8")
+        src.write_bytes(new.encode("utf-8"))
     return f"  [OK] {src.name}: status → {new_status} (status_since={stamp})"
 
 
@@ -240,7 +294,7 @@ def apply_conflict(action: Action, ts_board: str, ts_agent: str, *, dry: bool) -
     """Конфликт (§4): артефакт → Blocked, строка в escalations, реплика в обсуждение."""
     if action.src is None:
         return f"  [WARN] {action.key}: конфликт без артефакта — только эскалация"
-    text = action.src.read_text(encoding="utf-8")
+    text = action.src.read_bytes().decode("utf-8")
     stamp = _utcnow()
     new, changed = _rewrite_field(text, "status", "Blocked")
     new = _set_field(new, "status_since", f'"{stamp}"')
@@ -248,7 +302,7 @@ def apply_conflict(action: Action, ts_board: str, ts_agent: str, *, dry: bool) -
     # B5: конфликт борда↔артефакт нужно решить человеку — product_decision.
     new = _set_field(new, "blocked_reason", "product_decision")
     if not dry and changed:
-        action.src.write_text(new, encoding="utf-8")
+        action.src.write_bytes(new.encode("utf-8"))
         _append_escalation(
             action.key,
             f"конфликт борда↔артефакт: человек→{ts_board}, агент→{ts_agent}. "
@@ -377,15 +431,22 @@ def append_discussion(artifact_path: Path, comment: Comment, *, dry: bool) -> st
 
     Формат строки: `**[автор @ ISO-время]** текст`. Реплика человека → фабрике ход:
     выставляем `awaiting: qa`. Раздел создаётся, если его нет (старые артефакты до
-    шаблона docs/06). Дедупликация — на стороне sync_comments (по _replica_key)."""
-    text = artifact_path.read_text(encoding="utf-8")
-    replica = f"**[{comment.author} @ {comment.created}]** {comment.body.strip()}\n"
+    шаблона docs/06). Дедупликация — на стороне sync_comments (по _replica_key).
 
+    Байтовый ввод/вывод (AT-BUG-038): новый контент (пустые строки, заголовок
+    раздела, реплика) собирается со стилем EOL исходного файла (_file_eol), а
+    не жёстким '\\n' — иначе CRLF-файл получал бы LF-хвост при каждом переносе
+    комментария."""
+    text = artifact_path.read_bytes().decode("utf-8")
+    eol = _file_eol(text)
+    replica = f"**[{comment.author} @ {comment.created}]** {comment.body.strip()}"
+
+    stripped = text.rstrip("\r\n")
     if _DISCUSSION_HEADER in text:
         # Дозапись в конец существующего раздела (последний раздел файла по шаблону).
-        new = text.rstrip("\n") + "\n\n" + replica
+        new = stripped + eol + eol + replica + eol
     else:
-        new = text.rstrip("\n") + f"\n\n{_DISCUSSION_HEADER}\n\n" + replica
+        new = stripped + eol + eol + _DISCUSSION_HEADER + eol + eol + replica + eol
 
     # Реплика человека → ход за фабрикой (awaiting: qa). Поле может отсутствовать
     # в старом артефакте — тогда вставляем его во frontmatter после status:.
@@ -394,7 +455,7 @@ def append_discussion(artifact_path: Path, comment: Comment, *, dry: bool) -> st
     new, _ = _rewrite_field(new, "updated", f'"{stamp}"')
 
     if not dry:
-        artifact_path.write_text(new, encoding="utf-8")
+        artifact_path.write_bytes(new.encode("utf-8"))
     return f"  [COMMENT] {comment.key}: перенесена реплика [{comment.author} @ {comment.created}] (awaiting: qa)"
 
 
