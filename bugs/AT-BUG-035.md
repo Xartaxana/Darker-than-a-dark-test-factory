@@ -4,7 +4,7 @@ title: "render_work_page_html не несёт узел #kudo_submit ни в од
 type: test_debt
 debt_kind: missing_fixture
 severity: minor
-status: Fixed
+status: Verified
 found_in: "test-designer, проектирование области rating/bridge: авто-клик kudos (needs-design по bugs/BUG-015.md), 2026-07-31"
 fixed_in: "framework (test-only, без сборки приложения) — framework/data/recording_builder.py, framework/data/recordings/{listing_basic,work_with_download,works_multi,listing_paginated}.mitm, framework/tests/test_recording_builder_unit.py"
 last_seen_in: ""
@@ -12,8 +12,8 @@ test_cases: ["TC-138", "TC-139", "TC-140", "TC-141", "TC-142", "TC-143", "TC-144
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-08-01T16:39:52Z"
-updated: "2026-08-01T16:39:52Z"
+status_since: "2026-08-02T02:41:00Z"
+updated: "2026-08-02T02:41:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -166,6 +166,7 @@ TC-084, TC-119/120/122..127) — вставка НЕ должна сдвигат
 |---|---|---|---|---|
 | — | — | — | — | Open, ждёт фикса |
 | 2026-08-01 | 1.10 (versionCode 11), фикс не требует пересборки приложения (test_debt) | Долг (не TC-138..144, см. критерий готовности): device-free юнит `framework/tests/test_recording_builder_unit.py` (4 новых теста) + `python -m pytest scripts/tests -q` + живой смок TC-009 (x5)/TC-119/TC-120/TC-121/TC-122 — 3 прогона подряд | Все зелёные, без регресса | test-maintainer: Fixed, ждёт fix-verifier (переход Fixed→Verified не входит в мой guard) |
+| 2026-08-02 | 1.10 (versionCode 11), test_debt (framework-only, без пересборки приложения) | НЕЗАВИСИМАЯ верификация fix-verifier (не переиспользую прогоны test-maintainer): (1) чтение кода — `_kudo_submit_html()` подтверждена инкрементным счётчиком (`String(1+Number(this.getAttribute('data-kudo-clicked')\|\|0)))`, НЕ константой, вызов вставлен СИБЛИНГОМ `<ul class="work navigation actions">` (между `</ul>` и `<div class="wrapper">`), не внутрь нeё — `recording_builder.py:548-555,613-616`; (2) `python -m pytest scripts/tests -q` → `792 passed, 1 skipped in 25.25s` (без регресса; 792 против заявленных test-maintainer 783 — разница объясняется другими параллельными изменениями репозитория за сутки, не этим фиксом, ни одного failed); (3) `powershell -NoProfile -ExecutionPolicy Bypass -Command ". D:\AO3_tests\scripts\tasks.ps1; Invoke-Pytest tests/test_recording_builder_unit.py -q"` → `44 passed in 0.26s PYTEST_EXIT=0`; (4) `python scripts/arch_check.py` → `ошибок 0, предупреждений 0`, `python scripts/validate_frontmatter.py` → `ошибок 0, предупреждений 0`; (5) НЕЗАВИСИМЫЙ живой смок на эмуляторе (свой отдельный подъём env.ps1→tasks.ps1→`Start-Emulator -WritableSystem`→`Get-Device` DEVICE→`Install-App` Success→`Start-Appium`, НЕ переиспользую прогоны test-maintainer): `Invoke-Pytest tests/test_rating_listing.py -k rate_work_from_listing_overlay -v` (TC-009, все 5 параметризаций, `listing_basic.mitm`) → `5 passed, 11 deselected in 171.24s PYTEST_EXIT=0`; `Invoke-Pytest tests/canary/test_tap_zone_guard.py -v` (TC-119/120/121/122, `work_with_download.mitm`) → `4 passed in 216.39s PYTEST_EXIT=0`. TC-138..144 сознательно НЕ прогонялись (вне критерия готовности этого долга, п.5 задачи). Appium/эмулятор погашены (`Stop-NodeProcesses` + `adb emu kill`) по завершении. `app-under-test/` не тронут. | Все зелёные, без регресса, независимо подтверждено | fix-verifier: Verified |
 
 ## Обсуждение
 
@@ -279,6 +280,22 @@ download, badge-sync) при этом проектировании не заме
 Ни TC-138..144 не запускались как критерий Fixed (см. «Критерий готовности» —
 формально не требуется, это отдельная работа test-automator).
 `app-under-test/` не тронут — `git status` подтверждает пусто.
+
+**2026-08-02 — fix-verifier, независимая верификация (mode=verify, D1).**
+Подтверждаю Fixed → Verified. Сверка НЕ переиспользовала прогоны
+test-maintainer: код перечитан заново (`_kudo_submit_html`, инкрементный
+счётчик, место вставки — сиблинг `<ul class="work navigation actions">`);
+`scripts/tests`, `test_recording_builder_unit.py`, `arch_check.py`,
+`validate_frontmatter.py` перепрогнаны с нуля; живой смок — отдельный подъём
+эмулятора (свежая установка приложения, свой Appium), TC-009 (5/5) через
+`test_rating_listing.py` и TC-119/120/121/122 через
+`framework/tests/canary/test_tap_zone_guard.py` (актуальный `automated_by` из
+`test-cases/canary/TC-119..122.md` — файл `test_reading_ux.py`, названный в
+задаче, кейсы TC-119..122 больше не покрывает, они переехали в
+`tests/canary/test_tap_zone_guard.py`; замечание для координатора, если TC-119
+упоминается где-то ещё со старым путём). Все прогоны зелёные, без регресса
+порядка/локаторов `_download_list_html`/tap-zone-guard узлов. `known_issue`
+уже был `"false"` — сбрасывать не потребовалось. Лок снят, окружение погашено.
 
 ## Чек-лист качества
 - [x] Проверены дубликаты среди открытых test_debt-багов — не совпадает с
