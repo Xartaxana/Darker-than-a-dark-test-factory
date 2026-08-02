@@ -60,6 +60,57 @@ def test_duplicate_id(repo, schemas):
     assert any("дубль id" in e for e in errors)
 
 
+# --- vf-dup-key-detector (2026-08-02): дублирующийся YAML-ключ верхнего
+# уровня во frontmatter = ERROR (BUG-021 живьём — gitlab_sync writeback
+# слепо вставил вторую строку gitlab_issue поверх шаблонного плейсхолдера).
+
+def test_duplicate_top_level_key_is_error(repo, schemas):
+    """Образец — вчерашняя живая форма BUG-021: пустой плейсхолдер
+    `gitlab_issue: ""` в середине frontmatter (из шаблона) + вторая строка
+    `gitlab_issue: 12` (writeback-вставка), обе на нулевом отступе."""
+    repo.bug("BUG-090", "Open", extra='gitlab_issue: ""\n')
+    p = repo.root / "bugs" / "BUG-090.md"
+    text = p.read_text(encoding="utf-8")
+    text = text.replace('lock: ""\n---', 'lock: ""\ngitlab_issue: 12\n---')
+    p.write_text(text, encoding="utf-8")
+
+    errors, _warns = vf.validate()
+    assert any("BUG-090" in e and "gitlab_issue" in e for e in errors)
+
+
+def test_clean_file_no_duplicate_key_error(repo, schemas):
+    repo.bug("BUG-091", "Open")
+
+    errors, _warns = vf.validate()
+    assert not any("дублирующийся ключ" in e for e in errors)
+
+
+def test_nested_same_name_key_is_not_duplicate(repo, schemas):
+    """Вложенный ключ (отступ) с тем же именем, что и ключ верхнего уровня
+    (`type:`), НЕ считается дублем — только строки с нулевым отступом."""
+    repo.bug("BUG-092", "Open", extra=(
+        "type: app_bug\n"
+        "nested_block:\n"
+        "  type: not-a-top-level-duplicate\n"))
+
+    errors, _warns = vf.validate()
+    assert not any("дублирующийся ключ" in e and "BUG-092" in e for e in errors)
+
+
+def test_duplicate_key_three_times_is_single_error(repo, schemas):
+    """Граница: ключ, повторённый 3 раза — ОДИН ERROR (не три), с числом
+    повторов в тексте. Решение задокументировано в check_duplicate_keys."""
+    repo.bug("BUG-093", "Open", extra=(
+        "gitlab_issue: 1\n"
+        "gitlab_issue: 2\n"
+        "gitlab_issue: 3\n"))
+
+    errors, _warns = vf.validate()
+    dup_errors = [e for e in errors if "BUG-093" in e and "дублирующийся ключ" in e]
+    assert len(dup_errors) == 1
+    assert "3x" in dup_errors[0]
+
+
 def test_no_frontmatter_is_error_but_readme_skipped(repo, schemas):
     (repo.root / "bugs").mkdir(exist_ok=True)
     (repo.root / "bugs" / "broken.md").write_text("просто текст", encoding="utf-8")

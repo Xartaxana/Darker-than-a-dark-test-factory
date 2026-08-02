@@ -56,6 +56,61 @@ def load_feature_registry() -> set[str] | None:
     return {str(f.get("id")) for f in data.get("features", []) or [] if f.get("id")}
 
 
+def _frontmatter_raw(text: str) -> str | None:
+    """Сырое тело frontmatter (между `---` и `---`), ДО yaml.safe_load —
+    нужно проверкам, которые обязаны видеть исходные строки (дубль ключа
+    PyYAML молча схлопывает при парсинге, см. check_duplicate_keys). Границы
+    зеркалят board_sync._parse_frontmatter (тот модуль не в owns этой
+    задачи — переиспользовать импортом raw нельзя, он его не возвращает;
+    здесь дублируется только определение границ, не парсинг)."""
+    if not text.startswith("---"):
+        return None
+    end = text.find("\n---", 3)
+    if end == -1:
+        return None
+    return text[3:end].strip("\n")
+
+
+_TOP_LEVEL_KEY_RE = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)\s*:")
+
+
+def check_duplicate_keys(raw: str, rel: str) -> list[str]:
+    """Дублирующийся ключ ВЕРХНЕГО уровня в теле frontmatter — ERROR.
+    PyYAML.safe_load молча берёт последнее значение (не падает), но это
+    невалидный YAML и порча данных без сигнала (BUG-021, 2026-08-02: два
+    `gitlab_issue:` в одном файле, обнаружено вручную postfactum).
+
+    Строка считается ключом верхнего уровня, только если regex матчится с
+    НУЛЕВОГО отступа (`^` на re.match без re.MULTILINE — работает построчно
+    через splitlines, так что `^` = начало КОНКРЕТНОЙ строки): вложенные
+    поля и элементы списков всегда идут с отступом в наших артефактах,
+    строка внутри folded/literal-блока (`|`/`>`) с двоеточием на нулевом
+    отступе теоретически невозможна — контент такого блока YAML обязан
+    иметь больший отступ, чем сам ключ-блок, иначе это уже не часть блока.
+    Проверено на живом корпусе (bugs/test-cases/runs/exploratory-charters,
+    2026-08-02) — многострочных значений с этим риском не найдено.
+
+    Три и более повторения одного ключа — ОДИН ERROR с точным числом
+    повторов (не N ошибок): решение задачи (граница спеки, п. «ТЕСТЫ») —
+    один дубль ключа это одна причина порчи данных этого файла, отдельная
+    ошибка на каждое лишнее вхождение не добавляет диагностической
+    ценности и раздувает вывод для файла с случайно повторённым ключом
+    3+ раза."""
+    counts: dict[str, int] = {}
+    for line in raw.splitlines():
+        m = _TOP_LEVEL_KEY_RE.match(line)
+        if m:
+            key = m.group(1)
+            counts[key] = counts.get(key, 0) + 1
+    errors: list[str] = []
+    for key, n in counts.items():
+        if n > 1:
+            errors.append(
+                f"{rel}: дублирующийся ключ `{key}` во frontmatter ({n}x) — "
+                f"PyYAML молча берёт последнее значение, данные остальных теряются")
+    return errors
+
+
 def _s(value) -> str:
     """Значение frontmatter → строка для pattern-проверок (учёт коэрции PyYAML)."""
     if value is None:
@@ -214,10 +269,14 @@ def validate() -> tuple[list[str], list[str]]:
             if md.name.upper() in ("README.MD", "PERTURBATIONS.MD"):
                 continue
             rel = md.relative_to(REPO).as_posix()
-            meta, _body = bs._parse_frontmatter(md.read_text(encoding="utf-8", errors="replace"))
+            text = md.read_text(encoding="utf-8", errors="replace")
+            meta, _body = bs._parse_frontmatter(text)
             if not meta:
                 errors.append(f"{rel}: frontmatter отсутствует или не парсится")
                 continue
+            raw_fm = _frontmatter_raw(text)
+            if raw_fm is not None:
+                errors += check_duplicate_keys(raw_fm, rel)
             key = _s(meta.get("id"))
             if key:
                 if key in seen_ids:
