@@ -1,12 +1,12 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-02T06:01:45Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-02T13:11:38Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **746.4** (RUN-20260702-0300)
+- smoke: Closed · smoke_freshness_hours: **753.6** (RUN-20260702-0300)
 - regression: not_run
 - canary: not_run
 - Открытые blocker/critical: **0**
@@ -49,10 +49,9 @@ generated_at: 2026-08-02T06:01:45Z · генератор: `scripts/queue_snapsho
 
 ## Баги (12)
 
-- Open: **12**
+- Open: **11** · Intended: **1**
 - BUG-001 [minor] Open — PROJECT.md расходится с кодом: подписи вкладок Library/меню рейтинга; несуществующий глобальный «Enable filtering»
 - BUG-011 [major] Open — Restore from backup пропускает работы молча, если файл с тем же ao3Id уже лежит в папке загрузок
-- BUG-012 [minor] Open — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
 - BUG-013 [minor] Open — Смена темы, затем немедленный kill процесса (<100 мс) теряет theme_mode — выбор темы не персистится
 - BUG-014 [major] Open — Авто-скачивание Favorite срабатывает ретроактивно при правке тега ранее отмеченной работы
 - BUG-015 [major] Open — Авто-клик kudos на AO3 срабатывает ретроактивно при правке тега ранее отмеченной работы
@@ -65,7 +64,7 @@ generated_at: 2026-08-02T06:01:45Z · генератор: `scripts/queue_snapsho
 
 ## Известные проблемы, known_issue (1)
 
-- BUG-012 [minor] Open — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
+- BUG-012 [minor] Intended — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
 
 ## Test debt (2)
 
@@ -78,7 +77,7 @@ generated_at: 2026-08-02T06:01:45Z · генератор: `scripts/queue_snapsho
 
 ## Exploratory
 
-- Done: **7** · Blocked: **1**
+- Planned: **1** · Done: **7**
 - charters_executed: **7**
 - bugs_per_charter: **1.0**
 - new_tc_from_charters: **10**
