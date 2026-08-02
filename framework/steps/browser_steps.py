@@ -799,22 +799,43 @@ def assert_tap_to_scroll_delta(
     """TC-126 (direction=-1, тап по верхней трети)/TC-127 (direction=+1, тап по
     нижней трети) — измерение CH-005 (`dy ≈ ±1710` при `innerHeight=1800`,
     `0.95×1800=1710`). Опрашивает (не читает один раз) — тот же класс
-    WEBVIEW-round-trip латентности, что остальные опросы этого модуля."""
+    WEBVIEW-round-trip латентности, что остальные опросы этого модуля.
+
+    AT-BUG-039 (тот же класс, что `AT-BUG-036` attempt 2 —
+    `app_steps.wait_persisted_tab_count`): диагностика при таймауте обязана
+    нести последнее РЕАЛЬНО НАБЛЮДЁННОЕ внутри опроса значение `scrollY`, не
+    свежий вызов ДО/ПОСЛЕ ожидания — `message=` вычислялся бы до входа в
+    `wait_until`, замораживая устаревшее значение под подписью «текущий».
+    `holder` заполняется ВНУТРИ предиката на каждом опросе; при таймауте
+    `TimeoutException` от `wait_until` перехватывается и переброшен заново с
+    сообщением, дополненным `holder["scroll_y"]` — последним, что видел сам
+    опрос."""
     expected_delta = direction * _TAP_TO_SCROLL_DELTA_RATIO * inner_height
     tolerance_px = abs(expected_delta) * _TAP_TO_SCROLL_DELTA_TOLERANCE_RATIO
 
+    holder: dict[str, int] = {}
+
     def _matches(d):
-        actual_delta = get_webview_scroll_y(d) - scroll_before
+        holder["scroll_y"] = get_webview_scroll_y(d)
+        actual_delta = holder["scroll_y"] - scroll_before
         return abs(actual_delta - expected_delta) <= tolerance_px
 
-    wait_until(
-        driver, _matches, timeout=timeout,
-        message=(
+    try:
+        wait_until(
+            driver, _matches, timeout=timeout,
+            message=(
+                f"scrollY не изменился на ожидаемую дельту {expected_delta:.1f}px "
+                f"(±{tolerance_px:.1f}px) относительно scrollY до тапа={scroll_before} "
+                f"за {timeout}с"
+            ),
+        )
+    except TimeoutException as exc:
+        raise TimeoutException(
             f"scrollY не изменился на ожидаемую дельту {expected_delta:.1f}px "
             f"(±{tolerance_px:.1f}px) относительно scrollY до тапа={scroll_before} "
-            f"за {timeout}с (текущий scrollY={get_webview_scroll_y(driver)})"
-        ),
-    )
+            f"за {timeout}с (последнее наблюдённое внутри опроса scrollY="
+            f"{holder.get('scroll_y')})"
+        ) from exc
     return get_webview_scroll_y(driver)
 
 
