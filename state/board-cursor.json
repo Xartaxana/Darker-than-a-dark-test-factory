@@ -894,6 +894,16 @@
     "artifact_status": "Fixed",
     "board_status": "Fixed"
   },
+  "AT-BUG-037": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "AT-BUG-038": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
   "BUG-001": {
     "itype": "bug",
     "artifact_status": "Open",
