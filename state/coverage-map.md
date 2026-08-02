@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-02T01:37:58Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-08-02T06:01:49Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -19,9 +19,9 @@ generated_at: 2026-08-02T01:37:58Z · генератор: `scripts/coverage_map.
 | downloads | 14 | 14 | designed-full |
 | errors | 1 | 1 | designed-full |
 | filter-profiles | 5 | 5 | designed-full |
-| library | 17 | 15 | partial |
+| library | 17 | 17 | designed-full |
 | performance | 4 | 4 | designed-full |
-| rating | 21 | 14 | partial |
+| rating | 21 | 20 | partial |
 | security | 6 | 6 | designed-full |
 | settings | 11 | 10 | partial |
 | smoke | 5 | 5 | designed-full |
@@ -89,7 +89,7 @@ generated_at: 2026-08-02T01:37:58Z · генератор: `scripts/coverage_map.
 | library-sort-author | library | library:TC-064[Automated] |
 | library-sort-rating-files | library | library:TC-065[Automated] |
 | library-sort-scroll-reset | library | library:TC-030[Automated], library:TC-063[Automated] |
-| library-card-open-work | library | library:TC-136[Approved], library:TC-137[Approved] |
+| library-card-open-work | library | library:TC-136[Automated], library:TC-137[Automated] |
 | library-card-download | library | downloads:TC-033[Automated] |
 | library-card-open-file | library | downloads:TC-034[Automated] |
 | library-card-delete-file | library | downloads:TC-035[Automated] |
@@ -142,7 +142,7 @@ generated_at: 2026-08-02T01:37:58Z · генератор: `scripts/coverage_map.
 | data-clear-all-ratings | data | smoke:TC-004[Automated], settings:TC-018[Automated], settings:TC-019[Automated], settings:TC-020[Blocked] |
 | background-download-repository | background | downloads:TC-032[Automated], downloads:TC-033[Automated] |
 | background-auto-download-trigger | background | downloads:TC-032[Automated], downloads:TC-112[Automated], downloads:TC-114[Automated], downloads:TC-115[Automated], downloads:TC-116[Automated], downloads:TC-117[Automated] |
-| background-auto-kudos-trigger | background | rating:TC-138[Approved], rating:TC-139[Approved], rating:TC-140[Approved], rating:TC-141[Approved], rating:TC-142[Approved], rating:TC-143[Approved], rating:TC-144[Approved] |
+| background-auto-kudos-trigger | background | rating:TC-138[Automated], rating:TC-139[Approved], rating:TC-140[Automated], rating:TC-141[Automated], rating:TC-142[Automated], rating:TC-143[Automated], rating:TC-144[Automated] |
 | nf-perf-cold-start-budget | non-functional | performance:TC-096[Automated] |
 | nf-perf-webview-first-load-budget | non-functional | performance:TC-097[Automated] |
 | nf-stability-no-crash-anr | non-functional | performance:TC-098[Automated] |
@@ -310,18 +310,18 @@ generated_at: 2026-08-02T01:37:58Z · генератор: `scripts/coverage_map.
 
 ### library
 
-- coverage_status: **partial** (15/17 Automated)
+- coverage_status: **designed-full** (17/17 Automated)
 - риски: R-04, R-06, R-08, R-10
 - кейсы без risk: TC-006
-- P0/P1 не в Automated: TC-136 [P1, Approved]
-- автотесты (automated_by): framework/tests/test_library.py::test_change_rating_moves_work_between_tabs, framework/tests/test_library.py::test_comment_only_not_in_any_rating_tab, framework/tests/test_library.py::test_library_card_shows_note_icon_and_tags, framework/tests/test_library.py::test_library_tab_labels, framework/tests/test_library_filters.py::test_library_filter_by_fandom, framework/tests/test_library_filters.py::test_library_filter_downloaded_only, framework/tests/test_library_filters.py::test_library_filter_freetext_search, framework/tests/test_library_filters.py::test_library_filter_tags_and_semantics, framework/tests/test_library_filters.py::test_library_filter_word_count_range, framework/tests/test_library_filters.py::test_library_sort_author_asc_blank_last, framework/tests/test_library_filters.py::test_library_sort_last_read_default, framework/tests/test_library_filters.py::test_library_sort_rating_files_tab_only, framework/tests/test_library_filters.py::test_library_sort_wordcount_asc_resets_scroll, framework/tests/test_library_filters.py::test_library_sort_wordcount_desc_resets_scroll, framework/tests/test_library_filters.py::test_library_sort_wordcount_null_last, framework/tests/test_tabs.py::test_library_card_open_at_tab_limit_shows_dialog_and_switches_screen
+- P0/P1 не в Automated: нет
+- автотесты (automated_by): framework/tests/test_library.py::test_change_rating_moves_work_between_tabs, framework/tests/test_library.py::test_comment_only_not_in_any_rating_tab, framework/tests/test_library.py::test_library_card_shows_note_icon_and_tags, framework/tests/test_library.py::test_library_tab_labels, framework/tests/test_library_filters.py::test_library_filter_by_fandom, framework/tests/test_library_filters.py::test_library_filter_downloaded_only, framework/tests/test_library_filters.py::test_library_filter_freetext_search, framework/tests/test_library_filters.py::test_library_filter_tags_and_semantics, framework/tests/test_library_filters.py::test_library_filter_word_count_range, framework/tests/test_library_filters.py::test_library_sort_author_asc_blank_last, framework/tests/test_library_filters.py::test_library_sort_last_read_default, framework/tests/test_library_filters.py::test_library_sort_rating_files_tab_only, framework/tests/test_library_filters.py::test_library_sort_wordcount_asc_resets_scroll, framework/tests/test_library_filters.py::test_library_sort_wordcount_desc_resets_scroll, framework/tests/test_library_filters.py::test_library_sort_wordcount_null_last, framework/tests/test_tabs.py::test_library_card_open_at_tab_limit_shows_dialog_and_switches_screen, framework/tests/test_tabs.py::test_library_card_open_work_opens_new_active_browse_tab
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  | 2 |  |
-| P1 |  |  | 1 | 10 |  |
-| P2 |  |  | 1 | 2 |  |
+| P1 |  |  |  | 11 |  |
+| P2 |  |  |  | 3 |  |
 | P3 |  |  |  | 1 |  |
 
 ### performance
@@ -342,19 +342,19 @@ generated_at: 2026-08-02T01:37:58Z · генератор: `scripts/coverage_map.
 
 ### rating
 
-- coverage_status: **partial** (14/21 Automated)
+- coverage_status: **partial** (20/21 Automated)
 - риски: R-04, R-10, R-17
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-138 [P1, Approved], TC-139 [P1, Approved], TC-141 [P1, Approved], TC-142 [P1, Approved], TC-143 [P1, Approved], TC-144 [P1, Approved]
-- автотесты (automated_by): framework/tests/test_rating.py::test_deselect_rating_on_work_page_panel, framework/tests/test_rating.py::test_rate_work_from_work_page_panel, framework/tests/test_rating_listing.py::test_add_freeform_tag_persists, framework/tests/test_rating_listing.py::test_apply_ratings_syncs_duplicate_blurbs, framework/tests/test_rating_listing.py::test_clear_note_removes_comment, framework/tests/test_rating_listing.py::test_comment_only_visible_on_listing_and_absent_from_rating_tabs, framework/tests/test_rating_listing.py::test_listing_rate_button_updates_without_reload, framework/tests/test_rating_listing.py::test_matching_personal_tag_highlighted_on_listing, framework/tests/test_rating_listing.py::test_note_button_opens_overlay_with_expanded_comment, framework/tests/test_rating_listing.py::test_panel_rating_updates_without_reload, framework/tests/test_rating_listing.py::test_personal_tags_do_not_affect_visibility, framework/tests/test_rating_listing.py::test_rate_work_from_listing_overlay, framework/tests/test_rating_listing.py::test_save_note_persists_comment, framework/tests/test_rating_listing.py::test_tap_selected_chip_removes_tag
+- P0/P1 не в Automated: TC-139 [P1, Approved]
+- автотесты (automated_by): framework/tests/test_rating.py::test_deselect_rating_on_work_page_panel, framework/tests/test_rating.py::test_edit_tag_on_already_saved_work_via_panel_does_not_click_kudos, framework/tests/test_rating.py::test_first_panel_save_clicks_kudos_once, framework/tests/test_rating.py::test_rate_work_from_work_page_panel, framework/tests/test_rating_listing.py::test_add_freeform_tag_persists, framework/tests/test_rating_listing.py::test_apply_ratings_syncs_duplicate_blurbs, framework/tests/test_rating_listing.py::test_change_rating_kudosed_to_read_via_listing_does_not_click_kudos, framework/tests/test_rating_listing.py::test_clear_note_removes_comment, framework/tests/test_rating_listing.py::test_comment_only_visible_on_listing_and_absent_from_rating_tabs, framework/tests/test_rating_listing.py::test_deselect_kudosed_via_listing_does_not_click_kudos, framework/tests/test_rating_listing.py::test_edit_tag_on_already_kudosed_work_via_listing_does_not_reclick_kudos, framework/tests/test_rating_listing.py::test_first_kudosed_via_listing_with_open_work_tab_clicks_kudos_once, framework/tests/test_rating_listing.py::test_listing_rate_button_updates_without_reload, framework/tests/test_rating_listing.py::test_matching_personal_tag_highlighted_on_listing, framework/tests/test_rating_listing.py::test_note_button_opens_overlay_with_expanded_comment, framework/tests/test_rating_listing.py::test_panel_rating_updates_without_reload, framework/tests/test_rating_listing.py::test_personal_tags_do_not_affect_visibility, framework/tests/test_rating_listing.py::test_rate_kudosed_via_listing_without_open_work_tab_does_not_click_kudos, framework/tests/test_rating_listing.py::test_rate_work_from_listing_overlay, framework/tests/test_rating_listing.py::test_save_note_persists_comment, framework/tests/test_rating_listing.py::test_tap_selected_chip_removes_tag
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  | 3 |  |
-| P1 |  |  | 6 | 7 |  |
+| P1 |  |  | 1 | 12 |  |
 | P2 |  |  |  | 3 |  |
-| P3 |  |  | 1 | 1 |  |
+| P3 |  |  |  | 2 |  |
 
 ### security
 

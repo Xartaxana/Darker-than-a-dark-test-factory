@@ -391,13 +391,13 @@
   },
   "TC-136": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-137": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-096": {
     "itype": "test-case",
@@ -491,8 +491,8 @@
   },
   "TC-138": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-139": {
     "itype": "test-case",
@@ -501,28 +501,28 @@
   },
   "TC-140": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-141": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-142": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-143": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-144": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-100": {
     "itype": "test-case",
@@ -886,20 +886,35 @@
   },
   "AT-BUG-035": {
     "itype": "bug",
-    "artifact_status": "Fixed",
-    "board_status": "Fixed"
+    "artifact_status": "Verified",
+    "board_status": "Verified"
   },
   "AT-BUG-036": {
     "itype": "bug",
-    "artifact_status": "Fixed",
-    "board_status": "Fixed"
+    "artifact_status": "Verified",
+    "board_status": "Verified"
   },
   "AT-BUG-037": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "AT-BUG-038": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "AT-BUG-039": {
     "itype": "bug",
     "artifact_status": "Open",
     "board_status": "Open"
   },
-  "AT-BUG-038": {
+  "AT-BUG-040": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "AT-BUG-041": {
     "itype": "bug",
     "artifact_status": "Open",
     "board_status": "Open"
