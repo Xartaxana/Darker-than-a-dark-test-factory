@@ -276,19 +276,26 @@ def read_work_ratings() -> dict[str, dict]:
 
 
 def _read_full_rows(db: Path) -> dict[str, dict]:
-    """Читает ВСЕ поля наблюдения `work_ratings` (ao3Id/title/author/
-    downloadPath/rating/comment/tags/fandom/wordCount) из уже локального
-    файла БД `db` — без adb/pull, чистая SQL+parsing логика. Вынесена
-    отдельно от `read_work_ratings_full()`, чтобы device-free юниты могли
-    вызвать РЕАЛЬНЫЙ код разбора строки на временной sqlite-БД (см.
+    """Читает ВСЕ поля наблюдения `work_ratings` (ao3Id/title/author/url/
+    downloadPath/rating/timestamp/comment/tags/fandom/wordCount) из уже
+    локального файла БД `db` — без adb/pull, чистая SQL+parsing логика.
+    Вынесена отдельно от `read_work_ratings_full()`, чтобы device-free юниты
+    могли вызвать РЕАЛЬНЫЙ код разбора строки на временной sqlite-БД (см.
     `test_seed_db_full_baseline_unit.py`), не подделывая сам хелпер и не
     трогая устройство (AT-BUG-046, тот же приём, что `_insert_rows` в
-    `test_seed_null_wordcount_unit.py`)."""
+    `test_seed_null_wordcount_unit.py`).
+
+    ИНКРЕМЕНТ 2 (attempt 2, critic-вход rework): исходная версия отдавала 9
+    из 11 полей строки, пропуская `url` и `timestamp`, при докстринге и DoD,
+    обещающих ПОЛНЫЙ набор. `timestamp` — не косметика: это различающий
+    оракул CH-008 («timestamp не изменился ⇒ записи не было вовсе»,
+    единственный способ отличить «строка обновлена с тем же значением» от
+    «строка не тронута»). Оба поля добавлены в SELECT и в возвращаемый dict."""
     con = sqlite3.connect(db)
     con.row_factory = sqlite3.Row
     cur = con.execute(
-        "SELECT ao3Id, title, author, downloadPath, rating, comment, tags, "
-        "fandom, wordCount FROM work_ratings"
+        "SELECT ao3Id, title, author, url, downloadPath, rating, timestamp, "
+        "comment, tags, fandom, wordCount FROM work_ratings"
     )
     rows: dict[str, dict] = {}
     for row in cur:
@@ -296,8 +303,10 @@ def _read_full_rows(db: Path) -> dict[str, dict]:
         rows[row["ao3Id"]] = {
             "title": row["title"],
             "author": row["author"],
+            "url": row["url"],
             "downloadPath": row["downloadPath"],
             "rating": row["rating"],
+            "timestamp": row["timestamp"],
             "comment": row["comment"],
             "tags": tags,
             "fandom": row["fandom"],
@@ -309,9 +318,11 @@ def _read_full_rows(db: Path) -> dict[str, dict]:
 
 def read_work_ratings_full() -> dict[str, dict]:
     """Как `read_work_ratings()`, но отдаёт ПОЛНЫЙ набор полей строки
-    `work_ratings`, включая `title`/`author`/`downloadPath` (AT-BUG-046) —
-    нужно ассертам, проверяющим сохранность ВСЕХ полей строки (TC-151/152/
-    155/156: `existing.copy(...)` панели против пересборки overlay). Новая
+    `work_ratings` — все 11: `title`/`author`/`url`/`downloadPath`/`rating`/
+    `timestamp`/`comment`/`tags`/`fandom`/`word_count` (AT-BUG-046) — нужно
+    ассертам, проверяющим сохранность ВСЕХ полей строки (TC-151/152/155/156:
+    `existing.copy(...)` панели против пересборки overlay; `timestamp` —
+    различающий оракул CH-008: «не изменился ⇒ записи не было вовсе»). Новая
     функция РЯДОМ с `read_work_ratings()`, не расширение её сигнатуры — см.
     докстринг `read_work_ratings()` про существующего потребителя TC-021.
 

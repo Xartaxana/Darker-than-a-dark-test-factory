@@ -87,6 +87,12 @@ def test_baseline_a_comment_tags_download_path_all_present(work_ratings_db):
     assert row["author"] == _WORK_A.author
     assert row["fandom"] == _WORK_A.fandom
     assert row["word_count"] == _WORK_A.word_count
+    # attempt 2 (critic-вход): полный набор полей ОБЯЗАН включать url/timestamp
+    # — `timestamp` различающий оракул CH-008 («не изменился ⇒ записи не
+    # было вовсе»), терять его в `_read_full_rows` нельзя.
+    assert row["url"] == _WORK_A.url
+    assert isinstance(row["timestamp"], int)
+    assert row["timestamp"] > 0
 
 
 @pytest.mark.p2
