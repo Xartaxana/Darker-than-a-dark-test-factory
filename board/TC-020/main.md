@@ -5,9 +5,9 @@ issueType: "test-case"
 status: "tc-approved"
 priority: "p3"
 summary: "Бейджи открытых вкладок сохраняют состояние до перезагрузки страницы; после reload — сброшены"
-assignee: "qa-agents"
+assignee: "test-automator"
 reporter: "qa-agents"
-labels: ["test-case", "area:settings", "risk:R-01"]
+labels: ["test-case", "area:settings", "risk:R-01", "wip:test-automator"]
 components: []
 fixVersions: []
 watchers: []

@@ -1,19 +1,19 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-03T09:25:59Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-03T09:51:56Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **773.8** (RUN-20260702-0300)
+- smoke: Closed · smoke_freshness_hours: **774.3** (RUN-20260702-0300)
 - regression: not_run
 - canary: not_run
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **1**
 - p0_automation_coverage: **100%** (37/37)
-- p1_automation_coverage: **99%** (77/78)
-- Test debt открыт: **1** — AT-BUG-039
+- p1_automation_coverage: **95%** (77/81)
+- Test debt открыт: **0**
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
 - Untriaged: **0** · untriaged_failure_age: **0**
@@ -23,14 +23,14 @@ generated_at: 2026-08-03T09:25:59Z · генератор: `scripts/queue_snapsho
 - 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
 - smoke: passed · regression: not_run
 
-## Тест-кейсы (144)
+## Тест-кейсы (150)
 
-- Approved: **2** · Automated: **142**
+- Review: **6** · Approved: **2** · Automated: **142**
 - автотесты (B3): active: **142**
 
 | Область | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
-| accessibility |  |  |  | 3 |  |
+| accessibility |  | 3 |  | 3 |  |
 | backup |  |  |  | 1 |  |
 | browser |  |  |  | 13 |  |
 | canary |  |  |  | 23 |  |
@@ -42,7 +42,7 @@ generated_at: 2026-08-03T09:25:59Z · генератор: `scripts/queue_snapsho
 | performance |  |  |  | 4 |  |
 | rating |  |  | 1 | 20 |  |
 | security |  |  |  | 6 |  |
-| settings |  |  | 1 | 10 |  |
+| settings |  | 3 | 1 | 10 |  |
 | smoke |  |  |  | 5 |  |
 | tabs |  |  |  | 11 |  |
 | visibility |  |  |  | 6 |  |
@@ -67,11 +67,9 @@ generated_at: 2026-08-03T09:25:59Z · генератор: `scripts/queue_snapsho
 
 - BUG-012 [minor] Intended — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
 
-## Test debt (3)
+## Test debt (1)
 
-- AT-BUG-039 [flaky_test] Open — browser_steps.assert_tap_to_scroll_delta: диагностика scrollY снята ДО опроса, а не после — тот же класс, что AT-BUG-036
-- AT-BUG-041 [flaky_test] Fixed — build_watch.py::update_aut (+ спящие sla_sweep.rewrite_registry/loop_lock._atomic_write_text): EOL-перегон партиальных писателей scripts/, класс шире frontmatter-границы
-- AT-BUG-042 [flaky_test] Fixed — WorkRatingPanel dispose-save воскрешал запись после Clear all — блокер автоматизации TC-020 снят обходом порядка reload (дефект приложения — BUG-022)
+- AT-BUG-039 [flaky_test] Fixed — browser_steps.assert_tap_to_scroll_delta: диагностика scrollY снята ДО опроса, а не после — тот же класс, что AT-BUG-036
 
 ## Прогоны (1)
 
@@ -84,10 +82,9 @@ generated_at: 2026-08-03T09:25:59Z · генератор: `scripts/queue_snapsho
 - bugs_per_charter: **1.0**
 - new_tc_from_charters: **10**
 
-## Активные локи (2)
+## Активные локи (1)
 
-- AT-BUG-041 — `fix-verifier:2026-08-03T09:23:51Z`
-- AT-BUG-042 — `fix-verifier:2026-08-03T09:23:51Z`
+- TC-020 — `test-automator:2026-08-03T09:45:15Z`
 
 ## Эскалации (4)
 

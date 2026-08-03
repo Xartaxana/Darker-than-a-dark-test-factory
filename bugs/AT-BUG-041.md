@@ -4,7 +4,7 @@ title: "build_watch.py::update_aut (+ спящие sla_sweep.rewrite_registry/lo
 type: test_debt
 debt_kind: flaky_test
 severity: minor
-status: Fixed
+status: Verified
 found_in: "критик-вход D1-верификации AT-BUG-040, 2026-08-02: класс 1 (EOL-перегон) не совпадает по границе с классом 2 (frontmatter-boundary) - аргумент 'config-файл без frontmatter' исключает только класс 2"
 fixed_in: "test-maintainer, 2026-08-02T14:39:03Z (attempt 2, после критик-входа приёмки): build_watch.py::update_aut + sla_sweep.py::rewrite_registry + loop_lock.py::_atomic_write_text/_write_loop_escalation переведены на байтовый I/O; закрыты остаточные \\r-глотающие регрессы в границах полей (build_watch._rewrite_field, loop_lock.LOOP_LINE_RE) И класс-полнота нового контента (sla_sweep.rewrite_registry/loop_lock._write_loop_escalation теперь пишут новые строки в EOL-стиле файла, не хардкод \\n) — см. Обсуждение"
 last_seen_in: ""
@@ -12,8 +12,8 @@ test_cases: []
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-08-02T14:18:27Z"
-updated: "2026-08-02T14:39:03Z"
+status_since: "2026-08-03T09:32:39Z"
+updated: "2026-08-03T09:32:39Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -21,7 +21,7 @@ resolution: ""
 resolution_comment: ""
 known_issue: "false"
 blocked_reason: ""
-lock: "fix-verifier:2026-08-03T09:23:51Z"
+lock: ""
 gitlab_issue: ""
 ---
 
@@ -61,6 +61,7 @@ gitlab_issue: ""
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-08-03T09:32:39Z | scripts/ HEAD `27f67f6` (фикс-коммит по затронутым файлам `80d0a71`, 2026-08-02T16:42:12+02:00); test_debt в обвязке — сборки app-under-test не касается, D1 не ждёт новый APK | `test_cases: []` (carve-out D1: инфраструктурный test_debt scripts/, кейсов нет в принципе) — заменено: (1) независимый полный прогон `python -m pytest scripts/tests -q` (не только новые `test_at_bug_041_eol.py`); (2) точечная сверка кода трёх функций критерия готовности against фактического содержимого файлов | `848 passed, 1 skipped in 32.08s` (свежий независимый прогон, превышает заявленные test-maintainer `839 passed, 1 skipped` — разница объясняется прочими тестами, добавленными в scripts/tests после 2026-08-02T14:39; регресса нет); `arch_check: ошибок 0, предупреждений 0`; `validate_frontmatter: ошибок 0, предупреждений 0`; код-сверка подтвердила ВСЕ пункты критерия готовности буквально: `build_watch.py::update_aut` — `AUT_PATH.read_bytes().decode("utf-8")`/`.write_bytes(...)` (строки 204/217); `_rewrite_field` — граница `[^#\r\n]*(?P<comment>#[^\r\n]*)?(?=\r?\n|$)` + вставка новой строки по `eol = "\r\n" if "\r\n" in text else "\n"` (строки 103/114); `sla_sweep.py::rewrite_registry` — `read_bytes`/`write_bytes` + `eol` из файла применён и к новым строкам (329), и к header (334); `loop_lock.py::_atomic_write_text`/`_write_loop_escalation` — `write_bytes` (138), `read_bytes().decode(...)` + `eol` из файла применён к добивке и новой строке (205-206) | Verified |
 
 ## Обсуждение
 
@@ -237,6 +238,42 @@ attempt 2); при следующем касании соответствующ�
 Изменённые файлы attempt 2: `scripts/sla_sweep.py`, `scripts/loop_lock.py`,
 `scripts/tests/test_at_bug_041_eol.py`, `bugs/AT-BUG-041.md`. Ни одна правка в
 `app-under-test/`; живой лок прохода (`state/loop.lock`) не трогал.
+
+**2026-08-03T09:32:39Z — fix-verifier (Sonnet), D1-верификация, mode=verify → Verified:**
+
+`test_cases: []` — carve-out (Lead 2026-07-29, прецеденты AT-BUG-007/011/012/013/
+014/017/025/027/031, п.11 «Границы» fix-verifier): `test_debt` в обвязке
+scripts/ (не UI-фича, не device-класс), привязываемых TC нет в принципе. Замена —
+буквальное исполнение DoD «Критерия готовности»: независимый прогон
+`python -m pytest scripts/tests -q` (полный сьют, НЕ только новый
+`test_at_bug_041_eol.py`) + `arch_check.py`/`validate_frontmatter.py`, ПЛЮС
+точечная код-сверка каждого из первых шести пунктов чеклиста против фактического
+содержимого `build_watch.py`/`sla_sweep.py`/`loop_lock.py` (не пересказ
+Обсуждения test-maintainer — свежее чтение строк 92-118/198-217 `build_watch.py`,
+124-227 `loop_lock.py`, 288-341 `sla_sweep.py`).
+
+Результат: все шесть обязательных пунктов критерия готовности подтверждены
+буквально в коде (байтовый I/O во всех трёх функциях + `_atomic_write_text`;
+EOL-aware границы полей `_rewrite_field`/`LOOP_LINE_RE`; EOL-aware генерация
+НОВОГО контента в `rewrite_registry`/`_write_loop_escalation`, не хардкод `\n`
+— это был предмет отдельного блокера critic на attempt 1, закрыт в attempt 2).
+Независимый прогон зелёный (`848 passed, 1 skipped`, без регресса — превышает
+заявленные test-maintainer `839 passed`, разница не относится к этому багу).
+`arch_check`/`validate_frontmatter` — 0/0, как и требует чеклист. Седьмой пункт
+(«Ни одно изменение НЕ вносится в app-under-test/») подтверждён по диффу файлов,
+перечисленных test-maintainer в обоих attempt — все в `scripts/`/`bugs/`.
+Опциональный пункт (регрессия `stale_locks.py::_clear_lock`) намеренно вне
+скоупа этого бага, не блокирует Verified.
+
+Побочная находка при попытке запуска: неверный canonical-вызов
+(`Invoke-Pytest` без пути — framework/UI-сьют вместо `scripts/tests`) был
+по ошибке запущен fix-verifier'ом в фоне, обнаружен и остановлен
+(`taskkill //PID <pid> //F`) до завершения — никакого следа в `scripts/`/
+`app-under-test/`, упомянуто для полноты хода, не как находка по багу.
+
+Fixed → Verified. `known_issue` уже был `"false"` (долг закрыт, известная
+проблема не жива — соответствует правилу fix-verifier о сбросе при переводе в
+Verified). `lock` снят.
 
 ## Чек-лист качества (bug-reporter проходит перед публикацией)
 - [x] Проверены дубликаты среди открытых test_debt: не совпадает с AT-BUG-038 (закрыт на board_sync.py/board_inbound.py), AT-BUG-040 (закрыт на sla_sweep.apply_pingpong_block/stale_locks._clear_lock, тот же класс — сиблинг, не дубликат), AT-BUG-039 (другая ось — framework/steps диагностика ожидания)

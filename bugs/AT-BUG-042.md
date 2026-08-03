@@ -4,7 +4,7 @@ title: "WorkRatingPanel dispose-save воскрешал запись после 
 type: test_debt
 debt_kind: flaky_test
 severity: major
-status: Fixed
+status: Verified
 found_in: "1.10 (versionCode 11), build 6455af0cfc2c937e81975f59a250476c77aecb73, emulator-5554 — discovered by test-maintainer while reworking TC-020 for BUG-012 (Intended), 2026-08-02"
 fixed_in: "test-only (B4, no app rebuild needed): TC-020 automation blocker resolved by test design workaround (R8) + @pytest.mark.live -> @pytest.mark.replay conversion, test-maintainer 2026-08-03"
 last_seen_in: "1.10 (versionCode 11), build 6455af0cfc2c937e81975f59a250476c77aecb73"
@@ -12,8 +12,8 @@ test_cases: ["TC-020"]
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-08-03T01:20:00Z"
-updated: "2026-08-03T02:10:00Z"
+status_since: "2026-08-03T09:36:50Z"
+updated: "2026-08-03T09:36:50Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -21,7 +21,7 @@ resolution: ""
 resolution_comment: ""
 known_issue: "false"
 blocked_reason: ""
-lock: "fix-verifier:2026-08-03T09:23:51Z"
+lock: ""
 gitlab_issue: ""
 ---
 
@@ -313,6 +313,7 @@ test-maintainer/test-automator, если корень — в приложени�
 |---|---|---|---|---|
 | 2026-08-03 (test-maintainer, self-run — не fix-verifier, для fix-verifier см. B4 "не ждёт сборку приложения") | 1.10 (versionCode 11), replay `works_multi.mitm` | `TC-020` обе функции: `test_clear_all_ratings_badge_persists_without_reload` (3× PASSED, ~55-59с каждый), `test_clear_all_ratings_badge_resets_after_reload` (3× PASSED, ~55-72с каждый, включая 1 инструментированный прогон с различающим замером) | Все 6 прогонов PASSED, `PYTEST_EXIT=0` каждый | Fixed-критерий (c) достигнут — блокер автоматизации снят обходом; ждёт официальной верификации fix-verifier/test-reviewer (F1) |
 | 2026-08-03T02:10:00Z (test-maintainer Opus, финализация D5 — перепрогон ПОСЛЕ правок оракулов) | 1.10 (versionCode 11), replay `works_multi.mitm` | `TC-020` обе функции одним прогоном, 3 раза подряд | `2 passed, 6 deselected` в 103.92s / 101.98s / 108.77s, `PYTEST_EXIT=0` каждый | Правки оракулов (бюджет 10с, опрашивающий якорь Given, якорь состояния БД) не поколебали зелёный; каждая изменённая проверка предварительно доказана красной пробой (см. Обсуждение) |
+| 2026-08-03T09:36:50Z (fix-verifier Sonnet, D1 независимая верификация) | 1.10 (versionCode 11), build 6455af0cfc2c937e81975f59a250476c77aecb73 (installed 2026-08-02 23:57:06 — тот же билд, что `found_in`/`last_seen_in`; test-only test_debt, D1 не ждёт новый APK); эмулятор `emulator-5554`, replay `works_multi.mitm` | `TC-020` обе функции (`test_clear_all_ratings_badge_persists_without_reload`, `test_clear_all_ratings_badge_resets_after_reload`), канонической командой `Invoke-Pytest tests/test_settings.py -k "test_clear_all_ratings_badge_persists_without_reload or test_clear_all_ratings_badge_resets_after_reload" -v` | Первые 2 попытки красные/error по ЧИСТО инфраструктурным причинам (Appium не был поднят — `ConnectionRefusedError:4723`; после старта Appium — транзиентные `chrome not reachable`/`socket hang up`/гонка mitmdump-порта 8080/пустая `work_ratings` на пересеянной БД), НЕ репро механизма AT-BUG-042/BUG-022 (все сбои — на разных, не связанных с dispose-save шагах: swipe-жест, context-switch, seed-БД); диагностика (`Get-Device`→DEVICE, `ps -A \| grep uiautomator`→сервер жив) и изолированный перезапуск каждого теста дали чистый `PASSED` — итоговый прогон обеими функциями вместе: `2 passed, 6 deselected in 110.62s`, `PYTEST_EXIT=0` | Критерий (c) (`@pytest.mark.replay` на ОБЕИХ функциях) подтверждён `Grep`-сверкой кода (`test_settings.py:210-211,270-271`). `TC-020` (`automated_by`/статус) НЕ трогал — вне мандата. `Fixed → Verified`, `known_issue` уже был `"false"` (не менялся) |
 
 ## Обсуждение
 
@@ -591,6 +592,48 @@ checkout` был бы нелегален), байтовая копия
 выше. `validate_frontmatter` и `arch_check` — по 0 ошибок / 0 предупреждений.
 Правок в `app-under-test/` не вносилось; `bugs/BUG-022.md`, `bugs/BUG-012.md`,
 `scripts/`, `state/` не трогались.
+
+**2026-08-03T09:36:50Z — fix-verifier (Sonnet), D1-верификация:** независимый прогон
+обеих функций `TC-020` канонической `Invoke-Pytest`-командой (не самопрогон
+test-maintainer). Как `test_debt`, верификация НЕ ждала новую сборку приложения
+(`fixed_in` явно про test-only фикс).
+
+Первый прогон (устройство/Appium не подняты этой сессией заранее) упал сразу на
+`ConnectionRefusedError` к `127.0.0.1:4723` — Appium не был запущен; поднял его
+`Start-Appium`. Второй прогон дал ДВА РАЗНЫХ инфраструктурных сбоя: `chrome not
+reachable` (context-switch в `open_work_page`) на первой функции и `no such table:
+work_ratings` (пересеянная БД сразу после `pm clear`, до первого запуска
+приложения) + гонку порта mitmdump `8080` (`Errno 10048`) на второй. Третий
+изолированный прогон первой функции дал ЕЩЁ один отличный сбой — `socket hang up`
+при проксировании swipe-жеста в UiAutomator2. Ни один из четырёх сбоев не был на
+шаге, связанном с механизмом AT-BUG-042/BUG-022 (dispose-save панели рейтинга) —
+все на инфраструктурных операциях ДО или ПОСЛЕ релевантной логики; сбои не были и
+идентичны друг другу (разные вызовы/классы), так что строгий критерий
+«2 идентичных env-класса на одном и том же шаге» (CLAUDE.md «Fail-fast среды») не
+достигнут — не Blocked. Диагностика: `Get-Device` → `DEVICE: emulator-5554`;
+`adb shell ps -A | grep uiautomator` → `io.appium.uiautomator2.server` жив.
+Изолированные перезапуски каждой функции по отдельности дали чистый `PASSED`
+(`1 passed in 58.96s`, `1 passed in 52.08s`), и финальный совместный прогон
+канонической DoD-командой — `2 passed, 6 deselected in 110.62s (0:01:50)`,
+`PYTEST_EXIT=0`. Критерий (c) (`@pytest.mark.replay` на обеих функциях, не `live`)
+сверен `Grep`-поиском маркеров в `test_settings.py:210-211,270-271` — подтверждён.
+
+`TC-020` (`automated_by`, `status`) НЕ трогал (вне мандата fix-verifier, отдельное
+правило "Автоматизировать"). `framework/tests/test_settings.py`, `app-under-test/`
+— не менял. `Fixed → Verified`, `status_since` обновлён фактическим моментом
+перехода, `known_issue` уже был `"false"` (правило «сбрось при Verified» не
+потребовало действия — не был `"true"`), `reopen_count`/`dispute_count` не
+менялись (0 → 0, пинг-понга не было).
+
+**Дефект-собрат (D-0043):** транзиентная гонка порта mitmdump `8080` при быстром
+teardown/setup двух `replay`-тестов подряд (`Errno 10048`, код уже документирует
+её как повтор `ESC-009`-класса в докстринге `core/mitm.py::_assert_own_listener`)
+— наблюдалась и в этой сессии на связке `test_settings.py` функций; не блокер
+этой верификации (изолированные/раздельные прогоны прошли чисто), но тот же класс
+инфраструктурной гонки, что уже отмечен в коде — координатору на заметку, если
+участится на других replay-парах.
+
+**2026-08-03T09:48Z — координатор (Sonnet), точечная правка по critic-входу:** critic-вход приёмки D1-верификации (строка «Верификация» 2026-08-03T09:36:50Z) вернул FAIL с единственным блокером — колонка «Версия сборки» несла только class-обоснование carve-out, без якоря `app_version`/`versionCode`/hash (Evidence contract C2, `.claude/agents/fix-verifier.md`), регресс относительно соседних строк этой же таблицы. Критик сам замерил значение на устройстве (`adb shell dumpsys package com.example.ao3_wrapper`): `versionName=1.10`, `versionCode=11`, `lastUpdateTime=2026-08-02 23:57:06` — тот же билд, что `found_in`/`last_seen_in`. Правка одной ячейки применена координатором дословно по продиктованному критиком тексту (правило 8 CLAUDE.md, самоисполнение мелочи, блокирующей приёмку этого хода); перепрогон не требовался (критик явно это указал — значение измерено, не из прогона). `validate_frontmatter.py` после правки: 0/0.
 
 ## Чек-лист качества (bug-reporter проходит перед публикацией)
 - [x] Проверены дубликаты среди открытых test_debt: не пересекается с

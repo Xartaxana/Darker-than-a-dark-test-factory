@@ -69,6 +69,72 @@
     "archived": false
   },
   {
+    "key": "TC-148",
+    "path": "board/TC-148/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Интерактивные цели нативного хрома (панели, тумблеры, чипы TabStrip, кнопки диалогов) не меньше 48dp по bounds accessibility-дерева",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:accessibility",
+      "risk:R-13"
+    ],
+    "updated": "2026-08-03T12:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-149",
+    "path": "board/TC-149/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Вычисленный контраст DOM-контента WebView (инжектированные Rate/Note/бейджи + ключевые узлы replay-фикстур) держит WCAG-порог 4.5:1/3:1 в light и dark",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:accessibility",
+      "risk:R-13"
+    ],
+    "updated": "2026-08-03T12:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-150",
+    "path": "board/TC-150/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Bounding-rect'ы интерактивных элементов нативного слоя не пересекаются (перекрытие = недостижимый интерактив)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:accessibility",
+      "risk:R-13"
+    ],
+    "updated": "2026-08-03T12:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "TC-021",
     "path": "board/TC-021/main.md",
     "parent": null,
@@ -2607,11 +2673,12 @@
     "issueType": "test-case",
     "status": "tc-approved",
     "priority": "p3",
-    "assignee": "qa-agents",
+    "assignee": "test-automator",
     "labels": [
       "test-case",
       "area:settings",
-      "risk:R-01"
+      "risk:R-01",
+      "wip:test-automator"
     ],
     "updated": "2026-08-03T09:10:09Z",
     "resolution": null,
@@ -2799,6 +2866,72 @@
     ],
     "updated": "2026-07-30T19:45:07Z",
     "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-145",
+    "path": "board/TC-145/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Слайдер размера шрифта на экране Settings меняет текст WebView на обеих границах диапазона (0/6)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:settings",
+      "risk:R-11"
+    ],
+    "updated": "2026-08-03T12:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-146",
+    "path": "board/TC-146/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Слайдер яркости на экране Settings снижает реальную яркость и включает чёрный overlay ниже минимума (второй вход к жесту TC-055)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:settings",
+      "risk:R-11"
+    ],
+    "updated": "2026-08-03T12:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-147",
+    "path": "board/TC-147/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Позиция side panel Left/Right зеркалит handle, переживает рестарт и пишет одни и те же prefs в ОБЕИХ позициях",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:settings",
+      "risk:R-11"
+    ],
+    "updated": "2026-08-03T12:00:00Z",
+    "resolution": null,
     "children": [],
     "archived": false
   },
@@ -4167,7 +4300,7 @@
     "epicPath": null,
     "summary": "browser_steps.assert_tap_to_scroll_delta: диагностика scrollY снята ДО опроса, а не после — тот же класс, что AT-BUG-036",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -4178,7 +4311,7 @@
       "test_case:TC-127",
       "sev:minor"
     ],
-    "updated": "2026-08-02T15:25:00Z",
+    "updated": "2026-08-03T09:43:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4213,16 +4346,15 @@
     "epicPath": null,
     "summary": "build_watch.py::update_aut (+ спящие sla_sweep.rewrite_registry/loop_lock._atomic_write_text): EOL-перегон партиальных писателей scripts/, класс шире frontmatter-границы",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p2",
-    "assignee": "fix-verifier",
+    "assignee": "qa-agents",
     "labels": [
       "bug",
-      "sev:minor",
-      "wip:fix-verifier"
+      "sev:minor"
     ],
-    "updated": "2026-08-02T14:39:03Z",
-    "resolution": null,
+    "updated": "2026-08-03T09:32:39Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -4235,17 +4367,16 @@
     "epicPath": null,
     "summary": "WorkRatingPanel dispose-save воскрешал запись после Clear all — блокер автоматизации TC-020 снят обходом порядка reload (дефект приложения — BUG-022)",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p1",
-    "assignee": "fix-verifier",
+    "assignee": "qa-agents",
     "labels": [
       "bug",
       "test_case:TC-020",
-      "sev:major",
-      "wip:fix-verifier"
+      "sev:major"
     ],
-    "updated": "2026-08-03T02:10:00Z",
-    "resolution": null,
+    "updated": "2026-08-03T09:36:50Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
