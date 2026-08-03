@@ -4,7 +4,7 @@ title: "seed_db.py не даёт прямого сидинга комбинир�
 type: test_debt
 debt_kind: missing_fixture
 severity: minor
-status: Fixed
+status: Verified
 found_in: "test-designer, дизайн follow-up exploratory-charters/CH-008.md (кандидаты followup_tc 1 и 4-5); признак — CH-007 и CH-008 независимо просили то же самое (рецидив без бага, CH-008.md Follow-up: «test-maintainer/test-designer: seed_db.read_work_ratings() не отдаёт title/author/downloadPath … Второй запрос: seed_db не умеет сеять baseline A и C — оба пришлось строить дверями под измерением»)"
 fixed_in: "151ee6e, c03aa93 (attempt 2: url/timestamp добавлены в _read_full_rows/read_work_ratings_full)"
 last_seen_in: ""
@@ -12,8 +12,8 @@ test_cases: [TC-151, TC-152, TC-155, TC-156]
 runs: [CH-007, CH-008]
 duplicates: []
 regression_of: ""
-status_since: "2026-08-03T18:55:00Z"
-updated: "2026-08-03T18:19:13Z"
+status_since: "2026-08-03T18:26:00Z"
+updated: "2026-08-03T18:26:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -122,6 +122,7 @@ gitlab_issue: ""
 |---|---|---|---|---|
 | 2026-08-03 | ao3_test_api34, emulator-5554, no app rebuild (framework-only) | device-free: `test_seed_db_full_baseline_unit.py` (5 новых юнитов) — 3x подряд PASS (14, 5, 5 passed — первый прогон вместе с `test_seed_null_wordcount_unit.py`/`test_seed_db_schema_race_unit.py`/`test_seed_filter_profiles_unit.py`, далее только новый файл); live: `test_seed_db_full_baseline_live.py::test_seed_with_comment_and_download_baseline_a_and_c_round_trip` — 3x подряд PASS (68.45s, 8.04s, 7.61s); существующие потребители: TC-021 (`test_backup_restore.py`) — 3x подряд PASS (75.98s/74.08s/71.17s); TC-141 (`test_rating.py::test_edit_tag_on_already_saved_work_via_panel_does_not_click_kudos`) — 3x подряд PASS (45.60s/47.06s/45.68s) | Все зелёные, все PYTEST_EXIT=0 | test-maintainer: механизм закрыт, ждёт critic-вход (правило CLAUDE.md — ядровая логика сидинга, тот же класс, что AT-BUG-044) |
 | 2026-08-03 (attempt 2) | ao3_test_api34, emulator-5554, no app rebuild (framework-only) | device-free: `test_seed_db_full_baseline_unit.py` (5 юнитов, включая новый url/timestamp-ассерт) — `5 passed in 0.17s`, `PYTEST_EXIT=0`; live: `test_seed_db_full_baseline_live.py::test_seed_with_comment_and_download_baseline_a_and_c_round_trip` — 1x PASS (`1 passed in 6.70s`, `PYTEST_EXIT=0`, полный ×3 не требуется — дельта минимальна, критик уже прогнал живьём attempt 1); `arch_check.py` — `arch_check: ошибок 0, предупреждений 0`; `validate_frontmatter.py` — `validate_frontmatter: ошибок 0, предупреждений 0`; `git status --porcelain -- app-under-test/` — пусто | Все зелёные, все PYTEST_EXIT=0 | test-maintainer: блокер критик-входа (attempt 1) устранён — `url`/`timestamp` добавлены в `_read_full_rows`/`read_work_ratings_full`, юнит-ассерт на оба поля; готов ко второму critic-входу |
+| 2026-08-03 (fix-verifier, D1 независимая верификация) | app: com.example.ao3_wrapper versionCode=11/versionName=1.10, emulator-5554, no app rebuild (framework-only test_debt, поверхность целиком в `framework/data/seed_db.py`); repo HEAD=`4ca88e4` (тот же коммит, что вершина фикса); коммиты фикса сверены `git show --stat`: `151ee6e` (основной фикс: `seed_with_comment_and_download`+`_insert_rows_full_with_download`, `read_work_ratings_full`+`_read_full_rows`, оба тестовых файла добавлены), `c03aa93` (attempt 2, диф ограничен ИСКЛЮЧИТЕЛЬНО `_read_full_rows`/`read_work_ratings_full` SELECT+dict+docstring и `test_seed_db_full_baseline_unit.py`; `read_work_ratings()`, `seed_with_comment`, `seed_with_download`, `_insert_rows_full`, `_insert_rows_with_download`, `seed_with_comment_and_download` НЕ задеты), `fdb6dc7`+`4ca88e4` (bugs/AT-BUG-046.md docs-only) | device-free: `Invoke-Pytest tests/test_seed_db_full_baseline_unit.py -v` — `5 passed in 0.27s`, `PYTEST_EXIT=0` (все 5, включая url/timestamp-ассерт); live round-trip: `Invoke-Pytest tests/test_seed_db_full_baseline_live.py -v` — 2 прогона подряд (D1-порог), оба `1 passed`, `PYTEST_EXIT=0` (6.61s, 6.87s); существующие потребители — TC-141 (`test_rating.py -k test_edit_tag_on_already_saved_work_via_panel_does_not_click_kudos`) реплей 1× — `1 passed, 7 deselected in 43.82s`, `PYTEST_EXIT=0`; TC-021 (`test_backup_restore.py`) НЕ перепрогнан повторно — уже витнессирован 3x зелёным на attempt 1 (см. строку выше), а `git show c03aa93 --stat`/дифф подтверждают, что дифф attempt 2 ограничен `_read_full_rows`/`read_work_ratings_full`+юнит-файлом и не касается `read_work_ratings()` (контракт TC-021/`backup_steps.assert_restored_fields_match`) — обоснование см. в столбце «Прогнанные TC» этой строки; `arch_check.py` — `arch_check: ошибок 0, предупреждений 0` (exit 0); `validate_frontmatter.py` — `validate_frontmatter: ошибок 0, предупреждений 0` (exit 0); `git status --porcelain -- app-under-test/` — пусто (сверено) | Все прогнанные зелёные, все PYTEST_EXIT=0; репро не запрашивалось (test_debt, не product-баг) | fix-verifier: Fixed -> **Verified**, независимо от test-maintainer/critic-раунда; DoD верификации выполнен полностью (юниты, живой round-trip ×2, TC-141 реплей, обоснованный пропуск TC-021 повтора, arch_check/validate_frontmatter 0/0, app-under-test/ чист) |
 
 ## Обсуждение
 
@@ -213,6 +214,39 @@ Non-blocking того же хода (продиктованы критиком, 
   несут дословный вывод инструментов, не голую галку.
 
 `git status --porcelain -- app-under-test/` — пусто (сверено).
+
+**[fix-verifier @ 2026-08-03T18:26:00Z]**
+
+D1 верификация (mode=verify, независимо от test-maintainer/critic). Прогнано на
+актуальном состоянии репо (HEAD `4ca88e4`, тот же коммит, что вершина фикса;
+app: `com.example.ao3_wrapper` versionCode=11/1.10, emulator-5554 — сборка
+приложения не пересобиралась намеренно, долг целиком в
+`framework/data/seed_db.py`, независим от кода приложения):
+
+- Device-free юниты `test_seed_db_full_baseline_unit.py` — 5 passed, PYTEST_EXIT=0.
+- Живой round-trip `test_seed_db_full_baseline_live.py` — 2 прогона подряд
+  (D1-порог), оба зелёные, PYTEST_EXIT=0 (6.61s/6.87s).
+- TC-141 (`test_rating.py::test_edit_tag_on_already_saved_work_via_panel_does_not_click_kudos`)
+  реплей 1× — зелёный, PYTEST_EXIT=0.
+- TC-021 (`test_backup_restore.py`) НЕ перепрогнан повторно: сверил
+  `git show c03aa93 --stat` и полный дифф — attempt 2 меняет ТОЛЬКО
+  `_read_full_rows`/`read_work_ratings_full` (docstring+SELECT+dict, добавлены
+  `url`/`timestamp`) и `test_seed_db_full_baseline_unit.py`; функция-контракт
+  TC-021 (`read_work_ratings()`, потребляемая `backup_steps.
+  assert_restored_fields_match`) в этом коммите не тронута ни строкой, а
+  attempt 1 уже дал TC-021 3x зелёных до этого коммита (строка выше) — повторный
+  прогон не добавляет доказательной силы к уже сверенному диффу.
+- `arch_check.py`/`validate_frontmatter.py` — 0 ошибок/0 предупреждений оба.
+- `git status --porcelain -- app-under-test/` — пусто.
+
+Все прогоны зелёные, все витнессы дословны (см. строку таблицы). Статус
+`Fixed` -> `Verified`; `known_issue` уже был `"false"` (долг закрыт, не
+«живая известная проблема» — сверено по решению Lead 2026-07-29). Аналогов
+рядом не замечено (поверхность узкая, `framework/data/seed_db.py`, уже
+проверена test-maintainer на пересечение с AT-BUG-032/045/004/005 в
+чек-листе качества ниже — повторной проверки не потребовалось).
+
+Awaiting: none.
 
 ## Чек-лист качества (заводящий проходит перед публикацией)
 - [x] Проверены дубликаты среди открытых test_debt — не пересекается с

@@ -4852,7 +4852,7 @@
     "epicPath": null,
     "summary": "seed_db.py не даёт прямого сидинга комбинированных baseline-строк work_ratings (comment+tags+downloadPath; rating=null+downloadPath), а read_work_ratings() не отдаёт title/author/downloadPath — TC-151/152/155/156 вынуждены строить состояние дверями приложения",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -4865,8 +4865,8 @@
       "run:CH-008",
       "sev:minor"
     ],
-    "updated": "2026-08-03T18:30:00Z",
-    "resolution": null,
+    "updated": "2026-08-03T18:26:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
