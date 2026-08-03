@@ -7,14 +7,14 @@ priority: "p1"
 summary: "Снятие рейтинга через overlay листинга у скачанной работы обнуляет downloadPath и личные теги; правка заметки — то же"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["bug", "test_case:TC-115", "test_case:TC-114", "run:CH-007", "run:CH-008", "sev:major"]
+labels: ["bug", "test_case:TC-151", "test_case:TC-152", "run:CH-007", "run:CH-008", "sev:major"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-02T00:00:00Z"
-updated: "2026-08-02T00:00:00Z"
+created: "2026-08-03T18:35:00Z"
+updated: "2026-08-03T18:35:00Z"
 archived: false
 resolution: null
 ---
@@ -192,6 +192,15 @@ Room `upsert` на существующую запись **ПЕРЕЗАПИСЫ�
 Расширение (дверь 2: deselect + потеря tags) — из эксплораторного чартера CH-008 находка 1. Новое в этой сессии: (а) потеря ЛИЧНЫХ ТЕГОВ (новая клетка матрицы), (б) вторая дверь того же жеста (деselect), показывающая асимметрию между overlay (сломано) и панелью (работает правильно). Материал для фикса — в находке 5 CH-008: панель использует `existing.copy(...)` образец, уже существующий в том же файле.
 
 При фиксе этого бага рекомендуется проверить все места пересборки WorkRating (список в разделе «Класс дефекта»).
+
+**[qa @ 2026-08-03T18:35:00Z]**
+
+Regression-lock кейсы дизайн-этапа (follow-up CH-008, `test-designer`):
+`TC-152` (door 2, overlay — ожидаемо-красный до фикса, дословно повторяет
+репро-шаги этого раздела) и `TC-151` (companion-кейс, дверь панели — тот же
+жест, но КОНТРОЛЬНЫЙ случай, подтверждающий, что `existing.copy(...)`
+работает правильно и является образцом починки). `automated_by` у обоих пуст
+— design-only, ждут test-automator.
 
 Awaiting: dev
 

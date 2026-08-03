@@ -7,14 +7,14 @@ priority: "p1"
 summary: "Удаление скачанного файла из карточки удаляет только один файл; при двух файлах одного ao3Id второй остаётся на диске и воскрешает работу при повторном сканировании"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["bug", "run:CH-008", "sev:major"]
+labels: ["bug", "test_case:TC-154", "run:CH-008", "sev:major"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-03T17:00:00Z"
-updated: "2026-08-03T17:00:00Z"
+created: "2026-08-03T18:35:00Z"
+updated: "2026-08-03T18:35:00Z"
 archived: false
 resolution: null
 ---
@@ -137,6 +137,12 @@ fun deleteDownload(aoId: Long) {
 
 **Дельта к тестовому корпусу:**
 - **TC-035** (удаление скачанного файла): знает только сценарий с ОДНИМ файлом; при двух файлах поведение не проверено
+
+**[qa @ 2026-08-03T18:35:00Z]**
+
+Regression-lock кейс дизайн-этапа: `TC-154` (follow-up CH-008, test-designer)
+— дословно повторяет репро (остаток файла + воскрешение сканом). Ожидаемо-
+красный до фикса. `automated_by` пуст — design-only, ждёт test-automator.
 
 **Попутная находка:**
 - Папка загрузок содержит остатки файлов, которые пользователь считает удалёнными. Нет UI для просмотра/уборки сирот.

@@ -1377,6 +1377,72 @@
     "archived": false
   },
   {
+    "key": "TC-153",
+    "path": "board/TC-153/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Повторный ручной Scan for downloads при двух файлах одного ao3Id сходится к нулю relinked (идемпотентность), а не повторяет relinked=2 (ожидаемо-красный до фикса BUG-046)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:downloads",
+      "risk:R-05"
+    ],
+    "updated": "2026-08-03T18:10:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-154",
+    "path": "board/TC-154/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Удаление скачанного файла НЕ воскрешает работу последующим сканом, если на диске остаётся второй файл того же ao3Id (ожидаемо-красный до фикса BUG-047)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:downloads",
+      "risk:R-05"
+    ],
+    "updated": "2026-08-03T18:15:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-156",
+    "path": "board/TC-156/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Скачанная работа без рейтинга (rating=null, downloadPath!=null) видна ТОЛЬКО на вкладке FILES и ни на одной рейтинговой вкладке Library",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:downloads",
+      "risk:R-16"
+    ],
+    "updated": "2026-08-03T18:25:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "TC-046",
     "path": "board/TC-046/main.md",
     "parent": null,
@@ -2475,6 +2541,72 @@
     ],
     "updated": "2026-08-02T05:51:51Z",
     "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-151",
+    "path": "board/TC-151/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Повторный тап по выбранному рейтингу на ПАНЕЛИ work-страницы у скачанной работы с заметкой и тегом сохраняет downloadPath, тег, заметку и метаданные",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:rating",
+      "risk:R-01"
+    ],
+    "updated": "2026-08-03T18:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-152",
+    "path": "board/TC-152/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Повторный тап по выбранному рейтингу через OVERLAY листинга у скачанной работы с заметкой и тегом сохраняет downloadPath и тег (ожидаемо-красный до фикса BUG-021)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:rating",
+      "risk:R-01"
+    ],
+    "updated": "2026-08-03T18:05:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-155",
+    "path": "board/TC-155/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Панель work-страницы сохраняет downloadPath, заметку и теги скачанной работы при смене рейтинга и добавлении нового тега",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:rating",
+      "risk:R-01"
+    ],
+    "updated": "2026-08-03T18:20:00Z",
+    "resolution": null,
     "children": [],
     "archived": false
   },
@@ -4437,12 +4569,40 @@
     "issueType": "bug",
     "status": "bug-open",
     "priority": "p2",
+    "assignee": "test-maintainer",
+    "labels": [
+      "bug",
+      "sev:minor",
+      "wip:test-maintainer"
+    ],
+    "updated": "2026-08-03T14:10:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-046",
+    "path": "board/AT-BUG-046/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "seed_db.py не даёт прямого сидинга комбинированных baseline-строк work_ratings (comment+tags+downloadPath; rating=null+downloadPath), а read_work_ratings() не отдаёт title/author/downloadPath — TC-151/152/155/156 вынуждены строить состояние дверями приложения",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
+      "test_case:TC-151",
+      "test_case:TC-152",
+      "test_case:TC-155",
+      "test_case:TC-156",
+      "run:CH-007",
+      "run:CH-008",
       "sev:minor"
     ],
-    "updated": "2026-08-03T14:10:00Z",
+    "updated": "2026-08-03T18:30:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4708,13 +4868,13 @@
     "assignee": "qa-agents",
     "labels": [
       "bug",
-      "test_case:TC-115",
-      "test_case:TC-114",
+      "test_case:TC-151",
+      "test_case:TC-152",
       "run:CH-007",
       "run:CH-008",
       "sev:major"
     ],
-    "updated": "2026-08-02T00:00:00Z",
+    "updated": "2026-08-03T18:35:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4754,10 +4914,11 @@
     "assignee": "qa-agents",
     "labels": [
       "bug",
+      "test_case:TC-153",
       "run:CH-008",
       "sev:major"
     ],
-    "updated": "2026-08-03T17:00:00Z",
+    "updated": "2026-08-03T18:35:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4776,10 +4937,11 @@
     "assignee": "qa-agents",
     "labels": [
       "bug",
+      "test_case:TC-154",
       "run:CH-008",
       "sev:major"
     ],
-    "updated": "2026-08-03T17:00:00Z",
+    "updated": "2026-08-03T18:35:00Z",
     "resolution": null,
     "children": [],
     "archived": false

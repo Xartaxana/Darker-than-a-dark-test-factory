@@ -299,6 +299,21 @@
     "artifact_status": "Automated",
     "board_status": "Automated"
   },
+  "TC-153": {
+    "itype": "test-case",
+    "artifact_status": "Review",
+    "board_status": "Review"
+  },
+  "TC-154": {
+    "itype": "test-case",
+    "artifact_status": "Review",
+    "board_status": "Review"
+  },
+  "TC-156": {
+    "itype": "test-case",
+    "artifact_status": "Review",
+    "board_status": "Review"
+  },
   "TC-046": {
     "itype": "test-case",
     "artifact_status": "Automated",
@@ -538,6 +553,21 @@
     "itype": "test-case",
     "artifact_status": "Automated",
     "board_status": "Automated"
+  },
+  "TC-151": {
+    "itype": "test-case",
+    "artifact_status": "Review",
+    "board_status": "Review"
+  },
+  "TC-152": {
+    "itype": "test-case",
+    "artifact_status": "Review",
+    "board_status": "Review"
+  },
+  "TC-155": {
+    "itype": "test-case",
+    "artifact_status": "Review",
+    "board_status": "Review"
   },
   "TC-100": {
     "itype": "test-case",
@@ -965,6 +995,11 @@
     "board_status": "Verified"
   },
   "AT-BUG-045": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "AT-BUG-046": {
     "itype": "bug",
     "artifact_status": "Open",
     "board_status": "Open"

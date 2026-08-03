@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-03T15:18:28Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-08-03T15:58:41Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -16,12 +16,12 @@ generated_at: 2026-08-03T15:18:28Z · генератор: `scripts/coverage_map.
 | browser | 13 | 13 | designed-full |
 | canary | 23 | 23 | designed-full |
 | compatibility | 3 | 3 | designed-full |
-| downloads | 14 | 14 | designed-full |
+| downloads | 17 | 14 | partial |
 | errors | 1 | 1 | designed-full |
 | filter-profiles | 5 | 5 | designed-full |
 | library | 17 | 17 | designed-full |
 | performance | 4 | 4 | designed-full |
-| rating | 21 | 20 | partial |
+| rating | 24 | 20 | partial |
 | security | 6 | 6 | designed-full |
 | settings | 14 | 11 | partial |
 | smoke | 5 | 5 | designed-full |
@@ -32,11 +32,11 @@ generated_at: 2026-08-03T15:18:28Z · генератор: `scripts/coverage_map.
 
 | Риск | Категория | Покрывающие кейсы |
 |---|---|---|
-| R-01 | DATA | backup:TC-021, settings:TC-018, settings:TC-019, settings:TC-020, smoke:TC-004 |
+| R-01 | DATA | backup:TC-021, rating:TC-151, rating:TC-152, rating:TC-155, settings:TC-018, settings:TC-019, settings:TC-020, smoke:TC-004 |
 | R-02 | TECH | canary:TC-066, canary:TC-067, canary:TC-068, canary:TC-069, canary:TC-070, canary:TC-071, canary:TC-072, canary:TC-073, canary:TC-074, canary:TC-075, canary:TC-076, canary:TC-077, canary:TC-078, canary:TC-079, canary:TC-080, canary:TC-081, canary:TC-082, canary:TC-083, canary:TC-118, canary:TC-119, canary:TC-120, canary:TC-121, canary:TC-122 |
 | R-03 | TECH | errors:TC-046, smoke:TC-001 |
 | R-04 | DATA | canary:TC-072, canary:TC-073, canary:TC-074, canary:TC-075, canary:TC-076, canary:TC-077, library:TC-016, library:TC-017, rating:TC-007, rating:TC-008, rating:TC-009, rating:TC-010, rating:TC-011, rating:TC-012, smoke:TC-003 |
-| R-05 | TECH | downloads:TC-032, downloads:TC-033, downloads:TC-034, downloads:TC-035, downloads:TC-036, downloads:TC-037, downloads:TC-038, downloads:TC-039, downloads:TC-112, downloads:TC-113, downloads:TC-114, downloads:TC-115, downloads:TC-116, downloads:TC-117 |
+| R-05 | TECH | downloads:TC-032, downloads:TC-033, downloads:TC-034, downloads:TC-035, downloads:TC-036, downloads:TC-037, downloads:TC-038, downloads:TC-039, downloads:TC-112, downloads:TC-113, downloads:TC-114, downloads:TC-115, downloads:TC-116, downloads:TC-117, downloads:TC-153, downloads:TC-154 |
 | R-06 | BUS | browser:TC-094, library:TC-027, library:TC-028, library:TC-029, library:TC-030, library:TC-031, library:TC-060, library:TC-061, library:TC-062, library:TC-063, library:TC-064, library:TC-065, visibility:TC-013, visibility:TC-014, visibility:TC-015, visibility:TC-092, visibility:TC-093, visibility:TC-095 |
 | R-07 | OPS | риск не покрыт дизайном |
 | R-08 | TECH | library:TC-136, library:TC-137, tabs:TC-022, tabs:TC-023, tabs:TC-024, tabs:TC-025, tabs:TC-026, tabs:TC-084, tabs:TC-131, tabs:TC-132, tabs:TC-133, tabs:TC-134, tabs:TC-135 |
@@ -47,7 +47,7 @@ generated_at: 2026-08-03T15:18:28Z · генератор: `scripts/coverage_map.
 | R-13 | A11Y | accessibility:TC-106, accessibility:TC-107, accessibility:TC-148, accessibility:TC-149, accessibility:TC-150 |
 | R-14 | COMPAT | compatibility:TC-109, compatibility:TC-110, compatibility:TC-111 |
 | R-15 | SEC | security:TC-100, security:TC-101, security:TC-102, security:TC-103, security:TC-104, security:TC-105 |
-| R-16 | BUS | риск не покрыт дизайном |
+| R-16 | BUS | downloads:TC-156 |
 | R-17 | BUS | rating:TC-138, rating:TC-139, rating:TC-140, rating:TC-141, rating:TC-142, rating:TC-143, rating:TC-144 |
 
 ## Фичи → покрытие
@@ -78,7 +78,7 @@ generated_at: 2026-08-03T15:18:28Z · генератор: `scripts/coverage_map.
 | sidepanel-rating-filters | side-panel | browser:TC-094[Automated], visibility:TC-095[Automated] |
 | sidepanel-settings-sync-theme-font | side-panel | browser:TC-054[Automated] |
 | sidepanel-settings-sync-hidden-ratings | side-panel | browser:TC-094[Automated] |
-| library-tabs-six | library | smoke:TC-003[Automated], library:TC-006[Automated], library:TC-016[Automated], library:TC-017[Automated], rating:TC-043[Automated] |
+| library-tabs-six | library | smoke:TC-003[Automated], library:TC-006[Automated], library:TC-016[Automated], library:TC-017[Automated], rating:TC-043[Automated], downloads:TC-156[Review] |
 | library-filter-wordcount | library | library:TC-027[Automated] |
 | library-filter-fandom | library | library:TC-029[Automated] |
 | library-filter-downloaded-only | library | library:TC-028[Automated] |
@@ -91,8 +91,8 @@ generated_at: 2026-08-03T15:18:28Z · генератор: `scripts/coverage_map.
 | library-sort-scroll-reset | library | library:TC-030[Automated], library:TC-063[Automated] |
 | library-card-open-work | library | library:TC-136[Automated], library:TC-137[Automated] |
 | library-card-download | library | downloads:TC-033[Automated] |
-| library-card-open-file | library | downloads:TC-034[Automated] |
-| library-card-delete-file | library | downloads:TC-035[Automated] |
+| library-card-open-file | library | downloads:TC-034[Automated], downloads:TC-156[Review] |
+| library-card-delete-file | library | downloads:TC-035[Automated], downloads:TC-154[Review] |
 | library-card-delete-work | library | downloads:TC-036[Automated] |
 | library-card-comment-tags | library | library:TC-089[Automated] |
 | settings-theme-mode | settings | smoke:TC-005[Automated], settings:TC-047[Automated], settings:TC-049[Automated], settings:TC-059[Automated] |
@@ -110,7 +110,7 @@ generated_at: 2026-08-03T15:18:28Z · генератор: `scripts/coverage_map.
 | settings-restore-merge | settings | backup:TC-021[Automated] |
 | settings-orphan-scan-silent | settings | downloads:TC-038[Automated] |
 | settings-orphan-scan-restore-dialog | settings | downloads:TC-039[Automated] |
-| settings-scan-downloads-manual | settings | downloads:TC-037[Automated] |
+| settings-scan-downloads-manual | settings | downloads:TC-037[Automated], downloads:TC-153[Review], downloads:TC-154[Review] |
 | settings-filter-profiles-list | settings | нет кейсов |
 | settings-filter-profiles-delete | settings | filter-profiles:TC-042[Automated] |
 | settings-filter-profiles-rename | settings | filter-profiles:TC-085[Automated], filter-profiles:TC-086[Automated] |
@@ -120,13 +120,13 @@ generated_at: 2026-08-03T15:18:28Z · генератор: `scripts/coverage_map.
 | bridge-tag-highlight | ao3-bridge | rating:TC-056[Automated] |
 | browse-initial-load | browse | smoke:TC-001[Automated] |
 | rating-overlay-five-options | rating-notes | rating:TC-007[Automated], rating:TC-009[Automated] |
-| rating-deselect-on-tap | rating-notes | rating:TC-008[Automated] |
+| rating-deselect-on-tap | rating-notes | rating:TC-008[Automated], rating:TC-151[Review], rating:TC-152[Review] |
 | rating-comment-save | rating-notes | rating:TC-087[Automated] |
 | rating-comment-clear | rating-notes | rating:TC-088[Automated] |
-| rating-tags-chip-add | rating-notes | rating:TC-090[Automated] |
+| rating-tags-chip-add | rating-notes | rating:TC-090[Automated], rating:TC-155[Review] |
 | rating-tags-chip-remove | rating-notes | rating:TC-091[Automated] |
-| rating-entry-work-panel | rating-notes | rating:TC-007[Automated], rating:TC-008[Automated], rating:TC-010[Automated] |
-| rating-entry-listing-overlay | rating-notes | rating:TC-009[Automated], rating:TC-011[Automated] |
+| rating-entry-work-panel | rating-notes | rating:TC-007[Automated], rating:TC-008[Automated], rating:TC-010[Automated], rating:TC-151[Review], rating:TC-155[Review] |
+| rating-entry-listing-overlay | rating-notes | rating:TC-009[Automated], rating:TC-011[Automated], rating:TC-152[Review] |
 | rating-note-button-listing | rating-notes | rating:TC-044[Automated] |
 | bridge-rate-note-tag-buttons | ao3-bridge | canary:TC-068[Automated], canary:TC-069[Automated], canary:TC-070[Automated], canary:TC-071[Automated], canary:TC-072[Automated], canary:TC-073[Automated], canary:TC-074[Automated], canary:TC-075[Automated], canary:TC-076[Automated], canary:TC-077[Automated] |
 | bridge-badge-sync-multi | ao3-bridge | rating:TC-012[Automated] |
@@ -256,18 +256,18 @@ generated_at: 2026-08-03T15:18:28Z · генератор: `scripts/coverage_map.
 
 ### downloads
 
-- coverage_status: **designed-full** (14/14 Automated)
-- риски: R-05
+- coverage_status: **partial** (14/17 Automated)
+- риски: R-05, R-16
 - кейсы без risk: нет
-- P0/P1 не в Automated: нет
+- P0/P1 не в Automated: TC-153 [P1, Review], TC-154 [P1, Review]
 - автотесты (automated_by): framework/tests/test_downloads.py::test_auto_download_triggers_on_loved_rating, framework/tests/test_downloads.py::test_change_download_folder_triggers_silent_scan_and_relinks_orphan_file, framework/tests/test_downloads.py::test_delete_downloaded_file_keeps_rating_row, framework/tests/test_downloads.py::test_delete_work_removes_row_and_file, framework/tests/test_downloads.py::test_deselecting_favorite_rating_does_not_download, framework/tests/test_downloads.py::test_edit_note_on_already_saved_work_via_listing_overlay_does_not_redownload, framework/tests/test_downloads.py::test_edit_tag_on_already_saved_work_via_panel_does_not_redownload, framework/tests/test_downloads.py::test_enabling_auto_download_does_not_retroactively_download_favorites, framework/tests/test_downloads.py::test_favorite_rating_does_not_download_when_auto_download_off, framework/tests/test_downloads.py::test_manual_download_from_library_adds_local_file, framework/tests/test_downloads.py::test_manual_scan_for_downloads_shows_dialog_on_zero_files, framework/tests/test_downloads.py::test_open_downloaded_file_applies_viewport_and_reader_css, framework/tests/test_downloads.py::test_rating_change_from_favorite_to_kudosed_does_not_download, framework/tests/test_downloads.py::test_restore_folds_orphan_scan_into_single_dialog
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  |  |  |
-| P1 |  |  |  | 9 |  |
-| P2 |  |  |  | 4 |  |
+| P1 |  | 2 |  | 9 |  |
+| P2 |  | 1 |  | 4 |  |
 | P3 |  |  |  | 1 |  |
 
 ### errors
@@ -336,17 +336,17 @@ generated_at: 2026-08-03T15:18:28Z · генератор: `scripts/coverage_map.
 
 ### rating
 
-- coverage_status: **partial** (20/21 Automated)
-- риски: R-04, R-10, R-17
+- coverage_status: **partial** (20/24 Automated)
+- риски: R-01, R-04, R-10, R-17
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-139 [P1, Approved]
+- P0/P1 не в Automated: TC-139 [P1, Approved], TC-151 [P1, Review], TC-152 [P1, Review], TC-155 [P1, Review]
 - автотесты (automated_by): framework/tests/test_rating.py::test_deselect_rating_on_work_page_panel, framework/tests/test_rating.py::test_edit_tag_on_already_saved_work_via_panel_does_not_click_kudos, framework/tests/test_rating.py::test_first_panel_save_clicks_kudos_once, framework/tests/test_rating.py::test_rate_work_from_work_page_panel, framework/tests/test_rating_listing.py::test_add_freeform_tag_persists, framework/tests/test_rating_listing.py::test_apply_ratings_syncs_duplicate_blurbs, framework/tests/test_rating_listing.py::test_change_rating_kudosed_to_read_via_listing_does_not_click_kudos, framework/tests/test_rating_listing.py::test_clear_note_removes_comment, framework/tests/test_rating_listing.py::test_comment_only_visible_on_listing_and_absent_from_rating_tabs, framework/tests/test_rating_listing.py::test_deselect_kudosed_via_listing_does_not_click_kudos, framework/tests/test_rating_listing.py::test_edit_tag_on_already_kudosed_work_via_listing_does_not_reclick_kudos, framework/tests/test_rating_listing.py::test_first_kudosed_via_listing_with_open_work_tab_clicks_kudos_once, framework/tests/test_rating_listing.py::test_listing_rate_button_updates_without_reload, framework/tests/test_rating_listing.py::test_matching_personal_tag_highlighted_on_listing, framework/tests/test_rating_listing.py::test_note_button_opens_overlay_with_expanded_comment, framework/tests/test_rating_listing.py::test_panel_rating_updates_without_reload, framework/tests/test_rating_listing.py::test_personal_tags_do_not_affect_visibility, framework/tests/test_rating_listing.py::test_rate_kudosed_via_listing_without_open_work_tab_does_not_click_kudos, framework/tests/test_rating_listing.py::test_rate_work_from_listing_overlay, framework/tests/test_rating_listing.py::test_save_note_persists_comment, framework/tests/test_rating_listing.py::test_tap_selected_chip_removes_tag
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  | 3 |  |
-| P1 |  |  | 1 | 12 |  |
+| P1 |  | 3 | 1 | 12 |  |
 | P2 |  |  |  | 3 |  |
 | P3 |  |  |  | 2 |  |
 

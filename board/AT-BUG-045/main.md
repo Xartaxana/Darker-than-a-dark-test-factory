@@ -5,9 +5,9 @@ issueType: "bug"
 status: "bug-open"
 priority: "p2"
 summary: "settings_steps.py::assert_ratings_present/assert_no_ratings/assert_rating_rows_empty — пустой stdout (в т.ч. отказ транспорта) неотличим от 'нет sqlite3 на образе', степень тихо пропускает проверку"
-assignee: "qa-agents"
+assignee: "test-maintainer"
 reporter: "qa-agents"
-labels: ["bug", "sev:minor"]
+labels: ["bug", "sev:minor", "wip:test-maintainer"]
 components: []
 fixVersions: []
 watchers: []

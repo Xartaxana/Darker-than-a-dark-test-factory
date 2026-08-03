@@ -7,14 +7,14 @@ priority: "p1"
 summary: "Ручной скан при двух файлах одного ao3Id не сходится: счётчик relinked=2 на одну работу, повторный скан рапортует то же, не становясь 0"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["bug", "run:CH-008", "sev:major"]
+labels: ["bug", "test_case:TC-153", "run:CH-008", "sev:major"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-03T17:00:00Z"
-updated: "2026-08-03T17:00:00Z"
+created: "2026-08-03T18:35:00Z"
+updated: "2026-08-03T18:35:00Z"
 archived: false
 resolution: null
 ---
@@ -152,6 +152,13 @@ fun scanForDownloads(coroutineContext: CoroutineDispatcher = Dispatchers.IO) {
 - TC-038 (relinking one file): гоняет на ОДНОМ файле при смене папки
 - TC-039 (orphan scan with synthetic file): гоняет orphan-скан с одним синтетическим файлом
 - **Ни один кейс не имеет двух файлов на один ao3Id**, что именно и является условием для воспроизведения
+
+**[qa @ 2026-08-03T18:35:00Z]**
+
+Regression-lock кейс дизайн-этапа: `TC-153` (follow-up CH-008, test-designer)
+— дословно повторяет репро (3 скана подряд, инвариант идемпотентности
+сформулирован явной строкой). Ожидаемо-красный до фикса. `automated_by` пуст
+— design-only, ждёт test-automator.
 
 Awaiting: dev
 
