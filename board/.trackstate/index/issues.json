@@ -4831,16 +4831,15 @@
     "epicPath": null,
     "summary": "settings_steps.py::assert_ratings_present/assert_no_ratings/assert_rating_rows_empty — пустой stdout (в т.ч. отказ транспорта) неотличим от 'нет sqlite3 на образе', степень тихо пропускает проверку",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p2",
-    "assignee": "test-maintainer",
+    "assignee": "qa-agents",
     "labels": [
       "bug",
-      "sev:minor",
-      "wip:test-maintainer"
+      "sev:minor"
     ],
-    "updated": "2026-08-03T16:05:00Z",
-    "resolution": null,
+    "updated": "2026-08-03T17:09:03Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
