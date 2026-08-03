@@ -4413,6 +4413,27 @@
     "epicPath": null,
     "summary": "data/seed_db.py::ensure_db_initialized ждёт появления ФАЙЛА БД, а не схемы — окно 'no such table: work_ratings' при сидинге сразу после pm clear",
     "issueType": "bug",
+    "status": "bug-verified",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:minor"
+    ],
+    "updated": "2026-08-03T14:08:37Z",
+    "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-045",
+    "path": "board/AT-BUG-045/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "settings_steps.py::assert_ratings_present/assert_no_ratings/assert_rating_rows_empty — пустой stdout (в т.ч. отказ транспорта) неотличим от 'нет sqlite3 на образе', степень тихо пропускает проверку",
+    "issueType": "bug",
     "status": "bug-open",
     "priority": "p2",
     "assignee": "qa-agents",
@@ -4420,7 +4441,7 @@
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-08-03T10:46:00Z",
+    "updated": "2026-08-03T14:10:00Z",
     "resolution": null,
     "children": [],
     "archived": false

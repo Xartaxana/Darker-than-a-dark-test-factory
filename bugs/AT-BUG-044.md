@@ -4,7 +4,7 @@ title: "data/seed_db.py::ensure_db_initialized ждёт появления ФА�
 type: test_debt
 debt_kind: flaky_test
 severity: minor
-status: Fixed
+status: Verified
 found_in: "critic-вход приёмки D1 AT-BUG-042 + два независимых воспроизведения в D1-прогонах fix-verifier (AT-BUG-042 setup-фейл, AT-BUG-039 раунд 2 TC-127 ERROR), 2026-08-03; framework env, сборка 1.10 (versionCode 11)"
 fixed_in: "d8062c5"
 last_seen_in: ""
@@ -12,8 +12,8 @@ test_cases: []
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-08-03T13:55:00Z"
-updated: "2026-08-03T14:20:00Z"
+status_since: "2026-08-03T14:08:37Z"
+updated: "2026-08-03T14:08:37Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -69,6 +69,7 @@ gitlab_issue: ""
 |---|---|---|---|---|
 | 2026-08-03 | 1.10 (11) | device-free: 14 юнит-проб (framework/tests/test_seed_db_schema_race_unit.py x2, test_subprocess_timeout_unit.py x8, test_seed_null_wordcount_unit.py x2, test_seed_filter_profiles_unit.py x2); live: on-device tight-loop red/green race repro (6/6 red hits "no such table: work_ratings" на файловом гейте, 0/6 на гейте по схеме); replay TC-141 (`loved_work_seeded`) x3 | 14 passed device-free (PYTEST_EXIT=0); live red 6/6, live green 0/6 fails; TC-141 3/3 PASSED | Fixed (test-maintainer, до fix-verifier/critic-входа по правилу D-0037/critic-класс) — **rejected** critic-входом (attempt 1): `_schema_ready()` fail-OPEN на отказе транспорта |
 | 2026-08-03 | 1.10 (11) | Rework attempt 2: 4 живых зонда `_schema_ready()` через реальный код-путь (`adb.run_as`/`_run`) на emulator-5554/фиктивный emulator-9999 (см. Обсуждение); device-free: 17 юнит-проб (framework/tests/test_seed_db_schema_race_unit.py x5 [замена тавтологичного теста на параметризованный на реальном предикате], test_subprocess_timeout_unit.py x8, test_seed_null_wordcount_unit.py x2, test_seed_filter_profiles_unit.py x2); replay TC-141 (`loved_work_seeded`) x1 | 4/4 живых ветки совпали с диагнозом критика (RDY->True, no-such-table->False, device-unavailable->False [БЛОКЕР закрыт], db-file-missing->False); 17 passed device-free (PYTEST_EXIT=0); TC-141 1/1 PASSED; arch_check/validate_frontmatter 0/0 | Fixed (test-maintainer attempt 2, до повторного critic-входа) |
+| 2026-08-03 | 1.10 (11), commit `d8062c5` (fixed_in) — сборка приложения не тронута (test_debt в обвязке), якорь версии — `state/app-under-test.yaml` (versionCode 11, source_commit `63f6aac3`), + фикс-коммит фреймворка `d8062c5` | D1 fix-verifier, независимый прогон (не пересказ critic-входа): device-free `tests/test_seed_db_schema_race_unit.py tests/test_subprocess_timeout_unit.py tests/test_seed_null_wordcount_unit.py tests/test_seed_filter_profiles_unit.py -v` (все 17 test_cases-эквивалентов из этого набора — `test_cases: []` штатно для test_debt в обвязке, carve-out); живой consumer `loved_work_seeded` — `tests/test_rating.py::test_edit_tag_on_already_saved_work_via_panel_does_not_click_kudos` x2 подряд (D1-порог, а не x1 critic/test-maintainer); `arch_check.py`/`validate_frontmatter.py`; `git status --porcelain -- app-under-test/` | device-free: `17 passed in 1.11s`, `PYTEST_EXIT=0`; live consumer run 1: `1 passed, 7 deselected in 40.43s`, `PYTEST_EXIT=0`; live consumer run 2: `1 passed, 7 deselected in 42.30s`, `PYTEST_EXIT=0`; `arch_check: ошибок 0, предупреждений 0`; `validate_frontmatter: ошибок 0, предупреждений 0`; `git status --porcelain -- app-under-test/` — пустой вывод | **Verified** (fix-verifier, независимо от critic-входа) |
 
 ## Обсуждение
 
@@ -200,6 +201,31 @@ tests/test_seed_filter_profiles_unit.py -v` -> `17 passed`,
 сути DoD-наборе attempt 1, полный повторный 3/3 не обязателен).
 `arch_check.py`/`validate_frontmatter.py` — 0/0. `git status --porcelain
 -- app-under-test/` — пусто (сверено до и после правки).
+
+**2026-08-03T14:08:37Z — fix-verifier, D1 verify (независимый прогон, не
+пересказ critic-входа):** device-free `Invoke-Pytest
+tests/test_seed_db_schema_race_unit.py tests/test_subprocess_timeout_unit.py
+tests/test_seed_null_wordcount_unit.py tests/test_seed_filter_profiles_unit.py
+-v` -> `17 passed in 1.11s`, `PYTEST_EXIT=0`. Живой потребитель
+`loved_work_seeded` (`tests/test_rating.py::test_edit_tag_on_already_saved_work_via_panel_does_not_click_kudos`)
+прогнан 2/2 подряд отдельными вызовами `Invoke-Pytest` (D1-порог устойчивости
+— не единичный прогон critic/test-maintainer): run 1 `1 passed, 7 deselected
+in 40.43s`, run 2 `1 passed, 7 deselected in 42.30s`, оба `PYTEST_EXIT=0`.
+`python scripts/arch_check.py` -> `arch_check: ошибок 0, предупреждений 0`.
+`python scripts/validate_frontmatter.py` -> `validate_frontmatter: ошибок 0,
+предупреждений 0`. `git status --porcelain -- app-under-test/` — пустой
+вывод (до и после — не трогалось в этом ходе, дифф только в
+`framework/data/seed_db.py` и тестах, уже закоммичен в `d8062c5`).
+`test_cases: []` — штатно (carve-out test_debt-в-обвязке, ПС D-0043/CLAUDE.md
+«fix-verifier», прецеденты AT-BUG-007 и др.): заменой связанных TC служит
+device-free suite выше + живой consumer-replay. `Get-Device` -> `DEVICE:
+emulator-5554` перед прогоном (позитивная сверка). Версия сборки-якорь —
+`state/app-under-test.yaml` (versionCode 11, `source_commit 63f6aac3`,
+неизменна — test_debt в фреймворке, не в приложении); фикс-коммит
+`d8062c5` подтверждён `git show --stat` (правит `framework/data/seed_db.py`).
+`Fixed -> Verified`, `known_issue` уже был `"false"` (долг чинился как
+minor test_debt, не заявлялся known issue) — оставлено без изменений.
+Дефектов-собратьев в ходе прогона не замечено.
 
 Non-blocking пункты critic-вердикта (перенос `_schema_ready()` внутрь
 `try` цикла ретрая `ensure_db_initialized`; устаревшие ссылки на строки в

@@ -961,6 +961,11 @@
   },
   "AT-BUG-044": {
     "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "AT-BUG-045": {
+    "itype": "bug",
     "artifact_status": "Open",
     "board_status": "Open"
   },
