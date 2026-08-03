@@ -23,7 +23,15 @@ such table: work_ratings`.
 `conftest.py` (тот же приём, что `test_seed_filter_profiles_unit.py`/
 `test_subprocess_timeout_unit.py`) — эта проба чисто локальная, устройство не
 трогаем.
-"""
+
+Attempt 2 (critic-вход rework, тот же баг): первая версия `_schema_ready()`
+имела собственный дефект — fail-OPEN на отказе транспорта (пустой вывод
+`adb.run_as` при offline-устройстве читался как «схема готова»). Прежний
+тавтологичный тест ниже (ассертил только на `_FakeDeviceTimeline`, не мог
+поймать регрессию в реальном коде) заменён на
+`test_schema_ready_fail_closed_on_recorded_outputs` — параметризованный
+device-free юнит на САМ `seed_db._schema_ready()` с ДОСЛОВНЫМИ живыми
+выводами `adb.run_as` (4 ветки, см. `bugs/AT-BUG-044.md`)."""
 from __future__ import annotations
 
 import allure
@@ -62,20 +70,53 @@ class _FakeDeviceTimeline:
 
 
 @pytest.mark.p1
-@allure.id("AT-BUG-044-red-file-gate-fires-before-schema")
-@allure.title("Красная проба: файловый гейт (_db_exists) сигнализирует «готово» ДО появления схемы (AT-BUG-044, окно диагноза)")
-def test_file_only_gate_reports_ready_before_schema_exists():
-    # Given таймлайн: файл появляется на тике 1, схема — только на тике 4
-    # (то же взаимное упорядочение, что живая проба на устройстве: файл
-    # раньше схемы)
-    timeline = _FakeDeviceTimeline(file_appears_at=1, schema_ready_at=4)
-    timeline.step()  # тик 1: файл уже есть, схемы ещё нет
+@allure.id("AT-BUG-044-schema-ready-fail-closed-on-transport-loss")
+@allure.title("_schema_ready() — 4 ветки реального вывода run_as, fail-closed на отказе транспорта (attempt 2, critic-вход)")
+@pytest.mark.parametrize(
+    "recorded_output, expected",
+    [
+        # 1) схема есть, устройство живо — единственная ветка "готово".
+        pytest.param("RDY\n", True, id="schema-ready"),
+        # 2) таблицы нет — текст ошибки sqlite3, БЕЗ маркера RDY.
+        pytest.param(
+            "Error: in prepare, no such table: work_ratings\n", False,
+            id="no-such-table",
+        ),
+        # 3) САМ БЛОКЕР attempt 1: отказ транспорта (adb offline/устройство
+        # не найдено) — `adb.run_as`->`adb.shell`->`adb._run(...).stdout`
+        # отбрасывает returncode, remote-shell не запустился вовсе, stdout
+        # пуст. Старая проверка `out == ""` читала пустоту как "SELECT прошёл
+        # без ошибки" (fail-OPEN, ЛОЖЬ). Новая — маркер RDY отсутствует в
+        # пустой строке так же, как в любом другом "не готово" выводе
+        # (fail-closed).
+        pytest.param("", False, id="transport-lost-fail-closed"),
+        # 4) файла БД нет вовсе — тоже текст ошибки, без RDY.
+        pytest.param(
+            "Error: unable to open database file\n", False,
+            id="db-file-missing",
+        ),
+    ],
+)
+def test_schema_ready_fail_closed_on_recorded_outputs(monkeypatch, recorded_output, expected):
+    """Значения `recorded_output` — ДОСЛОВНЫЕ живые выводы `adb.run_as` (critic-
+    вход rework AT-BUG-044, живой зонд на `emulator-5554`/`emulator-9999`, см.
+    `bugs/AT-BUG-044.md`), не выдуманные строки — тест ловит регресс в РЕАЛЬНОМ
+    `_schema_ready()`, а не в фейковом таймлайне (в отличие от прежней версии
+    этого теста, ассертившей только на `_FakeDeviceTimeline`)."""
+    captured_cmd: list[str] = []
 
-    # Then файловый гейт (СТАРАЯ логика ensure_db_initialized ДО AT-BUG-044)
-    # уже считает БД готовой — именно это окно роняло _insert_rows
-    # «no such table: work_ratings» (см. живую пробу в bugs/AT-BUG-044.md)
-    assert timeline.db_exists() is True
-    assert timeline.schema_ready() is False
+    def _fake_run_as(cmd: str) -> str:
+        captured_cmd.append(cmd)
+        return recorded_output
+
+    monkeypatch.setattr(seed_db.adb, "run_as", _fake_run_as)
+
+    assert seed_db._schema_ready() is expected
+    # Находка критика (attempt 1): без `2>&1` ВНУТРИ remote-команды stderr
+    # sqlite3 CLI теряется в отдельном локальном потоке и `run_as()` видел бы
+    # пустую строку что при успехе, что при ошибке — ничем не охраняемая
+    # регрессия. Ассерт держит именно эту находку.
+    assert "2>&1" in captured_cmd[0]
 
 
 @pytest.mark.p1

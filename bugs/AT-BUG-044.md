@@ -6,14 +6,14 @@ debt_kind: flaky_test
 severity: minor
 status: Fixed
 found_in: "critic-вход приёмки D1 AT-BUG-042 + два независимых воспроизведения в D1-прогонах fix-verifier (AT-BUG-042 setup-фейл, AT-BUG-039 раунд 2 TC-127 ERROR), 2026-08-03; framework env, сборка 1.10 (versionCode 11)"
-fixed_in: "96734d8"
+fixed_in: "PENDING_COMMIT_ATTEMPT2"
 last_seen_in: ""
 test_cases: []
 runs: []
 duplicates: []
 regression_of: ""
 status_since: "2026-08-03T13:55:00Z"
-updated: "2026-08-03T13:55:00Z"
+updated: "2026-08-03T14:20:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -67,7 +67,8 @@ gitlab_issue: ""
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
-| 2026-08-03 | 1.10 (11) | device-free: 14 юнит-проб (framework/tests/test_seed_db_schema_race_unit.py x2, test_subprocess_timeout_unit.py x8, test_seed_null_wordcount_unit.py x2, test_seed_filter_profiles_unit.py x2); live: on-device tight-loop red/green race repro (6/6 red hits "no such table: work_ratings" на файловом гейте, 0/6 на гейте по схеме); replay TC-141 (`loved_work_seeded`) x3 | 14 passed device-free (PYTEST_EXIT=0); live red 6/6, live green 0/6 fails; TC-141 3/3 PASSED | Fixed (test-maintainer, до fix-verifier/critic-входа по правилу D-0037/critic-класс) |
+| 2026-08-03 | 1.10 (11) | device-free: 14 юнит-проб (framework/tests/test_seed_db_schema_race_unit.py x2, test_subprocess_timeout_unit.py x8, test_seed_null_wordcount_unit.py x2, test_seed_filter_profiles_unit.py x2); live: on-device tight-loop red/green race repro (6/6 red hits "no such table: work_ratings" на файловом гейте, 0/6 на гейте по схеме); replay TC-141 (`loved_work_seeded`) x3 | 14 passed device-free (PYTEST_EXIT=0); live red 6/6, live green 0/6 fails; TC-141 3/3 PASSED | Fixed (test-maintainer, до fix-verifier/critic-входа по правилу D-0037/critic-класс) — **rejected** critic-входом (attempt 1): `_schema_ready()` fail-OPEN на отказе транспорта |
+| 2026-08-03 | 1.10 (11) | Rework attempt 2: 4 живых зонда `_schema_ready()` через реальный код-путь (`adb.run_as`/`_run`) на emulator-5554/фиктивный emulator-9999 (см. Обсуждение); device-free: 17 юнит-проб (framework/tests/test_seed_db_schema_race_unit.py x5 [замена тавтологичного теста на параметризованный на реальном предикате], test_subprocess_timeout_unit.py x8, test_seed_null_wordcount_unit.py x2, test_seed_filter_profiles_unit.py x2); replay TC-141 (`loved_work_seeded`) x1 | 4/4 живых ветки совпали с диагнозом критика (RDY->True, no-such-table->False, device-unavailable->False [БЛОКЕР закрыт], db-file-missing->False); 17 passed device-free (PYTEST_EXIT=0); TC-141 1/1 PASSED; arch_check/validate_frontmatter 0/0 | Fixed (test-maintainer attempt 2, до повторного critic-входа) |
 
 ## Обсуждение
 
@@ -119,18 +120,103 @@ round-trip, но не короче on-device syscall-цикла) — это и �
 `validate_frontmatter.py` — 0/0 ошибок. `git status --porcelain --
 app-under-test/` — пусто (проверено до и после фикса).
 
-`fixed_in: 96734d8` (коммит `fix(seed_db): AT-BUG-044 ...`). Правка
-ограничена `framework/data/seed_db.py` + двумя тестовыми файлами — сама
-`_db_exists()` оставлена как отдельный примитив (диагностика/будущие
-вызовы), просто больше не используется как гейт готовности.
+`fixed_in: 96734d8` (коммит `fix(seed_db): AT-BUG-044 ...`) — attempt 1,
+ОТКЛОНЁН critic-входом. Правка ограничена `framework/data/seed_db.py` +
+двумя тестовыми файлами — сама `_db_exists()` оставлена как отдельный
+примитив (диагностика/будущие вызовы), просто больше не используется как
+гейт готовности.
 
-**Требуется critic-вход перед приёмкой (CLAUDE.md правило 3):** этот дифф —
-Sonnet-класс результат (test-maintainer); builder-класс правка ядровой
-логики сидинга (framework/data/seed_db.py) — приёмка легальна ТОЛЬКО через
-вход критика (льгота "critic: skipped" здесь недоступна per матрице
-"Роль ≠ ярус"). Статус выставлен `Fixed` для передачи в очередь
-fix-verifier/critic; при отклонении — вернуть в `Open` с `rejected`-событием
-маршрутизации.
+**2026-08-03T14:20:00Z — test-maintainer, rework attempt 2 (по
+critic-вердикту, единственный блокер):** `_schema_ready()`
+(`framework/data/seed_db.py`) переписана на проверенную критиком
+fail-closed форму — remote-команда после успешного SELECT явно печатает
+маркер:
+
+```python
+out = adb.run_as(
+    f"sh -c 'sqlite3 {_DB_REL} \"SELECT 1 FROM work_ratings LIMIT 0\" 2>&1 && echo RDY'"
+).strip()
+return out.endswith("RDY")
+```
+
+Позитивный контракт вместо прежнего негативного (`out == ""`): непустой
+суффикс `RDY` появляется в stdout ТОЛЬКО если весь remote pipeline реально
+исполнился (SELECT прошёл без ошибки, шелл жив, транспорт не отказал) —
+отказ транспорта (устройство offline/adb упал) теперь даёт пустую строку
+БЕЗ маркера, что читается как «не готово» (fail-closed), а не как «готово»
+(старый fail-OPEN баг attempt 1). Докстринг `_schema_ready()` дополнен
+инкрементом 2 с этим разбором (исходная прозаическая формулировка «пустой
+вывод = готово» помечена ложной).
+
+Живой зонд 4 веток РЕАЛЬНОГО кода (не ручная реконструкция через
+несколько слоёв локального шелла — та подошла бы неверно из-за
+многослойного re-tokenizing Bash→PowerShell→adb; зонд шёл питон-скриптом,
+вызывающим `seed_db._schema_ready()`/`adb.run_as()` напрямую тем же путём,
+что и продакшн-код, канонической venv `framework/.venv`), emulator-5554 +
+фиктивный `emulator-9999` для ветки отказа транспорта:
+- схема готова (`emulator-5554`, реальный `_DB_REL`): `_schema_ready()` ->
+  `True` (сырой вывод оканчивается `RDY`).
+- таблицы нет (запрос к заведомо отсутствующей таблице
+  `no_such_table_xyz` через тот же `sh -c '...2>&1 && echo RDY'`):
+  `'Error: in prepare, no such table: no_such_table_xyz\n'`, `endswith
+  RDY` -> `False`.
+- файла БД нет (`databases/no_such_db_xyz.db`, несуществующий путь):
+  `'Error: in prepare, no such table: work_ratings\n'` (sqlite3 на этом
+  образе тихо создаёт новый пустой файл БД по несуществующему пути и тут
+  же падает на отсутствующей таблице, а не текстом «unable to open
+  database file», как в зонде критика на другом варианте пути — эффект тот
+  же: непустой вывод без `RDY`), `endswith RDY` -> `False`. Артефакт-файл
+  `databases/no_such_db_xyz.db`, созданный этим зондом, удалён с
+  устройства сразу после проверки (`run-as ... rm -f`).
+- **устройство недоступно (`-s emulator-9999`, САМ БЛОКЕР attempt 1)**:
+  `adb.exe: device 'emulator-9999' not found` в stderr, `returncode=1`,
+  `stdout=''` — то самое пустое `stdout`, что `_schema_ready()` реально
+  получил бы через `adb.run_as`/`adb.shell`/`adb._run(...).stdout` (эти
+  функции отбрасывают returncode и stderr). `''.strip().endswith("RDY")`
+  -> `False` — блокер закрыт: раньше `out == ""` вернуло бы `True`.
+
+Все 4 ветки совпадают с диагнозом критика (RDY/no-such-table/db-missing/
+device-unavailable), включая различие фактического текста ошибки на ветке
+«файла БД нет» (объяснено выше) — оно не меняет исход предиката.
+
+Device-free юнит: тавтологичный `test_file_only_gate_reports_ready_before_schema_exists`
+(`test_seed_db_schema_race_unit.py`, ассертивший только на
+`_FakeDeviceTimeline`, не способный поймать регресс в реальном коде)
+заменён на параметризованный `test_schema_ready_fail_closed_on_recorded_outputs`
+— 4 монки-патч-кейса с ДОСЛОВНЫМИ записанными live-выводами (см. зонд
+выше) на САМ `seed_db._schema_ready()`, плюс ассерт, что отправленная в
+`adb.run_as` команда содержит `2>&1` (иначе находка про stdout/stderr
+ничем не охраняется). Второй тест файла
+(`test_ensure_db_initialized_waits_past_the_file_ready_tick`, критик
+подтвердил содержательным) не менялся. Полный device-free набор —
+17/17 зелёных (`Invoke-Pytest tests/test_seed_db_schema_race_unit.py
+tests/test_subprocess_timeout_unit.py tests/test_seed_null_wordcount_unit.py
+tests/test_seed_filter_profiles_unit.py -v` -> `17 passed`,
+`PYTEST_EXIT=0`).
+
+Потребитель `loved_work_seeded` — replay `TC-141`
+(`tests/test_rating.py::test_edit_tag_on_already_saved_work_via_panel_does_not_click_kudos`)
+— 1/1 PASSED (DoD attempt 2 требует минимум 1 зелёный при неизменном по
+сути DoD-наборе attempt 1, полный повторный 3/3 не обязателен).
+`arch_check.py`/`validate_frontmatter.py` — 0/0. `git status --porcelain
+-- app-under-test/` — пусто (сверено до и после правки).
+
+Non-blocking пункты critic-вердикта (перенос `_schema_ready()` внутрь
+`try` цикла ретрая `ensure_db_initialized`; устаревшие ссылки на строки в
+`app_steps.py:541-543`) НЕ применены в этом ходе — не обязательны для
+приёмки, оставлены как есть по явному разрешению DoD.
+
+`fixed_in` обновится на реальный хэш этого коммита в этом же ходе (тот же
+приём, что `96734d8` — сам файл коммитится вместе с кодовым диффом,
+placeholder заменяется на фактический хэш немедленно после коммита).
+
+**Требуется повторный critic-вход перед приёмкой (CLAUDE.md правило 3):**
+этот дифф — Sonnet-класс результат (test-maintainer); builder-класс
+правка ядровой логики сидинга (framework/data/seed_db.py) — приёмка
+легальна ТОЛЬКО через вход критика (льгота "critic: skipped" здесь
+недоступна per матрице "Роль ≠ ярус"). Статус оставлен `Fixed` для
+передачи в очередь fix-verifier/critic; при отклонении — вернуть в `Open`
+с `rejected`-событием маршрутизации.
 
 ## Чек-лист качества (заводящий проходит перед публикацией)
 - [x] Проверены дубликаты среди открытых test_debt: не пересекается с
