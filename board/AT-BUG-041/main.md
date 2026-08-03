@@ -5,9 +5,9 @@ issueType: "bug"
 status: "bug-fixed"
 priority: "p2"
 summary: "build_watch.py::update_aut (+ спящие sla_sweep.rewrite_registry/loop_lock._atomic_write_text): EOL-перегон партиальных писателей scripts/, класс шире frontmatter-границы"
-assignee: "qa-agents"
+assignee: "fix-verifier"
 reporter: "qa-agents"
-labels: ["bug", "sev:minor"]
+labels: ["bug", "sev:minor", "wip:fix-verifier"]
 components: []
 fixVersions: []
 watchers: []

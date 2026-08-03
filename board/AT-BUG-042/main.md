@@ -5,9 +5,9 @@ issueType: "bug"
 status: "bug-fixed"
 priority: "p1"
 summary: "WorkRatingPanel dispose-save воскрешал запись после Clear all — блокер автоматизации TC-020 снят обходом порядка reload (дефект приложения — BUG-022)"
-assignee: "qa-agents"
+assignee: "fix-verifier"
 reporter: "qa-agents"
-labels: ["bug", "test_case:TC-020", "sev:major"]
+labels: ["bug", "test_case:TC-020", "sev:major", "wip:fix-verifier"]
 components: []
 fixVersions: []
 watchers: []

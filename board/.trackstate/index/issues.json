@@ -4215,10 +4215,11 @@
     "issueType": "bug",
     "status": "bug-fixed",
     "priority": "p2",
-    "assignee": "qa-agents",
+    "assignee": "fix-verifier",
     "labels": [
       "bug",
-      "sev:minor"
+      "sev:minor",
+      "wip:fix-verifier"
     ],
     "updated": "2026-08-02T14:39:03Z",
     "resolution": null,
@@ -4236,11 +4237,12 @@
     "issueType": "bug",
     "status": "bug-fixed",
     "priority": "p1",
-    "assignee": "qa-agents",
+    "assignee": "fix-verifier",
     "labels": [
       "bug",
       "test_case:TC-020",
-      "sev:major"
+      "sev:major",
+      "wip:fix-verifier"
     ],
     "updated": "2026-08-03T02:10:00Z",
     "resolution": null,
