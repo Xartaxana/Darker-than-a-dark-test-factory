@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-03T14:17:24Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-08-03T14:32:24Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 прогоны без tc_results (поле ещё не внедрено): RUN-20260702-0300
@@ -23,7 +23,7 @@ generated_at: 2026-08-03T14:17:24Z · генератор: `scripts/coverage_map.
 | performance | 4 | 4 | designed-full |
 | rating | 21 | 20 | partial |
 | security | 6 | 6 | designed-full |
-| settings | 14 | 10 | partial |
+| settings | 14 | 11 | partial |
 | smoke | 5 | 5 | designed-full |
 | tabs | 11 | 11 | designed-full |
 | visibility | 6 | 6 | designed-full |
@@ -139,7 +139,7 @@ generated_at: 2026-08-03T14:17:24Z · генератор: `scripts/coverage_map.
 | bridge-tap-zone-guard | ao3-bridge | canary:TC-118[Automated], canary:TC-119[Automated], canary:TC-120[Automated], canary:TC-121[Automated], canary:TC-122[Automated] |
 | data-workrating-model | data | нет кейсов |
 | data-filterprofile-model | data | нет кейсов |
-| data-clear-all-ratings | data | smoke:TC-004[Automated], settings:TC-018[Automated], settings:TC-019[Automated], settings:TC-020[Approved] |
+| data-clear-all-ratings | data | smoke:TC-004[Automated], settings:TC-018[Automated], settings:TC-019[Automated], settings:TC-020[Automated] |
 | background-download-repository | background | downloads:TC-032[Automated], downloads:TC-033[Automated] |
 | background-auto-download-trigger | background | downloads:TC-032[Automated], downloads:TC-112[Automated], downloads:TC-114[Automated], downloads:TC-115[Automated], downloads:TC-116[Automated], downloads:TC-117[Automated] |
 | background-auto-kudos-trigger | background | rating:TC-138[Automated], rating:TC-139[Approved], rating:TC-140[Automated], rating:TC-141[Automated], rating:TC-142[Automated], rating:TC-143[Automated], rating:TC-144[Automated] |
@@ -368,7 +368,7 @@ generated_at: 2026-08-03T14:17:24Z · генератор: `scripts/coverage_map.
 
 ### settings
 
-- coverage_status: **partial** (10/14 Automated)
+- coverage_status: **partial** (11/14 Automated)
 - риски: R-01, R-11
 - кейсы без risk: нет
 - P0/P1 не в Automated: TC-145 [P1, Review], TC-146 [P1, Review], TC-147 [P1, Review]
@@ -380,7 +380,7 @@ generated_at: 2026-08-03T14:17:24Z · генератор: `scripts/coverage_map.
 | P0 |  |  |  |  |  |
 | P1 |  | 3 |  | 7 |  |
 | P2 |  |  |  | 3 |  |
-| P3 |  |  | 1 |  |  |
+| P3 |  |  |  | 1 |  |
 
 ### smoke
 

@@ -2671,16 +2671,17 @@
     "epicPath": null,
     "summary": "Бейджи открытых вкладок сохраняют состояние до перезагрузки страницы; после reload — сброшены",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p3",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:settings",
-      "risk:R-01"
+      "risk:R-01",
+      "automation:active"
     ],
-    "updated": "2026-08-03T09:10:09Z",
-    "resolution": null,
+    "updated": "2026-08-03T14:29:45Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
