@@ -17,6 +17,7 @@ from __future__ import annotations
 import os
 import socket
 import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -150,7 +151,7 @@ def _assert_own_listener() -> None:
     критика, работающего параллельно), и тест прошёл ЗЕЛЁНЫМ по ЧУЖОЙ
     записи вместо падения). `_wait_listening` доказывает только то, что
     ПОРТ занят — не то, что это НАШ `_proc`. Зовётся сразу после
-    `_wait_listening` в `start_replay`/`start_record` (классовая
+    `_spawn_and_wait_listening` в `start_replay`/`start_record` (классовая
     полнота — оба места поднимают mitmdump на тот же порт тем же
     паттерном)."""
     returncode = _proc.poll() if _proc is not None else None
@@ -163,24 +164,208 @@ def _assert_own_listener() -> None:
         )
 
 
-def _wait_listening(port: int, timeout: int) -> None:
-    """Ждёт, пока mitmdump реально начнёт слушать `port` — Popen возвращает
-    управление сразу, а mitmdump поднимается не мгновенно (импорт аддонов,
-    парсинг --server-replay). Без ожидания первая навигация теста может уйти
-    мимо ещё не поднятого прокси."""
+# --- AT-BUG-043: гонка teardown(stop())/startup(start_replay|start_record)
+# порта 8080 на Windows ---
+#
+# Диагностика (bugs/AT-BUG-043.md, state/escalations.md ESC-016): двукратный
+# `[Errno 10048] ... address already in use` в setup replay-фикстуры, на
+# РАЗНЫХ узлах разных прогонов, при том что порт в состоянии покоя свободен.
+# Красная проба (scratchpad, ~150 циклов: idle stop->start, 20 конкурентных
+# keep-alive соединений через реальный replay-трафик, CPU-сатурация 11
+# фоновых процессов на 12-ядерной машине, 31 живой переход между соседними
+# replay-тестами на реальном устройстве) НЕ смогла детерминированно
+# воспроизвести саму гонку в этой сессии — ни один вариант не дал WinError
+# 10048 повторно (см. bugs/AT-BUG-043.md, Обсуждение, полный протокол проб).
+# Причинная неоднозначность НЕ снята: вклад реальной нагрузки полного стека
+# (emulator+Appium+adb, конкурирующей за CPU/IO именно в момент двух
+# исторических инцидентов) в исходном отчёте не исключён этой сессией.
+#
+# Несмотря на отсутствие красного повтора, ниже — defence-in-depth ИМЕННО
+# по механизму (а), названному в исходной диагностике: `Popen.wait()` на
+# Windows может вернуть код завершения процесса РАНЬШЕ, чем ОС полностью
+# освободит порт для нового bind() (WaitForSingleObject сигнализирует
+# раньше завершения асинхронной очистки ресурса драйвером). Это не
+# ослабление таймаута (не голый sleep) — активная проверка bind() с
+# ретраем и явным диагнозом при исчерпании бюджета.
+_PORT_RELEASE_TIMEOUT = 5.0  # сек — бюджет ожидания освобождения порта в stop()
+_START_RETRY_BUDGET = 10.0  # сек — суммарный бюджет ретраев Popen на конфликт bind
+_START_RETRY_BACKOFF = 0.3  # сек — пауза между попытками Popen
+
+
+def _wait_port_released(port: int, timeout: float | None = None) -> None:
+    """После подтверждённой смерти `_proc` (`stop()`) активно проверяет, что
+    порт `port` РЕАЛЬНО доступен для НОВОГО bind() — не то же самое, что
+    «никто не отвечает на connect()» (это делает connect_ex-поллинг внутри
+    `_spawn_and_wait_listening`, для другого случая: там ждём появления
+    слушателя, здесь — исчезновения ресурса, который слушателя больше не
+    имеет, но ОС ещё не освободила). Пробует bind() пробным сокетом в цикле;
+    успех -> сразу закрывает пробный сокет и возвращается (счастливый путь:
+    единственная попытка, задержка для человека незаметна — так вело себя
+    ~150/150 циклов диагностики AT-BUG-043).
+
+    ИЗМЕНЕНО (AT-BUG-043 attempt 2, критик-вход, блокер 1): раньше исчерпание
+    `timeout` бросало `TimeoutError` наружу — `stop()` пробрасывал её
+    вызывающему, а `conftest.py` teardown (`mitm.stop()`; `mitm.
+    clear_device_proxy()` ПОДРЯД, без `try/finally`) на этом исключении НЕ
+    снимал прокси устройства: порча среды (`settings put global http_proxy
+    10.0.2.2:8080` остаётся выставленным) на весь остаток прогона —
+    воспроизведено device-free пробой критика («stop() бросил TimeoutError
+    через 5.0s... clear_device_proxy вызван: False»), гарантированно бьёт
+    в сценарии ESC-009 (чужой mitmdump держит порт). Enforcing-слой ЭТОГО
+    инварианта остаётся на СТОРОНЕ СТАРТА (`_spawn_and_wait_listening`
+    ретраит именно конфликт bind — для того он и есть); эта функция теперь
+    НИКОГДА не бросает — на исчерпании таймаута пишет видимый диагноз в
+    stderr и ВОЗВРАЩАЕТСЯ, чтобы `stop()` гарантированно мог продолжить
+    (а `conftest.py` — снять прокси через `finally`, см. блокер 1(б)).
+
+    Видимый сигнал ретрая (детектор рецидива, критик-вход attempt 2, правило
+    10в CLAUDE.md «Fail-fast среды»): и счастливый путь С ретраями (порт
+    освободился НЕ с первой попытки), и путь исчерпания таймаута печатают
+    строку в stderr с числом попыток/фактической длительностью — иначе
+    молчаливый успешный ретрай навсегда гасит сигнатуру WinError 10048 и
+    делает исходную гипотезу гонки непроверяемой.
+
+    `timeout=None` (по умолчанию) читает `_PORT_RELEASE_TIMEOUT` ВНУТРИ
+    тела функции, а не через дефолт-параметр — иначе значение защёлкивается
+    на момент импорта модуля, и юнит-проба на инвариант «`stop()` без
+    явного `timeout` не бросает» (attempt 2) не смогла бы ускорить прогон
+    monkeypatch'ем модульной константы."""
+    if timeout is None:
+        timeout = _PORT_RELEASE_TIMEOUT
     deadline = time.time() + timeout
+    start = time.time()
+    attempts = 0
+    last_exc: OSError | None = None
     while time.time() < deadline:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.settimeout(0.5)
-            if s.connect_ex(("127.0.0.1", port)) == 0:
-                return
-        time.sleep(0.3)
-    raise TimeoutError(f"mitmdump не поднял порт {port} за {timeout}s")
+        attempts += 1
+        probe = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            probe.bind(("0.0.0.0", port))
+            if attempts > 1:
+                print(
+                    f"AT-BUG-043: порт {port} освободился после {attempts} "
+                    f"попыток bind() за {time.time() - start:.2f}s (гонка "
+                    "teardown/startup сработала, ретрай справился)",
+                    file=sys.stderr,
+                )
+            return
+        except OSError as exc:
+            last_exc = exc
+            time.sleep(0.1)
+        finally:
+            probe.close()
+    print(
+        f"AT-BUG-043 WARNING: порт {port} не освободился за {timeout}s "
+        f"после остановки mitmdump ({attempts} попыток bind(), последняя "
+        f"ошибка: {last_exc}) — НЕ бросаю (блокер 1, критик-вход attempt "
+        "2), чтобы не сорвать teardown (clear_device_proxy); enforcing-слой "
+        "— ретрай на старте (_spawn_and_wait_listening).",
+        file=sys.stderr,
+    )
+
+
+def _spawn_and_wait_listening(args: list[str], ready_timeout: int) -> subprocess.Popen:
+    """Popen + ожидание слушателя с ретраем НА КОНФЛИКТ BIND (AT-BUG-043).
+
+    Раньше `start_replay`/`start_record` делали Popen один раз и ждали
+    `_wait_listening` весь `ready_timeout`, даже если СВОЙ процесс уже умер
+    (конфликт порта) — 15с впустую на попытку, обречённую с первой секунды,
+    и голый `TimeoutError` без диагноза причины. Здесь: если свой `Popen`
+    завершается САМ, ничего не заслушав в течение попытки — считаем это
+    конфликтом bind (та же гонка, что `_wait_port_released` лечит на
+    стороне `stop()`; этот путь — второй, симметричный слой защиты,
+    единственный работающий, когда предыдущий mitmdump умер в ДРУГОМ
+    pytest-процессе — исторический прецедент ESC-016: гонка ловилась на
+    ПЕРВОМ replay-тесте свежего прогона, `stop()` текущего процесса тут
+    вообще не звался) — ретраит Popen с коротким бэкоффом в пределах
+    `_START_RETRY_BUDGET`.
+
+    НЕ путать со случаем «порт слушается ЧУЖИМ процессом» (ESC-009): если
+    connect() успевает ДО того, как наш процесс поспевает умереть (или он
+    вовсе не умирает) — цикл возвращает `proc` как обычно, и решает, СВОЙ
+    это слушатель или чужой, `_assert_own_listener()` СРАЗУ ПОСЛЕ возврата
+    отсюда (вызывающий код, как раньше) — семантика замка ESC-009 не
+    тронута. Если процесс жив, но НЕ заслушал порт за полный
+    `ready_timeout` — это НЕ гонка порта (та убивает процесс почти
+    мгновенно) — ретрая нет, поведение идентично прежнему поведению до
+    AT-BUG-043 (голая `TimeoutError`).
+
+    ВЛАДЕНИЕ ХЭНДЛОМ (AT-BUG-043 attempt 2, критик-вход, блокер 2): модуль-
+    уровневый `_proc` присваивается СРАЗУ после КАЖДОГО `Popen()` — не
+    только при успешном возврате функции. Раньше `start_replay`/
+    `start_record` присваивали `_proc = _spawn_and_wait_listening(...)`
+    только на нормальный возврат — на ветке «процесс жив, но не поднял
+    порт за `ready_timeout`» (см. ниже, эта функция БРОСАЕТ, а не
+    возвращает) `_proc` оставался `None`, и живой mitmdump становился
+    сиротой: `stop()` не имел хэндла, чтобы его остановить — регрессия
+    против до-фиксового кода, где `_proc = Popen(...)` присваивался сразу
+    (живой прецедент такой ветки-сироты — `bugs/AT-BUG-025.md:206-213`).
+    Проба критика подтвердила: «процессов порождено: 1; mitm._proc после
+    отказа: None». Теперь ЛЮБОЙ исход этой функции оставляет `_proc` в
+    согласованном состоянии: живой процесс (ветка `TimeoutError` ниже) —
+    `_proc` указывает на него, `stop()` его остановит; мёртвый процесс
+    (ветка `RuntimeError` — ретраи исчерпаны) — `_proc` явно сброшен в
+    `None` (мёртвый хэндл никому не нужен, ничейного ЖИВОГО процесса при
+    этом не остаётся — дохлые процессы на промежуточных попытках ретрая
+    безобидны, они уже заменены следующим `Popen`)."""
+    global _proc
+    deadline = time.time() + _START_RETRY_BUDGET
+    attempt = 0
+    while True:
+        attempt += 1
+        attempt_start = time.time()
+        proc = subprocess.Popen(args)
+        _proc = proc  # владение с момента Popen -- AT-BUG-043 attempt 2, блокер 2
+        poll_deadline = attempt_start + ready_timeout
+        listening = False
+        while time.time() < poll_deadline:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(0.5)
+                if s.connect_ex(("127.0.0.1", int(_PORT))) == 0:
+                    listening = True
+                    break
+            if proc.poll() is not None:
+                break  # свой процесс уже умер -- слушателя дальше не будет
+            time.sleep(0.3)
+        if listening:
+            if attempt > 1:
+                print(
+                    f"AT-BUG-043: mitmdump поднял порт {_PORT} с попытки "
+                    f"{attempt} (гонка teardown/startup сработала на "
+                    "старте, ретрай Popen справился)",
+                    file=sys.stderr,
+                )
+            return proc
+        if proc.poll() is None:
+            # процесс жив, но не поднял порт за полный ready_timeout -- НЕ
+            # гонка bind (та роняет процесс почти мгновенно) -- прежнее
+            # поведение, без ретрая. _proc уже указывает на этот живой
+            # процесс (владение выше) -- stop() сможет его остановить.
+            raise TimeoutError(f"mitmdump не поднял порт {_PORT} за {ready_timeout}s")
+        died_after = time.time() - attempt_start
+        if attempt > 1:
+            print(
+                f"AT-BUG-043: mitmdump (попытка {attempt}) умер кодом "
+                f"{proc.returncode} через {died_after:.1f}s -- похоже на "
+                "конфликт bind, ретраю", file=sys.stderr,
+            )
+        if time.time() >= deadline:
+            _proc = None  # мёртвый процесс -- не оставляем ничейный ЖИВОЙ хэндл
+            raise RuntimeError(
+                f"mitmdump (попытка {attempt}) завершился кодом {proc.returncode} "
+                f"через {died_after:.1f}s, не начав слушать порт {_PORT} -- "
+                f"похоже на конфликт bind (либо иная мгновенная ошибка "
+                f"запуска -- битый .mitm/неверный флаг; проверьте stderr "
+                f"процесса вручную), ретраи исчерпаны за "
+                f"{_START_RETRY_BUDGET}s (AT-BUG-043)"
+            )
+        time.sleep(_START_RETRY_BACKOFF)
 
 
 def start_replay(flows_file: Path) -> None:
     """Поднимает mitmdump, отдавая записанные флоу приложению. Блокируется до тех
-    пор, пока порт не начнёт слушаться (см. `_wait_listening`).
+    пор, пока порт не начнёт слушаться (см. `_spawn_and_wait_listening` —
+    AT-BUG-043).
 
     Флаги подобраны на закрытии спайка B:
       server_replay_reuse=true — один и тот же ответ на повторные запросы (страница
@@ -190,21 +375,20 @@ def start_replay(flows_file: Path) -> None:
       connection_strategy=lazy — не открывать соединение к серверу, пока не понадобится.
     """
     global _proc
-    _proc = subprocess.Popen([
+    _proc = _spawn_and_wait_listening([
         _mitmdump(), "--listen-host", "0.0.0.0", "--listen-port", _PORT,
         "--server-replay", str(flows_file),
         "--set", "server_replay_reuse=true",
         "--set", "server_replay_extra=forward",
         "--set", "connection_strategy=lazy",
         "-q",
-    ])
-    _wait_listening(int(_PORT), _READY_TIMEOUT)
+    ], _READY_TIMEOUT)
     _assert_own_listener()
 
 
 def wait_device_proxy_reachable(timeout: float | None = None) -> None:
-    """AT-BUG-017: `_wait_listening` (см. выше) проверяет ГОТОВНОСТЬ mitmdump
-    только на ХОСТ-порту — недостаточно. `replay`-фикстура зовёт
+    """AT-BUG-017: `_spawn_and_wait_listening` (см. выше) проверяет ГОТОВНОСТЬ
+    mitmdump только на ХОСТ-порту — недостаточно. `replay`-фикстура зовёт
     `set_device_proxy()`, затем `start_replay()` (блокируется до хост-порта),
     но первая реальная навигация теста иногда всё равно ловит
     `net::ERR_PROXY_CONNECTION_FAILED` в `driver.get()` — похоже на race
@@ -260,20 +444,39 @@ def start_record(flows_file: Path) -> None:
     `_wait_listening` вовсе (в отличие от `start_replay`) — вызывающий код
     не имел гарантии, что порт реально поднят, ДО первой навигации записи;
     и `_assert_own_listener()` — тот же замок против чужого слушателя, что
-    и в `start_replay` (одна поверхность отказа, два места запуска)."""
+    и в `start_replay` (одна поверхность отказа, два места запуска).
+    Использует `_spawn_and_wait_listening` (AT-BUG-043) — тот же ретрай на
+    конфликт bind, что `start_replay`; классовая полнота, не только
+    `start_replay`."""
     global _proc
-    _proc = subprocess.Popen([
+    _proc = _spawn_and_wait_listening([
         _mitmdump(), "--listen-host", "0.0.0.0", "--listen-port", _PORT,
         "-w", str(flows_file), "-q",
-    ])
-    _wait_listening(int(_PORT), _READY_TIMEOUT)
+    ], _READY_TIMEOUT)
     _assert_own_listener()
 
 
 def stop() -> None:
     """Останавливает mitmdump и ждёт реального завершения процесса (не только
     terminate()) — иначе следующий start_replay/start_record того же прогона
-    может застать порт ещё занятым уходящим процессом (WinError 10048)."""
+    может застать порт ещё занятым уходящим процессом (WinError 10048).
+
+    AT-BUG-043: после подтверждённого завершения процесса дополнительно
+    ждёт (`_wait_port_released`), пока порт РЕАЛЬНО не станет доступен для
+    нового bind() — `Popen.wait()` на Windows может сигнализировать код
+    завершения процесса раньше, чем ОС закончит асинхронное освобождение
+    сокета/порта; следующий `start_replay()`/`start_record()` того же
+    pytest-процесса иначе мог поймать WinError 10048 в этом узком окне.
+
+    ИНВАРИАНТ (attempt 2, критик-вход, блокер 1): `stop()` НИКОГДА не
+    бросает исключение из-за неосвобождённого порта — `_wait_port_released`
+    больше не бросает `TimeoutError` (см. её докстринг), только пишет
+    предупреждение в stderr и возвращается. Это гарантирует, что вызывающий
+    teardown (`conftest.py::replay`) достижим до `clear_device_proxy()`
+    независимо от исхода ожидания порта; `try/finally` вокруг `stop()`/
+    `clear_device_proxy()` в `conftest.py` — дополнительный (не
+    единственный) слой защиты на случай ДРУГИХ будущих исключений отсюда
+    (например, из `terminate()`/`wait()` выше)."""
     global _proc
     if _proc is not None:
         _proc.terminate()
@@ -283,6 +486,7 @@ def stop() -> None:
             _proc.kill()
             _proc.wait(timeout=5)
         _proc = None
+        _wait_port_released(int(_PORT))
 
 
 def set_device_proxy() -> None:

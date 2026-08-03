@@ -713,8 +713,25 @@ def replay(request):
         # clear_device_proxy идемпотентен (check=False, ставит ":0" безусловно) —
         # безопасно звать даже если set_device_proxy выше не выполнился/упал:
         # teardown должен покрывать ЛЮБую точку отказа setup'а, не только yield.
-        mitm.stop()
-        mitm.clear_device_proxy()
+        #
+        # AT-BUG-043 attempt 2 (критик-вход, блокер 1): mitm.stop()/
+        # clear_device_proxy() РАЗДЕЛЬНЫМ try/finally — твин уже
+        # существующего паттерна exploratory-charters/attachments/CH-007/
+        # test_ch007_probe.py:132-136 (stop_replay). До этой правки оба
+        # вызова шли подряд БЕЗ защиты: если stop() бросал исключение (было
+        # штатно на неосвобождённом порте до фикса _wait_port_released,
+        # либо любое будущее исключение из terminate()/wait()),
+        # clear_device_proxy() не выполнялся вовсе — прокси устройства
+        # (`settings put global http_proxy 10.0.2.2:8080`) оставался
+        # выставленным на весь остаток прогона. Проба критика: «stop()
+        # бросил TimeoutError через 5.0s... clear_device_proxy вызван:
+        # False». stop() теперь сам не бросает по этой причине (см. его
+        # докстринг) — этот try/finally остаётся вторым, независимым слоем
+        # защиты от ЛЮБОГО будущего исключения из stop().
+        try:
+            mitm.stop()
+        finally:
+            mitm.clear_device_proxy()
 
 
 # --- download_oracle: глобальный инвариант-оракул скачиваний (BUG-014) ---
