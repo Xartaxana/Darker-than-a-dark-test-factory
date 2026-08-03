@@ -1,109 +1,28 @@
 ---
-id: RUN-20260803-2012
-suite: regression
-mode: replay
-app_version: "1.10 (versionCode 11), build 6455af0c"
-status: Triaged
+key: "RUN-20260803-2012"
+project: "AO3"
+issueType: "run"
+status: "run-triaged"
+priority: "p2"
+summary: "RUN-20260803-2012"
+assignee: "qa-agents"
+reporter: "qa-agents"
+labels: ["run"]
+components: []
+fixVersions: []
+watchers: []
+parent: null
+epic: null
+created: "2026-08-03T20:40:00Z"
 updated: "2026-08-03T20:40:00Z"
-status_since: "2026-08-03T20:40:00Z"
-totals: { passed: 160, failed: 5, skipped: 0, quarantined: 0, duration_min: 65 }
-allure: "framework/allure-results/"
-selection: { mode: full, reason: "operator-ordered baseline замер (D1 предусловие репетиции тёмного дня, решение владельца №2 опроса 25) — impact-селекция намеренно не применялась" }
-recoveries: "0/2"
-tc_results:
-  TC-002: passed
-  TC-003: passed
-  TC-004: passed
-  TC-005: passed
-  TC-009: passed
-  TC-013: passed
-  TC-014: passed
-  TC-015: passed
-  TC-017: passed
-  TC-021: passed
-  TC-022: passed
-  TC-023: passed
-  TC-025: passed
-  TC-026: passed
-  TC-027: passed
-  TC-028: passed
-  TC-029: passed
-  TC-030: passed
-  TC-032: passed
-  TC-033: passed
-  TC-034: passed
-  TC-035: passed
-  TC-036: passed
-  TC-040: passed
-  TC-041: passed
-  TC-042: passed
-  TC-043: failed
-  TC-044: passed
-  TC-045: passed
-  TC-060: passed
-  TC-061: passed
-  TC-062: passed
-  TC-063: passed
-  TC-064: passed
-  TC-065: passed
-  TC-067: passed
-  TC-069: passed
-  TC-071: passed
-  TC-073: passed
-  TC-075: passed
-  TC-077: passed
-  TC-079: passed
-  TC-081: passed
-  TC-083: passed
-  TC-084: passed
-  TC-085: passed
-  TC-086: passed
-  TC-087: passed
-  TC-088: passed
-  TC-090: passed
-  TC-091: passed
-  TC-092: passed
-  TC-093: failed
-  TC-094: passed
-  TC-095: passed
-  TC-096: passed
-  TC-097: passed
-  TC-099: passed
-  TC-100: passed
-  TC-101: passed
-  TC-103: passed
-  TC-104: passed
-  TC-112: passed
-  TC-113: passed
-  TC-114: failed
-  TC-115: failed
-  TC-119: passed
-  TC-120: passed
-  TC-121: passed
-  TC-122: passed
-  TC-123: passed
-  TC-124: passed
-  TC-125: passed
-  TC-126: passed
-  TC-127: passed
-  TC-128: passed
-  TC-129: passed
-  TC-130: passed
-  TC-131: passed
-  TC-132: passed
-  TC-133: passed
-  TC-134: passed
-  TC-135: passed
-  TC-136: passed
-  TC-138: passed
-  TC-139: failed
-  TC-141: passed
-  TC-142: passed
-  TC-143: passed
-  TC-144: passed
-blocked_reason: ""
-lock: ""
+archived: false
+resolution: null
 ---
+
+# RUN-20260803-2012
+
+_Спроецировано из `runs/RUN-20260803-2012.md` (источник правды).
+Статус в нашей машине: **Triaged**._
 
 # RUN-20260803-2012 — regression (full baseline) на 1.10 (11)
 

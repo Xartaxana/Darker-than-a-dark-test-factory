@@ -1064,6 +1064,16 @@
     "artifact_status": "Verified",
     "board_status": "Verified"
   },
+  "AT-BUG-047": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "AT-BUG-048": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
   "BUG-001": {
     "itype": "bug",
     "artifact_status": "Open",
@@ -1148,5 +1158,10 @@
     "itype": "run",
     "artifact_status": "Closed",
     "board_status": "Closed"
+  },
+  "RUN-20260803-2012": {
+    "itype": "run",
+    "artifact_status": "Triaged",
+    "board_status": "Triaged"
   }
 }

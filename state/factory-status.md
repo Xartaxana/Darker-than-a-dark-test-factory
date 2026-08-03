@@ -1,19 +1,19 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-03T18:26:42Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-03T20:39:39Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **782.9** (RUN-20260702-0300)
-- regression: not_run
+- smoke: Closed · smoke_freshness_hours: **785.1** (RUN-20260702-0300)
+- regression: Triaged · regression_freshness_hours: **-0.0** (RUN-20260803-2012)
 - canary: not_run
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **1**
 - p0_automation_coverage: **100%** (37/37)
 - p1_automation_coverage: **83%** (77/93)
-- Test debt открыт: **0**
+- Test debt открыт: **2** — AT-BUG-047, AT-BUG-048
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
 - Untriaged: **0** · untriaged_failure_age: **0**
@@ -21,7 +21,7 @@ generated_at: 2026-08-03T18:26:42Z · генератор: `scripts/queue_snapsho
 ## Сборка под тестом
 
 - 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: passed · regression: not_run
+- smoke: passed · regression: failed
 
 ## Тест-кейсы (168)
 
@@ -70,13 +70,14 @@ generated_at: 2026-08-03T18:26:42Z · генератор: `scripts/queue_snapsho
 
 - BUG-012 [minor] Intended — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
 
-## Test debt (0)
+## Test debt (2)
 
-- нет
+- AT-BUG-047 [flaky_test] Open — Гонка «wait_ui_ready → немедленная WebView-навигация»: стартовая загрузка Home ещё в полёте, chromedriver теряет цель (`cannot determine loading status from no such window`) — 27 call sites, экземпляр TC-043 в RUN-20260803-2012
+- AT-BUG-048 [flaky_test] Open — BaseScreen.swipe_to_text проскакивает искомую секцию под нагрузкой (fling-инерция + опрос раз в свайп) — Settings докручивается до конца списка, ассерт «секция не найдена прокруткой»; экземпляр TC-093 в RUN-20260803-2012
 
-## Прогоны (1)
+## Прогоны (2)
 
-- Closed: **1**
+- Triaged: **1** · Closed: **1**
 
 ## Exploratory
 

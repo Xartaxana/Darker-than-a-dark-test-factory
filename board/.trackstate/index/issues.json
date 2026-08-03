@@ -4871,6 +4871,52 @@
     "archived": false
   },
   {
+    "key": "AT-BUG-047",
+    "path": "board/AT-BUG-047/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Гонка «wait_ui_ready → немедленная WebView-навигация»: стартовая загрузка Home ещё в полёте, chromedriver теряет цель (`cannot determine loading status from no such window`) — 27 call sites, экземпляр TC-043 в RUN-20260803-2012",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-043",
+      "run:RUN-20260803-2012",
+      "sev:major"
+    ],
+    "updated": "2026-08-03T20:35:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-048",
+    "path": "board/AT-BUG-048/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "BaseScreen.swipe_to_text проскакивает искомую секцию под нагрузкой (fling-инерция + опрос раз в свайп) — Settings докручивается до конца списка, ассерт «секция не найдена прокруткой»; экземпляр TC-093 в RUN-20260803-2012",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-093",
+      "run:RUN-20260803-2012",
+      "sev:minor"
+    ],
+    "updated": "2026-08-03T20:35:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "BUG-001",
     "path": "board/BUG-001/main.md",
     "parent": null,
@@ -5249,6 +5295,26 @@
     ],
     "updated": "2026-07-02T03:35:00Z",
     "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "RUN-20260803-2012",
+    "path": "board/RUN-20260803-2012/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "RUN-20260803-2012",
+    "issueType": "run",
+    "status": "run-triaged",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "run"
+    ],
+    "updated": "2026-08-03T20:40:00Z",
+    "resolution": null,
     "children": [],
     "archived": false
   }
