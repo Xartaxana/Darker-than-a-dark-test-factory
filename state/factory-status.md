@@ -1,19 +1,19 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-03T10:07:14Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-03T10:12:32Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **774.5** (RUN-20260702-0300)
+- smoke: Closed · smoke_freshness_hours: **774.6** (RUN-20260702-0300)
 - regression: not_run
 - canary: not_run
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **1**
 - p0_automation_coverage: **100%** (37/37)
 - p1_automation_coverage: **95%** (77/81)
-- Test debt открыт: **0**
+- Test debt открыт: **1** — AT-BUG-043
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
 - Untriaged: **0** · untriaged_failure_age: **0**
@@ -67,9 +67,10 @@ generated_at: 2026-08-03T10:07:14Z · генератор: `scripts/queue_snapsho
 
 - BUG-012 [minor] Intended — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
 
-## Test debt (1)
+## Test debt (2)
 
-- AT-BUG-039 [flaky_test] Fixed — browser_steps.assert_tap_to_scroll_delta: диагностика scrollY снята ДО опроса, а не после — тот же класс, что AT-BUG-036
+- AT-BUG-039 [flaky_test] Blocked — browser_steps.assert_tap_to_scroll_delta: диагностика scrollY снята ДО опроса, а не после — тот же класс, что AT-BUG-036
+- AT-BUG-043 [broken_environment] Open — core/mitm.py: гонка teardown/startup порта 8080 между соседними replay-тестами (WinError 10048, дважды подряд) — блокировала D1-верификацию AT-BUG-039
 
 ## Прогоны (1)
 
@@ -82,9 +83,9 @@ generated_at: 2026-08-03T10:07:14Z · генератор: `scripts/queue_snapsho
 - bugs_per_charter: **1.0**
 - new_tc_from_charters: **10**
 
-## Активные локи (1)
+## Активные локи (0)
 
-- AT-BUG-039 — `fix-verifier:2026-08-03T09:56:04Z`
+- нет
 
 ## Эскалации (4)
 

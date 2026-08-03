@@ -936,8 +936,8 @@
   },
   "AT-BUG-039": {
     "itype": "bug",
-    "artifact_status": "Fixed",
-    "board_status": "Fixed"
+    "artifact_status": "Blocked",
+    "board_status": "Blocked"
   },
   "AT-BUG-040": {
     "itype": "bug",
@@ -953,6 +953,11 @@
     "itype": "bug",
     "artifact_status": "Verified",
     "board_status": "Verified"
+  },
+  "AT-BUG-043": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
   },
   "BUG-001": {
     "itype": "bug",

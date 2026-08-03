@@ -4,7 +4,7 @@ title: "browser_steps.assert_tap_to_scroll_delta: диагностика scrollY
 type: test_debt
 debt_kind: flaky_test
 severity: minor
-status: Fixed
+status: Blocked
 found_in: "критик-вход D1-верификации AT-BUG-036, 2026-08-02: класс-полнота проверена целиком по поверхности message= у wait_for/wait_until в framework/"
 fixed_in: "test-maintainer (Sonnet), 2026-08-03: holder-паттерн в framework/steps/browser_steps.py::assert_tap_to_scroll_delta (закоммичен f27af22, 2026-08-02); последний открытый пункт критерия (TC-125 3/3 подряд) закрыт чистым прогоном на свежей Appium-сессии после подтверждённой починки IPv6-policy-таблицы хоста (ESC-014, разбор Lead)."
 last_seen_in: ""
@@ -12,16 +12,16 @@ test_cases: ["TC-124", "TC-125", "TC-126", "TC-127"]
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-08-03T09:43:00Z"
-updated: "2026-08-03T09:43:00Z"
+status_since: "2026-08-03T10:11:00Z"
+updated: "2026-08-03T10:11:00Z"
 reopen_count: 0
 dispute_count: 0
-awaiting: none
+awaiting: dev
 resolution: ""
 resolution_comment: ""
 known_issue: "false"
-blocked_reason: ""
-lock: "fix-verifier:2026-08-03T09:56:04Z"
+blocked_reason: "environment"
+lock: ""
 gitlab_issue: ""
 ---
 
@@ -63,6 +63,7 @@ gitlab_issue: ""
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-08-03 | framework-код после f27af22 (test_debt, независимо от app-сборки) | TC-124, TC-125, TC-126, TC-127 (`Invoke-Pytest tests/test_reading_ux.py -k "test_tap_zone_top_third_scrolls_up or test_tap_zone_bottom_third_scrolls_down or test_tap_to_scroll_live_push_and_reload_persistence or test_tap_to_scroll_survives_kill_and_relaunch" -v`) | Раунд 1: `3 failed, 2 deselected, 1 error, PYTEST_EXIT=1` (TC-126/TC-127 упали на `BottomNav._find_pill` timeout, TC-124 ERROR в `loved_work_seeded` seed-фикстуре, TC-125 FAILED с captured setup `WinError 10048: HTTP(S) proxy failed to listen on 0.0.0.0:8080`). Изолированный повторный прогон (допущен протоколом 1 раз): `2 failed, 1 passed, 2 deselected, 1 error, PYTEST_EXIT=1` (TC-125 PASSED чисто; TC-126/TC-124 снова несут WinError 10048 в setup; TC-127 ERROR `sqlite3.OperationalError: no such table: work_ratings`). Ни один из 8 упавших узлов не дошёл до изменённого кода (`assert_tap_to_scroll_delta`) — все падения раньше, в Given/seed/prescroll. | **Blocked** — fail-fast (2 идентичных WinError 10048 на порту 8080 между прогонами, разбор ESC-016); D1-верификация недостижима в этой сессии, требуется починка среды (вероятная гонка teardown/startup `core/mitm.py`) |
 
 ## Обсуждение
 
@@ -173,6 +174,79 @@ PYTEST_EXIT=0
 Устройство/Appium оставлены поднятыми (device-очередь сессии не пуста).
 Lock снят. Изменён только `bugs/AT-BUG-039.md` (frontmatter + чек-лист +
 это обсуждение) — `framework/`, `app-under-test/` не тронуты.
+
+**2026-08-03T10:11:00Z — fix-verifier (Sonnet), D1-верификация (mode=verify), независимо от предыдущего critic-входа B4-приёмки:**
+
+Прогнан полный DoD-набор (все 4 реальных потребителя
+`assert_tap_to_scroll_delta`, `Invoke-Pytest tests/test_reading_ux.py -k
+"test_tap_zone_top_third_scrolls_up or test_tap_zone_bottom_third_scrolls_down
+or test_tap_to_scroll_live_push_and_reload_persistence or
+test_tap_to_scroll_survives_kill_and_relaunch" -v`), device `emulator-5554`,
+свежая Appium-сессия (`:4723/status` → `ready:true` ДО прогона), mitm-CA `134`
+(здоровое значение) — все три диагностики позитивно сверены ДО прогона.
+
+Раунд 1: `3 failed, 2 deselected, 1 error in 172.50s`, `PYTEST_EXIT=1`. Два
+узла (`test_tap_zone_top_third_scrolls_up`, `test_tap_zone_bottom_third_scrolls_down`)
+упали на ИДЕНТИЧНОМ шаге `screens/navigation.py::BottomNav._find_pill` (`wait_until`
+timeout). Третий (`test_tap_to_scroll_live_push_and_reload_persistence`) —
+ERROR в фикстуре `loved_work_seeded` (`adb run-as cp`: `No such file or
+directory`). Четвёртый — TC-125, FAILED на `prescroll_to_tap_zone_invariant_position`,
+с captured setup, несущим `[Errno 10048] HTTP(S) proxy failed to listen on
+0.0.0.0:8080 ... address already in use` (mitmdump-реплей не смог поднять
+прокси на порту 8080).
+
+Диагностический мини-прогон ДО решения о повторе: `Get-Device` →
+`DEVICE: emulator-5554`; Appium health-check → `ready:true`; mitm-CA → `134`.
+Все три здоровы — что не пересекается с наблюдаемыми симптомами (ни один
+упавший узел не дошёл до изменённого кода `assert_tap_to_scroll_delta`; порт
+8080 в состоянии покоя оказался свободен, персистентного mitmdump-процесса не
+найдено).
+
+Per carve-out диспатча («изолированный повторный прогон ТОЛЬКО упавшего узла
+один раз допустим», тот же принцип что для ReadTimeoutError) — один
+изолированный повторный прогон ТОГО ЖЕ набора: `2 failed, 1 passed, 2
+deselected, 1 error in 267.31s`, `PYTEST_EXIT=1`. TC-125 в этот раз PASSED
+чисто (без rerun/recovery). Но сигнатура `WinError 10048` на порту 8080
+повторилась ЕЩЁ в ДВУХ setup (`test_tap_zone_top_third_scrolls_up` и
+`test_tap_to_scroll_live_push_and_reload_persistence`), а
+`test_tap_zone_bottom_third_scrolls_down` дал ERROR
+`sqlite3.OperationalError: no such table: work_ratings` в `seed_db._insert_rows`
+(похоже на побочный эффект той же гонки).
+
+Итого 2 полных прогона, суммарно 5 из 8 узлов несут ИДЕНТИЧНУЮ сигнатуру
+env-класса (`WinError 10048`, порт 8080, setup replay-фикстуры) — повторение
+МЕЖДУ прогонами, не только внутри одного. Это буквальный триггер CLAUDE.md
+«Fail-fast среды»: третий подряд прогон НЕ предпринят. Полный диагноз, включая
+проверку остаточных mitmdump-процессов (0 найдено, порт свободен в покое) и
+гипотезу гонки teardown/startup в `core/mitm.py::stop()`/`start_replay()` —
+`state/escalations.md` ESC-016.
+
+Ни одно из 8 наблюдённых падений не пересекается с изменённым кодом
+(`assert_tap_to_scroll_delta` вызывается только ПОСЛЕ Given/prescroll-цепочки;
+все падения — раньше). Это НЕ повод переводить в Reopened (код фикса не
+опровергнут ни разу) и НЕ повод переводить в Verified (чистого зелёного
+DoD-witness на этой сессии нет — 5/8 попыток блокированы средой, TC-125
+единственный узел с чистым PASS во 2-м раунде, но набор в целом не подтверждён
+целиком). Решение: `status: Fixed → Blocked`, `awaiting: dev`
+(нужна починка гонки порта 8080 в `framework/core/mitm.py`, вне мандата
+fix-verifier — не диагностика AT-BUG-039, отдельный инфраструктурный дефект).
+`reopen_count`/`dispute_count` не тронуты — это не reopen-цикл по коду.
+
+**Дефекты-собратья (D-0043):** обнаруженная гонка teardown/startup
+`core/mitm.py` (порт 8080 не успевает освободиться между
+`stop()`/`start_replay()` соседних тестов в одной pytest-сессии) — НОВЫЙ
+класс инфраструктурного дефекта, не покрытый ни одним из существующих
+ESC-006/007/008/009/014/015 (те — про IPv6-транзит/qemu-краш/ReadTimeoutError
+к Appium; этот — про TCP-порт mitmdump на Windows). Не заведён как отдельный
+`bugs/AT-BUG-NNN.md` этим ходом (вне owns/non-goals диспатча — только
+`bugs/AT-BUG-039.md`); явно доложено координатору здесь и в ESC-016 для
+решения о заведении.
+
+Файлы изменены: `bugs/AT-BUG-039.md` (frontmatter: `status`, `status_since`,
+`updated`, `awaiting`, `blocked_reason`, `lock`; таблица «Верификация»; это
+обсуждение), `state/escalations.md` (ESC-016). `framework/`,
+`app-under-test/` не тронуты. Устройство/Appium оставлены поднятыми (device-
+очередь сессии не обязательно пуста). Lock снят.
 
 ## Чек-лист качества (bug-reporter проходит перед публикацией)
 - [x] Проверены дубликаты среди открытых test_debt: не совпадает с AT-BUG-036 (другой файл/функция, тот же класс — сиблинг, не дубликат), AT-BUG-037 (N2/N2а — другой приём-дефект, «глотание исключения», не «пред-опросное вычисление диагностики»)

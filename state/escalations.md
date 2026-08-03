@@ -1087,3 +1087,80 @@ resolved при закрытии.
   мёртвом транзите = прецедент заведения кода); детектор рецидива — WARN
   doctor в преамбуле каждого прохода + сигнатура ESC-009 в триаже. Статус
   resolved (closed) подтверждён с этой оговоркой.
+
+## ESC-016 — AT-BUG-039, D1-верификация: fail-fast на 2-м прогоне DoD-набора (2 идентичных WinError 10048 «порт 8080 занят» в setup replay-фикстуры на РАЗНЫХ шагах/тестах)
+
+- Артефакт: `bugs/AT-BUG-039.md` (status: Fixed → **Blocked** этим ходом,
+  lock `fix-verifier:2026-08-03T09:56:04Z`)
+- Роль: fix-verifier (Sonnet), режим `mode=verify` (D1), независимая
+  верификация поверх уже принятого critic-входа B4-перехода Open→Fixed.
+- Прогон DoD (`Invoke-Pytest tests/test_reading_ux.py -k
+  "test_tap_zone_top_third_scrolls_up or test_tap_zone_bottom_third_scrolls_down
+  or test_tap_to_scroll_live_push_and_reload_persistence or
+  test_tap_to_scroll_survives_kill_and_relaunch" -v`), device `emulator-5554`,
+  Appium свежесобранная сессия (`:4723/status` → `ready:true` ДО прогона),
+  mitm-CA в сторе — `134` (здоровое значение).
+  - Раунд 1: `3 failed, 2 deselected, 1 error in 172.50s`, `PYTEST_EXIT=1`.
+    `test_tap_zone_top_third_scrolls_up`/`test_tap_zone_bottom_third_scrolls_down`
+    — оба упали на ИДЕНТИЧНОМ шаге `screens/navigation.py::BottomNav._find_pill`
+    (`wait_until` timeout, сообщение «не удалось раскрыть/найти нижнюю панель
+    навигации»); `test_tap_to_scroll_live_push_and_reload_persistence` — ERROR
+    в фикстуре `loved_work_seeded` (`adb run-as cp` — `No such file or
+    directory`, AT-BUG-026 N3 guard); `test_tap_to_scroll_survives_kill_and_relaunch`
+    (TC-125) — FAILED на `prescroll_to_tap_zone_invariant_position` →
+    `scroll_webview_to` timeout; captured setup этого узла несёт
+    `[Errno 10048] HTTP(S) proxy failed to listen on 0.0.0.0:8080 ... address
+    already in use` (mitmdump-реплей не смог поднять прокси).
+  - Разрешённый протоколом ОДИН изолированный повторный прогон ТОГО ЖЕ набора
+    (не третий подряд полного цикла, тот же класс что «ReadTimeoutError на
+    несвязанном шаге» carve-out диспатча): `2 failed, 1 passed, 2 deselected,
+    1 error in 267.31s`, `PYTEST_EXIT=1`. TC-125 в этот раз PASSED чисто (без
+    rerun/recovery). Но ТЕПЕРЬ порт-8080-сигнатура повторилась ещё в ДВУХ
+    setup (`test_tap_zone_top_third_scrolls_up` и
+    `test_tap_to_scroll_live_push_and_reload_persistence`), а
+    `test_tap_zone_bottom_third_scrolls_down` дал ERROR в
+    `seed_db._insert_rows`: `sqlite3.OperationalError: no such table:
+    work_ratings` (похоже на побочный эффект той же гонки — БД пушится в
+    момент, когда файл ещё не долетел/сессия рассинхронизирована).
+  - Итого 2 полных прогона, суммарно 5 из 8 узлов несут сигнатуру
+    `WinError 10048 (адрес уже используется)` в setup replay-фикстуры на
+    порту 8080 — идентичный env-класс, повторившийся МЕЖДУ прогонами (не
+    только внутри одного). Это буквальный триггер CLAUDE.md «Fail-fast
+    среды» — дальнейшие прогоны (третий подряд) не предпринимались.
+- ВАЖНО, класс отличается от ESC-014/ESC-009/ESC-015: НЕ IPv6-транзит, НЕ
+  ReadTimeoutError к Appium. Ни один из 8 упавших узлов НЕ дошёл до
+  изменённого кода (`assert_tap_to_scroll_delta` вызывается только после
+  Given/prescroll-цепочки; все падения — раньше, в Given/seed/prescroll).
+  Причинной неоднозначности «код фикса или среда» здесь нет.
+- Диагностика (выполнена ДО и ПОСЛЕ обоих прогонов): `Get-Device` →
+  `DEVICE: emulator-5554` (стабильно); Appium `:4723/status` → `ready:true`
+  (стабильно); mitm-CA `134` (стабильно); foreground-приложение —
+  `com.example.ao3_wrapper/.MainActivity` (штатно); пакет установлен.
+  Порт 8080 в состоянии ПОКОЯ (между прогонами) — свободен
+  (`Get-NetTCPConnection -LocalPort 8080` пусто), персистентного
+  mitmdump-процесса, держащего порт, не найдено (`Get-CimInstance
+  Win32_Process` по `mitmdump|mitmproxy` — 0 совпадений; единственный
+  посторонний `python.exe` — `agent-dispatch serve`, не relevant). Похоже на
+  ГОНКУ teardown/startup: `core/mitm.py::stop()` делает
+  `terminate()`/`wait(timeout=5)`/`kill()`, но на Windows освобождение
+  TCP-порта предыдущим mitmdump-процессом может не успевать до
+  `start_replay()` следующего теста в том же pytest-сессии (TIME_WAIT/OS
+  socket cleanup задержка) — гипотеза, НЕ подтверждена логами mitmdump
+  напрямую (стандартный вывод mitmdump в captured setup не содержит PID).
+- Что нужно от человека/координатора: диагностировать и, при подтверждении
+  гипотезы, устранить гонку teardown→startup в `core/mitm.py` (ретрай
+  `start_replay` с бэкоффом на `WinError 10048`, либо ожидание фактического
+  освобождения порта перед следующим `Popen`, либо `SO_REUSEADDR`-эквивалент
+  на стороне mitmdump/`--set` опции) — правка `framework/core/mitm.py` вне
+  мандата fix-verifier (не код диагностики AT-BUG-039, отдельный
+  инфраструктурный дефект). Возможный НОВЫЙ test_debt (порт-race в
+  replay-фикстуре) — на усмотрение координатора/Lead после этого разбора;
+  fix-verifier scope не расширяет (см. non-goals диспатча).
+- Статус AT-BUG-039: переведён `Fixed` → **Blocked** этим ходом (не
+  Verified, не Reopened — код фикса ни разу не был достигнут падениями,
+  но и полный чистый DoD-witness недостижим в этой сессии из-за
+  подтверждённо больной среды). `status_since` обновлён на фактический ISO
+  момент перехода. `awaiting: dev` — нужна починка гонки порта 8080 (или
+  подтверждение/опровержение гипотезы) ПЕРЕД следующей попыткой D1.
+  `reopen_count`/`dispute_count` не тронуты (это не reopen-цикл по коду и
+  не спор по Rejected). Lock снят.

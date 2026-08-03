@@ -4299,19 +4299,18 @@
     "epicPath": null,
     "summary": "browser_steps.assert_tap_to_scroll_delta: диагностика scrollY снята ДО опроса, а не после — тот же класс, что AT-BUG-036",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-blocked",
     "priority": "p2",
-    "assignee": "fix-verifier",
+    "assignee": "qa-agents",
     "labels": [
       "bug",
       "test_case:TC-124",
       "test_case:TC-125",
       "test_case:TC-126",
       "test_case:TC-127",
-      "sev:minor",
-      "wip:fix-verifier"
+      "sev:minor"
     ],
-    "updated": "2026-08-03T09:43:00Z",
+    "updated": "2026-08-03T10:11:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4377,6 +4376,31 @@
     ],
     "updated": "2026-08-03T09:36:50Z",
     "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-043",
+    "path": "board/AT-BUG-043/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "core/mitm.py: гонка teardown/startup порта 8080 между соседними replay-тестами (WinError 10048, дважды подряд) — блокировала D1-верификацию AT-BUG-039",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-124",
+      "test_case:TC-125",
+      "test_case:TC-126",
+      "test_case:TC-127",
+      "sev:major"
+    ],
+    "updated": "2026-08-03T10:11:25Z",
+    "resolution": null,
     "children": [],
     "archived": false
   },
