@@ -336,6 +336,140 @@ def test_autoresolve_removes_only_tagged(repo):
     assert any("[ESC-]" in r for r in report)
 
 
+# --- charter_followup_unprocessed (спека Lead 2026-08-03) ---
+
+
+def _quiet_charter_queue(repo):
+    """Держит charter_queue_empty тихим, чтобы тесты ниже проверяли ТОЛЬКО
+    новый чек (тот же приём, что test_open_major_fresh_is_quiet)."""
+    repo.charter("CH-900", "Planned")
+
+
+def test_followup_tc_candidate_without_id_flags(repo):
+    _quiet_charter_queue(repo)
+    repo.charter("CH-010", "Done", extra=(
+        'found_bugs: []\n'
+        'followup_tc:\n  - "КАНДИДАТ (id за test-designer): что-то важное без id"\n'
+        'new_risks: []\n'))
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    text = _esc(repo)
+    assert "[sla:charter_followup_unprocessed]" in text and "CH-010:followup_tc#0" in text
+
+
+def test_followup_tc_candidate_with_tc_id_is_quiet(repo):
+    _quiet_charter_queue(repo)
+    repo.charter("CH-011", "Done", extra=(
+        'found_bugs: []\n'
+        'followup_tc:\n  - "ЗАКРЫТО → TC-200 (test-designer): что-то важное"\n'
+        'new_risks: []\n'))
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    assert "charter_followup_unprocessed" not in _esc(repo)
+
+
+def test_found_bugs_candidate_without_id_flags(repo):
+    _quiet_charter_queue(repo)
+    repo.charter("CH-012", "Done", extra=(
+        'found_bugs:\n  - "видел странное поведение, но баг ещё не заведён"\n'
+        'followup_tc: []\n'
+        'new_risks: []\n'))
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    text = _esc(repo)
+    assert "[sla:charter_followup_unprocessed]" in text and "CH-012:found_bugs#0" in text
+
+
+def test_found_bugs_candidate_with_bug_id_is_quiet(repo):
+    _quiet_charter_queue(repo)
+    repo.charter("CH-013", "Done", extra=(
+        'found_bugs:\n  - "BUG-500: описание находки"\n'
+        'followup_tc: []\n'
+        'new_risks: []\n'))
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    assert "charter_followup_unprocessed" not in _esc(repo)
+
+
+def test_followup_candidate_on_non_done_charter_is_quiet(repo):
+    """(в): follow-up ещё не долг, пока чартер не Done."""
+    _quiet_charter_queue(repo)
+    for status in ("Proposed", "Planned", "InProgress"):
+        repo.charter(f"CH-{status}", status, extra=(
+            'found_bugs:\n  - "кандидат без id"\n'
+            'followup_tc:\n  - "кандидат без id"\n'
+            'new_risks:\n  - "риск без маркера"\n'))
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    assert "charter_followup_unprocessed" not in _esc(repo)
+
+
+def test_new_risks_with_marker_is_quiet(repo):
+    _quiet_charter_queue(repo)
+    repo.charter("CH-014", "Done", extra=(
+        'found_bugs: []\nfollowup_tc: []\n'
+        'new_risks:\n  - "предложение риска"\n'))
+    docs = repo.root / "docs" / "01-test-strategy.md"
+    docs.parent.mkdir(parents=True, exist_ok=True)
+    docs.write_text("...\nПересмотр по чартеру CH-014 (2026-08-03)\n...\n", encoding="utf-8")
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    assert "charter_followup_unprocessed" not in _esc(repo)
+
+
+def test_new_risks_without_marker_flags(repo):
+    _quiet_charter_queue(repo)
+    repo.charter("CH-015", "Done", extra=(
+        'found_bugs: []\nfollowup_tc: []\n'
+        'new_risks:\n  - "предложение риска"\n'))
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    text = _esc(repo)
+    assert "[sla:charter_followup_unprocessed]" in text and "CH-015:new_risks" in text
+
+
+def test_followup_all_empty_lists_is_quiet(repo):
+    _quiet_charter_queue(repo)
+    repo.charter("CH-016", "Done", extra=(
+        'found_bugs: []\nfollowup_tc: []\nnew_risks: []\n'))
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    assert "charter_followup_unprocessed" not in _esc(repo)
+
+
+def test_followup_unprocessed_idempotent(repo):
+    _quiet_charter_queue(repo)
+    repo.charter("CH-017", "Done", extra=(
+        'found_bugs: []\n'
+        'followup_tc:\n  - "кандидат без id"\n'
+        'new_risks: []\n'))
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+    first = _esc(repo)
+    ss.sweep(now=NOW + datetime.timedelta(hours=5))
+    second = _esc(repo)
+
+    assert second == first
+    assert second.count("CH-017:followup_tc#0") == 1
+
+
 def test_dry_run_writes_nothing(repo):
     repo.bug("BUG-021", "Open", extra=f"status_since: {OLD}\n")
     _sla(repo)

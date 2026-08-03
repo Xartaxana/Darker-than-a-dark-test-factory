@@ -1215,3 +1215,12 @@ resolved при закрытии.
   оба блокера закрыты, детектор рецидива в stderr), `AT-BUG-039` возвращён
   `Fixed` (откат нелегального Fixed->Blocked — перехода нет в матрице,
   запись в Обсуждении бага); D1-верификации обоих — штатным правилом.
+- [2026-08-03T16:07:33Z] **CH-006:followup_tc#0** [sla:charter_followup_unprocessed] — followup_tc[0] без id-токена: «КАНДИДАТ (id за test-designer): гейт infinite-scroll на ГРАНИЦЕ навигации — ON→a…» | нужно: test-designer заводит TC-NNN
+- [2026-08-03T16:07:33Z] **CH-006:followup_tc#1** [sla:charter_followup_unprocessed] — followup_tc[1] без id-токена: «КАНДИДАТ: автопрыжок плотности checkPageDensity — одиночный (пустая стр.1 → page…» | нужно: test-designer заводит TC-NNN
+- [2026-08-03T16:07:33Z] **CH-006:followup_tc#2** [sla:charter_followup_unprocessed] — followup_tc[2] без id-токена: «КАНДИДАТ: эвикция окна PAGE_WINDOW=3 — состав DOM после каскада + подмена listin…» | нужно: test-designer заводит TC-NNN
+- [2026-08-03T16:07:33Z] **CH-006:followup_tc#3** [sla:charter_followup_unprocessed] — followup_tc[3] без id-токена: «КАНДИДАТ: browse-tap-to-scroll как live-push в СТАРУЮ вкладку — флаг доехал без …» | нужно: test-designer заводит TC-NNN
+- [2026-08-03T16:07:33Z] **CH-006:new_risks** [sla:charter_followup_unprocessed] — new_risks предложен (2 запис.), но в docs/01-test-strategy.md нет маркера «Пересмотр по чартеру CH-006» | нужно: test-strategist доносит риск до §10
+- [2026-08-03T16:07:33Z] **CH-007:followup_tc#2** [sla:charter_followup_unprocessed] — followup_tc[2] без id-токена: «КАНДИДАТ: формат бэкапа как контракт — верхний уровень ровно {version, works, fi…» | нужно: test-designer заводит TC-NNN
+- [2026-08-03T16:07:33Z] **CH-007:followup_tc#3** [sla:charter_followup_unprocessed] — followup_tc[3] без id-токена: «КАНДИДАТ: фильтр-профили × Restore — локально ПЕРЕИМЕНОВАННЫЙ профиль остаётся п…» | нужно: test-designer заводит TC-NNN
+- [2026-08-03T16:07:33Z] **CH-007:followup_tc#4** [sla:charter_followup_unprocessed] — followup_tc[4] без id-токена: «КАНДИДАТ: негатив Restore — не-JSON и пустой файл: 'Restore failed', база не изм…» | нужно: test-designer заводит TC-NNN
+- [2026-08-03T16:07:33Z] **CH-007:new_risks** [sla:charter_followup_unprocessed] — new_risks предложен (4 запис.), но в docs/01-test-strategy.md нет маркера «Пересмотр по чартеру CH-007» | нужно: test-strategist доносит риск до §10

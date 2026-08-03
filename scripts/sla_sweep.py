@@ -22,6 +22,17 @@ state/sla.yaml и ведёт реестр state/escalations.md:
                           executed_at старше sla.thresholds.charter_queue_empty
                           часов (fail-safe: протухание не молчит; пустой/
                           отсутствующий exploratory-charters/ — тоже эскалация)
+  charter_followup_unprocessed — испарившийся follow-up закрытого чартера
+                          (спека Lead 2026-08-03): для КАЖДОГО CH-*.md со
+                          status: Done — (1) непустая запись found_bugs без
+                          id-токена BUG-NNN/AT-BUG-NNN = необработанный
+                          кандидат bug-reporter'а; (2) непустая запись
+                          followup_tc без id-токена TC-NNN = необработанный
+                          кандидат test-designer'а; (3) непустой new_risks без
+                          буквальной подстроки "Пересмотр по чартеру CH-NNN" в
+                          docs/01-test-strategy.md = риск не донесён до §10
+                          (проверка на уровне чартера, не записи). Условие
+                          структурное, не временнОе — порога в sla.yaml нет.
 
 Дедупликация: одна строка на (артефакт, правило); повторные проходы не плодят
 дублей и сохраняют исходное время обнаружения. Строки [sla:*], чья причина
@@ -77,6 +88,12 @@ DEFAULTS = {
 # E5: активные статусы машины charter (schemas/transitions.yaml) — очередь
 # считается непротухшей, пока хотя бы один CH-*.md в одном из них.
 CHARTER_ACTIVE_STATUSES = ("Proposed", "Planned", "InProgress")
+
+# charter_followup_unprocessed: id-токены, которыми должна быть помечена
+# ОБРАБОТАННАЯ запись found_bugs/followup_tc (эталон — CH-008: found_bugs
+# несёт "BUG-NNN"/"AT-BUG-NNN", followup_tc несёт "TC-NNN").
+FOUND_BUGS_ID_RE = re.compile(r"\b(?:AT-)?BUG-\d+\b")
+FOLLOWUP_TC_ID_RE = re.compile(r"\bTC-\d+\b")
 
 
 def _utcnow() -> datetime.datetime:
@@ -174,6 +191,66 @@ def _charter_queue_wanted(now: datetime.datetime, thr: dict) -> dict[tuple[str, 
             f"| нужно: завести charter (charter-designer / вручную)"}
 
 
+def _excerpt(value, limit: int = 80) -> str:
+    s = str(value or "").strip()
+    return s if len(s) <= limit else s[:limit] + "…"
+
+
+def _charter_followup_wanted() -> dict[tuple[str, str], str]:
+    """charter_followup_unprocessed (спека Lead 2026-08-03, класс: испарившийся
+    follow-up закрытого чартера отложен «на следующий проход» без легальной
+    причины — pre_step ловит его в начале СЛЕДУЮЩЕГО прохода).
+
+    Только status: Done (follow-up не-Done чартера — ещё не долг, сессия может
+    быть не завершена). Три независимых структурных условия (см. докстринг
+    модуля): found_bugs/followup_tc — ПОЗАПИСНАЯ проверка id-токена; new_risks
+    — ОДНА проверка на весь чартер (§10 сводит риски пачкой, не поштучно).
+    docs/01-test-strategy.md читается один раз на прогон (кэш не нужен —
+    sweep() вызывается один раз за процесс).
+
+    Ключ дедупа found_bugs/followup_tc — (id чартера, поле, индекс записи):
+    стабилен, пока список не редактируется (Done-чартер после исполнения не
+    правится, кроме отметки "ЗАКРЫТО" внутри самой строки — индекс и текст
+    записи не меняются, только её содержимое обрастает префиксом)."""
+    wanted: dict[tuple[str, str], str] = {}
+    docs01_path = REPO / "docs" / "01-test-strategy.md"
+    docs01_text = (docs01_path.read_text(encoding="utf-8", errors="replace")
+                   if docs01_path.exists() else "")
+
+    for meta in charter_utils._iter_charters(REPO):
+        if str(meta.get("status")) != "Done":
+            continue
+        chid = str(meta.get("id"))
+
+        for field, id_re, who in (
+            ("found_bugs", FOUND_BUGS_ID_RE, "bug-reporter заводит BUG-NNN"),
+            ("followup_tc", FOLLOWUP_TC_ID_RE, "test-designer заводит TC-NNN"),
+        ):
+            items = meta.get(field) or []
+            if not isinstance(items, list):
+                items = [items]
+            for i, item in enumerate(items):
+                text = str(item or "").strip()
+                if not text or id_re.search(text):
+                    continue
+                key = f"{chid}:{field}#{i}"
+                wanted[(key, "charter_followup_unprocessed")] = (
+                    f"{field}[{i}] без id-токена: «{_excerpt(text)}» | нужно: {who}")
+
+        risks = meta.get("new_risks") or []
+        if not isinstance(risks, list):
+            risks = [risks]
+        risks = [r for r in risks if str(r or "").strip()]
+        if risks and f"Пересмотр по чартеру {chid}" not in docs01_text:
+            key = f"{chid}:new_risks"
+            wanted[(key, "charter_followup_unprocessed")] = (
+                f"new_risks предложен ({len(risks)} запис.), но в "
+                f"docs/01-test-strategy.md нет маркера «Пересмотр по чартеру {chid}» "
+                f"| нужно: test-strategist доносит риск до §10")
+
+    return wanted
+
+
 def collect_wanted(now: datetime.datetime, thr: dict) -> tuple[dict, list]:
     """(key, rule) -> message; плюс список мутаций pingpong→Blocked."""
     wanted: dict[tuple[str, str], str] = {}
@@ -261,6 +338,7 @@ def collect_wanted(now: datetime.datetime, thr: dict) -> tuple[dict, list]:
             mutations.append((src, key))
 
     wanted.update(_charter_queue_wanted(now, thr))
+    wanted.update(_charter_followup_wanted())
     return wanted, mutations
 
 
