@@ -36,6 +36,131 @@ function Clear-EmulatorStaleLocks {
     }
 }
 
+function Get-AdbOutput {
+    # Хелпер для Set-GuestIPv4Pin: инкапсулирует null-safe .Trim() (B1
+    # критик-вход attempt 2, 2026-08-03) - голый `(& $adb ...).Trim()` падает
+    # на $null-выводе (та же ловушка, что существующий `.Trim()` в
+    # снапшот-буд-цикле Start-Emulator, ниже - сиблинг, вне скоупа этой
+    # правки, см. отчёт). `2>$null` не сливает stderr в возвращаемое значение.
+    param([Parameter(Mandatory)][string]$Adb, [Parameter(Mandatory)][string[]]$AdbArgs)
+    $out = & $Adb @AdbArgs 2>$null
+    if ($null -eq $out) { return "" }
+    return (($out | Out-String)).Trim()
+}
+
+function Set-GuestIPv4Pin {
+    # env-ipv4-pin-0803 (решение владельца 2026-08-03): фабрика использует IPv4,
+    # IPv6-транзит хоста флапает как чёрная дыра (ESC-009/014/015, state/escalations.md).
+    # Хостовая половина уже IPv4-first (netsh prefix policies), но гостевой
+    # Android/Chromium эмулятора этой политике не подчиняется — сам резолвит и
+    # предпочитает IPv6, зависая на мёртвом транзите (ESC-015: `driver.get()`
+    # виснет в WebView, пока Chromium ждёт мёртвый AAAA-маршрут). Образ рутован —
+    # пиним гостя на IPv4 sysctl'ом через adb; пин НЕ переживает ребут/новый буд,
+    # поэтому вызывается из Start-Emulator при КАЖДОМ подъёме, не один раз.
+    # Не блокирующий: отказ пина (не-root образ / sysctl недоступен) не валит
+    # подъём эмулятора — печатается WARNING, разбор — доктору/человеку (doctor.py).
+    #
+    # Вынесена в отдельную функцию (критик-вход attempt 2, B1): тестируется
+    # изолированно стабом $Adb, без запуска реального эмулятора.
+    #
+    # B1 (БЛОКЕР attempt 1): под глобальным $ErrorActionPreference='Stop'
+    # (строка 5) ЛЮБАЯ stderr-строка нативной команды через `2>&1` становится
+    # завершающей NativeCommandError — ветка WARNING была НЕДОСТИЖИМА, отказ
+    # пина рвал весь Start-Emulator ПОСЛЕ бута и ДО Install-MitmCA. Локальный
+    # $ErrorActionPreference='Continue' на время этой функции (try/finally,
+    # восстановление гарантировано) + `2>$null` вместо `2>&1` (не сливаем
+    # stderr в возвращаемое значение) устраняют оба пути падения.
+    param([Parameter(Mandatory)][string]$Adb)
+
+    Write-Host "Pinning guest to IPv4 (disabling guest IPv6, ESC-015)..." -ForegroundColor Cyan
+    $prevEap = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        $suPrefix = $null
+        $adbRootedByUs = $false
+
+        $suOut = Get-AdbOutput -Adb $Adb -AdbArgs @("shell", "su 0 id")
+        if ($suOut -match 'uid=0') {
+            $suPrefix = "su 0 "
+        } else {
+            # su недоступен напрямую - пробуем adb root (некоторые сборки требуют
+            # перевода adbd в root-режим отдельно от su-бинарника гостя) и повтор.
+            Get-AdbOutput -Adb $Adb -AdbArgs @("root") | Out-Null
+            Start-Sleep 2
+            & $Adb wait-for-device 2>$null
+            # B2 (критик-вход attempt 2): предикат ПОСЛЕ adb root — голый `id`,
+            # НЕ `su 0 id`. Если adbd рутован, а su-бинаря в образе нет, `su 0 id`
+            # ложно провалился бы, хотя пин уже возможен напрямую без su, и adbd
+            # остался бы root на всю сессию без надобности (см. adbRootedByUs/unroot
+            # ниже).
+            $idOut = Get-AdbOutput -Adb $Adb -AdbArgs @("shell", "id")
+            if ($idOut -match 'uid=0') {
+                $suPrefix = ""
+                $adbRootedByUs = $true
+            }
+        }
+
+        if ($null -eq $suPrefix) {
+            Write-Warning "WARNING: guest IPv6 pin FAILED (su 0 недоступен и adb root не дал uid=0 - образ не рутован)."
+            return
+        }
+
+        Get-AdbOutput -Adb $Adb -AdbArgs @("shell", "${suPrefix}sysctl -w net.ipv6.conf.all.disable_ipv6=1") | Out-Null
+        Get-AdbOutput -Adb $Adb -AdbArgs @("shell", "${suPrefix}sysctl -w net.ipv6.conf.default.disable_ipv6=1") | Out-Null
+        # Находка живой верификации attempt 2 (2026-08-03, полный холодный рестарт с
+        # новым кодом): `all`/`default` НЕ гарантируют per-interface эффект на этом
+        # AVD — `conf/wlan0/disable_ipv6` наблюдался снова 0 через ~секунды-десятки
+        # секунд ПОСЛЕ успешного пина `all`/`default` (Android netd/Wi-Fi-фреймворк,
+        # похоже, переустанавливает его при обычной сетевой реинициализации), пока
+        # `all`/`eth0`/прочие интерфейсы оставались 1 - `ip -6 addr` снова показывал
+        # `inet6`-строки НА wlan0. Явный цикл по КАЖДОМУ `/proc/sys/net/ipv6/conf/*/
+        # disable_ipv6` (включая wlan0 индивидуально) эмпирически устойчив (проверено
+        # ожиданием 55с+ после установки - не откатывается).
+        $suPrefixTrimmed = $suPrefix.Trim()
+        $loopCmd = if ($suPrefixTrimmed) {
+            "$suPrefixTrimmed sh -c 'for f in /proc/sys/net/ipv6/conf/*/disable_ipv6; do echo 1 > `$f; done'"
+        } else {
+            "sh -c 'for f in /proc/sys/net/ipv6/conf/*/disable_ipv6; do echo 1 > `$f; done'"
+        }
+        Get-AdbOutput -Adb $Adb -AdbArgs @("shell", $loopCmd) | Out-Null
+
+        $disabled = Get-AdbOutput -Adb $Adb -AdbArgs @("shell", "cat /proc/sys/net/ipv6/conf/all/disable_ipv6")
+
+        # Сверка ЭФФЕКТОМ (CLAUDE.md permission-hygiene п.6), не наличием команды:
+        # disable_ipv6=1 обязан снять ВСЕ гостевые IPv6-адреса интерфейсов (проверено
+        # эмпирически на ao3_test_api34: до пина `ip -6 addr` несёт site/link-scope
+        # адреса на eth0/wlan0/dummy0 - НЕ "scope global", этот AVD никогда не
+        # показывает global-scope IPv6).
+        # B3 (критик-вход attempt 2): критерий — отсутствие строк, матчащих
+        # `inet6\s` (не общая пустота вывода целиком) - другой образ/версия
+        # iproute2 может печатать интерфейсные заголовки без адресных строк,
+        # что сделало бы пустоту-всего-вывода хрупким критерием (вечный
+        # ложный WARNING). WARNING-текст разведён по фактической причине.
+        $addrOut = Get-AdbOutput -Adb $Adb -AdbArgs @("shell", "ip -6 addr")
+        $inet6Lines = @($addrOut -split "`r?`n" | Where-Object { $_ -match 'inet6\s' })
+
+        if ($disabled -eq "1" -and $inet6Lines.Count -eq 0) {
+            Write-Host "guest IPv6: disabled (pin OK)" -ForegroundColor Green
+        } elseif ($disabled -ne "1") {
+            Write-Warning "WARNING: guest IPv6 pin FAILED (disable_ipv6='$disabled', sysctl не применился)."
+        } else {
+            Write-Warning ("WARNING: guest IPv6 pin FAILED (disable_ipv6=1, но остались inet6-адреса: " +
+                ($inet6Lines -join " | ") + ")")
+        }
+
+        if ($adbRootedByUs) {
+            # B2: root поднимали ТОЛЬКО ради пина - возвращаем adbd в исходный
+            # (не-root) режим, чтобы не менять семантику последующих
+            # Install-App/прогонов на этой сессии.
+            & $Adb unroot 2>$null | Out-Null
+            Start-Sleep 1
+            & $Adb wait-for-device 2>$null
+        }
+    } finally {
+        $ErrorActionPreference = $prevEap
+    }
+}
+
 function Start-Emulator {
     # -WritableSystem: нужен для replay-режима (установка CA mitmproxy в системное
     # хранилище, scripts/install-mitm-ca.sh). Для live-прогонов не требуется.
@@ -121,6 +246,9 @@ function Start-Emulator {
 
     do { Start-Sleep 2; $b = (& $adb shell getprop sys.boot_completed).Trim() } while ($b -ne "1")
     Write-Host "Emulator booted." -ForegroundColor Green
+
+    Set-GuestIPv4Pin -Adb $adb
+
     if ($WritableSystem) {
         # Автовызов сразу после boot_completed этого же старта — гарантированно
         # чистая загрузка (install-mitm-ca.sh рассчитан именно на неё: повторный

@@ -129,6 +129,96 @@ def test_non_git_app_under_test_labeled_not_git_repo(repo, env, monkeypatch):
     assert not (repo.root / "state" / "escalations.md").exists()
 
 
+def test_guest_ipv4_pin_ok(repo, env, monkeypatch):
+    """env-ipv4-pin-0803 (ESC-015): устройство присутствует, `ip -6 addr` без
+    inet6-строк — чек OK. Эффектный критерий (не отдельный агрегатный флаг
+    `conf/all/disable_ipv6`) — см. test_guest_ipv4_pin_warn_on_stale_interface_pin
+    ниже, находка живой верификации 2026-08-03, почему это важно."""
+    def fake_run(args, timeout=60):
+        if args[-1] == "devices":
+            return 0, "List of devices attached\nemulator-5554\tdevice\n"
+        if args[-3:] == ["ip", "-6", "addr"]:
+            return 0, ""
+        return 0, "deps-ok"
+    monkeypatch.setattr(dr, "_run", fake_run, raising=True)
+
+    checks = dr.run_checks()
+    pin = next(c for c in checks if c.name == "guest IPv4 pin")
+    assert pin.ok and not pin.warn
+    assert "emulator-5554" in pin.detail
+    assert dr.main([]) == 0
+
+
+def test_guest_ipv4_pin_warn_when_not_pinned(repo, env, monkeypatch):
+    """Устройство есть, но `ip -6 addr` несёт inet6-строки (пин не применён/
+    слетел) — WARN, не FAIL (doctor не роняет прогон), подсказка ведёт на
+    Start-Emulator."""
+    def fake_run(args, timeout=60):
+        if args[-1] == "devices":
+            return 0, "List of devices attached\nemulator-5554\tdevice\n"
+        if args[-3:] == ["ip", "-6", "addr"]:
+            return 0, (
+                "16: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500\n"
+                "    inet6 fec0::a829:2fab:7fe3:bff6/64 scope site temporary dynamic\n"
+            )
+        return 0, "deps-ok"
+    monkeypatch.setattr(dr, "_run", fake_run, raising=True)
+
+    checks = dr.run_checks()
+    pin = next(c for c in checks if c.name == "guest IPv4 pin")
+    assert not pin.ok and pin.warn
+    assert "Start-Emulator" in pin.detail
+    assert "inet6" in pin.detail
+    assert dr.main([]) == 0            # WARN не валит doctor
+
+
+def test_guest_ipv4_pin_warn_on_stale_interface_pin(repo, env, monkeypatch):
+    """Находка живой верификации 2026-08-03 (attempt 2, полный холодный
+    рестарт на реальном устройстве): Android асинхронно (~60с после буда, вне
+    контроля Start-Emulator) переустанавливает per-interface
+    `conf/wlan0/disable_ipv6` обратно в 0, ПОКА `conf/all/disable_ipv6`
+    остаётся 1 (воспроизведено эмпирически). Старый чек (`cat .../all/
+    disable_ipv6`) на этом сценарии давал ЛОЖНЫЙ OK; новый (`ip -6 addr`,
+    эффект) обязан поймать WARN даже когда агрегатный флаг `all` здоров. Тест
+    эмулирует ИМЕННО такое расхождение: fake_run не отвечает на чтение
+    `all`-флага вовсе (только на `ip -6 addr`) — падает AssertionError, если
+    реализация вернётся к чтению агрегатного флага."""
+    def fake_run(args, timeout=60):
+        if args[-1] == "devices":
+            return 0, "List of devices attached\nemulator-5554\tdevice\n"
+        if args[-3:] == ["ip", "-6", "addr"]:
+            return 0, (
+                "16: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500\n"
+                "    inet6 fec0::c6de:d4ee:3a0d:ae94/64 scope site temporary dynamic\n"
+                "    inet6 fe80::6455:48c9:c820:ef8d/64 scope link stable-privacy\n"
+            )
+        if any("disable_ipv6" in str(a) for a in args):
+            raise AssertionError(f"чек не должен читать conf/all/disable_ipv6 напрямую: {args}")
+        return 0, "deps-ok"
+    monkeypatch.setattr(dr, "_run", fake_run, raising=True)
+
+    checks = dr.run_checks()
+    pin = next(c for c in checks if c.name == "guest IPv4 pin")
+    assert not pin.ok and pin.warn
+    assert "2 шт." in pin.detail
+
+
+def test_guest_ipv4_pin_skipped_when_no_device(repo, env, monkeypatch):
+    """Устройства нет (эмулятор не поднят) - чек н/п (skip), НЕ FAIL: doctor
+    не поднимает эмулятор сам."""
+    def fake_run(args, timeout=60):
+        if args[-1] == "devices":
+            return 0, "List of devices attached\n"
+        return 0, "deps-ok"
+    monkeypatch.setattr(dr, "_run", fake_run, raising=True)
+
+    checks = dr.run_checks()
+    pin = next(c for c in checks if c.name == "guest IPv4 pin")
+    assert pin.ok and not pin.warn
+    assert "н/п" in pin.detail
+    assert dr.main([]) == 0
+
+
 def test_no_escalate_flag(repo, env):
     (repo.root / "tools" / "android-sdk" / "platform-tools" / "adb.exe").unlink()
 

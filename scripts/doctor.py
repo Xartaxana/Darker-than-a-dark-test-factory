@@ -10,7 +10,8 @@ scheduled-проходом /qa-loop убеждаемся, что стенд це
         state/{rules,sla,app-under-test}.yaml на месте
   run:  java/adb исполняются (пути из scripts/env.ps1); AVD ao3_test_api34
         существует; node/npx.cmd в PATH; appium установлен (tools/appium);
-        gradlew.bat в app-under-test; APK по apk_path существует
+        gradlew.bat в app-under-test; APK по apk_path существует; guest IPv4
+        pin (disable_ipv6=1 на устройстве, если оно поднято — ESC-015)
 
 Коды выхода: 0 — всё OK/WARN; 1 — есть FAIL (эскалация уже записана).
 FAIL дедуплицируется: одна строка **DOCTOR** на проверку, пока не устранена.
@@ -54,6 +55,21 @@ def _run(args: list[str], *, timeout: int = 60) -> tuple[int, str]:
         return 124, "timeout"
     except OSError as e:
         return 127, str(e)
+
+
+def _adb_device_serial(adb: Path) -> str | None:
+    """Канонический признак присутствия устройства (тот же паттерн, что
+    scripts/tasks.ps1::Get-Device): первая строка `adb devices` в состоянии
+    `device`. None — устройства нет (не «adb сломан», см. `_run` для ошибок
+    вызова)."""
+    rc, out = _run([str(adb), "devices"])
+    if rc != 0:
+        return None
+    for line in out.splitlines()[1:]:
+        parts = line.split()
+        if len(parts) == 2 and parts[1] == "device":
+            return parts[0]
+    return None
 
 
 def _env_paths() -> dict[str, Path]:
@@ -126,6 +142,39 @@ def run_checks() -> list[Check]:
 
     checks.append(Check("gradlew.bat (app-under-test)", "run", (APP / "gradlew.bat").exists(),
                         "на месте" if (APP / "gradlew.bat").exists() else "отсутствует"))
+
+    # env-ipv4-pin-0803 (решение владельца 2026-08-03, ESC-015): Start-Emulator
+    # пинит гостя на IPv4 при каждом подъёме (scripts/tasks.ps1), но пин не
+    # переживает ребут/новый буд без прохода через Start-Emulator (напр. ручной
+    # `adb emu kill` + сторонний запуск emulator.exe). Устройства нет — чек не
+    # применим (skip, НЕ FAIL): doctor не поднимает эмулятор сам.
+    if adb.exists():
+        device_serial = _adb_device_serial(adb)
+        if device_serial is None:
+            checks.append(Check("guest IPv4 pin", "run", True,
+                                "н/п — устройства нет (эмулятор не поднят)"))
+        else:
+            # Находка живой верификации 2026-08-03 (attempt 2, полный холодный
+            # рестарт): `net.ipv6.conf.ALL.disable_ipv6` — недостаточный сигнал.
+            # Android асинхронно (~60с после буда, вне контроля Start-Emulator)
+            # переустанавливает per-interface `conf/wlan0/disable_ipv6` обратно в 0,
+            # ПОКА `all`/`default` остаются 1 — старый чек (`cat .../all/...`) давал
+            # ЛОЖНЫЙ OK на живом устройстве с реально присутствующими IPv6-адресами
+            # на wlan0 (воспроизведено эмпирически). Тот же класс, что B3-фикс
+            # tasks.ps1::Set-GuestIPv4Pin — сверяем ЭФФЕКТОМ (`ip -6 addr`, строки
+            # `inet6 `), не отдельным агрегатным флагом.
+            rc, out = _run([str(adb), "-s", device_serial, "shell", "ip", "-6", "addr"])
+            inet6_lines = [ln for ln in out.splitlines() if re.search(r"inet6\s", ln)]
+            pinned = rc == 0 and not inet6_lines
+            checks.append(Check(
+                "guest IPv4 pin", "run", pinned,
+                (f"inet6-адреса присутствуют на {device_serial} "
+                 f"({len(inet6_lines)} шт., напр. {inet6_lines[0].strip()!r}) — "
+                 "перезапусти эмулятор через Start-Emulator (scripts/tasks.ps1)")
+                if not pinned else f"нет inet6-адресов на {device_serial}",
+                warn=not pinned))
+    else:
+        checks.append(Check("guest IPv4 pin", "run", True, "н/п — adb недоступен"))
 
     # docs/09 «Мелкое хозяйство» п.3 (2026-07-18): чисто информационная
     # видимость shallow-статуса клона app-under-test для человека — ok=True
