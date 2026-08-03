@@ -566,8 +566,8 @@
   },
   "TC-020": {
     "itype": "test-case",
-    "artifact_status": "Review",
-    "board_status": "Review"
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
   "TC-047": {
     "itype": "test-case",

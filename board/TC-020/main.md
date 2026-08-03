@@ -2,7 +2,7 @@
 key: "TC-020"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p3"
 summary: "Бейджи открытых вкладок сохраняют состояние до перезагрузки страницы; после reload — сброшены"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-03T02:10:00Z"
-updated: "2026-08-03T02:10:00Z"
+created: "2026-08-03T09:10:09Z"
+updated: "2026-08-03T09:10:09Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Бейджи открытых вкладок сохраняют состояние до перезагрузки страницы; после reload — сброшены
 
 _Спроецировано из `test-cases/settings/TC-020.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-020 — Бейдж открытой страницы AO3 сохраняет состояние до перезагрузки после Clear all ratings
 

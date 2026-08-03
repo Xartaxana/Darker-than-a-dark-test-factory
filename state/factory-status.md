@@ -1,12 +1,12 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-03T00:11:08Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-03T09:13:36Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **764.6** (RUN-20260702-0300)
+- smoke: Closed · smoke_freshness_hours: **773.6** (RUN-20260702-0300)
 - regression: not_run
 - canary: not_run
 - Открытые blocker/critical: **0**
@@ -25,7 +25,7 @@ generated_at: 2026-08-03T00:11:08Z · генератор: `scripts/queue_snapsho
 
 ## Тест-кейсы (144)
 
-- Review: **1** · Approved: **1** · Automated: **142**
+- Approved: **2** · Automated: **142**
 - автотесты (B3): active: **142**
 
 | Область | Draft | Review | Approved | Automated | Blocked |
@@ -42,7 +42,7 @@ generated_at: 2026-08-03T00:11:08Z · генератор: `scripts/queue_snapsho
 | performance |  |  |  | 4 |  |
 | rating |  |  | 1 | 20 |  |
 | security |  |  |  | 6 |  |
-| settings |  | 1 |  | 10 |  |
+| settings |  |  | 1 | 10 |  |
 | smoke |  |  |  | 5 |  |
 | tabs |  |  |  | 11 |  |
 | visibility |  |  |  | 6 |  |
