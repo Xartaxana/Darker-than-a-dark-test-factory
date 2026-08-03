@@ -6,7 +6,7 @@ debt_kind: flaky_test
 severity: minor
 status: Fixed
 found_in: "critic-вход приёмки D1 AT-BUG-042 + два независимых воспроизведения в D1-прогонах fix-verifier (AT-BUG-042 setup-фейл, AT-BUG-039 раунд 2 TC-127 ERROR), 2026-08-03; framework env, сборка 1.10 (versionCode 11)"
-fixed_in: "PENDING_COMMIT"
+fixed_in: "96734d8"
 last_seen_in: ""
 test_cases: []
 runs: []
