@@ -4,16 +4,16 @@ title: "data/seed_db.py::ensure_db_initialized ждёт появления ФА�
 type: test_debt
 debt_kind: flaky_test
 severity: minor
-status: Open
+status: Fixed
 found_in: "critic-вход приёмки D1 AT-BUG-042 + два независимых воспроизведения в D1-прогонах fix-verifier (AT-BUG-042 setup-фейл, AT-BUG-039 раунд 2 TC-127 ERROR), 2026-08-03; framework env, сборка 1.10 (versionCode 11)"
-fixed_in: ""
+fixed_in: "PENDING_COMMIT"
 last_seen_in: ""
 test_cases: []
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-08-03T10:46:00Z"
-updated: "2026-08-03T10:46:00Z"
+status_since: "2026-08-03T13:55:00Z"
+updated: "2026-08-03T13:55:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -54,19 +54,20 @@ gitlab_issue: ""
 
 ## Критерий готовности (Fixed)
 
-- [ ] `ensure_db_initialized` ждёт готовности СХЕМЫ (например,
-  `sqlite3 <db> "SELECT 1 FROM work_ratings LIMIT 0"` через `adb run-as` /
-  запрос к `sqlite_master`), а не существования файла.
-- [ ] Красная проба: воспроизведено окно ДО фикса (форсированный снимок
+- [x] `ensure_db_initialized` ждёт готовности СХЕМЫ (`sqlite3 <db> "SELECT 1
+  FROM work_ratings LIMIT 0" 2>&1` через `adb run-as`, новая `_schema_ready()`
+  в `framework/data/seed_db.py`), а не существования файла.
+- [x] Красная проба: воспроизведено окно ДО фикса (форсированный снимок
   сразу после появления файла) и устранено ПОСЛЕ.
-- [ ] Существующие потребители seed-фикстур зелёные (минимум: один
-  replay-тест с `loved_work_seeded`/`seeded_library` — 3/3 подряд).
-- [ ] arch_check/validate_frontmatter — 0/0.
-- [ ] Ни одно изменение не внесено в `app-under-test/`.
+- [x] Существующие потребители seed-фикстур зелёные (replay-тест TC-141 с
+  `loved_work_seeded` — 3/3 подряд).
+- [x] arch_check/validate_frontmatter — 0/0.
+- [x] Ни одно изменение не внесено в `app-under-test/`.
 
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-08-03 | 1.10 (11) | device-free: 14 юнит-проб (framework/tests/test_seed_db_schema_race_unit.py x2, test_subprocess_timeout_unit.py x8, test_seed_null_wordcount_unit.py x2, test_seed_filter_profiles_unit.py x2); live: on-device tight-loop red/green race repro (6/6 red hits "no such table: work_ratings" на файловом гейте, 0/6 на гейте по схеме); replay TC-141 (`loved_work_seeded`) x3 | 14 passed device-free (PYTEST_EXIT=0); live red 6/6, live green 0/6 fails; TC-141 3/3 PASSED | Fixed (test-maintainer, до fix-verifier/critic-входа по правилу D-0037/critic-класс) |
 
 ## Обсуждение
 
@@ -78,6 +79,50 @@ minor: сбой транзиентный (retry/изолированный пе�
 триаж в env-шум, но не блокирует очередь так, как `AT-BUG-043` (портовая
 гонка). Диспатч — B4 штатным проходом, ПОСЛЕ `AT-BUG-043` (лексикографический
 порядок правила это и так обеспечивает).
+
+**2026-08-03T13:55:00Z — test-maintainer, фикс (B4):** гейт
+`ensure_db_initialized` (`framework/data/seed_db.py`) заменён с
+`_db_exists()` (`test -f`, только файл) на новую `_schema_ready()` —
+`sqlite3 {databases/ao3_ratings.db} 'SELECT 1 FROM work_ratings LIMIT 0'
+2>&1` через `adb run-as`. `sqlite3` CLI подтверждён живой сверкой на образе
+(`adb shell which sqlite3` → `/system/bin/sqlite3` 3.39.2, emulator-5554).
+Важный нюанс, найденный при реализации: `adb.run_as`/`adb.shell` возвращают
+ТОЛЬКО `stdout` (`adb._run()`) — `adb shell` форвардит remote stdout/stderr в
+РАЗНЫЕ локальные потоки, а sqlite3 CLI пишет ошибки в stderr; без `2>&1`
+ВНУТРИ remote-команды `run_as()` видел пустую строку что при успехе, что при
+ошибке (ложный always-ready) — обнаружено и исправлено ДО зелёного прогона,
+живой сверкой (пустой вывод при ошибке без редиректа, непустой текст ошибки
+с редиректом).
+
+Красная/зелёная живая проба (emulator-5554, on-device tight-loop —
+host-driven поллинг через adb не годится, окно уже сетевой задержки
+round-trip'а): `pm clear` + `am start` (без `-W`, чтобы не ждать полной
+прорисовки) + on-device цикл `while [ ! -f databases/ao3_ratings.db ]; do
+:; done; sqlite3 ... 'SELECT 1 FROM work_ratings LIMIT 0' 2>&1` — 6/6
+прогонов дали `Error: in prepare, no such table: work_ratings` СРАЗУ по
+появлении файла (~330-350k итераций пустого цикла, т.е. окно короче network
+round-trip, но не короче on-device syscall-цикла) — это и есть форсированный
+снимок «сразу после появления файла», воспроизводящий диагноз буквально.
+Тот же цикл с условием `sqlite3 ... 2>&1` вместо `test -f` (эквивалент
+нового `_schema_ready`) — 0/6 попаданий, ~240-260 итераций КАЖДАЯ из которых
+дороже (полный fork/exec sqlite3), т.е. схема готова вскоре после файла, но
+гейт по файлу успевает соврать раньше. Дополнено device-free
+детерминированной пробой `framework/tests/test_seed_db_schema_race_unit.py`
+(тот же механизм на одном таймлайне, воспроизводимо без флейка тайминга на
+каждом прогоне) — обе новые тестовые функции + 2 переписанных монки-патча в
+`framework/tests/test_subprocess_timeout_unit.py` (гейт `_db_exists` ->
+`_schema_ready` в фейках) зелёные, 14/14 device-free юнит-проб PYTEST_EXIT=0.
+
+Потребитель seed-фикстур (`loved_work_seeded`) — replay `TC-141`
+(`tests/test_rating.py::test_edit_tag_on_already_saved_work_via_panel_does_not_click_kudos`)
+— 3/3 подряд PASSED (Invoke-Pytest, канонической формой). `arch_check.py` и
+`validate_frontmatter.py` — 0/0 ошибок. `git status --porcelain --
+app-under-test/` — пусто (проверено до и после фикса).
+
+Владение fixed_in обновится в этом же ходе на реальный хэш коммита. Правка
+ограничена `framework/data/seed_db.py` + двумя тестовыми файлами — сама
+`_db_exists()` оставлена как отдельный примитив (диагностика/будущие
+вызовы), просто больше не используется как гейт готовности.
 
 ## Чек-лист качества (заводящий проходит перед публикацией)
 - [x] Проверены дубликаты среди открытых test_debt: не пересекается с

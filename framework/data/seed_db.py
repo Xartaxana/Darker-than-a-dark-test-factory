@@ -28,14 +28,55 @@ _RATING_ENUM = {"SAVE", "LIKE", "READ", "PENDING", "DISLIKE"}
 
 
 def _db_exists() -> bool:
+    """Существование ФАЙЛА БД — необходимое, но НЕ достаточное условие готовности
+    (AT-BUG-044): Room создаёт файл раньше, чем прогоняет миграции/CREATE TABLE.
+    Оставлена как отдельный дешёвый примитив (диагностика/будущие вызовы), но
+    `ensure_db_initialized` полагается на `_schema_ready()`, не на эту функцию —
+    см. её докстринг."""
     out = adb.run_as(f"sh -c 'test -f {_DB_REL} && echo YES || echo NO'").strip()
     return out.endswith("YES")
 
 
+def _schema_ready() -> bool:
+    """Готовность СХЕМЫ (таблица `work_ratings` существует и доступна для SELECT),
+    а не только файла БД — AT-BUG-044 (диагноз: critic-вход приёмки D1
+    `AT-BUG-042`, подтверждён двумя независимыми живыми воспроизведениями).
+    `_db_exists()`/`test -f` раньше служил гейтом `ensure_db_initialized`, но
+    Room создаёт ФАЙЛ БД раньше, чем прогоняет миграции/CREATE TABLE — окно, в
+    котором `_pull_baseline` снимает файл без таблиц, и `_insert_rows` падает
+    `sqlite3.OperationalError: no such table: work_ratings`.
+
+    Проверка — `sqlite3 <db> "SELECT 1 FROM work_ratings LIMIT 0"` через
+    `run-as` (доступно на этом образе — `adb shell which sqlite3` даёт
+    `/system/bin/sqlite3`, живая сверка 2026-08-03, emulator-5554).
+    `LIMIT 0` не возвращает строк даже при готовой схеме — единственное, что
+    отличает «готово» от «не готово», это САМ факт ошибки, а не данные.
+
+    `2>&1` ВНУТРИ remote-команды обязателен: `adb.run_as` идёт через
+    `adb.shell()` -> `adb._run()`, который возвращает ТОЛЬКО `stdout`
+    (`CompletedProcess.stdout`) — `adb shell` форвардит remote stdout/stderr в
+    ДВА разных локальных потока, и текст ошибки sqlite3 CLI («no such table…»/
+    «unable to open database file») уходит в stderr и терялся бы без явного
+    редиректа (проверено живым прогоном: без `2>&1` `run_as()` видел пустую
+    строку что при успехе, что при ошибке — ложный always-ready).
+
+    Пустой (после `.strip()`) вывод = запрос прошёл без ошибки -> таблица
+    существует. Любой непустой вывод — либо «no such table: work_ratings»
+    (файл есть, схема ещё не создана), либо «unable to open database file»
+    (файла ещё нет вовсе) — оба варианта означают «не готово», различать их не
+    нужно вызывающему коду."""
+    out = adb.run_as(
+        f"sqlite3 {_DB_REL} 'SELECT 1 FROM work_ratings LIMIT 0' 2>&1"
+    ).strip()
+    return out == ""
+
+
 def ensure_db_initialized() -> None:
-    """После pm clear файла БД ещё нет — Room создаёт его при первом запуске.
-    Запускаем приложение (явный am start -W, надёжнее monkey), ждём появления БД.
-    Один ретрай на случай, если эмулятор был занят и запуск не состоялся.
+    """После pm clear файла БД ещё нет — Room создаёт его (и прогоняет
+    миграции/CREATE TABLE) при первом запуске. Запускаем приложение (явный
+    am start -W, надёжнее monkey), ждём готовности СХЕМЫ (`_schema_ready()`,
+    AT-BUG-044 — НЕ просто появления файла, см. её докстринг). Один ретрай на
+    случай, если эмулятор был занят и запуск не состоялся.
 
     AT-BUG-009, инкремент 2 (закрытие шва инкремента 1): `adb.shell("am start
     -W ...")` теперь сам может кинуть `TimeoutError` (обёртка `adb._run()`,
@@ -47,7 +88,7 @@ def ensure_db_initialized() -> None:
     onResume), не «быстрая» shell-команда из обоснования `ADB_SHELL_TIMEOUT`
     (`settings put`/`pm clear`/`force-stop`/`logcat -d`) — используем
     отдельный `ADB_LAUNCH_TIMEOUT`, см. обоснование в `settings.py`."""
-    if _db_exists():
+    if _schema_ready():
         return
     for attempt in range(2):
         try:
@@ -55,8 +96,8 @@ def ensure_db_initialized() -> None:
                 f"am start -W -n {settings.APP_PACKAGE}/{settings.APP_ACTIVITY}",
                 timeout=settings.ADB_LAUNCH_TIMEOUT,
             )
-            wait_for(_db_exists, timeout=40,
-                     message="Room не создал ao3_ratings.db после запуска")
+            wait_for(_schema_ready, timeout=40,
+                     message="Room не создал схему work_ratings в ao3_ratings.db после запуска (AT-BUG-044)")
             break
         except TimeoutError:
             if attempt == 1:

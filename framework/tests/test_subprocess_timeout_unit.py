@@ -183,7 +183,7 @@ def test_ensure_db_initialized_retries_timeout_from_shell(monkeypatch):
     вызывался ПЕРЕД `try:`, и `TimeoutError` из него улетал наружу немедленно,
     минуя ретрай-цикл — именно так упали 3 `ERROR at setup` на полном p0."""
     calls: list[str] = []
-    db_exists_calls = {"n": 0}
+    schema_ready_calls = {"n": 0}
 
     def _fake_shell(cmd, timeout=None):
         # adb.shell() уже оборачивает subprocess.TimeoutExpired в TimeoutError
@@ -194,15 +194,16 @@ def test_ensure_db_initialized_retries_timeout_from_shell(monkeypatch):
             raise TimeoutError(f"adb shell {cmd} не ответил за {timeout}s (AT-BUG-009)")
         return ""
 
-    def _fake_db_exists():
-        # Первый вызов (initial-check в начале ensure_db_initialized) — БД ещё
-        # нет; после успешного (второго) am start -W — уже есть (wait_for
-        # возвращается немедленно, без реального 40s-поллинга).
-        db_exists_calls["n"] += 1
-        return db_exists_calls["n"] > 1
+    def _fake_schema_ready():
+        # Первый вызов (initial-check в начале ensure_db_initialized) — схема
+        # ещё не готова; после успешного (второго) am start -W — уже готова
+        # (wait_for возвращается немедленно, без реального 40s-поллинга).
+        # AT-BUG-044: гейт теперь `_schema_ready`, не `_db_exists`.
+        schema_ready_calls["n"] += 1
+        return schema_ready_calls["n"] > 1
 
     monkeypatch.setattr(seed_db.adb, "shell", _fake_shell)
-    monkeypatch.setattr(seed_db, "_db_exists", _fake_db_exists)
+    monkeypatch.setattr(seed_db, "_schema_ready", _fake_schema_ready)
     monkeypatch.setattr(seed_db.adb, "force_stop", lambda: None)
 
     # When первая попытка am start -W виснет TimeoutError — ретрай-цикл обязан
@@ -227,7 +228,7 @@ def test_ensure_db_initialized_raises_after_two_consecutive_timeouts(monkeypatch
         raise TimeoutError(f"adb shell {cmd} не ответил за {timeout}s (AT-BUG-009)")
 
     monkeypatch.setattr(seed_db.adb, "shell", _fake_shell)
-    monkeypatch.setattr(seed_db, "_db_exists", lambda: False)
+    monkeypatch.setattr(seed_db, "_schema_ready", lambda: False)
     monkeypatch.setattr(seed_db.adb, "force_stop", lambda: None)
 
     # When обе попытки (attempt 0 и attempt 1) виснут TimeoutError подряд
