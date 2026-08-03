@@ -376,3 +376,26 @@ def test_release_readiness_section_placed_after_header(repo, monkeypatch):
 
     assert text.index("## Release readiness") < text.index("## Сборка под тестом")
     assert text.index("generated_at:") < text.index("## Release readiness")
+
+
+def test_escalation_lines_ignore_annotation_bullets(repo, monkeypatch):
+    """Прецедент 2026-08-03: свободные аннотационные буллеты `- [РАЗБОР ...]`
+    внутри записей ESC-* — не эскалации; счётчиком A4 считаются только строки
+    формата sla_sweep `- [<ISO ts>] **KEY** [rule] — msg` (на границе и за ней)."""
+    monkeypatch.setattr(qs, "REPO", repo.root, raising=True)
+    monkeypatch.setattr(qs, "AUT_PATH", repo.root / "state" / "app-under-test.yaml", raising=True)
+    monkeypatch.setattr(qs, "ESCALATIONS_PATH", repo.root / "state" / "escalations.md", raising=True)
+
+    (repo.root / "state" / "escalations.md").write_text(
+        "# Эскалации фабрики\n\n"
+        "- [2026-08-03T00:00:00Z] **BUG-011** [sla:bug_open_major] — висит\n"
+        "- [РАЗБОР Lead (Fable), 2026-08-02T16:5x, инцидент ЗАКРЫТ] Корень найден\n"
+        "- [НАХОДКА живой верификации, 2026-08-03 (attempt 3)] пин дрейфует\n"
+        "- [test-maintainer, 2026-08-03T01:1xZ: подтверждено] заметка\n"
+        "- [2026-08-03T12:34:56Z] **TC-020** [sla:blocked_any] — в Blocked\n",
+        encoding="utf-8")
+
+    lines = qs._escalation_lines()
+
+    assert len(lines) == 2
+    assert "BUG-011" in lines[0] and "TC-020" in lines[1]

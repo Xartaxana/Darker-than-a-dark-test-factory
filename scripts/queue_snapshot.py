@@ -72,11 +72,18 @@ def _read_aut() -> dict:
     return out
 
 
+# Формат живой SLA-эскалации: `- [<ISO ts>] **KEY** [rule] — msg` (пишет
+# sla_sweep). Свободные аннотационные буллеты `- [РАЗБОР ...]`/`- [НАХОДКА ...]`
+# внутри записей ESC-* эскалациями НЕ являются — прецедент 2026-08-03:
+# 7 аннотаций ESC-014/015 завысили счётчик A4 с 5 до 12.
+_ESCALATION_LINE_RE = re.compile(r"^- \[\d{4}-\d{2}-\d{2}T[\d:]+Z?\] \*\*")
+
+
 def _escalation_lines() -> list[str]:
     if not ESCALATIONS_PATH.exists():
         return []
     return [l for l in ESCALATIONS_PATH.read_text(encoding="utf-8").splitlines()
-            if l.startswith("- [")]
+            if _ESCALATION_LINE_RE.match(l)]
 
 
 def _charter_stats() -> dict:
