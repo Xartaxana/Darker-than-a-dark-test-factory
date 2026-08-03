@@ -187,6 +187,19 @@ def check_cross_field(meta: dict, schema: dict, rel: str) -> list[str]:
             errors.append(
                 f"{rel}: id `{bug_id}` с префиксом `AT-BUG-` требует "
                 f"`type: test_debt` (получено `{_s(meta.get('type')) or '(нет)'}`)")
+    # Красный замок (Lead 2026-08-03, прецедент TC-139/BUG-015): red_lock
+    # указывает баг, до фикса которого автотест намеренно красный — guard
+    # правила F1 в rules.yaml читает это поле; здесь держим целостность.
+    if schema.get("type") == "test-case" and _s(meta.get("red_lock")).strip():
+        lock_id = _s(meta.get("red_lock")).strip()
+        if not _s(meta.get("automated_by")).strip():
+            errors.append(
+                f"{rel}: `red_lock: {lock_id}` без `automated_by` — красный замок "
+                f"и есть намеренно-красный автотест, без теста поле бессмысленно")
+        if not (REPO / "bugs" / f"{lock_id}.md").exists():
+            errors.append(
+                f"{rel}: `red_lock: {lock_id}` ссылается на несуществующий "
+                f"bugs/{lock_id}.md — битая ссылка замка")
     return errors
 
 

@@ -103,10 +103,21 @@ rules:
     # кейс возвращается на повторное ревью следующим правилом.
 
   - name: "Ревью нового автотеста"                          # F1
-    when: "test-case.status == Approved И automated_by заполнен И нет review"
+    when: "test-case.status == Approved И automated_by заполнен И нет review
+      И (red_lock пуст ИЛИ баг из red_lock уже НЕ в Open|Reopened)"
     dispatch: test-reviewer
     # Гейт: Approved→Automated переводит ТОЛЬКО test-reviewer (матрица transitions.yaml).
     # Он же ставит automation_status: active (B3).
+    # red_lock-guard (Lead 2026-08-03, прецедент TC-139/BUG-015): кейс с
+    # намеренно-красным тестом до фикса бага (поле red_lock, schemas/
+    # test-case.schema.yaml) в F1 не проходит ПО ПОСТРОЕНИЮ — независимое
+    # воспроизведение ЗЕЛЁНОГО прогона невозможно, диспатч был бы холостым
+    # (до 2026-08-03 правило матчило TC-139 каждый проход). Баг замка дошёл
+    # до Fixed/Verified → guard отпускает, кейс уходит в F1 штатно (замок
+    # стал зелёным регресс-тестом). Ссылочную целостность red_lock держит
+    # validate_frontmatter (preflight). Детектор утечки guard'а — реактивный
+    # no-op test-reviewer («тест ожидаемо красный») в orchestrator-log +
+    # разбор no-op'ов чеком калибровки.
 
   - name: "Автоматизировать Approved-кейс"
     when: "test-case.status == Approved И пусто automated_by И кейс НЕ покрыт

@@ -40,6 +40,17 @@ fields:
   # остаётся Approved, пока test-reviewer не переведёт в Automated. changes_requested
   # ставит ревьюер (замечания — в тело кейса), снимает test-automator после доработки.
   review: { enum: [changes_requested] }
+  # Красный замок (Lead 2026-08-03, прецедент TC-139/BUG-015): кейс с заполненным
+  # automated_by, чей тест НАМЕРЕННО красный до фикса указанного бага. F1
+  # (независимое воспроизведение ЗЕЛЁНОГО прогона) для такого кейса невозможен
+  # по построению — правило rules.yaml «Ревью нового автотеста» пропускает кейс,
+  # пока баг из red_lock в Open|Reopened; после Fixed+ кейс уходит в F1 штатно
+  # (замок стал зелёным регресс-тестом). Конвенция для заводящих красные замки
+  # агентов (test-automator/test-designer): намеренно-красный тест до фикса
+  # бага X = обязательное `red_lock: "X"` — иначе F1-диспатч будет холостым.
+  # Ссылочная целостность и связка с automated_by — check_cross_field
+  # validate_frontmatter.py (preflight каждого прохода).
+  red_lock: { pattern: "^$|^(AT-)?BUG-\\d{3,}$" }
   reviewed_by: {}
   reviewed_at: { pattern: "^\\d{4}-\\d{2}-\\d{2}[T ][\\d:.+]+Z?$" }
   quarantine_reason: {}

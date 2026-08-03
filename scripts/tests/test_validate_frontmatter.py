@@ -399,3 +399,46 @@ def test_charter_attachments_md_not_scanned(repo, schemas):
     assert errors == []  # битый "не-frontmatter" вложения не всплывает ошибкой
     assert not any("attachments" in e for e in errors) and \
         not any("attachments" in w for w in _warns)
+
+
+# --- red_lock (Lead 2026-08-03, прецедент TC-139/BUG-015): красный замок ---
+
+def test_red_lock_valid_pair_is_clean(repo, schemas):
+    """red_lock на существующий баг при заполненном automated_by — чисто."""
+    repo.bug("BUG-080", "Open")
+    repo.test_case("TC-080", "Approved",
+                   extra='automated_by: "framework/tests/test_x.py::test_lock"\n'
+                         'red_lock: "BUG-080"\n')
+
+    errors, _warns = vf.validate()
+    assert errors == []
+
+
+def test_red_lock_dangling_bug_is_error(repo, schemas):
+    """Битая ссылка замка: red_lock на несуществующий bugs/<id>.md — ERROR."""
+    repo.test_case("TC-081", "Approved",
+                   extra='automated_by: "framework/tests/test_x.py::test_lock"\n'
+                         'red_lock: "BUG-999"\n')
+
+    errors, _warns = vf.validate()
+    assert any("TC-081" in e and "BUG-999" in e and "несуществующий" in e for e in errors)
+
+
+def test_red_lock_without_automated_by_is_error(repo, schemas):
+    """Замок без теста бессмыслен: red_lock при пустом automated_by — ERROR."""
+    repo.bug("BUG-082", "Open")
+    repo.test_case("TC-082", "Approved", extra='red_lock: "BUG-082"\n')
+
+    errors, _warns = vf.validate()
+    assert any("TC-082" in e and "automated_by" in e for e in errors)
+
+
+def test_red_lock_bad_format_is_error(repo, schemas):
+    """За границей паттерна: мусорное значение red_lock ловится схемой."""
+    repo.bug("BUG-083", "Open")
+    repo.test_case("TC-083", "Approved",
+                   extra='automated_by: "framework/tests/test_x.py::test_lock"\n'
+                         'red_lock: "не-баг-вовсе"\n')
+
+    errors, _warns = vf.validate()
+    assert any("TC-083" in e and "red_lock" in e for e in errors)
