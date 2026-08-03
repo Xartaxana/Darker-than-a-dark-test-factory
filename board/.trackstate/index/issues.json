@@ -2671,14 +2671,13 @@
     "epicPath": null,
     "summary": "Бейджи открытых вкладок сохраняют состояние до перезагрузки страницы; после reload — сброшены",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p3",
-    "assignee": "test-automator",
+    "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:settings",
-      "risk:R-01",
-      "wip:test-automator"
+      "risk:R-01"
     ],
     "updated": "2026-08-03T09:10:09Z",
     "resolution": null,
@@ -4302,14 +4301,15 @@
     "issueType": "bug",
     "status": "bug-fixed",
     "priority": "p2",
-    "assignee": "qa-agents",
+    "assignee": "fix-verifier",
     "labels": [
       "bug",
       "test_case:TC-124",
       "test_case:TC-125",
       "test_case:TC-126",
       "test_case:TC-127",
-      "sev:minor"
+      "sev:minor",
+      "wip:fix-verifier"
     ],
     "updated": "2026-08-03T09:43:00Z",
     "resolution": null,

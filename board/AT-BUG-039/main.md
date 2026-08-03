@@ -5,9 +5,9 @@ issueType: "bug"
 status: "bug-fixed"
 priority: "p2"
 summary: "browser_steps.assert_tap_to_scroll_delta: диагностика scrollY снята ДО опроса, а не после — тот же класс, что AT-BUG-036"
-assignee: "qa-agents"
+assignee: "fix-verifier"
 reporter: "qa-agents"
-labels: ["bug", "test_case:TC-124", "test_case:TC-125", "test_case:TC-126", "test_case:TC-127", "sev:minor"]
+labels: ["bug", "test_case:TC-124", "test_case:TC-125", "test_case:TC-126", "test_case:TC-127", "sev:minor", "wip:fix-verifier"]
 components: []
 fixVersions: []
 watchers: []

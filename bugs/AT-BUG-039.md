@@ -21,7 +21,7 @@ resolution: ""
 resolution_comment: ""
 known_issue: "false"
 blocked_reason: ""
-lock: ""
+lock: "fix-verifier:2026-08-03T09:56:04Z"
 gitlab_issue: ""
 ---
 

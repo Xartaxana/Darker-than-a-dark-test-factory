@@ -2,12 +2,12 @@
 key: "TC-020"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p3"
 summary: "Бейджи открытых вкладок сохраняют состояние до перезагрузки страницы; после reload — сброшены"
-assignee: "test-automator"
+assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:settings", "risk:R-01", "wip:test-automator"]
+labels: ["test-case", "area:settings", "risk:R-01"]
 components: []
 fixVersions: []
 watchers: []
@@ -213,6 +213,22 @@ _Спроецировано из `test-cases/settings/TC-020.md` (источни
   кейса НЕ ослаблено: Then (а) и Then (б) по-прежнему требуют сути (бейдж
   держится без reload; после reload — очищен), сузилась только ЗАЯВКА о
   порядке шагов, которая и была неверной. Правок в `app-under-test/` нет.
+- **2026-08-03T09:52:00Z — test-automator (диспатч по правилу "Автоматизировать
+  Approved-кейс", `AT-BUG-042` уже `Verified`):** код обеих функций (Then (а)/
+  Then (б)) уже существовал от предыдущей сессии и полностью соответствует
+  этому кейсу — переписан не был. Переподтверждено собственным прогоном:
+  `2 passed in 113.87s`, затем неформальная само-проба (намеренная инверсия
+  оракула Then (а) на `assert_panel_rating_deselected` — байтовая копия/откат
+  по CLAUDE.md п.8) дала честный `1 failed`, откат подтверждён пустым
+  `git status`/`git diff`, повторный прогон снова `2 passed in 114.00s`.
+  `automated_by` заполнен первой функцией (конвенция `TC-104`: два
+  `@allure.id("TC-020")`, `automated_by` указывает на Then (а)). `status`,
+  `automation_status` и формальный `red_probe`-таймстамп НЕ проставлены —
+  оба поля по `schemas/test-case.schema.yaml` (B3) и `test-reviewer.md`
+  («Пройдено») принадлежат исключительно F1-вердикту test-reviewer при
+  переводе `Approved → Automated`; моя само-проба выше — не замена F1 п.7,
+  а личная сверка, что тест не тавтологически зелёный, приложена как witness
+  для ревьюера. Правок в `app-under-test/` нет.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»
