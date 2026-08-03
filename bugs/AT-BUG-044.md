@@ -6,7 +6,7 @@ debt_kind: flaky_test
 severity: minor
 status: Fixed
 found_in: "critic-вход приёмки D1 AT-BUG-042 + два независимых воспроизведения в D1-прогонах fix-verifier (AT-BUG-042 setup-фейл, AT-BUG-039 раунд 2 TC-127 ERROR), 2026-08-03; framework env, сборка 1.10 (versionCode 11)"
-fixed_in: "PENDING_COMMIT_ATTEMPT2"
+fixed_in: "d8062c5"
 last_seen_in: ""
 test_cases: []
 runs: []
@@ -206,9 +206,10 @@ Non-blocking пункты critic-вердикта (перенос `_schema_ready
 `app_steps.py:541-543`) НЕ применены в этом ходе — не обязательны для
 приёмки, оставлены как есть по явному разрешению DoD.
 
-`fixed_in` обновится на реальный хэш этого коммита в этом же ходе (тот же
-приём, что `96734d8` — сам файл коммитится вместе с кодовым диффом,
-placeholder заменяется на фактический хэш немедленно после коммита).
+`fixed_in: d8062c5` (коммит `fix(seed_db): AT-BUG-044 attempt 2 - ...`,
+тот же приём, что `96734d8` — сам файл коммитится вместе с кодовым
+диффом, placeholder заменён на фактический хэш немедленно после коммита
+отдельным точечным коммитом ниже).
 
 **Требуется повторный critic-вход перед приёмкой (CLAUDE.md правило 3):**
 этот дифф — Sonnet-класс результат (test-maintainer); builder-класс
