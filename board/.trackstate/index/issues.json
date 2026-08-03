@@ -4405,6 +4405,27 @@
     "archived": false
   },
   {
+    "key": "AT-BUG-044",
+    "path": "board/AT-BUG-044/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "data/seed_db.py::ensure_db_initialized ждёт появления ФАЙЛА БД, а не схемы — окно 'no such table: work_ratings' при сидинге сразу после pm clear",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:minor"
+    ],
+    "updated": "2026-08-03T10:46:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "BUG-001",
     "path": "board/BUG-001/main.md",
     "parent": null,

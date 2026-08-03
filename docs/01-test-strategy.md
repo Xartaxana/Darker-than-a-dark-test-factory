@@ -516,7 +516,7 @@ TITLE несёт "/" на Rate/Note/Tag — три разных Then) задок
   (персистентность URL+scroll после рестарта), TC-026 (long-press по ссылке
   открывает фоновую вкладку без переключения активной).
 - **tabs: переключение активной вкладки тапом по чипу** (R-08) — **designed**
-  (2026-07-24, test-designer, no-op — метка `needs-design` протухла:
+  (2026-07-24, test-designer, no-op — дизайн-метка протухла:
   расхождение уже устранено проходами test-maintainer/fix-verifier
   2026-07-20/21, диспатч подтвердил и снял метку): `browse-tab-switch-active`
   (BrowserViewModel.kt:289-295; обработчик тапа TabStrip.kt:108 `clickable(onTap)`
