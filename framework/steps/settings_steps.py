@@ -320,17 +320,50 @@ def assert_clear_all_dialog_closed(driver, timeout: int = 3):
     ), "диалог подтверждения остался открыт после Cancel"
 
 
+# Относительный путь к БД приложения — тот же, что `seed_db._DB_REL`
+# (не импортируется напрямую: `seed_db._DB_REL` приватная граница модуля,
+# держим отдельную копию литерала, как и раньше делал этот файл).
+_RATINGS_DB_REL = "databases/ao3_ratings.db"
+
+
+def _no_sqlite_marker_missing_error(step: str, out: str) -> RuntimeError:
+    """AT-BUG-045: общий текст ошибки для трёх Then-хелперов ниже — вынесено,
+    чтобы формулировка не разъезжалась по копипасте."""
+    return RuntimeError(
+        f"{step}: не удалось прочитать work_ratings через adb (ни маркер "
+        f"NOSQLITE, ни OK не найдены в выводе — похоже на отказ транспорта, "
+        f"а не на намеренную деградацию 'нет sqlite3'), сырой вывод: {out!r}"
+    )
+
+
 @allure.step("Then в БД приложения рейтинги ещё присутствуют (диалог не подтверждён)")
 def assert_ratings_present():
     """Обратная проверка к `assert_no_ratings` — тот же деградационный приём
     (образ без бинаря sqlite3 не блокирует Then, проверку тогда делает UI-слой
-    вызывающего теста, см. `assert_no_ratings`)."""
+    вызывающего теста, см. `assert_no_ratings`).
+
+    AT-BUG-045 (тот же класс, что `seed_db._schema_ready()`, AT-BUG-044):
+    раньше маркер деградации был `"NOSQLITE" in out or out == ""` — пустой
+    `out` БЕЗ `NOSQLITE` трактовался как то же самое «нет sqlite3», но
+    `2>/dev/null` подавлял ЛЮБОЙ stderr remote-стороны, а `adb.run_as` (через
+    `adb.shell`/`adb._run().stdout`) отбрасывает returncode — отказ ТРАНСПОРТА
+    (устройство offline/adb упал) даёт тот же пустой `out`, и Then про
+    состояние БД молча пропускался вместо честного FAIL/ERROR. Fix (приём
+    `_schema_ready`): `2>&1` вместо `2>/dev/null` (ошибка не теряется) +
+    позитивный маркер `OK`, который remote-shell печатает, ТОЛЬКО если сам
+    SELECT реально исполнился. Три исхода: `NOSQLITE` в выводе — легитимная
+    деградация «нет бинаря/запрос не прошёл», skip; суффикс `OK` — реальные
+    данные, парсим текст ДО маркера; ни то ни другое (в т.ч. пустой `out` —
+    транспорт ничего не вернул) — явный `RuntimeError`, не тихий return."""
     out = adb.run_as(
-        'sh -c "sqlite3 databases/ao3_ratings.db \\"SELECT COUNT(*) FROM work_ratings\\" 2>/dev/null || echo NOSQLITE"'
+        f"sh -c 'sqlite3 {_RATINGS_DB_REL} \"SELECT COUNT(*) FROM work_ratings\" 2>&1 && echo OK || echo NOSQLITE'"
     ).strip()
-    if "NOSQLITE" in out or out == "":
+    if "NOSQLITE" in out:
         return
-    assert out not in ("0", ""), f"ожидали >0 рейтингов в БД (диалог ещё не подтверждён), получили: {out}"
+    if not out.endswith("OK"):
+        raise _no_sqlite_marker_missing_error("assert_ratings_present", out)
+    count = out[: -len("OK")].strip()
+    assert count not in ("0", ""), f"ожидали >0 рейтингов в БД (диалог ещё не подтверждён), получили: {count!r}"
 
 
 @allure.step("Then читаем сырые строки work_ratings (различающий замер)")
@@ -341,11 +374,18 @@ def read_rating_rows() -> str:
     значение, обычно `SAVE`) от `onWorkFinished` auto-READ
     (`BrowserViewModel.kt:1198-1224` + `ao3_bridge.js:1114-1147`, срабатывает на
     scroll-restore независимо от Clear all/dispose). Используется точечно в
-    диагностике `AT-BUG-042` — не возвращает `NOSQLITE`-деградацию отдельным
-    типом (вызывающий код сам решает, что делать с пустым/`NOSQLITE` выводом)."""
+    диагностике `AT-BUG-042`.
+
+    AT-BUG-045: вывод теперь несёт тот же fail-closed маркер, что
+    `assert_ratings_present`/`assert_no_ratings` — `NOSQLITE` (намеренная
+    деградация) ИЛИ суффикс `OK` (SELECT реально исполнился, тело ДО маркера —
+    сырые строки, возможно пустые) — вызывающий код (`assert_rating_rows_empty`)
+    сам разбирает маркер и решает, что делать с пустым/иным выводом; голый
+    пустой `out` без всякого маркера — то же самое «транспорт ничего не
+    вернул», что и в двух других хелперах."""
     return adb.run_as(
-        'sh -c "sqlite3 databases/ao3_ratings.db '
-        '\\"SELECT ao3Id, rating, timestamp FROM work_ratings\\" 2>/dev/null || echo NOSQLITE"'
+        f"sh -c 'sqlite3 {_RATINGS_DB_REL} "
+        '"SELECT ao3Id, rating, timestamp FROM work_ratings" 2>&1 && echo OK || echo NOSQLITE\''
     ).strip()
 
 
@@ -361,22 +401,38 @@ def assert_rating_rows_empty():
     `ao3Id|rating|timestamp` — единственное, что различает конкурирующих
     писателей (`SAVE` = dispose-save панели, `BUG-022`; `READ` = `onWorkFinished`
     auto-mark), см. докстринг `read_rating_rows`. Та же деградация к UI-слою на
-    образах без бинаря `sqlite3`, что у `assert_no_ratings`."""
+    образах без бинаря `sqlite3`, что у `assert_no_ratings`.
+
+    AT-BUG-045: `read_rating_rows()` теперь несёт `OK`-маркер поверх сырых
+    строк — распаковываем его здесь тем же приёмом, что и в двух остальных
+    хелперах (см. `assert_ratings_present`); пустое ТЕЛО (до маркера) при
+    наличии `OK` — легитимный ожидаемый Then (таблица пуста), пустой `out`
+    БЕЗ всякого маркера — отказ транспорта, ERROR."""
     out = read_rating_rows()
     if "NOSQLITE" in out:
         return
-    assert out == "", f"ожидали пустую work_ratings после Clear all ratings, в БД строки: {out!r}"
+    if not out.endswith("OK"):
+        raise _no_sqlite_marker_missing_error("assert_rating_rows_empty", out)
+    rows = out[: -len("OK")].strip()
+    assert rows == "", f"ожидали пустую work_ratings после Clear all ratings, в БД строки: {rows!r}"
 
 
 @allure.step("Then в БД приложения нет ни одного рейтинга")
 def assert_no_ratings():
+    """AT-BUG-045: тот же fail-closed маркер, что `assert_ratings_present`
+    (см. её докстринг за полным разбором класса дефекта) — раньше пустой
+    `out` без `NOSQLITE` маскировал отказ транспорта под легитимную
+    деградацию «нет sqlite3»."""
     out = adb.run_as(
-        'sh -c "sqlite3 databases/ao3_ratings.db \\"SELECT COUNT(*) FROM work_ratings\\" 2>/dev/null || echo NOSQLITE"'
+        f"sh -c 'sqlite3 {_RATINGS_DB_REL} \"SELECT COUNT(*) FROM work_ratings\" 2>&1 && echo OK || echo NOSQLITE'"
     ).strip()
     # На части образов нет бинаря sqlite3 — тогда проверку делает UI-слой (пустые вкладки)
-    if "NOSQLITE" in out or out == "":
+    if "NOSQLITE" in out:
         return
-    assert out == "0", f"ожидали 0 рейтингов, в БД: {out}"
+    if not out.endswith("OK"):
+        raise _no_sqlite_marker_missing_error("assert_no_ratings", out)
+    count = out[: -len("OK")].strip()
+    assert count == "0", f"ожидали 0 рейтингов, в БД: {count!r}"
 
 
 # --- Общий стейт side panel <-> Settings (theme_mode/font_size_step) ---
