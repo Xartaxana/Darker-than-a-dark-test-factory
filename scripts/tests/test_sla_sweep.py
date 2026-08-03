@@ -470,6 +470,140 @@ def test_followup_unprocessed_idempotent(repo):
     assert second.count("CH-017:followup_tc#0") == 1
 
 
+# --- defect_found 2026-08-03 16:36: id-токен-ЦИТАТА чужой записи ≠ обработано ---
+# (регрессия на живой ложный негатив; дословный текст — git-история CH-007
+# (5d6f834^:exploratory-charters/CH-007.md), followup_tc[0] ДО фикса
+# test-designer'ом: "id-токен где-то в тексте" гасил эскалацию, хотя запись
+# сама ещё не обработана — TC-115/TC-114 в ней ЦИТАТА чужого существующего
+# кейса, а не собственный id этой записи.)
+
+LIVE_QUOTED_FOLLOWUP_TC = (
+    "КАНДИДАТ (id за test-designer): downloadPath ПЕРЕЖИВАЕТ правку "
+    "заметки/тега у скачанной работы — замок под находку 1; TC-115/TC-114 "
+    "этот инвариант не держат (они про отсутствие файла у нескачанной "
+    "работы)."
+)
+
+
+def test_followup_tc_quoting_foreign_id_still_flags(repo):
+    """Дословный живой ложный негатив (CH-007 followup_tc[0] до фикса):
+    цитата "TC-115/TC-114" идёт ПОСЛЕ двоеточия/тире прозы — не свой id,
+    запись остаётся необработанным кандидатом."""
+    _quiet_charter_queue(repo)
+    repo.charter("CH-107", "Done", extra=(
+        'found_bugs: []\n'
+        f'followup_tc:\n  - "{LIVE_QUOTED_FOLLOWUP_TC}"\n'
+        'new_risks: []\n'))
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    text = _esc(repo)
+    assert "[sla:charter_followup_unprocessed]" in text and "CH-107:followup_tc#0" in text
+
+
+def test_followup_tc_zakryto_arrow_prefix_is_quiet(repo):
+    """Конвенция "ЗАКРЫТО → TC-NNN" (эталон CH-006/CH-008, обработано этой
+    сессией) — id идёт ПЕРЕД первым ":"/тире (тире — это "→", не ":"/"—")."""
+    _quiet_charter_queue(repo)
+    repo.charter("CH-108", "Done", extra=(
+        'found_bugs: []\n'
+        'followup_tc:\n  - "ЗАКРЫТО → TC-157 (test-designer, 2026-08-03): '
+        'гейт на границе навигации, покрытия не было."\n'
+        'new_risks: []\n'))
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    assert "charter_followup_unprocessed" not in _esc(repo)
+
+
+def test_followup_tc_pokryt_sushchestvuyushchim_prefix_is_quiet(repo):
+    """Вторая легальная форма закрытия (эталон CH-007, дословно): "ПОКРЫТ
+    СУЩЕСТВУЮЩИМ → TC-NNN" — кандидат закрыт УЖЕ существующим кейсом, не
+    новым; та же позиция id (перед ":"/тире) — тихо."""
+    _quiet_charter_queue(repo)
+    repo.charter("CH-109", "Done", extra=(
+        'found_bugs: []\n'
+        'followup_tc:\n  - "ПОКРЫТ СУЩЕСТВУЮЩИМ → TC-129 (test-designer, '
+        '2026-08-03): замок под находку уже существует в другом кейсе."\n'
+        'new_risks: []\n'))
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    assert "charter_followup_unprocessed" not in _esc(repo)
+
+
+def test_followup_tc_marker_colon_without_arrow_still_flags(repo):
+    """Граница классификатора (правило 6a): маркер-слово, за которым сразу
+    ':' БЕЗ стрелки "→" — это НЕ распознанная конвенция закрытия (id идёт
+    ПОСЛЕ ':', как в цитате) — намеренно флагуется, чтобы не открыть дыру
+    вида "ЗАКРЫТО: <проза с чужим id>" без реального назначения id этой
+    записи."""
+    _quiet_charter_queue(repo)
+    repo.charter("CH-110", "Done", extra=(
+        'found_bugs: []\n'
+        'followup_tc:\n  - "ЗАКРЫТО: TC-202 без стрелки — не наша конвенция"\n'
+        'new_risks: []\n'))
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    text = _esc(repo)
+    assert "[sla:charter_followup_unprocessed]" in text and "CH-110:followup_tc#0" in text
+
+
+def test_found_bugs_quoting_foreign_id_still_flags(repo):
+    """Симметрично followup_tc (DoD п.1: found_bugs тем же приёмом):
+    кандидат, упоминающий ЧУЖОЙ существующий BUG-id как контекст, но не
+    несущий СВОЙ id первым — остаётся необработанным. (Представительная
+    фикстура класса; дословного живого примера с этой формой в found_bugs
+    на момент фикса в данных не найдено — found_bugs пишется сразу с
+    собственным id при заведении бага, см. CH-008.)"""
+    _quiet_charter_queue(repo)
+    repo.charter("CH-111", "Done", extra=(
+        'found_bugs:\n  - "видели похожее в этой же сессии — BUG-021 не '
+        'единственный случай такого рода, но отдельно ещё не заведено"\n'
+        'followup_tc: []\n'
+        'new_risks: []\n'))
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    text = _esc(repo)
+    assert "[sla:charter_followup_unprocessed]" in text and "CH-111:found_bugs#0" in text
+
+
+def test_found_bugs_own_id_at_start_is_quiet(repo):
+    """Эталон CH-008 (дословно): found_bugs несёт свой id ПРЯМО в начале
+    записи, без маркера-слова — тихо."""
+    _quiet_charter_queue(repo)
+    repo.charter("CH-112", "Done", extra=(
+        'found_bugs:\n  - "BUG-046: ручной «Scan for downloads» при ДВУХ '
+        'файлах с одним ao3Id рапортует несходящийся результат."\n'
+        'followup_tc: []\n'
+        'new_risks: []\n'))
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    assert "charter_followup_unprocessed" not in _esc(repo)
+
+
+def test_record_processed_unit_dash_inside_id_not_a_delimiter():
+    """Граница (правило 6a): ASCII-дефис ВНУТРИ самого id-токена ("TC-151",
+    "BUG-021") — не разделитель прозы (разделитель — ":"/тире "—"/"–", не
+    дефис-дефис); id-токен на позиции 0 всегда "свой", даже если он сам
+    содержит дефис."""
+    assert ss._record_processed("BUG-021 (расширение): текст", ss.FOUND_BUGS_ID_RE) is True
+    assert ss._record_processed("TC-151/TC-152 (test-designer): текст", ss.FOLLOWUP_TC_ID_RE) is True
+
+
+def test_record_processed_unit_no_id_at_all_is_unprocessed():
+    assert ss._record_processed("КАНДИДАТ без id вовсе", ss.FOLLOWUP_TC_ID_RE) is False
+
+
 def test_dry_run_writes_nothing(repo):
     repo.bug("BUG-021", "Open", extra=f"status_since: {OLD}\n")
     _sla(repo)

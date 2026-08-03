@@ -1,12 +1,12 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-03T16:38:05Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-03T16:50:09Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **781.1** (RUN-20260702-0300)
+- smoke: Closed · smoke_freshness_hours: **781.3** (RUN-20260702-0300)
 - regression: not_run
 - canary: not_run
 - Открытые blocker/critical: **0**
@@ -85,22 +85,13 @@ generated_at: 2026-08-03T16:38:05Z · генератор: `scripts/queue_snapsho
 - bugs_per_charter: **1.25**
 - new_tc_from_charters: **15**
 
-## Активные локи (1)
+## Активные локи (0)
 
-- AT-BUG-045 — `test-maintainer:2026-08-03T18:35:57+02:00`
+- нет
 
-## Эскалации (13)
+## Эскалации (4)
 
 - [2026-07-21T22:43:25Z] **BUG-013** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-19T17:30:00Z | нужно: ответить в ## Обсуждение
 - [2026-07-24T05:10:04Z] **BUG-011** [sla:bug_open_major] — major-баг open с 2026-07-15T14:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
 - [2026-07-30T12:38:12Z] **BUG-016** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-28T12:00:00Z | нужно: ответить в ## Обсуждение
 - [2026-08-01T16:01:07Z] **BUG-017** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-30T00:00:00Z | нужно: ответить в ## Обсуждение
-- [2026-08-03T16:07:33Z] **CH-006:followup_tc#0** [sla:charter_followup_unprocessed] — followup_tc[0] без id-токена: «КАНДИДАТ (id за test-designer): гейт infinite-scroll на ГРАНИЦЕ навигации — ON→a…» | нужно: test-designer заводит TC-NNN
-- [2026-08-03T16:07:33Z] **CH-006:followup_tc#1** [sla:charter_followup_unprocessed] — followup_tc[1] без id-токена: «КАНДИДАТ: автопрыжок плотности checkPageDensity — одиночный (пустая стр.1 → page…» | нужно: test-designer заводит TC-NNN
-- [2026-08-03T16:07:33Z] **CH-006:followup_tc#2** [sla:charter_followup_unprocessed] — followup_tc[2] без id-токена: «КАНДИДАТ: эвикция окна PAGE_WINDOW=3 — состав DOM после каскада + подмена listin…» | нужно: test-designer заводит TC-NNN
-- [2026-08-03T16:07:33Z] **CH-006:followup_tc#3** [sla:charter_followup_unprocessed] — followup_tc[3] без id-токена: «КАНДИДАТ: browse-tap-to-scroll как live-push в СТАРУЮ вкладку — флаг доехал без …» | нужно: test-designer заводит TC-NNN
-- [2026-08-03T16:07:33Z] **CH-006:new_risks** [sla:charter_followup_unprocessed] — new_risks предложен (2 запис.), но в docs/01-test-strategy.md нет маркера «Пересмотр по чартеру CH-006» | нужно: test-strategist доносит риск до §10
-- [2026-08-03T16:07:33Z] **CH-007:followup_tc#2** [sla:charter_followup_unprocessed] — followup_tc[2] без id-токена: «КАНДИДАТ: формат бэкапа как контракт — верхний уровень ровно {version, works, fi…» | нужно: test-designer заводит TC-NNN
-- [2026-08-03T16:07:33Z] **CH-007:followup_tc#3** [sla:charter_followup_unprocessed] — followup_tc[3] без id-токена: «КАНДИДАТ: фильтр-профили × Restore — локально ПЕРЕИМЕНОВАННЫЙ профиль остаётся п…» | нужно: test-designer заводит TC-NNN
-- [2026-08-03T16:07:33Z] **CH-007:followup_tc#4** [sla:charter_followup_unprocessed] — followup_tc[4] без id-токена: «КАНДИДАТ: негатив Restore — не-JSON и пустой файл: 'Restore failed', база не изм…» | нужно: test-designer заводит TC-NNN
-- [2026-08-03T16:07:33Z] **CH-007:new_risks** [sla:charter_followup_unprocessed] — new_risks предложен (4 запис.), но в docs/01-test-strategy.md нет маркера «Пересмотр по чартеру CH-007» | нужно: test-strategist доносит риск до §10
