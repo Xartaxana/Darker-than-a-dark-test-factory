@@ -244,7 +244,13 @@ def read_work_ratings() -> dict[str, dict]:
     В отличие от `seed()`/`seed_with_comment()` не требует остановленного
     приложения перед вызовом (запись не производится, только чтение уже
     зафиксированных Room данных) — вызывается, пока приложение открыто на
-    экране Settings после Restore."""
+    экране Settings после Restore.
+
+    НЕ расширяется полями `title`/`author`/`downloadPath` (AT-BUG-046) — эта
+    сигнатура зафиксирована существующим потребителем `backup_steps.
+    assert_restored_fields_match`/TC-021, который сравнивает `expected` (ровно
+    эти 5 полей) с `actual` через `!=`: лишние ключи в `actual` сломали бы
+    сравнение. Полный набор полей — `read_work_ratings_full()`."""
     tmp = Path(tempfile.mkdtemp(prefix="ao3read_"))
     try:
         db = _pull_baseline(tmp)
@@ -265,6 +271,56 @@ def read_work_ratings() -> dict[str, dict]:
             }
         con.close()
         return rows
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def _read_full_rows(db: Path) -> dict[str, dict]:
+    """Читает ВСЕ поля наблюдения `work_ratings` (ao3Id/title/author/
+    downloadPath/rating/comment/tags/fandom/wordCount) из уже локального
+    файла БД `db` — без adb/pull, чистая SQL+parsing логика. Вынесена
+    отдельно от `read_work_ratings_full()`, чтобы device-free юниты могли
+    вызвать РЕАЛЬНЫЙ код разбора строки на временной sqlite-БД (см.
+    `test_seed_db_full_baseline_unit.py`), не подделывая сам хелпер и не
+    трогая устройство (AT-BUG-046, тот же приём, что `_insert_rows` в
+    `test_seed_null_wordcount_unit.py`)."""
+    con = sqlite3.connect(db)
+    con.row_factory = sqlite3.Row
+    cur = con.execute(
+        "SELECT ao3Id, title, author, downloadPath, rating, comment, tags, "
+        "fandom, wordCount FROM work_ratings"
+    )
+    rows: dict[str, dict] = {}
+    for row in cur:
+        tags = json.loads(row["tags"]) if row["tags"] else None
+        rows[row["ao3Id"]] = {
+            "title": row["title"],
+            "author": row["author"],
+            "downloadPath": row["downloadPath"],
+            "rating": row["rating"],
+            "comment": row["comment"],
+            "tags": tags,
+            "fandom": row["fandom"],
+            "word_count": row["wordCount"],
+        }
+    con.close()
+    return rows
+
+
+def read_work_ratings_full() -> dict[str, dict]:
+    """Как `read_work_ratings()`, но отдаёт ПОЛНЫЙ набор полей строки
+    `work_ratings`, включая `title`/`author`/`downloadPath` (AT-BUG-046) —
+    нужно ассертам, проверяющим сохранность ВСЕХ полей строки (TC-151/152/
+    155/156: `existing.copy(...)` панели против пересборки overlay). Новая
+    функция РЯДОМ с `read_work_ratings()`, не расширение её сигнатуры — см.
+    докстринг `read_work_ratings()` про существующего потребителя TC-021.
+
+    Не требует остановленного приложения перед вызовом (только чтение) — тот
+    же контракт, что у `read_work_ratings()`/`read_filter_profiles()`."""
+    tmp = Path(tempfile.mkdtemp(prefix="ao3read_"))
+    try:
+        db = _pull_baseline(tmp)
+        return _read_full_rows(db)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
@@ -403,6 +459,83 @@ def seed_with_download(rows: list[tuple[Work, str, Path]]) -> dict[str, str]:
         db = _pull_baseline(tmp)
         _insert_rows_with_download(
             db, [(work, rating, device_paths[work.ao3_id]) for work, rating, _ in rows]
+        )
+        adb.run_as(f"rm -f {_WAL} {_SHM}")
+        adb.push_app_file(db, _DB_REL)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return device_paths
+
+
+# --- Сидинг комбинированных baseline-строк (CH-008 baseline A/C, AT-BUG-046) ---
+# `seed_with_comment` жёстко пишет `downloadPath=None` (`_insert_rows_full:190`),
+# `seed_with_download` жёстко пишет `comment=tags=None` (`_insert_rows_with_download:385`)
+# И ассертит `rating in _RATING_ENUM` (`rating=None` не проходит) — обе функции
+# идут INSERT OR REPLACE на одну строку, композиция вызовов взаимно
+# разрушительна. Функция ниже пишет comment+tags+downloadPath ОДНОЙ строкой,
+# рейтинг независимо опционален (`None` легален, как в `_insert_rows_full`) —
+# закрывает ОБЕ грани долга сразу: baseline A (rating не null, comment+tags+
+# downloadPath) и baseline C (rating null, downloadPath, comment/tags опциональны).
+
+
+def _insert_rows_full_with_download(
+    db: Path,
+    rows: list[tuple[Work, str | None, str | None, str | None, str]],
+) -> None:
+    """Как `_insert_rows_full`, но дополнительно пишет `downloadPath` (не
+    жёстко `None`). rows: (work, rating, comment, tags, download_path) —
+    `rating` опционален (`None` — comment/download-only запись, тот же
+    инвариант `_RATING_ENUM`, что у `_insert_rows_full`: непустой `rating`
+    ОБЯЗАН быть валидным значением enum, мусор по-прежнему ассертится);
+    `download_path` НЕ опционален здесь — вызывающая сторона
+    (`seed_with_comment_and_download`) всегда подставляет реальный путь на
+    устройстве (для «нет файла» есть исходный `seed_with_comment`)."""
+    con = sqlite3.connect(db)
+    cur = con.cursor()
+    now = int(time.time() * 1000)
+    for work, rating, comment, tags, download_path in rows:
+        assert rating is None or rating in _RATING_ENUM, f"неизвестный rating: {rating}"
+        cur.execute(
+            """INSERT OR REPLACE INTO work_ratings
+               (ao3Id, title, author, url, rating, timestamp, fandom, wordCount, comment, downloadPath, tags)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+            (work.ao3_id, work.title, work.author, work.url, rating, now,
+             work.fandom, work.word_count, comment, download_path, tags),
+        )
+    con.commit()
+    con.close()
+
+
+def seed_with_comment_and_download(
+    rows: list[tuple[Work, str | None, str | None, str | None, Path]],
+) -> dict[str, str]:
+    """Сидинг комбинированного baseline «comment+tags+downloadPath одновременно»
+    (CH-008 baseline A) И «rating=null+downloadPath» (baseline C) — ОДНОЙ
+    функцией, т.к. обе грани долга AT-BUG-046 требуют одного и того же:
+    независимость `downloadPath` от `comment`/`tags`/`rating`.
+
+    rows: (work, rating, comment, tags, local_html_path) — `rating` может быть
+    `None` (baseline C), `comment`/`tags` независимо опциональны (как в
+    `seed_with_comment`), `local_html_path` — локальный HTML-фикстур,
+    кладётся на устройство (как `seed_with_download`) и его device-путь
+    пишется в `downloadPath`. Не заменяет `seed_with_comment`/
+    `seed_with_download` — для строк, которым не нужна ОБА поля сразу,
+    используйте их (дешевле — не кладут файл / не трогают comment/tags).
+    Возвращает `{ao3_id: путь на устройстве}` (как `seed_with_download`)."""
+    adb.force_stop()
+    ensure_db_initialized()
+    device_paths: dict[str, str] = {}
+    for work, _rating, _comment, _tags, local_html in rows:
+        device_paths[work.ao3_id] = _push_download_fixture(local_html, work)
+    tmp = Path(tempfile.mkdtemp(prefix="ao3seed_"))
+    try:
+        db = _pull_baseline(tmp)
+        _insert_rows_full_with_download(
+            db,
+            [
+                (work, rating, comment, tags, device_paths[work.ao3_id])
+                for work, rating, comment, tags, _ in rows
+            ],
         )
         adb.run_as(f"rm -f {_WAL} {_SHM}")
         adb.push_app_file(db, _DB_REL)
