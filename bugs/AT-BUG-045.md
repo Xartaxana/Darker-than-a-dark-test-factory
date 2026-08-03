@@ -6,7 +6,7 @@ debt_kind: flaky_test
 severity: minor
 status: Fixed
 found_in: "critic-вход приёмки D1 AT-BUG-044 (attempt 2, 2026-08-03): найдено при поиске сиблингов класса 'решение о состоянии по одному stdout adb.run_as/shell с отброшенным returncode, где пустота = успех' по внутренней оси framework/core/adb.py <-> потребители"
-fixed_in: "3805010,PLACEHOLDER_ATTEMPT2"
+fixed_in: "3805010,e6d4871"
 last_seen_in: ""
 test_cases: []
 runs: []
@@ -333,9 +333,10 @@ OK/NOSQLITE» (`framework/steps/settings_steps.py:387-388`).
 fix-verifier (attempt 2).
 
 `fixed_in` (frontmatter) обновлён на список из двух коммитов —
-`3805010` (attempt 1, транспортный фикс) + плейсхолдер attempt 2,
-который будет заменён фактическим хэшем точечной правкой сразу после
-`git commit` этого диффа (тот же приём, что и раньше).
+`3805010` (attempt 1, транспортный фикс) + `e6d4871` (attempt 2,
+коммит `fix(settings_steps): AT-BUG-045 attempt 2 - fail-closed
+NOSQLITE gate + regression unit`) — точечной правкой сразу после
+`git commit` кодового диффа, тот же приём, что и `AT-BUG-044`/attempt 1.
 
 ## Чек-лист качества (заводящий проходит перед публикацией)
 - [x] Проверены дубликаты среди открытых test_debt: не пересекается с
