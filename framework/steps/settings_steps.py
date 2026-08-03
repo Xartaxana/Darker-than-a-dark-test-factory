@@ -354,9 +354,25 @@ def assert_ratings_present():
     SELECT реально исполнился. Три исхода: `NOSQLITE` в выводе — легитимная
     деградация «нет бинаря/запрос не прошёл», skip; суффикс `OK` — реальные
     данные, парсим текст ДО маркера; ни то ни другое (в т.ч. пустой `out` —
-    транспорт ничего не вернул) — явный `RuntimeError`, не тихий return."""
+    транспорт ничего не вернул) — явный `RuntimeError`, не тихий return.
+
+    ИНКРЕМЕНТ 2 (attempt 2, critic-вход rework): attempt 1 печатал `NOSQLITE`
+    через `... 2>&1 && echo OK || echo NOSQLITE'` — `|| echo NOSQLITE` ловил
+    ЛЮБОЙ ненулевой exit `sqlite3`, не только «бинаря нет». Живой зонд критика
+    на `emulator-5554` (бинарь `sqlite3` РЕАЛЬНО есть): SELECT из
+    несуществующей таблицы дал `'Error: in prepare, no such table:
+    work_ratings\nNOSQLITE\n'` — все три хелпера молча делали `return`
+    (ложный зелёный Then на состоянии гонки AT-BUG-044, вместо честного
+    `RuntimeError`). Fix: `NOSQLITE` теперь печатает ТОЛЬКО отдельный
+    `command -v sqlite3` гейт ПЕРЕД самим SELECT (`command -v sqlite3
+    >/dev/null 2>&1 || { echo NOSQLITE; exit 0; }; sqlite3 ... 2>&1 && echo
+    OK`) — реальное отсутствие бинаря коротит выполнение до SELECT; любая
+    ошибка самого SELECT (нет таблицы / БД заблокирована / файла нет) теперь
+    остаётся сырым текстом БЕЗ какого-либо маркера и попадает в ту же ветку
+    `RuntimeError`, что и пустой транспортный `out`."""
     out = adb.run_as(
-        f"sh -c 'sqlite3 {_RATINGS_DB_REL} \"SELECT COUNT(*) FROM work_ratings\" 2>&1 && echo OK || echo NOSQLITE'"
+        "sh -c 'command -v sqlite3 >/dev/null 2>&1 || { echo NOSQLITE; exit 0; }; "
+        f"sqlite3 {_RATINGS_DB_REL} \"SELECT COUNT(*) FROM work_ratings\" 2>&1 && echo OK'"
     ).strip()
     if "NOSQLITE" in out:
         return
@@ -368,8 +384,9 @@ def assert_ratings_present():
 
 @allure.step("Then читаем сырые строки work_ratings (различающий замер)")
 def read_rating_rows() -> str:
-    """Возвращает сырой вывод `SELECT ao3Id, rating, timestamp FROM work_ratings`
-    — различающий замер, НЕ `COUNT` (критик D5, 2026-08-02): `COUNT` не отличает
+    """Возвращает вывод `SELECT ao3Id, rating, timestamp FROM work_ratings` с
+    маркером `OK`/`NOSQLITE` (AT-BUG-045) — различающий замер, НЕ `COUNT`
+    (критик D5, 2026-08-02): `COUNT` не отличает
     конкурирующих писателей — `WorkRatingPanel`'s `onDispose` re-save (стухшее
     значение, обычно `SAVE`) от `onWorkFinished` auto-READ
     (`BrowserViewModel.kt:1198-1224` + `ao3_bridge.js:1114-1147`, срабатывает на
@@ -384,8 +401,9 @@ def read_rating_rows() -> str:
     пустой `out` без всякого маркера — то же самое «транспорт ничего не
     вернул», что и в двух других хелперах."""
     return adb.run_as(
-        f"sh -c 'sqlite3 {_RATINGS_DB_REL} "
-        '"SELECT ao3Id, rating, timestamp FROM work_ratings" 2>&1 && echo OK || echo NOSQLITE\''
+        "sh -c 'command -v sqlite3 >/dev/null 2>&1 || { echo NOSQLITE; exit 0; }; "
+        f"sqlite3 {_RATINGS_DB_REL} "
+        '"SELECT ao3Id, rating, timestamp FROM work_ratings" 2>&1 && echo OK\''
     ).strip()
 
 
@@ -424,7 +442,8 @@ def assert_no_ratings():
     `out` без `NOSQLITE` маскировал отказ транспорта под легитимную
     деградацию «нет sqlite3»."""
     out = adb.run_as(
-        f"sh -c 'sqlite3 {_RATINGS_DB_REL} \"SELECT COUNT(*) FROM work_ratings\" 2>&1 && echo OK || echo NOSQLITE'"
+        "sh -c 'command -v sqlite3 >/dev/null 2>&1 || { echo NOSQLITE; exit 0; }; "
+        f"sqlite3 {_RATINGS_DB_REL} \"SELECT COUNT(*) FROM work_ratings\" 2>&1 && echo OK'"
     ).strip()
     # На части образов нет бинаря sqlite3 — тогда проверку делает UI-слой (пустые вкладки)
     if "NOSQLITE" in out:
