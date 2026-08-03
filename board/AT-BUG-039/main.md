@@ -2,7 +2,7 @@
 key: "AT-BUG-039"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p2"
 summary: "browser_steps.assert_tap_to_scroll_delta: диагностика scrollY снята ДО опроса, а не после — тот же класс, что AT-BUG-036"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-03T12:14:00Z"
-updated: "2026-08-03T12:14:00Z"
+created: "2026-08-03T12:22:12Z"
+updated: "2026-08-03T12:22:12Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # browser_steps.assert_tap_to_scroll_delta: диагностика scrollY снята ДО опроса, а не после — тот же класс, что AT-BUG-036
 
 _Спроецировано из `bugs/AT-BUG-039.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # AT-BUG-039 — замороженная диагностика в assert_tap_to_scroll_delta
 
@@ -63,6 +63,7 @@ _Спроецировано из `bugs/AT-BUG-039.md` (источник прав
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
 | 2026-08-03 | framework-код после f27af22 (test_debt, независимо от app-сборки) | TC-124, TC-125, TC-126, TC-127 (`Invoke-Pytest tests/test_reading_ux.py -k "test_tap_zone_top_third_scrolls_up or test_tap_zone_bottom_third_scrolls_down or test_tap_to_scroll_live_push_and_reload_persistence or test_tap_to_scroll_survives_kill_and_relaunch" -v`) | Раунд 1: `3 failed, 2 deselected, 1 error, PYTEST_EXIT=1` (TC-126/TC-127 упали на `BottomNav._find_pill` timeout, TC-124 ERROR в `loved_work_seeded` seed-фикстуре, TC-125 FAILED с captured setup `WinError 10048: HTTP(S) proxy failed to listen on 0.0.0.0:8080`). Изолированный повторный прогон (допущен протоколом 1 раз): `2 failed, 1 passed, 2 deselected, 1 error, PYTEST_EXIT=1` (TC-125 PASSED чисто; TC-126/TC-124 снова несут WinError 10048 в setup; TC-127 ERROR `sqlite3.OperationalError: no such table: work_ratings`). Ни один из 8 упавших узлов не дошёл до изменённого кода (`assert_tap_to_scroll_delta`) — все падения раньше, в Given/seed/prescroll. | **Blocked** — fail-fast (2 идентичных WinError 10048 на порту 8080 между прогонами, разбор ESC-016); D1-верификация недостижима в этой сессии, требуется починка среды (вероятная гонка teardown/startup `core/mitm.py`) |
+| 2026-08-03 | git-анкер framework: `202e077` (HEAD, incl. `f27af22` — holder-фикс `assert_tap_to_scroll_delta`); app: package `com.example.ao3_wrapper`, `versionCode=11`, `versionName=1.10` на `emulator-5554` | TC-124, TC-125, TC-126, TC-127 — все 4 прогнаны ОДНИМ вызовом (`Invoke-Pytest tests/test_reading_ux.py -k "test_tap_zone_top_third_scrolls_up or test_tap_zone_bottom_third_scrolls_down or test_tap_to_scroll_live_push_and_reload_persistence or test_tap_to_scroll_survives_kill_and_relaunch" -v`), ни один не заменён/не пропущен | ДО прогона: `Get-Device` → `DEVICE: emulator-5554`; свежая Appium-сессия (`Start-Appium` → `ready on :4723`); mitm-CA `adb shell "ls /apex/com.android.conscrypt/cacerts \| wc -l"` → `134` (здоровое значение); `netstat -ano \| findstr :8080` → пусто (порт 8080 в покое свободен, блокер AT-BUG-043 подтверждён починенным — фикс `core/mitm.py` уже в `202e077`). Прогон: `test_tap_zone_top_third_scrolls_up PASSED`, `test_tap_zone_bottom_third_scrolls_down PASSED`, `test_tap_to_scroll_live_push_and_reload_persistence PASSED`, `test_tap_to_scroll_survives_kill_and_relaunch PASSED` — `4 passed, 2 deselected in 278.75s (0:04:38)`, `PYTEST_EXIT=0`. Ноль rerun, ноль device-liveness recovery (`recoveries this session = 0/2`), ноль `WinError 10048` — предыдущий env-блокер (ESC-016/AT-BUG-043) не проявился. | **Verified** — все 4 потребителя `assert_tap_to_scroll_delta` зелёные на актуальном коде за один прогон; `Fixed → Verified` |
 
 ## Обсуждение
 
@@ -278,6 +279,35 @@ test-maintainer выше (2026-08-03, «...per решение Lead ESC-014: ...�
 проводится сейчас: кодификация — по evidence второго случая (D-0063 OS-репо,
 продвижение по evidence, не ради симметрии). До тех пор формулировка выше
 читается как разовое решение по этому багу, не как прецедент-правило.
+
+**2026-08-03T12:22:12Z — fix-verifier (Sonnet), D1-верификация (mode=verify), вторая попытка — среда чинилась (AT-BUG-043 принят), Fixed сохранён полным Lead:**
+
+Стартовое состояние: `status: Fixed` (восстановлен полным Lead 2026-08-03T12:14Z после отката нелегального `Fixed → Blocked` предыдущей попытки D1, 10:11Z — тот переход вне матрицы `schemas/transitions.yaml` был пометкой процедурной ошибки, не вердиктом по коду; см. запись Lead выше). Блокировавший D1 инфраструктурный дефект — `AT-BUG-043` (гонка teardown/startup порта 8080 в `core/mitm.py`, найден этим же багом как «дефект-собрат» в раунде 10:11Z, ESC-016) — почижен и принят отдельной сессией (attempt 2, 2026-08-03T12:12Z).
+
+Позитивная сверка среды ДО прогона: `Get-Device` → `DEVICE: emulator-5554`; свежая Appium-сессия (`Start-Appium` → `Appium started and ready on :4723`); mitm-CA `134` (здоровое значение, ESC-001/008); `netstat -ano | findstr :8080` → пусто (порт свободен в покое, никакого зависшего mitmdump-процесса — прямая проверка гипотезы AT-BUG-043).
+
+Прогон DoD-набора (все 4 реальных потребителя `assert_tap_to_scroll_delta` одним вызовом, per диспатч):
+```
+tests/test_reading_ux.py::test_tap_zone_top_third_scrolls_up[work_with_download.mitm] PASSED [ 25%]
+tests/test_reading_ux.py::test_tap_zone_bottom_third_scrolls_down[work_with_download.mitm] PASSED [ 50%]
+tests/test_reading_ux.py::test_tap_to_scroll_live_push_and_reload_persistence[work_with_download.mitm] PASSED [ 75%]
+tests/test_reading_ux.py::test_tap_to_scroll_survives_kill_and_relaunch[work_with_download.mitm] PASSED [100%]
+
+AT-BUG-026 device-liveness guard: recoveries this session = 0/2
+================= 4 passed, 2 deselected in 278.75s (0:04:38) =================
+PYTEST_EXIT=0
+```
+Чисто, за один прогон, без единого повтора/recovery — ни один из симптомов раунда 10:11Z (`WinError 10048`, `no such table: work_ratings`, `BottomNav._find_pill` timeout, `adb run-as cp`) не воспроизвёлся. Это прямое эмпирическое подтверждение того, что AT-BUG-043 действительно был причиной блокировки D1 этого бага, а не совпадением.
+
+Версия-якорь: framework-код `git log -1` → `202e077` (HEAD, включает `f27af22` — сам holder-фикс, и последующий коммит отката статуса; `browser_steps.py` этой сессией не тронут — non-goals диспатча). App-анкер (test_debt не зависит от app-сборки, но фиксирую для полноты evidence contract): `adb shell dumpsys package com.example.ao3_wrapper` → `versionCode=11 minSdk=26 targetSdk=36`, `versionName=1.10` на `emulator-5554`.
+
+`status: Fixed → Verified` (легальный переход `schemas/transitions.yaml`: `{from: Fixed, to: Verified, by: [fix-verifier]}`). `known_issue` уже был `"false"` (правило калибровки 2026-07-29 — оставлено). `lock` снят. `awaiting: none` без изменений. `reopen_count`/`dispute_count` не тронуты — код не опровергался, чистый первый успешный прогон после починки блокера.
+
+**Дефекты-собратья (D-0043):** не обнаружено новых — падения раунда 10:11Z полностью объясняются уже заведённым и принятым AT-BUG-043, отдельного нового класса нет.
+
+Полный DoD-прогон (все 4 узла одним вызовом, ~278.75s) — точечный прогон конкретных TC, не suite `-m p0`/regression, run-артефакт в `runs/` не требуется (named-not-covered per правило "Общие правила ведения frontmatter").
+
+Файлы изменены: `bugs/AT-BUG-039.md` (frontmatter: `status`, `status_since`, `updated`, `lock`; таблица «Верификация»; это обсуждение). `framework/`, `app-under-test/` не тронуты. Устройство/Appium оставлены поднятыми.
 
 ## Чек-лист качества (bug-reporter проходит перед публикацией)
 - [x] Проверены дубликаты среди открытых test_debt: не совпадает с AT-BUG-036 (другой файл/функция, тот же класс — сиблинг, не дубликат), AT-BUG-037 (N2/N2а — другой приём-дефект, «глотание исключения», не «пред-опросное вычисление диагностики»)

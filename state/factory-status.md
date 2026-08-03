@@ -1,12 +1,12 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-03T12:14:59Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-03T12:31:52Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **776.7** (RUN-20260702-0300)
+- smoke: Closed · smoke_freshness_hours: **776.9** (RUN-20260702-0300)
 - regression: not_run
 - canary: not_run
 - Открытые blocker/critical: **0**
@@ -67,10 +67,8 @@ generated_at: 2026-08-03T12:14:59Z · генератор: `scripts/queue_snapsho
 
 - BUG-012 [minor] Intended — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
 
-## Test debt (3)
+## Test debt (1)
 
-- AT-BUG-039 [flaky_test] Fixed — browser_steps.assert_tap_to_scroll_delta: диагностика scrollY снята ДО опроса, а не после — тот же класс, что AT-BUG-036
-- AT-BUG-043 [broken_environment] Fixed — core/mitm.py: гонка teardown/startup порта 8080 между соседними replay-тестами (WinError 10048, дважды подряд) — блокировала D1-верификацию AT-BUG-039
 - AT-BUG-044 [flaky_test] Open — data/seed_db.py::ensure_db_initialized ждёт появления ФАЙЛА БД, а не схемы — окно 'no such table: work_ratings' при сидинге сразу после pm clear
 
 ## Прогоны (1)

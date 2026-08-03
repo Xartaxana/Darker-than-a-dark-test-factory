@@ -2,7 +2,7 @@
 key: "AT-BUG-043"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p1"
 summary: "core/mitm.py: гонка teardown/startup порта 8080 между соседними replay-тестами (WinError 10048, дважды подряд) — блокировала D1-верификацию AT-BUG-039"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-03T18:05:00Z"
-updated: "2026-08-03T18:05:00Z"
+created: "2026-08-03T12:28:28Z"
+updated: "2026-08-03T12:28:28Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # core/mitm.py: гонка teardown/startup порта 8080 между соседними replay-тестами (WinError 10048, дважды подряд) — блокировала D1-верификацию AT-BUG-039
 
 _Спроецировано из `bugs/AT-BUG-043.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # AT-BUG-043 — гонка порта 8080 в core/mitm.py между соседними replay-тестами
 
@@ -118,6 +118,7 @@ address already in use
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-08-03 | framework HEAD `202e0778299ad810edc03bf3320540367c054bc8` (фикс-коммит `da5bbb25e83a302ede0aca8bb2e08e47f370593b` не позже HEAD, файлы mitm.py/conftest.py/test_mitm_port_race_unit.py не менялись после него); app `com.example.ao3_wrapper` versionName 1.10 / versionCode 11, hash `6455af0cfc2c937e81975f59a250476c77aecb73` (test_debt в фреймворке — новая сборка приложения не требуется, D1) | Юниты: `tests/test_mitm_port_race_unit.py` + сиблинги `test_mitm_upstream_guard_unit.py`/`test_mitm_proxy_reachable_unit.py`/`test_replay_ca_check_unit.py` — независимый прогон. TC-124/TC-125 (`test_tap_to_scroll_live_push_and_reload_persistence`/`test_tap_to_scroll_survives_kill_and_relaunch`) — НЕ перепрогнаны в этой D1-сессии (полный DoD-набор уже сошёлся дважды тем же днём: 3x чистый прогон в witness'е test-maintainer attempt 2 + отдельный D1-прогон AT-BUG-039; повтор избыточен). TC-126/TC-127 (`test_tap_zone_top_third_scrolls_up`/`test_tap_zone_bottom_third_scrolls_down`) — перепрогнаны НЕЗАВИСИМО этой сессией как точечная пара соседних replay-тестов, ровно покрывающая поверхность teardown→startup, которую чинит фикс. | Юниты: `24 passed in 0.82s`, `PYTEST_EXIT=0`. Device-пара TC-126/TC-127: `2 passed, 4 deselected in 107.36s`, `PYTEST_EXIT=0`, ни одного WinError 10048, ни одной строки `AT-BUG-043` (детектор рецидива) в выводе — happy path без ретраев. Код-сверка (независимая от witness'а сдачи, точечно ≥3 пункта критерия): `_wait_port_released` (mitm.py:257-264) на исчерпании таймаута печатает `AT-BUG-043 WARNING` в stderr и **возвращается**, не бросает — подтверждено чтением тела функции; `_spawn_and_wait_listening` (mitm.py:317-318) присваивает `_proc = proc` СРАЗУ после `Popen()`, до цикла ожидания слушателя — подтверждено; `conftest.py::replay` teardown (строки 731-734) — раздельный `try: mitm.stop() / finally: mitm.clear_device_proxy()` — подтверждено; видимый детектор рецидива — оба print() (успешный ретрай и WARNING) несут номер попытки/returncode/фактическую длительность (mitm.py:245-250, 257-264, 332-337, 347-351) — подтверждено. `validate_frontmatter.py` (baseline до правки этого файла) → `ошибок 0, предупреждений 0`. | Verified |
 
 ## Обсуждение
 
@@ -374,6 +375,60 @@ DoD-прогон — прецедент AT-BUG-024/ESC-006), С УСЛОВИЕМ
 
 Полный DoD attempt 2 закрыт — статус `Open → Fixed` (guard-переход B4),
 `fixed_in` заполнен, lock снят.
+
+**2026-08-03T12:28:28Z — fix-verifier (Sonnet), D1-верификация, `Fixed → Verified`:**
+
+Независимая (не повтор witness'а сдачи) верификация заявленного критерия
+готовности attempt 2. Прогон юнитов: `Invoke-Pytest tests/test_mitm_port_
+race_unit.py tests/test_mitm_upstream_guard_unit.py tests/test_mitm_
+proxy_reachable_unit.py tests/test_replay_ca_check_unit.py -q` →
+`24 passed in 0.82s`, `PYTEST_EXIT=0` — совпадает с заявленным (11+13).
+Код-сверка ≥3 пунктов критерия готовности против фактического содержимого
+(не пересказ, прямое чтение файлов): `_wait_port_released` действительно
+не бросает на исчерпании таймаута (пишет `AT-BUG-043 WARNING` в stderr и
+`return`), `_spawn_and_wait_listening` действительно присваивает `_proc`
+сразу после `Popen()` (до цикла ожидания слушателя, обе ветки исхода —
+`TimeoutError`/`RuntimeError` — оставляют `_proc` в согласованном
+состоянии), `conftest.py::replay` teardown действительно раздельный
+`try/finally` вокруг `mitm.stop()`/`mitm.clear_device_proxy()`, видимый
+детектор рецидива (print в stderr с номером попытки/returncode/
+длительностью) присутствует на обоих счастливых-с-ретраем путях и на
+исчерпании таймаута — все подтверждены построчно (см. номера строк в
+таблице «Верификация»).
+
+Device-прогон: `Get-Device` → `DEVICE: emulator-5554`, `Start-Appium` →
+`ready on :4723`, затем `tests/test_reading_ux.py -k
+"test_tap_zone_top_third_scrolls_up or
+test_tap_zone_bottom_third_scrolls_down"` (TC-126/TC-127, ровно пара
+соседних replay-тестов = поверхность teardown→startup, которую чинит
+фикс) → `2 passed, 4 deselected in 107.36s`, `PYTEST_EXIT=0`, ни одного
+WinError 10048, ни одной строки `AT-BUG-043:` в выводе (happy path без
+ретраев — печать сигнала не сработала, что ожидаемо: детектор молчит,
+когда ретрай не потребовался). TC-124/TC-125 в этой D1-сессии НЕ
+перепрогнаны отдельно — явно, не молчаливый пропуск: полный DoD-набор
+(все 4 TC) уже сошёлся дважды в тот же день (witness test-maintainer
+attempt 2, 3x подряд, и отдельный D1-прогон AT-BUG-039 этой же сессии
+ранее), инструкция диспатча прямо разрешила не повторять его целиком.
+
+`validate_frontmatter.py` (baseline до этой правки) → `ошибок 0,
+предупреждений 0` — сходится с заявленным attempt 2. Ни одно изменение
+не внесено в `app-under-test/` (эта верификация не трогала код — только
+`bugs/AT-BUG-043.md`).
+
+Пункт критерия 3 (репро исходной гонки) остаётся закрытым РЕШЕНИЕМ Lead
+по совокупности улик, как и было принято при переводе в `Fixed` — эта
+верификация его не переоткрывает и не пытается повторить красную пробу
+(вне DoD-манифеста диспатча, п.3 явно ограничил объём прогона). Видимый
+детектор рецидива присутствует и работоспособен (проверено кодом и
+отсутствием сигнала на чистом прогоне) — условие решения Lead выполнено.
+
+Дефекты-собратья: не замечено новых аналогов сверх уже задокументированных
+в теле бага (предсуществующая тонкая гонка `_assert_own_listener()` —
+уже доложена test-maintainer как отдельный потенциальный test_debt-
+кандидат, вне scope этой верификации).
+
+`status: Fixed → Verified`, `known_issue` уже был `"false"` (не менялся),
+`lock` снят.
 
 ## Чек-лист качества (заводящий проходит перед публикацией)
 - [x] Проверены дубликаты среди открытых test_debt: не пересекается с
