@@ -158,6 +158,94 @@
     "archived": false
   },
   {
+    "key": "TC-165",
+    "path": "board/TC-165/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Экспортированный backup-файл содержит РОВНО контрактные ключи {version, works, filterProfiles} и поля работы; ни одна настройка приложения в файл не попадает",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:backup",
+      "risk:R-01"
+    ],
+    "updated": "2026-08-03T19:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-166",
+    "path": "board/TC-166/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Restore возвращает локально удалённый фильтр-профиль и НЕ откатывает локальное переименование другого — скип/импорт по id, имя не сравнивается",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:backup",
+      "risk:R-09"
+    ],
+    "updated": "2026-08-03T19:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-167",
+    "path": "board/TC-167/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Restore не-JSON файла показывает «Restore failed» и НЕ изменяет данные (полусостояния нет)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:backup",
+      "risk:R-01"
+    ],
+    "updated": "2026-08-03T19:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-168",
+    "path": "board/TC-168/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Restore пустого файла показывает «Restore failed» с текстом, отличным от не-JSON случая, и НЕ изменяет данные",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:backup",
+      "risk:R-01"
+    ],
+    "updated": "2026-08-03T19:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "TC-050",
     "path": "board/TC-050/main.md",
     "parent": null,
@@ -453,6 +541,138 @@
     ],
     "updated": "2026-07-30T12:54:46Z",
     "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-157",
+    "path": "board/TC-157/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Гейт infinite-scroll на границе навигации: ON→append→OFF→Next — новая страница загружается БЕЗ подписки (номерная пагинация видима, дальнейший скролл не подгружает)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-11"
+    ],
+    "updated": "2026-08-03T19:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-158",
+    "path": "board/TC-158/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Гейт infinite-scroll на границе навигации: OFF→ON→Next — новая страница загружается С подпиской (номерная пагинация скрыта, скролл подгружает с эвикцией)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-11"
+    ],
+    "updated": "2026-08-03T19:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-159",
+    "path": "board/TC-159/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "checkPageDensity: страница листинга, опустошённая фильтром скрытия, автоматически переводит на следующую страницу (infinite_scroll ON)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-11"
+    ],
+    "updated": "2026-08-03T19:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-160",
+    "path": "board/TC-160/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "checkPageDensity: цепочка из нескольких подряд опустошённых фильтром страниц даёт каскад полных навигаций до первой непустой страницы",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-11"
+    ],
+    "updated": "2026-08-03T19:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-161",
+    "path": "board/TC-161/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "checkPageDensity: НЕ переводит на следующую страницу, когда infinite_scroll OFF — пользователь остаётся на полностью скрытой странице",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-11"
+    ],
+    "updated": "2026-08-03T19:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-162",
+    "path": "board/TC-162/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Эвикция окна PAGE_WINDOW=3 удаляет DOM старейшей подгруженной страницы и обновляет точку восстановления (listingRestoreUrl/scrollY) в prefs при каскаде подгрузок",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-16"
+    ],
+    "updated": "2026-08-03T19:00:00Z",
+    "resolution": null,
     "children": [],
     "archived": false
   },
@@ -1438,6 +1658,28 @@
       "risk:R-16"
     ],
     "updated": "2026-08-03T18:25:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-164",
+    "path": "board/TC-164/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Restore в НЕпустую библиотеку: работа скипается по ao3Id, а её файл релинкуется сканом в ОДНОМ и том же диалоге результата",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:downloads",
+      "risk:R-05"
+    ],
+    "updated": "2026-08-03T19:00:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3068,6 +3310,28 @@
     "archived": false
   },
   {
+    "key": "TC-163",
+    "path": "board/TC-163/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Tap to scroll: включение тумблера доезжает БЕЗ reload до СТАРОЙ (не активной на момент переключения) вкладки — live-push пробрасывается на ВСЕ открытые WebView, не только на активный",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:settings",
+      "risk:R-11"
+    ],
+    "updated": "2026-08-03T19:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "TC-001",
     "path": "board/TC-001/main.md",
     "parent": null,
@@ -4567,7 +4831,7 @@
     "epicPath": null,
     "summary": "settings_steps.py::assert_ratings_present/assert_no_ratings/assert_rating_rows_empty — пустой stdout (в т.ч. отказ транспорта) неотличим от 'нет sqlite3 на образе', степень тихо пропускает проверку",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "test-maintainer",
     "labels": [
@@ -4575,7 +4839,7 @@
       "sev:minor",
       "wip:test-maintainer"
     ],
-    "updated": "2026-08-03T14:10:00Z",
+    "updated": "2026-08-03T16:05:00Z",
     "resolution": null,
     "children": [],
     "archived": false

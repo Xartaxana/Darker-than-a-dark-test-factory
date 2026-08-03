@@ -39,6 +39,19 @@
 # сборка та же (63f6aac = source_commit в state/app-under-test.yaml), это
 # коррекция гранулярности/формулировок и добор пропущенной фичи, а не новый
 # build (прецедент docs/01 §10 (к), 2026-07-17).
+#
+# Правка 2026-08-03 (test-strategist; вход: чартер CH-007 находка 3 с вердиктом
+# владельца 2026-08-02 «ПРИНЯТ» + находка гранулярности test-designer в TC-146):
+# ДВА дробления по правилу гранулярности шапки, обе прятали грань с НУЛЕВЫМ
+# покрытием за «покрытой» записью —
+#   settings-brightness-slider  → + settings-brightness-reset-on-start
+#   settings-restore-merge      → + settings-restore-merge-skip-existing
+# Оба раза маркером служил сам title (перечисление режимов в скобке). id
+# существующих записей НЕ менялись, ре-теггинга кейсов не потребовалось (на обе
+# записи ссылается по одному кейсу, и он покрывает именно оставшуюся за id
+# грань). Обоснование и код-якоря — в комментариях у самих записей;
+# решение и §9-метки — docs/01 §10 (ц). inventoried_at_commit НЕ меняется:
+# сборка та же (63f6aac), это коррекция гранулярности, а не новый build.
 inventoried_at_commit: "63f6aac3b1ea1dfad82f68b8196aa6cf56f41853"
 
 features:
@@ -370,8 +383,28 @@ features:
     title: "Слайдер размера шрифта (7 ступеней, 100–190%)"
     screen: settings
     source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  # settings-brightness-slider раздроблена test-strategist 2026-08-03 (вход:
+  # находка гранулярности test-designer в test-cases/settings/TC-146.md, раздел
+  # «Дефекты-собратья»; правило шапки — перечисление режимов в title = маркер
+  # дробления). Прежний title «Слайдер яркости (overlay при v<0, reset-on-start)»
+  # бандлил ДВЕ поверхности с разными Then: сам слайдер/диапазон/overlay (TC-146)
+  # и самостоятельный persistence-тумблер resetBrightnessOnStart (0 кейсов) —
+  # второй прятался за «покрытой» фичей. Сверено чтением кода: SettingsScreen.kt
+  # :688-693 (SettingsSwitchRow «Reset brightness on start»), :461-465
+  # (setResetBrightnessOnStart; при OFF попутно фиксирует текущую яркость в
+  # prefs), :157 (readInitialBrightnessValue — при ON возвращает системную,
+  # сохранённое значение игнорируется), :457-458 (слайдер пишет prefs только при
+  # выключенном тумблере), MainActivity.kt:120-127 (при OFF яркость
+  # восстанавливается ДО setContent). Ре-теггинга нет: id settings-brightness-
+  # slider сохранён за TC-146 (единственный ссылающийся кейс), новая запись
+  # начинает с нуля кейсов. Метка дизайна — docs/01 §9, область «settings:
+  # контролы, покрытые только с одной стороны или только вторым входом».
   - id: settings-brightness-slider
-    title: "Слайдер яркости (overlay при v<0, reset-on-start)"
+    title: "Слайдер яркости в Settings: диапазон и overlay при v<0"
+    screen: settings
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  - id: settings-brightness-reset-on-start
+    title: "Тумблер «Reset brightness on start»: ON — яркость на старте берётся из системы (сохранённое значение игнорируется), OFF — сохранённое значение переживает kill+relaunch"
     screen: settings
     source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
   # settings-rating-visibility-filter раздроблена test-strategist 2026-07-17
@@ -421,8 +454,28 @@ features:
     title: "Экспорт бэкапа JSON (works + filterProfiles)"
     screen: settings
     source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  # settings-restore-merge раздроблена test-strategist 2026-08-03 (вход: чартер
+  # CH-007 находка 3, риск ПРИНЯТ владельцем 2026-08-02 — docs/01 §10 (ц)).
+  # Прежний title обещал merge «с пропуском уже существующих id», а единственный
+  # привязанный кейс TC-021 идёт кругом «экспорт → Clear all ratings → Restore»,
+  # то есть импортирует в ПУСТУЮ базу: ветка коллизии ao3Id им физически не
+  # проходится, и фича числилась покрытой. Это второй живой экземпляр урока
+  # hide/dim (один кейс зачитывает покрытым режим, которого не исполняет), и он
+  # НЕ виден секции «Фичи без единого кейса» coverage-map по построению.
+  # Сверено чтением кода: SettingsScreen.kt:341 (existingIds = repo.getAllIds()),
+  # :348 (if (id in existingIds) { skippedCount++; continue } — строка бэкапа
+  # пропускается целиком, слияния полей нет), :1187-1191 (диалог сообщает только
+  # числа: «Restored N works, M filters (K works already existed)» — без имён и
+  # без выбора «перезаписать/оставить»). Ре-теггинга нет: id settings-restore-
+  # merge сохранён за TC-021, его title приведён к фактически исполняемой ветке;
+  # ветка коллизии вынесена в новую запись с нулём кейсов. Метка дизайна —
+  # docs/01 §9, P1-область «backup: merge-семантика Restore в непустую базу».
   - id: settings-restore-merge
-    title: "Восстановление из бэкапа с merge (пропуск уже существующих id)"
+    title: "Restore из бэкапа: строки, которых нет в базе, импортируются (works + filterProfiles); поддержан и старый bare-array формат"
+    screen: settings
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  - id: settings-restore-merge-skip-existing
+    title: "Restore в НЕПУСТУЮ базу: работа с уже существующим ao3Id пропускается целиком (локальная версия побеждает, поля из бэкапа не возвращаются), в диалоге — только число «(N works already existed)», без имён и без выбора перезаписать/оставить"
     screen: settings
     source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
   - id: settings-orphan-scan-silent

@@ -1,19 +1,19 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-03T16:08:20Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-03T16:38:05Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **780.6** (RUN-20260702-0300)
+- smoke: Closed · smoke_freshness_hours: **781.1** (RUN-20260702-0300)
 - regression: not_run
 - canary: not_run
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **1**
 - p0_automation_coverage: **100%** (37/37)
-- p1_automation_coverage: **90%** (77/86)
-- Test debt открыт: **2** — AT-BUG-045, AT-BUG-046
+- p1_automation_coverage: **83%** (77/93)
+- Test debt открыт: **1** — AT-BUG-046
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
 - Untriaged: **0** · untriaged_failure_age: **0**
@@ -23,26 +23,26 @@ generated_at: 2026-08-03T16:08:20Z · генератор: `scripts/queue_snapsho
 - 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
 - smoke: passed · regression: not_run
 
-## Тест-кейсы (156)
+## Тест-кейсы (168)
 
-- Review: **12** · Approved: **1** · Automated: **143**
+- Review: **24** · Approved: **1** · Automated: **143**
 - автотесты (B3): active: **143**
 
 | Область | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | accessibility |  | 3 |  | 3 |  |
-| backup |  |  |  | 1 |  |
-| browser |  |  |  | 13 |  |
+| backup |  | 4 |  | 1 |  |
+| browser |  | 6 |  | 13 |  |
 | canary |  |  |  | 23 |  |
 | compatibility |  |  |  | 3 |  |
-| downloads |  | 3 |  | 14 |  |
+| downloads |  | 4 |  | 14 |  |
 | errors |  |  |  | 1 |  |
 | filter-profiles |  |  |  | 5 |  |
 | library |  |  |  | 17 |  |
 | performance |  |  |  | 4 |  |
 | rating |  | 3 | 1 | 20 |  |
 | security |  |  |  | 6 |  |
-| settings |  | 3 |  | 11 |  |
+| settings |  | 4 |  | 11 |  |
 | smoke |  |  |  | 5 |  |
 | tabs |  |  |  | 11 |  |
 | visibility |  |  |  | 6 |  |
@@ -71,7 +71,7 @@ generated_at: 2026-08-03T16:08:20Z · генератор: `scripts/queue_snapsho
 
 ## Test debt (2)
 
-- AT-BUG-045 [flaky_test] Open — settings_steps.py::assert_ratings_present/assert_no_ratings/assert_rating_rows_empty — пустой stdout (в т.ч. отказ транспорта) неотличим от 'нет sqlite3 на образе', степень тихо пропускает проверку
+- AT-BUG-045 [flaky_test] Fixed — settings_steps.py::assert_ratings_present/assert_no_ratings/assert_rating_rows_empty — пустой stdout (в т.ч. отказ транспорта) неотличим от 'нет sqlite3 на образе', степень тихо пропускает проверку
 - AT-BUG-046 [missing_fixture] Open — seed_db.py не даёт прямого сидинга комбинированных baseline-строк work_ratings (comment+tags+downloadPath; rating=null+downloadPath), а read_work_ratings() не отдаёт title/author/downloadPath — TC-151/152/155/156 вынуждены строить состояние дверями приложения
 
 ## Прогоны (1)
@@ -87,7 +87,7 @@ generated_at: 2026-08-03T16:08:20Z · генератор: `scripts/queue_snapsho
 
 ## Активные локи (1)
 
-- AT-BUG-045 — `test-maintainer:2026-08-03T15:50:00Z`
+- AT-BUG-045 — `test-maintainer:2026-08-03T18:35:57+02:00`
 
 ## Эскалации (13)
 
