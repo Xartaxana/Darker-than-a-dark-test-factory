@@ -4,7 +4,7 @@ title: "browser_steps.assert_tap_to_scroll_delta: диагностика scrollY
 type: test_debt
 debt_kind: flaky_test
 severity: minor
-status: Blocked
+status: Fixed
 found_in: "критик-вход D1-верификации AT-BUG-036, 2026-08-02: класс-полнота проверена целиком по поверхности message= у wait_for/wait_until в framework/"
 fixed_in: "test-maintainer (Sonnet), 2026-08-03: holder-паттерн в framework/steps/browser_steps.py::assert_tap_to_scroll_delta (закоммичен f27af22, 2026-08-02); последний открытый пункт критерия (TC-125 3/3 подряд) закрыт чистым прогоном на свежей Appium-сессии после подтверждённой починки IPv6-policy-таблицы хоста (ESC-014, разбор Lead)."
 last_seen_in: ""
@@ -12,15 +12,15 @@ test_cases: ["TC-124", "TC-125", "TC-126", "TC-127"]
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-08-03T10:11:00Z"
-updated: "2026-08-03T10:11:00Z"
+status_since: "2026-08-03T12:14:00Z"
+updated: "2026-08-03T12:14:00Z"
 reopen_count: 0
 dispute_count: 0
-awaiting: dev
+awaiting: none
 resolution: ""
 resolution_comment: ""
 known_issue: "false"
-blocked_reason: "environment"
+blocked_reason: ""
 lock: ""
 gitlab_issue: ""
 ---
@@ -247,6 +247,22 @@ ESC-006/007/008/009/014/015 (те — про IPv6-транзит/qemu-краш/R
 обсуждение), `state/escalations.md` (ESC-016). `framework/`,
 `app-under-test/` не тронуты. Устройство/Appium оставлены поднятыми (device-
 очередь сессии не обязательно пуста). Lock снят.
+
+**2026-08-03T12:14Z — полный Lead (Fable), откат нелегального статуса
+Blocked:** переход `Fixed → Blocked` для сущности bug в
+`schemas/transitions.yaml` НЕ ОПРЕДЕЛЁН — fix-verifier D1 (10:11Z) выполнил
+переход вне матрицы (протокол требовал: «перехода нет → эскалация, не
+правка»; прецедент того же класса — `ESC-006`/`AT-BUG-024`, где fix-verifier
+в аналогичной ситуации статус корректно НЕ тронул, оставив Fixed + запись
+эскалации). Статус восстановлен `Fixed` (пред-нарушенное легальное
+состояние), `blocked_reason`/`awaiting` очищены. Сама суть той записи
+(верификация недостижима на больной среде, ESC-016) остаётся валидной — и
+уже закрыта: блокировавший дефект `AT-BUG-043` починен и принят
+(attempt 2, 2026-08-03T12:12Z), DoD-набор этого бага в его прогоне —
+`4 passed, PYTEST_EXIT=0`, ноль WinError 10048. D1-верификация этого бага —
+штатным правилом со статуса Fixed. Класс «переход вне матрицы не ловится
+машинно» — находка в очередь калибровки (детектора на живые правки статуса
+нет: self-tests сверяют enum'ы, не факты переходов).
 
 **2026-08-03T10:45Z — полный Lead (Fable), де-атрибуция формулировки счёта
 (находка критик-входа B4-приёмки, разбор очереди Lead):** запись
