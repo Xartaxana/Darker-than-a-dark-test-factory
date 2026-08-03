@@ -2603,9 +2603,9 @@
     "epic": null,
     "parentPath": null,
     "epicPath": null,
-    "summary": "Clear all ratings сбрасывает бейджи на открытых страницах AO3 без перезагрузки",
+    "summary": "Бейджи открытых вкладок сохраняют состояние до перезагрузки страницы; после reload — сброшены",
     "issueType": "test-case",
-    "status": "tc-blocked",
+    "status": "tc-review",
     "priority": "p3",
     "assignee": "qa-agents",
     "labels": [
@@ -2613,7 +2613,7 @@
       "area:settings",
       "risk:R-01"
     ],
-    "updated": "2026-07-19T09:55:00Z",
+    "updated": "2026-08-03T02:10:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4172,9 +4172,13 @@
     "assignee": "qa-agents",
     "labels": [
       "bug",
+      "test_case:TC-124",
+      "test_case:TC-125",
+      "test_case:TC-126",
+      "test_case:TC-127",
       "sev:minor"
     ],
-    "updated": "2026-08-02T02:11:33Z",
+    "updated": "2026-08-02T15:25:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4209,14 +4213,36 @@
     "epicPath": null,
     "summary": "build_watch.py::update_aut (+ спящие sla_sweep.rewrite_registry/loop_lock._atomic_write_text): EOL-перегон партиальных писателей scripts/, класс шире frontmatter-границы",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-08-02T02:38:33Z",
+    "updated": "2026-08-02T14:39:03Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-042",
+    "path": "board/AT-BUG-042/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "WorkRatingPanel dispose-save воскрешал запись после Clear all — блокер автоматизации TC-020 снят обходом порядка reload (дефект приложения — BUG-022)",
+    "issueType": "bug",
+    "status": "bug-fixed",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-020",
+      "sev:major"
+    ],
+    "updated": "2026-08-03T02:10:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4274,7 +4300,7 @@
     "epicPath": null,
     "summary": "Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-intended",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -4282,7 +4308,7 @@
       "test_case:TC-020",
       "sev:minor"
     ],
-    "updated": "2026-08-01T22:05:00Z",
+    "updated": "2026-08-02T12:35:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4488,6 +4514,27 @@
       "sev:major"
     ],
     "updated": "2026-08-02T00:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-022",
+    "path": "board/BUG-022/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Панель рейтинга work-страницы при dispose переписывает рейтинг, который пользователь не менял — возврат на Browse после Clear all ratings воскрешает удалённую запись",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:major"
+    ],
+    "updated": "2026-08-02T23:23:44Z",
     "resolution": null,
     "children": [],
     "archived": false

@@ -1,19 +1,19 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-02T13:11:38Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-03T00:11:08Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **753.6** (RUN-20260702-0300)
+- smoke: Closed · smoke_freshness_hours: **764.6** (RUN-20260702-0300)
 - regression: not_run
 - canary: not_run
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **1**
 - p0_automation_coverage: **100%** (37/37)
 - p1_automation_coverage: **99%** (77/78)
-- Test debt открыт: **2** — AT-BUG-039, AT-BUG-041
+- Test debt открыт: **1** — AT-BUG-039
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
 - Untriaged: **0** · untriaged_failure_age: **0**
@@ -25,7 +25,7 @@ generated_at: 2026-08-02T13:11:38Z · генератор: `scripts/queue_snapsho
 
 ## Тест-кейсы (144)
 
-- Approved: **1** · Automated: **142** · Blocked: **1**
+- Review: **1** · Approved: **1** · Automated: **142**
 - автотесты (B3): active: **142**
 
 | Область | Draft | Review | Approved | Automated | Blocked |
@@ -42,14 +42,14 @@ generated_at: 2026-08-02T13:11:38Z · генератор: `scripts/queue_snapsho
 | performance |  |  |  | 4 |  |
 | rating |  |  | 1 | 20 |  |
 | security |  |  |  | 6 |  |
-| settings |  |  |  | 10 | 1 |
+| settings |  | 1 |  | 10 |  |
 | smoke |  |  |  | 5 |  |
 | tabs |  |  |  | 11 |  |
 | visibility |  |  |  | 6 |  |
 
-## Баги (12)
+## Баги (13)
 
-- Open: **11** · Intended: **1**
+- Open: **12** · Intended: **1**
 - BUG-001 [minor] Open — PROJECT.md расходится с кодом: подписи вкладок Library/меню рейтинга; несуществующий глобальный «Enable filtering»
 - BUG-011 [major] Open — Restore from backup пропускает работы молча, если файл с тем же ao3Id уже лежит в папке загрузок
 - BUG-013 [minor] Open — Смена темы, затем немедленный kill процесса (<100 мс) теряет theme_mode — выбор темы не персистится
@@ -61,15 +61,17 @@ generated_at: 2026-08-02T13:11:38Z · генератор: `scripts/queue_snapsho
 - BUG-019 [major] Open — Back после автопрыжка плотности не выводит назад — ловушка + рост истории
 - BUG-020 [major] Open — Простановка DISLIKE уводит пользователя со страницы; автонавигация live-push под открытым bottom-sheet
 - BUG-021 [major] Open — Правка заметки скачанной работы через overlay листинга обнуляет downloadPath в Room
+- BUG-022 [major] Open — Панель рейтинга work-страницы при dispose переписывает рейтинг, который пользователь не менял — возврат на Browse после Clear all ratings воскрешает удалённую запись
 
 ## Известные проблемы, known_issue (1)
 
 - BUG-012 [minor] Intended — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
 
-## Test debt (2)
+## Test debt (3)
 
 - AT-BUG-039 [flaky_test] Open — browser_steps.assert_tap_to_scroll_delta: диагностика scrollY снята ДО опроса, а не после — тот же класс, что AT-BUG-036
-- AT-BUG-041 [flaky_test] Open — build_watch.py::update_aut (+ спящие sla_sweep.rewrite_registry/loop_lock._atomic_write_text): EOL-перегон партиальных писателей scripts/, класс шире frontmatter-границы
+- AT-BUG-041 [flaky_test] Fixed — build_watch.py::update_aut (+ спящие sla_sweep.rewrite_registry/loop_lock._atomic_write_text): EOL-перегон партиальных писателей scripts/, класс шире frontmatter-границы
+- AT-BUG-042 [flaky_test] Fixed — WorkRatingPanel dispose-save воскрешал запись после Clear all — блокер автоматизации TC-020 снят обходом порядка reload (дефект приложения — BUG-022)
 
 ## Прогоны (1)
 
@@ -86,10 +88,8 @@ generated_at: 2026-08-02T13:11:38Z · генератор: `scripts/queue_snapsho
 
 - нет
 
-## Эскалации (6)
+## Эскалации (4)
 
-- [2026-07-21T08:57:20Z] **BUG-012** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-18T12:00:00Z | нужно: ответить в ## Обсуждение
-- [2026-07-21T08:57:20Z] **TC-020** [sla:blocked_any] — в Blocked с 2026-07-19T09:55:00Z (причина: product_decision) | нужно: разобрать причину и вывести из Blocked
 - [2026-07-21T22:43:25Z] **BUG-013** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-19T17:30:00Z | нужно: ответить в ## Обсуждение
 - [2026-07-24T05:10:04Z] **BUG-011** [sla:bug_open_major] — major-баг open с 2026-07-15T14:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
 - [2026-07-30T12:38:12Z] **BUG-016** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-28T12:00:00Z | нужно: ответить в ## Обсуждение

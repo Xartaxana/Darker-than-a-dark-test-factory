@@ -566,8 +566,8 @@
   },
   "TC-020": {
     "itype": "test-case",
-    "artifact_status": "Blocked",
-    "board_status": "Blocked"
+    "artifact_status": "Review",
+    "board_status": "Review"
   },
   "TC-047": {
     "itype": "test-case",
@@ -916,8 +916,13 @@
   },
   "AT-BUG-041": {
     "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
+    "artifact_status": "Fixed",
+    "board_status": "Fixed"
+  },
+  "AT-BUG-042": {
+    "itype": "bug",
+    "artifact_status": "Fixed",
+    "board_status": "Fixed"
   },
   "BUG-001": {
     "itype": "bug",
@@ -931,8 +936,8 @@
   },
   "BUG-012": {
     "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
+    "artifact_status": "Intended",
+    "board_status": "Intended"
   },
   "BUG-013": {
     "itype": "bug",
@@ -975,6 +980,11 @@
     "board_status": "Open"
   },
   "BUG-021": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "BUG-022": {
     "itype": "bug",
     "artifact_status": "Open",
     "board_status": "Open"
