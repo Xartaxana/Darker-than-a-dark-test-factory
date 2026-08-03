@@ -6,14 +6,14 @@ debt_kind: missing_fixture
 severity: minor
 status: Fixed
 found_in: "test-designer, дизайн follow-up exploratory-charters/CH-008.md (кандидаты followup_tc 1 и 4-5); признак — CH-007 и CH-008 независимо просили то же самое (рецидив без бага, CH-008.md Follow-up: «test-maintainer/test-designer: seed_db.read_work_ratings() не отдаёт title/author/downloadPath … Второй запрос: seed_db не умеет сеять baseline A и C — оба пришлось строить дверями под измерением»)"
-fixed_in: "151ee6e"
+fixed_in: "151ee6e, c03aa93 (attempt 2: url/timestamp добавлены в _read_full_rows/read_work_ratings_full)"
 last_seen_in: ""
 test_cases: [TC-151, TC-152, TC-155, TC-156]
 runs: [CH-007, CH-008]
 duplicates: []
 regression_of: ""
 status_since: "2026-08-03T18:55:00Z"
-updated: "2026-08-03T18:55:00Z"
+updated: "2026-08-03T18:19:13Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -53,8 +53,12 @@ gitlab_issue: ""
    `seed_with_download`/`_insert_rows_with_download` (`:374-388`) пишут
    `downloadPath`, но `comment`/`tags` жёстко `None` (`:385`). Обе функции
    идут `INSERT OR REPLACE` на одну строку — композиция вызовов взаимно
-   разрушительна (докстринг `framework/tests/conftest.py:313-318` уже
-   предупреждает об этом на уровне комментария, но обходного пути не даёт).
+   разрушительна. **Поправка (attempt 2, N3 критик-входа):** ссылка на
+   `framework/tests/conftest.py:313-318` в attempt 1 была неверной — те
+   строки описывают ДРУГОЙ, безопасный случай (два последовательных сидинга
+   с РАЗНЫМИ `ao3Id` не затирают друг друга, `library_downloaded_only_seeded`),
+   а не предупреждают о разрушительной композиции однополевых функций на
+   ОДНОЙ строке. Обходного пути в кодовой базе до этого фикса не было нигде.
 3. **Нет прямого сидинга baseline «rating=null+downloadPath»** (CH-008
    baseline C): `seed_with_download` типизирована как `rating: str` (не
    `str | None`), а `_insert_rows_with_download` жёстко ассертит `rating in
@@ -79,7 +83,12 @@ gitlab_issue: ""
   `_read_full_rows(db)`, вынесенный для device-free юнитов) — `read_work_ratings()`
   не тронута ни на строку, чтобы не сломать `backup_steps.
   assert_restored_fields_match` (сравнение `actual != expected` по фиксированному
-  набору из 5 ключей).
+  набору из 5 ключей). **attempt 2 (critic-вход):** attempt 1 отдавал 9 из 11
+  полей — `_read_full_rows`/`read_work_ratings_full` не включали `url` и
+  `timestamp`, при докстринге/DoD, обещающих ПОЛНЫЙ набор; `timestamp` —
+  различающий оракул CH-008 («не изменился ⇒ записи не было вовсе»). Оба поля
+  добавлены в SELECT и в возвращаемый dict (`seed_db.py`), юнит-ассерт на оба
+  добавлен в `test_baseline_a_comment_tags_download_path_all_present`.
 - [x] Добавлена функция сидинга (или расширена существующая), принимающая ОДНОЙ
   строкой `comment`+`tags`+`downloadPath` вместе (baseline A CH-008).
   Реализовано `seed_with_comment_and_download()` (+ `_insert_rows_full_with_download`).
@@ -96,8 +105,15 @@ gitlab_issue: ""
   без потери сути проверяемого сценария. **Вне мандата этого фикса** (кейсы —
   Review, не Automated; их automation ведёт test-automator/test-designer, не
   test-maintainer, D-0037 — scope не расширяется); примитивы готовы к
-  переиспользованию.
-- [x] `arch_check.py`/`validate_frontmatter.py` — 0/0 после правок.
+  переиспользованию. **+ обёртка `app_steps` для `seed_with_comment_and_download`
+  отсутствует** (все прочие сидеры — `seed_library`/`seed_downloaded_work`/
+  `seed_filter_profiles` — имеют парную функцию в `framework/steps/app_steps.py`,
+  `conftest.py`-фикстуры ходят к сидингу только через `app_steps`, не напрямую
+  в `seed_db`) — доложит test-automator при автоматизации TC-151/152/155/156.
+- [x] `arch_check.py`/`validate_frontmatter.py` — 0/0 после правок (attempt 2,
+  дословный вывод): `arch_check`: `arch_check: ошибок 0, предупреждений 0`
+  (exit 0); `validate_frontmatter`: `validate_frontmatter: ошибок 0,
+  предупреждений 0` (exit 0).
 - [x] Ни одно изменение не внесено в `app-under-test/` (`git status --porcelain
   -- app-under-test/` — пусто, сверено).
 
@@ -105,6 +121,7 @@ gitlab_issue: ""
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
 | 2026-08-03 | ao3_test_api34, emulator-5554, no app rebuild (framework-only) | device-free: `test_seed_db_full_baseline_unit.py` (5 новых юнитов) — 3x подряд PASS (14, 5, 5 passed — первый прогон вместе с `test_seed_null_wordcount_unit.py`/`test_seed_db_schema_race_unit.py`/`test_seed_filter_profiles_unit.py`, далее только новый файл); live: `test_seed_db_full_baseline_live.py::test_seed_with_comment_and_download_baseline_a_and_c_round_trip` — 3x подряд PASS (68.45s, 8.04s, 7.61s); существующие потребители: TC-021 (`test_backup_restore.py`) — 3x подряд PASS (75.98s/74.08s/71.17s); TC-141 (`test_rating.py::test_edit_tag_on_already_saved_work_via_panel_does_not_click_kudos`) — 3x подряд PASS (45.60s/47.06s/45.68s) | Все зелёные, все PYTEST_EXIT=0 | test-maintainer: механизм закрыт, ждёт critic-вход (правило CLAUDE.md — ядровая логика сидинга, тот же класс, что AT-BUG-044) |
+| 2026-08-03 (attempt 2) | ao3_test_api34, emulator-5554, no app rebuild (framework-only) | device-free: `test_seed_db_full_baseline_unit.py` (5 юнитов, включая новый url/timestamp-ассерт) — `5 passed in 0.17s`, `PYTEST_EXIT=0`; live: `test_seed_db_full_baseline_live.py::test_seed_with_comment_and_download_baseline_a_and_c_round_trip` — 1x PASS (`1 passed in 6.70s`, `PYTEST_EXIT=0`, полный ×3 не требуется — дельта минимальна, критик уже прогнал живьём attempt 1); `arch_check.py` — `arch_check: ошибок 0, предупреждений 0`; `validate_frontmatter.py` — `validate_frontmatter: ошибок 0, предупреждений 0`; `git status --porcelain -- app-under-test/` — пусто | Все зелёные, все PYTEST_EXIT=0 | test-maintainer: блокер критик-входа (attempt 1) устранён — `url`/`timestamp` добавлены в `_read_full_rows`/`read_work_ratings_full`, юнит-ассерт на оба поля; готов ко второму critic-входу |
 
 ## Обсуждение
 
@@ -164,6 +181,38 @@ downloadPath), 3 прогона подряд, без флейка (68s/8s/8s —
 дороже за счёт холодного `pm clear`/`am start -W`, воспроизводимо). Параллельно
 `read_work_ratings()` (старая функция) сверена на том же прогоне — её ключи
 остались РОВНО тем же 5-элементным набором, что до фикса.
+
+**[test-maintainer @ 2026-08-03T18:19:13Z, attempt 2]**
+
+Rework после critic-входа attempt 1: критик подтвердил ядро фикса (обоснование
+не-трогания `read_work_ratings()`, одна функция на baseline A+C, отсутствие
+fail-open классов, совпадение схемы юнит-копии с реальной) и указал ОДИН узкий
+блокер вариантом (а) — `_read_full_rows`/`read_work_ratings_full` отдавали 9 из
+11 полей строки `work_ratings`, пропуская `url` и `timestamp`, при докстринге
+«ВСЕ поля» и DoD «полный набор полей». `timestamp` — различающий оракул CH-008
+(«timestamp не изменился ⇒ записи не было вовсе»), терять нельзя.
+
+Правка: `SELECT` в `_read_full_rows` (`framework/data/seed_db.py`) расширен на
+`url`/`timestamp`, оба поля добавлены в возвращаемый dict; докстринги
+`_read_full_rows`/`read_work_ratings_full` обновлены (перечисляют ВСЕ 11 полей
+явно, не общей фразой). Юнит-ассерт добавлен в
+`test_baseline_a_comment_tags_download_path_all_present`
+(`test_seed_db_full_baseline_unit.py`): `row["url"] == work.url`,
+`isinstance(row["timestamp"], int)`, `timestamp > 0`. Существующие
+5 юнитов + новый ассерт — зелёные (`5 passed`); живой round-trip — зелёный 1x
+(критик уже гонял живьём attempt 1, дельта фикса не задевает device-путь
+записи, только SELECT чтения).
+
+Non-blocking того же хода (продиктованы критиком, применены):
+- N1: чекбокс 4 (TC-151/152/155/156 на новые примитивы) дополнен явной строкой
+  про отсутствующую обёртку `app_steps` для `seed_with_comment_and_download`.
+- N3: ссылка на `conftest.py:313-318` в «Сути долга» исправлена — те строки
+  описывают ПРОТИВОПОЛОЖНОЕ (разные `ao3Id` не затирают друг друга), не
+  разрушительную композицию однополевых сидеров на одной строке.
+- N4: чекбокс `arch_check`/`validate_frontmatter` и строка таблицы верификации
+  несут дословный вывод инструментов, не голую галку.
+
+`git status --porcelain -- app-under-test/` — пусто (сверено).
 
 ## Чек-лист качества (заводящий проходит перед публикацией)
 - [x] Проверены дубликаты среди открытых test_debt — не пересекается с
