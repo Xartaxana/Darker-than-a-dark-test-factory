@@ -1,12 +1,12 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-03T14:32:23Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-03T15:18:27Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **779.0** (RUN-20260702-0300)
+- smoke: Closed · smoke_freshness_hours: **779.7** (RUN-20260702-0300)
 - regression: not_run
 - canary: not_run
 - Открытые blocker/critical: **0**
@@ -47,9 +47,9 @@ generated_at: 2026-08-03T14:32:23Z · генератор: `scripts/queue_snapsho
 | tabs |  |  |  | 11 |  |
 | visibility |  |  |  | 6 |  |
 
-## Баги (13)
+## Баги (15)
 
-- Open: **12** · Intended: **1**
+- Open: **14** · Intended: **1**
 - BUG-001 [minor] Open — PROJECT.md расходится с кодом: подписи вкладок Library/меню рейтинга; несуществующий глобальный «Enable filtering»
 - BUG-011 [major] Open — Restore from backup пропускает работы молча, если файл с тем же ao3Id уже лежит в папке загрузок
 - BUG-013 [minor] Open — Смена темы, затем немедленный kill процесса (<100 мс) теряет theme_mode — выбор темы не персистится
@@ -60,8 +60,10 @@ generated_at: 2026-08-03T14:32:23Z · генератор: `scripts/queue_snapsho
 - BUG-018 [major] Open — DOM-ссылка «Next →» указывает на уже показанную страницу; тап уводит назад
 - BUG-019 [major] Open — Back после автопрыжка плотности не выводит назад — ловушка + рост истории
 - BUG-020 [major] Open — Простановка DISLIKE уводит пользователя со страницы; автонавигация live-push под открытым bottom-sheet
-- BUG-021 [major] Open — Правка заметки скачанной работы через overlay листинга обнуляет downloadPath в Room
+- BUG-021 [major] Open — Снятие рейтинга через overlay листинга у скачанной работы обнуляет downloadPath и личные теги; правка заметки — то же
 - BUG-022 [major] Open — Панель рейтинга work-страницы при dispose переписывает рейтинг, который пользователь не менял — возврат на Browse после Clear all ratings воскрешает удалённую запись
+- BUG-046 [major] Open — Ручной скан при двух файлах одного ao3Id не сходится: счётчик relinked=2 на одну работу, повторный скан рапортует то же, не становясь 0
+- BUG-047 [major] Open — Удаление скачанного файла из карточки удаляет только один файл; при двух файлах одного ao3Id второй остаётся на диске и воскрешает работу при повторном сканировании
 
 ## Известные проблемы, known_issue (1)
 
@@ -77,10 +79,10 @@ generated_at: 2026-08-03T14:32:23Z · генератор: `scripts/queue_snapsho
 
 ## Exploratory
 
-- Planned: **1** · Done: **7**
-- charters_executed: **7**
-- bugs_per_charter: **1.0**
-- new_tc_from_charters: **10**
+- Done: **8**
+- charters_executed: **8**
+- bugs_per_charter: **1.25**
+- new_tc_from_charters: **15**
 
 ## Активные локи (0)
 

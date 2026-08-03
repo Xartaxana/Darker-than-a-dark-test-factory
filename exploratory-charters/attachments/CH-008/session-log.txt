@@ -1,0 +1,904 @@
+[16:40:03] ======================================================================
+[16:40:03] === ПРОБА СРЕДЫ + Г6
+[16:40:03]     FIXTURE local: D:\AO3_tests\framework\data\fixtures\downloaded_work.html exists=True
+[16:40:03]     after clean_state:
+[16:40:04]     LS[default dl after pm clear] /sdcard/Android/data/com.example.ao3_wrapper/files/ao3_downloads: n=0 []
+[16:40:09]     PREFS[t0 after clean_state+seed] auto_download_saved -> auto_download_saved: ОТСУТСТВУЕТ в prefs (дефолт false)
+[16:40:09]     PREFS[t0 after clean_state+seed] full: 
+[16:40:09]     ROOM[t0 seeded (no download)] n=1 TARGET={"author": "seed_author_a", "comment": null, "downloadPath": null, "fandom": "Мой фандом", "rating": "SAVE", "tags": null, "timestamp": 1785768009392, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:40:09]     ROOM[t0 seeded (no download)] others={}
+[16:40:22] --- STEP: wait_app_ready
+[16:40:28]     OK: wait_app_ready
+[16:40:28] --- STEP: open work page
+[16:40:29]     OK: open work page
+[16:40:30]     G6a: url=https://archiveofourown.org/works/900000001 title='A Loved Test Work | Archive of Our Own' #chapters=False nodes={'chapters': False, 'h': 1, 'tos': False, 'workskin': True}
+[16:40:31]     ROOM[G6 before scroll-to-end] n=1 TARGET={"author": "seed_author_a", "comment": null, "downloadPath": null, "fandom": "Мой фандом", "rating": "SAVE", "tags": null, "timestamp": 1785768009392, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:40:31]     ROOM[G6 before scroll-to-end] others={}
+[16:40:35]     G6b: scrollY=4439.23828125 scrollHeight=6308
+[16:40:38]     ROOM[G6 after scroll-to-end] n=1 TARGET={"author": "seed_author_a", "comment": null, "downloadPath": null, "fandom": "Мой фандом", "rating": "SAVE", "tags": null, "timestamp": 1785768009392, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:40:38]     ROOM[G6 after scroll-to-end] others={}
+[16:40:38]     G6b: rating before=SAVE after=SAVE (ожидание: без изменений)
+[16:40:39]     SHOT 01_g6_work_page_bottom.png
+[16:41:11] ======================================================================
+[16:41:11] === SEED1 R0 baseline B (без двери)
+[16:41:18]     SEEDED B: downloadPath={'900000001': '/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html'}
+[16:41:18]     PREFS[R0 baseline B (без двери) after seed] auto_download_saved -> auto_download_saved: ОТСУТСТВУЕТ в prefs (дефолт false)
+[16:41:18]     PREFS[R0 baseline B (без двери) after seed] full: 
+[16:41:28] --- STEP: wait_app_ready
+[16:41:33]     OK: wait_app_ready
+[16:41:33]     ROOM[R0 baseline B] n=4 TARGET={"author": "seed_author_a", "comment": null, "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Мой фандом", "rating": "SAVE", "tags": null, "timestamp": 1785768077243, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:41:33]     ROOM[R0 baseline B] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:41:33]     LS-runas[R0 seeded file] files/ao3_test_downloads: '900000001.html'
+[16:41:33]     LS[R0 default dl (ожидание: пусто)] /sdcard/Android/data/com.example.ao3_wrapper/files/ao3_downloads: n=0 []
+[16:41:43]     TEXTS[R0 library default tab]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'ЛОКАЛЬНЫЙ заголовок', 'seed_author_a', 'Мой фандом · 777,777 words', 'Open downloaded', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:41:44]     SHOT 01_R0_library.png
+[16:41:44] --- STEP: open FAVORITE tab
+[16:41:44]     OK: open FAVORITE tab
+[16:41:46]     TEXTS[R0 FAVORITE tab card]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'ЛОКАЛЬНЫЙ заголовок', 'seed_author_a', 'Мой фандом · 777,777 words', 'Open downloaded', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:41:46]     SHOT 02_R0_favorite_card.png
+[16:41:46] --- STEP: open Library
+[16:41:47]     OK: open Library
+[16:41:48] --- STEP: open FILES tab
+[16:41:49]     OK: open FILES tab
+[16:41:50]     TEXTS[R0 FILES tab]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'ЛОКАЛЬНЫЙ заголовок', 'seed_author_a', 'Мой фандом · 777,777 words', 'Open downloaded', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:41:51]     SHOT 03_R0_files_tab.png
+[16:41:51]     PREFS[R0 end] auto_download_saved -> auto_download_saved: ОТСУТСТВУЕТ в prefs (дефолт false)
+[16:41:51]     PREFS[R0 end] full: <?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <int name="active_tab_index" value="0" />
+    <string name="open_tabs_urls">[{&quot;historyEntries&quot;:[{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/&quot;}],&quot;historyIndex&quot;:0,&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/&quot;}]</string>
+</map>
+[16:41:54] ======================================================================
+[16:41:54] === SEED1 R1 дверь 1: overlay Save note @ baseline C
+[16:42:01]     SEEDED B: downloadPath={'900000001': '/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html'}
+[16:42:01]     PREFS[R1 дверь 1: overlay Save note @ baseline C after seed] auto_download_saved -> auto_download_saved: ОТСУТСТВУЕТ в prefs (дефолт false)
+[16:42:01]     PREFS[R1 дверь 1: overlay Save note @ baseline C after seed] full: 
+[16:42:10] --- STEP: wait_app_ready
+[16:42:16]     OK: wait_app_ready
+[16:42:16] --- STEP: goto work page
+[16:42:18]     OK: goto work page
+[16:42:18] --- STEP: open panel
+[16:42:23]     OK: open panel
+[16:42:23] --- STEP: панель: add note (шаг достройки C, ПИШЕТ)
+[16:42:27]     OK: панель: add note (шаг достройки C, ПИШЕТ)
+[16:42:29]     ROOM[R1 C-build after panel note] n=4 TARGET={"author": "seed_author_a", "comment": "note C", "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Мой фандом", "rating": "SAVE", "tags": null, "timestamp": 1785768144927, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:42:29]     ROOM[R1 C-build after panel note] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:42:29] --- STEP: re-open panel
+[16:42:29]     OK: re-open panel
+[16:42:29] --- STEP: панель: deselect SAVE (шаг достройки C, ПИШЕТ)
+[16:42:29]     OK: панель: deselect SAVE (шаг достройки C, ПИШЕТ)
+[16:42:32]     ROOM[R1 baseline C] n=4 TARGET={"author": "seed_author_a", "comment": "note C", "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Мой фандом", "rating": null, "tags": null, "timestamp": 1785768148438, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:42:32]     ROOM[R1 baseline C] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:42:32]     ROOM[R1 BEFORE door1] n=4 TARGET={"author": "seed_author_a", "comment": "note C", "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Мой фандом", "rating": null, "tags": null, "timestamp": 1785768148438, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:42:32]     ROOM[R1 BEFORE door1] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:42:32]     LS-runas[R1 before door1] files/ao3_test_downloads: '900000001.html'
+[16:42:32] --- STEP: goto listing
+[16:42:34]     OK: goto listing
+[16:42:34] --- STEP: open overlay
+[16:42:36]     OK: open overlay
+[16:42:36]     TEXTS[R1 overlay open]: ['A Loved Test Work', 'seed_author_a', 'Already downloaded', 'Favorite', 'Kudosed', 'Read', 'Pending', 'Dislike', 'note C', 'Add tags', 'Expand panel']
+[16:42:36] --- STEP: ДВЕРЬ 1: overlay Save note (правка заметки)
+[16:42:37]     OK: ДВЕРЬ 1: overlay Save note (правка заметки)
+[16:42:40]     SHOT 04_R1_overlay_after_savenote.png
+[16:42:40] --- STEP: dismiss overlay
+[16:42:40]     OK: dismiss overlay
+[16:42:40]     ROOM[R1 AFTER door1] n=4 TARGET={"author": "seed_author_a", "comment": "note Cnote C EDITED via overlay", "downloadPath": null, "fandom": "Fandom Alpha", "rating": null, "tags": null, "timestamp": 1785768156282, "title": "A Loved Test Work", "url": "https://archiveofourown.org/works/900000001", "wordCount": 4200}
+[16:42:40]     ROOM[R1 AFTER door1] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:42:40]     R1 DELTA: downloadPath '/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html' -> None
+[16:42:40]     R1 DELTA: title 'ЛОКАЛЬНЫЙ заголовок' -> 'A Loved Test Work'
+[16:42:40]     R1 DELTA: fandom 'Мой фандом' -> 'Fandom Alpha'; wordCount 777777 -> 4200
+[16:42:40]     LS-runas[R1 after door1 (файл на месте?)] files/ao3_test_downloads: '900000001.html'
+[16:42:47]     TEXTS[R1 library default tab]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'Nothing here yet', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:42:47]     SHOT 05_R1_library.png
+[16:42:47] --- STEP: open Library
+[16:42:48]     OK: open Library
+[16:42:49] --- STEP: open filter sheet
+[16:42:50]     OK: open filter sheet
+[16:42:51]     TEXTS[R1 filter sheet]: ['Close sheet', 'Filters', 'Close', 'Search any field', 'Fandom', 'All fandoms', 'Word count', 'Min', '–', 'Max', 'Downloaded only', 'Apply filters']
+[16:42:51] --- STEP: filter fandom «Мой фандом»
+[16:43:13]     FAIL: filter fandom «Мой фандом»: TimeoutException: Message: не кликабелен: ('-android uiautomator', 'new UiSelector().text("Мой фандом")')
+Stacktrace:
+NoSuchElementError: An element could not be located on the page using the given search parameters.
+    at AndroidUiautomator2Driver.findElOrEls (D:\AO3_tests\tools\appium\node_modules\appium-uiautomator2-driver\node_modules\appium-android-driver\build\lib\commands\find.js:62:15)
+    at process.proce
+[16:43:13]         at async AndroidUiautomator2Driver.findElOrElsWithProcessing (D:\AO3_tests\tools\appium\node_modules\@appium\base-driver\build\lib\basedriver\commands\find.js:12:16)
+[16:43:14]     TEXTS[R1 after fandom filter]: ['All fandoms', 'Fandom Alpha', 'Fandom Beta', 'Fandom Delta', 'Fandom Gamma']
+[16:43:15]     SHOT 06_R1_fandom_filter.png
+[16:43:15] --- STEP: open Library
+[16:43:39]     FAIL: open Library: TimeoutException: Message: не кликабелен: ('-android uiautomator', 'new UiSelector().text("Library")')
+Stacktrace:
+NoSuchElementError: An element could not be located on the page using the given search parameters.
+    at AndroidUiautomator2Driver.findElOrEls (D:\AO3_tests\tools\appium\node_modules\appium-uiautomator2-driver\node_modules\appium-android-driver\build\lib\commands\find.js:62:15)
+    at process.processT
+[16:43:39]         at async AndroidUiautomator2Driver.findElOrElsWithProcessing (D:\AO3_tests\tools\appium\node_modules\@appium\base-driver\build\lib\basedriver\commands\find.js:12:16)
+[16:43:40] --- STEP: open FILES tab
+[16:44:01]     FAIL: open FILES tab: TimeoutException: Message: не кликабелен: ('-android uiautomator', 'new UiSelector().text("FILES")')
+Stacktrace:
+NoSuchElementError: An element could not be located on the page using the given search parameters.
+    at AndroidUiautomator2Driver.findElOrEls (D:\AO3_tests\tools\appium\node_modules\appium-uiautomator2-driver\node_modules\appium-android-driver\build\lib\commands\find.js:62:15)
+    at process.processTic
+[16:44:01]         at async AndroidUiautomator2Driver.findElOrElsWithProcessing (D:\AO3_tests\tools\appium\node_modules\@appium\base-driver\build\lib\basedriver\commands\find.js:12:16)
+[16:44:02]     TEXTS[R1 FILES tab]: ['Close sheet', 'Filters', '1', 'Reset', 'Close', 'Search any field', 'Fandom', 'Fandom Gamma', 'Word count', 'Min', '–', 'Max', 'Downloaded only', 'Apply filters']
+[16:44:03]     SHOT 07_R1_files_tab.png
+[16:44:03]     PREFS[R1 end] auto_download_saved -> auto_download_saved: ОТСУТСТВУЕТ в prefs (дефолт false)
+[16:44:03]     PREFS[R1 end] full: <?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <int name="active_tab_index" value="0" />
+    <string name="open_tabs_urls">[{&quot;historyEntries&quot;:[{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/&quot;},{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/works/900000001&quot;},{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/works?ao3_companion_fixture\u003dlisting_basic&quot;}],&quot;historyIndex&quot;:2,&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/works?ao3_companion_fixture\u003dlisting_basic&quot;}]</string>
+</map>
+[16:45:23] ======================================================================
+[16:45:23] === SEED1 R2 дверь 2: панель rating+tag @ baseline A
+[16:45:30]     SEEDED B: downloadPath={'900000001': '/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html'}
+[16:45:30]     PREFS[R2 дверь 2: панель rating+tag @ baseline A after seed] auto_download_saved -> auto_download_saved: ОТСУТСТВУЕТ в prefs (дефолт false)
+[16:45:30]     PREFS[R2 дверь 2: панель rating+tag @ baseline A after seed] full: 
+[16:45:40] --- STEP: wait_app_ready
+[16:45:45]     OK: wait_app_ready
+[16:45:45] --- STEP: goto work page
+[16:45:47]     OK: goto work page
+[16:45:47] --- STEP: open panel
+[16:45:53]     OK: open panel
+[16:45:53] --- STEP: панель: add note (достройка A, ПИШЕТ)
+[16:45:56]     OK: панель: add note (достройка A, ПИШЕТ)
+[16:45:58]     ROOM[R2 A-build after panel note] n=4 TARGET={"author": "seed_author_a", "comment": "note A", "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Мой фандом", "rating": "SAVE", "tags": null, "timestamp": 1785768354306, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:45:58]     ROOM[R2 A-build after panel note] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:45:58] --- STEP: re-open panel
+[16:45:59]     OK: re-open panel
+[16:45:59] --- STEP: панель: add tag (достройка A, ПИШЕТ)
+[16:46:00]     OK: панель: add tag (достройка A, ПИШЕТ)
+[16:46:03]     ROOM[R2 baseline A] n=4 TARGET={"author": "seed_author_a", "comment": "note A", "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Мой фандом", "rating": "SAVE", "tags": "[\"tagA\"]", "timestamp": 1785768359374, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:46:03]     ROOM[R2 baseline A] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:46:03]     ROOM[R2 BEFORE door2] n=4 TARGET={"author": "seed_author_a", "comment": "note A", "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Мой фандом", "rating": "SAVE", "tags": "[\"tagA\"]", "timestamp": 1785768359374, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:46:03]     ROOM[R2 BEFORE door2] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:46:03] --- STEP: open panel
+[16:46:03]     OK: open panel
+[16:46:03] --- STEP: ДВЕРЬ 2a: панель SAVE->LIKE
+[16:46:04]     OK: ДВЕРЬ 2a: панель SAVE->LIKE
+[16:46:07]     ROOM[R2 AFTER door2a (rating LIKE)] n=4 TARGET={"author": "seed_author_a", "comment": "note A", "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Мой фандом", "rating": "LIKE", "tags": "[\"tagA\"]", "timestamp": 1785768362262, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:46:07]     ROOM[R2 AFTER door2a (rating LIKE)] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:46:07]     R2a DELTA: downloadPath '/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html' -> '/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html'; title 'ЛОКАЛЬНЫЙ заголовок' -> 'ЛОКАЛЬНЫЙ заголовок'
+[16:46:07] --- STEP: re-open panel
+[16:46:07]     OK: re-open panel
+[16:46:07] --- STEP: ДВЕРЬ 2b: панель add tag
+[16:46:29]     FAIL: ДВЕРЬ 2b: панель add tag: TimeoutException: Message: не кликабелен: ('-android uiautomator', 'new UiSelector().textContains("Saved tags")')
+Stacktrace:
+NoSuchElementError: An element could not be located on the page using the given search parameters.
+    at AndroidUiautomator2Driver.findElOrEls (D:\AO3_tests\tools\appium\node_modules\appium-uiautomator2-driver\node_modules\appium-android-driver\build\lib\commands\find.js:62:15)
+    at proce
+[16:46:29]         at async AndroidUiautomator2Driver.findElOrElsWithProcessing (D:\AO3_tests\tools\appium\node_modules\@appium\base-driver\build\lib\basedriver\commands\find.js:12:16)
+[16:46:32]     ROOM[R2 AFTER door2b (tag)] n=4 TARGET={"author": "seed_author_a", "comment": "note A", "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Мой фандом", "rating": "LIKE", "tags": "[\"tagA\"]", "timestamp": 1785768362262, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:46:32]     ROOM[R2 AFTER door2b (tag)] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:46:32]     R2b DELTA: downloadPath -> '/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html'; tags -> '["tagA"]'; title -> 'ЛОКАЛЬНЫЙ заголовок'
+[16:46:32]     LS-runas[R2 after door2] files/ao3_test_downloads: '900000001.html'
+[16:46:36]     TEXTS[R2 library default tab]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'Nothing here yet', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:46:36]     SHOT 01_R2_library.png
+[16:46:36]     PREFS[R2 end] auto_download_saved -> auto_download_saved: ОТСУТСТВУЕТ в prefs (дефолт false)
+[16:46:36]     PREFS[R2 end] full: <?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <int name="active_tab_index" value="0" />
+    <string name="open_tabs_urls">[{&quot;historyEntries&quot;:[{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/&quot;},{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/works/900000001&quot;}],&quot;historyIndex&quot;:1,&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/works/900000001&quot;}]</string>
+</map>
+[16:46:39] ======================================================================
+[16:46:39] === SEED1 R3 дверь 3a-панель: deselect @ baseline A
+[16:46:46]     SEEDED B: downloadPath={'900000001': '/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html'}
+[16:46:46]     PREFS[R3 дверь 3a-панель: deselect @ baseline A after seed] auto_download_saved -> auto_download_saved: ОТСУТСТВУЕТ в prefs (дефолт false)
+[16:46:46]     PREFS[R3 дверь 3a-панель: deselect @ baseline A after seed] full: 
+[16:46:56] --- STEP: wait_app_ready
+[16:47:01]     OK: wait_app_ready
+[16:47:01] --- STEP: goto work page
+[16:47:03]     OK: goto work page
+[16:47:03] --- STEP: open panel
+[16:47:08]     OK: open panel
+[16:47:08] --- STEP: панель: add tag (достройка A, ПИШЕТ)
+[16:47:12]     OK: панель: add tag (достройка A, ПИШЕТ)
+[16:47:14]     ROOM[R3 A-build after panel tag] n=4 TARGET={"author": "seed_author_a", "comment": null, "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Мой фандом", "rating": "SAVE", "tags": "[\"tagA\"]", "timestamp": 1785768430162, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:47:14]     ROOM[R3 A-build after panel tag] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:47:14] --- STEP: re-open panel
+[16:47:15]     OK: re-open panel
+[16:47:15] --- STEP: панель: add note (достройка A, ПИШЕТ)
+[16:47:17]     OK: панель: add note (достройка A, ПИШЕТ)
+[16:47:19]     ROOM[R3 baseline A] n=4 TARGET={"author": "seed_author_a", "comment": "note A", "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Мой фандом", "rating": "SAVE", "tags": "[\"tagA\"]", "timestamp": 1785768435392, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:47:19]     ROOM[R3 baseline A] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:47:20]     ROOM[R3 BEFORE door3a-panel] n=4 TARGET={"author": "seed_author_a", "comment": "note A", "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Мой фандом", "rating": "SAVE", "tags": "[\"tagA\"]", "timestamp": 1785768435392, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:47:20]     ROOM[R3 BEFORE door3a-panel] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:47:20] --- STEP: open panel
+[16:47:20]     OK: open panel
+[16:47:20] --- STEP: ДВЕРЬ 3a-панель: deselect SAVE
+[16:47:20]     OK: ДВЕРЬ 3a-панель: deselect SAVE
+[16:47:23]     ROOM[R3 AFTER door3a-panel] n=4 TARGET={"author": "seed_author_a", "comment": "note A", "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Мой фандом", "rating": null, "tags": "[\"tagA\"]", "timestamp": 1785768439059, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:47:23]     ROOM[R3 AFTER door3a-panel] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:47:23]     R3 DELTA: rating 'SAVE' -> None; downloadPath '/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html' -> '/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html'; tags '["tagA"]' -> '["tagA"]'; comment 'note A' -> 'note A'; title 'ЛОКАЛЬНЫЙ заголовок' -> 'ЛОКАЛЬНЫЙ заголовок'
+[16:47:23]     LS-runas[R3 after] files/ao3_test_downloads: '900000001.html'
+[16:47:25]     TEXTS[R3 library default tab]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'Nothing here yet', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:47:26]     SHOT 02_R3_library.png
+[16:47:26] --- STEP: open Library
+[16:47:26]     OK: open Library
+[16:47:27]     TEXTS[R3 ORACLE default sort Last read (порядок карточек)]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'Nothing here yet', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:47:27] --- STEP: open filter sheet
+[16:47:29]     OK: open filter sheet
+[16:47:29] --- STEP: open fandom picker
+[16:47:31]     OK: open fandom picker
+[16:47:32]     TEXTS[R3 ORACLE fandom picker options]: ['All fandoms', 'Fandom Beta', 'Fandom Delta', 'Fandom Gamma', 'Мой фандом']
+[16:47:32]     R3 ORACLE: «Мой фандом» доступен пользователю = True
+[16:47:32]     SHOT 03_R3_fandom_picker.png
+[16:47:32] --- STEP: select All fandoms (сброс)
+[16:47:33]     OK: select All fandoms (сброс)
+[16:47:33] --- STEP: apply filters
+[16:47:34]     OK: apply filters
+[16:47:36] --- STEP: sort Word count (high to low)
+[16:47:38]     OK: sort Word count (high to low)
+[16:47:40]     TEXTS[R3 ORACLE after sort wordcount desc]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'Nothing here yet', 'Library', 'Filter library', 'Sort library: Word count (high to low)', 'Browse', 'Settings']
+[16:47:41]     SHOT 04_R3_sort_wordcount.png
+[16:47:41] --- STEP: sort back Last read
+[16:47:43]     OK: sort back Last read
+[16:47:45] --- STEP: open Library
+[16:47:45]     OK: open Library
+[16:47:46] --- STEP: open FILES tab
+[16:47:46]     OK: open FILES tab
+[16:47:48]     TEXTS[R3 FILES tab]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'ЛОКАЛЬНЫЙ заголовок', 'seed_author_a', 'Мой фандом · 777,777 words', 'tagA', 'View note', 'Open downloaded', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:47:49]     SHOT 05_R3_files_tab.png
+[16:47:49]     PREFS[R3 end] auto_download_saved -> auto_download_saved: ОТСУТСТВУЕТ в prefs (дефолт false)
+[16:47:49]     PREFS[R3 end] full: <?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <int name="active_tab_index" value="0" />
+    <string name="open_tabs_urls">[{&quot;historyEntries&quot;:[{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/&quot;},{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/works/900000001&quot;}],&quot;historyIndex&quot;:1,&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/works/900000001&quot;}]</string>
+</map>
+[16:47:52] ======================================================================
+[16:47:52] === SEED1 R4 дверь 3a-overlay: deselect @ baseline A (пере-сев)
+[16:47:58]     SEEDED B: downloadPath={'900000001': '/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html'}
+[16:47:58]     PREFS[R4 дверь 3a-overlay: deselect @ baseline A (пере-сев) after seed] auto_download_saved -> auto_download_saved: ОТСУТСТВУЕТ в prefs (дефолт false)
+[16:47:58]     PREFS[R4 дверь 3a-overlay: deselect @ baseline A (пере-сев) after seed] full: 
+[16:48:09] --- STEP: wait_app_ready
+[16:48:15]     OK: wait_app_ready
+[16:48:15] --- STEP: goto work page
+[16:48:16]     OK: goto work page
+[16:48:16] --- STEP: open panel
+[16:48:22]     OK: open panel
+[16:48:22] --- STEP: панель: add note (достройка A, ПИШЕТ)
+[16:48:26]     OK: панель: add note (достройка A, ПИШЕТ)
+[16:48:28]     ROOM[R4 A-build after panel note] n=4 TARGET={"author": "seed_author_a", "comment": "note A", "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Мой фандом", "rating": "SAVE", "tags": null, "timestamp": 1785768503629, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:48:28]     ROOM[R4 A-build after panel note] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:48:28] --- STEP: re-open panel
+[16:48:28]     OK: re-open panel
+[16:48:28] --- STEP: панель: add tag (достройка A, ПИШЕТ)
+[16:48:30]     OK: панель: add tag (достройка A, ПИШЕТ)
+[16:48:32]     ROOM[R4 baseline A] n=4 TARGET={"author": "seed_author_a", "comment": "note A", "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Мой фандом", "rating": "SAVE", "tags": "[\"tagA\"]", "timestamp": 1785768508744, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:48:32]     ROOM[R4 baseline A] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:48:32]     ROOM[R4 BEFORE door3a-overlay] n=4 TARGET={"author": "seed_author_a", "comment": "note A", "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Мой фандом", "rating": "SAVE", "tags": "[\"tagA\"]", "timestamp": 1785768508744, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:48:32]     ROOM[R4 BEFORE door3a-overlay] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:48:32] --- STEP: goto listing
+[16:48:35]     OK: goto listing
+[16:48:35] --- STEP: open overlay
+[16:48:37]     OK: open overlay
+[16:48:37]     TEXTS[R4 overlay open]: ['A Loved Test Work', 'seed_author_a', 'Already downloaded', 'Favorite', 'Kudosed', 'Read', 'Pending', 'Dislike', 'note A', 'Saved tags (1)', 'Expand panel']
+[16:48:37] --- STEP: ДВЕРЬ 3a-overlay: deselect SAVE
+[16:48:37]     OK: ДВЕРЬ 3a-overlay: deselect SAVE
+[16:48:40]     SHOT 06_R4_overlay_after_deselect.png
+[16:48:40] --- STEP: dismiss overlay
+[16:48:40]     OK: dismiss overlay
+[16:48:40]     ROOM[R4 AFTER door3a-overlay] n=4 TARGET={"author": "seed_author_a", "comment": "note A", "downloadPath": null, "fandom": "Fandom Alpha", "rating": null, "tags": null, "timestamp": 1785768516102, "title": "A Loved Test Work", "url": "https://archiveofourown.org/works/900000001", "wordCount": 4200}
+[16:48:40]     ROOM[R4 AFTER door3a-overlay] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:48:40]     R4 DELTA: rating 'SAVE' -> None; downloadPath '/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html' -> None; tags '["tagA"]' -> None; comment 'note A' -> 'note A'; title 'ЛОКАЛЬНЫЙ заголовок' -> 'A Loved Test Work'; fandom -> 'Fandom Alpha'; wc -> 4200
+[16:48:41]     LS-runas[R4 after] files/ao3_test_downloads: '900000001.html'
+[16:48:48]     TEXTS[R4 library default tab]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'Nothing here yet', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:48:48]     SHOT 07_R4_library.png
+[16:48:48] --- STEP: open Library
+[16:48:48]     OK: open Library
+[16:48:50]     TEXTS[R4 ORACLE default sort Last read (порядок карточек)]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'Nothing here yet', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:48:50] --- STEP: open filter sheet
+[16:48:51]     OK: open filter sheet
+[16:48:51] --- STEP: open fandom picker
+[16:48:52]     OK: open fandom picker
+[16:48:54]     TEXTS[R4 ORACLE fandom picker options]: ['All fandoms', 'Fandom Alpha', 'Fandom Beta', 'Fandom Delta', 'Fandom Gamma']
+[16:48:54]     R4 ORACLE: «Мой фандом» доступен пользователю = False
+[16:48:54]     SHOT 08_R4_fandom_picker.png
+[16:48:54] --- STEP: select All fandoms (сброс)
+[16:48:55]     OK: select All fandoms (сброс)
+[16:48:55] --- STEP: apply filters
+[16:48:56]     OK: apply filters
+[16:48:58] --- STEP: sort Word count (high to low)
+[16:49:00]     OK: sort Word count (high to low)
+[16:49:02]     TEXTS[R4 ORACLE after sort wordcount desc]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'Nothing here yet', 'Library', 'Filter library', 'Sort library: Word count (high to low)', 'Browse', 'Settings']
+[16:49:02]     SHOT 09_R4_sort_wordcount.png
+[16:49:02] --- STEP: sort back Last read
+[16:49:04]     OK: sort back Last read
+[16:49:06] --- STEP: open Library
+[16:49:06]     OK: open Library
+[16:49:07] --- STEP: open FILES tab
+[16:49:08]     OK: open FILES tab
+[16:49:10]     TEXTS[R4 FILES tab]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'Nothing here yet', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:49:10]     SHOT 10_R4_files_tab.png
+[16:49:11]     PREFS[R4 end] auto_download_saved -> auto_download_saved: ОТСУТСТВУЕТ в prefs (дефолт false)
+[16:49:11]     PREFS[R4 end] full: <?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <int name="active_tab_index" value="0" />
+    <string name="open_tabs_urls">[{&quot;historyEntries&quot;:[{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/&quot;},{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/works/900000001&quot;},{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/works?ao3_companion_fixture\u003dlisting_basic&quot;}],&quot;historyIndex&quot;:2,&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/works?ao3_companion_fixture\u003dlisting_basic&quot;}]</string>
+</map>
+[16:49:51] ======================================================================
+[16:49:51] === SEED1 R5 дверь 3b-панель: deselect @ baseline B
+[16:49:57]     SEEDED B: downloadPath={'900000001': '/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html'}
+[16:49:57]     PREFS[R5 дверь 3b-панель: deselect @ baseline B after seed] auto_download_saved -> auto_download_saved: ОТСУТСТВУЕТ в prefs (дефолт false)
+[16:49:57]     PREFS[R5 дверь 3b-панель: deselect @ baseline B after seed] full: 
+[16:50:07] --- STEP: wait_app_ready
+[16:50:13]     OK: wait_app_ready
+[16:50:14]     ROOM[R5 BEFORE door3b-panel (baseline B)] n=4 TARGET={"author": "seed_author_a", "comment": null, "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Мой фандом", "rating": "SAVE", "tags": null, "timestamp": 1785768597117, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:50:14]     ROOM[R5 BEFORE door3b-panel (baseline B)] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:50:14] --- STEP: goto work page
+[16:50:15]     OK: goto work page
+[16:50:15] --- STEP: open panel
+[16:50:21]     OK: open panel
+[16:50:21] --- STEP: ДВЕРЬ 3b-панель: deselect SAVE
+[16:50:22]     OK: ДВЕРЬ 3b-панель: deselect SAVE
+[16:50:25]     ROOM[R5 AFTER door3b-panel] n=4 TARGET={"author": "seed_author_a", "comment": null, "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Мой фандом", "rating": null, "tags": null, "timestamp": 1785768597117, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:50:25]     ROOM[R5 AFTER door3b-panel] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:50:25]     R5 DELTA: строка жива=True; rating -> None; downloadPath -> '/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html'; title -> 'ЛОКАЛЬНЫЙ заголовок'
+[16:50:25]     LS-runas[R5 after] files/ao3_test_downloads: '900000001.html'
+[16:50:28]     TEXTS[R5 library default tab]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'Nothing here yet', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:50:29]     SHOT 01_R5_library.png
+[16:50:29] --- STEP: open tab SAVE
+[16:50:29]     OK: open tab SAVE
+[16:50:31]     TEXTS[R5 tab SAVE]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'Nothing here yet', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:50:31] --- STEP: open tab LIKE
+[16:50:31]     OK: open tab LIKE
+[16:50:33]     TEXTS[R5 tab LIKE]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'A Kudosed Test Work', 'seed_author_b', 'Fandom Beta · 1,500 words', 'Download', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:50:33] --- STEP: open tab READ
+[16:50:34]     OK: open tab READ
+[16:50:35]     TEXTS[R5 tab READ]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'A Read Test Work', 'seed_author_c', 'Fandom Gamma · 800 words', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:50:35] --- STEP: open tab PENDING
+[16:50:36]     OK: open tab PENDING
+[16:50:38]     TEXTS[R5 tab PENDING]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'A Pending Test Work', 'seed_author_d', 'Fandom Delta · 12,000 words', 'Download', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:50:38] --- STEP: open Library
+[16:50:38]     OK: open Library
+[16:50:39] --- STEP: open FILES tab
+[16:50:39]     OK: open FILES tab
+[16:50:41]     TEXTS[R5 FILES tab]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'ЛОКАЛЬНЫЙ заголовок', 'seed_author_a', 'Мой фандом · 777,777 words', 'Open downloaded', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:50:42]     SHOT 02_R5_files_tab.png
+[16:50:42]     PREFS[R5 end] auto_download_saved -> auto_download_saved: ОТСУТСТВУЕТ в prefs (дефолт false)
+[16:50:42]     PREFS[R5 end] full: <?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <int name="active_tab_index" value="0" />
+    <string name="open_tabs_urls">[{&quot;historyEntries&quot;:[{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/&quot;},{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/works/900000001&quot;}],&quot;historyIndex&quot;:1,&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/works/900000001&quot;}]</string>
+</map>
+[16:50:45] ======================================================================
+[16:50:45] === SEED1 R6 дверь 3b-overlay: deselect @ baseline B (пере-сев)
+[16:50:52]     SEEDED B: downloadPath={'900000001': '/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html'}
+[16:50:52]     PREFS[R6 дверь 3b-overlay: deselect @ baseline B (пере-сев) after seed] auto_download_saved -> auto_download_saved: ОТСУТСТВУЕТ в prefs (дефолт false)
+[16:50:52]     PREFS[R6 дверь 3b-overlay: deselect @ baseline B (пере-сев) after seed] full: 
+[16:51:01] --- STEP: wait_app_ready
+[16:51:08]     OK: wait_app_ready
+[16:51:08]     ROOM[R6 BEFORE door3b-overlay (baseline B)] n=4 TARGET={"author": "seed_author_a", "comment": null, "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Мой фандом", "rating": "SAVE", "tags": null, "timestamp": 1785768651308, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:51:08]     ROOM[R6 BEFORE door3b-overlay (baseline B)] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:51:08] --- STEP: goto listing
+[16:51:17]     OK: goto listing
+[16:51:17] --- STEP: open overlay
+[16:51:19]     OK: open overlay
+[16:51:19] --- STEP: ДВЕРЬ 3b-overlay: deselect SAVE
+[16:51:19]     OK: ДВЕРЬ 3b-overlay: deselect SAVE
+[16:51:21] --- STEP: dismiss overlay
+[16:51:22]     OK: dismiss overlay
+[16:51:22]     ROOM[R6 AFTER door3b-overlay] n=4 TARGET={"author": "seed_author_a", "comment": null, "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Мой фандом", "rating": null, "tags": null, "timestamp": 1785768651308, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:51:22]     ROOM[R6 AFTER door3b-overlay] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:51:22]     R6 DELTA: строка жива=True; rating -> None; downloadPath -> '/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html'; title -> 'ЛОКАЛЬНЫЙ заголовок'
+[16:51:22]     LS-runas[R6 after] files/ao3_test_downloads: '900000001.html'
+[16:51:29]     TEXTS[R6 library default tab]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'Nothing here yet', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:51:29]     SHOT 03_R6_library.png
+[16:51:29] --- STEP: open Library
+[16:51:30]     OK: open Library
+[16:51:31] --- STEP: open FILES tab
+[16:51:32]     OK: open FILES tab
+[16:51:34]     TEXTS[R6 FILES tab]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'ЛОКАЛЬНЫЙ заголовок', 'seed_author_a', 'Мой фандом · 777,777 words', 'Open downloaded', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:51:34]     SHOT 04_R6_files_tab.png
+[16:51:34] --- STEP: Settings -> Theme
+[16:51:54]     FAIL: Settings -> Theme: TimeoutException: Message: нативная оболочка приложения не отрисовалась
+Stacktrace:
+NoSuchElementError: An element could not be located on the page using the given search parameters.
+    at AndroidUiautomator2Driver.findElOrEls (D:\AO3_tests\tools\appium\node_modules\appium-uiautomator2-driver\node_modules\appium-android-driver\build\lib\commands\find.js:62:15)
+    at process.processTicksAndRejections (node:interna
+[16:51:54]         at async AndroidUiautomator2Driver.findElOrElsWithProcessing (D:\AO3_tests\tools\appium\node_modules\@appium\base-driver\build\lib\basedriver\commands\find.js:12:16)
+[16:51:54] --- STEP: theme DARK
+[16:52:15]     FAIL: theme DARK: TimeoutException: Message: не кликабелен: ('-android uiautomator', 'new UiSelector().text("Dark")')
+Stacktrace:
+NoSuchElementError: An element could not be located on the page using the given search parameters.
+    at AndroidUiautomator2Driver.findElOrEls (D:\AO3_tests\tools\appium\node_modules\appium-uiautomator2-driver\node_modules\appium-android-driver\build\lib\commands\find.js:62:15)
+    at process.processTick
+[16:52:15]         at async AndroidUiautomator2Driver.findElOrElsWithProcessing (D:\AO3_tests\tools\appium\node_modules\@appium\base-driver\build\lib\basedriver\commands\find.js:12:16)
+[16:52:17]     SHOT 05_R6_settings_dark.png
+[16:52:17] --- STEP: open Library (dark)
+[16:52:17]     OK: open Library (dark)
+[16:52:20]     SHOT 06_R6_library_dark.png
+[16:52:20]     TEXTS[R6 library dark]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'ЛОКАЛЬНЫЙ заголовок', 'seed_author_a', 'Мой фандом · 777,777 words', 'Open downloaded', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:52:20] --- STEP: open FILES tab (dark)
+[16:52:20]     OK: open FILES tab (dark)
+[16:52:22]     SHOT 07_R6_files_tab_dark.png
+[16:52:22] --- STEP: open Browse (dark)
+[16:52:23]     OK: open Browse (dark)
+[16:52:26]     SHOT 08_R6_listing_dark.png
+[16:52:26]     PREFS[R6 end] auto_download_saved -> auto_download_saved: ОТСУТСТВУЕТ в prefs (дефолт false)
+[16:52:26]     PREFS[R6 end] full: <?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <int name="active_tab_index" value="0" />
+    <string name="open_tabs_urls">[{&quot;historyEntries&quot;:[{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/&quot;},{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/works?ao3_companion_fixture\u003dlisting_basic&quot;}],&quot;historyIndex&quot;:1,&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/works?ao3_companion_fixture\u003dlisting_basic&quot;}]</string>
+</map>
+[16:52:29] ======================================================================
+[16:52:29] === SEED1 R7 дверь 4: overlay Clear note @ baseline C
+[16:52:36]     SEEDED B: downloadPath={'900000001': '/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html'}
+[16:52:36]     PREFS[R7 дверь 4: overlay Clear note @ baseline C after seed] auto_download_saved -> auto_download_saved: ОТСУТСТВУЕТ в prefs (дефолт false)
+[16:52:36]     PREFS[R7 дверь 4: overlay Clear note @ baseline C after seed] full: 
+[16:52:46] --- STEP: wait_app_ready
+[16:52:51]     OK: wait_app_ready
+[16:52:51] --- STEP: goto work page
+[16:52:53]     OK: goto work page
+[16:52:53] --- STEP: open panel
+[16:52:59]     OK: open panel
+[16:52:59] --- STEP: панель: add note (шаг достройки C, ПИШЕТ)
+[16:53:03]     OK: панель: add note (шаг достройки C, ПИШЕТ)
+[16:53:05]     ROOM[R7 C-build after panel note] n=4 TARGET={"author": "seed_author_a", "comment": "note C", "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Мой фандом", "rating": "SAVE", "tags": null, "timestamp": 1785768780831, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:53:05]     ROOM[R7 C-build after panel note] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:53:05] --- STEP: re-open panel
+[16:53:05]     OK: re-open panel
+[16:53:05] --- STEP: панель: deselect SAVE (шаг достройки C, ПИШЕТ)
+[16:53:05]     OK: панель: deselect SAVE (шаг достройки C, ПИШЕТ)
+[16:53:08]     ROOM[R7 baseline C] n=4 TARGET={"author": "seed_author_a", "comment": "note C", "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Мой фандом", "rating": null, "tags": null, "timestamp": 1785768784354, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:53:08]     ROOM[R7 baseline C] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:53:08]     ROOM[R7 BEFORE door4 (baseline C)] n=4 TARGET={"author": "seed_author_a", "comment": "note C", "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Мой фандом", "rating": null, "tags": null, "timestamp": 1785768784354, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:53:08]     ROOM[R7 BEFORE door4 (baseline C)] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:53:08] --- STEP: goto listing
+[16:53:10]     OK: goto listing
+[16:53:10] --- STEP: open overlay
+[16:53:12]     OK: open overlay
+[16:53:12]     TEXTS[R7 overlay open]: ['A Loved Test Work', 'seed_author_a', 'Already downloaded', 'Favorite', 'Kudosed', 'Read', 'Pending', 'Dislike', 'note C', 'Add tags', 'Expand panel']
+[16:53:12] --- STEP: раскрыть превью заметки
+[16:53:13]     OK: раскрыть превью заметки
+[16:53:14]     TEXTS[R7 overlay expanded]: ['A Loved Test Work', 'seed_author_a', 'Already downloaded', 'Favorite', 'Kudosed', 'Read', 'Pending', 'Dislike', 'Hide note', 'note C', 'Clear note', 'Save note', 'Add tags', 'Expand panel']
+[16:53:14] --- STEP: ДВЕРЬ 4: overlay Clear note
+[16:53:14]     OK: ДВЕРЬ 4: overlay Clear note
+[16:53:17]     SHOT 09_R7_overlay_after_clearnote.png
+[16:53:17] --- STEP: dismiss overlay
+[16:53:17]     OK: dismiss overlay
+[16:53:18]     ROOM[R7 AFTER door4] n=4 TARGET={"author": "seed_author_a", "comment": null, "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Мой фандом", "rating": null, "tags": null, "timestamp": 1785768793237, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:53:18]     ROOM[R7 AFTER door4] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:53:18]     R7 DELTA: строка жива=True; comment 'note C' -> None; downloadPath '/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html' -> '/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html'; title 'ЛОКАЛЬНЫЙ заголовок' -> 'ЛОКАЛЬНЫЙ заголовок'
+[16:53:18]     LS-runas[R7 after] files/ao3_test_downloads: '900000001.html'
+[16:53:25]     TEXTS[R7 library default tab]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'Nothing here yet', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:53:25]     SHOT 10_R7_library.png
+[16:53:25] --- STEP: open Library
+[16:53:25]     OK: open Library
+[16:53:26] --- STEP: open FILES tab
+[16:53:27]     OK: open FILES tab
+[16:53:29]     TEXTS[R7 FILES tab]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'ЛОКАЛЬНЫЙ заголовок', 'seed_author_a', 'Мой фандом · 777,777 words', 'Open downloaded', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:53:29]     SHOT 11_R7_files_tab.png
+[16:53:29]     PREFS[R7 end] auto_download_saved -> auto_download_saved: ОТСУТСТВУЕТ в prefs (дефолт false)
+[16:53:29]     PREFS[R7 end] full: <?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <int name="active_tab_index" value="0" />
+    <string name="open_tabs_urls">[{&quot;historyEntries&quot;:[{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/&quot;},{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/works/900000001&quot;},{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/works?ao3_companion_fixture\u003dlisting_basic&quot;}],&quot;historyIndex&quot;:2,&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/works?ao3_companion_fixture\u003dlisting_basic&quot;}]</string>
+</map>
+[16:53:30] ======================================================================
+[16:53:30] === SEED2 «Два файла на один id» (ДЕФОЛТНАЯ папка загрузок)
+[16:53:36]     PREFS[S2 t0] auto_download_saved -> auto_download_saved: ОТСУТСТВУЕТ в prefs (дефолт false)
+[16:53:36]     PREFS[S2 t0] full: 
+[16:53:36]     ROOM[S2 t0 seeded (downloadPath=null)] n=1 TARGET={"author": "seed_author_a", "comment": null, "downloadPath": null, "fandom": "Мой фандом", "rating": "SAVE", "tags": null, "timestamp": 1785768815922, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:53:36]     ROOM[S2 t0 seeded (downloadPath=null)] others={}
+[16:53:36]     LS[S2 t0 ДО первого скачивания (ожидание: пусто после pm clear)] /sdcard/Android/data/com.example.ao3_wrapper/files/ao3_downloads: n=0 []
+[16:53:49] --- STEP: wait_app_ready
+[16:53:54]     OK: wait_app_ready
+[16:53:54] --- STEP: open Library
+[16:54:02]     OK: open Library
+[16:54:02] --- STEP: open FAVORITE tab
+[16:54:03]     OK: open FAVORITE tab
+[16:54:05]     TEXTS[S2 card before download]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'ЛОКАЛЬНЫЙ заголовок', 'seed_author_a', 'Мой фандом · 777,777 words', 'Download', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:54:06]     SHOT 12_S2_card_before_download.png
+[16:54:06] --- STEP: download via card
+[16:54:07]     OK: download via card
+[16:54:17]     LS[S2 после скачивания #1] /sdcard/Android/data/com.example.ao3_wrapper/files/ao3_downloads: n=1 ['ao3_ЛОКАЛЬНЫЙ заголовок_900000001.html']
+[16:54:17]     ROOM[S2 после скачивания #1] n=1 TARGET={"author": "seed_author_a", "comment": null, "downloadPath": "/storage/emulated/0/Android/data/com.example.ao3_wrapper/files/ao3_downloads/ao3_ЛОКАЛЬНЫЙ заголовок_900000001.html", "fandom": "Мой фандом", "rating": "SAVE", "tags": null, "timestamp": 1785768815922, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:54:17]     ROOM[S2 после скачивания #1] others={}
+[16:54:17]     FILE[S2 файл #1 (сверка с эталоном)] /sdcard/Android/data/com.example.ao3_wrapper/files/ao3_downloads/ao3_ЛОКАЛЬНЫЙ заголовок_900000001.html len=339 head='<!DOCTYPE html>\n<html lang="en">\n<head><meta charset="utf-8"><title>A Loved Test Work</title></head>\n<body>\n<div id="preface">\n  <h1>A Loved Test Work</h1>\n  <h3 class="byline">seed_author_a</h3>\n</div>\n<div id="chapters">\n  <div class="userstuff">\n    <p>Downloaded fixture body for A Loved Test Wor'
+[16:54:18]     TEXTS[S2 card after download #1]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'ЛОКАЛЬНЫЙ заголовок', 'seed_author_a', 'Мой фандом · 777,777 words', 'Open downloaded', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:54:18]     SHOT 13_S2_card_after_download1.png
+[16:54:18] --- STEP: goto listing
+[16:54:21]     OK: goto listing
+[16:54:21] --- STEP: open overlay
+[16:54:23]     OK: open overlay
+[16:54:23] --- STEP: ИНСТРУМЕНТ: overlay Save note
+[16:54:24]     OK: ИНСТРУМЕНТ: overlay Save note
+[16:54:26] --- STEP: dismiss overlay
+[16:54:26]     OK: dismiss overlay
+[16:54:27]     ROOM[S2 после Save note (инструмент)] n=1 TARGET={"author": "seed_author_a", "comment": "s2 note", "downloadPath": null, "fandom": "Fandom Alpha", "rating": "SAVE", "tags": null, "timestamp": 1785768862694, "title": "A Loved Test Work", "url": "https://archiveofourown.org/works/900000001", "wordCount": 4200}
+[16:54:27]     ROOM[S2 после Save note (инструмент)] others={}
+[16:54:27]     LS[S2 после Save note (файл на диске?)] /sdcard/Android/data/com.example.ao3_wrapper/files/ao3_downloads: n=1 ['ao3_ЛОКАЛЬНЫЙ заголовок_900000001.html']
+[16:54:27] --- STEP: open Library
+[16:54:32]     OK: open Library
+[16:54:34]     TEXTS[S2 card after note (Download-иконка вернулась?)]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'A Loved Test Work', 'seed_author_a', 'Fandom Alpha · 4,200 words', 'View note', 'Download', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:54:34]     SHOT 14_S2_card_after_note.png
+[16:54:34] --- STEP: download via card #2
+[16:54:35]     OK: download via card #2
+[16:54:47]     LS[S2 после скачивания #2 (ДВА файла?)] /sdcard/Android/data/com.example.ao3_wrapper/files/ao3_downloads: n=2 ['ao3_A Loved Test Work_900000001.html', 'ao3_ЛОКАЛЬНЫЙ заголовок_900000001.html']
+[16:54:47]     ROOM[S2 после скачивания #2] n=1 TARGET={"author": "seed_author_a", "comment": "s2 note", "downloadPath": "/storage/emulated/0/Android/data/com.example.ao3_wrapper/files/ao3_downloads/ao3_A Loved Test Work_900000001.html", "fandom": "Fandom Alpha", "rating": "SAVE", "tags": null, "timestamp": 1785768862694, "title": "A Loved Test Work", "url": "https://archiveofourown.org/works/900000001", "wordCount": 4200}
+[16:54:47]     ROOM[S2 после скачивания #2] others={}
+[16:54:47]     SHOT 15_S2_card_after_download2.png
+[16:54:47]     FILE[S2 body ao3_A Loved Test Work_900000001.html] /sdcard/Android/data/com.example.ao3_wrapper/files/ao3_downloads/ao3_A Loved Test Work_900000001.html len=339 head='<!DOCTYPE html>\n<html lang="en">\n<head><meta charset="utf-8"><title>A Loved Test Work</title></head>\n<body>\n<div id="preface">\n  <h1>A Loved Test Work</h1>\n  <h3 class="byline">seed_author_a</h3>\n</di'
+[16:54:47]     FILE[S2 body ao3_ЛОКАЛЬНЫЙ заголовок_900000001.html] /sdcard/Android/data/com.example.ao3_wrapper/files/ao3_downloads/ao3_ЛОКАЛЬНЫЙ заголовок_900000001.html len=339 head='<!DOCTYPE html>\n<html lang="en">\n<head><meta charset="utf-8"><title>A Loved Test Work</title></head>\n<body>\n<div id="preface">\n  <h1>A Loved Test Work</h1>\n  <h3 class="byline">seed_author_a</h3>\n</di'
+[16:54:47] --- STEP: kill+релонч
+[16:54:53]     OK: kill+релонч
+[16:54:57]     ROOM[S2 после kill+релонч] n=1 TARGET={"author": "seed_author_a", "comment": "s2 note", "downloadPath": "/storage/emulated/0/Android/data/com.example.ao3_wrapper/files/ao3_downloads/ao3_A Loved Test Work_900000001.html", "fandom": "Fandom Alpha", "rating": "SAVE", "tags": null, "timestamp": 1785768862694, "title": "A Loved Test Work", "url": "https://archiveofourown.org/works/900000001", "wordCount": 4200}
+[16:54:57]     ROOM[S2 после kill+релонч] others={}
+[16:54:57]     LS[S2 после kill+релонч] /sdcard/Android/data/com.example.ao3_wrapper/files/ao3_downloads: n=2 ['ao3_A Loved Test Work_900000001.html', 'ao3_ЛОКАЛЬНЫЙ заголовок_900000001.html']
+[16:54:57] --- STEP: Settings -> Scan
+[16:55:10]     OK: Settings -> Scan
+[16:55:10] --- STEP: tap Scan
+[16:55:11]     OK: tap Scan
+[16:55:15]     TEXTS[S2 SCAN #1 dialog (ДОСЛОВНО)]: ['Scan complete', 'Found 2 files — relinked 2, added 0 new.', 'OK']
+[16:55:15]     SHOT 16_S2_scan1_dialog.png
+[16:55:15] --- STEP: dismiss scan dialog
+[16:55:16]     OK: dismiss scan dialog
+[16:55:16]     ROOM[S2 после скана #1 (кто победил?)] n=1 TARGET={"author": "seed_author_a", "comment": "s2 note", "downloadPath": "/storage/emulated/0/Android/data/com.example.ao3_wrapper/files/ao3_downloads/ao3_A Loved Test Work_900000001.html", "fandom": "Fandom Alpha", "rating": "SAVE", "tags": null, "timestamp": 1785768862694, "title": "A Loved Test Work", "url": "https://archiveofourown.org/works/900000001", "wordCount": 4200}
+[16:55:16]     ROOM[S2 после скана #1 (кто победил?)] others={}
+[16:55:16]     S2 победитель скана #1: '/storage/emulated/0/Android/data/com.example.ao3_wrapper/files/ao3_downloads/ao3_A Loved Test Work_900000001.html'
+[16:55:16] --- STEP: Settings -> Scan (2)
+[16:55:17]     OK: Settings -> Scan (2)
+[16:55:17] --- STEP: tap Scan (2)
+[16:55:17]     OK: tap Scan (2)
+[16:55:20]     TEXTS[S2 SCAN #2 dialog (ДОСЛОВНО)]: ['Scan complete', 'Found 2 files — relinked 2, added 0 new.', 'OK']
+[16:55:21]     SHOT 17_S2_scan2_dialog.png
+[16:55:21] --- STEP: dismiss scan dialog
+[16:55:21]     OK: dismiss scan dialog
+[16:55:22]     ROOM[S2 после скана #2] n=1 TARGET={"author": "seed_author_a", "comment": "s2 note", "downloadPath": "/storage/emulated/0/Android/data/com.example.ao3_wrapper/files/ao3_downloads/ao3_A Loved Test Work_900000001.html", "fandom": "Fandom Alpha", "rating": "SAVE", "tags": null, "timestamp": 1785768862694, "title": "A Loved Test Work", "url": "https://archiveofourown.org/works/900000001", "wordCount": 4200}
+[16:55:22]     ROOM[S2 после скана #2] others={}
+[16:55:22]     S2 победитель скана #2: '/storage/emulated/0/Android/data/com.example.ao3_wrapper/files/ao3_downloads/ao3_A Loved Test Work_900000001.html' (стабилен=True)
+[16:55:22] --- STEP: Settings -> Scan (3)
+[16:55:23]     OK: Settings -> Scan (3)
+[16:55:23] --- STEP: tap Scan (3)
+[16:55:23]     OK: tap Scan (3)
+[16:55:26]     TEXTS[S2 SCAN #3 dialog (ДОСЛОВНО, идемпотентность)]: ['Scan complete', 'Found 2 files — relinked 2, added 0 new.', 'OK']
+[16:55:26] --- STEP: dismiss scan dialog
+[16:55:28]     OK: dismiss scan dialog
+[16:55:28]     ROOM[S2 после скана #3] n=1 TARGET={"author": "seed_author_a", "comment": "s2 note", "downloadPath": "/storage/emulated/0/Android/data/com.example.ao3_wrapper/files/ao3_downloads/ao3_A Loved Test Work_900000001.html", "fandom": "Fandom Alpha", "rating": "SAVE", "tags": null, "timestamp": 1785768862694, "title": "A Loved Test Work", "url": "https://archiveofourown.org/works/900000001", "wordCount": 4200}
+[16:55:28]     ROOM[S2 после скана #3] others={}
+[16:55:28] --- STEP: open Library
+[16:55:29]     OK: open Library
+[16:55:31]     TEXTS[S2 card before open file]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'A Loved Test Work', 'seed_author_a', 'Fandom Alpha · 4,200 words', 'View note', 'Open downloaded', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:55:31] --- STEP: open downloaded file
+[16:55:32]     OK: open downloaded file
+[16:55:39]     S2 открытый файл: url='https://archiveofourown.org/works?ao3_companion_fixture=listing_basic' h1=None
+[16:55:39]     G6 (локальный файл): {'chapters': False, 'href': 'https://archiveofourown.org/works?ao3_companion_fixture=listing_basic', 'pathname': '/works', 'worksMatch': False}
+[16:55:39]     SHOT 18_S2_opened_file.png
+[16:55:39] --- STEP: open Library
+[16:55:44]     OK: open Library
+[16:55:45] --- STEP: delete downloaded file
+[16:55:49]     OK: delete downloaded file
+[16:55:52]     LS[S2 после удаления файла (остался второй?)] /sdcard/Android/data/com.example.ao3_wrapper/files/ao3_downloads: n=1 ['ao3_ЛОКАЛЬНЫЙ заголовок_900000001.html']
+[16:55:52]     ROOM[S2 после удаления файла] n=1 TARGET={"author": "seed_author_a", "comment": "s2 note", "downloadPath": null, "fandom": "Fandom Alpha", "rating": "SAVE", "tags": null, "timestamp": 1785768862694, "title": "A Loved Test Work", "url": "https://archiveofourown.org/works/900000001", "wordCount": 4200}
+[16:55:52]     ROOM[S2 после удаления файла] others={}
+[16:55:53]     TEXTS[S2 card after delete file]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'A Loved Test Work', 'seed_author_a', 'Fandom Alpha · 4,200 words', 'View note', 'Download', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:55:53]     SHOT 19_S2_card_after_delete.png
+[16:55:53] --- STEP: Settings -> Scan (post-delete)
+[16:56:13]     FAIL: Settings -> Scan (post-delete): TimeoutException: Message: нативная оболочка приложения не отрисовалась
+Stacktrace:
+NoSuchElementError: An element could not be located on the page using the given search parameters.
+    at AndroidUiautomator2Driver.findElOrEls (D:\AO3_tests\tools\appium\node_modules\appium-uiautomator2-driver\node_modules\appium-android-driver\build\lib\commands\find.js:62:15)
+    at process.processTicksAndRejections (node:interna
+[16:56:13]         at async AndroidUiautomator2Driver.findElOrElsWithProcessing (D:\AO3_tests\tools\appium\node_modules\@appium\base-driver\build\lib\basedriver\commands\find.js:12:16)
+[16:56:13] --- STEP: tap Scan (post-delete)
+[16:56:33]     FAIL: tap Scan (post-delete): TimeoutException: Message: не кликабелен: ('-android uiautomator', 'new UiSelector().text("Scan")')
+Stacktrace:
+NoSuchElementError: An element could not be located on the page using the given search parameters.
+    at AndroidUiautomator2Driver.findElOrEls (D:\AO3_tests\tools\appium\node_modules\appium-uiautomator2-driver\node_modules\appium-android-driver\build\lib\commands\find.js:62:15)
+    at process.processTick
+[16:56:33]         at async AndroidUiautomator2Driver.findElOrElsWithProcessing (D:\AO3_tests\tools\appium\node_modules\@appium\base-driver\build\lib\basedriver\commands\find.js:12:16)
+[16:56:37]     TEXTS[S2 SCAN post-delete dialog (ДОСЛОВНО)]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'A Loved Test Work', 'seed_author_a', 'Fandom Alpha · 4,200 words', 'View note', 'Download', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:56:37]     SHOT 20_S2_scan_postdelete_dialog.png
+[16:56:37] --- STEP: dismiss scan dialog
+[16:56:57]     FAIL: dismiss scan dialog: TimeoutException: Message: не кликабелен: ('-android uiautomator', 'new UiSelector().text("OK")')
+Stacktrace:
+NoSuchElementError: An element could not be located on the page using the given search parameters.
+    at AndroidUiautomator2Driver.findElOrEls (D:\AO3_tests\tools\appium\node_modules\appium-uiautomator2-driver\node_modules\appium-android-driver\build\lib\commands\find.js:62:15)
+    at process.processTicksA
+[16:56:57]         at async AndroidUiautomator2Driver.findElOrElsWithProcessing (D:\AO3_tests\tools\appium\node_modules\@appium\base-driver\build\lib\basedriver\commands\find.js:12:16)
+[16:56:57]     ROOM[S2 ПОСЛЕ скана post-delete (Г5: воскресла?)] n=1 TARGET={"author": "seed_author_a", "comment": "s2 note", "downloadPath": null, "fandom": "Fandom Alpha", "rating": "SAVE", "tags": null, "timestamp": 1785768862694, "title": "A Loved Test Work", "url": "https://archiveofourown.org/works/900000001", "wordCount": 4200}
+[16:56:57]     ROOM[S2 ПОСЛЕ скана post-delete (Г5: воскресла?)] others={}
+[16:56:57]     S2 Г5: downloadPath после воскрешающего скана -> None
+[16:56:57] --- STEP: open Library
+[16:56:58]     OK: open Library
+[16:57:00]     TEXTS[S2 card after resurrection scan]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'A Loved Test Work', 'seed_author_a', 'Fandom Alpha · 4,200 words', 'View note', 'Download', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:57:00]     SHOT 21_S2_card_after_resurrection.png
+[16:57:00]     LS[S2 end] /sdcard/Android/data/com.example.ao3_wrapper/files/ao3_downloads: n=1 ['ao3_ЛОКАЛЬНЫЙ заголовок_900000001.html']
+[16:57:00]     PREFS[S2 end] auto_download_saved -> auto_download_saved: ОТСУТСТВУЕТ в prefs (дефолт false)
+[16:57:00]     PREFS[S2 end] full: <?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <int name="active_tab_index" value="1" />
+    <string name="open_tabs_urls">[{&quot;historyEntries&quot;:[{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/&quot;},{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/works?ao3_companion_fixture\u003dlisting_basic&quot;}],&quot;historyIndex&quot;:1,&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/works?ao3_companion_fixture\u003dlisting_basic&quot;},{&quot;historyEntries&quot;:[{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;file:///storage/emulated/0/Android/data/com.example.ao3_wrapper/files/ao3_downloads/ao3_A%20Loved%20Test%20Work_900000001.html&quot;}],&quot;historyIndex&quot;:0,&quot;scrollY&quot;:0,&quot;url&quot;:&quot;file:///storage/emulated/0/Android/data/com.example.ao3_wrapper/files/ao3_downloads/a
+[16:58:31] ======================================================================
+[16:58:31] === SEED1 R4 дверь 3a-overlay: deselect @ baseline A (пере-сев)
+[16:58:38]     SEEDED B: downloadPath={'900000001': '/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html'}
+[16:58:38]     PREFS[R4 дверь 3a-overlay: deselect @ baseline A (пере-сев) after seed] auto_download_saved -> auto_download_saved: ОТСУТСТВУЕТ в prefs (дефолт false)
+[16:58:38]     PREFS[R4 дверь 3a-overlay: deselect @ baseline A (пере-сев) after seed] full: 
+[16:58:48] --- STEP: wait_app_ready
+[16:58:53]     OK: wait_app_ready
+[16:58:53] --- STEP: goto work page
+[16:58:55]     OK: goto work page
+[16:58:55] --- STEP: open panel
+[16:59:01]     OK: open panel
+[16:59:01] --- STEP: панель: add note (достройка A, ПИШЕТ)
+[16:59:05]     OK: панель: add note (достройка A, ПИШЕТ)
+[16:59:07]     ROOM[R4 A-build after panel note] n=4 TARGET={"author": "seed_author_a", "comment": "note A", "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Мой фандом", "rating": "SAVE", "tags": null, "timestamp": 1785769142715, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:59:07]     ROOM[R4 A-build after panel note] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:59:07] --- STEP: re-open panel
+[16:59:07]     OK: re-open panel
+[16:59:07] --- STEP: панель: add tag (достройка A, ПИШЕТ)
+[16:59:09]     OK: панель: add tag (достройка A, ПИШЕТ)
+[16:59:11]     ROOM[R4 baseline A] n=4 TARGET={"author": "seed_author_a", "comment": "note A", "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Мой фандом", "rating": "SAVE", "tags": "[\"tagA\"]", "timestamp": 1785769147776, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:59:11]     ROOM[R4 baseline A] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:59:11]     ROOM[R4 BEFORE door3a-overlay] n=4 TARGET={"author": "seed_author_a", "comment": "note A", "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Мой фандом", "rating": "SAVE", "tags": "[\"tagA\"]", "timestamp": 1785769147776, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:59:11]     ROOM[R4 BEFORE door3a-overlay] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:59:11] --- STEP: goto listing
+[16:59:14]     OK: goto listing
+[16:59:14] --- STEP: open overlay
+[16:59:16]     OK: open overlay
+[16:59:16]     TEXTS[R4 overlay open]: ['A Loved Test Work', 'seed_author_a', 'Already downloaded', 'Favorite', 'Kudosed', 'Read', 'Pending', 'Dislike', 'note A', 'Saved tags (1)', 'Expand panel']
+[16:59:16] --- STEP: ДВЕРЬ 3a-overlay: deselect SAVE
+[16:59:16]     OK: ДВЕРЬ 3a-overlay: deselect SAVE
+[16:59:19]     SHOT 01_R4_overlay_after_deselect.png
+[16:59:19] --- STEP: dismiss overlay
+[16:59:20]     OK: dismiss overlay
+[16:59:20]     ROOM[R4 AFTER door3a-overlay] n=4 TARGET={"author": "seed_author_a", "comment": "note A", "downloadPath": null, "fandom": "Fandom Alpha", "rating": null, "tags": null, "timestamp": 1785769155393, "title": "A Loved Test Work", "url": "https://archiveofourown.org/works/900000001", "wordCount": 4200}
+[16:59:20]     ROOM[R4 AFTER door3a-overlay] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[16:59:20]     R4 DELTA: rating 'SAVE' -> None; downloadPath '/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html' -> None; tags '["tagA"]' -> None; comment 'note A' -> 'note A'; title 'ЛОКАЛЬНЫЙ заголовок' -> 'A Loved Test Work'; fandom -> 'Fandom Alpha'; wc -> 4200
+[16:59:20]     LS-runas[R4 after] files/ao3_test_downloads: '900000001.html'
+[16:59:27]     TEXTS[R4 library default tab]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'Nothing here yet', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:59:27]     SHOT 02_R4_library.png
+[16:59:27] --- STEP: open Library
+[16:59:28]     OK: open Library
+[16:59:29]     TEXTS[R4 ORACLE default sort Last read (порядок карточек)]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'Nothing here yet', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:59:29] --- STEP: open filter sheet
+[16:59:31]     OK: open filter sheet
+[16:59:31] --- STEP: open fandom picker
+[16:59:33]     OK: open fandom picker
+[16:59:34]     TEXTS[R4 ORACLE fandom picker options]: ['All fandoms', 'Fandom Alpha', 'Fandom Beta', 'Fandom Delta', 'Fandom Gamma']
+[16:59:34]     R4 ORACLE: «Мой фандом» доступен пользователю = False
+[16:59:34]     SHOT 03_R4_fandom_picker.png
+[16:59:34] --- STEP: select All fandoms (сброс)
+[16:59:35]     OK: select All fandoms (сброс)
+[16:59:35] --- STEP: apply filters
+[16:59:36]     OK: apply filters
+[16:59:38] --- STEP: sort Word count (high to low)
+[16:59:40]     OK: sort Word count (high to low)
+[16:59:42]     TEXTS[R4 ORACLE after sort wordcount desc]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'Nothing here yet', 'Library', 'Filter library', 'Sort library: Word count (high to low)', 'Browse', 'Settings']
+[16:59:43]     SHOT 04_R4_sort_wordcount.png
+[16:59:43] --- STEP: sort back Last read
+[16:59:45]     OK: sort back Last read
+[16:59:47] --- STEP: open Library
+[16:59:47]     OK: open Library
+[16:59:48] --- STEP: open FILES tab
+[16:59:49]     OK: open FILES tab
+[16:59:51]     TEXTS[R4 FILES tab]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'Nothing here yet', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[16:59:51]     SHOT 05_R4_files_tab.png
+[16:59:51]     PREFS[R4 end] auto_download_saved -> auto_download_saved: ОТСУТСТВУЕТ в prefs (дефолт false)
+[16:59:51]     PREFS[R4 end] full: <?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <int name="active_tab_index" value="0" />
+    <string name="open_tabs_urls">[{&quot;historyEntries&quot;:[{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/&quot;},{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/works/900000001&quot;},{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/works?ao3_companion_fixture\u003dlisting_basic&quot;}],&quot;historyIndex&quot;:2,&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/works?ao3_companion_fixture\u003dlisting_basic&quot;}]</string>
+</map>
+[16:59:52] ======================================================================
+[16:59:52] === ДОБОР: Г5 воскрешение + тёмная тема
+[16:59:58]     LS[M t0 (ожидание: пусто)] /sdcard/Android/data/com.example.ao3_wrapper/files/ao3_downloads: n=0 []
+[16:59:58]     ROOM[M t0] n=1 TARGET={"author": "seed_author_a", "comment": null, "downloadPath": null, "fandom": "Мой фандом", "rating": "SAVE", "tags": null, "timestamp": 1785769198008, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[16:59:58]     ROOM[M t0] others={}
+[17:00:11] --- STEP: wait_app_ready
+[17:00:18]     OK: wait_app_ready
+[17:00:18] --- STEP: open Library
+[17:00:26]     OK: open Library
+[17:00:26] --- STEP: open FAVORITE tab
+[17:00:27]     OK: open FAVORITE tab
+[17:00:29] --- STEP: download #1
+[17:00:29]     OK: download #1
+[17:00:39]     LS[M после скачивания #1] /sdcard/Android/data/com.example.ao3_wrapper/files/ao3_downloads: n=1 ['ao3_ЛОКАЛЬНЫЙ заголовок_900000001.html']
+[17:00:40]     ROOM[M после скачивания #1] n=1 TARGET={"author": "seed_author_a", "comment": null, "downloadPath": "/storage/emulated/0/Android/data/com.example.ao3_wrapper/files/ao3_downloads/ao3_ЛОКАЛЬНЫЙ заголовок_900000001.html", "fandom": "Мой фандом", "rating": "SAVE", "tags": null, "timestamp": 1785769198008, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[17:00:40]     ROOM[M после скачивания #1] others={}
+[17:00:40] --- STEP: goto listing
+[17:00:42]     OK: goto listing
+[17:00:42] --- STEP: open overlay
+[17:00:44]     OK: open overlay
+[17:00:44] --- STEP: ИНСТРУМЕНТ: overlay Save note
+[17:00:45]     OK: ИНСТРУМЕНТ: overlay Save note
+[17:00:47] --- STEP: dismiss overlay
+[17:00:47]     OK: dismiss overlay
+[17:00:48]     ROOM[M после Save note] n=1 TARGET={"author": "seed_author_a", "comment": "m note", "downloadPath": null, "fandom": "Fandom Alpha", "rating": "SAVE", "tags": null, "timestamp": 1785769243787, "title": "A Loved Test Work", "url": "https://archiveofourown.org/works/900000001", "wordCount": 4200}
+[17:00:48]     ROOM[M после Save note] others={}
+[17:00:48] --- STEP: open Library
+[17:00:53]     OK: open Library
+[17:00:54] --- STEP: download #2
+[17:00:55]     OK: download #2
+[17:01:07]     LS[M после скачивания #2 (два файла)] /sdcard/Android/data/com.example.ao3_wrapper/files/ao3_downloads: n=2 ['ao3_A Loved Test Work_900000001.html', 'ao3_ЛОКАЛЬНЫЙ заголовок_900000001.html']
+[17:01:07]     ROOM[M после скачивания #2] n=1 TARGET={"author": "seed_author_a", "comment": "m note", "downloadPath": "/storage/emulated/0/Android/data/com.example.ao3_wrapper/files/ao3_downloads/ao3_A Loved Test Work_900000001.html", "fandom": "Fandom Alpha", "rating": "SAVE", "tags": null, "timestamp": 1785769243787, "title": "A Loved Test Work", "url": "https://archiveofourown.org/works/900000001", "wordCount": 4200}
+[17:01:07]     ROOM[M после скачивания #2] others={}
+[17:01:07] --- STEP: delete downloaded file
+[17:01:11]     OK: delete downloaded file
+[17:01:14]     LS[M после удаления (остался второй файл?)] /sdcard/Android/data/com.example.ao3_wrapper/files/ao3_downloads: n=1 ['ao3_ЛОКАЛЬНЫЙ заголовок_900000001.html']
+[17:01:14]     ROOM[M после удаления файла] n=1 TARGET={"author": "seed_author_a", "comment": "m note", "downloadPath": null, "fandom": "Fandom Alpha", "rating": "SAVE", "tags": null, "timestamp": 1785769243787, "title": "A Loved Test Work", "url": "https://archiveofourown.org/works/900000001", "wordCount": 4200}
+[17:01:14]     ROOM[M после удаления файла] others={}
+[17:01:15]     TEXTS[M card after delete]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'A Loved Test Work', 'seed_author_a', 'Fandom Alpha · 4,200 words', 'View note', 'Download', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[17:01:15]     SHOT 06_M_card_after_delete.png
+[17:01:15] --- STEP: open Browse
+[17:01:15]     OK: open Browse
+[17:01:17] --- STEP: Settings -> Scan
+[17:01:30]     OK: Settings -> Scan
+[17:01:30] --- STEP: tap Scan
+[17:01:31]     OK: tap Scan
+[17:01:34]     TEXTS[M SCAN post-delete dialog (ДОСЛОВНО)]: ['Scan complete', 'Found 1 files — relinked 1, added 0 new.', 'OK']
+[17:01:34]     SHOT 07_M_scan_postdelete_dialog.png
+[17:01:34] --- STEP: dismiss scan dialog
+[17:01:35]     OK: dismiss scan dialog
+[17:01:36]     ROOM[M ПОСЛЕ скана post-delete (Г5)] n=1 TARGET={"author": "seed_author_a", "comment": "m note", "downloadPath": "/storage/emulated/0/Android/data/com.example.ao3_wrapper/files/ao3_downloads/ao3_ЛОКАЛЬНЫЙ заголовок_900000001.html", "fandom": "Fandom Alpha", "rating": "SAVE", "tags": null, "timestamp": 1785769243787, "title": "A Loved Test Work", "url": "https://archiveofourown.org/works/900000001", "wordCount": 4200}
+[17:01:36]     ROOM[M ПОСЛЕ скана post-delete (Г5)] others={}
+[17:01:36]     M Г5: downloadPath -> '/storage/emulated/0/Android/data/com.example.ao3_wrapper/files/ao3_downloads/ao3_ЛОКАЛЬНЫЙ заголовок_900000001.html' (остаток на диске был: ['ao3_ЛОКАЛЬНЫЙ заголовок_900000001.html'])
+[17:01:36] --- STEP: open Library
+[17:01:36]     OK: open Library
+[17:01:38]     TEXTS[M card after resurrection scan (Open downloaded?)]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'A Loved Test Work', 'seed_author_a', 'Fandom Alpha · 4,200 words', 'View note', 'Open downloaded', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[17:01:38]     SHOT 08_M_card_after_resurrection.png
+[17:01:38] --- STEP: open Browse
+[17:01:39]     OK: open Browse
+[17:01:41] --- STEP: Settings -> Theme
+[17:01:48]     OK: Settings -> Theme
+[17:01:48] --- STEP: theme DARK
+[17:01:48]     OK: theme DARK
+[17:01:51]     SHOT 09_M_settings_DARK.png
+[17:01:51] --- STEP: open Library (dark)
+[17:01:51]     OK: open Library (dark)
+[17:01:54]     SHOT 10_M_library_DARK.png
+[17:01:54]     TEXTS[M library DARK]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'A Loved Test Work', 'seed_author_a', 'Fandom Alpha · 4,200 words', 'View note', 'Open downloaded', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[17:01:54] --- STEP: open FILES tab (dark)
+[17:01:54]     OK: open FILES tab (dark)
+[17:01:56]     SHOT 11_M_files_tab_DARK.png
+[17:01:57]     TEXTS[M FILES tab DARK]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'A Loved Test Work', 'seed_author_a', 'Fandom Alpha · 4,200 words', 'View note', 'Open downloaded', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[17:01:57] --- STEP: open Browse (dark)
+[17:01:58]     OK: open Browse (dark)
+[17:02:01]     SHOT 12_M_listing_DARK.png
+[17:02:01] --- STEP: open overlay (dark)
+[17:02:02]     OK: open overlay (dark)
+[17:02:04]     SHOT 13_M_overlay_DARK.png
+[17:02:04]     PREFS[M end (theme_mode?)] auto_download_saved -> auto_download_saved: ОТСУТСТВУЕТ в prefs (дефолт false)
+[17:02:04]     PREFS[M end (theme_mode?)] full: <?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <string name="theme_mode">DARK</string>
+    <int name="active_tab_index" value="0" />
+    <string name="open_tabs_urls">[{&quot;historyEntries&quot;:[{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/&quot;},{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/works?ao3_companion_fixture\u003dlisting_basic&quot;}],&quot;historyIndex&quot;:1,&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/works?ao3_companion_fixture\u003dlisting_basic&quot;}]</string>
+</map>
+[17:02:05] ======================================================================
+[17:02:05] === SEED4 амплификация «Save note» x5
+[17:02:12]     SEEDED B: downloadPath={'900000001': '/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html'}
+[17:02:12]     ROOM[S4 t0 baseline B] n=4 TARGET={"author": "seed_author_a", "comment": null, "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Мой фандом", "rating": "SAVE", "tags": null, "timestamp": 1785769331579, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[17:02:12]     ROOM[S4 t0 baseline B] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[17:02:25] --- STEP: wait_app_ready
+[17:02:31]     OK: wait_app_ready
+[17:02:31] --- STEP: goto listing
+[17:02:40]     OK: goto listing
+[17:02:40] --- STEP: open overlay
+[17:02:42]     OK: open overlay
+[17:02:42] --- STEP: Save note #1
+[17:02:44]     OK: Save note #1
+[17:02:45]     ROOM[S4 после Save note #1] n=4 TARGET={"author": "seed_author_a", "comment": "series note 1", "downloadPath": null, "fandom": "Fandom Alpha", "rating": "SAVE", "tags": null, "timestamp": 1785769362006, "title": "A Loved Test Work", "url": "https://archiveofourown.org/works/900000001", "wordCount": 4200}
+[17:02:45]     ROOM[S4 после Save note #1] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[17:02:45]     S4 iter 1: 2.0s; ts=1785769362006; tags=None; dlPath=None
+[17:02:45]     TEXTS[S4 overlay after save #1]: ['A Loved Test Work', 'seed_author_a', 'Already downloaded', 'Favorite', 'Kudosed', 'Read', 'Pending', 'Dislike', 'series note 1', 'Add tags', 'Expand panel']
+[17:02:45] --- STEP: Save note #2
+[17:02:47]     OK: Save note #2
+[17:02:48]     ROOM[S4 после Save note #2] n=4 TARGET={"author": "seed_author_a", "comment": "series note 1series note 2", "downloadPath": null, "fandom": "Fandom Alpha", "rating": "SAVE", "tags": null, "timestamp": 1785769365666, "title": "A Loved Test Work", "url": "https://archiveofourown.org/works/900000001", "wordCount": 4200}
+[17:02:48]     ROOM[S4 после Save note #2] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[17:02:48]     S4 iter 2: 1.2s; ts=1785769365666; tags=None; dlPath=None
+[17:02:48]     TEXTS[S4 overlay after save #2]: ['A Loved Test Work', 'seed_author_a', 'Already downloaded', 'Favorite', 'Kudosed', 'Read', 'Pending', 'Dislike', 'series note 1series note 2', 'Add tags', 'Expand panel']
+[17:02:48] --- STEP: Save note #3
+[17:02:50]     OK: Save note #3
+[17:02:51]     ROOM[S4 после Save note #3] n=4 TARGET={"author": "seed_author_a", "comment": "series note 3", "downloadPath": null, "fandom": "Fandom Alpha", "rating": "SAVE", "tags": null, "timestamp": 1785769368507, "title": "A Loved Test Work", "url": "https://archiveofourown.org/works/900000001", "wordCount": 4200}
+[17:02:51]     ROOM[S4 после Save note #3] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[17:02:51]     S4 iter 3: 1.2s; ts=1785769368507; tags=None; dlPath=None
+[17:02:51]     TEXTS[S4 overlay after save #3]: ['A Loved Test Work', 'seed_author_a', 'Already downloaded', 'Favorite', 'Kudosed', 'Read', 'Pending', 'Dislike', 'series note 3', 'Add tags', 'Expand panel']
+[17:02:51] --- STEP: Save note #4
+[17:02:52]     OK: Save note #4
+[17:02:54]     ROOM[S4 после Save note #4] n=4 TARGET={"author": "seed_author_a", "comment": "series note 4", "downloadPath": null, "fandom": "Fandom Alpha", "rating": "SAVE", "tags": null, "timestamp": 1785769371275, "title": "A Loved Test Work", "url": "https://archiveofourown.org/works/900000001", "wordCount": 4200}
+[17:02:54]     ROOM[S4 после Save note #4] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[17:02:54]     S4 iter 4: 1.1s; ts=1785769371275; tags=None; dlPath=None
+[17:02:54]     TEXTS[S4 overlay after save #4]: ['A Loved Test Work', 'seed_author_a', 'Already downloaded', 'Favorite', 'Kudosed', 'Read', 'Pending', 'Dislike', 'series note 4', 'Add tags', 'Expand panel']
+[17:02:54] --- STEP: Save note #5
+[17:02:55]     OK: Save note #5
+[17:02:57]     ROOM[S4 после Save note #5] n=4 TARGET={"author": "seed_author_a", "comment": "series note 4series note 5", "downloadPath": null, "fandom": "Fandom Alpha", "rating": "SAVE", "tags": null, "timestamp": 1785769374156, "title": "A Loved Test Work", "url": "https://archiveofourown.org/works/900000001", "wordCount": 4200}
+[17:02:57]     ROOM[S4 после Save note #5] others={"900000002": "LIKE", "900000003": "READ", "900000004": "PENDING"}
+[17:02:57]     S4 iter 5: 1.3s; ts=1785769374156; tags=None; dlPath=None
+[17:02:57]     TEXTS[S4 overlay after save #5]: ['A Loved Test Work', 'seed_author_a', 'Already downloaded', 'Favorite', 'Kudosed', 'Read', 'Pending', 'Dislike', 'series note 4series note 5', 'Add tags', 'Expand panel']
+[17:02:57]     SHOT 14_S4_after_5x_save_note.png
+[17:02:57] --- STEP: dismiss overlay
+[17:02:57]     OK: dismiss overlay
+[17:02:57] --- STEP: open Library
+[17:03:03]     OK: open Library
+[17:03:05]     TEXTS[S4 library after 5x (Last read)]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'A Loved Test Work', 'seed_author_a', 'Fandom Alpha · 4,200 words', 'View note', 'Download', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[17:03:05]     SHOT 15_S4_library_after_5x.png
+[17:03:05]     PREFS[S4 end] auto_download_saved -> auto_download_saved: ОТСУТСТВУЕТ в prefs (дефолт false)
+[17:03:05]     PREFS[S4 end] full: <?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <int name="active_tab_index" value="0" />
+    <string name="open_tabs_urls">[{&quot;historyEntries&quot;:[{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/&quot;},{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/works?ao3_companion_fixture\u003dlisting_basic&quot;}],&quot;historyIndex&quot;:1,&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/works?ao3_companion_fixture\u003dlisting_basic&quot;}]</string>
+</map>
+[17:04:58] ======================================================================
+[17:04:58] === ДОБОР: Г5 воскрешение + тёмная тема
+[17:05:04]     LS[M t0 (ожидание: пусто)] /sdcard/Android/data/com.example.ao3_wrapper/files/ao3_downloads: n=0 []
+[17:05:04]     ROOM[M t0] n=1 TARGET={"author": "seed_author_a", "comment": null, "downloadPath": null, "fandom": "Мой фандом", "rating": "SAVE", "tags": null, "timestamp": 1785769503986, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[17:05:04]     ROOM[M t0] others={}
+[17:05:17] --- STEP: wait_app_ready
+[17:05:23]     OK: wait_app_ready
+[17:05:23] --- STEP: open Library
+[17:05:31]     OK: open Library
+[17:05:31] --- STEP: open FAVORITE tab
+[17:05:31]     OK: open FAVORITE tab
+[17:05:33] --- STEP: download #1
+[17:05:34]     OK: download #1
+[17:05:44]     LS[M после скачивания #1] /sdcard/Android/data/com.example.ao3_wrapper/files/ao3_downloads: n=1 ['ao3_ЛОКАЛЬНЫЙ заголовок_900000001.html']
+[17:05:44]     ROOM[M после скачивания #1] n=1 TARGET={"author": "seed_author_a", "comment": null, "downloadPath": "/storage/emulated/0/Android/data/com.example.ao3_wrapper/files/ao3_downloads/ao3_ЛОКАЛЬНЫЙ заголовок_900000001.html", "fandom": "Мой фандом", "rating": "SAVE", "tags": null, "timestamp": 1785769503986, "title": "ЛОКАЛЬНЫЙ заголовок", "url": "https://archiveofourown.org/works/900000001", "wordCount": 777777}
+[17:05:44]     ROOM[M после скачивания #1] others={}
+[17:05:44] --- STEP: goto listing
+[17:05:47]     OK: goto listing
+[17:05:47] --- STEP: open overlay
+[17:05:48]     OK: open overlay
+[17:05:48] --- STEP: ИНСТРУМЕНТ: overlay Save note
+[17:05:49]     OK: ИНСТРУМЕНТ: overlay Save note
+[17:05:52] --- STEP: dismiss overlay
+[17:05:52]     OK: dismiss overlay
+[17:05:52]     ROOM[M после Save note] n=1 TARGET={"author": "seed_author_a", "comment": "m note", "downloadPath": null, "fandom": "Fandom Alpha", "rating": "SAVE", "tags": null, "timestamp": 1785769548248, "title": "A Loved Test Work", "url": "https://archiveofourown.org/works/900000001", "wordCount": 4200}
+[17:05:52]     ROOM[M после Save note] others={}
+[17:05:52] --- STEP: open Library
+[17:05:57]     OK: open Library
+[17:05:59] --- STEP: download #2
+[17:05:59]     OK: download #2
+[17:06:12]     LS[M после скачивания #2 (два файла)] /sdcard/Android/data/com.example.ao3_wrapper/files/ao3_downloads: n=2 ['ao3_A Loved Test Work_900000001.html', 'ao3_ЛОКАЛЬНЫЙ заголовок_900000001.html']
+[17:06:12]     ROOM[M после скачивания #2] n=1 TARGET={"author": "seed_author_a", "comment": "m note", "downloadPath": "/storage/emulated/0/Android/data/com.example.ao3_wrapper/files/ao3_downloads/ao3_A Loved Test Work_900000001.html", "fandom": "Fandom Alpha", "rating": "SAVE", "tags": null, "timestamp": 1785769548248, "title": "A Loved Test Work", "url": "https://archiveofourown.org/works/900000001", "wordCount": 4200}
+[17:06:12]     ROOM[M после скачивания #2] others={}
+[17:06:12] --- STEP: delete downloaded file
+[17:06:16]     OK: delete downloaded file
+[17:06:19]     LS[M после удаления (остался второй файл?)] /sdcard/Android/data/com.example.ao3_wrapper/files/ao3_downloads: n=1 ['ao3_ЛОКАЛЬНЫЙ заголовок_900000001.html']
+[17:06:19]     ROOM[M после удаления файла] n=1 TARGET={"author": "seed_author_a", "comment": "m note", "downloadPath": null, "fandom": "Fandom Alpha", "rating": "SAVE", "tags": null, "timestamp": 1785769548248, "title": "A Loved Test Work", "url": "https://archiveofourown.org/works/900000001", "wordCount": 4200}
+[17:06:19]     ROOM[M после удаления файла] others={}
+[17:06:19]     TEXTS[M card after delete]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'A Loved Test Work', 'seed_author_a', 'Fandom Alpha · 4,200 words', 'View note', 'Download', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[17:06:20]     SHOT 01_M_card_after_delete.png
+[17:06:20] --- STEP: open Browse
+[17:06:20]     OK: open Browse
+[17:06:22] --- STEP: Settings -> Scan
+[17:06:34]     OK: Settings -> Scan
+[17:06:34] --- STEP: tap Scan
+[17:06:34]     OK: tap Scan
+[17:06:37]     TEXTS[M SCAN post-delete dialog (ДОСЛОВНО)]: ['Scan complete', 'Found 1 files — relinked 1, added 0 new.', 'OK']
+[17:06:38]     SHOT 02_M_scan_postdelete_dialog.png
+[17:06:38] --- STEP: dismiss scan dialog
+[17:06:39]     OK: dismiss scan dialog
+[17:06:39]     ROOM[M ПОСЛЕ скана post-delete (Г5)] n=1 TARGET={"author": "seed_author_a", "comment": "m note", "downloadPath": "/storage/emulated/0/Android/data/com.example.ao3_wrapper/files/ao3_downloads/ao3_ЛОКАЛЬНЫЙ заголовок_900000001.html", "fandom": "Fandom Alpha", "rating": "SAVE", "tags": null, "timestamp": 1785769548248, "title": "A Loved Test Work", "url": "https://archiveofourown.org/works/900000001", "wordCount": 4200}
+[17:06:39]     ROOM[M ПОСЛЕ скана post-delete (Г5)] others={}
+[17:06:39]     M Г5: downloadPath -> '/storage/emulated/0/Android/data/com.example.ao3_wrapper/files/ao3_downloads/ao3_ЛОКАЛЬНЫЙ заголовок_900000001.html' (остаток на диске был: ['ao3_ЛОКАЛЬНЫЙ заголовок_900000001.html'])
+[17:06:39] --- STEP: open Library
+[17:06:39]     OK: open Library
+[17:06:41]     TEXTS[M card after resurrection scan (Open downloaded?)]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'A Loved Test Work', 'seed_author_a', 'Fandom Alpha · 4,200 words', 'View note', 'Open downloaded', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[17:06:42]     SHOT 03_M_card_after_resurrection.png
+[17:06:42] --- STEP: open Browse
+[17:06:42]     OK: open Browse
+[17:06:44] --- STEP: Settings -> Theme
+[17:06:51]     OK: Settings -> Theme
+[17:06:51] --- STEP: theme DARK
+[17:06:51]     OK: theme DARK
+[17:06:54]     SHOT 04_M_settings_DARK.png
+[17:06:54] --- STEP: open Library (dark)
+[17:06:54]     OK: open Library (dark)
+[17:06:57]     SHOT 05_M_library_DARK.png
+[17:06:57]     TEXTS[M library DARK]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'A Loved Test Work', 'seed_author_a', 'Fandom Alpha · 4,200 words', 'View note', 'Open downloaded', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[17:06:57] --- STEP: open FILES tab (dark)
+[17:06:57]     OK: open FILES tab (dark)
+[17:06:59]     SHOT 06_M_files_tab_DARK.png
+[17:07:00]     TEXTS[M FILES tab DARK]: ['FAVORITE', 'KUDOSED', 'READ', 'PENDING', 'DISLIKED', 'FILES', 'A Loved Test Work', 'seed_author_a', 'Fandom Alpha · 4,200 words', 'View note', 'Open downloaded', 'Library', 'Filter library', 'Sort library: Last read', 'Browse', 'Settings']
+[17:07:00] --- STEP: open Browse (dark)
+[17:07:01]     OK: open Browse (dark)
+[17:07:04]     SHOT 07_M_listing_DARK.png
+[17:07:04] --- STEP: open overlay (dark)
+[17:07:05]     OK: open overlay (dark)
+[17:07:07]     SHOT 08_M_overlay_DARK.png
+[17:07:07]     PREFS[M end (theme_mode?)] auto_download_saved -> auto_download_saved: ОТСУТСТВУЕТ в prefs (дефолт false)
+[17:07:07]     PREFS[M end (theme_mode?)] full: <?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <string name="theme_mode">DARK</string>
+    <int name="active_tab_index" value="0" />
+    <string name="open_tabs_urls">[{&quot;historyEntries&quot;:[{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/&quot;},{&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/works?ao3_companion_fixture\u003dlisting_basic&quot;}],&quot;historyIndex&quot;:1,&quot;scrollY&quot;:0,&quot;url&quot;:&quot;https://archiveofourown.org/works?ao3_companion_fixture\u003dlisting_basic&quot;}]</string>
+</map>
