@@ -77,7 +77,7 @@
     "epicPath": null,
     "summary": "Интерактивные цели нативного хрома (панели, тумблеры, чипы TabStrip, кнопки диалогов) не меньше 48dp по bounds accessibility-дерева",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -85,7 +85,7 @@
       "area:accessibility",
       "risk:R-13"
     ],
-    "updated": "2026-08-03T12:00:00Z",
+    "updated": "2026-08-04T12:28:48Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1170,13 +1170,12 @@
     "issueType": "test-case",
     "status": "tc-automated",
     "priority": "p0",
-    "assignee": "test-runner",
+    "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:canary",
       "risk:R-02",
-      "automation:active",
-      "wip:test-runner"
+      "automation:active"
     ],
     "updated": "2026-07-29T19:29:48Z",
     "resolution": "done",
@@ -1626,7 +1625,7 @@
     "epic": null,
     "parentPath": null,
     "epicPath": null,
-    "summary": "Удаление скачанного файла НЕ воскрешает работу последующим сканом, если на диске остаётся второй файл того же ao3Id (ожидаемо-красный до фикса BUG-047)",
+    "summary": "Удаление скачанного файла оставляет файл-дубликат на диске; повторный скан связывает работу с ним обратно (воскрешение) — задуманное поведение (BUG-047, Intended)",
     "issueType": "test-case",
     "status": "tc-review",
     "priority": "p1",
@@ -1636,7 +1635,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-08-03T18:15:00Z",
+    "updated": "2026-08-04T16:40:35Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4926,7 +4925,7 @@
     "epicPath": null,
     "summary": "PROJECT.md расходится с кодом: подписи вкладок Library/меню рейтинга; несуществующий глобальный «Enable filtering»",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-rejected",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -4935,7 +4934,7 @@
       "test_case:TC-015",
       "sev:minor"
     ],
-    "updated": "2026-07-10T16:56:00Z",
+    "updated": "2026-08-04T16:43:21Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5013,7 +5012,7 @@
     "epicPath": null,
     "summary": "Авто-скачивание Favorite срабатывает ретроактивно при правке тега ранее отмеченной работы",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-rejected",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5022,7 +5021,7 @@
       "test_case:TC-115",
       "sev:major"
     ],
-    "updated": "2026-07-28T12:00:00Z",
+    "updated": "2026-08-04T16:44:07Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5228,7 +5227,7 @@
       "run:CH-008",
       "sev:major"
     ],
-    "updated": "2026-08-03T18:35:00Z",
+    "updated": "2026-08-04T12:32:15Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5242,7 +5241,7 @@
     "epicPath": null,
     "summary": "Удаление скачанного файла из карточки удаляет только один файл; при двух файлах одного ao3Id второй остаётся на диске и воскрешает работу при повторном сканировании",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-intended",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5251,7 +5250,7 @@
       "run:CH-008",
       "sev:major"
     ],
-    "updated": "2026-08-03T18:35:00Z",
+    "updated": "2026-08-04T12:32:15Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5316,7 +5315,7 @@
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-08-04T12:20:00Z",
+    "updated": "2026-08-04T12:42:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5404,6 +5403,26 @@
     "archived": false
   },
   {
+    "key": "RUN-20260804-1301",
+    "path": "board/RUN-20260804-1301/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "RUN-20260804-1301",
+    "issueType": "run",
+    "status": "run-blocked",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "run"
+    ],
+    "updated": "2026-08-04T16:34:03Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "RUN-20260804-1317",
     "path": "board/RUN-20260804-1317/main.md",
     "parent": null,
@@ -5440,6 +5459,26 @@
     ],
     "updated": "2026-07-02T00:00:00Z",
     "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "RUN-20260804-1624",
+    "path": "board/RUN-20260804-1624/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "RUN-20260804-1624",
+    "issueType": "run",
+    "status": "run-needstriage",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "run"
+    ],
+    "updated": "2026-08-04T16:24:46Z",
+    "resolution": null,
     "children": [],
     "archived": false
   }

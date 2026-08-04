@@ -1,14 +1,14 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-04T12:21:16Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-04T16:52:59Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **800.8** (RUN-20260702-0300)
-- regression: Triaged · regression_freshness_hours: **15.7** (RUN-20260803-2012)
-- canary: Triaged · canary_freshness_hours: **0.6** (RUN-20260804-1317)
+- smoke: Closed · smoke_freshness_hours: **805.3** (RUN-20260702-0300)
+- regression: Blocked · regression_freshness_hours: **0.3** (RUN-20260804-1301)
+- canary: Triaged · canary_freshness_hours: **5.1** (RUN-20260804-1317)
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **2**
 - p0_automation_coverage: **100%** (37/37)
@@ -16,7 +16,7 @@ generated_at: 2026-08-04T12:21:16Z · генератор: `scripts/queue_snapsho
 - Test debt открыт: **2** — AT-BUG-047, AT-BUG-048
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
-- Untriaged: **0** · untriaged_failure_age: **0**
+- Untriaged: **1** · untriaged_failure_age: **0.5**
 
 ## Сборка под тестом
 
@@ -25,12 +25,12 @@ generated_at: 2026-08-04T12:21:16Z · генератор: `scripts/queue_snapsho
 
 ## Тест-кейсы (168)
 
-- Review: **24** · Approved: **1** · Automated: **143**
+- Review: **23** · Approved: **2** · Automated: **143**
 - автотесты (B3): active: **143**
 
 | Область | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
-| accessibility |  | 3 |  | 3 |  |
+| accessibility |  | 2 | 1 | 3 |  |
 | backup |  | 4 |  | 1 |  |
 | browser |  | 6 |  | 13 |  |
 | canary |  |  |  | 23 |  |
@@ -49,11 +49,9 @@ generated_at: 2026-08-04T12:21:16Z · генератор: `scripts/queue_snapsho
 
 ## Баги (20)
 
-- Open: **18** · Fixed: **1** · Intended: **1**
-- BUG-001 [minor] Open — PROJECT.md расходится с кодом: подписи вкладок Library/меню рейтинга; несуществующий глобальный «Enable filtering»
+- Open: **15** · Fixed: **1** · Rejected: **2** · Intended: **2**
 - BUG-011 [major] Open — Restore from backup пропускает работы молча, если файл с тем же ao3Id уже лежит в папке загрузок
 - BUG-013 [minor] Open — Смена темы, затем немедленный kill процесса (<100 мс) теряет theme_mode — выбор темы не персистится
-- BUG-014 [major] Open — Авто-скачивание Favorite срабатывает ретроактивно при правке тега ранее отмеченной работы
 - BUG-015 [major] Open — Авто-клик kudos на AO3 срабатывает ретроактивно при правке тега ранее отмеченной работы
 - BUG-016 [major] Open — Undo закрытия вкладки на потолке 10 молча теряет вкладку и её снапшот
 - BUG-017 [major] Open — Быстрое закрытие вкладок → долгий парад снекбаров; подозрение на потерю Undo-токенов при задержке показа
@@ -63,9 +61,8 @@ generated_at: 2026-08-04T12:21:16Z · генератор: `scripts/queue_snapsho
 - BUG-021 [major] Open — Снятие рейтинга через overlay листинга у скачанной работы обнуляет downloadPath и личные теги; правка заметки — то же
 - BUG-022 [major] Open — Панель рейтинга work-страницы при dispose переписывает рейтинг, который пользователь не менял — возврат на Browse после Clear all ratings воскрешает удалённую запись
 - BUG-046 [major] Open — Ручной скан при двух файлах одного ao3Id не сходится: счётчик relinked=2 на одну работу, повторный скан рапортует то же, не становясь 0
-- BUG-047 [major] Open — Удаление скачанного файла из карточки удаляет только один файл; при двух файлах одного ao3Id второй остаётся на диске и воскрешает работу при повторном сканировании
 - BUG-048 [major] Open — Overlay листинга молча перезаписывает title/fandom/wordCount скрейпом текущей страницы — работа исчезает из фандом-фильтра, прыгает в сортировке, а при rating=null пропадает со всех вкладок Library без какого-либо сообщения
-- BUG-050 [minor] Open — Длинный заголовок работы в снекбаре Undo обрезается без многоточия — конец слова просто исчезает
+- BUG-050 [minor] Open [accepted_risk] — Длинный заголовок работы в снекбаре Undo обрезается без многоточия — конец слова просто исчезает
 - BUG-051 [minor] Open — Поиск в Library принимает чисто пробельный запрос — список мигает пустой выдачей вместо игнорирования
 - BUG-052 [minor] Open — Scan for downloads не показывает прогресс при большом числе файлов — кнопка выглядит зависшей
 
@@ -79,9 +76,9 @@ generated_at: 2026-08-04T12:21:16Z · генератор: `scripts/queue_snapsho
 - AT-BUG-047 [flaky_test] Open — Гонка «wait_ui_ready → немедленная WebView-навигация»: стартовая загрузка Home ещё в полёте, chromedriver теряет цель (`cannot determine loading status from no such window`) — 27 call sites, экземпляр TC-043 в RUN-20260803-2012
 - AT-BUG-048 [flaky_test] Open — BaseScreen.swipe_to_text проскакивает искомую секцию под нагрузкой (fling-инерция + опрос раз в свайп) — Settings докручивается до конца списка, ассерт «секция не найдена прокруткой»; экземпляр TC-093 в RUN-20260803-2012
 
-## Прогоны (4)
+## Прогоны (6)
 
-- Triaged: **2** · Closed: **2**
+- NeedsTriage: **1** · Triaged: **2** · Closed: **2** · Blocked: **1**
 
 ## Exploratory
 
@@ -90,14 +87,17 @@ generated_at: 2026-08-04T12:21:16Z · генератор: `scripts/queue_snapsho
 - bugs_per_charter: **1.25**
 - new_tc_from_charters: **15**
 
-## Активные локи (1)
+## Активные локи (0)
 
-- TC-121 — `test-runner:2026-08-02T00:00:00Z`
+- нет
 
-## Эскалации (5)
+## Эскалации (8)
 
 - [2026-07-21T22:43:25Z] **BUG-013** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-19T17:30:00Z | нужно: ответить в ## Обсуждение
 - [2026-07-24T05:10:04Z] **BUG-011** [sla:bug_open_major] — major-баг open с 2026-07-15T14:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
 - [2026-07-30T12:38:12Z] **BUG-016** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-28T12:00:00Z | нужно: ответить в ## Обсуждение
 - [2026-08-01T16:01:07Z] **BUG-017** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-30T00:00:00Z | нужно: ответить в ## Обсуждение
 - [2026-08-04T11:26:57Z] **BUG-021** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-02T00:00:00Z | нужно: ответить в ## Обсуждение
+- [2026-08-04T15:01:41Z] **BUG-016** [sla:bug_open_major] — major-баг open с 2026-07-28T12:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
+- [2026-08-04T15:01:41Z] **BUG-049** [sla:bug_fixed_waiting_build] — Fixed с 2026-08-01T04:00:00Z, но новой сборки нет | нужно: запушить/собрать сборку с фиксом
+- [2026-08-04T15:01:41Z] **BUG-051** [sla:bug_open_minor] — minor-баг open с 2026-07-02T04:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом

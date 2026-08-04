@@ -5,9 +5,9 @@ issueType: "test-case"
 status: "tc-automated"
 priority: "p0"
 summary: "Тап по whitelisted-ссылке БЕЗ собственного JS-обработчика в теле work-страницы не запускает зональное действие (whitelist по тегу, независимо от наличия обработчика, replay)"
-assignee: "test-runner"
+assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:canary", "risk:R-02", "automation:active", "wip:test-runner"]
+labels: ["test-case", "area:canary", "risk:R-02", "automation:active"]
 components: []
 fixVersions: []
 watchers: []

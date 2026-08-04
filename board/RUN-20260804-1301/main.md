@@ -1,109 +1,28 @@
 ---
-id: RUN-20260804-1301
-suite: regression
-mode: replay
-app_version: "1.10 (versionCode 11), build 6455af0c"
-status: Blocked
+key: "RUN-20260804-1301"
+project: "AO3"
+issueType: "run"
+status: "run-blocked"
+priority: "p2"
+summary: "RUN-20260804-1301"
+assignee: "qa-agents"
+reporter: "qa-agents"
+labels: ["run"]
+components: []
+fixVersions: []
+watchers: []
+parent: null
+epic: null
+created: "2026-08-04T16:34:03Z"
 updated: "2026-08-04T16:34:03Z"
-status_since: "2026-08-04T16:34:03Z"
-totals: { passed: 95, failed: 1, skipped: 0, quarantined: 0, errors: 69, duration_min: 23 }
-allure: "runs/RUN-20260804-1301/allure/"
-selection: { mode: full, reason: "прямое указание Lead в диспатче: канон Invoke-Pytest tests -m \"(p0 or p1) and not live\", зеркалит baseline RUN-20260803-2012 (репетиция тёмного дня, docs/11-dark-day-rehearsal.md / runs/REHEARSAL-2026-08-04.md Б7); impact_select.py намеренно не запускался" }
-recoveries: "0/2"
-tc_results:
-  TC-002: passed
-  TC-003: passed
-  TC-004: passed
-  TC-005: passed
-  TC-009: failed
-  TC-013: failed
-  TC-014: failed
-  TC-015: failed
-  TC-017: passed
-  TC-021: passed
-  TC-022: passed
-  TC-023: failed
-  TC-025: failed
-  TC-026: failed
-  TC-027: passed
-  TC-028: passed
-  TC-029: passed
-  TC-030: passed
-  TC-032: failed
-  TC-033: failed
-  TC-034: passed
-  TC-035: passed
-  TC-036: passed
-  TC-040: failed
-  TC-041: failed
-  TC-042: failed
-  TC-043: failed
-  TC-044: failed
-  TC-045: failed
-  TC-060: passed
-  TC-061: passed
-  TC-062: passed
-  TC-063: passed
-  TC-064: passed
-  TC-065: passed
-  TC-067: failed
-  TC-069: failed
-  TC-071: failed
-  TC-073: failed
-  TC-075: failed
-  TC-077: failed
-  TC-079: failed
-  TC-081: failed
-  TC-083: failed
-  TC-084: failed
-  TC-085: failed
-  TC-086: failed
-  TC-087: failed
-  TC-088: failed
-  TC-090: failed
-  TC-091: failed
-  TC-092: failed
-  TC-093: failed
-  TC-094: failed
-  TC-095: failed
-  TC-096: passed
-  TC-097: failed
-  TC-099: failed
-  TC-100: passed
-  TC-101: passed
-  TC-103: passed
-  TC-104: passed
-  TC-112: failed
-  TC-113: failed
-  TC-114: failed
-  TC-115: failed
-  TC-119: failed
-  TC-120: failed
-  TC-121: failed
-  TC-122: failed
-  TC-123: failed
-  TC-124: failed
-  TC-125: failed
-  TC-126: failed
-  TC-127: failed
-  TC-128: failed
-  TC-129: failed
-  TC-130: failed
-  TC-131: failed
-  TC-132: failed
-  TC-133: failed
-  TC-134: failed
-  TC-135: failed
-  TC-136: failed
-  TC-138: failed
-  TC-139: failed
-  TC-141: failed
-  TC-142: failed
-  TC-143: failed
-  TC-144: failed
-blocked_reason: environment
-lock: ""
+archived: false
+resolution: null
 ---
+
+# RUN-20260804-1301
+
+_Спроецировано из `runs/RUN-20260804-1301.md` (источник правды).
+Статус в нашей машине: **Blocked**._
 
 # RUN-20260804-1301 — regression (replay) на 1.10 (11)
 

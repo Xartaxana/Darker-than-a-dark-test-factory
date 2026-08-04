@@ -2,7 +2,7 @@
 key: "TC-148"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p2"
 summary: "Интерактивные цели нативного хрома (панели, тумблеры, чипы TabStrip, кнопки диалогов) не меньше 48dp по bounds accessibility-дерева"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-03T12:00:00Z"
-updated: "2026-08-03T12:00:00Z"
+created: "2026-08-04T12:28:48Z"
+updated: "2026-08-04T12:28:48Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Интерактивные цели нативного хрома (панели, тумблеры, чипы TabStrip, кнопки диалогов) не меньше 48dp по bounds accessibility-дерева
 
 _Спроецировано из `test-cases/accessibility/TC-148.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-148 — Свип touch-target: нативные интерактивные цели не меньше 48dp
 
