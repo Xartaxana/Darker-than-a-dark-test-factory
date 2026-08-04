@@ -1,0 +1,1 @@
+AT-BUG-043 WARNING: порт 8080 не освободился за 0.05s после остановки mitmdump (32963 попыток bind(), последняя ошибка: [Errno 10048] address already in use) — НЕ бросаю (блокер 1, критик-вход attempt 2), чтобы не сорвать teardown (clear_device_proxy); enforcing-слой — ретрай на старте (_spawn_and_wait_listening).

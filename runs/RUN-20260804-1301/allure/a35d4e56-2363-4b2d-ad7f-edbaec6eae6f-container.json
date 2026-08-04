@@ -1,0 +1,1 @@
+{"uuid": "c185ce51-a9ac-42b5-8ad5-e75bac3401c6", "children": ["e04e7b8d-42c8-40ff-916d-581077d906b2"], "befores": [{"name": "_reset_ca_cache", "status": "passed", "start": 1785847716946, "stop": 1785847716946}], "afters": [{"name": "_reset_ca_cache::<lambda>", "start": 1785847716950}], "start": 1785847716946, "stop": 1785847716950}
