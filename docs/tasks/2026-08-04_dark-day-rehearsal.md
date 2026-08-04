@@ -16,13 +16,14 @@ task_id: dark-day-rehearsal-0804
 | 2 | Env: эмулятор -WritableSystem + CA + Install-App | Lead (канон tasks.ps1) | done | — (device) |
 | 3 | Recon механики подкладок (rehearsal-seed-recon-0804) | scout | in_progress | — (read-only) |
 | 4 | Recon app-кода под патчи (rehearsal-patch-recon-0804) | scout | in_progress | — (read-only) |
-| 5 | План сева: карта «подкладка → артефакт/правка» | Lead | pending | runs/REHEARSAL-2026-08-04.md |
-| 6 | Критик-вход на план сева (правило 3, «критик на план») | critic | pending | — (read-only) |
-| 7 | Сев Lead-подкладок: П5-сев, П10, П11, П16, П17, П19-сев, backdate П2 | Lead | pending | bugs/, test-cases/, framework/ (точечные файлы по узлу 5), state/ |
-| 8 | Patch-рецепты режима A (П1, П3, П4, П12, D7) ВНЕ app-under-test | Lead (+builder при необходимости) | pending | scratchpad + runs/REHEARSAL-2026-08-04.md (git apply-рецепты) |
-| 9 | T0: включить AO3-QA-Heartbeat (триггер 30 мин) — первый шаг репетиции (решение владельца №1 опроса 25) | Lead | pending | schtasks (вне репо) |
-| 10 | Чек-лист владельца T0 (борда: П2-статус, П5–П9, П13–П15, П18) — передать оператору | Lead → владелец | pending | — |
-| 11 | «Ночь» T0..T0+3ч: heartbeat-проходы без вмешательства; Lead только наблюдает | фабрика | pending | — |
+| 5 | План сева: карта «подкладка → артефакт/правка» (v4) | Lead | done | runs/REHEARSAL-2026-08-04.md |
+| 6 | Критик-вход на план (3 раунда: 10+7+4 блокеров, приняты) | critic | done | — (read-only) |
+| 7 | Сев Lead-подкладок (BUG-049..052, П10/П11/П17/П19; T0-ходы владельца каналом борды) | Lead | done | bugs/, test-cases/, framework/, board/, state/ |
+| 8 | Патчи режима A (A: частичный фикс BUG-014 + D7 + бумп v12; B: титул диалога) — критик PASS, сборка BUILD SUCCESSFUL | builder | done | runs/REHEARSAL-2026-08-04-patches/ |
+| 8а | ВНЕПЛАН: env-инцидент SAC/mitmdump — диагноз + фикс 253d3ff + ночной прогон v2 | Lead | done | framework/core/mitm.py, runs/ |
+| 9 | T0 14:30Z: AO3-QA-Heartbeat включён (/mo 30, Ready, первый проход 15:00Z) | Lead | done | schtasks (вне репо) |
+| 10 | Чек-лист владельца — T0-часть исполнена; T0+3ч/T0+6ч — в отчёте | Lead → владелец | done (T0) | — |
+| 11 | «Ночь» T0..T0+3ч (14:30-17:30Z): heartbeat-проходы; Lead наблюдает, не вмешивается | фабрика | in_progress | — |
 | 12 | T0+3ч: владелец применяет патчи (П1, П3, П4, П12) + push origin | владелец | pending | app-under-test (владелец) |
 | 13 | «День» T0+3ч..T0+6ч: build_watch/D1/D3/D9/D11 | фабрика | pending | — |
 | 14 | T0+6ч: стоп (heartbeat disable), разбор по §4, таблица свидетельств, откаты сева | Lead | pending | runs/REHEARSAL-2026-08-04.md, откаты по байтовым копиям |
