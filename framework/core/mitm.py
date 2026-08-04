@@ -139,8 +139,22 @@ def assert_upstream_fast(host: str = "archiveofourown.org", port: int = 443) -> 
         s.close()
 
 
-def _mitmdump() -> str:
-    return str(settings.FRAMEWORK_ROOT / ".venv" / "Scripts" / "mitmdump.exe")
+def _mitmdump() -> list[str]:
+    """Командный префикс запуска mitmdump.
+
+    НЕ exe-шим `.venv/Scripts/mitmdump.exe`: Windows Smart App Control
+    (enforcement с 2026-08-04, VerifiedAndReputablePolicyState=1) блокирует
+    локально сгенерированные неподписанные шимы venv — WinError 4551,
+    69/165 ERROR в RUN-20260804-1301, 144 события CodeIntegrity 3033/3077.
+    Тот же mitmdump запускается через ПОДПИСАННЫЙ python.exe венва
+    (энтрипойнт mitmproxy.tools.main:mitmdump — ровно то, что зовёт шим);
+    исключений SAC не поддерживает, откат на шим — только при выключенном
+    SAC. Сверка обхода: `--version` даёт Mitmproxy 11.1.3 (2026-08-04)."""
+    python = str(settings.FRAMEWORK_ROOT / ".venv" / "Scripts" / "python.exe")
+    return [
+        python, "-c",
+        "import sys; from mitmproxy.tools.main import mitmdump; sys.exit(mitmdump())",
+    ]
 
 
 def _assert_own_listener() -> None:
@@ -376,7 +390,7 @@ def start_replay(flows_file: Path) -> None:
     """
     global _proc
     _proc = _spawn_and_wait_listening([
-        _mitmdump(), "--listen-host", "0.0.0.0", "--listen-port", _PORT,
+        *_mitmdump(), "--listen-host", "0.0.0.0", "--listen-port", _PORT,
         "--server-replay", str(flows_file),
         "--set", "server_replay_reuse=true",
         "--set", "server_replay_extra=forward",
@@ -450,7 +464,7 @@ def start_record(flows_file: Path) -> None:
     `start_replay`."""
     global _proc
     _proc = _spawn_and_wait_listening([
-        _mitmdump(), "--listen-host", "0.0.0.0", "--listen-port", _PORT,
+        *_mitmdump(), "--listen-host", "0.0.0.0", "--listen-port", _PORT,
         "-w", str(flows_file), "-q",
     ], _READY_TIMEOUT)
     _assert_own_listener()
