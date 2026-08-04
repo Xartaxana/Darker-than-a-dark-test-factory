@@ -2,7 +2,7 @@
 key: "BUG-001"
 project: "AO3"
 issueType: "bug"
-status: "bug-open"
+status: "bug-rejected"
 priority: "p2"
 summary: "PROJECT.md расходится с кодом: подписи вкладок Library/меню рейтинга; несуществующий глобальный «Enable filtering»"
 assignee: "qa-agents"

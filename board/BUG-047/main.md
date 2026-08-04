@@ -2,7 +2,7 @@
 key: "BUG-047"
 project: "AO3"
 issueType: "bug"
-status: "bug-open"
+status: "bug-intended"
 priority: "p1"
 summary: "Удаление скачанного файла из карточки удаляет только один файл; при двух файлах одного ao3Id второй остаётся на диске и воскрешает работу при повторном сканировании"
 assignee: "qa-agents"

@@ -2,7 +2,7 @@
 key: "BUG-014"
 project: "AO3"
 issueType: "bug"
-status: "bug-open"
+status: "bug-rejected"
 priority: "p1"
 summary: "Авто-скачивание Favorite срабатывает ретроактивно при правке тега ранее отмеченной работы"
 assignee: "qa-agents"
