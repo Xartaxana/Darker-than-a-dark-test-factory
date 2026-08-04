@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-03T21:43:55Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-08-04T11:30:54Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 ## Сводка по областям
@@ -250,25 +250,25 @@ generated_at: 2026-08-03T21:43:55Z · генератор: `scripts/coverage_map.
 - автотесты (automated_by): framework/tests/canary/test_ao3_selectors.py::test_bridge_marker_present_live, framework/tests/canary/test_ao3_selectors.py::test_bridge_marker_present_replay, framework/tests/canary/test_ao3_selectors.py::test_exclude_main_pairing_checkbox_availability_live, framework/tests/canary/test_ao3_selectors.py::test_exclude_main_pairing_checkbox_availability_replay, framework/tests/canary/test_ao3_selectors.py::test_main_pairing_checkbox_availability_live, framework/tests/canary/test_ao3_selectors.py::test_main_pairing_checkbox_availability_replay, framework/tests/canary/test_ao3_selectors.py::test_no_non_whitelisted_onclick_candidates_on_live_work_page, framework/tests/canary/test_ao3_selectors.py::test_note_button_present_iff_comment_live, framework/tests/canary/test_ao3_selectors.py::test_note_button_present_iff_comment_replay, framework/tests/canary/test_ao3_selectors.py::test_rate_button_badge_opaque_color_live, framework/tests/canary/test_ao3_selectors.py::test_rate_button_badge_opaque_color_replay, framework/tests/canary/test_ao3_selectors.py::test_rate_button_injected_on_live_listing, framework/tests/canary/test_ao3_selectors.py::test_rate_button_injected_on_replay_listing, framework/tests/canary/test_ao3_selectors.py::test_save_filter_button_idempotent_live, framework/tests/canary/test_ao3_selectors.py::test_save_filter_button_idempotent_replay, framework/tests/canary/test_ao3_selectors.py::test_tag_button_present_iff_custom_tag_live, framework/tests/canary/test_ao3_selectors.py::test_tag_button_present_iff_custom_tag_replay, framework/tests/canary/test_ao3_selectors.py::test_work_blurb_selector_matches_live_listing, framework/tests/canary/test_ao3_selectors.py::test_work_blurb_selector_matches_replay_listing, framework/tests/canary/test_tap_zone_guard.py::test_tap_zone_guard_blocks_whitelisted_button, framework/tests/canary/test_tap_zone_guard.py::test_tap_zone_guard_closest_semantics_on_descendant, framework/tests/canary/test_tap_zone_guard.py::test_tap_zone_guard_pierced_by_non_whitelisted_div, framework/tests/canary/test_tap_zone_guard.py::test_tap_zone_guard_whitelisted_link_without_own_handler
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
-  - TC-066: нет зелёного per-TC
+  - TC-066: RUN-20260804-1317 (updated: 2026-08-04T11:20:00Z)
   - TC-067: RUN-20260803-2012 (updated: 2026-08-03T20:40:00Z)
-  - TC-068: нет зелёного per-TC
+  - TC-068: RUN-20260804-1317 (updated: 2026-08-04T11:20:00Z)
   - TC-069: RUN-20260803-2012 (updated: 2026-08-03T20:40:00Z)
-  - TC-070: нет зелёного per-TC
+  - TC-070: RUN-20260804-1317 (updated: 2026-08-04T11:20:00Z)
   - TC-071: RUN-20260803-2012 (updated: 2026-08-03T20:40:00Z)
-  - TC-072: нет зелёного per-TC
+  - TC-072: RUN-20260804-1317 (updated: 2026-08-04T11:20:00Z)
   - TC-073: RUN-20260803-2012 (updated: 2026-08-03T20:40:00Z)
-  - TC-074: нет зелёного per-TC
+  - TC-074: RUN-20260804-1317 (updated: 2026-08-04T11:20:00Z)
   - TC-075: RUN-20260803-2012 (updated: 2026-08-03T20:40:00Z)
-  - TC-076: нет зелёного per-TC
+  - TC-076: RUN-20260804-1317 (updated: 2026-08-04T11:20:00Z)
   - TC-077: RUN-20260803-2012 (updated: 2026-08-03T20:40:00Z)
   - TC-078: нет зелёного per-TC
   - TC-079: RUN-20260803-2012 (updated: 2026-08-03T20:40:00Z)
-  - TC-080: нет зелёного per-TC
+  - TC-080: RUN-20260804-1317 (updated: 2026-08-04T11:20:00Z)
   - TC-081: RUN-20260803-2012 (updated: 2026-08-03T20:40:00Z)
-  - TC-082: нет зелёного per-TC
+  - TC-082: RUN-20260804-1317 (updated: 2026-08-04T11:20:00Z)
   - TC-083: RUN-20260803-2012 (updated: 2026-08-03T20:40:00Z)
-  - TC-118: нет зелёного per-TC
+  - TC-118: RUN-20260804-1317 (updated: 2026-08-04T11:20:00Z)
   - TC-119: RUN-20260803-2012 (updated: 2026-08-03T20:40:00Z)
   - TC-120: RUN-20260803-2012 (updated: 2026-08-03T20:40:00Z)
   - TC-121: RUN-20260803-2012 (updated: 2026-08-03T20:40:00Z)

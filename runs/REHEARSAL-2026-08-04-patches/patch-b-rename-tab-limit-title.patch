@@ -1,0 +1,21 @@
+Suggested commit message (apply with `git apply`, then commit with this message):
+
+    Clarify tab-limit dialog title
+
+    The "Tab limit reached" heading read as a hard technical ceiling
+    rather than a nudge to clean up tabs. Retitled to "Maximum tab count
+    reached" -- the body text (tab count + guidance) is unchanged.
+
+diff --git a/app/src/main/java/com/example/ao3_wrapper/MainActivity.kt b/app/src/main/java/com/example/ao3_wrapper/MainActivity.kt
+index 600acc6..9319f27 100644
+--- a/app/src/main/java/com/example/ao3_wrapper/MainActivity.kt
++++ b/app/src/main/java/com/example/ao3_wrapper/MainActivity.kt
+@@ -616,7 +616,7 @@ private fun Ao3App(
+             onDismissRequest = { browserViewModel.dismissTabLimitWarning() },
+             title = {
+                 Text(
+-                    "Tab limit reached",
++                    "Maximum tab count reached",
+                     color = MaterialTheme.colorScheme.error,
+                     style = MaterialTheme.typography.titleMedium,
+                 )

@@ -1,0 +1,40 @@
+Suggested commit message (apply with `git apply`, then commit with this message):
+
+    Fix BUG-014: only auto-download Favorite on rating transition, not every panel save
+
+    savePanelRating() re-triggered downloadWork() on ANY metadata edit
+    (tags, comment) of an already-Favorite work, because the predicate
+    checked the current rating level (rating == SAVE) instead of the
+    transition into it. Guard on the pre-save rating (existing.rating,
+    read before the upsert) so the download only fires when the work
+    actually becomes Favorite for the first time.
+
+diff --git a/app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt b/app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt
+index ab80131..a5a237a 100644
+--- a/app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt
++++ b/app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt
+@@ -753,7 +753,11 @@ class BrowserViewModel(
+                 )
+                 refreshActiveTabRating(workId, rating, savedComment, effectiveTags)
+                 broadcastRatingChange(workId, rating, savedComment, effectiveTags)
+-                if (rating == Rating.SAVE && autoDownloadSaved) {
++                // BUG-014: only auto-download on the transition INTO Favorite, not on
++                // every metadata save (tag/comment edits) of an already-Favorite work.
++                // `existing` was read before this upsert, so `existing.rating` is the
++                // pre-save value.
++                if (existing.rating != Rating.SAVE && rating == Rating.SAVE && autoDownloadSaved) {
+                     downloadWork(workId)
+                 }
+             } else if (tab != null) {
+@@ -1054,7 +1058,10 @@ class BrowserViewModel(
+                         evalJs(tabId, "var b=document.getElementById('kudo_submit');if(b)b.click();")
+                     }
+                 }
+-                if (rating == Rating.SAVE && autoDownloadSaved) {
++                // BUG-014: same transition-only guard as savePanelRating (see above) —
++                // only auto-download when the rating just became Favorite.
++                val previousRating = repo.getWorkRating(workId)?.rating
++                if (previousRating != Rating.SAVE && rating == Rating.SAVE && autoDownloadSaved) {
+                     downloadWork(workId)
+                 }
+             } else {

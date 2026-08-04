@@ -1,22 +1,22 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-03T21:43:56Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-04T11:30:53Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **786.1** (RUN-20260702-0300)
-- regression: Triaged · regression_freshness_hours: **1.1** (RUN-20260803-2012)
-- canary: not_run
+- smoke: Closed · smoke_freshness_hours: **799.9** (RUN-20260702-0300)
+- regression: Triaged · regression_freshness_hours: **14.8** (RUN-20260803-2012)
+- canary: NeedsTriage · canary_freshness_hours: **0.2** (RUN-20260804-1317)
 - Открытые blocker/critical: **0**
-- Известные проблемы (known_issue): **1**
+- Известные проблемы (known_issue): **2**
 - p0_automation_coverage: **100%** (37/37)
 - p1_automation_coverage: **83%** (77/93)
 - Test debt открыт: **2** — AT-BUG-047, AT-BUG-048
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
-- Untriaged: **0** · untriaged_failure_age: **0**
+- Untriaged: **1** · untriaged_failure_age: **0.2**
 
 ## Сборка под тестом
 
@@ -66,18 +66,19 @@ generated_at: 2026-08-03T21:43:56Z · генератор: `scripts/queue_snapsho
 - BUG-047 [major] Open — Удаление скачанного файла из карточки удаляет только один файл; при двух файлах одного ao3Id второй остаётся на диске и воскрешает работу при повторном сканировании
 - BUG-048 [major] Open — Overlay листинга молча перезаписывает title/fandom/wordCount скрейпом текущей страницы — работа исчезает из фандом-фильтра, прыгает в сортировке, а при rating=null пропадает со всех вкладок Library без какого-либо сообщения
 
-## Известные проблемы, known_issue (1)
+## Известные проблемы, known_issue (2)
 
 - BUG-012 [minor] Intended — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
+- BUG-015 [major] Open — Авто-клик kudos на AO3 срабатывает ретроактивно при правке тега ранее отмеченной работы
 
 ## Test debt (2)
 
 - AT-BUG-047 [flaky_test] Open — Гонка «wait_ui_ready → немедленная WebView-навигация»: стартовая загрузка Home ещё в полёте, chromedriver теряет цель (`cannot determine loading status from no such window`) — 27 call sites, экземпляр TC-043 в RUN-20260803-2012
 - AT-BUG-048 [flaky_test] Open — BaseScreen.swipe_to_text проскакивает искомую секцию под нагрузкой (fling-инерция + опрос раз в свайп) — Settings докручивается до конца списка, ассерт «секция не найдена прокруткой»; экземпляр TC-093 в RUN-20260803-2012
 
-## Прогоны (2)
+## Прогоны (3)
 
-- Triaged: **1** · Closed: **1**
+- NeedsTriage: **1** · Triaged: **1** · Closed: **1**
 
 ## Exploratory
 
@@ -86,13 +87,14 @@ generated_at: 2026-08-03T21:43:56Z · генератор: `scripts/queue_snapsho
 - bugs_per_charter: **1.25**
 - new_tc_from_charters: **15**
 
-## Активные локи (0)
+## Активные локи (1)
 
-- нет
+- RUN-20260804-1317 — `failure-analyst:2026-08-04T11:27:40Z`
 
-## Эскалации (4)
+## Эскалации (5)
 
 - [2026-07-21T22:43:25Z] **BUG-013** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-19T17:30:00Z | нужно: ответить в ## Обсуждение
 - [2026-07-24T05:10:04Z] **BUG-011** [sla:bug_open_major] — major-баг open с 2026-07-15T14:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
 - [2026-07-30T12:38:12Z] **BUG-016** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-28T12:00:00Z | нужно: ответить в ## Обсуждение
 - [2026-08-01T16:01:07Z] **BUG-017** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-30T00:00:00Z | нужно: ответить в ## Обсуждение
+- [2026-08-04T11:26:57Z] **BUG-021** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-02T00:00:00Z | нужно: ответить в ## Обсуждение

@@ -1163,5 +1163,10 @@
     "itype": "run",
     "artifact_status": "Triaged",
     "board_status": "Triaged"
+  },
+  "RUN-20260804-1317": {
+    "itype": "run",
+    "artifact_status": "NeedsTriage",
+    "board_status": "NeedsTriage"
   }
 }

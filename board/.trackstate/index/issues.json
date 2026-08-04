@@ -5049,7 +5049,7 @@
       "test_case:TC-144",
       "sev:major"
     ],
-    "updated": "2026-07-31T21:00:00Z",
+    "updated": "2026-08-04T11:16:11Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5314,6 +5314,27 @@
       "run"
     ],
     "updated": "2026-08-03T20:40:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "RUN-20260804-1317",
+    "path": "board/RUN-20260804-1317/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "RUN-20260804-1317",
+    "issueType": "run",
+    "status": "run-needstriage",
+    "priority": "p2",
+    "assignee": "failure-analyst",
+    "labels": [
+      "run",
+      "wip:failure-analyst"
+    ],
+    "updated": "2026-08-04T11:20:00Z",
     "resolution": null,
     "children": [],
     "archived": false
