@@ -1,37 +1,37 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-04T16:52:59Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-04T19:49:57Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **805.3** (RUN-20260702-0300)
-- regression: Blocked · regression_freshness_hours: **0.3** (RUN-20260804-1301)
-- canary: Triaged · canary_freshness_hours: **5.1** (RUN-20260804-1317)
+- smoke: Closed · smoke_freshness_hours: **808.2** (RUN-20260702-0300)
+- regression: Blocked · regression_freshness_hours: **3.3** (RUN-20260804-1301)
+- canary: Triaged · canary_freshness_hours: **8.1** (RUN-20260804-1317)
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **2**
 - p0_automation_coverage: **100%** (37/37)
-- p1_automation_coverage: **83%** (77/93)
+- p1_automation_coverage: **80%** (77/96)
 - Test debt открыт: **2** — AT-BUG-047, AT-BUG-048
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
-- Untriaged: **1** · untriaged_failure_age: **0.5**
+- Untriaged: **1** · untriaged_failure_age: **3.4**
 
 ## Сборка под тестом
 
 - 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
 - smoke: passed · regression: failed
 
-## Тест-кейсы (168)
+## Тест-кейсы (172)
 
-- Review: **23** · Approved: **2** · Automated: **143**
+- Review: **27** · Approved: **2** · Automated: **143**
 - автотесты (B3): active: **143**
 
 | Область | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | accessibility |  | 2 | 1 | 3 |  |
-| backup |  | 4 |  | 1 |  |
+| backup |  | 6 |  | 1 |  |
 | browser |  | 6 |  | 13 |  |
 | canary |  |  |  | 23 |  |
 | compatibility |  |  |  | 3 |  |
@@ -42,14 +42,14 @@ generated_at: 2026-08-04T16:52:59Z · генератор: `scripts/queue_snapsho
 | performance |  |  |  | 4 |  |
 | rating |  | 3 | 1 | 20 |  |
 | security |  |  |  | 6 |  |
-| settings |  | 4 |  | 11 |  |
+| settings |  | 6 |  | 11 |  |
 | smoke |  |  |  | 5 |  |
 | tabs |  |  |  | 11 |  |
 | visibility |  |  |  | 6 |  |
 
 ## Баги (20)
 
-- Open: **15** · Fixed: **1** · Rejected: **2** · Intended: **2**
+- Open: **14** · Fixed: **2** · Rejected: **1** · Intended: **2** · Blocked: **1**
 - BUG-011 [major] Open — Restore from backup пропускает работы молча, если файл с тем же ao3Id уже лежит в папке загрузок
 - BUG-013 [minor] Open — Смена темы, затем немедленный kill процесса (<100 мс) теряет theme_mode — выбор темы не персистится
 - BUG-015 [major] Open — Авто-клик kudos на AO3 срабатывает ретроактивно при правке тега ранее отмеченной работы
@@ -64,7 +64,7 @@ generated_at: 2026-08-04T16:52:59Z · генератор: `scripts/queue_snapsho
 - BUG-048 [major] Open — Overlay листинга молча перезаписывает title/fandom/wordCount скрейпом текущей страницы — работа исчезает из фандом-фильтра, прыгает в сортировке, а при rating=null пропадает со всех вкладок Library без какого-либо сообщения
 - BUG-050 [minor] Open [accepted_risk] — Длинный заголовок работы в снекбаре Undo обрезается без многоточия — конец слова просто исчезает
 - BUG-051 [minor] Open — Поиск в Library принимает чисто пробельный запрос — список мигает пустой выдачей вместо игнорирования
-- BUG-052 [minor] Open — Scan for downloads не показывает прогресс при большом числе файлов — кнопка выглядит зависшей
+- BUG-052 [minor] Blocked — Scan for downloads не показывает прогресс при большом числе файлов — кнопка выглядит зависшей
 
 ## Известные проблемы, known_issue (2)
 
@@ -87,11 +87,11 @@ generated_at: 2026-08-04T16:52:59Z · генератор: `scripts/queue_snapsho
 - bugs_per_charter: **1.25**
 - new_tc_from_charters: **15**
 
-## Активные локи (0)
+## Активные локи (1)
 
-- нет
+- TC-148 — `test-automator:2026-08-04T19:52:00Z`
 
-## Эскалации (8)
+## Эскалации (9)
 
 - [2026-07-21T22:43:25Z] **BUG-013** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-19T17:30:00Z | нужно: ответить в ## Обсуждение
 - [2026-07-24T05:10:04Z] **BUG-011** [sla:bug_open_major] — major-баг open с 2026-07-15T14:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
@@ -101,3 +101,4 @@ generated_at: 2026-08-04T16:52:59Z · генератор: `scripts/queue_snapsho
 - [2026-08-04T15:01:41Z] **BUG-016** [sla:bug_open_major] — major-баг open с 2026-07-28T12:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
 - [2026-08-04T15:01:41Z] **BUG-049** [sla:bug_fixed_waiting_build] — Fixed с 2026-08-01T04:00:00Z, но новой сборки нет | нужно: запушить/собрать сборку с фиксом
 - [2026-08-04T15:01:41Z] **BUG-051** [sla:bug_open_minor] — minor-баг open с 2026-07-02T04:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
+- [2026-08-04T18:18:52Z] **BUG-052** — конфликт борда↔артефакт: человек→Intended, агент→Rejected. Артефакт переведён в Blocked, нужно решение человека.

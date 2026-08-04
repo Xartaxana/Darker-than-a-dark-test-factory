@@ -79,11 +79,12 @@
     "issueType": "test-case",
     "status": "tc-approved",
     "priority": "p2",
-    "assignee": "qa-agents",
+    "assignee": "test-automator",
     "labels": [
       "test-case",
       "area:accessibility",
-      "risk:R-13"
+      "risk:R-13",
+      "wip:test-automator"
     ],
     "updated": "2026-08-04T12:28:48Z",
     "resolution": null,
@@ -241,6 +242,50 @@
       "risk:R-01"
     ],
     "updated": "2026-08-03T19:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-171",
+    "path": "board/TC-171/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Restore в непустую базу: работа с уже существующим ao3Id остаётся с ЛОКАЛЬНОЙ версией (не откатывается на бэкапную), локально удалённая работа возвращается из бэкапа целиком; диалог сообщает только число скипнутых",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:backup",
+      "risk:R-01"
+    ],
+    "updated": "2026-08-04T20:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-172",
+    "path": "board/TC-172/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Restore: работа, пересозданная локально после Clear all с тем же ao3Id, что и файл на диске, пропускается по id, НО scanForOrphanedDownloads всё равно релинкует файл в том же объединённом диалоге (шов merge × downloads)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:backup",
+      "risk:R-01"
+    ],
+    "updated": "2026-08-04T20:00:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3332,6 +3377,50 @@
     "archived": false
   },
   {
+    "key": "TC-169",
+    "path": "board/TC-169/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Reset brightness on start ON: каждый холодный старт берёт ТЕКУЩУЮ системную яркость, ручная правка слайдера не переживает kill+relaunch",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:settings",
+      "risk:R-11"
+    ],
+    "updated": "2026-08-04T18:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-170",
+    "path": "board/TC-170/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Reset brightness on start OFF: тумблер немедленно фиксирует ТЕКУЩУЮ яркость при переключении, и сохранённое значение (включая последующую ручную правку) переживает kill+relaunch",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:settings",
+      "risk:R-11"
+    ],
+    "updated": "2026-08-04T20:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "TC-001",
     "path": "board/TC-001/main.md",
     "parent": null,
@@ -5012,7 +5101,7 @@
     "epicPath": null,
     "summary": "Авто-скачивание Favorite срабатывает ретроактивно при правке тега ранее отмеченной работы",
     "issueType": "bug",
-    "status": "bug-rejected",
+    "status": "bug-fixed",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5021,7 +5110,7 @@
       "test_case:TC-115",
       "sev:major"
     ],
-    "updated": "2026-08-04T16:44:07Z",
+    "updated": "2026-08-04T19:22:32Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5350,14 +5439,14 @@
     "epicPath": null,
     "summary": "Scan for downloads не показывает прогресс при большом числе файлов — кнопка выглядит зависшей",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-blocked",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-08-04T12:20:00Z",
+    "updated": "2026-08-04T18:18:52Z",
     "resolution": null,
     "children": [],
     "archived": false

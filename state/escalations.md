@@ -1116,6 +1116,42 @@ resolved при закрытии.
 - Журнал: routing-log escalated 2026-08-04T16:34:03 (agent=lead,
   model=fable, by=sonnet).
 
+## ESC-019 — AT-BUG-047, B4 test debt: 2 rejected подряд (test-maintainer, sonnet-ярус), эскалация правилом 6
+
+- Артефакт: `bugs/AT-BUG-047.md` (status: Open, lock "" — НЕ ретраить
+  test-maintainer'ом в этом или следующих Sonnet-проходах без решения
+  полного Lead).
+- С какого времени: 2026-08-04T19:32:12Z (второй rejected).
+- Причина: два `rejected` на sonnet-ярусе, task_id `AT-BUG-047`, agent
+  `test-maintainer` — attempt 1 (ts 17:18:09, `failure_class: tooling`,
+  мёртвый фоновый job) и attempt 2 (ts 19:32:12, `failure_class: spec`,
+  DoD «test_rating_listing.py + test_visibility.py целиком зелёные» не
+  выполнен под нагрузкой). Класс НЕ закрыт целиком (rule 9): фикс
+  attempt 2 (`navigate.py::navigate()`, choke point `driver.get()`)
+  корректен и верифицирован для своего скоупа, но под полным прогоном
+  (27 тестов, 1082с) проявился ВТОРОЙ choke point той же гонки —
+  `framework/core/contexts.py::in_webview` (`driver.switch_to.context`)
+  — падает `WebDriverException: session not created... loader has
+  changed while resolving nodes`, физически недостижим для
+  navigate.py-ретрая (switch_to происходит РАНЬШЕ). Диагностирован
+  критиком (qa-loop3-critic-gate-1932, Q2): тот же класс, барьер нужен
+  ВНУТРИ `contexts.in_webview` со своим узким маркером (не
+  navigate.py-маркер, не голый «session not created»).
+- Что нужно от человека/полного Lead: реализовать барьер в
+  `contexts.in_webview` по ориентиру критика (см. `bugs/AT-BUG-047.md`
+  Обсуждение @19:31 + routing-log delegated 19:34:07/accepted-вердикт
+  критика) — либо личной реализацией (Fable выше sonnet, приёмка
+  легальна), либо явной авторизацией нового sonnet-цикла (третий
+  диспатч test-maintainer НЕ как «attempt 3» того же счётчика, а как
+  новое основание после решения Lead). Байт-копия рабочего
+  navigate.py-диффа (attempt 2, для переиспользования) — сессия
+  Sonnet-координатора, `/tmp/at-bug-047-scratch/navigate.py.fixed` +
+  `test_navigate_transient_race_unit.py.attempt2` (не переживёт границу
+  сессии/машины — если недоступно новой сессии, реализовать заново по
+  тексту диагностики критика, дифф некомплексный).
+- Журнал: routing-log escalated 2026-08-04T19:46:21 (agent=test-maintainer,
+  model=fable, by=sonnet).
+
 ## ESC-018 — RUN-20260804-1301, статус NeedsTriage→Blocked (factory-переход, «нечего гонять»): прогон замаскирован SAC-блокировкой mitmdump, заменён RUN-20260804-1624
 
 - Артефакт: `runs/RUN-20260804-1301.md` (status: NeedsTriage → **Blocked**
@@ -1270,3 +1306,4 @@ resolved при закрытии.
 - [2026-08-04T15:01:41Z] **BUG-016** [sla:bug_open_major] — major-баг open с 2026-07-28T12:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
 - [2026-08-04T15:01:41Z] **BUG-049** [sla:bug_fixed_waiting_build] — Fixed с 2026-08-01T04:00:00Z, но новой сборки нет | нужно: запушить/собрать сборку с фиксом
 - [2026-08-04T15:01:41Z] **BUG-051** [sla:bug_open_minor] — minor-баг open с 2026-07-02T04:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
+- [2026-08-04T18:18:52Z] **BUG-052** — конфликт борда↔артефакт: человек→Intended, агент→Rejected. Артефакт переведён в Blocked, нужно решение человека.

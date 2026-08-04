@@ -150,3 +150,44 @@ TC-057 (2026-07-17) воспроизводился детерминирован�
 падения TC-043 в `runs/RUN-20260803-2012.md`. Собрат по классу «ожидание слабее,
 чем требует следующий шаг» — `AT-BUG-048` (свайп-поиск в Settings), заведён тем
 же ходом; общего кода у них нет, объединять фикс не требуется.
+
+**[координатор (Sonnet) @ 2026-08-04T19:31:00Z, attempt 2 rejected]** test-maintainer
+attempt 2 закрыл choke point `core/navigate.py::navigate()` (реактивный ретрай
+узкой сигнатуры `cannot determine loading status from no such window`) —
+верифицировано независимо: 7/7 юнит-проб зелёные, красная проба на байтовой копии
+до-фикс версии подтвердила падение с ТОЧНО этой сигнатурой, 3/3 изолированных
+TC-043 зелёные. Затем полный `test_rating_listing.py` + `test_visibility.py`
+(DoD, 27 тестов, 1082с) дал **2 падения** с ДРУГОЙ, но родственной сигнатурой:
+
+```
+WebDriverException: A new session could not be created. Details: session not created
+from no such execution context: loader has changed while resolving nodes
+```
+
+— TC-139 (ожидаемый красный замок `BUG-015`) упал НЕ своей ассерцией
+(`data-kudo-clicked`), а этим крашем ДО неё; TC-143 (зелёный в базовом прогоне
+`RUN-20260804-1624`) упал тем же крашем — регрессии от фикса это не (изолированный
+повтор ОБОИХ тестов сразу после — TC-139 вернулся к штатному
+`AssertionError: data-kudo-clicked неожиданно = 1` (ожидаемый red_lock BUG-015),
+TC-143 зелёный; под нагрузкой полного прогона не воспроизвелось изолированно —
+согласуется с собственным описанием бага «0/3 изолированно, гонка под нагрузкой
+длинного прогона»). Стек краша — `AndroidUiautomator2Driver.setContext` →
+`startChromedriverProxy` → `Chromedriver.start()`, т.е. та же WebView-таргет-
+не-готов гонка, но на ДРУГОМ choke point (переключение в WEBVIEW-контекст,
+`framework/core/contexts.py::in_webview`), не на `driver.get()`. Это ровно
+барьер, который attempt 1 начинал (`contexts.py +53`, отменённый по протоколу
+отката 17:18:09) и который attempt 2 не переиспользовал («классификация заново»,
+18:06:36) — класс (rule 9 CLAUDE.md) не закрыт полностью, DoD «test_rating_listing
++ test_visibility целиком зелёные» не выполнен.
+
+Дифф attempt 2 (navigate.py fix + новая юнит-проба) КОРРЕКТЕН и верифицирован
+для своего скоупа (сам choke point navigate() закрыт чисто, регрессий не внёс —
+25/27 прошли, 2 падения не про navigate()) — не отброшен как брак, снят с дерева
+по протоколу байтовой копии (housekeeping п.8 CLAUDE.md) для переиспользования
+attempt 3: `/tmp/at-bug-047-scratch/navigate.py.fixed`,
+`/tmp/at-bug-047-scratch/test_navigate_transient_race_unit.py.attempt2` (сессия
+Sonnet-координатора; если недоступно новой сессии — переклассифицировать заново
+тем же образом, что attempt 2 уже показал для attempt 1). Второй `rejected` на
+этом task_id одного яруса (sonnet) → эскалация обязательна правилом 6, дальше —
+критик-вход (диагностика, нужен ли барьер именно в `contexts.in_webview` или
+альтернативная форма) ДО attempt 3.

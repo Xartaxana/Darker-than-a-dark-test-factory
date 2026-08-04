@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-04T16:53:03Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-08-04T19:50:03Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 ## Сводка по областям
@@ -8,7 +8,7 @@ generated_at: 2026-08-04T16:53:03Z · генератор: `scripts/coverage_map.
 | Область | Кейсов | Automated | coverage_status |
 |---|---|---|---|
 | accessibility | 6 | 3 | partial |
-| backup | 5 | 1 | partial |
+| backup | 7 | 1 | partial |
 | browser | 19 | 13 | partial |
 | canary | 23 | 23 | designed-full |
 | compatibility | 3 | 3 | designed-full |
@@ -19,7 +19,7 @@ generated_at: 2026-08-04T16:53:03Z · генератор: `scripts/coverage_map.
 | performance | 4 | 4 | designed-full |
 | rating | 24 | 20 | partial |
 | security | 6 | 6 | designed-full |
-| settings | 15 | 11 | partial |
+| settings | 17 | 11 | partial |
 | smoke | 5 | 5 | designed-full |
 | tabs | 11 | 11 | designed-full |
 | visibility | 6 | 6 | designed-full |
@@ -28,7 +28,7 @@ generated_at: 2026-08-04T16:53:03Z · генератор: `scripts/coverage_map.
 
 | Риск | Категория | Покрывающие кейсы |
 |---|---|---|
-| R-01 | DATA | backup:TC-021, backup:TC-165, backup:TC-167, backup:TC-168, rating:TC-151, rating:TC-152, rating:TC-155, settings:TC-018, settings:TC-019, settings:TC-020, smoke:TC-004 |
+| R-01 | DATA | backup:TC-021, backup:TC-165, backup:TC-167, backup:TC-168, backup:TC-171, backup:TC-172, rating:TC-151, rating:TC-152, rating:TC-155, settings:TC-018, settings:TC-019, settings:TC-020, smoke:TC-004 |
 | R-02 | TECH | canary:TC-066, canary:TC-067, canary:TC-068, canary:TC-069, canary:TC-070, canary:TC-071, canary:TC-072, canary:TC-073, canary:TC-074, canary:TC-075, canary:TC-076, canary:TC-077, canary:TC-078, canary:TC-079, canary:TC-080, canary:TC-081, canary:TC-082, canary:TC-083, canary:TC-118, canary:TC-119, canary:TC-120, canary:TC-121, canary:TC-122 |
 | R-03 | TECH | errors:TC-046, smoke:TC-001 |
 | R-04 | DATA | canary:TC-072, canary:TC-073, canary:TC-074, canary:TC-075, canary:TC-076, canary:TC-077, library:TC-016, library:TC-017, rating:TC-007, rating:TC-008, rating:TC-009, rating:TC-010, rating:TC-011, rating:TC-012, smoke:TC-003 |
@@ -36,7 +36,7 @@ generated_at: 2026-08-04T16:53:03Z · генератор: `scripts/coverage_map.
 | R-06 | BUS | browser:TC-094, library:TC-027, library:TC-028, library:TC-029, library:TC-030, library:TC-031, library:TC-060, library:TC-061, library:TC-062, library:TC-063, library:TC-064, library:TC-065, visibility:TC-013, visibility:TC-014, visibility:TC-015, visibility:TC-092, visibility:TC-093, visibility:TC-095 |
 | R-07 | OPS | риск не покрыт дизайном |
 | R-08 | TECH | library:TC-136, library:TC-137, tabs:TC-022, tabs:TC-023, tabs:TC-024, tabs:TC-025, tabs:TC-026, tabs:TC-084, tabs:TC-131, tabs:TC-132, tabs:TC-133, tabs:TC-134, tabs:TC-135 |
-| R-11 | TECH | accessibility:TC-108, browser:TC-050, browser:TC-051, browser:TC-052, browser:TC-053, browser:TC-054, browser:TC-055, browser:TC-057, browser:TC-058, browser:TC-126, browser:TC-127, browser:TC-128, browser:TC-130, browser:TC-157, browser:TC-158, browser:TC-159, browser:TC-160, browser:TC-161, settings:TC-047, settings:TC-048, settings:TC-049, settings:TC-059, settings:TC-123, settings:TC-124, settings:TC-125, settings:TC-129, settings:TC-145, settings:TC-146, settings:TC-147, settings:TC-163 |
+| R-11 | TECH | accessibility:TC-108, browser:TC-050, browser:TC-051, browser:TC-052, browser:TC-053, browser:TC-054, browser:TC-055, browser:TC-057, browser:TC-058, browser:TC-126, browser:TC-127, browser:TC-128, browser:TC-130, browser:TC-157, browser:TC-158, browser:TC-159, browser:TC-160, browser:TC-161, settings:TC-047, settings:TC-048, settings:TC-049, settings:TC-059, settings:TC-123, settings:TC-124, settings:TC-125, settings:TC-129, settings:TC-145, settings:TC-146, settings:TC-147, settings:TC-163, settings:TC-169, settings:TC-170 |
 | R-09 | BUS | backup:TC-166, filter-profiles:TC-040, filter-profiles:TC-041, filter-profiles:TC-042, filter-profiles:TC-085, filter-profiles:TC-086 |
 | R-10 | DATA | library:TC-089, rating:TC-043, rating:TC-044, rating:TC-045, rating:TC-056, rating:TC-087, rating:TC-088, rating:TC-090, rating:TC-091 |
 | R-12 | PERF | performance:TC-096, performance:TC-097, performance:TC-098, performance:TC-099 |
@@ -95,7 +95,7 @@ generated_at: 2026-08-04T16:53:03Z · генератор: `scripts/coverage_map.
 | settings-webview-dark-mode | settings | settings:TC-048[Automated], browser:TC-050[Automated], settings:TC-059[Automated] |
 | settings-font-slider | settings | settings:TC-145[Review] |
 | settings-brightness-slider | settings | settings:TC-146[Review] |
-| settings-brightness-reset-on-start | settings | нет кейсов |
+| settings-brightness-reset-on-start | settings | settings:TC-169[Review], settings:TC-170[Review] |
 | settings-rating-visibility-filter | settings | visibility:TC-015[Automated], visibility:TC-095[Automated] |
 | settings-filter-display-mode | settings | visibility:TC-093[Automated] |
 | settings-panel-side | settings | settings:TC-147[Review] |
@@ -105,9 +105,9 @@ generated_at: 2026-08-04T16:53:03Z · генератор: `scripts/coverage_map.
 | settings-download-folder-saf | settings | downloads:TC-038[Automated] |
 | settings-backup-export | settings | backup:TC-021[Automated], backup:TC-165[Review] |
 | settings-restore-merge | settings | backup:TC-021[Automated], downloads:TC-164[Review], backup:TC-166[Review], backup:TC-167[Review], backup:TC-168[Review] |
-| settings-restore-merge-skip-existing | settings | нет кейсов |
+| settings-restore-merge-skip-existing | settings | backup:TC-171[Review], backup:TC-172[Review] |
 | settings-orphan-scan-silent | settings | downloads:TC-038[Automated] |
-| settings-orphan-scan-restore-dialog | settings | downloads:TC-039[Automated], downloads:TC-164[Review] |
+| settings-orphan-scan-restore-dialog | settings | downloads:TC-039[Automated], downloads:TC-164[Review], backup:TC-172[Review] |
 | settings-scan-downloads-manual | settings | downloads:TC-037[Automated], downloads:TC-153[Review], downloads:TC-154[Review] |
 | settings-filter-profiles-list | settings | backup:TC-166[Review] |
 | settings-filter-profiles-delete | settings | filter-profiles:TC-042[Automated] |
@@ -164,8 +164,6 @@ generated_at: 2026-08-04T16:53:03Z · генератор: `scripts/coverage_map.
 ## Фичи без единого кейса
 
 - browse-tabstrip-indicators (browse): TabStrip: индикация активной вкладки, закрытие свайпом вверх, кнопка New tab
-- settings-brightness-reset-on-start (settings): Тумблер «Reset brightness on start»: ON — яркость на старте берётся из системы (сохранённое значение игнорируется), OFF — сохранённое значение переживает kill+relaunch
-- settings-restore-merge-skip-existing (settings): Restore в НЕПУСТУЮ базу: работа с уже существующим ao3Id пропускается целиком (локальная версия побеждает, поля из бэкапа не возвращаются), в диалоге — только число «(N works already existed)», без имён и без выбора перезаписать/оставить
 - bridge-dark-css (ao3-bridge): CSS-переопределения тёмной темы на AO3-страницах (window.__ao3AppDark)
 - bridge-scroll-reporting (ao3-bridge): Отчёт позиции скролла и прогресса чтения (глава/%) в Kotlin
 - data-workrating-model (data): Room-сущность WorkRating (rating/comment/tags/fandom/author/wordCount/downloadPath)
@@ -195,10 +193,10 @@ generated_at: 2026-08-04T16:53:03Z · генератор: `scripts/coverage_map.
 
 ### backup
 
-- coverage_status: **partial** (1/5 Automated)
+- coverage_status: **partial** (1/7 Automated)
 - риски: R-01, R-09
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-166 [P1, Review]
+- P0/P1 не в Automated: TC-166 [P1, Review], TC-171 [P1, Review]
 - автотесты (automated_by): framework/tests/test_backup_restore.py::test_backup_clear_restore_returns_original_data
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
@@ -207,8 +205,8 @@ generated_at: 2026-08-04T16:53:03Z · генератор: `scripts/coverage_map.
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  | 1 |  |
-| P1 |  | 1 |  |  |  |
-| P2 |  | 3 |  |  |  |
+| P1 |  | 2 |  |  |  |
+| P2 |  | 4 |  |  |  |
 | P3 |  |  |  |  |  |
 
 ### browser
@@ -489,10 +487,10 @@ generated_at: 2026-08-04T16:53:03Z · генератор: `scripts/coverage_map.
 
 ### settings
 
-- coverage_status: **partial** (11/15 Automated)
+- coverage_status: **partial** (11/17 Automated)
 - риски: R-01, R-11
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-145 [P1, Review], TC-146 [P1, Review], TC-147 [P1, Review], TC-163 [P1, Review]
+- P0/P1 не в Automated: TC-145 [P1, Review], TC-146 [P1, Review], TC-147 [P1, Review], TC-163 [P1, Review], TC-169 [P1, Review], TC-170 [P1, Review]
 - автотесты (automated_by): framework/tests/test_infinite_scroll.py::test_infinite_scroll_off_keeps_native_pagination, framework/tests/test_reading_ux.py::test_tap_to_scroll_live_push_and_reload_persistence, framework/tests/test_reading_ux.py::test_tap_to_scroll_survives_kill_and_relaunch, framework/tests/test_reading_ux.py::test_tap_zone_disabled_no_effect_in_any_third, framework/tests/test_settings.py::test_cancel_clear_all_dialog_keeps_data, framework/tests/test_settings.py::test_clear_all_ratings_badge_persists_without_reload, framework/tests/test_settings.py::test_clear_all_ratings_shows_confirmation_dialog, framework/tests/test_settings.py::test_system_theme_follows_os_dark_mode, framework/tests/test_settings.py::test_theme_dark_applies_instantly_without_recreating_activity, framework/tests/test_settings.py::test_webview_dark_mode_applies_instantly, framework/tests/test_settings.py::test_webview_follows_system_theme_without_in_app_toggle
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
@@ -511,7 +509,7 @@ generated_at: 2026-08-04T16:53:03Z · генератор: `scripts/coverage_map.
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  |  |  |
-| P1 |  | 4 |  | 7 |  |
+| P1 |  | 6 |  | 7 |  |
 | P2 |  |  |  | 3 |  |
 | P3 |  |  |  | 1 |  |
 

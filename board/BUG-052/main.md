@@ -2,7 +2,7 @@
 key: "BUG-052"
 project: "AO3"
 issueType: "bug"
-status: "bug-open"
+status: "bug-blocked"
 priority: "p2"
 summary: "Scan for downloads не показывает прогресс при большом числе файлов — кнопка выглядит зависшей"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-04T12:20:00Z"
-updated: "2026-08-04T12:20:00Z"
+created: "2026-08-04T18:18:52Z"
+updated: "2026-08-04T18:18:52Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Scan for downloads не показывает прогресс при большом числе файлов — кнопка выглядит зависшей
 
 _Спроецировано из `bugs/BUG-052.md` (источник правды).
-Статус в нашей машине: **Open**._
+Статус в нашей машине: **Blocked**._
 
 # BUG-052 — Scan for downloads без индикатора прогресса
 
@@ -43,3 +43,10 @@ _Спроецировано из `bugs/BUG-052.md` (источник правд�
 UX-косметика; повторный тап запускает второй скан (следствие — дубль-снекбары).
 
 ## Обсуждение
+
+**[qa/Lead @ 2026-08-04T18:22:00Z]** Пометка репетиции (карта
+runs/REHEARSAL-2026-08-04.md, П18): предшествовавший конфликту переход
+артефакта Open→Rejected был НАМЕРЕННОЙ СИМУЛЯЦИЕЙ хода фабрики рукой
+Lead (перехода для актора lead в schemas/transitions.yaml нет —
+зафиксировано заранее критик-входом плана). Конфликт «человек→Intended
+vs агент→Rejected» — сеяная подкладка; Blocked снимет разбор T0+6ч.

@@ -2,7 +2,7 @@
 key: "BUG-014"
 project: "AO3"
 issueType: "bug"
-status: "bug-rejected"
+status: "bug-fixed"
 priority: "p1"
 summary: "Авто-скачивание Favorite срабатывает ретроактивно при правке тега ранее отмеченной работы"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-04T16:44:07Z"
-updated: "2026-08-04T16:44:07Z"
+created: "2026-08-04T19:22:32Z"
+updated: "2026-08-04T19:22:32Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Авто-скачивание Favorite срабатывает ретроактивно при правке тега ранее отмеченной работы
 
 _Спроецировано из `bugs/BUG-014.md` (источник правды).
-Статус в нашей машине: **Rejected**._
+Статус в нашей машине: **Fixed**._
 
 # BUG-014 — Авто-скачивание Favorite срабатывает ретроактивно при изменении тега
 
