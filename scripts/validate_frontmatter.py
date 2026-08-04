@@ -281,6 +281,14 @@ def validate() -> tuple[list[str], list[str]]:
             # 2026-07-21) — без frontmatter намеренно.
             if md.name.upper() in ("README.MD", "PERTURBATIONS.MD"):
                 continue
+            # Отчёт репетиции тёмного дня и его вложения (runs/REHEARSAL-*,
+            # спека docs/11 §5) — свободная форма, НЕ RUN-артефакт конвейера:
+            # frontmatter не требуется намеренно. Узкое исключение только
+            # области runs (шов вскрыт preflight'ом /qa-loop 2026-08-04:
+            # спека кладёт отчёт в runs/, схема требует run-frontmatter).
+            if itype == "run" and (md.name.upper().startswith("REHEARSAL-")
+                                   or md.parent.name.upper().startswith("REHEARSAL-")):
+                continue
             rel = md.relative_to(REPO).as_posix()
             text = md.read_text(encoding="utf-8", errors="replace")
             meta, _body = bs._parse_frontmatter(text)
