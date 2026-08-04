@@ -1,14 +1,14 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-04T19:49:57Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-04T21:13:54Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
-- Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **808.2** (RUN-20260702-0300)
-- regression: Blocked · regression_freshness_hours: **3.3** (RUN-20260804-1301)
-- canary: Triaged · canary_freshness_hours: **8.1** (RUN-20260804-1317)
+- Сборка: 1.11 (versionCode 12), commit `bfc8f41a`, built_at 2026-08-04T20:03:38Z
+- smoke: Closed · smoke_freshness_hours: **809.6** (RUN-20260702-0300)
+- regression: Blocked · regression_freshness_hours: **4.7** (RUN-20260804-1301)
+- canary: Triaged · canary_freshness_hours: **9.5** (RUN-20260804-1317)
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **2**
 - p0_automation_coverage: **100%** (37/37)
@@ -16,12 +16,12 @@ generated_at: 2026-08-04T19:49:57Z · генератор: `scripts/queue_snapsho
 - Test debt открыт: **2** — AT-BUG-047, AT-BUG-048
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
-- Untriaged: **1** · untriaged_failure_age: **3.4**
+- Untriaged: **1** · untriaged_failure_age: **4.8**
 
 ## Сборка под тестом
 
-- 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: passed · regression: failed
+- 1.11 (versionCode 12), commit `bfc8f41a`, built_at 2026-08-04T20:03:38Z
+- smoke: not_run · regression: not_run
 
 ## Тест-кейсы (172)
 
@@ -91,7 +91,7 @@ generated_at: 2026-08-04T19:49:57Z · генератор: `scripts/queue_snapsho
 
 - TC-148 — `test-automator:2026-08-04T19:52:00Z`
 
-## Эскалации (9)
+## Эскалации (8)
 
 - [2026-07-21T22:43:25Z] **BUG-013** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-19T17:30:00Z | нужно: ответить в ## Обсуждение
 - [2026-07-24T05:10:04Z] **BUG-011** [sla:bug_open_major] — major-баг open с 2026-07-15T14:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
@@ -99,6 +99,5 @@ generated_at: 2026-08-04T19:49:57Z · генератор: `scripts/queue_snapsho
 - [2026-08-01T16:01:07Z] **BUG-017** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-30T00:00:00Z | нужно: ответить в ## Обсуждение
 - [2026-08-04T11:26:57Z] **BUG-021** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-02T00:00:00Z | нужно: ответить в ## Обсуждение
 - [2026-08-04T15:01:41Z] **BUG-016** [sla:bug_open_major] — major-баг open с 2026-07-28T12:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
-- [2026-08-04T15:01:41Z] **BUG-049** [sla:bug_fixed_waiting_build] — Fixed с 2026-08-01T04:00:00Z, но новой сборки нет | нужно: запушить/собрать сборку с фиксом
 - [2026-08-04T15:01:41Z] **BUG-051** [sla:bug_open_minor] — minor-баг open с 2026-07-02T04:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
 - [2026-08-04T18:18:52Z] **BUG-052** — конфликт борда↔артефакт: человек→Intended, агент→Rejected. Артефакт переведён в Blocked, нужно решение человека.

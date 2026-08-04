@@ -69,6 +69,16 @@ class SettingsScreen(BaseScreen):
         label = f"{100 + step * 15}%"
         return (AppiumBy.XPATH, f'//*[@text="{label}"]/..')
 
+    # --- PanelSideRow (SettingsScreen.kt:1248-1284, TC-148) — Left/Right TextButton,
+    # тот же паттерн, что `theme_button_locator`/`font_size_button_locator`: клик и
+    # реальный `enabled`/размер висят на кликабельном РОДИТЕЛЕ TextButton, не на
+    # дочернем текстовом узле «Left»/«Right» (см. докстринг `_button_container` в
+    # `side_panel.py` — тот же класс Compose-разметки, тот же приём). Рендерится
+    # сразу после Theme (строки 641-656) — в том же непроскролленном вьюпорте, что
+    # `THEME_HEADER`/`font_size_button_locator`, `swipe_to_text` не требуется. ---
+    def panel_side_button_locator(self, label: str):
+        return (AppiumBy.XPATH, f'//*[@text="{label}"]/..')
+
     BRIGHTNESS_SLIDER = (AppiumBy.CLASS_NAME, "android.widget.SeekBar")
 
     # --- Auto-download toggle (секция "Data", SettingsScreen.kt SettingsSwitchRow —

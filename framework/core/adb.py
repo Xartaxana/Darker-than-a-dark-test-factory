@@ -314,6 +314,30 @@ def parse_am_start_metrics(output: str) -> dict[str, int]:
     return metrics
 
 
+# --- Screen density (TC-148, accessibility touch-target sweep): порог 48dp
+# переводится в device px через РЕАЛЬНО измеренную плотность текущего
+# прогона, не через хардкод из документации. ---
+
+def screen_density(timeout: float = settings.ADB_SHELL_TIMEOUT) -> int:
+    """Парсит `wm density` (TC-148): `Override density: NNN` (если задана
+    отдельно, например явным `wm density NNN`) имеет приоритет над `Physical
+    density: NNN` — это ФАКТИЧЕСКАЯ плотность, применяемая системой поверх
+    физической. По образцу `parse_am_start_metrics`/`total_pss_kb`: явный
+    `RuntimeError` с сырым выводом, если ни один из двух маркеров не найден
+    (не молчаливый дефолт вроде 160/320 — тихая подмена реальной плотности
+    хардкодом обесценила бы весь смысл замера)."""
+    out = shell("wm density", timeout=timeout)
+    m = re.search(r"Override density:\s*(\d+)", out)
+    if not m:
+        m = re.search(r"Physical density:\s*(\d+)", out)
+    if not m:
+        raise RuntimeError(
+            f"вывод 'wm density' не содержит ни 'Override density', ни "
+            f"'Physical density' — вывод: {out!r}"
+        )
+    return int(m.group(1))
+
+
 def total_pss_kb(timeout: float = settings.ADB_SHELL_TIMEOUT) -> int:
     """Парсит `TOTAL PSS` (КБ) из `dumpsys meminfo <package>` (TC-099) — формат
     строки сверен на живом устройстве (emulator-5554, 2026-07-22):

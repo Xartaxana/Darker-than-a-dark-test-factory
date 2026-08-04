@@ -163,6 +163,13 @@ def set_font_scale(scale: float):
     adb.set_font_scale(scale)
 
 
+@allure.step("Given плотность экрана измерена (adb shell wm density)")
+def measure_screen_density() -> int:
+    """TC-148: РЕАЛЬНАЯ плотность текущего прогона (не хардкод из
+    документации) — порог 48dp переводится в device px через это значение."""
+    return adb.screen_density()
+
+
 @allure.step("Then процесс приложения жив (pidof)")
 def assert_process_alive():
     pid = adb.pidof_app()

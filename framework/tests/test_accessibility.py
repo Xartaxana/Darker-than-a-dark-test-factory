@@ -1,6 +1,6 @@
 """Область accessibility (test-cases/accessibility/, docs/01-test-strategy.md §9
 area E1): TC-106 (content-desc/text на ключевых контролах), TC-107 (font scaling
-1.3x), TC-108 (contrast sanity dark/light).
+1.3x), TC-108 (contrast sanity dark/light), TC-148 (touch-target >= 48dp свип).
 """
 from __future__ import annotations
 
@@ -159,3 +159,56 @@ def test_contrast_sanity_dark_and_light(placeholder_seeded_work, driver):
     # Then то же свойство различимости верно и в Light
     browser_steps.assert_bottom_bar_text_distinguishable(driver)
     browser_steps.assert_work_title_distinguishable(driver)
+
+
+@pytest.mark.p2
+@pytest.mark.live
+@allure.id("TC-148")
+@allure.title("Свип touch-target: нативные интерактивные цели не меньше 48dp")
+@pytest.mark.parametrize("placeholder_seeded_work", [W.LOVED], indirect=True)
+def test_native_chrome_touch_targets_at_least_48dp(placeholder_seeded_work, driver):
+    work = placeholder_seeded_work
+    # Given плотность экрана измерена ДО свипа (РЕАЛЬНАЯ плотность текущего
+    # прогона, не хардкод из документации), маршрут Library -> Browse (work
+    # page, side panel свёрнут) -> Browse (side panel раскрыт) -> Settings
+    # пройден один раз, TabStrip виден с >=2 вкладками (тот же приём открытия
+    # второй вкладки, что TC-106/TC-107: rating_steps.open_work_page + deep-link
+    # на Home + переключение обратно на вкладку-0).
+    app_steps.wait_app_ready(driver)
+    density = app_steps.measure_screen_density()
+    rating_steps.open_work_page(driver, work.ao3_id)
+    app_steps.open_deep_link(browser_steps.HOME_URL)
+    browser_steps.assert_tab_strip_visible(driver, timeout=10)
+    browser_steps.switch_to_tab(driver, 0)
+
+    measurements: list[tuple[str, dict]] = []
+
+    # When accessibility-дерево читается напрямую (без взаимодействия с самими
+    # контролами — раскрытие панелей ниже готовит состояние Given, не часть
+    # измерения) на КАЖДОЙ точке маршрута, для поимённого списка целей.
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_library_loaded(driver)
+    measurements += a11y_steps.measure_library_tab_chips(driver)
+
+    # `open_tab` сбрасывает `navExpanded=false` (MainActivity.kt onSelect) при
+    # ЛЮБОМ переключении нижней навигации — возврат на Browse гарантированно
+    # заново свёрнут, а активная вкладка-0 (страница работы) и TabStrip (2
+    # вкладки) не зависят от переключений BottomNav (отдельный слой состояния
+    # browserViewModel), поэтому здесь по-прежнему видна работа W с TabStrip.
+    app_steps.open_tab(driver, "Browse")
+    measurements += a11y_steps.measure_bottom_bar_handle(driver)
+    measurements += a11y_steps.measure_side_panel_collapsed_handle(driver)
+    measurements += a11y_steps.measure_tab_strip_targets(driver)
+
+    side_panel_steps.expand(driver)
+    measurements += a11y_steps.measure_side_panel_expanded_controls(driver)
+
+    app_steps.open_tab(driver, "Settings")
+    settings_steps.assert_settings_loaded(driver)
+    measurements += a11y_steps.measure_settings_controls(driver)
+
+    # Then для КАЖДОЙ именованной цели маршрута bounds.width >= 48dp И
+    # bounds.height >= 48dp по РЕАЛЬНО измеренной плотности — проверяется КАК
+    # СВОЙСТВО одновременно для всего списка (см. «Инвариант» TC-148.md), не
+    # как отдельные примеры по одной цели.
+    a11y_steps.assert_touch_targets_at_least_48dp(measurements, density)

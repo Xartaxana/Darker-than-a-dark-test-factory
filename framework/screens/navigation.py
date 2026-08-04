@@ -80,6 +80,16 @@ class BottomNav(BaseScreen):
             self._expand_pill()
         return self
 
+    def pill_element(self):
+        """Публичная обёртка над `_find_pill()` (TC-148): даёт вызывающему
+        коду сам найденный элемент ручки-пилюли для замера `rect`/bounds
+        (accessibility touch-target sweep) — `is_visible()` отдаёт только факт
+        видимости панели, не элемент. Валидна только когда нижняя навигация
+        СВЁРНУТА (тот же самый нижний кликабельный не-WebView View, что
+        описан в докстринге модуля/`_find_pill`); при развёрнутой навигации
+        вернёт ДРУГОЙ (нижний навигационный пункт), см. вызывающий код."""
+        return self._find_pill()
+
     def open(self, tab_label: str):
         self.ensure_visible()
         self.tap(self.by_text(tab_label))

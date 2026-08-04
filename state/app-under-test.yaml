@@ -2,13 +2,14 @@
 # изменение этого файла = триггер для test-runner (см. docs/03 §3, правило 1).
 app: ao3-wrapper
 repo: https://gitlab.com/Xartaxana1/ao3-wrapper
-source_commit: 63f6aac3b1ea1dfad82f68b8196aa6cf56f41853   # 2026-06-28
-version_name: "1.10"
-version_code: 11
+source_commit: bfc8f41a21812f12cd790ebfc7121586844468ca   # 2026-06-28
+coalesced_commits: [77d65bc4]
+version_name: "1.11"
+version_code: 12
 build_type: debug
 apk_path: app-under-test/app/build/outputs/apk/debug/app-debug.apk
-apk_sha256: "6455af0cfc2c937e81975f59a250476c77aecb73088a65b5e814210df3c87544"
-built_at: "2026-07-02T02:39:46"
-smoke_status: passed      # not_run | passed | failed; RUN-20260702-0300 9/9 + P0 smoke 17/17 (2026-07-03) на этой сборке
-regression_status: failed    # RUN-20260804-1624 (NeedsTriage): 154/165 passed, 11 failed, 0 errors — повторный ночной прогон репетиции v2, замена RUN-20260804-1301 (та env-блокировка mitmdump/WinError 4551 устранена коммитом 253d3ff). 3 из 11 — известные замки (TC-114/115 -> BUG-014, TC-139 -> BUG-015); остальные 8 (TC-043/085/086/090/129/130/134/135) не триажены. Фоновый job харнесса снова убит на ~60-мин отметке (рецидив находки RUN-20260803-2012) — прогон дополнен вторым сегментом (15 тестов), результаты слиты. RUN-20260804-1301 не переоткрывается, остаётся как есть. Предыдущий чистый baseline: RUN-20260803-2012 (Triaged) 160/165
+apk_sha256: "7e9230ad6f256796cd7738e4a5a583d9d8e1e563cf556573f6675183c8597b08"
+built_at: "2026-08-04T20:03:38Z"
+smoke_status: not_run   # not_run | passed | failed; RUN-20260702-0300 9/9 + P0 smoke 17/17 (2026-07-03) на этой сборке
+regression_status: not_run   # RUN-20260804-1624 (NeedsTriage): 154/165 passed, 11 failed, 0 errors — повторный ночной прогон репетиции v2, замена RUN-20260804-1301 (та env-блокировка mitmdump/WinError 4551 устранена коммитом 253d3ff). 3 из 11 — известные замки (TC-114/115 -> BUG-014, TC-139 -> BUG-015); остальные 8 (TC-043/085/086/090/129/130/134/135) не триажены. Фоновый job харнесса снова убит на ~60-мин отметке (рецидив находки RUN-20260803-2012) — прогон дополнен вторым сегментом (15 тестов), результаты слиты. RUN-20260804-1301 не переоткрывается, остаётся как есть. Предыдущий чистый baseline: RUN-20260803-2012 (Triaged) 160/165
 canary_status: passed    # RUN-20260804-1355 (Closed): 10/10 passed live под предписанной TC-078 конфигурацией (AO3_EMU_GPU=host, сверено фактом hw.gpu.mode=host в hardware-qemu.ini) — перепрогон-замена RUN-20260804-1317 по вердикту ENV_ISSUE triage (RUN-20260804-1317 остаётся Triaged, не переоткрыт)

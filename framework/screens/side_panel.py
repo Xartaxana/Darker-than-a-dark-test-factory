@@ -78,6 +78,13 @@ class SidePanel(BaseScreen):
     def is_decrease_enabled(self) -> bool:
         return self.is_enabled(self._button_container("A-"))
 
+    def font_button_container(self, text: str):
+        """Публичная обёртка над `_button_container` (TC-148): нужна для
+        замера `rect`/bounds ВНЕШНЕГО кликабельного узла (не только
+        `enabled`, как в `is_increase_enabled`/`is_decrease_enabled`) —
+        тот же локатор, та же причина (см. докстринг `_button_container`)."""
+        return self._button_container(text)
+
     # --- Home (BrowseSidePanel.kt PanelIconButton Home, TC-057) ---
     def home_icon_visible(self, timeout: int | None = None) -> bool:
         # contentDescription фиксирован ("AO3 home") — не переключается по стейту,
