@@ -1170,12 +1170,13 @@
     "issueType": "test-case",
     "status": "tc-automated",
     "priority": "p0",
-    "assignee": "qa-agents",
+    "assignee": "test-runner",
     "labels": [
       "test-case",
       "area:canary",
       "risk:R-02",
-      "automation:active"
+      "automation:active",
+      "wip:test-runner"
     ],
     "updated": "2026-07-29T19:29:48Z",
     "resolution": "done",
@@ -5279,6 +5280,90 @@
     "archived": false
   },
   {
+    "key": "BUG-049",
+    "path": "board/BUG-049/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Снекбар «Tab closed» перекрывает нижнюю навигацию на узких экранах — кнопка Undo и таб Library недоступны одновременно",
+    "issueType": "bug",
+    "status": "bug-fixed",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:minor"
+    ],
+    "updated": "2026-08-01T04:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-050",
+    "path": "board/BUG-050/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Длинный заголовок работы в снекбаре Undo обрезается без многоточия — конец слова просто исчезает",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:minor"
+    ],
+    "updated": "2026-08-04T12:20:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-051",
+    "path": "board/BUG-051/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Поиск в Library принимает чисто пробельный запрос — список мигает пустой выдачей вместо игнорирования",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:minor"
+    ],
+    "updated": "2026-07-02T04:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-052",
+    "path": "board/BUG-052/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Scan for downloads не показывает прогресс при большом числе файлов — кнопка выглядит зависшей",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:minor"
+    ],
+    "updated": "2026-08-04T12:20:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "RUN-20260702-0300",
     "path": "board/RUN-20260702-0300/main.md",
     "parent": null,
@@ -5327,15 +5412,34 @@
     "epicPath": null,
     "summary": "RUN-20260804-1317",
     "issueType": "run",
-    "status": "run-needstriage",
+    "status": "run-triaged",
     "priority": "p2",
-    "assignee": "failure-analyst",
+    "assignee": "qa-agents",
     "labels": [
-      "run",
-      "wip:failure-analyst"
+      "run"
     ],
-    "updated": "2026-08-04T11:20:00Z",
+    "updated": "2026-08-04T11:44:09Z",
     "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "RUN-20260804-1355",
+    "path": "board/RUN-20260804-1355/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "RUN-20260804-1355",
+    "issueType": "run",
+    "status": "run-closed",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "run"
+    ],
+    "updated": "2026-07-02T00:00:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   }

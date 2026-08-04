@@ -9,6 +9,24 @@ Suggested commit message (apply with `git apply`, then commit with this message)
     read before the upsert) so the download only fires when the work
     actually becomes Favorite for the first time.
 
+    Bump versionCode/versionName so build_watch and the BUG-014 D1
+    verification pick this up as a genuinely newer build.
+
+diff --git a/app/build.gradle.kts b/app/build.gradle.kts
+index 3d86822..dcbcd56 100644
+--- a/app/build.gradle.kts
++++ b/app/build.gradle.kts
+@@ -16,8 +16,8 @@ android {
+         applicationId = "com.example.ao3_wrapper"
+         minSdk = 26
+         targetSdk = 36
+-        versionCode = 11
+-        versionName = "1.10"
++        versionCode = 12
++        versionName = "1.11"
+ 
+         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+     }
 diff --git a/app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt b/app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt
 index ab80131..a5a237a 100644
 --- a/app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt

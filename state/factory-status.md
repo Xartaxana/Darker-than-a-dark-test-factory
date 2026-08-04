@@ -1,14 +1,14 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-04T11:30:53Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-04T12:21:16Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 
 ## Release readiness
 
 - Сборка: 1.10 (versionCode 11), commit `63f6aac3`, built_at 2026-07-02T02:39:46
-- smoke: Closed · smoke_freshness_hours: **799.9** (RUN-20260702-0300)
-- regression: Triaged · regression_freshness_hours: **14.8** (RUN-20260803-2012)
-- canary: NeedsTriage · canary_freshness_hours: **0.2** (RUN-20260804-1317)
+- smoke: Closed · smoke_freshness_hours: **800.8** (RUN-20260702-0300)
+- regression: Triaged · regression_freshness_hours: **15.7** (RUN-20260803-2012)
+- canary: Triaged · canary_freshness_hours: **0.6** (RUN-20260804-1317)
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **2**
 - p0_automation_coverage: **100%** (37/37)
@@ -16,7 +16,7 @@ generated_at: 2026-08-04T11:30:53Z · генератор: `scripts/queue_snapsho
 - Test debt открыт: **2** — AT-BUG-047, AT-BUG-048
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
-- Untriaged: **1** · untriaged_failure_age: **0.2**
+- Untriaged: **0** · untriaged_failure_age: **0**
 
 ## Сборка под тестом
 
@@ -47,9 +47,9 @@ generated_at: 2026-08-04T11:30:53Z · генератор: `scripts/queue_snapsho
 | tabs |  |  |  | 11 |  |
 | visibility |  |  |  | 6 |  |
 
-## Баги (16)
+## Баги (20)
 
-- Open: **15** · Intended: **1**
+- Open: **18** · Fixed: **1** · Intended: **1**
 - BUG-001 [minor] Open — PROJECT.md расходится с кодом: подписи вкладок Library/меню рейтинга; несуществующий глобальный «Enable filtering»
 - BUG-011 [major] Open — Restore from backup пропускает работы молча, если файл с тем же ao3Id уже лежит в папке загрузок
 - BUG-013 [minor] Open — Смена темы, затем немедленный kill процесса (<100 мс) теряет theme_mode — выбор темы не персистится
@@ -65,6 +65,9 @@ generated_at: 2026-08-04T11:30:53Z · генератор: `scripts/queue_snapsho
 - BUG-046 [major] Open — Ручной скан при двух файлах одного ao3Id не сходится: счётчик relinked=2 на одну работу, повторный скан рапортует то же, не становясь 0
 - BUG-047 [major] Open — Удаление скачанного файла из карточки удаляет только один файл; при двух файлах одного ao3Id второй остаётся на диске и воскрешает работу при повторном сканировании
 - BUG-048 [major] Open — Overlay листинга молча перезаписывает title/fandom/wordCount скрейпом текущей страницы — работа исчезает из фандом-фильтра, прыгает в сортировке, а при rating=null пропадает со всех вкладок Library без какого-либо сообщения
+- BUG-050 [minor] Open — Длинный заголовок работы в снекбаре Undo обрезается без многоточия — конец слова просто исчезает
+- BUG-051 [minor] Open — Поиск в Library принимает чисто пробельный запрос — список мигает пустой выдачей вместо игнорирования
+- BUG-052 [minor] Open — Scan for downloads не показывает прогресс при большом числе файлов — кнопка выглядит зависшей
 
 ## Известные проблемы, known_issue (2)
 
@@ -76,9 +79,9 @@ generated_at: 2026-08-04T11:30:53Z · генератор: `scripts/queue_snapsho
 - AT-BUG-047 [flaky_test] Open — Гонка «wait_ui_ready → немедленная WebView-навигация»: стартовая загрузка Home ещё в полёте, chromedriver теряет цель (`cannot determine loading status from no such window`) — 27 call sites, экземпляр TC-043 в RUN-20260803-2012
 - AT-BUG-048 [flaky_test] Open — BaseScreen.swipe_to_text проскакивает искомую секцию под нагрузкой (fling-инерция + опрос раз в свайп) — Settings докручивается до конца списка, ассерт «секция не найдена прокруткой»; экземпляр TC-093 в RUN-20260803-2012
 
-## Прогоны (3)
+## Прогоны (4)
 
-- NeedsTriage: **1** · Triaged: **1** · Closed: **1**
+- Triaged: **2** · Closed: **2**
 
 ## Exploratory
 
@@ -89,7 +92,7 @@ generated_at: 2026-08-04T11:30:53Z · генератор: `scripts/queue_snapsho
 
 ## Активные локи (1)
 
-- RUN-20260804-1317 — `failure-analyst:2026-08-04T11:27:40Z`
+- TC-121 — `test-runner:2026-08-02T00:00:00Z`
 
 ## Эскалации (5)
 

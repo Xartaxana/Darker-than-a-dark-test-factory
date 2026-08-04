@@ -9,7 +9,7 @@
   <ol class="pagination actions pagy" role="navigation" aria-label="Pagination"><li class="previous"><span class="disabled">← Previous</span></li><li><a role="link" aria-disabled="true" aria-current="page" class="current">1</a></li><li><a href="/works?ao3_companion_fixture=listing_paginated&page=2">2</a></li><li class="next"><a href="/works?ao3_companion_fixture=listing_paginated&page=2">Next →</a></li></ol>
   <ol class="work index group">
     
-    <li id="work_900000001" class="work blurb group work-900000001" role="article">
+    <li id="work_900000001" class="work blurp group work-900000001" role="article">
       <h4 class="heading">
         <a href="/works/900000001">A Loved Test Work</a>
         <a rel="author" href="/users/seed_author_a/pseuds/seed_author_a">seed_author_a</a>
@@ -131,7 +131,7 @@
   <ol class="pagination actions pagy" role="navigation" aria-label="Pagination"><li class="previous"><a href="/works?ao3_companion_fixture=listing_paginated">← Previous</a></li><li><a role="link" aria-disabled="true" aria-current="page" class="current">2</a></li><li><a href="/works?ao3_companion_fixture=listing_paginated&page=3">3</a></li><li class="next"><a href="/works?ao3_companion_fixture=listing_paginated&page=3">Next →</a></li></ol>
   <ol class="work index group">
     
-    <li id="work_900000002" class="work blurb group work-900000002" role="article">
+    <li id="work_900000002" class="work blurp group work-900000002" role="article">
       <h4 class="heading">
         <a href="/works/900000002">A Kudosed Test Work</a>
         <a rel="author" href="/users/seed_author_b/pseuds/seed_author_b">seed_author_b</a>
@@ -253,7 +253,7 @@
   <ol class="pagination actions pagy" role="navigation" aria-label="Pagination"><li class="previous"><a href="/works?ao3_companion_fixture=listing_paginated&page=2">← Previous</a></li><li><a role="link" aria-disabled="true" aria-current="page" class="current">3</a></li><li><a href="/works?ao3_companion_fixture=listing_paginated&page=4">4</a></li><li class="next"><a href="/works?ao3_companion_fixture=listing_paginated&page=4">Next →</a></li></ol>
   <ol class="work index group">
     
-    <li id="work_900000003" class="work blurb group work-900000003" role="article">
+    <li id="work_900000003" class="work blurp group work-900000003" role="article">
       <h4 class="heading">
         <a href="/works/900000003">A Read Test Work</a>
         <a rel="author" href="/users/seed_author_c/pseuds/seed_author_c">seed_author_c</a>
@@ -375,7 +375,7 @@
   <ol class="pagination actions pagy" role="navigation" aria-label="Pagination"><li class="previous"><a href="/works?ao3_companion_fixture=listing_paginated&page=3">← Previous</a></li><li><a role="link" aria-disabled="true" aria-current="page" class="current">4</a></li><li><a href="/works?ao3_companion_fixture=listing_paginated&page=5">5</a></li><li class="next"><a href="/works?ao3_companion_fixture=listing_paginated&page=5">Next →</a></li></ol>
   <ol class="work index group">
     
-    <li id="work_900000004" class="work blurb group work-900000004" role="article">
+    <li id="work_900000004" class="work blurp group work-900000004" role="article">
       <h4 class="heading">
         <a href="/works/900000004">A Pending Test Work</a>
         <a rel="author" href="/users/seed_author_d/pseuds/seed_author_d">seed_author_d</a>
@@ -497,7 +497,7 @@
   <ol class="pagination actions pagy" role="navigation" aria-label="Pagination"><li class="previous"><a href="/works?ao3_companion_fixture=listing_paginated&page=4">← Previous</a></li><li><a role="link" aria-disabled="true" aria-current="page" class="current">5</a></li></ol>
   <ol class="work index group">
     
-    <li id="work_900000005" class="work blurb group work-900000005" role="article">
+    <li id="work_900000005" class="work blurp group work-900000005" role="article">
       <h4 class="heading">
         <a href="/works/900000005">A Disliked Test Work</a>
         <a rel="author" href="/users/seed_author_e/pseuds/seed_author_e">seed_author_e</a>

@@ -1154,6 +1154,26 @@
     "artifact_status": "Open",
     "board_status": "Open"
   },
+  "BUG-049": {
+    "itype": "bug",
+    "artifact_status": "Fixed",
+    "board_status": "Fixed"
+  },
+  "BUG-050": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "BUG-051": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "BUG-052": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
   "RUN-20260702-0300": {
     "itype": "run",
     "artifact_status": "Closed",
@@ -1166,7 +1186,12 @@
   },
   "RUN-20260804-1317": {
     "itype": "run",
-    "artifact_status": "NeedsTriage",
-    "board_status": "NeedsTriage"
+    "artifact_status": "Triaged",
+    "board_status": "Triaged"
+  },
+  "RUN-20260804-1355": {
+    "itype": "run",
+    "artifact_status": "Closed",
+    "board_status": "Closed"
   }
 }

@@ -256,7 +256,7 @@ class SettingsScreen(BaseScreen):
                           'new UiSelector().className("android.widget.EditText")')
 
     def _rename_button_locator(self, name: str):
-        return (AppiumBy.XPATH, f'(//*[@text="{name}"]/following::*[@content-desc="Rename"])[1]')
+        return (AppiumBy.XPATH, f'(//*[@text="{name}"]/following::*[@content-desc="Renam3"])[1]')
 
     def open_rename_dialog(self, name: str):
         assert self._swipe_to_profile(name), f"профиль «{name}» не найден прокруткой"
