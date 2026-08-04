@@ -254,11 +254,20 @@ rules:
     # Ниже прочих правил намеренно: исследование не крадёт очередь у триажа
     # и автоматизации. Таймбокс — в frontmatter charter'а.
 
-  # [план] Включить, когда canary-suite реально существует (сейчас в framework/tests
-  # нет canary-тестов — находка планировщика 2026-07-07; иначе ежедневный холостой
-  # диспатч test-runner в стену) И live-baseline ЗЕЛЁНЫЙ (DoD области — docs/01 §9
-  # «Canary», выровнено 2026-07-17). Создание canary-suite — Этап 3 docs/09.
-  # - name: "Ежедневный canary на live AO3"
-  #   when: "расписание: раз в сутки"
-  #   dispatch: test-runner
-  #   args: { suite: [canary], mode: live }
+  - name: "Ежедневный canary на live AO3"
+    when: "расписание: раз в сутки — нет canary-RUN (runs/RUN-*.md, suite: canary)
+      с датой текущих суток UTC"
+    dispatch: test-runner
+    args: { suite: [canary], mode: live }
+    # ВКЛЮЧЕНО 2026-08-04 словом владельца: оба условия плана выполнены —
+    # canary-suite существует (23 automated, framework/tests/canary/; прежний
+    # комментарий «нет canary-тестов» устарел с 2026-07-07) и live-baseline
+    # ЗЕЛЁНЫЙ (RUN-20260804-1355: 10/10, PYTEST_EXIT=0, hw.gpu.mode=host).
+    # ИЗВЕСТНЫЙ ENV-РИСК (до механизма машинной сверки env-предпосылок —
+    # очередь Lead): TC-078 live стабилен ТОЛЬКО под -Gpu host
+    # (test-cases/canary/TC-078.md «Заметки», bugs/AT-BUG-021.md); на
+    # дефолтном GPU — флейк класса AT-BUG-021 (1/4 зелёных, возможен крах
+    # эмулятора с автовосстановлением guard). Красный TC-078 на дефолте =
+    # вердикт ENV_ISSUE со ссылкой AT-BUG-021 (прецедент RUN-20260804-1317),
+    # НЕ новый баг. AO3 сторонний — нагрузку не наматывать (см. границы
+    # test-runner).
