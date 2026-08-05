@@ -1,0 +1,64 @@
+diff --git a/framework/core/contexts.py b/framework/core/contexts.py
+index 21a5676..1155a87 100644
+--- a/framework/core/contexts.py
++++ b/framework/core/contexts.py
+@@ -34,10 +34,55 @@ def to_native(driver) -> None:
+ 
+ @contextlib.contextmanager
+ def in_webview(driver, timeout: int | None = None):
+-    """Временно переключается в WebView и гарантированно возвращается в нативный контекст."""
+-    name = wait_for_webview(driver, timeout)
+-    driver.switch_to.context(name)
++    """Временно переключается в WebView и гарантированно возвращается в нативный контекст.
++
++    Барьер AT-BUG-047 (класс «wait_ui_ready -> немедленная WebView-навигация»,
++    рецидив после точечного фикса TC-057): на cold-старте `WEBVIEW_<pkg>`-
++    контекст может появиться в `driver.contexts` РАНЬШЕ, чем реально
++    прикрепляемый renderer WebView устоится (logcat разбора бага: `Start proc
++    ...:com.android.webview:sandboxed_process0` в момент падения) — очередная
++    команда chromedriver против этого контекста (в т.ч. САМА навигация,
++    `driver.get`/`core.navigate.navigate`, если вызывающий код делает её сразу
++    следующим шагом) теряет цель:
++    `WebDriverException: cannot determine loading status from no such window`.
++
++    Раньше барьер стоял ТОЧЕЧНО — `app_steps.wait_app_ready` (`BrowserScreen.
++    wait_ao3_loaded`) ждал `current_url` ИМЕННО тем же приёмом (`wait_until`
++    поверх `driver.current_url`), но был подставлен только в TC-057, не во
++    все 27 call sites `wait_ui_ready -> немедленная навигация`. Здесь тот же
++    приём перенесён В САМ ВХОД в WebView: `wait_until` (`framework/core/
++    waits.py`) игнорирует `WebDriverException` в поллинге — опрашиваем
++    `document.readyState` (не привязано к конкретному домену/странице, в
++    отличие от `wait_ao3_loaded`, поэтому не ломает сценарии, где следующая
++    навигация ведёт НЕ на archiveofourown.org, напр. `open_unreachable_url`/
++    `assert_error_page_shown`, TC-046) до первого УСПЕШНОГО выполнения —
++    доказывает, что контекст реально устоялся, ПРЕЖДЕ чем отдать управление
++    вызывающему коду. Закрывает класс в одной точке, а не в 27 местах.
++
++    Резолюция ИМЕНИ контекста, `switch_to.context` И проверка ПЕРЕОПРАШИВАЮТСЯ
++    вместе, одним predicate — а не резолюция один раз (`wait_for_webview`)
++    снаружи, потом отдельный `switch_to.context`: если гонка ударит именно в
++    сам `switch_to.context` (окно исчезло МЕЖДУ resolve и switch), тот же
++    `wait_until` её тоже поглотит и передоверит `webview_name(d)` заново на
++    следующем опросе, а не упадёт необработанным `WebDriverException`."""
++    holder: dict[str, str] = {}
++
++    def _context_stable(d) -> bool:
++        current_name = webview_name(d)
++        if current_name is None:
++            return False
++        d.switch_to.context(current_name)
++        d.execute_script("return document.readyState;")
++        holder["name"] = current_name
++        return True
++
++    wait_until(
++        driver, _context_stable,
++        timeout=timeout or settings.WEBVIEW_LOAD_TIMEOUT,
++        message="WEBVIEW-контекст не устоялся (не появился либо постоянно "
++                "теряет цель при переключении/readyState — см. bugs/AT-BUG-047.md)",
++    )
+     try:
+-        yield name
++        yield holder["name"]
+     finally:
+         to_native(driver)

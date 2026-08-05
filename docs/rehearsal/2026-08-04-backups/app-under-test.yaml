@@ -1,0 +1,14 @@
+# Тестируемая сборка. Обновляется при каждой новой сборке приложения —
+# изменение этого файла = триггер для test-runner (см. docs/03 §3, правило 1).
+app: ao3-wrapper
+repo: https://gitlab.com/Xartaxana1/ao3-wrapper
+source_commit: 63f6aac3b1ea1dfad82f68b8196aa6cf56f41853   # 2026-06-28
+version_name: "1.10"
+version_code: 11
+build_type: debug
+apk_path: app-under-test/app/build/outputs/apk/debug/app-debug.apk
+apk_sha256: "6455af0cfc2c937e81975f59a250476c77aecb73088a65b5e814210df3c87544"
+built_at: "2026-07-02T02:39:46"
+smoke_status: passed      # not_run | passed | failed; RUN-20260702-0300 9/9 + P0 smoke 17/17 (2026-07-03) на этой сборке
+regression_status: failed    # RUN-20260803-2012 (Triaged): 160/165 passed — все 5 красных атрибутированы: TC-139/114/115 ожидаемые замки Open-багов (BUG-015/014), TC-043/093 TEST_BUG (AT-BUG-047/048, B4-очередь)
+canary_status: passed    # RUN-20260804-1355 (Closed): 10/10 passed live под предписанной TC-078 конфигурацией (AO3_EMU_GPU=host, сверено фактом hw.gpu.mode=host в hardware-qemu.ini) — перепрогон-замена RUN-20260804-1317 по вердикту ENV_ISSUE triage (RUN-20260804-1317 остаётся Triaged, не переоткрыт)

@@ -1,0 +1,1036 @@
+12173:9:websocket;0:~8:response;10766:6:reason;2:OK,11:status_code;3:200#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;10537:<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Test Fixture Paginated Listing (page 1) | Archive of Our Own</title></head>
+<body>
+<div id="main" class="works-index dashboard region" role="main">
+  <h2 class="heading">Test Fixture Paginated Listing (page 1)</h2>
+  <h4 class="landmark heading">Navigation</h4>
+  <ol class="pagination actions pagy" role="navigation" aria-label="Pagination"><li class="previous"><span class="disabled">← Previous</span></li><li><a role="link" aria-disabled="true" aria-current="page" class="current">1</a></li><li><a href="/works?ao3_companion_fixture=listing_paginated&page=2">2</a></li><li class="next"><a href="/works?ao3_companion_fixture=listing_paginated&page=2">Next →</a></li></ol>
+  <ol class="work index group">
+    
+    <li id="work_900000001" class="work blurb group work-900000001" role="article">
+      <h4 class="heading">
+        <a href="/works/900000001">A Loved Test Work</a>
+        <a rel="author" href="/users/seed_author_a/pseuds/seed_author_a">seed_author_a</a>
+      </h4>
+      <h5 class="fandoms heading">
+        <a class="tag" href="/tags/Fandom Alpha/works">Fandom Alpha</a>
+      </h5>
+      <p class="datetime">01 Jul 2026</p>
+      <h6 class="landmark heading">Summary</h6>
+      <blockquote class="userstuff summary">
+        <p>Test fixture summary for A Loved Test Work.</p>
+      </blockquote>
+      <ul class="tags commas">
+        <li class="warnings"><a class="tag" href="/tags/Creator%20Chose%20Not%20To%20Use%20Archive%20Warnings/works">Creator Chose Not To Use Archive Warnings</a></li>
+        <li class="relationships"><a class="tag" href="/tags/Test%20Ship*s*Other%20Ship/works">Test Ship/Other Ship</a></li>
+        <li class="freeforms"><a class="tag" href="/tags/Fluff/works">Fluff</a></li>
+      </ul>
+      <dl class="stats">
+        <dt class="words">Words:</dt><dd class="words">4200</dd>
+        <dt class="chapters">Chapters:</dt><dd class="chapters">1/1</dd>
+        <dt class="comments">Comments:</dt><dd class="comments">0</dd>
+        <dt class="kudos">Kudos:</dt><dd class="kudos">0</dd>
+        <dt class="hits">Hits:</dt><dd class="hits">1</dd>
+      </dl>
+    </li>
+  </ol>
+  <ol class="pagination actions pagy" role="navigation" aria-label="Pagination"><li class="previous"><span class="disabled">← Previous</span></li><li><a role="link" aria-disabled="true" aria-current="page" class="current">1</a></li><li><a href="/works?ao3_companion_fixture=listing_paginated&page=2">2</a></li><li class="next"><a href="/works?ao3_companion_fixture=listing_paginated&page=2">Next →</a></li></ol>
+      <p>Filler paragraph 0 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 1 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 2 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 3 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 4 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 5 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 6 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 7 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 8 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 9 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 10 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 11 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 12 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 13 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 14 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 15 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 16 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 17 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 18 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 19 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 20 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 21 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 22 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 23 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 24 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 25 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 26 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 27 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 28 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 29 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 30 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 31 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 32 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 33 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 34 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 35 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 36 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 37 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 38 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 39 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 40 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 41 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 42 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 43 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 44 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 45 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 46 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 47 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 48 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 49 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 50 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 51 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 52 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 53 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 54 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 55 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 56 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 57 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 58 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 59 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 60 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 61 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 62 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 63 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 64 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 65 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 66 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 67 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 68 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 69 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 70 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 71 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 72 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 73 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 74 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 75 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 76 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 77 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 78 for paginated listing page 1 — scroll padding, not real content.</p>
+    <p>Filler paragraph 79 for paginated listing page 1 — scroll padding, not real content.</p>
+</div>
+</body>
+</html>
+,7:headers;78:44:12:Content-Type,24:text/html; charset=utf-8,]26:14:content-length,5:10537,]]12:http_version;8:HTTP/1.1,}7:request;285:4:path;46:/works?ao3_companion_fixture=listing_paginated,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:be2802ad-d6de-899b-7495-464955a300f7;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:582c97e9-0868-7841-f135-adae5ab60615;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:9e7a2ceb-e0c3-c301-a45d-cdc14cd29241;4:type;4:http;7:version;2:21#}12244:9:websocket;0:~8:response;10830:6:reason;2:OK,11:status_code;3:200#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;10601:<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Test Fixture Paginated Listing (page 2) | Archive of Our Own</title></head>
+<body>
+<div id="main" class="works-index dashboard region" role="main">
+  <h2 class="heading">Test Fixture Paginated Listing (page 2)</h2>
+  <h4 class="landmark heading">Navigation</h4>
+  <ol class="pagination actions pagy" role="navigation" aria-label="Pagination"><li class="previous"><a href="/works?ao3_companion_fixture=listing_paginated">← Previous</a></li><li><a role="link" aria-disabled="true" aria-current="page" class="current">2</a></li><li><a href="/works?ao3_companion_fixture=listing_paginated&page=3">3</a></li><li class="next"><a href="/works?ao3_companion_fixture=listing_paginated&page=3">Next →</a></li></ol>
+  <ol class="work index group">
+    
+    <li id="work_900000002" class="work blurb group work-900000002" role="article">
+      <h4 class="heading">
+        <a href="/works/900000002">A Kudosed Test Work</a>
+        <a rel="author" href="/users/seed_author_b/pseuds/seed_author_b">seed_author_b</a>
+      </h4>
+      <h5 class="fandoms heading">
+        <a class="tag" href="/tags/Fandom Beta/works">Fandom Beta</a>
+      </h5>
+      <p class="datetime">01 Jul 2026</p>
+      <h6 class="landmark heading">Summary</h6>
+      <blockquote class="userstuff summary">
+        <p>Test fixture summary for A Kudosed Test Work.</p>
+      </blockquote>
+      <ul class="tags commas">
+        <li class="warnings"><a class="tag" href="/tags/Creator%20Chose%20Not%20To%20Use%20Archive%20Warnings/works">Creator Chose Not To Use Archive Warnings</a></li>
+        <li class="relationships"><a class="tag" href="/tags/Test%20Ship*s*Other%20Ship/works">Test Ship/Other Ship</a></li>
+        <li class="freeforms"><a class="tag" href="/tags/Fluff/works">Fluff</a></li>
+      </ul>
+      <dl class="stats">
+        <dt class="words">Words:</dt><dd class="words">1500</dd>
+        <dt class="chapters">Chapters:</dt><dd class="chapters">1/1</dd>
+        <dt class="comments">Comments:</dt><dd class="comments">0</dd>
+        <dt class="kudos">Kudos:</dt><dd class="kudos">0</dd>
+        <dt class="hits">Hits:</dt><dd class="hits">1</dd>
+      </dl>
+    </li>
+  </ol>
+  <ol class="pagination actions pagy" role="navigation" aria-label="Pagination"><li class="previous"><a href="/works?ao3_companion_fixture=listing_paginated">← Previous</a></li><li><a role="link" aria-disabled="true" aria-current="page" class="current">2</a></li><li><a href="/works?ao3_companion_fixture=listing_paginated&page=3">3</a></li><li class="next"><a href="/works?ao3_companion_fixture=listing_paginated&page=3">Next →</a></li></ol>
+      <p>Filler paragraph 0 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 1 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 2 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 3 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 4 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 5 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 6 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 7 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 8 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 9 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 10 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 11 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 12 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 13 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 14 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 15 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 16 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 17 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 18 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 19 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 20 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 21 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 22 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 23 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 24 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 25 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 26 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 27 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 28 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 29 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 30 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 31 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 32 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 33 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 34 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 35 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 36 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 37 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 38 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 39 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 40 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 41 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 42 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 43 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 44 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 45 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 46 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 47 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 48 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 49 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 50 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 51 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 52 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 53 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 54 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 55 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 56 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 57 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 58 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 59 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 60 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 61 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 62 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 63 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 64 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 65 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 66 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 67 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 68 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 69 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 70 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 71 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 72 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 73 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 74 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 75 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 76 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 77 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 78 for paginated listing page 2 — scroll padding, not real content.</p>
+    <p>Filler paragraph 79 for paginated listing page 2 — scroll padding, not real content.</p>
+</div>
+</body>
+</html>
+,7:headers;78:44:12:Content-Type,24:text/html; charset=utf-8,]26:14:content-length,5:10601,]]12:http_version;8:HTTP/1.1,}7:request;292:4:path;53:/works?ao3_companion_fixture=listing_paginated&page=2,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:05bfbadf-471e-2720-998f-5cd12e3475c8;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:5c1a797e-dbeb-d647-21b8-233b79249dd3;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:48e28f94-3894-a21d-3091-7e2c37162088;4:type;4:http;7:version;2:21#}12253:9:websocket;0:~8:response;10839:6:reason;2:OK,11:status_code;3:200#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;10610:<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Test Fixture Paginated Listing (page 3) | Archive of Our Own</title></head>
+<body>
+<div id="main" class="works-index dashboard region" role="main">
+  <h2 class="heading">Test Fixture Paginated Listing (page 3)</h2>
+  <h4 class="landmark heading">Navigation</h4>
+  <ol class="pagination actions pagy" role="navigation" aria-label="Pagination"><li class="previous"><a href="/works?ao3_companion_fixture=listing_paginated&page=2">← Previous</a></li><li><a role="link" aria-disabled="true" aria-current="page" class="current">3</a></li><li><a href="/works?ao3_companion_fixture=listing_paginated&page=4">4</a></li><li class="next"><a href="/works?ao3_companion_fixture=listing_paginated&page=4">Next →</a></li></ol>
+  <ol class="work index group">
+    
+    <li id="work_900000003" class="work blurb group work-900000003" role="article">
+      <h4 class="heading">
+        <a href="/works/900000003">A Read Test Work</a>
+        <a rel="author" href="/users/seed_author_c/pseuds/seed_author_c">seed_author_c</a>
+      </h4>
+      <h5 class="fandoms heading">
+        <a class="tag" href="/tags/Fandom Gamma/works">Fandom Gamma</a>
+      </h5>
+      <p class="datetime">01 Jul 2026</p>
+      <h6 class="landmark heading">Summary</h6>
+      <blockquote class="userstuff summary">
+        <p>Test fixture summary for A Read Test Work.</p>
+      </blockquote>
+      <ul class="tags commas">
+        <li class="warnings"><a class="tag" href="/tags/Creator%20Chose%20Not%20To%20Use%20Archive%20Warnings/works">Creator Chose Not To Use Archive Warnings</a></li>
+        <li class="relationships"><a class="tag" href="/tags/Test%20Ship*s*Other%20Ship/works">Test Ship/Other Ship</a></li>
+        <li class="freeforms"><a class="tag" href="/tags/Fluff/works">Fluff</a></li>
+      </ul>
+      <dl class="stats">
+        <dt class="words">Words:</dt><dd class="words">800</dd>
+        <dt class="chapters">Chapters:</dt><dd class="chapters">1/1</dd>
+        <dt class="comments">Comments:</dt><dd class="comments">0</dd>
+        <dt class="kudos">Kudos:</dt><dd class="kudos">0</dd>
+        <dt class="hits">Hits:</dt><dd class="hits">1</dd>
+      </dl>
+    </li>
+  </ol>
+  <ol class="pagination actions pagy" role="navigation" aria-label="Pagination"><li class="previous"><a href="/works?ao3_companion_fixture=listing_paginated&page=2">← Previous</a></li><li><a role="link" aria-disabled="true" aria-current="page" class="current">3</a></li><li><a href="/works?ao3_companion_fixture=listing_paginated&page=4">4</a></li><li class="next"><a href="/works?ao3_companion_fixture=listing_paginated&page=4">Next →</a></li></ol>
+      <p>Filler paragraph 0 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 1 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 2 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 3 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 4 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 5 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 6 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 7 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 8 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 9 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 10 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 11 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 12 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 13 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 14 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 15 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 16 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 17 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 18 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 19 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 20 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 21 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 22 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 23 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 24 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 25 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 26 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 27 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 28 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 29 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 30 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 31 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 32 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 33 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 34 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 35 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 36 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 37 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 38 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 39 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 40 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 41 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 42 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 43 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 44 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 45 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 46 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 47 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 48 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 49 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 50 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 51 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 52 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 53 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 54 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 55 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 56 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 57 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 58 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 59 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 60 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 61 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 62 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 63 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 64 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 65 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 66 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 67 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 68 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 69 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 70 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 71 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 72 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 73 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 74 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 75 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 76 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 77 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 78 for paginated listing page 3 — scroll padding, not real content.</p>
+    <p>Filler paragraph 79 for paginated listing page 3 — scroll padding, not real content.</p>
+</div>
+</body>
+</html>
+,7:headers;78:44:12:Content-Type,24:text/html; charset=utf-8,]26:14:content-length,5:10610,]]12:http_version;8:HTTP/1.1,}7:request;292:4:path;53:/works?ao3_companion_fixture=listing_paginated&page=3,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:89669b2f-565b-3550-e96d-cac468ffbd91;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:1afeb478-6213-deeb-9a68-f048a2b0c344;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:2f109531-c1de-f91a-020e-fbdfc1597f24;4:type;4:http;7:version;2:21#}12261:9:websocket;0:~8:response;10847:6:reason;2:OK,11:status_code;3:200#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;10618:<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Test Fixture Paginated Listing (page 4) | Archive of Our Own</title></head>
+<body>
+<div id="main" class="works-index dashboard region" role="main">
+  <h2 class="heading">Test Fixture Paginated Listing (page 4)</h2>
+  <h4 class="landmark heading">Navigation</h4>
+  <ol class="pagination actions pagy" role="navigation" aria-label="Pagination"><li class="previous"><a href="/works?ao3_companion_fixture=listing_paginated&page=3">← Previous</a></li><li><a role="link" aria-disabled="true" aria-current="page" class="current">4</a></li><li><a href="/works?ao3_companion_fixture=listing_paginated&page=5">5</a></li><li class="next"><a href="/works?ao3_companion_fixture=listing_paginated&page=5">Next →</a></li></ol>
+  <ol class="work index group">
+    
+    <li id="work_900000004" class="work blurb group work-900000004" role="article">
+      <h4 class="heading">
+        <a href="/works/900000004">A Pending Test Work</a>
+        <a rel="author" href="/users/seed_author_d/pseuds/seed_author_d">seed_author_d</a>
+      </h4>
+      <h5 class="fandoms heading">
+        <a class="tag" href="/tags/Fandom Delta/works">Fandom Delta</a>
+      </h5>
+      <p class="datetime">01 Jul 2026</p>
+      <h6 class="landmark heading">Summary</h6>
+      <blockquote class="userstuff summary">
+        <p>Test fixture summary for A Pending Test Work.</p>
+      </blockquote>
+      <ul class="tags commas">
+        <li class="warnings"><a class="tag" href="/tags/Creator%20Chose%20Not%20To%20Use%20Archive%20Warnings/works">Creator Chose Not To Use Archive Warnings</a></li>
+        <li class="relationships"><a class="tag" href="/tags/Test%20Ship*s*Other%20Ship/works">Test Ship/Other Ship</a></li>
+        <li class="freeforms"><a class="tag" href="/tags/Fluff/works">Fluff</a></li>
+      </ul>
+      <dl class="stats">
+        <dt class="words">Words:</dt><dd class="words">12000</dd>
+        <dt class="chapters">Chapters:</dt><dd class="chapters">1/1</dd>
+        <dt class="comments">Comments:</dt><dd class="comments">0</dd>
+        <dt class="kudos">Kudos:</dt><dd class="kudos">0</dd>
+        <dt class="hits">Hits:</dt><dd class="hits">1</dd>
+      </dl>
+    </li>
+  </ol>
+  <ol class="pagination actions pagy" role="navigation" aria-label="Pagination"><li class="previous"><a href="/works?ao3_companion_fixture=listing_paginated&page=3">← Previous</a></li><li><a role="link" aria-disabled="true" aria-current="page" class="current">4</a></li><li><a href="/works?ao3_companion_fixture=listing_paginated&page=5">5</a></li><li class="next"><a href="/works?ao3_companion_fixture=listing_paginated&page=5">Next →</a></li></ol>
+      <p>Filler paragraph 0 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 1 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 2 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 3 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 4 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 5 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 6 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 7 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 8 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 9 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 10 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 11 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 12 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 13 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 14 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 15 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 16 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 17 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 18 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 19 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 20 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 21 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 22 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 23 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 24 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 25 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 26 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 27 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 28 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 29 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 30 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 31 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 32 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 33 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 34 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 35 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 36 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 37 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 38 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 39 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 40 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 41 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 42 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 43 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 44 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 45 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 46 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 47 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 48 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 49 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 50 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 51 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 52 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 53 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 54 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 55 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 56 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 57 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 58 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 59 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 60 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 61 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 62 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 63 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 64 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 65 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 66 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 67 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 68 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 69 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 70 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 71 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 72 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 73 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 74 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 75 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 76 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 77 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 78 for paginated listing page 4 — scroll padding, not real content.</p>
+    <p>Filler paragraph 79 for paginated listing page 4 — scroll padding, not real content.</p>
+</div>
+</body>
+</html>
+,7:headers;78:44:12:Content-Type,24:text/html; charset=utf-8,]26:14:content-length,5:10618,]]12:http_version;8:HTTP/1.1,}7:request;292:4:path;53:/works?ao3_companion_fixture=listing_paginated&page=4,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:2ab6cb67-c6d7-b3a7-30bc-b6dde431953c;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:23384b09-7181-34e8-bff7-571db4d64638;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:3bb66b77-c0b3-f916-505e-16d61ad6dd9e;4:type;4:http;7:version;2:21#}11905:9:websocket;0:~8:response;10491:6:reason;2:OK,11:status_code;3:200#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;10262:<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Test Fixture Paginated Listing (page 5) | Archive of Our Own</title></head>
+<body>
+<div id="main" class="works-index dashboard region" role="main">
+  <h2 class="heading">Test Fixture Paginated Listing (page 5)</h2>
+  <h4 class="landmark heading">Navigation</h4>
+  <ol class="pagination actions pagy" role="navigation" aria-label="Pagination"><li class="previous"><a href="/works?ao3_companion_fixture=listing_paginated&page=4">← Previous</a></li><li><a role="link" aria-disabled="true" aria-current="page" class="current">5</a></li></ol>
+  <ol class="work index group">
+    
+    <li id="work_900000005" class="work blurb group work-900000005" role="article">
+      <h4 class="heading">
+        <a href="/works/900000005">A Disliked Test Work</a>
+        <a rel="author" href="/users/seed_author_e/pseuds/seed_author_e">seed_author_e</a>
+      </h4>
+      <h5 class="fandoms heading">
+        <a class="tag" href="/tags/Fandom Eps/works">Fandom Eps</a>
+      </h5>
+      <p class="datetime">01 Jul 2026</p>
+      <h6 class="landmark heading">Summary</h6>
+      <blockquote class="userstuff summary">
+        <p>Test fixture summary for A Disliked Test Work.</p>
+      </blockquote>
+      <ul class="tags commas">
+        <li class="warnings"><a class="tag" href="/tags/Creator%20Chose%20Not%20To%20Use%20Archive%20Warnings/works">Creator Chose Not To Use Archive Warnings</a></li>
+        <li class="relationships"><a class="tag" href="/tags/Test%20Ship*s*Other%20Ship/works">Test Ship/Other Ship</a></li>
+        <li class="freeforms"><a class="tag" href="/tags/Fluff/works">Fluff</a></li>
+      </ul>
+      <dl class="stats">
+        <dt class="words">Words:</dt><dd class="words">300</dd>
+        <dt class="chapters">Chapters:</dt><dd class="chapters">1/1</dd>
+        <dt class="comments">Comments:</dt><dd class="comments">0</dd>
+        <dt class="kudos">Kudos:</dt><dd class="kudos">0</dd>
+        <dt class="hits">Hits:</dt><dd class="hits">1</dd>
+      </dl>
+    </li>
+  </ol>
+  <ol class="pagination actions pagy" role="navigation" aria-label="Pagination"><li class="previous"><a href="/works?ao3_companion_fixture=listing_paginated&page=4">← Previous</a></li><li><a role="link" aria-disabled="true" aria-current="page" class="current">5</a></li></ol>
+      <p>Filler paragraph 0 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 1 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 2 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 3 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 4 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 5 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 6 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 7 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 8 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 9 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 10 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 11 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 12 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 13 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 14 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 15 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 16 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 17 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 18 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 19 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 20 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 21 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 22 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 23 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 24 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 25 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 26 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 27 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 28 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 29 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 30 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 31 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 32 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 33 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 34 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 35 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 36 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 37 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 38 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 39 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 40 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 41 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 42 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 43 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 44 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 45 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 46 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 47 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 48 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 49 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 50 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 51 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 52 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 53 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 54 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 55 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 56 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 57 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 58 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 59 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 60 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 61 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 62 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 63 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 64 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 65 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 66 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 67 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 68 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 69 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 70 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 71 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 72 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 73 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 74 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 75 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 76 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 77 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 78 for paginated listing page 5 — scroll padding, not real content.</p>
+    <p>Filler paragraph 79 for paginated listing page 5 — scroll padding, not real content.</p>
+</div>
+</body>
+</html>
+,7:headers;78:44:12:Content-Type,24:text/html; charset=utf-8,]26:14:content-length,5:10262,]]12:http_version;8:HTTP/1.1,}7:request;292:4:path;53:/works?ao3_companion_fixture=listing_paginated&page=5,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:dd120c94-7220-3a8f-34a4-dc91938c8221;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:67b6524f-22fc-4851-f4d2-0c2271a785d9;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:54692d85-0308-04da-23e6-884f7c9af3e2;4:type;4:http;7:version;2:21#}8579:9:websocket;0:~8:response;7203:6:reason;2:OK,11:status_code;3:200#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;6976:<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>A Loved Test Work | Archive of Our Own</title></head>
+<body>
+<div id="main" class="works-show region" role="main">
+  <div id="workskin">
+    <div class="preface group">
+      <h2 class="title heading">A Loved Test Work</h2>
+      <h3 class="byline heading"><a rel="author" href="/users/seed_author_a/pseuds/seed_author_a">seed_author_a</a></h3>
+      <h5 class="fandom tags"><a class="tag" href="/tags/Fandom Alpha/works">Fandom Alpha</a></h5>
+    </div>
+    <ul class="work navigation actions" role="navigation">
+      
+    <li class="download" title="Download">
+      <a>Download</a>
+      <ul class="download-list expandable" title="Download">
+        <li><a href="/downloads/900000001/A_Loved_Test_Work.pdf?updated_at=0" title="PDF">PDF</a></li>
+        <li><a href="/downloads/900000001/A_Loved_Test_Work.html?updated_at=0" title="HTML">HTML</a></li>
+        <li><a href="/downloads/900000001/A_Loved_Test_Work.mobi?updated_at=0" title="MOBI">MOBI</a></li>
+        <li><a href="/downloads/900000001/A_Loved_Test_Work.epub?updated_at=0" title="EPUB">EPUB</a></li>
+      </ul>
+    </li>
+    </ul>
+    <p class="kudos"><a href="#" id="kudo_submit" role="button" onclick="this.setAttribute('data-kudo-clicked', String(1+Number(this.getAttribute('data-kudo-clicked')||0)));return false;">Give Kudos</a></p>
+    <div class="wrapper">
+      <p>Test fixture body for download-flow recording (4200 words).</p>
+      
+    <button data-tap-marker="button"
+            onclick="this.setAttribute('data-tapped', '1')"
+            style="position:absolute; top:40vh; left:24px;
+                   width:200px; height:60px; margin:0; padding:0; border:1px solid #333;">
+      <span data-tap-marker-child="span"
+            style="display:block; width:100%; height:100%; margin:0; padding:0;">Tap target</span>
+    </button>
+    <div data-tap-marker="div"
+         onclick="this.setAttribute('data-tapped', '1')"
+         style="position:absolute; top:50vh; left:24px;
+                width:200px; height:60px; background:#eee; border:1px solid #333;">Tap target (div)</div>
+      <div style="min-height: 6000px;">
+    <p>Filler paragraph 0 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 1 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 2 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 3 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 4 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 5 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 6 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 7 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 8 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 9 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 10 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 11 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 12 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 13 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 14 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 15 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 16 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 17 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 18 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 19 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 20 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 21 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 22 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 23 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 24 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 25 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 26 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 27 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 28 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 29 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 30 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 31 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 32 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 33 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 34 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 35 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 36 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 37 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 38 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 39 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
+,7:headers;77:44:12:Content-Type,24:text/html; charset=utf-8,]25:14:content-length,4:6976,]]12:http_version;8:HTTP/1.1,}7:request;255:4:path;16:/works/900000001,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:c8837619-ef41-abcc-f98e-89235728c4d2;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:5f7ca42d-2366-bba3-b259-66ea62abedcd;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:74e1d1e5-c15f-1184-f4d4-fa7806f645c2;4:type;4:http;7:version;2:21#}8589:9:websocket;0:~8:response;7213:6:reason;2:OK,11:status_code;3:200#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;6986:<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>A Kudosed Test Work | Archive of Our Own</title></head>
+<body>
+<div id="main" class="works-show region" role="main">
+  <div id="workskin">
+    <div class="preface group">
+      <h2 class="title heading">A Kudosed Test Work</h2>
+      <h3 class="byline heading"><a rel="author" href="/users/seed_author_b/pseuds/seed_author_b">seed_author_b</a></h3>
+      <h5 class="fandom tags"><a class="tag" href="/tags/Fandom Beta/works">Fandom Beta</a></h5>
+    </div>
+    <ul class="work navigation actions" role="navigation">
+      
+    <li class="download" title="Download">
+      <a>Download</a>
+      <ul class="download-list expandable" title="Download">
+        <li><a href="/downloads/900000002/A_Kudosed_Test_Work.pdf?updated_at=0" title="PDF">PDF</a></li>
+        <li><a href="/downloads/900000002/A_Kudosed_Test_Work.html?updated_at=0" title="HTML">HTML</a></li>
+        <li><a href="/downloads/900000002/A_Kudosed_Test_Work.mobi?updated_at=0" title="MOBI">MOBI</a></li>
+        <li><a href="/downloads/900000002/A_Kudosed_Test_Work.epub?updated_at=0" title="EPUB">EPUB</a></li>
+      </ul>
+    </li>
+    </ul>
+    <p class="kudos"><a href="#" id="kudo_submit" role="button" onclick="this.setAttribute('data-kudo-clicked', String(1+Number(this.getAttribute('data-kudo-clicked')||0)));return false;">Give Kudos</a></p>
+    <div class="wrapper">
+      <p>Test fixture body for download-flow recording (1500 words).</p>
+      
+    <button data-tap-marker="button"
+            onclick="this.setAttribute('data-tapped', '1')"
+            style="position:absolute; top:40vh; left:24px;
+                   width:200px; height:60px; margin:0; padding:0; border:1px solid #333;">
+      <span data-tap-marker-child="span"
+            style="display:block; width:100%; height:100%; margin:0; padding:0;">Tap target</span>
+    </button>
+    <div data-tap-marker="div"
+         onclick="this.setAttribute('data-tapped', '1')"
+         style="position:absolute; top:50vh; left:24px;
+                width:200px; height:60px; background:#eee; border:1px solid #333;">Tap target (div)</div>
+      <div style="min-height: 6000px;">
+    <p>Filler paragraph 0 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 1 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 2 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 3 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 4 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 5 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 6 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 7 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 8 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 9 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 10 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 11 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 12 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 13 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 14 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 15 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 16 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 17 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 18 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 19 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 20 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 21 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 22 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 23 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 24 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 25 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 26 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 27 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 28 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 29 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 30 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 31 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 32 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 33 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 34 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 35 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 36 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 37 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 38 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 39 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
+,7:headers;77:44:12:Content-Type,24:text/html; charset=utf-8,]25:14:content-length,4:6986,]]12:http_version;8:HTTP/1.1,}7:request;255:4:path;16:/works/900000002,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:0a1a2db6-729d-089f-3199-874c2d22038e;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:d75bd08a-4368-1a6c-c270-c820ebdc6f25;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:e16b00b9-514b-6c09-b1d9-f533ac35449c;4:type;4:http;7:version;2:21#}8572:9:websocket;0:~8:response;7196:6:reason;2:OK,11:status_code;3:200#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;6969:<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>A Read Test Work | Archive of Our Own</title></head>
+<body>
+<div id="main" class="works-show region" role="main">
+  <div id="workskin">
+    <div class="preface group">
+      <h2 class="title heading">A Read Test Work</h2>
+      <h3 class="byline heading"><a rel="author" href="/users/seed_author_c/pseuds/seed_author_c">seed_author_c</a></h3>
+      <h5 class="fandom tags"><a class="tag" href="/tags/Fandom Gamma/works">Fandom Gamma</a></h5>
+    </div>
+    <ul class="work navigation actions" role="navigation">
+      
+    <li class="download" title="Download">
+      <a>Download</a>
+      <ul class="download-list expandable" title="Download">
+        <li><a href="/downloads/900000003/A_Read_Test_Work.pdf?updated_at=0" title="PDF">PDF</a></li>
+        <li><a href="/downloads/900000003/A_Read_Test_Work.html?updated_at=0" title="HTML">HTML</a></li>
+        <li><a href="/downloads/900000003/A_Read_Test_Work.mobi?updated_at=0" title="MOBI">MOBI</a></li>
+        <li><a href="/downloads/900000003/A_Read_Test_Work.epub?updated_at=0" title="EPUB">EPUB</a></li>
+      </ul>
+    </li>
+    </ul>
+    <p class="kudos"><a href="#" id="kudo_submit" role="button" onclick="this.setAttribute('data-kudo-clicked', String(1+Number(this.getAttribute('data-kudo-clicked')||0)));return false;">Give Kudos</a></p>
+    <div class="wrapper">
+      <p>Test fixture body for download-flow recording (800 words).</p>
+      
+    <button data-tap-marker="button"
+            onclick="this.setAttribute('data-tapped', '1')"
+            style="position:absolute; top:40vh; left:24px;
+                   width:200px; height:60px; margin:0; padding:0; border:1px solid #333;">
+      <span data-tap-marker-child="span"
+            style="display:block; width:100%; height:100%; margin:0; padding:0;">Tap target</span>
+    </button>
+    <div data-tap-marker="div"
+         onclick="this.setAttribute('data-tapped', '1')"
+         style="position:absolute; top:50vh; left:24px;
+                width:200px; height:60px; background:#eee; border:1px solid #333;">Tap target (div)</div>
+      <div style="min-height: 6000px;">
+    <p>Filler paragraph 0 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 1 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 2 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 3 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 4 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 5 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 6 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 7 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 8 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 9 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 10 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 11 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 12 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 13 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 14 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 15 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 16 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 17 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 18 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 19 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 20 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 21 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 22 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 23 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 24 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 25 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 26 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 27 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 28 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 29 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 30 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 31 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 32 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 33 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 34 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 35 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 36 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 37 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 38 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 39 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
+,7:headers;77:44:12:Content-Type,24:text/html; charset=utf-8,]25:14:content-length,4:6969,]]12:http_version;8:HTTP/1.1,}7:request;255:4:path;16:/works/900000003,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:981ceb4a-c54d-c28b-9c5e-8739be17bb2f;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:3076cb20-ee66-d026-4a41-e817b596ea91;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:ffbc103b-a42e-f35a-09bb-b64b57134d76;4:type;4:http;7:version;2:21#}8592:9:websocket;0:~8:response;7216:6:reason;2:OK,11:status_code;3:200#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;6989:<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>A Pending Test Work | Archive of Our Own</title></head>
+<body>
+<div id="main" class="works-show region" role="main">
+  <div id="workskin">
+    <div class="preface group">
+      <h2 class="title heading">A Pending Test Work</h2>
+      <h3 class="byline heading"><a rel="author" href="/users/seed_author_d/pseuds/seed_author_d">seed_author_d</a></h3>
+      <h5 class="fandom tags"><a class="tag" href="/tags/Fandom Delta/works">Fandom Delta</a></h5>
+    </div>
+    <ul class="work navigation actions" role="navigation">
+      
+    <li class="download" title="Download">
+      <a>Download</a>
+      <ul class="download-list expandable" title="Download">
+        <li><a href="/downloads/900000004/A_Pending_Test_Work.pdf?updated_at=0" title="PDF">PDF</a></li>
+        <li><a href="/downloads/900000004/A_Pending_Test_Work.html?updated_at=0" title="HTML">HTML</a></li>
+        <li><a href="/downloads/900000004/A_Pending_Test_Work.mobi?updated_at=0" title="MOBI">MOBI</a></li>
+        <li><a href="/downloads/900000004/A_Pending_Test_Work.epub?updated_at=0" title="EPUB">EPUB</a></li>
+      </ul>
+    </li>
+    </ul>
+    <p class="kudos"><a href="#" id="kudo_submit" role="button" onclick="this.setAttribute('data-kudo-clicked', String(1+Number(this.getAttribute('data-kudo-clicked')||0)));return false;">Give Kudos</a></p>
+    <div class="wrapper">
+      <p>Test fixture body for download-flow recording (12000 words).</p>
+      
+    <button data-tap-marker="button"
+            onclick="this.setAttribute('data-tapped', '1')"
+            style="position:absolute; top:40vh; left:24px;
+                   width:200px; height:60px; margin:0; padding:0; border:1px solid #333;">
+      <span data-tap-marker-child="span"
+            style="display:block; width:100%; height:100%; margin:0; padding:0;">Tap target</span>
+    </button>
+    <div data-tap-marker="div"
+         onclick="this.setAttribute('data-tapped', '1')"
+         style="position:absolute; top:50vh; left:24px;
+                width:200px; height:60px; background:#eee; border:1px solid #333;">Tap target (div)</div>
+      <div style="min-height: 6000px;">
+    <p>Filler paragraph 0 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 1 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 2 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 3 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 4 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 5 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 6 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 7 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 8 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 9 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 10 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 11 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 12 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 13 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 14 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 15 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 16 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 17 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 18 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 19 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 20 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 21 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 22 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 23 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 24 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 25 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 26 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 27 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 28 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 29 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 30 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 31 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 32 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 33 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 34 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 35 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 36 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 37 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 38 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 39 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
+,7:headers;77:44:12:Content-Type,24:text/html; charset=utf-8,]25:14:content-length,4:6989,]]12:http_version;8:HTTP/1.1,}7:request;255:4:path;16:/works/900000004,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:ff825a2e-4b97-ed2a-aef1-52ed6c01d1c4;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:f8bbf843-9e76-c92a-ccb0-6b5f27a57b7a;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:664f35f9-820d-6995-a20a-63a0fa7360a9;4:type;4:http;7:version;2:21#}8592:9:websocket;0:~8:response;7216:6:reason;2:OK,11:status_code;3:200#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;6989:<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>A Disliked Test Work | Archive of Our Own</title></head>
+<body>
+<div id="main" class="works-show region" role="main">
+  <div id="workskin">
+    <div class="preface group">
+      <h2 class="title heading">A Disliked Test Work</h2>
+      <h3 class="byline heading"><a rel="author" href="/users/seed_author_e/pseuds/seed_author_e">seed_author_e</a></h3>
+      <h5 class="fandom tags"><a class="tag" href="/tags/Fandom Eps/works">Fandom Eps</a></h5>
+    </div>
+    <ul class="work navigation actions" role="navigation">
+      
+    <li class="download" title="Download">
+      <a>Download</a>
+      <ul class="download-list expandable" title="Download">
+        <li><a href="/downloads/900000005/A_Disliked_Test_Work.pdf?updated_at=0" title="PDF">PDF</a></li>
+        <li><a href="/downloads/900000005/A_Disliked_Test_Work.html?updated_at=0" title="HTML">HTML</a></li>
+        <li><a href="/downloads/900000005/A_Disliked_Test_Work.mobi?updated_at=0" title="MOBI">MOBI</a></li>
+        <li><a href="/downloads/900000005/A_Disliked_Test_Work.epub?updated_at=0" title="EPUB">EPUB</a></li>
+      </ul>
+    </li>
+    </ul>
+    <p class="kudos"><a href="#" id="kudo_submit" role="button" onclick="this.setAttribute('data-kudo-clicked', String(1+Number(this.getAttribute('data-kudo-clicked')||0)));return false;">Give Kudos</a></p>
+    <div class="wrapper">
+      <p>Test fixture body for download-flow recording (300 words).</p>
+      
+    <button data-tap-marker="button"
+            onclick="this.setAttribute('data-tapped', '1')"
+            style="position:absolute; top:40vh; left:24px;
+                   width:200px; height:60px; margin:0; padding:0; border:1px solid #333;">
+      <span data-tap-marker-child="span"
+            style="display:block; width:100%; height:100%; margin:0; padding:0;">Tap target</span>
+    </button>
+    <div data-tap-marker="div"
+         onclick="this.setAttribute('data-tapped', '1')"
+         style="position:absolute; top:50vh; left:24px;
+                width:200px; height:60px; background:#eee; border:1px solid #333;">Tap target (div)</div>
+      <div style="min-height: 6000px;">
+    <p>Filler paragraph 0 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 1 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 2 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 3 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 4 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 5 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 6 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 7 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 8 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 9 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 10 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 11 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 12 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 13 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 14 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 15 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 16 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 17 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 18 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 19 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 20 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 21 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 22 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 23 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 24 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 25 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 26 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 27 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 28 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 29 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 30 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 31 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 32 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 33 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 34 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 35 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 36 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 37 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 38 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    <p>Filler paragraph 39 for reading-UX tap-to-scroll fixture (AT-BUG-030) — scroll padding, not real content.</p>
+    </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
+,7:headers;77:44:12:Content-Type,24:text/html; charset=utf-8,]25:14:content-length,4:6989,]]12:http_version;8:HTTP/1.1,}7:request;255:4:path;16:/works/900000005,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:a9d91fa9-34b6-d662-fb6e-a8f7e5e48e00;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:94c8b93d-490e-9b76-d0a5-d5738a9b44ff;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:cde560fe-2be5-9e2f-d982-888546df3067;4:type;4:http;7:version;2:21#}
