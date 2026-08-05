@@ -1,0 +1,404 @@
+--------- beginning of main
+08-04 13:28:50.820  4035 12930 I cr_VariationsUtils: Seed download job already scheduled
+--------- beginning of system
+08-04 13:28:50.832  2301  2379 D ActivityManager: freezing 3807 com.android.documentsui
+08-04 13:28:50.847  2301  5084 D CompatibilityChangeReporter: Compat change id reported: 214016041; UID 10145; state: ENABLED
+08-04 13:28:50.847  2301  5084 I ImeTracker: com.example.ao3_wrapper:dec0b5dd: onRequestHide at ORIGIN_SERVER_HIDE_INPUT reason HIDE_UNSPECIFIED_WINDOW
+08-04 13:28:50.848  2301  5084 I ImeTracker: com.example.ao3_wrapper:dec0b5dd: onCancelled at PHASE_SERVER_SHOULD_HIDE
+08-04 13:28:50.961  2301  2379 D ActivityManager: freezing 2879 com.android.permissioncontroller
+08-04 13:28:51.065   870   902 W tomator2.server: Accessing hidden field Landroid/view/accessibility/AccessibilityNodeInfo;->mSourceNodeId:J (unsupported, reflection, allowed)
+08-04 13:28:51.079   870   902 I appium  : AppiumResponse: {"sessionId":"64ef2702-e9f2-4665-ad1f-662def38cb3d","value":{"ELEMENT":"00000000-0000-0295-ffff-ffff0000000e","element-6066-11e4-a52e-4f735466cecf":"00000000-0000-0295-ffff-ffff0000000e"}}
+08-04 13:28:51.097   870   902 I appium  : channel read: POST /session/64ef2702-e9f2-4665-ad1f-662def38cb3d/element
+08-04 13:28:51.099   870   902 I appium  : FindElement command
+08-04 13:28:51.101   870   902 I appium  : method: '-android uiautomator', selector: 'new UiSelector().text("Library")'
+08-04 13:28:51.103   870   902 I appium  : Waiting up to 10000ms for the device to idle
+08-04 13:28:51.119   182   779 I keystore2: system/security/keystore2/src/watchdog.rs:319 - Watchdog thread idle -> terminating. Have a great day.
+08-04 13:28:51.401   870   902 I appium  : AppiumResponse: {"sessionId":"64ef2702-e9f2-4665-ad1f-662def38cb3d","value":{"error":"no such element","message":"An element could not be located on the page using the given search parameters","stacktrace":"io.appium.uiautomator2.common.exceptions.ElementNotFoundException: An element could not be located on the page using the given search parameters\n\tat io.appium.uiautomator2.handler.FindElement.safeHandle(FindElement.java:63)\n\tat io.appium.uiautomator2.handler.request.SafeRequestHandler.handle(SafeRequestHandler.java:59)\n\tat io.appium.uiautomator2.server.AppiumServlet.handleRequest(AppiumServlet.java:267)\n\tat io.appium.uiautomator2.server.AppiumServlet.handleHttpRequest(AppiumServlet.java:261)\n\tat io.appium.uiautomator2.http.ServerHandler.channelRead(ServerHandler.java:77)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)\n\tat io.netty.handler.codec.MessageToMessageDecoder.channelRead(MessageToMessageDecoder.java:107)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)\n\tat io.netty.channel.CombinedChannelDuplexHandler$DelegatingChannelHandlerContext.fireChannelRead(CombinedChannelDuplexHandler.java:434)\n\tat io.netty.handler.codec.ByteToMessageDecoder.fireChannelRead(ByteToMessageDecoder.java:361)\n\tat io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:325)\n\tat io.netty.channel.CombinedChannelDuplexHandler.channelRead(CombinedChannelDuplexHandler.java:249)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:355)\n\tat io.netty.handler.timeout.IdleStateHandler.channelRead(IdleStateHandler.java:288)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:355)\n\tat io.netty.channel.DefaultChannelPipeline$HeadContext.channelRead(DefaultChannelPipeline.java:1429)\n\tat io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:918)\n\tat io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:176)\n\tat io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.handle(AbstractNioChannel.java:445)\n\tat io.netty.channel.nio.NioIoHandler$DefaultNioRegistration.handle(NioIoHandler.java:388)\n\tat io.netty.channel.nio.NioIoHandler.processSelectedKey(NioIoHandler.java:596)\n\tat io.netty.channel.nio.NioIoHandler.processSelectedKeysOptimized(NioIoHandler.java:571)\n\tat io.netty.channel.nio.NioIoHandler.processSelectedKeys(NioIoHandler.java:512)\n\tat io.netty.channel.nio.NioIoHandler.run(NioIoHandler.java:484)\n\tat io.netty.channel.SingleThreadIoEventLoop.runIo(SingleThreadIoEventLoop.java:225)\n\tat io.netty.channel.SingleThreadIoEventLoop.run(SingleThreadIoEventLoop.java:196)\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:1195)\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\n\tat java.lang.Thread.run(Thread.java:1012)\n"}}
+08-04 13:28:51.463  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:28:51.463  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:28:51.464  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:28:51.464  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:28:51.814   870   902 I appium  : channel read: POST /session/64ef2702-e9f2-4665-ad1f-662def38cb3d/element
+08-04 13:28:51.816   870   902 I appium  : FindElement command
+08-04 13:28:51.818   870   902 I appium  : method: '-android uiautomator', selector: 'new UiSelector().text("Library")'
+08-04 13:28:51.818   870   902 I appium  : Waiting up to 10000ms for the device to idle
+08-04 13:28:51.849   918   937 D EGL_emulation: app_time_stats: avg=668.75ms min=146.46ms max=932.44ms count=3
+08-04 13:28:51.946   870   902 I appium  : AppiumResponse: {"sessionId":"64ef2702-e9f2-4665-ad1f-662def38cb3d","value":{"error":"no such element","message":"An element could not be located on the page using the given search parameters","stacktrace":"io.appium.uiautomator2.common.exceptions.ElementNotFoundException: An element could not be located on the page using the given search parameters\n\tat io.appium.uiautomator2.handler.FindElement.safeHandle(FindElement.java:63)\n\tat io.appium.uiautomator2.handler.request.SafeRequestHandler.handle(SafeRequestHandler.java:59)\n\tat io.appium.uiautomator2.server.AppiumServlet.handleRequest(AppiumServlet.java:267)\n\tat io.appium.uiautomator2.server.AppiumServlet.handleHttpRequest(AppiumServlet.java:261)\n\tat io.appium.uiautomator2.http.ServerHandler.channelRead(ServerHandler.java:77)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)\n\tat io.netty.handler.codec.MessageToMessageDecoder.channelRead(MessageToMessageDecoder.java:107)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)\n\tat io.netty.channel.CombinedChannelDuplexHandler$DelegatingChannelHandlerContext.fireChannelRead(CombinedChannelDuplexHandler.java:434)\n\tat io.netty.handler.codec.ByteToMessageDecoder.fireChannelRead(ByteToMessageDecoder.java:361)\n\tat io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:325)\n\tat io.netty.channel.CombinedChannelDuplexHandler.channelRead(CombinedChannelDuplexHandler.java:249)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:355)\n\tat io.netty.handler.timeout.IdleStateHandler.channelRead(IdleStateHandler.java:288)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:355)\n\tat io.netty.channel.DefaultChannelPipeline$HeadContext.channelRead(DefaultChannelPipeline.java:1429)\n\tat io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:918)\n\tat io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:176)\n\tat io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.handle(AbstractNioChannel.java:445)\n\tat io.netty.channel.nio.NioIoHandler$DefaultNioRegistration.handle(NioIoHandler.java:388)\n\tat io.netty.channel.nio.NioIoHandler.processSelectedKey(NioIoHandler.java:596)\n\tat io.netty.channel.nio.NioIoHandler.processSelectedKeysOptimized(NioIoHandler.java:571)\n\tat io.netty.channel.nio.NioIoHandler.processSelectedKeys(NioIoHandler.java:512)\n\tat io.netty.channel.nio.NioIoHandler.run(NioIoHandler.java:484)\n\tat io.netty.channel.SingleThreadIoEventLoop.runIo(SingleThreadIoEventLoop.java:225)\n\tat io.netty.channel.SingleThreadIoEventLoop.run(SingleThreadIoEventLoop.java:196)\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:1195)\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\n\tat java.lang.Thread.run(Thread.java:1012)\n"}}
+08-04 13:28:52.359   870   902 I appium  : channel read: POST /session/64ef2702-e9f2-4665-ad1f-662def38cb3d/element
+08-04 13:28:52.361   870   902 I appium  : FindElement command
+08-04 13:28:52.363   870   902 I appium  : method: '-android uiautomator', selector: 'new UiSelector().text("Library")'
+08-04 13:28:52.365   870   902 I appium  : Waiting up to 10000ms for the device to idle
+08-04 13:28:52.464  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:28:52.464  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:28:52.465  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:28:52.465  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:28:53.250   918   937 D EGL_emulation: app_time_stats: avg=1400.11ms min=1400.11ms max=1400.11ms count=1
+08-04 13:28:53.291   918   918 I Choreographer: Skipped 67 frames!  The application may be doing too much work on its main thread.
+08-04 13:28:53.467  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:28:53.468  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:28:53.469  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:28:53.469  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:28:53.748  2491  2491 D StatusBarIconController: ignoring old pipeline callback because the new wifi icon is enabled
+08-04 13:28:53.927   918  1004 I OpenGLRenderer: Davey! duration=1190ms; Flags=0, FrameTimelineVsyncId=1509899, IntendedVsync=3991061279440, Vsync=3991061279440, InputEventId=0, HandleInputStart=3991071880800, AnimationStart=3991071923400, PerformTraversalsStart=3991073631600, DrawStart=3991073816500, FrameDeadline=3991077946106, FrameInterval=3991071847700, FrameStartTime=16666666, SyncQueued=3991075640200, SyncStart=3991075973200, IssueDrawCommandsStart=3991076034100, SwapBuffers=3992247125000, FrameCompleted=3992251875500, DequeueBufferDuration=56500, QueueBufferDuration=559800, GpuCompleted=3992250077300, SwapBuffersCompleted=3992251875500, DisplayPresentTime=0, CommandSubmissionCompleted=3992247125000, 
+08-04 13:28:53.984   918   918 I Choreographer: Skipped 40 frames!  The application may be doing too much work on its main thread.
+08-04 13:28:53.999   918  1009 D ProfileInstaller: Installing profile for com.example.ao3_wrapper
+08-04 13:28:54.362   918  1004 I OpenGLRenderer: Davey! duration=707ms; Flags=0, FrameTimelineVsyncId=1509955, IntendedVsync=3991127946104, Vsync=3991127946104, InputEventId=0, HandleInputStart=3991143493800, AnimationStart=3991143533600, PerformTraversalsStart=3991152346400, DrawStart=3991152894600, FrameDeadline=3992277946058, FrameInterval=3991143474300, FrameStartTime=16666666, SyncQueued=3991154842200, SyncStart=3992253326600, IssueDrawCommandsStart=3992253467900, SwapBuffers=3992926991900, FrameCompleted=3992934091000, DequeueBufferDuration=37900, QueueBufferDuration=2398200, GpuCompleted=3992933872100, SwapBuffersCompleted=3992934091000, DisplayPresentTime=0, CommandSubmissionCompleted=3992926991900, 
+08-04 13:28:54.366   918   937 D EGL_emulation: app_time_stats: avg=557.49ms min=432.86ms max=682.12ms count=2
+08-04 13:28:54.419   918   932 I OpenGLRenderer: Davey! duration=1588ms; Flags=0, FrameTimelineVsyncId=1509976, IntendedVsync=3991161279436, Vsync=3992277946058, InputEventId=0, HandleInputStart=3992293472700, AnimationStart=3992293545300, PerformTraversalsStart=3992301993000, DrawStart=3992302332800, FrameDeadline=3992961279364, FrameInterval=3992291057500, FrameStartTime=16666666, SyncQueued=3992303781600, SyncStart=3992934540800, IssueDrawCommandsStart=3992937281500, SwapBuffers=3993362784900, FrameCompleted=3993380099600, DequeueBufferDuration=43400, QueueBufferDuration=469100, GpuCompleted=3993380099600, SwapBuffersCompleted=3993367304100, DisplayPresentTime=0, CommandSubmissionCompleted=3993362784900, 
+08-04 13:28:54.447   918   932 I OpenGLRenderer: Davey! duration=734ms; Flags=0, FrameTimelineVsyncId=1510467, IntendedVsync=3992311279390, Vsync=3992977946030, InputEventId=0, HandleInputStart=3992987590200, AnimationStart=3992987633900, PerformTraversalsStart=3992990744300, DrawStart=3992991254700, FrameDeadline=3993411279346, FrameInterval=3992984042700, FrameStartTime=16666666, SyncQueued=3992994525600, SyncStart=3993367914000, IssueDrawCommandsStart=3993368005300, SwapBuffers=3993405363500, FrameCompleted=3993419408900, DequeueBufferDuration=8929200, QueueBufferDuration=423900, GpuCompleted=3993419408900, SwapBuffersCompleted=3993419408900, DisplayPresentTime=0, CommandSubmissionCompleted=3993405363500, 
+08-04 13:28:54.467  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:28:54.467  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:28:54.467  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:28:54.467  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:28:54.818   870   902 I appium  : AppiumResponse: {"sessionId":"64ef2702-e9f2-4665-ad1f-662def38cb3d","value":{"error":"no such element","message":"An element could not be located on the page using the given search parameters","stacktrace":"io.appium.uiautomator2.common.exceptions.ElementNotFoundException: An element could not be located on the page using the given search parameters\n\tat io.appium.uiautomator2.handler.FindElement.safeHandle(FindElement.java:63)\n\tat io.appium.uiautomator2.handler.request.SafeRequestHandler.handle(SafeRequestHandler.java:59)\n\tat io.appium.uiautomator2.server.AppiumServlet.handleRequest(AppiumServlet.java:267)\n\tat io.appium.uiautomator2.server.AppiumServlet.handleHttpRequest(AppiumServlet.java:261)\n\tat io.appium.uiautomator2.http.ServerHandler.channelRead(ServerHandler.java:77)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)\n\tat io.netty.handler.codec.MessageToMessageDecoder.channelRead(MessageToMessageDecoder.java:107)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)\n\tat io.netty.channel.CombinedChannelDuplexHandler$DelegatingChannelHandlerContext.fireChannelRead(CombinedChannelDuplexHandler.java:434)\n\tat io.netty.handler.codec.ByteToMessageDecoder.fireChannelRead(ByteToMessageDecoder.java:361)\n\tat io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:325)\n\tat io.netty.channel.CombinedChannelDuplexHandler.channelRead(CombinedChannelDuplexHandler.java:249)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:355)\n\tat io.netty.handler.timeout.IdleStateHandler.channelRead(IdleStateHandler.java:288)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:355)\n\tat io.netty.channel.DefaultChannelPipeline$HeadContext.channelRead(DefaultChannelPipeline.java:1429)\n\tat io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:918)\n\tat io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:176)\n\tat io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.handle(AbstractNioChannel.java:445)\n\tat io.netty.channel.nio.NioIoHandler$DefaultNioRegistration.handle(NioIoHandler.java:388)\n\tat io.netty.channel.nio.NioIoHandler.processSelectedKey(NioIoHandler.java:596)\n\tat io.netty.channel.nio.NioIoHandler.processSelectedKeysOptimized(NioIoHandler.java:571)\n\tat io.netty.channel.nio.NioIoHandler.processSelectedKeys(NioIoHandler.java:512)\n\tat io.netty.channel.nio.NioIoHandler.run(NioIoHandler.java:484)\n\tat io.netty.channel.SingleThreadIoEventLoop.runIo(SingleThreadIoEventLoop.java:225)\n\tat io.netty.channel.SingleThreadIoEventLoop.run(SingleThreadIoEventLoop.java:196)\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:1195)\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\n\tat java.lang.Thread.run(Thread.java:1012)\n"}}
+08-04 13:28:54.827   870   902 I appium  : channel read: POST /session/64ef2702-e9f2-4665-ad1f-662def38cb3d/elements
+08-04 13:28:54.829   870   902 I appium  : FindElements command
+08-04 13:28:54.833   870   902 I appium  : method: 'xpath', selector: '//*[@clickable="true"][not(ancestor-or-self::*[contains(@class,"WebView")])]'
+08-04 13:28:54.834   870   902 I appium  : Waiting up to 10000ms for the device to idle
+08-04 13:28:55.091   870   902 I appium  : The following attributes will be included to the page source: [clickable, class]
+08-04 13:28:55.468  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:28:55.468  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:28:55.468  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:28:55.469  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:28:56.053  2491  2491 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+08-04 13:28:56.201   870   902 D CompatibilityChangeReporter: Compat change id reported: 247079863; UID 10144; state: ENABLED
+08-04 13:28:56.468  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:28:56.468  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:28:56.469  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:28:56.469  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:28:56.576   870   902 I appium  : Took 0ms to retrieve 2 matches for '//*[@clickable="true"][not(ancestor-or-self::*[contains(@class,"WebView")])]' XPath2 query
+08-04 13:28:56.580   870   902 I appium  : Caching 2 found elements
+08-04 13:28:56.583   870   902 I appium  : Cached 2 elements
+08-04 13:28:56.586   870   902 I appium  : AppiumResponse: {"sessionId":"64ef2702-e9f2-4665-ad1f-662def38cb3d","value":[{"ELEMENT":"00000000-0000-0295-0000-002d00000007","element-6066-11e4-a52e-4f735466cecf":"00000000-0000-0295-0000-002d00000007"},{"ELEMENT":"00000000-0000-0295-0000-002100000007","element-6066-11e4-a52e-4f735466cecf":"00000000-0000-0295-000вЂ¦
+08-04 13:28:56.595   870   902 I appium  : channel read: GET /session/64ef2702-e9f2-4665-ad1f-662def38cb3d/element/00000000-0000-0295-0000-002d00000007/rect
+08-04 13:28:56.598   870   902 I appium  : GetRect command
+08-04 13:28:56.607   870   902 I appium  : AppiumResponse: {"sessionId":"64ef2702-e9f2-4665-ad1f-662def38cb3d","value":{"height":126,"width":1080,"x":0,"y":2185}}
+08-04 13:28:56.618   870   902 I appium  : channel read: GET /session/64ef2702-e9f2-4665-ad1f-662def38cb3d/element/00000000-0000-0295-0000-002100000007/rect
+08-04 13:28:56.620   870   902 I appium  : GetRect command
+08-04 13:28:56.630   870   902 I appium  : AppiumResponse: {"sessionId":"64ef2702-e9f2-4665-ad1f-662def38cb3d","value":{"height":168,"width":84,"x":0,"y":496}}
+08-04 13:28:56.641   870   902 I appium  : channel read: POST /session/64ef2702-e9f2-4665-ad1f-662def38cb3d/element/00000000-0000-0295-0000-002d00000007/click
+08-04 13:28:56.643   870   902 I appium  : Click command
+08-04 13:28:56.658   870   902 D CompatibilityChangeReporter: Compat change id reported: 289878283; UID 10144; state: ENABLED
+08-04 13:28:56.705   870   902 W GestureController: Gestures took longer than expected (47ms >> 16ms), device might be in a busy state.
+08-04 13:28:56.706   870   902 I appium  : Waiting up to 10000ms for the device to idle
+08-04 13:28:56.710   870   902 I appium  : AppiumResponse: {"sessionId":"64ef2702-e9f2-4665-ad1f-662def38cb3d","value":null}
+08-04 13:28:56.726   870   902 I appium  : channel read: POST /session/64ef2702-e9f2-4665-ad1f-662def38cb3d/element
+08-04 13:28:56.727   870   902 I appium  : FindElement command
+08-04 13:28:56.730   870   902 I appium  : method: '-android uiautomator', selector: 'new UiSelector().text("Settings")'
+08-04 13:28:56.730   870   902 I appium  : Waiting up to 10000ms for the device to idle
+08-04 13:28:56.892   918   937 D EGL_emulation: app_time_stats: avg=629.07ms min=43.18ms max=2367.21ms count=4
+08-04 13:28:57.309   870   902 I QueryController: Matched selector: UiSelector[TEXT=Settings] <<==>> [android.view.accessibility.AccessibilityNodeInfo@9b86; boundsInParent: Rect(0, 0 - 0, 0); boundsInScreen: Rect(858, 2217 - 955, 2247); boundsInWindow: Rect(858, 2217 - 955, 2247); packageName: com.example.ao3_wrapper; className: android.widget.TextView; text: Settings; error: null; maxTextLength: -1; stateDescription: null; contentDescription: null; tooltipText: null; containerTitle: null; viewIdResName: null; uniqueId: null; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: true; actions: [AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SET_SELECTION - null]; isTextSelectable: false]
+08-04 13:28:57.314   870   902 I appium  : AppiumResponse: {"sessionId":"64ef2702-e9f2-4665-ad1f-662def38cb3d","value":{"ELEMENT":"00000000-0000-0295-0000-005500000007","element-6066-11e4-a52e-4f735466cecf":"00000000-0000-0295-0000-005500000007"}}
+08-04 13:28:57.325   870   902 I appium  : channel read: GET /session/64ef2702-e9f2-4665-ad1f-662def38cb3d/element/00000000-0000-0295-0000-005500000007/attribute/displayed
+08-04 13:28:57.326   870   902 I appium  : GetElementAttribute command
+08-04 13:28:57.469  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:28:57.469  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:28:57.469  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:28:57.469  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:28:57.855   870   902 I QueryController: Matched selector: UiSelector[TEXT=Settings] <<==>> [android.view.accessibility.AccessibilityNodeInfo@9b86; boundsInParent: Rect(0, 0 - 0, 0); boundsInScreen: Rect(858, 2217 - 955, 2247); boundsInWindow: Rect(858, 2217 - 955, 2247); packageName: com.example.ao3_wrapper; className: android.widget.TextView; text: Settings; error: null; maxTextLength: -1; stateDescription: null; contentDescription: null; tooltipText: null; containerTitle: null; viewIdResName: null; uniqueId: null; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: true; actions: [AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SET_SELECTION - null]; isTextSelectable: false]
+08-04 13:28:57.858   870   902 D UiObject: Waiting 0ms for UiSelector[TEXT=Settings].
+08-04 13:28:57.863   870   902 I QueryController: Matched selector: UiSelector[TEXT=Settings] <<==>> [android.view.accessibility.AccessibilityNodeInfo@9b86; boundsInParent: Rect(0, 0 - 0, 0); boundsInScreen: Rect(858, 2217 - 955, 2247); boundsInWindow: Rect(858, 2217 - 955, 2247); packageName: com.example.ao3_wrapper; className: android.widget.TextView; text: Settings; error: null; maxTextLength: -1; stateDescription: null; contentDescription: null; tooltipText: null; containerTitle: null; viewIdResName: null; uniqueId: null; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: true; actions: [AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SET_SELECTION - null]; isTextSelectable: false]
+08-04 13:28:57.871   870   902 I QueryController: Matched selector: UiSelector[TEXT=Settings] <<==>> [android.view.accessibility.AccessibilityNodeInfo@9b86; boundsInParent: Rect(0, 0 - 0, 0); boundsInScreen: Rect(858, 2217 - 955, 2247); boundsInWindow: Rect(858, 2217 - 955, 2247); packageName: com.example.ao3_wrapper; className: android.widget.TextView; text: Settings; error: null; maxTextLength: -1; stateDescription: null; contentDescription: null; tooltipText: null; containerTitle: null; viewIdResName: null; uniqueId: null; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: true; actions: [AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SET_SELECTION - null]; isTextSelectable: false]
+08-04 13:28:57.873   870   902 I appium  : AppiumResponse: {"sessionId":"64ef2702-e9f2-4665-ad1f-662def38cb3d","value":"true"}
+08-04 13:28:57.883   870   902 I appium  : channel read: GET /session/64ef2702-e9f2-4665-ad1f-662def38cb3d/element/00000000-0000-0295-0000-005500000007/attribute/enabled
+08-04 13:28:57.885   870   902 I appium  : GetElementAttribute command
+08-04 13:28:57.890   870   902 I QueryController: Matched selector: UiSelector[TEXT=Settings] <<==>> [android.view.accessibility.AccessibilityNodeInfo@9b86; boundsInParent: Rect(0, 0 - 0, 0); boundsInScreen: Rect(858, 2217 - 955, 2247); boundsInWindow: Rect(858, 2217 - 955, 2247); packageName: com.example.ao3_wrapper; className: android.widget.TextView; text: Settings; error: null; maxTextLength: -1; stateDescription: null; contentDescription: null; tooltipText: null; containerTitle: null; viewIdResName: null; uniqueId: null; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: true; actions: [AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SET_SELECTION - null]; isTextSelectable: false]
+08-04 13:28:57.893  2483  2483 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 
+08-04 13:28:57.904   870   902 I QueryController: Matched selector: UiSelector[TEXT=Settings] <<==>> [android.view.accessibility.AccessibilityNodeInfo@9b86; boundsInParent: Rect(0, 0 - 0, 0); boundsInScreen: Rect(858, 2217 - 955, 2247); boundsInWindow: Rect(858, 2217 - 955, 2247); packageName: com.example.ao3_wrapper; className: android.widget.TextView; text: Settings; error: null; maxTextLength: -1; stateDescription: null; contentDescription: null; tooltipText: null; containerTitle: null; viewIdResName: null; uniqueId: null; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: true; actions: [AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SET_SELECTION - null]; isTextSelectable: false]
+08-04 13:28:57.906   870   902 I appium  : AppiumResponse: {"sessionId":"64ef2702-e9f2-4665-ad1f-662def38cb3d","value":"true"}
+08-04 13:28:57.915   870   902 I appium  : channel read: POST /session/64ef2702-e9f2-4665-ad1f-662def38cb3d/element/00000000-0000-0295-0000-005500000007/click
+08-04 13:28:57.917   870   902 I appium  : Click command
+08-04 13:28:57.926   870   902 I QueryController: Matched selector: UiSelector[TEXT=Settings] <<==>> [android.view.accessibility.AccessibilityNodeInfo@9b86; boundsInParent: Rect(0, 0 - 0, 0); boundsInScreen: Rect(858, 2217 - 955, 2247); boundsInWindow: Rect(858, 2217 - 955, 2247); packageName: com.example.ao3_wrapper; className: android.widget.TextView; text: Settings; error: null; maxTextLength: -1; stateDescription: null; contentDescription: null; tooltipText: null; containerTitle: null; viewIdResName: null; uniqueId: null; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: true; actions: [AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SET_SELECTION - null]; isTextSelectable: false]
+08-04 13:28:57.936   870   902 I QueryController: Matched selector: UiSelector[TEXT=Settings] <<==>> [android.view.accessibility.AccessibilityNodeInfo@9b86; boundsInParent: Rect(0, 0 - 0, 0); boundsInScreen: Rect(858, 2217 - 955, 2247); boundsInWindow: Rect(858, 2217 - 955, 2247); packageName: com.example.ao3_wrapper; className: android.widget.TextView; text: Settings; error: null; maxTextLength: -1; stateDescription: null; contentDescription: null; tooltipText: null; containerTitle: null; viewIdResName: null; uniqueId: null; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: true; actions: [AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SET_SELECTION - null]; isTextSelectable: false]
+08-04 13:28:57.983   870   902 W GestureController: Gestures took longer than expected (45ms >> 16ms), device might be in a busy state.
+08-04 13:28:57.985   870   902 I appium  : Waiting up to 10000ms for the device to idle
+08-04 13:28:57.990   870   902 I appium  : AppiumResponse: {"sessionId":"64ef2702-e9f2-4665-ad1f-662def38cb3d","value":null}
+08-04 13:28:58.006   870   902 I appium  : channel read: POST /session/64ef2702-e9f2-4665-ad1f-662def38cb3d/element
+08-04 13:28:58.008   870   902 I appium  : FindElement command
+08-04 13:28:58.009   870   902 I appium  : method: '-android uiautomator', selector: 'new UiSelector().text("Infinite scroll (listing pages)")'
+08-04 13:28:58.011   870   902 I appium  : Waiting up to 10000ms for the device to idle
+08-04 13:28:58.469  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:28:58.469  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:28:58.470  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:28:58.470  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:28:58.877   918   937 D EGL_emulation: app_time_stats: avg=396.56ms min=47.88ms max=1626.36ms count=5
+08-04 13:28:58.927   918   942 I OpenGLRenderer: Davey! duration=916ms; Flags=0, FrameTimelineVsyncId=1512546, IntendedVsync=3996961279204, Vsync=3996977945870, InputEventId=-886462087, HandleInputStart=3996984977900, AnimationStart=3996985020100, PerformTraversalsStart=3997375784100, DrawStart=3997558131600, FrameDeadline=3996977945870, FrameInterval=3996984929700, FrameStartTime=16666666, SyncQueued=3997605189700, SyncStart=3997605902700, IssueDrawCommandsStart=3997606225700, SwapBuffers=3997757808600, FrameCompleted=3997878166300, DequeueBufferDuration=35400, QueueBufferDuration=364400, GpuCompleted=3997877759200, SwapBuffersCompleted=3997878166300, DisplayPresentTime=0, CommandSubmissionCompleted=3997757808600, 
+08-04 13:28:59.143   870   902 I QueryController: Matched selector: UiSelector[TEXT=Infinite scroll (listing pages)] <<==>> [android.view.accessibility.AccessibilityNodeInfo@a5d1; boundsInParent: Rect(0, 0 - 0, 0); boundsInScreen: Rect(42, 1514 - 489, 1557); boundsInWindow: Rect(42, 1514 - 489, 1557); packageName: com.example.ao3_wrapper; className: android.widget.TextView; text: Infinite scroll (listing pages); error: null; maxTextLength: -1; stateDescription: null; contentDescription: null; tooltipText: null; containerTitle: null; viewIdResName: null; uniqueId: null; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: true; actions: [AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SET_SELECTION - null]; isTextSelectable: false]
+08-04 13:28:59.146   870   902 I appium  : AppiumResponse: {"sessionId":"64ef2702-e9f2-4665-ad1f-662def38cb3d","value":{"ELEMENT":"00000000-0000-0295-0000-00aa00000007","element-6066-11e4-a52e-4f735466cecf":"00000000-0000-0295-0000-00aa00000007"}}
+08-04 13:28:59.157   870   902 I appium  : channel read: POST /session/64ef2702-e9f2-4665-ad1f-662def38cb3d/element
+08-04 13:28:59.159   870   902 I appium  : FindElement command
+08-04 13:28:59.161   870   902 I appium  : method: 'xpath', selector: '(//*[@text="Infinite scroll (listing pages)"]/following::*[@checkable="true"])[1]'
+08-04 13:28:59.162   870   902 I appium  : Waiting up to 10000ms for the device to idle
+08-04 13:28:59.470  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:28:59.470  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:28:59.470  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:28:59.470  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:28:59.626   870   902 I appium  : The following attributes will be included to the page source: [checkable, text]
+08-04 13:28:59.749  2491  2491 D StatusBarIconController: ignoring old pipeline callback because the new wifi icon is enabled
+08-04 13:29:00.037  2491  2559 D EGL_emulation: app_time_stats: avg=3340.46ms min=35.61ms max=9945.41ms count=3
+08-04 13:29:00.082   870   902 I appium  : Took 0ms to retrieve 1 matches for '(//*[@text="Infinite scroll (listing pages)"]/following::*[@checkable="true"])[1]' XPath2 query
+08-04 13:29:00.090   870   902 I appium  : AppiumResponse: {"sessionId":"64ef2702-e9f2-4665-ad1f-662def38cb3d","value":{"ELEMENT":"00000000-0000-0295-0000-00ac00000007","element-6066-11e4-a52e-4f735466cecf":"00000000-0000-0295-0000-00ac00000007"}}
+08-04 13:29:00.100   870   902 I appium  : channel read: GET /session/64ef2702-e9f2-4665-ad1f-662def38cb3d/element/00000000-0000-0295-0000-00ac00000007/attribute/checked
+08-04 13:29:00.103   870   902 I appium  : GetElementAttribute command
+08-04 13:29:00.471  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:00.471  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:00.471  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:00.471  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:333
+08-04 13:29:00.644   870   902 I appium  : AppiumResponse: {"sessionId":"64ef2702-e9f2-4665-ad1f-662def38cb3d","value":"true"}
+08-04 13:29:00.670   870   902 I appium  : channel read: POST /session/64ef2702-e9f2-4665-ad1f-662def38cb3d/element
+08-04 13:29:00.673   870   902 I appium  : FindElement command
+08-04 13:29:00.674   870   902 I appium  : method: '-android uiautomator', selector: 'new UiSelector().text("Library")'
+08-04 13:29:00.675   870   902 I appium  : Waiting up to 10000ms for the device to idle
+08-04 13:29:00.941   870   902 I QueryController: Matched selector: UiSelector[TEXT=Library] <<==>> [android.view.accessibility.AccessibilityNodeInfo@9a50; boundsInParent: Rect(0, 0 - 0, 0); boundsInScreen: Rect(499, 2217 - 580, 2247); boundsInWindow: Rect(499, 2217 - 580, 2247); packageName: com.example.ao3_wrapper; className: android.widget.TextView; text: Library; error: null; maxTextLength: -1; stateDescription: null; contentDescription: null; tooltipText: null; containerTitle: null; viewIdResName: null; uniqueId: null; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: true; actions: [AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SET_SELECTION - null]; isTextSelectable: false]
+08-04 13:29:00.945   870   902 I appium  : AppiumResponse: {"sessionId":"64ef2702-e9f2-4665-ad1f-662def38cb3d","value":{"ELEMENT":"00000000-0000-0295-0000-004b00000007","element-6066-11e4-a52e-4f735466cecf":"00000000-0000-0295-0000-004b00000007"}}
+08-04 13:29:00.956   870   902 I appium  : channel read: POST /session/64ef2702-e9f2-4665-ad1f-662def38cb3d/element
+08-04 13:29:00.958   870   902 I appium  : FindElement command
+08-04 13:29:00.960   870   902 I appium  : method: '-android uiautomator', selector: 'new UiSelector().text("Browse")'
+08-04 13:29:00.961   870   902 I appium  : Waiting up to 10000ms for the device to idle
+08-04 13:29:01.125   870   902 I QueryController: Matched selector: UiSelector[TEXT=Browse] <<==>> [android.view.accessibility.AccessibilityNodeInfo@991a; boundsInParent: Rect(0, 0 - 0, 0); boundsInScreen: Rect(130, 2217 - 216, 2247); boundsInWindow: Rect(130, 2217 - 216, 2247); packageName: com.example.ao3_wrapper; className: android.widget.TextView; text: Browse; error: null; maxTextLength: -1; stateDescription: null; contentDescription: null; tooltipText: null; containerTitle: null; viewIdResName: null; uniqueId: null; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: true; actions: [AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SET_SELECTION - null]; isTextSelectable: false]
+08-04 13:29:01.127   870   902 I appium  : AppiumResponse: {"sessionId":"64ef2702-e9f2-4665-ad1f-662def38cb3d","value":{"ELEMENT":"00000000-0000-0295-0000-004100000007","element-6066-11e4-a52e-4f735466cecf":"00000000-0000-0295-0000-004100000007"}}
+08-04 13:29:01.138   870   902 I appium  : channel read: GET /session/64ef2702-e9f2-4665-ad1f-662def38cb3d/element/00000000-0000-0295-0000-004100000007/attribute/displayed
+08-04 13:29:01.140   870   902 I appium  : GetElementAttribute command
+08-04 13:29:01.148   870   902 I QueryController: Matched selector: UiSelector[TEXT=Browse] <<==>> [android.view.accessibility.AccessibilityNodeInfo@991a; boundsInParent: Rect(0, 0 - 0, 0); boundsInScreen: Rect(130, 2217 - 216, 2247); boundsInWindow: Rect(130, 2217 - 216, 2247); packageName: com.example.ao3_wrapper; className: android.widget.TextView; text: Browse; error: null; maxTextLength: -1; stateDescription: null; contentDescription: null; tooltipText: null; containerTitle: null; viewIdResName: null; uniqueId: null; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: true; actions: [AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SET_SELECTION - null]; isTextSelectable: false]
+08-04 13:29:01.149   870   902 D UiObject: Waiting 0ms for UiSelector[TEXT=Browse].
+08-04 13:29:01.163   870   902 I QueryController: Matched selector: UiSelector[TEXT=Browse] <<==>> [android.view.accessibility.AccessibilityNodeInfo@991a; boundsInParent: Rect(0, 0 - 0, 0); boundsInScreen: Rect(130, 2217 - 216, 2247); boundsInWindow: Rect(130, 2217 - 216, 2247); packageName: com.example.ao3_wrapper; className: android.widget.TextView; text: Browse; error: null; maxTextLength: -1; stateDescription: null; contentDescription: null; tooltipText: null; containerTitle: null; viewIdResName: null; uniqueId: null; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: true; actions: [AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SET_SELECTION - null]; isTextSelectable: false]
+08-04 13:29:01.173   870   902 I QueryController: Matched selector: UiSelector[TEXT=Browse] <<==>> [android.view.accessibility.AccessibilityNodeInfo@991a; boundsInParent: Rect(0, 0 - 0, 0); boundsInScreen: Rect(130, 2217 - 216, 2247); boundsInWindow: Rect(130, 2217 - 216, 2247); packageName: com.example.ao3_wrapper; className: android.widget.TextView; text: Browse; error: null; maxTextLength: -1; stateDescription: null; contentDescription: null; tooltipText: null; containerTitle: null; viewIdResName: null; uniqueId: null; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: true; actions: [AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SET_SELECTION - null]; isTextSelectable: false]
+08-04 13:29:01.175   870   902 I appium  : AppiumResponse: {"sessionId":"64ef2702-e9f2-4665-ad1f-662def38cb3d","value":"true"}
+08-04 13:29:01.186   870   902 I appium  : channel read: GET /session/64ef2702-e9f2-4665-ad1f-662def38cb3d/element/00000000-0000-0295-0000-004100000007/attribute/enabled
+08-04 13:29:01.188   870   902 I appium  : GetElementAttribute command
+08-04 13:29:01.202   870   902 I QueryController: Matched selector: UiSelector[TEXT=Browse] <<==>> [android.view.accessibility.AccessibilityNodeInfo@991a; boundsInParent: Rect(0, 0 - 0, 0); boundsInScreen: Rect(130, 2217 - 216, 2247); boundsInWindow: Rect(130, 2217 - 216, 2247); packageName: com.example.ao3_wrapper; className: android.widget.TextView; text: Browse; error: null; maxTextLength: -1; stateDescription: null; contentDescription: null; tooltipText: null; containerTitle: null; viewIdResName: null; uniqueId: null; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: true; actions: [AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SET_SELECTION - null]; isTextSelectable: false]
+08-04 13:29:01.211   870   902 I QueryController: Matched selector: UiSelector[TEXT=Browse] <<==>> [android.view.accessibility.AccessibilityNodeInfo@991a; boundsInParent: Rect(0, 0 - 0, 0); boundsInScreen: Rect(130, 2217 - 216, 2247); boundsInWindow: Rect(130, 2217 - 216, 2247); packageName: com.example.ao3_wrapper; className: android.widget.TextView; text: Browse; error: null; maxTextLength: -1; stateDescription: null; contentDescription: null; tooltipText: null; containerTitle: null; viewIdResName: null; uniqueId: null; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: true; actions: [AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SET_SELECTION - null]; isTextSelectable: false]
+08-04 13:29:01.213   870   902 I appium  : AppiumResponse: {"sessionId":"64ef2702-e9f2-4665-ad1f-662def38cb3d","value":"true"}
+08-04 13:29:01.224   870   902 I appium  : channel read: POST /session/64ef2702-e9f2-4665-ad1f-662def38cb3d/element/00000000-0000-0295-0000-004100000007/click
+08-04 13:29:01.225   870   902 I appium  : Click command
+08-04 13:29:01.241   870   902 I QueryController: Matched selector: UiSelector[TEXT=Browse] <<==>> [android.view.accessibility.AccessibilityNodeInfo@991a; boundsInParent: Rect(0, 0 - 0, 0); boundsInScreen: Rect(130, 2217 - 216, 2247); boundsInWindow: Rect(130, 2217 - 216, 2247); packageName: com.example.ao3_wrapper; className: android.widget.TextView; text: Browse; error: null; maxTextLength: -1; stateDescription: null; contentDescription: null; tooltipText: null; containerTitle: null; viewIdResName: null; uniqueId: null; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: true; actions: [AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SET_SELECTION - null]; isTextSelectable: false]
+08-04 13:29:01.249   870   902 I QueryController: Matched selector: UiSelector[TEXT=Browse] <<==>> [android.view.accessibility.AccessibilityNodeInfo@991a; boundsInParent: Rect(0, 0 - 0, 0); boundsInScreen: Rect(130, 2217 - 216, 2247); boundsInWindow: Rect(130, 2217 - 216, 2247); packageName: com.example.ao3_wrapper; className: android.widget.TextView; text: Browse; error: null; maxTextLength: -1; stateDescription: null; contentDescription: null; tooltipText: null; containerTitle: null; viewIdResName: null; uniqueId: null; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: true; actions: [AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SET_SELECTION - null]; isTextSelectable: false]
+08-04 13:29:01.306   870   902 W GestureController: Gestures took longer than expected (54ms >> 16ms), device might be in a busy state.
+08-04 13:29:01.309   870   902 I appium  : Waiting up to 10000ms for the device to idle
+08-04 13:29:01.315   870   902 I appium  : AppiumResponse: {"sessionId":"64ef2702-e9f2-4665-ad1f-662def38cb3d","value":null}
+08-04 13:29:01.471  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:01.471  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:01.471  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:01.471  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:01.487   918   918 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+08-04 13:29:01.487   918   918 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+08-04 13:29:01.566   918   937 D EGL_emulation: app_time_stats: avg=895.55ms min=49.80ms max=2549.15ms count=3
+08-04 13:29:02.472  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:02.472  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:02.472  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:02.472  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:03.308   918   937 D EGL_emulation: app_time_stats: avg=435.57ms min=55.70ms max=1493.34ms count=4
+08-04 13:29:03.472  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:03.472  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:03.472  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:03.472  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:04.473  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:04.473  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:04.473  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:04.473  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:05.473  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:05.473  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:05.473  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:05.474  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:05.765  2491  2491 D StatusBarIconController: ignoring old pipeline callback because the new wifi icon is enabled
+08-04 13:29:05.829  2483  2483 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 
+08-04 13:29:06.048  2491  2491 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+08-04 13:29:06.474  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:06.475  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:06.475  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:06.475  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:07.455  2301  2375 W CpuMonitorService: Current CPU frequency (3632383) is greater than maximum CPU frequency (2) for policy ID (1). Skipping CPU frequency policy
+08-04 13:29:07.456  2301  2375 W CpuMonitorService: Current CPU frequency (3621457) is greater than maximum CPU frequency (2) for policy ID (3). Skipping CPU frequency policy
+08-04 13:29:07.475  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:07.475  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:07.475  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:07.475  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:08.476  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:08.476  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:08.476  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:08.477  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:08.784  2491  2491 D StatusBarIconController: ignoring old pipeline callback because the new wifi icon is enabled
+08-04 13:29:09.476  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:09.476  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:09.477  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:09.477  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:10.477  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:10.477  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:10.477  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:10.477  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:11.435 32439 32440 I AidlLazyServiceRegistrar: Process has 0 (of 1 available) client(s) in use after notification artd has clients: 0
+08-04 13:29:11.435 32439 32440 I AidlLazyServiceRegistrar: Trying to shut down the service. No clients in use for any service in process.
+--------- beginning of kernel
+08-04 13:29:11.411     0     0 I servicemanager: Notifying artd they don't (previously: do) have clients when we now have no record of a client
+08-04 13:29:11.413     0     0 I servicemanager: Unregistering artd
+08-04 13:29:11.414     0     0 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+08-04 13:29:11.438 32439 32440 I AidlLazyServiceRegistrar: Unregistered all clients and exiting
+08-04 13:29:11.424     0     0 I init    : Service 'artd' (pid 32439) exited with status 0 oneshot service took 107.026001 seconds in background
+08-04 13:29:11.424     0     0 I init    : Sending signal 9 to service 'artd' (pid 32439) process group...
+08-04 13:29:11.425     0     0 I libprocessgroup: Successfully killed process cgroup uid 1082 pid 32439 in 0ms
+08-04 13:29:11.478  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:11.478  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:11.478  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:11.478  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:12.479  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:12.479  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:12.479  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:12.479  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:13.480  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:13.480  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:13.481  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:13.481  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:14.021  2483  2483 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 
+08-04 13:29:14.480  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:14.480  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:14.480  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:14.480  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:15.481  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:15.481  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:15.481  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:15.481  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:16.050  2491  2491 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+08-04 13:29:16.052  2491  2559 D EGL_emulation: app_time_stats: avg=16015.00ms min=16015.00ms max=16015.00ms count=1
+08-04 13:29:16.482  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:16.482  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:16.482  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:16.482  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:17.482  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:17.482  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:17.482  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:17.482  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:18.376  2301  2339 D KernelCpuUidUserSysTimeReader: Removing uids 99104-99104
+08-04 13:29:18.377  2301  2339 D KernelCpuUidUserSysTimeReader: Removing uids 99105-99105
+08-04 13:29:18.482  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:18.482  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:18.482  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:18.482  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:19.483  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:19.483  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:19.483  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:19.483  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:20.483  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:20.484  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:20.484  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:20.485  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:20.812  2301  2421 E WifiStaIfaceAidlImpl: installApfPacketFilter failed with service-specific exception: android.os.ServiceSpecificException:  (code 4)
+08-04 13:29:21.484  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:21.484  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:21.484  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:21.484  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:21.957  2483  2483 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 
+08-04 13:29:22.484  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:22.484  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:22.484  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:22.484  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:23.485  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:23.485  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:23.485  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:23.485  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:23.823  2491  2491 D StatusBarIconController: ignoring old pipeline callback because the new wifi icon is enabled
+08-04 13:29:24.485  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:24.485  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:24.485  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:24.485  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:25.485  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:25.485  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:25.485  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:25.485  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:26.038  2491  2491 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+08-04 13:29:26.485  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:26.486  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:26.486  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:26.486  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:26.819  2491  2491 D StatusBarIconController: ignoring old pipeline callback because the new wifi icon is enabled
+08-04 13:29:27.486  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:27.486  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:27.486  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:27.486  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:28.486  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:28.487  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:28.487  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:28.487  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:29.487  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:29.488  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:29.488  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:29.488  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:29.894  2483  2483 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 
+08-04 13:29:30.488  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:30.489  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:30.489  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:30.489  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:31.489  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:31.489  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:31.489  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:31.489  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:32.489  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:32.489  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:32.490  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:32.490  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:33.490  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:33.491  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:33.491  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:33.491  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:34.491  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:34.491  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:34.491  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:34.491  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:35.492  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:35.492  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:35.492  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:35.492  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:36.051  2491  2491 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+08-04 13:29:36.492  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:36.493  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:36.493  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:36.493  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:37.493  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:37.493  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:37.493  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:37.493  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:37.829  2483  2483 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 
+08-04 13:29:38.494  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:38.494  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:38.494  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:38.494  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:39.494  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:39.495  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:39.495  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:39.495  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:40.495  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:40.495  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:40.495  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:40.495  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:41.495  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:41.496  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:41.496  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:41.496  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:42.495  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:42.496  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:42.496  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:42.496  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:43.496  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:43.496  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:43.497  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:43.497  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:44.198   870   902 I appium  : channel read: GET /session/64ef2702-e9f2-4665-ad1f-662def38cb3d/screenshot
+08-04 13:29:44.199   870   902 I appium  : CaptureScreenshot command
+08-04 13:29:44.203   870   902 W tomator2.server: Accessing hidden method Landroid/view/Display;->getAddress()Landroid/view/DisplayAddress; (blocked, reflection, allowed)
+08-04 13:29:44.203   870   902 W tomator2.server: Accessing hidden method Landroid/view/DisplayAddress$Physical;->getPhysicalDisplayId()J (blocked, reflection, allowed)
+08-04 13:29:44.277  1039  1039 W BpBinder: Linking to death on android.gui.ISurfaceComposer but there are no threads (yet?) listening to incoming transactions. See ProcessState::startThreadPool and ProcessState::setThreadPoolMaxThreadCount. Generally you should setup the binder threadpool before other initialization steps.
+08-04 13:29:44.279  1039  1039 W ProcessState: Extra binder thread started, but 0 threads requested. Do not use *startThreadPool when zero threads are requested.
+08-04 13:29:44.268     0     0 I servicemanager: Could not find android.hardware.graphics.allocator.IAllocator/default in the VINTF manifest.
+08-04 13:29:44.293   163   163 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device VINTF manifest.
+08-04 13:29:44.293  1039  1044 I Gralloc4: mapper 4.x is not supported
+08-04 13:29:44.497  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:44.497  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-04 13:29:44.498  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-04 13:29:44.498  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-04 13:29:44.641   870   902 I appium  : AppiumResponse: {"sessionId":"64ef2702-e9f2-4665-ad1f-662def38cb3d","value":"iVBORw0KGgoAAAANSUhEUgAABDgAAAlgCAYAAABtGofVAAAAAXNSR0IArs4c6QAAAARzQklUCAgICHwIZIgAACAASURBVHic7N13dFTVwsbhd9InJCQkBAKh9xqKVOkISkeKiChFBPmsiIJ69drL9VqvvRfsIEWqFOm9E0B6C2mQRvqkz/dHLrnEJDOTMgkDv2ct1iJn9tlnTzuz55199jZkmpLMAgAAAAAAcGBOld0AAAAвЂ¦
+08-04 13:29:44.659   870   902 I appium  : channel read: GET /session/64ef2702-e9f2-4665-ad1f-662def38cb3d/source
+08-04 13:29:44.661   870   902 I appium  : Source command
+08-04 13:29:44.662   870   902 I appium  : Waiting up to 10000ms for the device to idle
+08-04 13:29:45.215   870   899 I appium  : READER_IDLE: closing the channel
+08-04 13:29:45.234   870   900 I appium  : READER_IDLE: closing the channel
+08-04 13:29:45.249   870   901 I appium  : READER_IDLE: closing the channel
+08-04 13:29:45.364   870   902 I appium  : AppiumResponse: {"sessionId":"64ef2702-e9f2-4665-ad1f-662def38cb3d","value":"<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>\r\n<hierarchy index=\"0\" class=\"hierarchy\" rotation=\"0\" width=\"1080\" height=\"2146\">\r\n  <android.widget.FrameLayout index=\"0\" package=\"com.example.ao3_wrapper\" class=\"вЂ¦

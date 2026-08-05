@@ -7,7 +7,7 @@ priority: "p1"
 summary: "Kill+relaunch приложения не переоткрывает уже обработанный deep-link"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:tabs", "risk:R-08", "automation:active"]
+labels: ["test-case", "area:tabs", "risk:R-08", "automation:quarantined"]
 components: []
 fixVersions: []
 watchers: []

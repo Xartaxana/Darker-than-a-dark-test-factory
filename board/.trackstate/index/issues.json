@@ -79,12 +79,11 @@
     "issueType": "test-case",
     "status": "tc-approved",
     "priority": "p2",
-    "assignee": "test-automator",
+    "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:accessibility",
-      "risk:R-13",
-      "wip:test-automator"
+      "risk:R-13"
     ],
     "updated": "2026-08-04T12:28:48Z",
     "resolution": null,
@@ -1337,7 +1336,7 @@
       "risk:R-05",
       "automation:active"
     ],
-    "updated": "2026-07-18T05:30:00Z",
+    "updated": "2026-08-05T03:25:00Z",
     "resolution": "done",
     "children": [],
     "archived": false
@@ -1905,9 +1904,9 @@
       "test-case",
       "area:library",
       "risk:R-04",
-      "automation:active"
+      "automation:quarantined"
     ],
-    "updated": "2026-07-08T23:15:00Z",
+    "updated": "2026-08-05T03:20:00Z",
     "resolution": "done",
     "children": [],
     "archived": false
@@ -3756,7 +3755,7 @@
       "test-case",
       "area:tabs",
       "risk:R-08",
-      "automation:active"
+      "automation:quarantined"
     ],
     "updated": "2026-07-31T18:12:23Z",
     "resolution": "done",
@@ -3779,7 +3778,7 @@
       "test-case",
       "area:tabs",
       "risk:R-08",
-      "automation:active"
+      "automation:quarantined"
     ],
     "updated": "2026-07-31T18:12:23Z",
     "resolution": "done",
@@ -5006,6 +5005,125 @@
     "archived": false
   },
   {
+    "key": "AT-BUG-053",
+    "path": "board/AT-BUG-053/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "settings_screen.rename_filter_button_locator ищет content-desc «Renam3» вместо «Rename» — TC-085/TC-086 broken на шаге переименования профиля",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-085",
+      "test_case:TC-086",
+      "run:RUN-20260804-1624",
+      "sev:major"
+    ],
+    "updated": "2026-08-04T22:20:45Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-054",
+    "path": "board/AT-BUG-054/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Replay-фикстура listing_paginated.mitm несёт class=\"work blurp\" вместо \"work blurb\" — листинговая страница не опознаётся ни тестом, ни bridge'ем (TC-129/TC-130 broken)",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-129",
+      "test_case:TC-130",
+      "run:RUN-20260804-1624",
+      "sev:major"
+    ],
+    "updated": "2026-08-04T22:20:45Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-055",
+    "path": "board/AT-BUG-055/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Нестабильные TC-134/TC-135: наблюдение вкладок через `run-as cat ao3_settings.xml` слепое — пустой/неудавшийся ответ adb неотличим от «0 вкладок»",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-134",
+      "test_case:TC-135",
+      "run:RUN-20260803-2012",
+      "run:RUN-20260804-1624",
+      "sev:major"
+    ],
+    "updated": "2026-08-04T22:20:45Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-057",
+    "path": "board/AT-BUG-057/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Нестабильный TC-016 (p0, live): RatingOverlay не открывается на странице работы после open_work_page → open_tab(Browse); в изоляции 3/3 зелёный",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-016",
+      "run:RUN-20260805-0432",
+      "sev:major"
+    ],
+    "updated": "2026-08-05T03:20:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-058",
+    "path": "board/AT-BUG-058/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "TC-096 замеряет холодный старт (force-stop+pm clear+am start -W) ПОД активной Appium-сессией — запуск не рапортует завершение, TimeoutError 60s; та же последовательность без сессии — 6/6 успешных, ~6.0-6.3s",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-096",
+      "run:RUN-20260805-0437",
+      "sev:major"
+    ],
+    "updated": "2026-08-05T03:20:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "BUG-001",
     "path": "board/BUG-001/main.md",
     "parent": null,
@@ -5101,7 +5219,7 @@
     "epicPath": null,
     "summary": "Авто-скачивание Favorite срабатывает ретроактивно при правке тега ранее отмеченной работы",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-blocked",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5110,7 +5228,7 @@
       "test_case:TC-115",
       "sev:major"
     ],
-    "updated": "2026-08-04T19:22:32Z",
+    "updated": "2026-08-05T02:52:06Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5138,7 +5256,7 @@
       "test_case:TC-144",
       "sev:major"
     ],
-    "updated": "2026-08-04T11:16:11Z",
+    "updated": "2026-08-05T03:28:42Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5376,14 +5494,14 @@
     "epicPath": null,
     "summary": "Снекбар «Tab closed» перекрывает нижнюю навигацию на узких экранах — кнопка Undo и таб Library недоступны одновременно",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-open",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-08-01T04:00:00Z",
+    "updated": "2026-08-04T22:13:11Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5447,6 +5565,52 @@
       "sev:minor"
     ],
     "updated": "2026-08-04T18:18:52Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-056",
+    "path": "board/BUG-056/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Bridge-скрипт падает на document.head.appendChild — Rate-кнопки не инжектируются",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-090",
+      "run:RUN-20260804-1624",
+      "sev:major"
+    ],
+    "updated": "2026-08-04T22:29:15Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-057",
+    "path": "board/BUG-057/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Авто-скачивание НЕ запускается при первичной простановке Favorite через панель work-страницы (регрессия фикса BUG-014, путь onRateWorkRequested)",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-032",
+      "run:RUN-20260805-0437",
+      "sev:major"
+    ],
+    "updated": "2026-08-05T03:25:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5560,13 +5724,53 @@
     "epicPath": null,
     "summary": "RUN-20260804-1624",
     "issueType": "run",
-    "status": "run-needstriage",
+    "status": "run-triaged",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "run"
     ],
-    "updated": "2026-08-04T16:24:46Z",
+    "updated": "2026-08-04T22:20:45Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "RUN-20260805-0432",
+    "path": "board/RUN-20260805-0432/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "RUN-20260805-0432",
+    "issueType": "run",
+    "status": "run-triaged",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "run"
+    ],
+    "updated": "2026-08-05T03:20:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "RUN-20260805-0437",
+    "path": "board/RUN-20260805-0437/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "RUN-20260805-0437",
+    "issueType": "run",
+    "status": "run-triaged",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "run"
+    ],
+    "updated": "2026-08-05T03:20:00Z",
     "resolution": null,
     "children": [],
     "archived": false

@@ -5,9 +5,9 @@ issueType: "test-case"
 status: "tc-approved"
 priority: "p2"
 summary: "Интерактивные цели нативного хрома (панели, тумблеры, чипы TabStrip, кнопки диалогов) не меньше 48dp по bounds accessibility-дерева"
-assignee: "test-automator"
+assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:accessibility", "risk:R-13", "wip:test-automator"]
+labels: ["test-case", "area:accessibility", "risk:R-13"]
 components: []
 fixVersions: []
 watchers: []

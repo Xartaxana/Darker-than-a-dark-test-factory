@@ -1,0 +1,207 @@
+---
+key: "RUN-20260805-0432"
+project: "AO3"
+issueType: "run"
+status: "run-triaged"
+priority: "p2"
+summary: "RUN-20260805-0432"
+assignee: "qa-agents"
+reporter: "qa-agents"
+labels: ["run"]
+components: []
+fixVersions: []
+watchers: []
+parent: null
+epic: null
+created: "2026-08-05T03:20:00Z"
+updated: "2026-08-05T03:20:00Z"
+archived: false
+resolution: null
+---
+
+# RUN-20260805-0432
+
+_Спроецировано из `runs/RUN-20260805-0432.md` (источник правды).
+Статус в нашей машине: **Triaged**._
+
+# RUN-20260805-0432 — smoke на 1.11 (12)
+
+## Контекст запуска
+
+Триггер: E1 (новая сборка) — `state/app-under-test.yaml` обновлён на 1.11
+(versionCode 12), `source_commit bfc8f41a2181…`, собрана `build_watch`.
+Прямая инструкция координатора: переустановить APK новой сборкой,
+`Invoke-Pytest tests -m p0`, затем regression replay.
+
+Окружение поднято заранее (не мной), сверено `Get-Device` → `DEVICE:
+emulator-5554` (эмулятор `ao3_test_api34`) ДО старта. `Install-App` —
+`Streamed Install: Success`. `Start-Appium` (health-checked) выполнен перед
+первым прогоном.
+
+**Команда**: `pytest tests -m p0` — 49 selected / 314 collected (265
+deselected). Маркер `p0` не исключает `live`, поэтому набор смешанный
+(canary live+replay-варианты вперемешку с device-тестами) — `mode: live`
+в frontmatter указан по конвенции `RUN-20260702-0300` (домашний p0-прогон),
+не означает «только live».
+
+## Находка: первая попытка — Appium упал посреди прогона (env, не app)
+
+Первый запуск (`run_in_background`, canon 07-19) дошёл до `sessionfinish`
+(итоговая строка есть) за 650.43s, но с 06:xx-й минуты по нему пошла
+однотипная серия `urllib3.exceptions.NewConnectionError: …port=4723…
+[WinError 10061] соединение не установлено` — **42 ERROR + 1 FAILED (реальный,
+`ERR_TUNNEL_CONNECTION_FAILED`) + 6 PASSED**. Позитивная сверка сразу после:
+`Get-Device` → `DEVICE: emulator-5554` (эмулятор жив); прямой запрос
+`http://127.0.0.1:4723/status` → отказ соединения; `Get-CimInstance
+Win32_Process -Filter node.exe` → **процесса Appium нет вовсе** (упал
+полностью, не завис). Это ровно класс fail-fast-среды (docs/06 §5): серия
+идентичных `NewConnectionError` на одном и том же вызове (`urllib3`→`:4723`)
+— среда деградировала, прогон первой попытки не пригоден для триажа.
+
+**Восстановление**: `Stop-NodeProcesses` (не нашёл процессов — Appium уже
+мёртв сам, не завис) → `Start-Appium` (health-checked, `Appium started and
+ready on :4723`) → `Get-Device` → `DEVICE: emulator-5554`. Второй прогон той
+же команды (`pytest tests -m p0`) запущен с чистой средой.
+
+## Итог (второй прогон — валидный, витнесс)
+
+49 selected, **48 passed, 1 failed**, 3167.00s (52:47), сессия дошла до
+`sessionfinish`. Дословный хвост:
+
+```
+tests\canary\test_ao3_selectors.py .................                     [ 34%]
+tests\canary\test_tap_zone_guard.py ....                                 [ 42%]
+tests\test_backup_restore.py .                                           [ 44%]
+tests\test_library.py F.                                                 [ 48%]
+tests\test_performance.py ..                                             [ 53%]
+tests\test_rating.py ......                                              [ 65%]
+tests\test_rating_listing.py .....                                       [ 75%]
+tests\test_smoke.py .........                                            [ 93%]
+tests\test_visibility.py ...                                             [100%]
+
+================================== FAILURES ===================================
+_________________ test_change_rating_moves_work_between_tabs __________________
+...
+>       rating_steps.rate_current_work(driver, "SAVE")
+...
+        overlay = RatingOverlay(driver)
+>       assert overlay.is_visible(), "Меню рейтинга не открылось на странице работы"
+E       AssertionError: Меню рейтинга не открылось на странице работы
+steps\rating_steps.py:31: AssertionError
+AT-BUG-026 device-liveness guard: recoveries this session = 0/2
+=========================== short test summary info ===========================
+FAILED tests/test_library.py::test_change_rating_moves_work_between_tabs - As...
+========== 1 failed, 48 passed, 265 deselected in 3167.00s (0:52:46) ==========
+PYTEST_EXIT=1
+```
+
+**recoveries this session = 0/2** — дублировано дословно, как того требует
+AT-BUG-026/D1 (перенесено в `recoveries: "0/2"` frontmatter). Токена
+`ENV_ISSUE` в этом (втором, валидном) прогоне не было.
+
+## Первоочередной факт: p0 красный (TC-016, новый)
+
+`test_library.py::test_change_rating_moves_work_between_tabs` (**TC-016**,
+`test-cases/library/TC-016.md`) упал: `RatingOverlay.is_visible()` вернул
+`False` после `open_work_page` → `open_tab(Browse)` → `rate_current_work(SAVE)`
+— панель рейтинга не открылась на странице работы. TC-016 **не несёт
+`red_lock`/`known_issue`** (`automation_status: active`, последняя red-проба
+2026-07-22 подтвердила, что тест умеет падать осмысленно) — это НЕ известный
+замок, а новый красный на новой сборке 1.11 (12). Вердикт (APP_BUG/TEST_BUG/
+FLAKY) не выношу — факт для failure-analyst.
+
+## Артефакты
+
+Allure-результаты ОБОИХ прогонов smoke **не сохранились**: `Invoke-Pytest`
+чистит `framework/allure-results/` (`--clean-alluredir`) при каждом новом
+вызове, а следом за smoke шли ещё 4 прогона regression — рабочий каталог к
+моменту написания этого отчёта содержит только результаты последнего
+(disambiguation) прогона regression. Тот же класс процессной дыры уже
+задокументирован в `runs/RUN-20260804-1624.md` («Уничтожение артефактов
+прогона») — рецидив, архивация вручную для smoke сделана не была (не успел
+до старта следующего прогона). Скриншот/logcat падения TC-016 недоступны
+задним числом.
+
+## Дефекты-собратья (D-0043) — доклад
+
+1. **Appium падает целиком посреди сессии (WinError 10061)** — см.
+   «Находка» выше. Наблюдалось ТОЛЬКО в первой попытке smoke; во второй
+   попытке smoke и во всех прогонах regression (кроме отдельного эпизода,
+   см. `RUN-20260805-0437.md`) Appium был стабилен. Не диагностирую
+   причину (не моя роль) — фиксирую факт как класс-кандидат.
+2. **Уничтожение allure-артефактов `--clean-alluredir` между последовательными
+   прогонами** — тот же класс, что зафиксирован в `runs/RUN-20260804-1624.md`
+   («Дефекты-собратья» п.1 там же под другим номером, «процессная дыра»),
+   рецидив: третий известный случай подряд (тот отчёт был вторым). Предложение
+   test-runner'а не изменилось: обязательная архивация
+   `framework/allure-results/` → `runs/RUN-<id>/allure/` шагом закрытия
+   прогона (или pre_step qa-loop) ДО следующего `--clean-alluredir`.
+3. **TC-016 (новый красный) — граничит по механике с находкой TC-090
+   (`runs/RUN-20260804-1624.md`, APP_BUG BUG-056):** оба падения — панель/
+   кнопка рейтинга не появляется на странице/листинге после навигации между
+   вкладками. Возможный класс-кандидат (инъекция bridge/rating UI не
+   переживает смену контекста WebView), не расследовал — за failure-analyst.
+
+## Падения и триаж (failure-analyst, 2026-08-05T03:20:00Z)
+
+| Тест (TC) | Ошибка (кратко) | Вердикт | Действие | Ссылка |
+|---|---|---|---|---|
+| TC-016 `test_change_rating_moves_work_between_tabs` (p0, live) | `AssertionError: меню рейтинга не появилось на странице работы` — `steps/rating_steps.py:31`, `RatingOverlay.is_visible()` == False после `open_work_page` → `open_tab(Browse)` | **FLAKY** | карантин кейса (`automation_status: quarantined`) + заведён долг на стабилизацию | `bugs/AT-BUG-057.md`, `test-cases/library/TC-016.md` |
+
+Итого: 1 `FLAKY`. `APP_BUG`/`APP_CHANGED`/`TEST_BUG`/`SITE_CHANGED`/`ENV_ISSUE` не
+выставлены — обоснование ниже.
+
+### Пакет доказательств (C2, `schemas/evidence.yaml` → FLAKY)
+
+- **`rerun_history`** — изолированные перепрогоны той же сборки/эмулятора
+  (`Get-Device` → `DEVICE: emulator-5554`; Appium перезапущен `Stop-NodeProcesses`
+  + `Start-Appium`, health-checked, `:4723/status` → 200):
+  `Invoke-Pytest -k test_change_rating_moves_work_between_tabs -v` →
+  `1 passed … 71.13s` / `1 passed … 72.08s` / `1 passed … 131.57s`, все
+  `PYTEST_EXIT=0`. **3/3 зелёный, падение не воспроизвелось.**
+- **`failure_signature`** — сигнатура прогона: `AssertionError` на
+  `assert overlay.is_visible()` (`rating_steps.py:31`). Сверить с сигнатурой
+  перепрогонов невозможно (перепрогоны зелёные), а артефакты САМОГО падения
+  утрачены `--clean-alluredir` (см. «Артефакты» выше) — это и есть причина, по
+  которой причина падения не устанавливается и заводится долг, а не фикс.
+  Историческая парная сигнатура: то же падение того же теста 2026-07-29
+  (`docs/HANDOFF.md`, «TC-016 флейк-кандидат») — второе наблюдение.
+- **`quarantine_decision`** — `test-cases/library/TC-016.md`:
+  `automation_status: active → quarantined`, `quarantine_reason` (полный),
+  `quarantine_since: 2026-08-05T03:20:00Z`, `quarantine_owner: test-maintainer`,
+  `quarantine_expiry` не задан (действует `sla.quarantine_max`); долг —
+  `bugs/AT-BUG-057.md` (`type: test_debt`, `debt_kind: flaky_test`).
+
+### Почему НЕ регресс сборки 1.11 (12) — сверка по шагу 4 протокола
+
+Сборка = два коммита поверх `63f6aac` (`git -C app-under-test log --oneline
+63f6aac..bfc8f41`): `77d65bc` «Fix BUG-014: trigger favorite auto-download only on
+rating transition (panel path); bump version to 1.11 (12)» и `bfc8f41` «Clarify
+tab-limit dialog title». Ни один не касается `RatingMenu`/`RatingOverlay`,
+`isWorkPage` или `BottomBar` (`show --stat`: `BrowserViewModel.kt` — предикат
+скачивания, `MainActivity.kt:619` — строка заголовка диалога, `build.gradle.kts` —
+версия). Прямое опровержение: в регрессе на ЭТОЙ ЖЕ сборке
+(`RUN-20260805-0437`) ЗЕЛЁНЫЙ TC-114 — он проходит ровно ту же
+последовательность `open_work_page` → `open_tab(Browse)` →
+`RatingOverlay.is_visible()` (через `rating_steps.add_tag_via_panel`), но в
+replay. Механизм раскрытия панели на 1.11 исправен; отличие TC-016 — живой AO3.
+
+### Дефекты-собратья (D-0043) — доклад
+
+1. **Гипотеза runner'а «TC-016 ≈ TC-090/BUG-056» не подтвердилась** (см.
+   «Дефекты-собратья» п.3 выше): BUG-056 — bridge НЕ инжектирует Rate-кнопки в
+   DOM листинга (`li#work_… [data-ao3-rate-btn]` не найден, WEBVIEW-контекст),
+   TC-016 — НАТИВНАЯ Compose-панель на странице работы (`RatingOverlay`,
+   NATIVE_APP), другой слой и другой наблюдаемый объект. Общего класса нет.
+2. **Слепое наблюдение в шаге** — `rate_current_work` падает голым «меню не
+   появилось», без URL/признака work-page; тот же класс, что `AT-BUG-055`
+   (слепое чтение prefs) — вынесено пунктом 1 «Что сделать» в `AT-BUG-057`.
+3. **Уничтожение allure-артефактов `--clean-alluredir`** (п.2 доклада runner'а) —
+   подтверждаю ПОСЛЕДСТВИЕ: пакет доказательств этого падения собран без
+   скриншота/logcat/page source, причина не устанавливаема, вердикт вынужденно
+   «FLAKY + долг» вместо адресного. Третий рецидив подряд; архивация
+   `framework/allure-results/` шагом закрытия прогона нужна механизмом.
+
+## Условия закрытия прогона (Closed)
+- [x] Падение TC-016 имеет вердикт и действие (`FLAKY` → карантин + `AT-BUG-057`)
+- [ ] `state/coverage-map.md` не перегенерирована (шаг снимка — за qa-loop)

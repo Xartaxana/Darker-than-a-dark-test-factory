@@ -1094,6 +1094,31 @@
     "artifact_status": "Open",
     "board_status": "Open"
   },
+  "AT-BUG-053": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "AT-BUG-054": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "AT-BUG-055": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "AT-BUG-057": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "AT-BUG-058": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
   "BUG-001": {
     "itype": "bug",
     "artifact_status": "Rejected",
@@ -1116,8 +1141,8 @@
   },
   "BUG-014": {
     "itype": "bug",
-    "artifact_status": "Fixed",
-    "board_status": "Fixed"
+    "artifact_status": "Blocked",
+    "board_status": "Blocked"
   },
   "BUG-015": {
     "itype": "bug",
@@ -1176,8 +1201,8 @@
   },
   "BUG-049": {
     "itype": "bug",
-    "artifact_status": "Fixed",
-    "board_status": "Fixed"
+    "artifact_status": "Open",
+    "board_status": "Open"
   },
   "BUG-050": {
     "itype": "bug",
@@ -1193,6 +1218,16 @@
     "itype": "bug",
     "artifact_status": "Blocked",
     "board_status": "Blocked"
+  },
+  "BUG-056": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "BUG-057": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
   },
   "RUN-20260702-0300": {
     "itype": "run",
@@ -1221,7 +1256,17 @@
   },
   "RUN-20260804-1624": {
     "itype": "run",
-    "artifact_status": "NeedsTriage",
-    "board_status": "NeedsTriage"
+    "artifact_status": "Triaged",
+    "board_status": "Triaged"
+  },
+  "RUN-20260805-0432": {
+    "itype": "run",
+    "artifact_status": "Triaged",
+    "board_status": "Triaged"
+  },
+  "RUN-20260805-0437": {
+    "itype": "run",
+    "artifact_status": "Triaged",
+    "board_status": "Triaged"
   }
 }

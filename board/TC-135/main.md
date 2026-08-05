@@ -7,7 +7,7 @@ priority: "p1"
 summary: "Deep-link на холодном старте переиспользует единственную незагруженную home-вкладку (positive-reuse)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:tabs", "risk:R-08", "automation:active"]
+labels: ["test-case", "area:tabs", "risk:R-08", "automation:quarantined"]
 components: []
 fixVersions: []
 watchers: []

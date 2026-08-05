@@ -1,0 +1,414 @@
+--------- beginning of main
+08-05 02:52:06.671  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:06.671  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+--------- beginning of system
+08-05 02:52:06.671  2301  2321 I ActivityManager: Killing 22557:com.example.ao3_wrapper/u0a145 (adj -10000): remove task
+08-05 02:52:06.676  2491  2518 W Looper  : Drained
+08-05 02:52:06.701  2301  2334 I libprocessgroup: Successfully killed process cgroup uid 10145 pid 22557 in 9ms
+08-05 02:52:06.701  2491  2529 W Looper  : Slow delivery took 63ms wmshell.anim h=android.view.Choreographer$FrameHandler c=android.view.Choreographer$FrameDisplayEventReceiver@f47a527 m=0
+08-05 02:52:06.702  2491  2529 W Looper  : Slow dispatch took 53ms wmshell.anim h=android.view.Choreographer$FrameHandler c=android.view.Choreographer$FrameDisplayEventReceiver@f47a527 m=0
+--------- beginning of kernel
+08-05 02:52:06.680     0     0 I binder_alloc: 22557: binder_alloc_buf, no vma
+08-05 02:52:06.688     0     0 I binder  : release 22557:22557 transaction 7520375 out, still active
+08-05 02:52:06.688     0     0 I binder  : undelivered TRANSACTION_COMPLETE
+08-05 02:52:06.696     0     0 I binder  : cannot allocate buffer: vma cleared, target dead or dying
+08-05 02:52:06.697     0     0 I binder  : 2301:3316 transaction async to 22557:0 failed 7520400/29189/-3, size 160-0 line 3406
+08-05 02:52:06.727  2491  2518 V WindowManagerShell: Transition animation finished (aborted=false), notifying core (#1654)android.os.BinderProxy@34de7fd@0
+08-05 02:52:06.728  2230  2230 I Zygote  : Process 22557 exited due to signal 9 (Killed)
+08-05 02:52:06.740  2301  3316 E IPCThreadState: Binder transaction failure: 7520400/29189/-3
+08-05 02:52:06.740  2301  2371 D CompatibilityChangeReporter: Compat change id reported: 265195908; UID 10145; state: ENABLED
+08-05 02:52:06.757  2491  2518 V WindowManagerShell: Track 0 became idle
+08-05 02:52:06.757  2491  2518 V WindowManagerShell: All active transition animations finished
+08-05 02:52:06.757  2491  2518 W Looper  : Slow dispatch took 56ms wmshell.main h=android.os.Handler c=com.android.wm.shell.transition.DefaultTransitionHandler$$ExternalSyntheticLambda7@e9c27ea m=0
+08-05 02:52:06.771  2301  2318 V WindowManager: Finish Transition #1654: created at 08-05 02:52:06.030 collect-started=0.081ms request-sent=106.134ms started=152.289ms ready=397.395ms sent=433.6ms finished=725.197ms
+08-05 02:52:06.797  2301  2319 W Looper  : Slow dispatch took 338ms android.ui h=com.android.server.am.ActivityManagerService$UiHandler c=com.android.server.am.UidObserverController$$ExternalSyntheticLambda0@9295680 m=0
+08-05 02:52:06.797  2301  2319 W Looper  : Slow delivery took 334ms android.ui h=com.android.server.wm.DisplayPolicy$PolicyHandler c=com.android.server.wm.DisplayPolicy$2$$ExternalSyntheticLambda3@e209b2f m=0
+08-05 02:52:06.811  2301  3316 E ActivityManager: Exception thrown during bind of ProcessRecord{b26da55 22557:com.example.ao3_wrapper/u0a145}
+08-05 02:52:06.811  2301  3316 E ActivityManager: android.os.DeadObjectException
+08-05 02:52:06.811  2301  3316 E ActivityManager: 	at android.os.BinderProxy.transactNative(Native Method)
+08-05 02:52:06.811  2301  3316 E ActivityManager: 	at android.os.BinderProxy.transact(BinderProxy.java:584)
+08-05 02:52:06.811  2301  3316 E ActivityManager: 	at android.app.IApplicationThread$Stub$Proxy.attachStartupAgents(IApplicationThread.java:1938)
+08-05 02:52:06.811  2301  3316 E ActivityManager: 	at com.android.server.am.AppProfiler.setupProfilerInfoLocked(AppProfiler.java:2344)
+08-05 02:52:06.811  2301  3316 E ActivityManager: 	at com.android.server.am.ActivityManagerService.attachApplicationLocked(ActivityManagerService.java:4683)
+08-05 02:52:06.811  2301  3316 E ActivityManager: 	at com.android.server.am.ActivityManagerService.attachApplication(ActivityManagerService.java:4813)
+08-05 02:52:06.811  2301  3316 E ActivityManager: 	at android.app.IActivityManager$Stub.onTransact(IActivityManager.java:2696)
+08-05 02:52:06.811  2301  3316 E ActivityManager: 	at com.android.server.am.ActivityManagerService.onTransact(ActivityManagerService.java:2720)
+08-05 02:52:06.811  2301  3316 E ActivityManager: 	at android.os.Binder.execTransactInternal(Binder.java:1339)
+08-05 02:52:06.811  2301  3316 E ActivityManager: 	at android.os.Binder.execTransact(Binder.java:1275)
+08-05 02:52:06.814  2301  3316 I ActivityManager: Killing 22557:com.example.ao3_wrapper/u0a145 (adj -10000): error during bind
+08-05 02:52:06.840  2301  2334 I libprocessgroup: Successfully killed process cgroup uid 10145 pid 22557 in 0ms
+08-05 02:52:06.860  2301  2319 D DisplayManagerService: Drop pending events for gone uid 10145
+08-05 02:52:06.864  2301  2364 W system_server: Long monitor contention with owner binder:2301_A (3316) at void com.android.server.am.ActivityManagerService.attachApplication(android.app.IApplicationThread, long)(ActivityManagerService.java:4815) waiters=1 in void com.android.server.am.ActivityManagerService$AppDeathRecipient.binderDied() for 154ms
+08-05 02:52:06.839     0     0 I binder  : 3316:2301 reply target not found
+08-05 02:52:06.839     0     0 I binder  : 2301:3316 transaction reply to 0:0 failed 7520489/29189/0, size 4-0 line 3140
+08-05 02:52:06.840     0     0 I binder  : send failed reply for transaction 7520375, target dead
+08-05 02:52:06.865  2301  2364 W ActivityManager: Spurious death for ProcessRecord{b26da55 0:com.example.ao3_wrapper/u0a145}, curProc for 22557: null
+08-05 02:52:06.866  2301  7111 W system_server: Long monitor contention with owner binder:2301_A (3316) at void com.android.server.am.ActivityManagerService.attachApplication(android.app.IApplicationThread, long)(ActivityManagerService.java:4815) waiters=2 in int com.android.server.am.ActivityManagerService.getMemoryTrimLevel() for 139ms
+08-05 02:52:06.890  2301  2301 W AccessibilityManagerService:  wait for adding window timeout: 3984
+08-05 02:52:06.919  3095  3335 I MediaProvider: Begin Intent { act=android.intent.action.PACKAGE_DATA_CLEARED dat=package: flg=0x5000010 cmp=com.android.providers.media.module/com.android.providers.media.MediaService (has extras) }
+08-05 02:52:06.920  3095  3335 D MediaProvider: Deleted 0 Android/media items belonging to com.example.ao3_wrapper on /data/user/0/com.android.providers.media.module/databases/external.db
+08-05 02:52:06.932  3095  3335 D MediaGrants: Removed 0 media_grants for 0 user for com.example.ao3_wrapper. Reason: Package orphaned
+08-05 02:52:06.935  3095  3335 I MediaProvider: End Intent { act=android.intent.action.PACKAGE_DATA_CLEARED dat=package: flg=0x5000010 cmp=com.android.providers.media.module/com.android.providers.media.MediaService (has extras) }
+08-05 02:52:06.969  2491  2559 D EGL_emulation: app_time_stats: avg=1066.47ms min=1066.47ms max=1066.47ms count=1
+08-05 02:52:07.016  2491  2559 D EGL_emulation: app_time_stats: avg=351.63ms min=76.31ms max=882.15ms count=3
+08-05 02:52:07.017  2301  3316 D SafetySourceDataValidator: No cert check requested for package com.android.permissioncontroller
+08-05 02:52:07.030  2301  2310 I system_server: NativeAlloc concurrent copying GC freed 324489(13MB) AllocSpace objects, 70(1656KB) LOS objects, 49% free, 23MB/46MB, paused 4.772ms,263us total 1.178s
+08-05 02:52:07.054  2301  7111 D SafetySourceDataValidator: No cert check requested for package com.android.permissioncontroller
+08-05 02:52:07.102  2879  2879 D PersistedStoragePackageUninstalledReceiver: Received android.intent.action.PACKAGE_DATA_CLEARED for com.example.ao3_wrapper for u0
+08-05 02:52:07.131  2301  2319 W Looper  : Drained
+08-05 02:52:07.556  2491  2491 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+08-05 02:52:07.672  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:07.672  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:07.672  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:07.672  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:08.238  2491  2491 D StatusBarIconController: ignoring old pipeline callback because the new wifi icon is enabled
+08-05 02:52:08.672  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:08.673  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:08.673  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:08.673  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:08.870  2483  2483 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 
+08-05 02:52:09.138  2301  3127 E TaskPersister: File error accessing recents directory (directory doesn't exist?).
+08-05 02:52:09.674  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:09.675  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:09.676  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:09.677  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:10.673  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:10.673  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:10.673  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:10.673  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:11.250  2491  2491 D StatusBarIconController: ignoring old pipeline callback because the new wifi icon is enabled
+08-05 02:52:11.440 22257 22258 I AidlLazyServiceRegistrar: Process has 0 (of 1 available) client(s) in use after notification artd has clients: 0
+08-05 02:52:11.440 22257 22258 I AidlLazyServiceRegistrar: Trying to shut down the service. No clients in use for any service in process.
+08-05 02:52:11.414     0     0 I servicemanager: Notifying artd they don't (previously: do) have clients when we now have no record of a client
+08-05 02:52:11.418     0     0 I servicemanager: Unregistering artd
+08-05 02:52:11.424     0     0 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+08-05 02:52:11.448 22257 22258 I AidlLazyServiceRegistrar: Unregistered all clients and exiting
+08-05 02:52:11.439     0     0 I init    : Service 'artd' (pid 22257) exited with status 0 oneshot service took 69.377998 seconds in background
+08-05 02:52:11.440     0     0 I init    : Sending signal 9 to service 'artd' (pid 22257) process group...
+08-05 02:52:11.441     0     0 I libprocessgroup: Successfully killed process cgroup uid 1082 pid 22257 in 0ms
+08-05 02:52:11.673  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:11.674  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:11.674  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:11.674  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:12.674  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:12.674  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:12.674  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:12.674  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:13.675  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:13.680  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:13.681  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:13.688  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:14.271  2491  2491 D StatusBarIconController: ignoring old pipeline callback because the new wifi icon is enabled
+08-05 02:52:14.678  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:14.680  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:14.683  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:14.683  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:15.494  2301  2379 D ActivityManager: freezing 4035 com.android.webview:webview_service
+08-05 02:52:15.530  2491  2509 I ndroid.systemui: Background young concurrent copying GC freed 230207(10MB) AllocSpace objects, 0(0B) LOS objects, 43% free, 13MB/23MB, paused 8.959ms,98us total 38.581ms
+08-05 02:52:15.678  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:15.679  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:15.679  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:15.679  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:15.709   182 22546 I keystore2: system/security/keystore2/src/watchdog.rs:319 - Watchdog thread idle -> terminating. Have a great day.
+08-05 02:52:16.138  2301  2321 W ActivityTaskManager: Launch timeout has expired, giving up wake lock!
+08-05 02:52:16.577  2301  2379 D ActivityManager: freezing 30630 com.android.documentsui
+08-05 02:52:16.677  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:16.678  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:16.678  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:16.682  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:16.810  2483  2483 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 
+08-05 02:52:16.953  2301  3458 D WifiNl80211Manager: Scan result ready event
+08-05 02:52:16.954  2301  3458 D WifiNative: Scan result ready event
+08-05 02:52:17.117  2301  2379 D ActivityManager: freezing 2879 com.android.permissioncontroller
+08-05 02:52:17.551  2491  2491 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+08-05 02:52:17.679  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:17.679  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:17.679  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:17.679  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:18.680  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:18.681  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:18.681  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:18.681  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:19.679  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:19.679  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:19.679  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:19.680  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:20.678  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:20.678  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:20.678  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:20.678  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:21.099  2301  7111 W BatteryExternalStatsWorker: error reading Bluetooth stats: 11
+08-05 02:52:21.118  2301  3458 D TelephonyManager: requestModemActivityInfo: Sending result to app: ModemActivityInfo{ mTimestamp=52200112 mSleepTimeMs=0 mIdleTimeMs=52169405 mActivityStatsTechSpecificInfo=[{mRat=UNKNOWN,mFrequencyRange=UNKNOWN,mTxTimeMs[]=[0, 0, 0, 0, 0],mRxTimeMs=0}]}
+08-05 02:52:21.125  2301  2339 E system_server: Cannot read thread CPU times for PID 2301
+08-05 02:52:21.155  2218  2251 I netd    : tetherGetStats() -> {[]} <0.45ms>
+08-05 02:52:21.680  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:21.680  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:21.680  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:21.680  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:22.680  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:22.680  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:22.680  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:22.681  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:23.621  2491  2509 I ndroid.systemui: Background young concurrent copying GC freed 207540(9728KB) AllocSpace objects, 0(0B) LOS objects, 41% free, 13MB/23MB, paused 5.671ms,88us total 20.258ms
+08-05 02:52:23.682  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:23.682  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:23.682  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:23.682  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:24.681  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:24.681  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:24.682  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:24.682  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:24.998  2483  2483 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 
+08-05 02:52:25.681  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:25.681  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:25.682  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:25.682  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:26.681  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:26.682  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:26.682  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:26.682  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:27.554  2491  2491 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+08-05 02:52:27.681  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:27.682  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:27.682  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:27.689  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:27.724  2491  2509 I ndroid.systemui: Background young concurrent copying GC freed 177076(8398KB) AllocSpace objects, 1(20KB) LOS objects, 34% free, 15MB/23MB, paused 9.368ms,777us total 41.628ms
+08-05 02:52:28.684  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:28.684  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:28.685  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:28.694  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:29.685  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:29.685  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:29.686  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:29.686  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:30.685  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:30.685  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:30.686  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:30.686  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:30.756     0     0 W healthd : battery l=100 v=5000 t=25.0 h=2 st=4 c=900000 fc=3000000 cc=10 chg=
+08-05 02:52:31.686  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:31.687  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:31.687  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:31.687  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:32.687  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:32.687  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:32.687  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:32.687  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:32.937  2483  2483 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 
+08-05 02:52:33.685  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:33.685  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:33.686  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:33.686  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:34.686  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:34.686  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:34.686  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:34.686  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:35.686  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:35.686  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:35.686  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:35.686  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:36.685  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:36.685  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:36.686  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:36.686  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:37.555  2491  2491 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+08-05 02:52:37.575  2491  2559 D EGL_emulation: app_time_stats: avg=30559.01ms min=30559.01ms max=30559.01ms count=1
+08-05 02:52:37.687  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:37.687  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:37.687  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:37.687  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:38.687  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:38.687  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:38.687  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:38.687  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:38.703  2491  2509 I ndroid.systemui: Background young concurrent copying GC freed 187101(8779KB) AllocSpace objects, 0(0B) LOS objects, 36% free, 14MB/22MB, paused 7.117ms,125us total 32.406ms
+08-05 02:52:39.687  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:39.687  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:39.687  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:39.687  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:40.688  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:40.688  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:40.688  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:40.688  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:40.874  2483  2483 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 
+08-05 02:52:41.689  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:41.689  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:41.690  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:41.690  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:42.689  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:42.689  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:42.689  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:42.689  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:43.690  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:43.690  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:43.690  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:43.690  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:44.691  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:44.691  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:44.691  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:44.691  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:333
+08-05 02:52:45.691  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:45.691  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:45.691  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:45.691  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:46.695  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:46.696  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:46.696  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:46.696  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:47.571  2491  2491 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+08-05 02:52:47.693  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:47.693  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:47.693  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:47.693  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:48.694  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:48.694  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:48.694  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:48.694  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:48.814  2483  2483 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 
+08-05 02:52:49.695  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:49.695  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:49.695  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:49.696  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:50.699  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:50.700  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:50.700  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:50.700  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:51.697  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:51.699  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:51.700  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:51.702  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:52.695  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:52.698  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:52.698  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:52.708  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:53.701  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:53.702  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:53.704  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:53.716  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:54.699  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:54.700  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:54.700  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:54.700  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:55.699  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:55.699  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:55.699  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:55.701  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:56.381  2491  2491 D StatusBarIconController: ignoring old pipeline callback because the new wifi icon is enabled
+08-05 02:52:56.698  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:56.699  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:56.699  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:56.699  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:56.999  2483  2483 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 
+08-05 02:52:57.550  2491  2491 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+08-05 02:52:57.698  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:57.699  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:57.699  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:57.699  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:58.699  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:58.699  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:58.699  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:58.699  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:52:59.406  2491  2491 D StatusBarIconController: ignoring old pipeline callback because the new wifi icon is enabled
+08-05 02:52:59.699  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:59.700  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:52:59.700  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:52:59.700  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:53:00.043  2491  2559 D EGL_emulation: app_time_stats: avg=22467.65ms min=22467.65ms max=22467.65ms count=1
+08-05 02:53:00.700  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:00.700  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:00.701  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:53:00.701  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:53:00.798  2301  2375 W CpuMonitorService: Current CPU frequency (3642660) is greater than maximum CPU frequency (2) for policy ID (1). Skipping CPU frequency policy
+08-05 02:53:00.800  2301  2375 W CpuMonitorService: Current CPU frequency (3640715) is greater than maximum CPU frequency (2) for policy ID (3). Skipping CPU frequency policy
+08-05 02:53:01.705  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:01.705  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:01.705  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:53:01.706  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:53:02.707  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:02.707  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:02.707  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:53:02.707  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:53:03.703  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:03.703  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:03.703  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:53:03.703  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:53:03.983 22491 22520 I appium  : READER_IDLE: closing the channel
+08-05 02:53:04.031 22491 22521 I appium  : READER_IDLE: closing the channel
+08-05 02:53:04.155 22491 22522 I appium  : READER_IDLE: closing the channel
+08-05 02:53:04.245 22491 22523 I appium  : READER_IDLE: closing the channel
+08-05 02:53:04.703  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:04.704  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:04.704  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:53:04.704  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:53:04.934  2483  2483 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 
+08-05 02:53:05.704  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:05.704  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:05.705  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:53:05.705  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:53:05.735  2491  2509 I ndroid.systemui: Background young concurrent copying GC freed 213828(10026KB) AllocSpace objects, 0(0B) LOS objects, 42% free, 13MB/23MB, paused 5.480ms,495us total 35.808ms
+08-05 02:53:05.830     0     0 I binder  : release 22552:22552 transaction 7519893 out, still active
+08-05 02:53:05.832     0     0 I binder  : undelivered TRANSACTION_COMPLETE
+08-05 02:53:06.232 22491 22578 I appium  : channel read: GET /session/9c35a19f-5961-49bf-b4da-fc1e79bb4411/screenshot
+08-05 02:53:06.234 22491 22578 I appium  : CaptureScreenshot command
+08-05 02:53:06.250 22491 22578 W tomator2.server: Accessing hidden method Landroid/view/MotionEvent;->setDisplayId(I)V (blocked,test-api, reflection, allowed)
+08-05 02:53:06.260 22491 22578 W tomator2.server: Accessing hidden method Landroid/view/Display;->getAddress()Landroid/view/DisplayAddress; (blocked, reflection, allowed)
+08-05 02:53:06.261 22491 22578 W tomator2.server: Accessing hidden method Landroid/view/DisplayAddress$Physical;->getPhysicalDisplayId()J (blocked, reflection, allowed)
+08-05 02:53:06.365 22579 22579 W BpBinder: Linking to death on android.gui.ISurfaceComposer but there are no threads (yet?) listening to incoming transactions. See ProcessState::startThreadPool and ProcessState::setThreadPoolMaxThreadCount. Generally you should setup the binder threadpool before other initialization steps.
+08-05 02:53:06.367 22579 22579 W ProcessState: Extra binder thread started, but 0 threads requested. Do not use *startThreadPool when zero threads are requested.
+08-05 02:53:06.392   163   163 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device VINTF manifest.
+08-05 02:53:06.392 22579 22584 I Gralloc4: mapper 4.x is not supported
+08-05 02:53:06.368     0     0 I servicemanager: Could not find android.hardware.graphics.allocator.IAllocator/default in the VINTF manifest.
+08-05 02:53:06.704  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:06.704  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:06.705  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:53:06.706  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:53:06.739 22491 22578 I appium  : AppiumResponse: {"sessionId":"9c35a19f-5961-49bf-b4da-fc1e79bb4411","value":"iVBORw0KGgoAAAANSUhEUgAABDgAAAlgCAYAAABtGofVAAAAAXNSR0IArs4c6QAAAARzQklUCAgICHwIZIgAACAASURBVHic7N15cJXXneD9nxaQriQ2IQEyYjGLjW3A+74AduzEazqx0+nEsZPO2pVK4klX91tvTb3vzPyVyVT+mEmlp6ume3qNs0z27niNYxu8Ad4wS8xqA2YRaDMS2pF05w+ZGy5iEYsQB38+VVTlPnrвЂ¦
+08-05 02:53:06.769 22491 22578 I appium  : channel read: GET /session/9c35a19f-5961-49bf-b4da-fc1e79bb4411/source
+08-05 02:53:06.777 22491 22578 I appium  : Source command
+08-05 02:53:06.779 22491 22578 I appium  : Waiting up to 10000ms for the device to idle
+08-05 02:53:06.831     0     0 I init    : Untracked pid 22552 received signal 1
+08-05 02:53:06.832     0     0 I init    : Untracked pid 22552 did not have an associated service entry and will not be reaped
+08-05 02:53:07.554  2491  2491 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+08-05 02:53:07.571  2491  2559 D EGL_emulation: app_time_stats: avg=7527.37ms min=7527.37ms max=7527.37ms count=1
+08-05 02:53:07.705  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:07.705  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:07.705  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:53:07.705  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:53:08.706  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:08.706  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:08.706  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:53:08.706  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:53:09.706  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:09.706  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:09.706  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:53:09.706  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:53:10.706  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:10.706  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:10.706  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:53:10.707  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:53:11.709  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:11.709  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:11.709  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:53:11.709  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:53:12.706  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:12.706  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:12.706  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:53:12.706  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:53:12.871  2483  2483 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 
+08-05 02:53:13.707  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:13.707  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:13.707  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:53:13.707  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:53:14.707  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:14.707  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:14.708  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:53:14.708  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:53:15.708  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:15.708  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:15.710  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:53:15.711  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:53:16.714  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:16.716  2584  5187 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-05 02:53:16.716  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-05 02:53:16.717  2584  5187 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-05 02:53:16.991 22491 22578 I appium  : AppiumResponse: {"sessionId":"9c35a19f-5961-49bf-b4da-fc1e79bb4411","value":{"error":"unknown error","message":"Timed out after 10184ms waiting for the root AccessibilityNodeInfo in the active window. Make sure the active window is not constantly hogging the main UI thread (e.g. the application is being idle long enough), so the accessibility manager could do its work","stacktrace":"io.appium.uiautomator2.common.exceptions.UiAutomator2Exception: Timed out after 10184ms waiting for the root AccessibilityNodeInfo in the active window. Make sure the active window is not constantly hogging the main UI thread (e.g. the application is being idle long enough), so the accessibility manager could do its work\n\tat io.appium.uiautomator2.utils.AXWindowHelpers.getActiveWindowRoot(AXWindowHelpers.java:107)\n\tat io.appium.uiautomator2.utils.AXWindowHelpers.retrieveWindowRoots(AXWindowHelpers.java:87)\n\tat io.appium.uiautomator2.utils.AXWindowHelpers.getCachedWindowRoots(AXWindowHelpers.java:68)\n\tat io.appium.uiautomator2.core.AccessibilityNodeInfoDumper.toStream(AccessibilityNodeInfoDumper.java:228)\n\tat io.appium.uiautomator2.core.AccessibilityNodeInfoDumper.dumpToXml(AccessibilityNodeInfoDumper.java:245)\n\tat io.appium.uiautomator2.handler.Source.safeHandle(Source.java:38)\n\tat io.appium.uiautomator2.handler.request.SafeRequestHandler.handle(SafeRequestHandler.java:59)\n\tat io.appium.uiautomator2.server.AppiumServlet.handleRequest(AppiumServlet.java:267)\n\tat io.appium.uiautomator2.server.AppiumServlet.handleHttpRequest(AppiumServlet.java:261)\n\tat io.appium.uiautomator2.http.ServerHandler.channelRead(ServerHandler.java:77)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)\n\tat io.netty.handler.codec.MessageToMessageDecoder.channelRead(MessageToMessageDecoder.java:107)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)\n\tat io.netty.channel.CombinedChannelDuplexHandler$DelegatingChannelHandlerContext.fireChannelRead(CombinedChannelDuplexHandler.java:434)\n\tat io.netty.handler.codec.ByteToMessageDecoder.fireChannelRead(ByteToMessageDecoder.java:361)\n\tat io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:325)\n\tat io.netty.channel.CombinedChannelDuplexHandler.channelRead(CombinedChannelDuplexHandler.java:249)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:355)\n\tat io.netty.handler.timeout.IdleStateHandler.channelRead(IdleStateHandler.java:288)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:355)\n\tat io.netty.channel.DefaultChannelPipeline$HeadContext.channelRead(DefaultChannelPipeline.java:1429)\n\tat io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:918)\n\tat io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:176)\n\tat io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.handle(AbstractNioChannel.java:445)\n\tat io.netty.channel.nio.NioIoHandler$DefaultNioRegistration.handle(NioIoHandler.java:388)\n\tat io.netty.channel.nio.NioIoHandler.processSelectedKey(NioIoHandler.java:596)\n\tat io.netty.channel.nio.NioIoHandler.processSelectedKeysOptimized(NioIoHandler.java:571)\n\tat io.netty.channel.nio.NioIoHandler.processSelectedKeys(NioIoHandler.java:512)\n\tat io.netty.channel.nio.NioIoHandler.run(NioIoHandler.java:484)\n\tat io.netty.channel.SingleThreadIoEventLoop.runIo(SingleThreadIoEventLoop.java:225)\n\tat io.netty.channel.SingleThreadIoEventLoop.run(SingleThreadIoEventLoop.java:196)\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:1195)\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\n\tat java.lang.Thread.run(Thread.java:1012)\n"}}

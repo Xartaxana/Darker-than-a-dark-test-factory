@@ -7,14 +7,14 @@ priority: "p0"
 summary: "Смена рейтинга перемещает work из одной вкладки Library в другую"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:library", "risk:R-04", "automation:active"]
+labels: ["test-case", "area:library", "risk:R-04", "automation:quarantined"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-08T23:15:00Z"
-updated: "2026-07-08T23:15:00Z"
+created: "2026-08-05T03:20:00Z"
+updated: "2026-08-05T03:20:00Z"
 archived: false
 resolution: "done"
 ---
