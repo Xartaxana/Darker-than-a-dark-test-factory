@@ -149,6 +149,20 @@ def test_create_payload_title_labels_description(bugs_dir):
     assert "TC-020" in payload["description"]
 
 
+def test_desired_labels_fixed_projects_as_qaready():
+    """Наружный словарь ярлыков (решение владельца 2026-08-09): внутренний
+    Fixed -> ярлык QAready; остальные статусы проецируются как есть
+    (граница: словарь из одной пары, не общее переименование)."""
+    assert "qa-status::QAready" in gs.desired_labels(
+        {"severity": "major", "status": "Fixed"})
+    assert "qa-status::Fixed" not in gs.desired_labels(
+        {"severity": "major", "status": "Fixed"})
+    assert "qa-status::Verified" in gs.desired_labels(
+        {"severity": "major", "status": "Verified"})
+    assert "qa-status::Open" in gs.desired_labels(
+        {"severity": "minor", "status": "Open"})
+
+
 # --- закрытый баг: create + немедленный close -----------------------------
 
 def test_closed_status_creates_then_closes(bugs_dir):

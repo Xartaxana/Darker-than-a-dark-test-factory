@@ -334,10 +334,22 @@ def build_title(bug_id: str, title: str) -> str:
     return full
 
 
+# Наружный словарь ярлыков (решение владельца 2026-08-09): внутренний
+# статус `Fixed` («починено, ЖДЁТ QA-верификации» — D1 ещё впереди)
+# наружу проецируется ярлыком `QAready` — разработчику «Fixed» читается
+# как «готово/закрыто», тогда как работа только входит в тестирование.
+# Внутренняя машина статусов НЕ переименована (schemas/transitions.yaml
+# остаётся единственным источником правды по статусам); словарь живёт
+# ТОЛЬКО в проекции labels. Обратного словаря нет: статусы issue/label
+# внутрь не переносятся (граница канала — docs/06 §3а).
+STATUS_LABEL_ALIASES = {"Fixed": "QAready"}
+
+
 def desired_labels(meta: dict) -> list[str]:
     severity = meta.get("severity", "")
     status = meta.get("status", "")
-    return ["qa-factory", f"severity::{severity}", f"qa-status::{status}"]
+    status_label = STATUS_LABEL_ALIASES.get(status, status)
+    return ["qa-factory", f"severity::{severity}", f"qa-status::{status_label}"]
 
 
 def _join_list(value) -> str:
