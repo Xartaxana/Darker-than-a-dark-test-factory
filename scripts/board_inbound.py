@@ -321,7 +321,8 @@ def _append_escalation(key: str, reason: str) -> None:
     line = f"- [{stamp}] **{key}** — {reason}\n"
     header = "" if ESCALATIONS_PATH.exists() else (
         "# Эскалации фабрики\n\nАктивные варнинги, требующие человека "
-        "(docs/06 §4). Строку удаляет человек по разрешении.\n\n"
+        "(docs/06 §4). Живёт до разрешения; запись не удаляется, а "
+        "помечается resolved при закрытии.\n\n"
     )
     with ESCALATIONS_PATH.open("a", encoding="utf-8") as f:
         if header:
