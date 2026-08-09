@@ -2,14 +2,14 @@
 # изменение этого файла = триггер для test-runner (см. docs/03 §3, правило 1).
 app: ao3-wrapper
 repo: https://gitlab.com/Xartaxana1/ao3-wrapper
-source_commit: bfc8f41a21812f12cd790ebfc7121586844468ca   # 2026-06-28
-coalesced_commits: [77d65bc4]
-version_name: "1.11"
-version_code: 12
+source_commit: fdcbad9103854990e20858a3e9d59c8b1c16b585   # 2026-06-28
+coalesced_commits: [e8c948bf]
+version_name: "1.10"
+version_code: 11
 build_type: debug
 apk_path: app-under-test/app/build/outputs/apk/debug/app-debug.apk
-apk_sha256: "7e9230ad6f256796cd7738e4a5a583d9d8e1e563cf556573f6675183c8597b08"
-built_at: "2026-08-04T20:03:38Z"
-smoke_status: failed   # RUN-20260805-0432 (NeedsTriage): 48/49 passed, 1 failed на сборке 1.11 (12) — TC-016 (test_change_rating_moves_work_between_tabs), НЕ известный замок (нет red_lock/known_issue). Первая попытка (env-крах: Appium node.exe упал целиком, WinError 10061, ~10 мин) отброшена, не в счёт; вторая попытка дошла до sessionfinish, recoveries 0/2, без ENV_ISSUE. Не триажено (не мандат test-runner).
-regression_status: failed   # RUN-20260805-0437 (NeedsTriage): 154/165 passed, 11 failed, 0 errors на сборке 1.11 (12), selection: full (прямая инструкция координатора). Прогон дробился на 4 сегмента: сегмент 1 (Appium упал целиком, WinError 10061, тот же класс что smoke попытка 1), сегмент 2 (фоновый job УБИТ ХАРНЕССОМ на ~45-50 мин — рецидив №3 подряд того же класса, что RUN-20260803-2012/RUN-20260804-1624), сегменты 3-4 добили явным списком файлов до sessionfinish. Красные: TC-022/032/085/086/096/115/129/130/131/135/139 — 7 общих с прошлым triaged-baseline (RUN-20260804-1624), 4 новых (TC-022/032/096/131), 4 там были красными а здесь зелёные (TC-043/090/114/134). Allure-артефакты сохранились только частично (19/165, последний сегмент) — --clean-alluredir между сегментами стёр остальное, тот же класс что дважды отмечен в RUN-20260804-1624. Не триажено (не мандат test-runner). Предыдущий triaged baseline: RUN-20260804-1624 (Triaged) 154/165 на сборке 1.10 (11).
+apk_sha256: "267eb5e9173e2fc01779dd947e6630feaeb43e6e6ab60939ef7246661560464f"
+built_at: "2026-08-09T13:17:11Z"
+smoke_status: not_run   # RUN-20260805-0432 (NeedsTriage): 48/49 passed, 1 failed на сборке 1.11 (12) — TC-016 (test_change_rating_moves_work_between_tabs), НЕ известный замок (нет red_lock/known_issue). Первая попытка (env-крах: Appium node.exe упал целиком, WinError 10061, ~10 мин) отброшена, не в счёт; вторая попытка дошла до sessionfinish, recoveries 0/2, без ENV_ISSUE. Не триажено (не мандат test-runner).
+regression_status: not_run   # RUN-20260805-0437 (NeedsTriage): 154/165 passed, 11 failed, 0 errors на сборке 1.11 (12), selection: full (прямая инструкция координатора). Прогон дробился на 4 сегмента: сегмент 1 (Appium упал целиком, WinError 10061, тот же класс что smoke попытка 1), сегмент 2 (фоновый job УБИТ ХАРНЕССОМ на ~45-50 мин — рецидив №3 подряд того же класса, что RUN-20260803-2012/RUN-20260804-1624), сегменты 3-4 добили явным списком файлов до sessionfinish. Красные: TC-022/032/085/086/096/115/129/130/131/135/139 — 7 общих с прошлым triaged-baseline (RUN-20260804-1624), 4 новых (TC-022/032/096/131), 4 там были красными а здесь зелёные (TC-043/090/114/134). Allure-артефакты сохранились только частично (19/165, последний сегмент) — --clean-alluredir между сегментами стёр остальное, тот же класс что дважды отмечен в RUN-20260804-1624. Не триажено (не мандат test-runner). Предыдущий triaged baseline: RUN-20260804-1624 (Triaged) 154/165 на сборке 1.10 (11).
 canary_status: passed    # RUN-20260804-1355 (Closed): 10/10 passed live под предписанной TC-078 конфигурацией (AO3_EMU_GPU=host, сверено фактом hw.gpu.mode=host в hardware-qemu.ini) — перепрогон-замена RUN-20260804-1317 по вердикту ENV_ISSUE triage (RUN-20260804-1317 остаётся Triaged, не переоткрыт)
