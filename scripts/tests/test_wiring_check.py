@@ -225,6 +225,28 @@ def test_harness_channel_unparsed_command_form(tmp_path):
     assert sum("unparsed hook command" in w for w in warnings) == 2
 
 
+def test_harness_channel_absolute_form_inside_root_accepted(tmp_path):
+    """Абсолютный твин канона (введён 2026-08-09 после живого cwd-инцидента):
+    'python <root>/scripts/<file>.py' принимается и проверяется, если путь
+    нормализуется ВНУТРЬ scripts/ этого корня (любой стиль слэшей)."""
+    _write(tmp_path / "scripts" / "abs_hook.py", "VALUE = 1\n")
+    abs_cmd = f"python {str(tmp_path / 'scripts' / 'abs_hook.py').replace(chr(92), '/')}"
+    _settings(tmp_path, [abs_cmd])
+    warnings, count = wc.harness_channel(tmp_path)
+    assert warnings == []
+    assert count == 1
+
+
+def test_harness_channel_foreign_absolute_path_stays_unparsed(tmp_path):
+    """Абсолютный путь ВНЕ scripts/ этого корня — честный 'unparsed', не
+    догадка (граница за формой: чужой корень)."""
+    foreign = tmp_path / "elsewhere" / "scripts" / "x.py"
+    _settings(tmp_path, [f"python {foreign}"])
+    warnings, count = wc.harness_channel(tmp_path)
+    assert sum("unparsed hook command" in w for w in warnings) == 1
+    assert count == 0
+
+
 def test_harness_channel_missing_settings_file(tmp_path):
     warnings, count = wc.harness_channel(tmp_path)
     assert any("not readable" in w for w in warnings)

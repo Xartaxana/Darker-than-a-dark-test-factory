@@ -96,14 +96,49 @@ _SETTINGS_RELPATH = Path(".claude") / "settings.json"
 # with an ellipsis marker (see _ascii_sanitize).
 _WIRING_LINE_MAX_LEN = 300
 
-# The command shape every hook line in THIS repo's .claude/settings.json
-# actually uses (CLAUDE.md command-hygiene: canonical forms, no ad hoc
-# variants): exactly "python scripts/<file>.py", no extra flags, forward
-# slashes. Anything else is reported as an honest "unparsed hook command"
-# WARNING rather than guessed at. `[^/\\]+` (not `[\w ]+`) deliberately
-# allows spaces in the filename so a path-with-spaces command is still
-# recognized and checked, not silently misparsed.
+# The command shapes this repo's .claude/settings.json hooks may use
+# (CLAUDE.md command-hygiene: canonical forms, no ad hoc variants):
+# (1) "python scripts/<file>.py" -- the original relative canon;
+# (2) "python <repo-root>/scripts/<file>.py" -- ABSOLUTE twin, introduced
+#     2026-08-09 after the live cwd-drift incident (a coordinator's
+#     cd-prefixed command shifted the harness-tracked cwd; the PreToolUse
+#     hook's relative script path then failed to resolve and EVERY
+#     Bash/PowerShell call died before executing -- orchestrator-log
+#     14:49Z). Absolute-form commands survive a drifted cwd; the parser
+#     accepts them ONLY when the path normalizes into THIS root's
+#     scripts/ dir (foreign absolute paths stay "unparsed" -- honesty
+#     over guessing). No extra flags in either form. Spaces in the
+#     filename are allowed (deliberate: a path-with-spaces command is
+#     recognized and checked, not silently misparsed).
 _HOOK_COMMAND_RE = re.compile(r"^python scripts/([^/\\]+\.py)$")
+
+
+def _hook_script_name(command: str, root: Path):
+    """Returns '<file>.py' when `command` is one of the two canonical hook
+    shapes above (relative, or absolute inside <root>/scripts), else None.
+    Comparison is normcase/normpath (Windows: slash style and case do not
+    matter). Never raises."""
+    cmd = command.strip()
+    m = _HOOK_COMMAND_RE.match(cmd)
+    if m:
+        return m.group(1)
+    prefix = "python "
+    if not cmd.startswith(prefix):
+        return None
+    path_str = cmd[len(prefix):].strip()
+    if not path_str.endswith(".py"):
+        return None
+    try:
+        p = Path(path_str)
+        if not p.is_absolute():
+            return None
+        parent_norm = os.path.normcase(os.path.normpath(str(p.parent)))
+        expected = os.path.normcase(os.path.normpath(str(Path(root) / "scripts")))
+    except (ValueError, OSError):
+        return None
+    if parent_norm != expected:
+        return None
+    return p.name
 
 
 def _ascii_sanitize(text, max_len=80):
@@ -287,12 +322,11 @@ def harness_channel(root: Path):
     ok_files = set()
     seen_files = set()
     for command in commands:
-        m = _HOOK_COMMAND_RE.match(command.strip())
-        if not m:
+        filename = _hook_script_name(command, root)
+        if filename is None:
             command_safe = _ascii_sanitize(command, 150)
             warnings.append(f"unparsed hook command: {command_safe}")
             continue
-        filename = m.group(1)
         if filename in seen_files:
             continue
         seen_files.add(filename)

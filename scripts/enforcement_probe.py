@@ -186,7 +186,13 @@ WIRING_CHECK_REL = "scripts/wiring_check.py"
 # shell script -- the same shape every hook in this repo already uses
 # (see .claude/settings.json's own "command" values; adapted from the
 # source's "tools/" pattern to this repo's "scripts/" pattern).
-_PY_TOOL_CMD_RE = re.compile(r"python\s+(scripts/[A-Za-z0-9_./\\-]+\.py)")
+# 2026-08-09 (live cwd-drift incident, sibling of wiring_check's
+# _hook_script_name): hook commands may now use the ABSOLUTE twin
+# "python <drive>:/.../scripts/<name>.py" -- the optional non-capturing
+# drive prefix strips it so group(1) stays the repo-relative
+# "scripts/<name>.py" the chain is keyed on.
+_PY_TOOL_CMD_RE = re.compile(
+    r"python\s+(?:[A-Za-z]:[^\s\"']*[/\\])?(scripts/[A-Za-z0-9_./\\-]+\.py)")
 
 
 def _read_text_best_effort(path):

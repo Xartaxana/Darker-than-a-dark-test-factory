@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python scripts/hygiene_gate.py"
+            "command": "python D:/AO3_tests/scripts/hygiene_gate.py"
           }
         ]
       }
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python scripts/wiring_check.py"
+            "command": "python D:/AO3_tests/scripts/wiring_check.py"
           }
         ]
       }

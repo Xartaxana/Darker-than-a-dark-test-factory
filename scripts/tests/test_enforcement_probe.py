@@ -211,6 +211,16 @@ def test_chain_paths_includes_known_repo_hooks():
     assert ".githooks/commit-msg" in chain
 
 
+def test_referenced_tool_paths_absolute_twin_strips_root():
+    """Абсолютный твин канона хук-команд (2026-08-09, cwd-инцидент):
+    drive-префикс срезается, в цепь идёт repo-relative scripts/<name>.py;
+    относительная форма — как раньше (граница: обе формы в одном тексте)."""
+    text = ('python D:/AO3_tests/scripts/hygiene_gate.py\n'
+            'python scripts/wiring_check.py\n')
+    assert enforcement_probe._referenced_tool_paths(text) == {
+        "scripts/hygiene_gate.py", "scripts/wiring_check.py"}
+
+
 def test_githooks_files_recursive_walk(tmp_path, monkeypatch):
     # F9(г) (critic t-339): .githooks/ is walked RECURSIVELY, not just
     # its top level -- a nested file must be found too.
