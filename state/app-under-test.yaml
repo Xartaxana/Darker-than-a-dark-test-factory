@@ -1,7 +1,7 @@
 # Тестируемая сборка. Обновляется при каждой новой сборке приложения —
 # изменение этого файла = триггер для test-runner (см. docs/03 §3, правило 1).
 app: ao3-wrapper
-repo: https://gitlab.com/Xartaxana1/ao3-wrapper
+repo: https://gitlab.com/dyakagreen-group/ao3-wrapper
 source_commit: fdcbad9103854990e20858a3e9d59c8b1c16b585   # 2026-06-28
 coalesced_commits: [e8c948bf]
 version_name: "1.10"
