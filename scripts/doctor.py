@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import datetime
+import json
 import re
 import shutil
 import subprocess
@@ -34,6 +35,7 @@ except (AttributeError, ValueError):
     pass
 
 import board_sync as bs
+import sla_utils
 
 REPO = bs.REPO
 VENV_PY = REPO / "framework" / ".venv" / "Scripts" / "python.exe"
@@ -41,6 +43,8 @@ ENV_PS1 = REPO / "scripts" / "env.ps1"
 APP = REPO / "app-under-test"
 AUT_PATH = REPO / "state" / "app-under-test.yaml"
 ESCALATIONS_PATH = REPO / "state" / "escalations.md"
+LOCK_FILE = REPO / "state" / "loop.lock"
+SLA_PATH = REPO / "state" / "sla.yaml"
 AVD_NAME = "ao3_test_api34"
 
 _which = shutil.which
@@ -70,6 +74,102 @@ def _adb_device_serial(adb: Path) -> str | None:
         if len(parts) == 2 and parts[1] == "device":
             return parts[0]
     return None
+
+
+def _lock_payload(lock_file: Path) -> dict | None:
+    if not lock_file.exists():
+        return None
+    try:
+        data = json.loads(lock_file.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError, UnicodeDecodeError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def _lock_age_hours(payload: dict, *, now: datetime.datetime | None = None) -> float | None:
+    """Возраст лока в часах по payload['ts']; None — ts отсутствует/не
+    парсится (свежесть не проверить — тот же принцип, что loop_lock.py).
+
+    Критик-фикс (2026-08-09, класс 2а вместе с loop_lock._parse_ts): naive
+    ISO ts (без 'Z') давал naive datetime, вычитание которого с aware `now`
+    роняло TypeError и валило ВЕСЬ preflight (doctor — шаг 1 каждого
+    прохода). Naive результат трактуется как UTC — та же единая семантика,
+    что и в loop_lock._parse_ts."""
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    ts_raw = payload.get("ts")
+    if not ts_raw:
+        return None
+    try:
+        ts = datetime.datetime.fromisoformat(str(ts_raw).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if ts.tzinfo is None:
+        ts = ts.replace(tzinfo=datetime.timezone.utc)
+    return (now - ts).total_seconds() / 3600.0
+
+
+def _pid_alive(pid: int) -> bool | None:
+    """True/False — подтверждённая живость; None — сам вызов tasklist
+    недоступен/ошибся (rc!=0) — НЕИЗВЕСТНО, не считается «мёртв».
+
+    Критик-фикс (2026-08-09, п.4): раньше rc!=0 схлопывался в False
+    («мёртв») — ошибка ИНСТРУМЕНТА давала ложный WARN осиротевшего лока.
+    Унифицировано с scripts/heartbeat_wrap.py::_tasklist_alive: ошибка
+    tasklist == «неизвестно», не факт смерти процесса; здесь неизвестность
+    — отдельная (третья) ветка вызывающего кода, не «жив»/«мёртв»."""
+    rc, out = _run(["tasklist", "/FI", f"PID eq {pid}"])
+    if rc != 0:
+        return None
+    return str(pid) in out
+
+
+def _heartbeat_lock_dead_pid_check() -> Check:
+    """[M1/R4, plan-m1-m4.md v3; runs/REHEARSAL-2026-08-04.md N1 разбор
+    2026-08-09]: живой (LIVE по TTL state/sla.yaml thresholds.lock_stale)
+    state/loop.lock, чей payload.pid НЕ является работающим процессом,
+    сигнализирует осиротевший лок обёртки (kill машины/среды между
+    scripts/heartbeat_wrap.py::acquire и его finally-release).
+
+    Применяется ТОЛЬКО к holder'ам `heartbeat:*`: честный долгоживущий pid
+    существует только у лока обёртки (payload.pid = os.getpid() самой
+    обёртки, живущей весь проход). Интерактивный лок (CLI-вызов
+    `loop_lock.py acquire` изнутри SKILL qa-loop) несёт pid ОДНОКРАТНОГО
+    короткоживущего процесса — он мёртв уже через секунду после acquire
+    штатно; чек на нём давал бы ложный WARN на КАЖДОМ preflight'е, если бы
+    не был сужен до heartbeat:*-holder'ов.
+
+    Оговорка (переиспользование pid ОС): в теории мёртвый heartbeat-pid
+    может совпасть с чужим, позже стартовавшим процессом — код это не
+    исключает (маловероятно в пределах TTL-окна по умолчанию 2ч), см.
+    также docstring loop_lock.py про честность/переиспользование pid."""
+    name = "живой loop.lock с мёртвым pid"
+    payload = _lock_payload(LOCK_FILE)
+    if payload is None:
+        return Check(name, "run", True, "лока нет/нечитаем — н/п")
+    holder = str(payload.get("holder") or "")
+    if not holder.startswith("heartbeat:"):
+        return Check(name, "run", True,
+                    f"holder={holder!r} не heartbeat:* — pid не информативен, "
+                    "проверка не применима")
+    threshold_h = sla_utils.load_lock_stale_hours(SLA_PATH)
+    age_h = _lock_age_hours(payload)
+    if age_h is None or age_h > threshold_h:
+        return Check(name, "run", True,
+                    "лок не LIVE (протух/ts нечитаем) — TTL-страховка справится сама")
+    pid = payload.get("pid")
+    if not isinstance(pid, int):
+        return Check(name, "run", True, f"pid отсутствует/некорректен в payload ({pid!r}) — н/п")
+    alive = _pid_alive(pid)
+    if alive is None:
+        return Check(name, "run", True,
+                    f"pid-проверка недоступна для pid={pid} (tasklist rc!=0/ошибка "
+                    "вызова) — не считается признаком осиротения")
+    detail = (f"holder={holder} pid={pid} жив" if alive else
+             f"holder={holder} pid={pid} НЕ является работающим процессом — лок "
+             "осиротел (kill обёртки/машины между acquire и release); TTL-страховка "
+             f"снимет через {threshold_h}ч, либо снять сейчас вручную "
+             "`python scripts/loop_lock.py release --force`")
+    return Check(name, "run", alive, detail, warn=not alive)
 
 
 def _env_paths() -> dict[str, Path]:
@@ -209,6 +309,9 @@ def run_checks() -> list[Check]:
             apk_detail = "apk_path не указан"
     # APK может законно отсутствовать до первой сборки build_watch — это WARN, не FAIL
     checks.append(Check("APK по apk_path", "run", apk_ok, apk_detail, warn=not apk_ok))
+
+    # M1/R4 (plan-m1-m4.md v3, 2026-08-09): сирота-детектор для heartbeat-обёртки.
+    checks.append(_heartbeat_lock_dead_pid_check())
 
     return checks
 

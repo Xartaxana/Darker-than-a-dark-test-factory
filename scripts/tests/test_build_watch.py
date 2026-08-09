@@ -5,6 +5,7 @@
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pytest
@@ -45,18 +46,26 @@ class FakeRunner:
     """Отвечает как git/gradle; пишет журнал вызовов для ассертов."""
 
     def __init__(self, repo_root: Path, new_commits: list[str],
-                 *, fetch_rc=0, gradle_rc=0, checkout_rc=0, rev_list_rc=0):
+                 *, fetch_rc=0, gradle_rc=0, checkout_rc=0, rev_list_rc=0,
+                 fetch_out=None, token_fetch_rc=0, token_fetch_out=""):
         self.root = repo_root
         self.new = new_commits
         self.fetch_rc, self.gradle_rc, self.checkout_rc = fetch_rc, gradle_rc, checkout_rc
         self.rev_list_rc = rev_list_rc
+        self.fetch_out = fetch_out if fetch_out is not None else "fatal: unable to access"
+        self.token_fetch_rc = token_fetch_rc
+        self.token_fetch_out = token_fetch_out
         self.calls: list[str] = []
+        self.envs: list[dict | None] = []
 
     def __call__(self, args, *, cwd=None, env=None, timeout=120):
         cmd = " ".join(str(a) for a in args)
         self.calls.append(cmd)
+        self.envs.append(env)
         if "fetch" in cmd:
-            return self.fetch_rc, "" if self.fetch_rc == 0 else "fatal: unable to access"
+            if "credential.helper=" in cmd:                     # M3 token-ретрай
+                return self.token_fetch_rc, self.token_fetch_out
+            return self.fetch_rc, "" if self.fetch_rc == 0 else self.fetch_out
         if "rev-parse" in cmd:
             return 0, (self.new[-1] if self.new else OLD_SHA) + "\n"
         if "rev-list" in cmd:
@@ -152,3 +161,128 @@ def test_dry_run_detects_but_does_not_build(repo, runner):
 
     assert repo.read_artifact("state/app-under-test.yaml") == before
     assert not any("gradlew" in c or "checkout" in c for c in r.calls)
+
+
+# ---------------------------------------------------------------------------
+# M3 (plan-m1-m4.md v3, [B9][B7], 2026-08-09): headless-safe fetch creds
+# ---------------------------------------------------------------------------
+
+AUTH_FAIL_OUT = ("fatal: could not read Username for 'https://gitlab.com': "
+                 "terminal prompts disabled")
+
+
+def test_fetch_env_extra_preserves_os_environ(repo, runner, monkeypatch):
+    """env-надбавка GIT_TERMINAL_PROMPT/GCM_INTERACTIVE ДОБАВЛЯЕТСЯ поверх
+    os.environ, не заменяет его целиком (B7: голый словарь терял бы
+    SystemRoot/PATH и git не видел бы GITLAB_TOKEN)."""
+    monkeypatch.delenv("GITLAB_TOKEN", raising=False)
+    r = runner()
+
+    assert bw.watch(dry=True) == 0
+
+    fetch_env = r.envs[0]
+    assert fetch_env is not None
+    assert fetch_env.get("GIT_TERMINAL_PROMPT") == "0"
+    assert fetch_env.get("GCM_INTERACTIVE") == "never"
+    # Надбавка, не замена (B7): fetch_env МИНУС две добавленные ключа обязан
+    # байт-в-байт совпасть с os.environ на момент вызова (SystemRoot/PATH и
+    # прочее — не потеряны). os.environ на Windows хранит ключи в верхнем
+    # регистре независимо от их написания в коде — сверяем через dict(...),
+    # не хардкодя написание отдельных имён (класс F-34: сужающий фильтр
+    # регистра ловил бы ложный негатив на "SystemRoot" != "SYSTEMROOT").
+    extra_keys = {"GIT_TERMINAL_PROMPT", "GCM_INTERACTIVE"}
+    without_extra = {k: v for k, v in fetch_env.items() if k not in extra_keys}
+    base = {k: v for k, v in dict(os.environ).items() if k not in extra_keys}
+    assert without_extra == base
+
+
+def test_fallback_only_on_auth_signature_offline_rc_gets_no_retry(repo, runner, monkeypatch):
+    """Офлайн/сетевой rc (сигнатура НЕ совпадает) — ретрая нет ДАЖЕ при
+    наличии GITLAB_TOKEN."""
+    monkeypatch.setenv("GITLAB_TOKEN", "sekrit-token-value")
+    r = runner(fetch_rc=128, fetch_out="fatal: unable to access 'https://gitlab.com/x': "
+                                        "Could not resolve host")
+
+    assert bw.watch() == 0
+
+    fetch_calls = [c for c in r.calls if "fetch" in c]
+    assert len(fetch_calls) == 1
+    assert not any("credential.helper=" in c for c in r.calls)
+
+
+def test_no_token_keeps_prior_warn_path_no_retry(repo, runner, monkeypatch, capsys):
+    """Сигнатура auth-отказа совпадает, но GITLAB_TOKEN не задан — прежний
+    [WARN]-путь без ретрая."""
+    monkeypatch.delenv("GITLAB_TOKEN", raising=False)
+    r = runner(fetch_rc=128, fetch_out=AUTH_FAIL_OUT)
+
+    assert bw.watch() == 0
+
+    fetch_calls = [c for c in r.calls if "fetch" in c]
+    assert len(fetch_calls) == 1
+    out = capsys.readouterr().out
+    assert "[WARN]" in out
+    assert "GITLAB_TOKEN" not in out
+
+
+def test_auth_signature_no_match_gets_unrecognized_marker(repo, runner, monkeypatch, capsys):
+    """[R5(a)] Страховка: rc!=0 без совпадения сигнатуры несёт явную
+    пометку «сигнатура ... не распознана» в [WARN] — детектор видим,
+    даже если regex когда-нибудь перестанет ловить реальный отказ."""
+    monkeypatch.setenv("GITLAB_TOKEN", "sekrit-token-value")
+    r = runner(fetch_rc=128, fetch_out="fatal: unable to access 'https://gitlab.com/x': "
+                                        "Could not resolve host")
+
+    assert bw.watch() == 0
+
+    out = capsys.readouterr().out
+    assert "не распознана" in out
+
+
+def test_auth_failure_with_token_retries_and_succeeds(repo, runner, monkeypatch, capsys):
+    monkeypatch.setenv("GITLAB_TOKEN", "sekrit-token-value")
+    r = runner(fetch_rc=128, fetch_out=AUTH_FAIL_OUT, token_fetch_rc=0, token_fetch_out="")
+
+    assert bw.watch() == 0
+
+    fetch_calls = [c for c in r.calls if "fetch" in c]
+    assert len(fetch_calls) == 2                              # primary + ретрай
+    assert any("credential.helper=" in c for c in r.calls)
+    out = capsys.readouterr().out
+    assert "[INFO] fetch через GITLAB_TOKEN" in out
+    text = repo.read_artifact("state/app-under-test.yaml")
+    assert f"source_commit: {TIP_SHA}" in text                # сборка продолжилась после ретрая
+
+
+def test_retry_failure_prints_redacted_out2(repo, runner, monkeypatch, capsys):
+    """Критик-фикс (некритично п.3, 2026-08-09): неуспешный ретрай с
+    GITLAB_TOKEN печатает СВОЙ (редактированный) вывод — иначе scope-отказ
+    токена (read_repository не выдан) недиагностируем оператором."""
+    secret = "sekrit-token-value-abc"
+    monkeypatch.setenv("GITLAB_TOKEN", secret)
+    r = runner(fetch_rc=128, fetch_out=AUTH_FAIL_OUT, token_fetch_rc=1,
+               token_fetch_out=f"remote: 403 Forbidden (scope insufficient, token={secret})")
+
+    assert bw.watch() == 0
+
+    out = capsys.readouterr().out
+    assert "ретрай с GITLAB_TOKEN тоже не прошёл" in out
+    assert "403 Forbidden" in out
+    assert secret not in out                                  # редактирован
+    assert "***" in out
+
+
+def test_redact_strips_token_from_output_and_argv(repo, runner, monkeypatch, capsys):
+    secret = "sekrit-token-value-zzz"
+    monkeypatch.setenv("GITLAB_TOKEN", secret)
+    auth_out = (f"fatal: could not read Username for 'https://gitlab.com': "
+               f"terminal prompts disabled (echoed token={secret} rejected)")
+    r = runner(fetch_rc=128, fetch_out=auth_out, token_fetch_rc=1,
+               token_fetch_out="retry failed too")
+
+    assert bw.watch() == 0
+
+    out = capsys.readouterr().out
+    assert secret not in out
+    assert "***" in out
+    assert not any(secret in c for c in r.calls)              # argv не несёт литерала токена

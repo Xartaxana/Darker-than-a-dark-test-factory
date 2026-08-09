@@ -32,6 +32,11 @@ def test_mechanism_paths_filters_ao3_prefixes_with_boundary():
     # его тесты — нет.
     assert mg.mechanism_paths(["scripts/tests/test_log_append.py"]) == []
     assert mg.mechanism_paths(["scripts/log_append.py.bak"]) == []
+    # 2026-08-09 (некрит-9, M1+M4): heartbeat_wrap решает, состоится ли
+    # scheduled-проход — механизм; его тесты — вне невода (тот же образец,
+    # что log_append.py выше).
+    assert mg.mechanism_paths(["scripts/heartbeat_wrap.py"]) == ["scripts/heartbeat_wrap.py"]
+    assert mg.mechanism_paths(["scripts/tests/test_heartbeat_wrap.py"]) == []
     # 2026-07-23: срез карты — вход гейта, тихая правка = обход осей.
     assert mg.mechanism_paths(["state/sibling-map.snapshot.md"]) == [
         "state/sibling-map.snapshot.md"]

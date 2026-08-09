@@ -59,6 +59,16 @@ docs/09-improvement-plan.md). Journal: `logs/routing-log.jsonl`,
      Сверка дешёвая: свежий `state/escalations.md` (sla_sweep уже
      считает charter follow-up) + Grep по Open|Fixed багам и
      Approved-кейсам против занятости устройства на закрытии.
+   - **3б. Парность heartbeat-строк (детектор M4, разбор репетиции
+     2026-08-09).** Если за сессию/окно в `logs/heartbeat.log` появлялись
+     строки `heartbeat start` — каждая обязана иметь парную строку
+     обёртки (`heartbeat-обёртка` / `heartbeat_wrap`) в
+     `state/orchestrator-log.md` с exit/release-исходом. Непарная
+     start-строка = проход умер, не оставив следа (класс N6 репетиции) —
+     находка, не FAIL хендоффа: зафиксировать в журнале и в HANDOFF.
+     Сверка дешёвая: Grep обоих файлов по окну сессии. Остаток класса
+     (события ВНУТРИ умершего прохода не восстановимы) — известное
+     ограничение M4, чинится чеком 2 (open-dispatches).
    - `state/factory-status.md`: перегенерирован
      `scripts/queue_snapshot.py` ПОСЛЕ последнего изменения
      артефактов сессии — сверить `generated_at` со временем последних

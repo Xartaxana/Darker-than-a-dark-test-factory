@@ -101,12 +101,25 @@ def _utcnow() -> datetime.datetime:
 
 
 def _parse_ts(value: str) -> datetime.datetime | None:
+    """ISO ts -> aware datetime (UTC), либо None (не парсится).
+
+    Критик-фикс (2026-08-09, heartbeat_wrap-диспатч, класс 2а): naive ISO
+    (без 'Z'/offset — теоретически возможный, хоть и не наш собственный,
+    формат payload.ts) давал aware-naive datetime, вычитание которого с
+    aware `now` (_utcnow()) роняет TypeError и в acquire(), и в status() —
+    падение на КАЖДОМ preflight'е (doctor — шаг 1 каждого прохода). Naive
+    результат трактуется как UTC (та же семантика, что и весь модуль:
+    все свои ts пишутся с суффиксом 'Z' — naive может появиться только у
+    чужого/ручного лока)."""
     if not value:
         return None
     try:
-        return datetime.datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        ts = datetime.datetime.fromisoformat(str(value).replace("Z", "+00:00"))
     except ValueError:
         return None
+    if ts.tzinfo is None:
+        ts = ts.replace(tzinfo=datetime.timezone.utc)
+    return ts
 
 
 def load_lock_stale_hours(sla_path: Path) -> float:

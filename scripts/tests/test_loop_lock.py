@@ -267,6 +267,52 @@ def test_n2_mixed_corrupt_then_genuine_stale_streak_counts_only_genuine(tmp_path
     assert not any(l.startswith("ESCALATION:") for l in lines)   # порог 2 не достигнут
 
 
+def test_acquire_handles_naive_ts_without_crashing(tmp_path):
+    """Критик-фикс (класс 2а, heartbeat_wrap-диспатч 2026-08-09): naive ISO
+    ts (без 'Z') в существующем локе раньше ронял acquire() TypeError'ом
+    (naive - aware). Naive трактуется как UTC — свежий naive ts даёт BUSY,
+    не крах."""
+    p = _paths(tmp_path)
+    p["lock_file"].parent.mkdir(parents=True, exist_ok=True)
+    p["lock_file"].write_text(
+        '{"holder": "naive-holder", "pid": 1, "ts": "2026-07-17T11:59:00"}',
+        encoding="utf-8")
+
+    code, lines = ll.acquire(holder="fresh", now=NOW, **p)   # NOW - ts ~= 1 мин < порога
+
+    assert code == 1
+    assert any(l.startswith("BUSY:") and "naive-holder" in l for l in lines)
+
+
+def test_acquire_naive_ts_stale_still_reaps_normally(tmp_path):
+    """Тот же naive ts, но реально протухший (age > threshold) — REAPED,
+    как обычно, без TypeError."""
+    p = _paths(tmp_path)
+    p["lock_file"].parent.mkdir(parents=True, exist_ok=True)
+    p["lock_file"].write_text(
+        '{"holder": "naive-holder", "pid": 1, "ts": "2026-07-17T09:00:00"}',
+        encoding="utf-8")  # 3ч до NOW > порога 2ч
+
+    code, lines = ll.acquire(holder="fresh", now=NOW, **p)
+
+    assert code == 0
+    assert any(l.startswith("REAPED:") and "naive-holder" in l for l in lines)
+
+
+def test_status_handles_naive_ts_without_crashing(tmp_path):
+    p = _paths(tmp_path)
+    p["lock_file"].parent.mkdir(parents=True, exist_ok=True)
+    p["lock_file"].write_text(
+        '{"holder": "naive-holder", "pid": 1, "ts": "2026-07-17T11:59:00"}',
+        encoding="utf-8")
+
+    code, lines = ll.status(lock_file=p["lock_file"], reaps_path=p["reaps_path"],
+                            sla_path=p["sla_path"], now=NOW)
+
+    assert code == 0
+    assert any(l.startswith("LIVE:") and "naive-holder" in l for l in lines)
+
+
 def test_idempotent_release_after_release_is_noop(tmp_path):
     p = _paths(tmp_path)
     ll.acquire(holder="h0", now=NOW, **p)

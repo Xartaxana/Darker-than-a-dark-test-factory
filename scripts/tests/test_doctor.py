@@ -1,6 +1,9 @@
 """Юнит-тесты doctor (scripts/doctor.py) на фейковом окружении."""
 from __future__ import annotations
 
+import datetime
+import json
+import os
 from pathlib import Path
 
 import pytest
@@ -18,6 +21,8 @@ def env(repo, monkeypatch):
     monkeypatch.setattr(dr, "APP", root / "app-under-test", raising=True)
     monkeypatch.setattr(dr, "AUT_PATH", root / "state" / "app-under-test.yaml", raising=True)
     monkeypatch.setattr(dr, "ESCALATIONS_PATH", root / "state" / "escalations.md", raising=True)
+    monkeypatch.setattr(dr, "LOCK_FILE", root / "state" / "loop.lock", raising=True)
+    monkeypatch.setattr(dr, "SLA_PATH", root / "state" / "sla.yaml", raising=True)
     monkeypatch.setattr(dr, "_run", lambda args, timeout=60: (0, "deps-ok"), raising=True)
     monkeypatch.setattr(dr, "_which", lambda name: f"C:/fake/{name}", raising=True)
 
@@ -224,3 +229,134 @@ def test_no_escalate_flag(repo, env):
 
     assert dr.main(["--no-escalate"]) == 1
     assert not (repo.root / "state" / "escalations.md").exists()
+
+
+# ---------------------------------------------------------------------------
+# _heartbeat_lock_dead_pid_check — M1/R4 (plan-m1-m4.md v3, 2026-08-09)
+# ---------------------------------------------------------------------------
+
+def _write_lock(repo, *, holder: str, pid, ts: str) -> Path:
+    p = repo.root / "state" / "loop.lock"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps({"holder": holder, "pid": pid, "ts": ts}), encoding="utf-8")
+    return p
+
+
+def _now_stamp(delta_hours: float = 0.0) -> str:
+    ts = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=delta_hours)
+    return ts.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def test_heartbeat_lock_dead_pid_warns(repo, env, monkeypatch):
+    """LIVE лок с holder=heartbeat:* и мёртвым pid -> WARN (не FAIL)."""
+    _write_lock(repo, holder="heartbeat:2026-08-09T10:00:00Z:ab12cd34",
+                pid=999999, ts=_now_stamp())
+
+    def fake_run(args, timeout=60):
+        if args[:1] == ["tasklist"]:
+            return 0, "INFO: No tasks are running which match the specified criteria.\n"
+        return 0, "deps-ok"
+    monkeypatch.setattr(dr, "_run", fake_run, raising=True)
+
+    checks = dr.run_checks()
+    chk = next(c for c in checks if c.name == "живой loop.lock с мёртвым pid")
+    assert not chk.ok and chk.warn
+    assert "999999" in chk.detail
+    assert dr.main([]) == 0                     # WARN не валит doctor
+
+
+def test_interactive_lock_dead_pid_not_applicable(repo, env, monkeypatch):
+    """Тот же мёртвый pid, но holder НЕ heartbeat:* (интерактивный CLI-лок,
+    умирает мгновенно штатно) -> проверка н/п, tasklist даже не зовётся."""
+    _write_lock(repo, holder="qa-loop:2026-08-09T10:00:00Z", pid=999999, ts=_now_stamp())
+
+    def fake_run(args, timeout=60):
+        if args[:1] == ["tasklist"]:
+            raise AssertionError("не должен звать tasklist для НЕ-heartbeat holder")
+        return 0, "deps-ok"
+    monkeypatch.setattr(dr, "_run", fake_run, raising=True)
+
+    checks = dr.run_checks()
+    chk = next(c for c in checks if c.name == "живой loop.lock с мёртвым pid")
+    assert chk.ok and not chk.warn
+    assert dr.main([]) == 0
+
+
+def test_heartbeat_lock_alive_pid_ok(repo, env, monkeypatch):
+    _write_lock(repo, holder="heartbeat:2026-08-09T10:00:00Z:ab12cd34",
+                pid=os.getpid(), ts=_now_stamp())
+
+    def fake_run(args, timeout=60):
+        if args[:1] == ["tasklist"]:
+            return 0, f"python.exe   {os.getpid()} Console  1  10,000 K\n"
+        return 0, "deps-ok"
+    monkeypatch.setattr(dr, "_run", fake_run, raising=True)
+
+    checks = dr.run_checks()
+    chk = next(c for c in checks if c.name == "живой loop.lock с мёртвым pid")
+    assert chk.ok and not chk.warn
+
+
+def test_heartbeat_lock_missing_is_not_applicable(repo, env):
+    checks = dr.run_checks()
+    chk = next(c for c in checks if c.name == "живой loop.lock с мёртвым pid")
+    assert chk.ok and not chk.warn
+    assert "н/п" in chk.detail
+
+
+def test_heartbeat_lock_naive_ts_does_not_crash_and_still_warns(repo, env, monkeypatch):
+    """Критик-фикс (класс 2а, 2026-08-09): naive ISO ts (без 'Z') раньше
+    ронял run_checks() TypeError'ом (naive - aware). Naive трактуется как
+    UTC — свежий naive ts даёт LIVE + мёртвый pid -> WARN, не крах."""
+    naive_ts = (datetime.datetime.now(datetime.timezone.utc)
+               - datetime.timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M:%S")  # без 'Z'
+    _write_lock(repo, holder="heartbeat:2026-08-09T10:00:00Z:ab12cd34",
+                pid=999999, ts=naive_ts)
+
+    def fake_run(args, timeout=60):
+        if args[:1] == ["tasklist"]:
+            return 0, "INFO: No tasks are running which match the specified criteria.\n"
+        return 0, "deps-ok"
+    monkeypatch.setattr(dr, "_run", fake_run, raising=True)
+
+    checks = dr.run_checks()                     # не должно бросить TypeError
+    chk = next(c for c in checks if c.name == "живой loop.lock с мёртвым pid")
+    assert not chk.ok and chk.warn
+    assert "999999" in chk.detail
+
+
+def test_heartbeat_lock_tasklist_error_is_unknown_not_dead(repo, env, monkeypatch):
+    """Критик-фикс п.4: ошибка САМОГО tasklist (rc!=0) — «неизвестно», не
+    «мёртв». Раньше схлопывалось в False -> ложный WARN осиротевшего лока
+    на банальном сбое инструмента."""
+    _write_lock(repo, holder="heartbeat:2026-08-09T10:00:00Z:ab12cd34",
+                pid=999999, ts=_now_stamp())
+
+    def fake_run(args, timeout=60):
+        if args[:1] == ["tasklist"]:
+            return 1, "ERROR: tasklist недоступен (симуляция)"
+        return 0, "deps-ok"
+    monkeypatch.setattr(dr, "_run", fake_run, raising=True)
+
+    checks = dr.run_checks()
+    chk = next(c for c in checks if c.name == "живой loop.lock с мёртвым pid")
+    assert chk.ok and not chk.warn                # НЕ WARN — просто "недоступна"
+    assert "недоступна" in chk.detail
+    assert dr.main([]) == 0
+
+
+def test_heartbeat_lock_stale_ttl_not_applicable(repo, env, monkeypatch):
+    """STALE лок (возраст > TTL sla.yaml, дефолт 2ч) — проверка НЕ
+    применяется (TTL-страховка снимет его сама на следующем acquire);
+    tasklist не должен вызываться вовсе."""
+    _write_lock(repo, holder="heartbeat:old:ab12cd34", pid=999999, ts=_now_stamp(delta_hours=5))
+
+    def fake_run(args, timeout=60):
+        if args[:1] == ["tasklist"]:
+            raise AssertionError("STALE-лок не должен доходить до tasklist")
+        return 0, "deps-ok"
+    monkeypatch.setattr(dr, "_run", fake_run, raising=True)
+
+    checks = dr.run_checks()
+    chk = next(c for c in checks if c.name == "живой loop.lock с мёртвым pid")
+    assert chk.ok and not chk.warn

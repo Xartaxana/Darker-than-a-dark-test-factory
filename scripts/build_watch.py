@@ -26,6 +26,7 @@ from __future__ import annotations
 import argparse
 import datetime
 import hashlib
+import os
 import re
 import subprocess
 import sys
@@ -47,6 +48,34 @@ ENV_PS1 = REPO / "scripts" / "env.ps1"
 APK_REL = "app/build/outputs/apk/debug/app-debug.apk"
 
 BUILD_TIMEOUT_S = 1200
+
+# M3 (plan-m1-m4.md v3, [B9][B7], 2026-08-09): env-надбавка ТОЛЬКО для
+# fetch-вызовов — GIT_TERMINAL_PROMPT=0/GCM_INTERACTIVE=never отключают
+# интерактивный фолбэк GCM/git в headless Task Scheduler-контексте (без
+# них падение прежде повисало бы на промпте вместо честного rc!=0/[WARN]).
+GIT_FETCH_ENV_EXTRA = {"GIT_TERMINAL_PROMPT": "0", "GCM_INTERACTIVE": "never"}
+
+# [B9/R5] Regex ВЫВЕДЕН из дословных выводов падающего fetch (эмпирика
+# builder-диспатча M3, 2026-08-09 — реальный gitlab.com-URL требующий
+# auth, GIT_TERMINAL_PROMPT=0, обе формы credential.helper):
+#   форма 1 (helper явно отключён -c credential.helper=):
+#     "fatal: could not read Username for 'https://gitlab.com': terminal
+#     prompts disabled"
+#   форма 2 (активный GCM, GCM_INTERACTIVE=never, пустое credential-хранилище):
+#     "fatal: Cannot prompt because user interactivity has been disabled.
+#     fatal: could not read Username for 'https://gitlab.com': terminal
+#     prompts disabled"
+# Обе формы разделяют "could not read Username"/"terminal prompts disabled";
+# GCM даёт отдельно ещё "Cannot prompt because user interactivity" — своя
+# ветка альтернации на случай, если GCM когда-нибудь изменит общую
+# формулировку. "Authentication failed"/"could not read Password" —
+# ориентир-минимум спеки (иные формы того же класса отказа, не
+# воспроизведённые буквально в этом окружении, но покрытые на случай
+# другого поведения сервера/GCM).
+AUTH_FAILURE_RE = re.compile(
+    r"authentication failed|could not read username|could not read password|"
+    r"terminal prompts disabled|cannot prompt because user interactivity",
+    re.IGNORECASE)
 
 
 def _utcnow_s() -> str:
@@ -118,8 +147,45 @@ def _rewrite_field(text: str, field: str, value: str) -> str:
     return text.rstrip("\r\n") + f"{eol}{field}: {value}{eol}"
 
 
+def _redact(text: str) -> str:
+    """[B7] Значение GITLAB_TOKEN -> '***' перед ЛЮБОЙ печатью fetch-вывода
+    (секрет не должен оказаться в консоли/logs/heartbeat.log/orchestrator-log)."""
+    token = os.environ.get("GITLAB_TOKEN", "")
+    if not token:
+        return text
+    return text.replace(token, "***")
+
+
+def _fetch_with_token(env: dict) -> tuple[int, str]:
+    """[B7] Ретрай fetch с GITLAB_TOKEN через одноразовый inline
+    credential-хелпер: `-c credential.helper=` сбрасывает список
+    хелперов пустым значением ПЕРЕД добавлением своего — GCM не
+    опрашивается первым (GCM_INTERACTIVE=never в fetch_env уже отключил
+    его интерактивный фолбэк, но без сброса списка сам вызов GCM всё
+    равно шёл бы первым и съедал время до отказа). Inline-хелпер выводит
+    `username=oauth2`/`password=$GITLAB_TOKEN` — значение токена в argv
+    НЕ попадает (раскрывается git-порождённым sh() из окружения)."""
+    helper = "!f() { echo username=oauth2; echo password=$GITLAB_TOKEN; }; f"
+    return _run(
+        ["git", "-C", str(APP), "-c", "credential.helper=",
+         "-c", f"credential.helper={helper}", "fetch", "origin"],
+        timeout=60, env=env)
+
+
 def detect_new_commits() -> dict | None:
     """fetch + сравнение с source_commit. None = проверить не удалось (офлайн).
+
+    M3 (plan-m1-m4.md v3, [B9], 2026-08-09): fetch идёт с env-надбавкой
+    GIT_FETCH_ENV_EXTRA (GIT_TERMINAL_PROMPT=0/GCM_INTERACTIVE=never) —
+    headless Task Scheduler-контекст не может ответить на интерактивный
+    промпт GCM. Провал, чья ошибка совпадает с AUTH_FAILURE_RE (эмпирика
+    R5(а): реальные дословные выводы обеих форм — helper явно отключён и
+    активный GCM с пустым хранилищем, обе дали "could not read
+    Username"/"terminal prompts disabled") И для которого доступен
+    GITLAB_TOKEN — ретраится ОДИН раз через _fetch_with_token() (60с,
+    inline credential-хелпер). Провал без совпадения сигнатуры (или без
+    токена) деградирует как раньше ([WARN], код 0) — та же семантика,
+    что и офлайн.
 
     Shallow-клон app-under-test (docs/09 «Мелкое хозяйство» п.3, 2026-07-18):
     на shallow-клоне `current` (старый source_commit) типично отсутствует в
@@ -134,10 +200,38 @@ def detect_new_commits() -> dict | None:
     в app-under-test.yaml тихо получал "[]", даже если реально было
     несколько пушей подряд — оператор не мог отличить «правда один пуш» от
     «диапазон не восстановился». Guard ниже делает деградацию видимой."""
-    rc, out = _run(["git", "-C", str(APP), "fetch", "origin"], timeout=180)
+    fetch_env = dict(os.environ) | GIT_FETCH_ENV_EXTRA
+    rc, out = _run(["git", "-C", str(APP), "fetch", "origin"], timeout=180, env=fetch_env)
     if rc != 0:
-        print(f"  [WARN] git fetch не прошёл (офлайн/недоступен origin): {out.strip()[:200]}")
-        return None
+        token = os.environ.get("GITLAB_TOKEN", "")
+        matched = bool(AUTH_FAILURE_RE.search(out))
+        if matched and token:
+            # [B7][R5(б)] Fallback ТОЛЬКО по auth-сигнатуре И при наличии
+            # токена — офлайн/сетевой rc без совпадения сигнатуры в
+            # ретрай не идёт (см. else-ветку ниже).
+            rc2, out2 = _fetch_with_token(fetch_env)
+            if rc2 == 0:
+                print("  [INFO] fetch через GITLAB_TOKEN (GCM недоступен headless)")
+                rc, out = rc2, out2
+            else:
+                print(f"  [WARN] git fetch не прошёл (офлайн/недоступен origin): "
+                      f"{_redact(out).strip()[:200]}")
+                # Критик-фикс (некритично п.3, 2026-08-09): без этой строки
+                # неуспех РЕТРАЯ (напр. scope-отказ токена — read_repository
+                # не выдан) недиагностируем — оператор видит только исходный
+                # WARN и не узнаёт, что попытка с GITLAB_TOKEN тоже провалилась.
+                print(f"  [WARN] ретрай с GITLAB_TOKEN тоже не прошёл (возможен "
+                      f"scope-отказ токена): {_redact(out2).strip()[:200]}")
+                return None
+        else:
+            # [R5(a)] Страховка: rc!=0 БЕЗ совпадения сигнатуры (или без
+            # токена для ретрая) — прежний [WARN]-путь; отсутствие
+            # совпадения помечается явно, чтобы «механизм есть, не
+            # триггерится» было видно оператору, а не тонуло молча.
+            suffix = " (сигнатура auth-отказа не распознана)" if not matched else ""
+            print(f"  [WARN] git fetch не прошёл (офлайн/недоступен origin){suffix}: "
+                  f"{_redact(out).strip()[:200]}")
+            return None
     rc, tip = _run(["git", "-C", str(APP), "rev-parse", "FETCH_HEAD"])
     if rc != 0:
         print(f"  [WARN] rev-parse FETCH_HEAD: {tip.strip()[:200]}")

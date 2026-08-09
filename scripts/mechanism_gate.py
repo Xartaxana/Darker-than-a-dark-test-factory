@@ -141,6 +141,11 @@ MECHANISM_PREFIXES = (
     "scripts/escape_check.py",
     "scripts/critic_verdict_check.py",
     "scripts/enforcement_probe.py",
+    # 2026-08-09 (некрит-9, решение Lead, plan-m1-m4.md v3, M1+M4): обёртка
+    # heartbeat.cmd решает, СОСТОИТСЯ ЛИ проход /qa-loop вовсе (программный
+    # acquire/release локa, kill-tree по таймауту) — гейт-класс на пути
+    # исполнения scheduled-запуска, не генератор/свипер.
+    "scripts/heartbeat_wrap.py",
     # 2026-07-23: срез карты осей — вход этого же гейта; тихая правка
     # среза = обход полноты осевого блока, поэтому сам срез механизмен.
     MAP_SNAPSHOT_REL,
