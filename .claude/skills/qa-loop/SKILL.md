@@ -104,7 +104,11 @@ description: Запустить один проход QA-конвейера — 
    `state/escalations.md` (+ метка attention для борды).
 3. `python scripts/board_inbound.py` — переходы/комментарии человека с борды →
    артефакты (whitelist docs/06 §3; конфликт → Blocked + эскалация).
-4. `python scripts/build_watch.py` — новые коммиты приложения → сборка APK →
+4. `python scripts/gitlab_inbound.py` — ноты разработчиков из GitLab-issues →
+   `## Обсуждение` бага (`awaiting: qa` → правило D6; на терминальных
+   статусах — эскалация вместо awaiting; офлайн/нет токена → [WARN],
+   не блокирует). Вторая inbound-дверь — ДО тяжёлой сборки.
+5. `python scripts/build_watch.py` — новые коммиты приложения → сборка APK →
    `state/app-under-test.yaml` (вызывать Bash с timeout 600000: gradle-сборка
    идёт минуты; обновлённый yaml триггерит правило «Новая сборка» этим же проходом).
 

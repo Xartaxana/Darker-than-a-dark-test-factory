@@ -14,6 +14,11 @@ diff «борда vs артефакт» неоднозначен (борда в�
 сверкой (деградирует при офлайне); collect_board_comments()/append_discussion()/
 sync_comments() — перенос комментариев карточек TrackState в ## Обсуждение артефакта
 (формат board/<KEY>/comments/<NNNN>.md, реверс по исходникам TrackState — см. §5 ниже).
+
+append_discussion() и Comment — общий узел ВТОРОГО обратного канала:
+scripts/gitlab_inbound.py (notes GitLab-issue → ## Обсуждение) импортирует их
+напрямую, не копирует (план gitlab-inbound v3). Классовые фиксы вставки/EOL
+внутри append_discussion (см. её докстринг, [B3][B4]) выигрывают ОБА канала.
 """
 from __future__ import annotations
 
@@ -394,6 +399,19 @@ def collect_board_comments(key: str) -> list[Comment]:
 _DISCUSSION_HEADER = "## Обсуждение"
 _REPLICA_RE = re.compile(r"^\*\*\[(?P<author>.+?) @ (?P<time>.+?)\]\*\*", re.M)
 
+# Классовые фиксы (план gitlab-inbound v3 §6, [B3][B4]) — общие для ОБОИХ
+# каналов (борда и GitLab, scripts/gitlab_inbound.py импортирует
+# append_discussion). [B3]: раздел «## Обсуждение» — не всегда последний в
+# файле (у 17/22 багов на 2026-08-09 после него идёт «## Чек-лист качества»
+# шаблона docs/templates/bug-report.md) — слепая вставка в EOF файла
+# уезжала БЫ мимо секции, в чужую. Якорим на САМУ строку заголовка секции
+# (не на substring где угодно в файле — не матчит квотированное
+# «> ## Обсуждение» внутри чужой реплики, gitlab_inbound.py префиксует
+# ноты блок-цитатой ровно ради этой нейтрализации) и ищем СЛЕДУЮЩИЙ h2
+# после неё для определения конца секции.
+_DISCUSSION_HEADER_RE = re.compile(r"(?m)^" + re.escape(_DISCUSSION_HEADER) + r"[^\r\n]*")
+_NEXT_HEADING_RE = re.compile(r"(?m)^## ")
+
 
 def _existing_replicas(text: str) -> set[tuple[str, str, str]]:
     """Множество (автор, время, первая-строка-текста) уже перенесённых реплик.
@@ -426,37 +444,66 @@ def _replica_key(c: Comment) -> tuple[str, str, str]:
     return (c.author, c.created, first)
 
 
-def append_discussion(artifact_path: Path, comment: Comment, *, dry: bool) -> str:
+def append_discussion(artifact_path: Path, comment: Comment, *, dry: bool,
+                       set_awaiting: bool = True) -> str:
     """Дозаписывает реплику comment в раздел ## Обсуждение артефакта (docs/06 §2).
 
     Формат строки: `**[автор @ ISO-время]** текст`. Реплика человека → фабрике ход:
-    выставляем `awaiting: qa`. Раздел создаётся, если его нет (старые артефакты до
-    шаблона docs/06). Дедупликация — на стороне sync_comments (по _replica_key).
+    по умолчанию выставляем `awaiting: qa` — `set_awaiting=False` (используется
+    gitlab_inbound.py на терминальных статусах бага, [B7] плана gitlab-inbound)
+    пишет реплику в историю, но НЕ трогает поле `awaiting` вовсе. Раздел
+    создаётся, если его нет (старые артефакты до шаблона docs/06). Дедупликация —
+    на стороне ВЫЗЫВАЮЩЕГО кода (sync_comments по _replica_key; gitlab_inbound.py —
+    тем же _replica_key через _existing_replicas), не здесь.
 
-    Байтовый ввод/вывод (AT-BUG-038): новый контент (пустые строки, заголовок
-    раздела, реплика) собирается со стилем EOL исходного файла (_file_eol), а
-    не жёстким '\\n' — иначе CRLF-файл получал бы LF-хвост при каждом переносе
-    комментария."""
+    [B3] Вставка — В КОНЕЦ СЕКЦИИ «## Обсуждение», перед следующим `^## ` (или в
+    EOF, если секция последняя/файла без заголовка следующей секции) — НЕ слепо
+    в конец файла: у 17/22 багов на 2026-08-09 после «## Обсуждение» идёт
+    «## Чек-лист качества» шаблона docs/templates/bug-report.md, и вставка позже
+    нужного места портила бы порядок секций.
+
+    [B4] Байтовый ввод/вывод (AT-BUG-038): И framing (пустые строки, заголовок
+    раздела), И само ТЕЛО реплики нормализуются под EOL исходного файла
+    (_file_eol) — многострочная реплика (gitlab_inbound.py, блок-цитата по
+    строкам) раньше вставлялась с внутренними '\\n' даже в CRLF-файл (смешанный
+    EOL внутри одной вставки)."""
     text = artifact_path.read_bytes().decode("utf-8")
     eol = _file_eol(text)
-    replica = f"**[{comment.author} @ {comment.created}]** {comment.body.strip()}"
+    body_normalized = comment.body.strip().replace("\r\n", "\n").replace("\r", "\n")
+    replica = f"**[{comment.author} @ {comment.created}]** {body_normalized}"
+    if eol != "\n":
+        replica = replica.replace("\n", eol)
 
-    stripped = text.rstrip("\r\n")
-    if _DISCUSSION_HEADER in text:
-        # Дозапись в конец существующего раздела (последний раздел файла по шаблону).
-        new = stripped + eol + eol + replica + eol
-    else:
+    header_m = _DISCUSSION_HEADER_RE.search(text)
+    if header_m is None:
+        stripped = text.rstrip("\r\n")
         new = stripped + eol + eol + _DISCUSSION_HEADER + eol + eol + replica + eol
+    else:
+        next_m = _NEXT_HEADING_RE.search(text, header_m.end())
+        if next_m is None:
+            # Секция «## Обсуждение» последняя в файле — как раньше, дозапись в EOF.
+            stripped = text.rstrip("\r\n")
+            new = stripped + eol + eol + replica + eol
+        else:
+            # После «## Обсуждение» есть ЕЩЁ секция (напр. «## Чек-лист качества») —
+            # вставляем ПЕРЕД ней, не после неё.
+            insertion_point = next_m.start()
+            before = text[:insertion_point].rstrip("\r\n")
+            after = text[insertion_point:]
+            new = before + eol + eol + replica + eol + eol + after
 
-    # Реплика человека → ход за фабрикой (awaiting: qa). Поле может отсутствовать
-    # в старом артефакте — тогда вставляем его во frontmatter после status:.
-    new = _set_field(new, "awaiting", "qa")
+    if set_awaiting:
+        # Реплика человека → ход за фабрикой (awaiting: qa). Поле может отсутствовать
+        # в старом артефакте — тогда вставляем его во frontmatter после status:.
+        new = _set_field(new, "awaiting", "qa")
     stamp = _utcnow()
     new, _ = _rewrite_field(new, "updated", f'"{stamp}"')
 
     if not dry:
         artifact_path.write_bytes(new.encode("utf-8"))
-    return f"  [COMMENT] {comment.key}: перенесена реплика [{comment.author} @ {comment.created}] (awaiting: qa)"
+    awaiting_note = "awaiting: qa" if set_awaiting else "awaiting не тронут (закрытый статус)"
+    return (f"  [COMMENT] {comment.key}: перенесена реплика "
+            f"[{comment.author} @ {comment.created}] ({awaiting_note})")
 
 
 def sync_comments(states: dict[str, TicketState], *, dry: bool) -> int:
