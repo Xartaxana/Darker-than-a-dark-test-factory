@@ -263,6 +263,19 @@ def is_app_bug(meta: dict) -> bool:
     return bug_type in (None, "", "app_bug")
 
 
+def is_seeded(meta: dict) -> bool:
+    """Батч мелочей (репетиция тёмного дня, разбор 2026-08-09): сеяный
+    артефакт репетиции/учений (schemas/bug.schema.yaml, поле `seeded`) — в
+    GitLab не публикуется никогда, ни полным sync, ни точечным --bug.
+    Нормализация обязательна — как у остальных читателей строковых bool
+    репо (queue_snapshot:187, sla_sweep:190-194, ui_snapshot:56): PyYAML
+    парсит `seeded: true` БЕЗ кавычек в bool True, а validate_frontmatter
+    приводит bool к нижнему регистру до enum-проверки — schema-валидная
+    форма проходила бы мимо строгого сравнения и сеяный утекал бы в
+    GitLab (блокер 1 критик-входа 2026-08-09)."""
+    return str(meta.get("seeded") or "").strip().lower() == "true"
+
+
 def writeback_gitlab_issue(path: Path, iid: int) -> None:
     """Если в frontmatter УЖЕ есть строка 'gitlab_issue: <...>' (шаблонный
     плейсхолдер или предыдущий iid) — заменяет ТОЛЬКО эту строку на
@@ -491,7 +504,7 @@ def plan_for(meta: dict) -> str:
 
 # --- Пакетные режимы (общие для CLI и тестов) -------------------------------
 
-def _iter_selected(bugs: list[Path]):
+def _iter_selected(bugs: list[Path], skipped_seeded: list[str] | None = None):
     """Yields (path, meta, body) для отобранных app-багов. На ошибку
     парсинга (BugSyncError) печатает '[ERROR] ...' в stderr и yield'ит
     сентинель (path, None, None) — вызывающая сторона (run_dry_run/run_check/
@@ -500,7 +513,12 @@ def _iter_selected(bugs: list[Path]):
     ничего не "возвращает" — предыдущая формулировка про "флаг через
     замыкание" была неточной (рекомендация 4 критик-ревью). На AT-BUG-*/
     type: test_debt — молча пропускает (решение оператора 2026-08-01, не
-    фильтр качества, поэтому не считается ошибкой)."""
+    фильтр качества, поэтому не считается ошибкой). На `seeded: "true"`
+    (батч мелочей, разбор 2026-08-09) — тоже пропускает (сеяный артефакт
+    репетиции/учений в GitLab не публикуется никогда), но НЕ молча:
+    если вызывающая сторона передала список `skipped_seeded`, id пропущенного
+    бага туда добавляется — молчаливый пропуск запрещён (--check обязан
+    показать их отдельной строкой, не просто "не встретить")."""
     for path in bugs:
         try:
             meta, body = load_bug(path)
@@ -510,28 +528,45 @@ def _iter_selected(bugs: list[Path]):
             continue
         if not is_app_bug(meta):
             continue
+        if is_seeded(meta):
+            if skipped_seeded is not None:
+                skipped_seeded.append(str(meta.get("id", path.stem)))
+            continue
         yield path, meta, body
 
 
 def run_dry_run(bugs: list[Path]) -> int:
     exit_code = 0
-    for path, meta, _body in _iter_selected(bugs):
+    skipped_seeded: list[str] = []
+    for path, meta, _body in _iter_selected(bugs, skipped_seeded=skipped_seeded):
         if meta is None:
             exit_code = 1
             continue
         print(plan_for(meta))
+    if skipped_seeded:
+        print(f"skipped (seeded): {len(skipped_seeded)}")
+        for bug_id in skipped_seeded:
+            print(f"  {bug_id}")
     return exit_code
 
 
 def run_check(bugs: list[Path]) -> int:
     missing: list[str] = []
     had_error = False
-    for path, meta, _body in _iter_selected(bugs):
+    skipped_seeded: list[str] = []
+    for path, meta, _body in _iter_selected(bugs, skipped_seeded=skipped_seeded):
         if meta is None:
             had_error = True
             continue
         if not meta.get("gitlab_issue"):
             missing.append(str(meta.get("id", path.stem)))
+    # Сеяные (батч мелочей, разбор 2026-08-09) — ОТДЕЛЬНАЯ строка, ВСЕГДА
+    # (даже когда missing/had_error пусты) -- молчаливый пропуск запрещён
+    # (это находка-детектор: без строки сеяные неотличимы от "их не было").
+    if skipped_seeded:
+        print(f"gitlab_sync --check: skipped (seeded): {len(skipped_seeded)}")
+        for bug_id in skipped_seeded:
+            print(f"  {bug_id}")
     if not missing and not had_error:
         print("gitlab_sync --check: все BUG-* синхронизированы")
         return 0
@@ -544,7 +579,8 @@ def run_check(bugs: list[Path]) -> int:
 
 def run_sync(client: GitLabClient, bugs: list[Path]) -> int:
     exit_code = 0
-    for path, meta, body in _iter_selected(bugs):
+    skipped_seeded: list[str] = []
+    for path, meta, body in _iter_selected(bugs, skipped_seeded=skipped_seeded):
         if meta is None:
             exit_code = 1
             continue
@@ -557,6 +593,10 @@ def run_sync(client: GitLabClient, bugs: list[Path]) -> int:
         except GitLabHTTPError as e:
             print(f"[ERROR] {meta.get('id', path.stem)}: {e}", file=sys.stderr)
             exit_code = 1
+    if skipped_seeded:
+        print(f"skipped (seeded): {len(skipped_seeded)}")
+        for bug_id in skipped_seeded:
+            print(f"  {bug_id}")
     return exit_code
 
 
@@ -578,6 +618,18 @@ def validate_bug_arg(value: str) -> None:
             f"gitlab_sync: '--bug {value}' — публикуются только BUG-* "
             f"(AT-BUG-* — тестовый долг фабрики, в GitLab не идёт; "
             f"решение оператора 2026-08-01)")
+
+
+def reject_seeded_bug_arg(bug_id: str, meta: dict) -> None:
+    """Точечный --bug BUG-NNN на seeded-баге -- явный отказ (батч мелочей,
+    разбор 2026-08-09): публикация сеяного артефакта репетиции/учений в
+    GitLab руками -- та же ошибка, что и его публикация полным sync, только
+    менее очевидная (человек мог не знать про признак seeded)."""
+    if is_seeded(meta):
+        raise SystemExit(
+            f"gitlab_sync: '--bug {bug_id}' — сеяный артефакт репетиции/"
+            f"учений (frontmatter seeded: \"true\"), в GitLab не публикуется "
+            f"даже точечно (см. resolution_comment/раздел «Обсуждение» бага)")
 
 
 # --- CLI ---------------------------------------------------------------------
@@ -606,6 +658,14 @@ def main(argv: list[str] | None = None) -> int:
     if args.bug and not bugs:
         print(f"gitlab_sync: '{args.bug}' не найден в bugs/", file=sys.stderr)
         return 1
+
+    if args.bug:
+        try:
+            bug_meta, _bug_body = load_bug(bugs[0])
+        except BugSyncError as e:
+            print(f"[ERROR] {e}", file=sys.stderr)
+            return 1
+        reject_seeded_bug_arg(args.bug, bug_meta)
 
     if args.check:
         return run_check(bugs)

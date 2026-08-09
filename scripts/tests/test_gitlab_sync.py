@@ -726,6 +726,106 @@ def test_check_missing_ones_exit_1(bugs_dir, capsys):
     assert "BUG-150" not in out.split("не синхронизированы:")[-1]
 
 
+# --- seeded: "true" — сеяные артефакты репетиции/учений (батч мелочей,
+# разбор 2026-08-09) — пропускаются И в --check, И в полном sync; поле
+# отсутствует -> публикуется как раньше (граница b); --bug на seeded -> отказ.
+
+def test_seeded_bug_skipped_in_dry_run_and_check(bugs_dir, capsys):
+    _write_bug(bugs_dir, "BUG-300", status="Open", extra='seeded: "true"\n')
+    _write_bug(bugs_dir, "BUG-301", status="Open")   # обычный, для контраста
+
+    code = gs.main(["--dry-run"])
+    out = capsys.readouterr().out
+    assert code == 0
+    assert "create BUG-301" in out
+    assert "create BUG-300" not in out
+    assert "skipped (seeded): 1" in out
+    assert "BUG-300" in out.split("skipped (seeded):")[-1]
+
+    code = gs.main(["--check"])
+    out = capsys.readouterr().out
+    assert code == 1   # BUG-301 не синхронизирован (нет gitlab_issue)
+    assert "gitlab_sync --check: skipped (seeded): 1" in out
+    assert "BUG-300" in out
+    assert "не синхронизированы:" in out
+    assert "BUG-301" in out.split("не синхронизированы:")[-1]
+    # сеяный НЕ должен попасть в список "не синхронизированы"
+    assert "BUG-300" not in out.split("не синхронизированы:")[-1]
+
+
+def test_seeded_bug_skipped_in_full_sync_no_network_call(bugs_dir, capsys):
+    """Сеяный баг пропущен полным sync -- ни один сетевой вызов по нему не
+    происходит (FakeTransport с ПУСТЫМ списком ответов упал бы
+    AssertionError на неожиданный вызов, если бы sync попытался его
+    обработать)."""
+    _write_bug(bugs_dir, "BUG-302", status="Open", extra='seeded: "true"\n')
+
+    client, transport = _client([])   # ни один вызов не ожидается
+    bugs = gs.discover_bugs()
+    code = gs.run_sync(client, bugs)
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert transport.calls == []
+    assert "skipped (seeded): 1" in out
+    assert "BUG-302" in out
+
+
+def test_seeded_field_absent_publishes_as_before(bugs_dir, capsys):
+    """Граница (b): поле seeded отсутствует вовсе -- баг синхронизируется
+    так же, как до появления признака (регрессия по умолчанию)."""
+    _write_bug(bugs_dir, "BUG-303", status="Open")   # без extra -> нет seeded
+
+    code = gs.main(["--dry-run"])
+    out = capsys.readouterr().out
+    assert code == 0
+    assert "create BUG-303" in out
+    assert "skipped (seeded)" not in out
+
+
+def test_bug_arg_on_seeded_bug_is_explicit_refusal(bugs_dir, capsys):
+    """Точечный --bug на seeded-баге -- явный отказ (не тихий no-op, не
+    публикация вручную мимо фильтра)."""
+    _write_bug(bugs_dir, "BUG-304", status="Open", extra='seeded: "true"\n')
+
+    with pytest.raises(SystemExit, match="сеяный артефакт"):
+        gs.main(["--dry-run", "--bug", "BUG-304"])
+
+    with pytest.raises(SystemExit, match="сеяный артефакт"):
+        gs.main(["--check", "--bug", "BUG-304"])
+
+
+def test_is_seeded_helper_true_false_and_absent():
+    assert gs.is_seeded({"seeded": "true"}) is True
+    assert gs.is_seeded({"seeded": "false"}) is False
+    assert gs.is_seeded({}) is False
+
+
+def test_seeded_unquoted_yaml_bool_still_skipped(bugs_dir, capsys):
+    """Блокер 1 критик-входа 2026-08-09: `seeded: true` БЕЗ кавычек —
+    schema-валидная форма (PyYAML -> bool True, validate_frontmatter
+    приводит bool к нижнему регистру до enum) — обязана фильтроваться так
+    же, как каноническая '"true"'. Через РЕАЛЬНЫЙ парсер (файл + main),
+    не через is_seeded({...}) — иначе класс не покрыт."""
+    _write_bug(bugs_dir, "BUG-305", status="Open", extra="seeded: true\n")
+
+    code = gs.main(["--dry-run"])
+    out = capsys.readouterr().out
+    assert code == 0
+    assert "create BUG-305" not in out
+    assert "skipped (seeded): 1" in out
+    assert "BUG-305" in out.split("skipped (seeded):")[-1]
+
+
+def test_is_seeded_normalizes_case_and_whitespace():
+    """Тот же класс: нормализация регистра/пробелов (str(True) == 'True',
+    ручной ввод 'True ')."""
+    assert gs.is_seeded({"seeded": True}) is True
+    assert gs.is_seeded({"seeded": "True "}) is True
+    assert gs.is_seeded({"seeded": False}) is False
+    assert gs.is_seeded({"seeded": None}) is False
+
+
 # --- Разбор repo URL ---------------------------------------------------------
 
 def test_parse_project_and_api_base():
