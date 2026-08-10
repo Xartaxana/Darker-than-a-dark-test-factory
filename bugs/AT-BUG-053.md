@@ -4,16 +4,16 @@ title: "settings_screen.rename_filter_button_locator ищет content-desc «Ren
 type: test_debt
 debt_kind: weak_locator
 severity: major
-status: Open
+status: Fixed
 found_in: "framework commit 2f26f8a (тестируемая сборка приложения 1.10 (versionCode 11), build 6455af0c — от сборки НЕ зависит)"
-fixed_in: ""
-last_seen_in: "RUN-20260804-1624 (2026-08-04)"
+fixed_in: "d96eef9"
+last_seen_in: "RUN-20260810-0146 (2026-08-10)"
 test_cases: ["TC-085", "TC-086"]
-runs: ["RUN-20260804-1624"]
+runs: ["RUN-20260804-1624", "RUN-20260810-0146"]
 duplicates: []
 regression_of: ""
-status_since: "2026-08-04T22:20:45Z"
-updated: "2026-08-04T22:20:45Z"
+status_since: "2026-08-10T09:34:00Z"
+updated: "2026-08-10T09:34:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -71,6 +71,57 @@ return (AppiumBy.XPATH, f'(//*[@text="{name}"]/following::*[@content-desc="Renam
 фактическим `contentDescription` в `SettingsScreen.kt` — опечатка в
 константе локатора не ловится ничем, кроме прогона самого теста
 (red_probe кейса был снят 2026-07-21, до порчи).
+
+## Верификация (заполняет fix-verifier)
+| Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
+|---|---|---|---|---|
+| 2026-08-10 | 1.10 (11), сборка приложения не тронута (test_debt в обвязке) | `Invoke-Pytest -k "test_rename_filter_profile" -v` (TC-085 `test_rename_filter_profile_keeps_query_string`, TC-086 `test_rename_filter_profile_to_duplicate_name`) — 3 прогона подряд | run1 `2 passed, 312 deselected in 131.56s (0:02:11)`, run2 `2 passed, 312 deselected in 131.26s (0:02:11)`, run3 `2 passed, 312 deselected in 126.87s (0:02:06)`, все три `PYTEST_EXIT=0` | Fixed (test-maintainer; таблица верификации D1 — за fix-verifier следующим проходом) |
+
+## Обсуждение
+
+**2026-08-10T09:34:00Z — test-maintainer, фикс (B4):**
+
+Причина устранена по месту (не замаскирована): `_rename_button_locator`
+(`framework/screens/settings_screen.py:269`) собирал xpath на
+`@content-desc="Renam3"` — опечатка коммита `2f26f8a`. Заменено на
+`@content-desc="Rename"`, сверено с местом рендера
+(`SettingsScreen.kt:852`, `IconButton(onClick = {
+viewModel.requestRenameFilter(filter) })` → `Icon(...,
+contentDescription = "Rename", ...)`). Ассерт кейсов не менялся —
+TC-085/TC-086 проверяли и проверяют переименование профиля по существу,
+падение было исключительно на шаге открытия диалога (клик по
+несуществующему узлу).
+
+**Класс, не экземпляр — сверка ОСТАЛЬНЫХ `@content-desc`-локаторов
+`settings_screen.py` с `SettingsScreen.kt` (read-only):**
+
+| Локатор | Строка фреймворка | Строка приложения | Совпадает? |
+|---|---|---|---|
+| `_rename_button_locator` (`content-desc="Rename"`, после фикса) | `settings_screen.py:269` | `SettingsScreen.kt:852` `contentDescription = "Rename"` | Да |
+| `_delete_button_locator` (`content-desc="Delete"`) | `settings_screen.py:236` | `SettingsScreen.kt:860` `contentDescription = "Delete"` | Да |
+
+Других локаторов, собранных на `@content-desc="..."` (буквальный литерал
+в XPath/UiSelector), в файле нет — сверено `Grep` по паттерну
+`@content-desc="` (2 совпадения, оба выше). Остальные упоминания
+`content-desc` в файле — только докстринги/комментарии (строки 85, 110,
+136, 163, 205, 208, 212, 254), не исполняемый код. Прочие локаторы файла
+опираются на `@text`/`@checkable`/`className`, вне поверхности этого
+долга (класс `weak_locator` здесь — именно опечатанный литерал
+content-desc). Новых аналогичных дефектов не найдено — правку класса
+завершать некуда.
+
+Прогон `Invoke-Pytest -k "test_rename_filter_profile" -v` — 3 раза
+подряд, все зелёные (см. таблица верификации выше), `Get-Device` →
+`DEVICE: emulator-5554` перед прогонами.
+
+`git status --porcelain -- app-under-test/` — пустой вывод (сверено до
+и после правки); дифф целиком в `framework/screens/settings_screen.py`
+(1 строка), коммит `d96eef9`.
+
+Новых блокеров/долгов в ходе работы не найдено (фикстуры/сидинг/replay
+не затронуты, живое дерево доступно штатно).
+
+Статус: `Open` → `Fixed`. Лок снят.
 
 ## Ссылки
 
