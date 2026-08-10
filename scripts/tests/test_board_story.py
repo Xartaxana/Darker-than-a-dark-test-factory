@@ -678,7 +678,10 @@ def test_board_view_story_column_renders_badges_and_lists(repo):
     # НЕТ approve/priority/severity-контролов на story-карточке (изолируем
     # секцию Stories от JS-функций approveCard/setPriority, которые всегда
     # присутствуют в <script> ниже, но не должны быть ВЫЗВАНЫ из story-карточки).
-    story_section = html_str.split("<h2>Stories")[1].split("<div id=\"backdrop\"")[0]
+    # Секция Stories теперь ПЕРВАЯ (слово владельца 2026-08-10) — режем до
+    # СЛЕДУЮЩЕГО <h2>, а не до конца документа (прежний срез захватывал чужие
+    # секции с approve-контролами и давал ложный провал инварианта read-only).
+    story_section = html_str.split("<h2>Stories")[1].split("<h2>")[0]
     assert "onclick=\"event.stopPropagation(); approveCard(" not in story_section
     assert "pri-select" not in story_section
     assert "class=\"approve\"" not in story_section

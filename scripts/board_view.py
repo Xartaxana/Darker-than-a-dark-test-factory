@@ -200,7 +200,8 @@ def render(by_type, live: bool = False) -> str:
             f'<div class="col"><div class="colhead" style="border-color:{CAT_COLOR[STATUS_CAT[sid]]}">'
             f'{esc(STATUS_NAME[sid])} <b>{len(cards)}</b></div>{card_html or "<div class=empty>—</div>"}</div>'
         )
-    sections.append(
+    # Слово владельца 2026-08-10: линия сторей — ПЕРВОЙ сверху борды.
+    sections.insert(0,
         f'<h2>{esc(TYPE_TITLE["story"])} <span class="cnt">{len(story_tickets)}</span></h2>'
         f'<div class="board">{"".join(story_cols_html)}</div>'
     )
