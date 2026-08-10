@@ -208,6 +208,62 @@ def run_as(cmd: str) -> str:
     return shell(f"run-as {_PKG} {cmd}")
 
 
+_RUN_AS_FILE_RC_SENTINEL = "AT_BUG_055_RUN_AS_FILE_RC="
+
+
+def run_as_file_or_raise(path: str, timeout: float = settings.ADB_SHELL_TIMEOUT) -> str:
+    """Честно читает приватный файл приложения через `run-as cat` (AT-BUG-055):
+    в отличие от `run_as()`/`shell()` (отбрасывают `returncode`/`stderr` —
+    см. `shell()` выше), эта функция ловит код возврата ЯВНО через
+    echo-sentinel ВНУТРИ той же remote-shell-сессии — тот же приём, что уже
+    закрыл аналогичный класс в `seed_db._schema_ready` (AT-BUG-044),
+    `settings_steps.assert_ratings_present`/`assert_no_ratings` (AT-BUG-045) и
+    `conftest._snapshot_download_dir` (download-oracle-0728): `adb.shell()`
+    не прокидывает `returncode` подпроцесса наружу, единственный способ узнать
+    его — вывести самим `echo $?` внутри той же remote-команды.
+
+    Три исхода:
+    - `rc == 0` -> `cat` реально прочитал файл, возвращаем контент (может
+      быть пустой строкой — легитимное пустое содержимое, это НЕ то же самое,
+      что «файл не читался»);
+    - `rc != 0` И контент пуст -> типично «No such file or directory»: файл
+      ещё не создан приложением (легитимное раннее состояние, например ДО
+      первой записи `SharedPreferences.apply()`) — валидный пустой результат,
+      не ошибка;
+    - иначе (sentinel-строка отсутствует вовсе — `run-as`/remote shell не
+      выполнились совсем; ЛИБО код возврата не распознан; ЛИБО ненулевой код
+      с непустым содержимым — подозрительная смесь) -> `RuntimeError` с сырым
+      выводом. Раньше (AT-BUG-055) такой вход молча превращался в `""`, и
+      вызывающий код (`_parse_persisted_tabs`) штатно трактовал нечитаемый
+      ответ как «0 вкладок» — неотличимо от реального пустого состояния."""
+    out = shell(
+        f"run-as {_PKG} sh -c 'cat {path} 2>/dev/null; "
+        f"echo {_RUN_AS_FILE_RC_SENTINEL}$?'",
+        timeout=timeout,
+    )
+    lines = out.splitlines()
+    rc: int | None = None
+    if lines and lines[-1].startswith(_RUN_AS_FILE_RC_SENTINEL):
+        rc_raw = lines.pop()[len(_RUN_AS_FILE_RC_SENTINEL):].strip()
+        try:
+            rc = int(rc_raw)
+        except ValueError:
+            rc = None
+    content = "\n".join(lines)
+    if rc == 0:
+        return content
+    if rc is not None and rc != 0 and not content.strip():
+        return ""
+    raise RuntimeError(
+        f"run-as {_PKG} cat {path} не завершился однозначно успешно "
+        f"(rc={rc!r}, сырой вывод={out!r}) — ожидали 0 «файл прочитан» или "
+        "ненулевой БЕЗ содержимого «файла ещё нет»; похоже на отвалившийся/"
+        "неоднозначный adb или run-as (устройство офлайн, пакет не "
+        "debuggable, битый toybox), не на легитимное пустое состояние "
+        "(AT-BUG-055)."
+    )
+
+
 def pull_app_file(rel_path: str, dest: Path) -> bool:
     """Тянет файл из приватной песочницы приложения на хост через run-as cat (бинарно).
     Не идёт через `_run()` (нужны сырые байты без `text=True`) — тот же конечный

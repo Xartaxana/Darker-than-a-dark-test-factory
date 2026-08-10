@@ -270,34 +270,56 @@ def bring_app_to_foreground_without_deep_link() -> None:
     adb.shell(f"am start -n {settings.APP_PACKAGE}/{settings.APP_ACTIVITY}")
 
 
-@allure.step("Then вкладки сохранены в SharedPreferences (сентинел «{sentinel}» найден)")
-def wait_tabs_persisted(sentinel: str, timeout: int = 10) -> None:
-    """Опрашивает файл SharedPreferences приложения (`ao3_settings.xml`, через
-    `run-as cat` — тот же приём, что `pull_app_file`), пока в нём не появится
-    `sentinel` — TC-025: `saveTabsToPrefs` (BrowserViewModel.kt `scheduleSave`)
-    ДЕБАУНСИТ запись на 500мс после каждого скролл-события; принудительная
-    остановка процесса (`am force-stop`) ДО истечения этого окна теряет
-    несохранённое состояние безвозвратно (отменённая корутина никогда не
-    допишет файл) — одноразовое чтение/фиксированная пауза было бы гонкой с этим
-    дебаунсом, поэтому здесь именно опрос РЕАЛЬНОГО файла на диске, а не UI."""
-    path = f"/data/data/{settings.APP_PACKAGE}/shared_prefs/ao3_settings.xml"
-
-    def _check() -> bool:
-        return sentinel in adb.run_as(f"cat {path}")
-
-    wait_for(_check, timeout=timeout,
-             message=f"вкладки с сентинелом {sentinel!r} не появились в {path}")
-
-
 _TABS_PREFS_PATH = f"/data/data/{settings.APP_PACKAGE}/shared_prefs/ao3_settings.xml"
 
 
 def _read_tabs_prefs_raw() -> str:
-    """Сырой XML SharedPreferences приложения (`run-as cat`) — та же цель файла,
-    что `wait_tabs_persisted`, вынесена отдельно для повторного использования
-    парсерами ниже (TC-131: нужен точный СЧЁТ вкладок/вхождений, не просто
-    присутствие сентинела)."""
-    return adb.run_as(f"cat {_TABS_PREFS_PATH}")
+    """Сырой XML SharedPreferences приложения (`run-as cat`) — общий источник
+    для `wait_tabs_persisted` (сентинел-присутствие) и парсерами ниже (TC-131:
+    точный СЧЁТ вкладок/вхождений, не просто присутствие сентинела).
+
+    AT-BUG-055 (Fixed): раньше это был голый `adb.run_as(f"cat {path}")` —
+    `adb.shell()` отбрасывает `returncode`/`stderr` (`framework/core/adb.py`),
+    поэтому нечитаемый/отвалившийся ответ (устройство офлайн, `run-as`
+    отказал) неотличимо совпадал с легитимно пустым/отсутствующим файлом:
+    `_parse_persisted_tabs` на таком входе штатно возвращал `[]`, и «0
+    вкладок» означало и то и другое одновременно. Теперь читает через
+    `adb.run_as_file_or_raise` (`framework/core/adb.py`) — тот же
+    echo-sentinel-приём, что уже закрыл аналогичный класс в
+    `seed_db._schema_ready`/`settings_steps.assert_ratings_present`
+    (AT-BUG-044/045): честно различает «прочитано» / «файла легитимно ещё
+    нет» / «отвалившийся adb/run-as» (последнее — явный `RuntimeError`, не
+    молчаливая пустая строка)."""
+    return adb.run_as_file_or_raise(_TABS_PREFS_PATH)
+
+
+@allure.step("Then вкладки сохранены в SharedPreferences (сентинел «{sentinel}» найден)")
+def wait_tabs_persisted(sentinel: str, timeout: int = 10) -> None:
+    """Опрашивает файл SharedPreferences приложения (`ao3_settings.xml`, через
+    `_read_tabs_prefs_raw`/`run-as cat` — тот же приём, что `pull_app_file`),
+    пока в нём не появится `sentinel` — TC-025: `saveTabsToPrefs`
+    (BrowserViewModel.kt `scheduleSave`) ДЕБАУНСИТ запись на 500мс после
+    каждого скролл-события; принудительная остановка процесса (`am
+    force-stop`) ДО истечения этого окна теряет несохранённое состояние
+    безвозвратно (отменённая корутина никогда не допишет файл) —
+    одноразовое чтение/фиксированная пауза было бы гонкой с этим дебаунсом,
+    поэтому здесь именно опрос РЕАЛЬНОГО файла на диске, а не UI.
+
+    AT-BUG-055 (Fixed): раньше читал `adb.run_as(f"cat {path}")` напрямую
+    (собственная слепая копия того же примитива, что `_read_tabs_prefs_raw`
+    использовала параллельно) — теперь единая точка чтения
+    `_read_tabs_prefs_raw()`, честная (см. её докстринг). Отвалившийся
+    adb/run-as больше не маскируется под «сентинел ещё не появился»: честное
+    исключение из `_read_tabs_prefs_raw` ловится и ретраится самим `wait_for`
+    (сохраняется в `last`), а на итоговом таймауте всплывает в тексте
+    ошибки (`; last error: ...`) — тот же контракт, что уже описан у
+    `wait_persisted_tab_count` (AT-BUG-036)."""
+
+    def _check() -> bool:
+        return sentinel in _read_tabs_prefs_raw()
+
+    wait_for(_check, timeout=timeout,
+             message=f"вкладки с сентинелом {sentinel!r} не появились в {_TABS_PREFS_PATH}")
 
 
 def _parse_persisted_tabs(raw: str) -> list[dict]:
@@ -314,8 +336,20 @@ def _parse_persisted_tabs(raw: str) -> list[dict]:
     `&`/`<`/`>` (не `"` — не значение атрибута), Gson-эскейп `=` -> `\\u003d`
     внутри JSON штатно раскрывается самим `json.loads` (см. `wait_tabs_persisted`
     за той же практикой, сверено на живом файле устройства при разведке
-    TC-025). Пустой список — валидный исход (файл ещё не создан/только что
-    после `pm clear`), не ошибка парсинга."""
+    TC-025). Отсутствующий ключ `open_tabs_urls` -> пустой список — валидный
+    исход (файл ещё не создан/только что после `pm clear`, ИЛИ приложение
+    ещё ни разу не вызывало `saveTabsToPrefs`), не ошибка парсинга.
+
+    AT-BUG-055 (Fixed): `raw` сюда попадает ТОЛЬКО из честного
+    `_read_tabs_prefs_raw()` — нечитаемый/отвалившийся ответ adb/run-as уже
+    отфильтрован явным исключением НИЖЕ по стеку (`adb.run_as_file_or_raise`),
+    сюда он не доходит. Раньше при НАЙДЕННОМ, но БИТОМ/обрезанном ключе
+    `open_tabs_urls` (`json.loads` кидает `JSONDecodeError`) эта функция тоже
+    молча возвращала `[]` — неотличимо от «вкладок реально нет». Это тоже
+    часть класса «нечитаемый вход не должен становиться `[]`»: ключ
+    ПРИСУТСТВУЕТ (значит, приложение его писало), но его нельзя разобрать —
+    подозрение на повреждённый/обрезанный ответ транспорта, не на
+    легитимное отсутствие вкладок, поэтому теперь явный `RuntimeError`."""
     m = re.search(r'name="open_tabs_urls"[^>]*>(.*?)</string>', raw, re.DOTALL)
     if not m:
         return []
@@ -327,8 +361,13 @@ def _parse_persisted_tabs(raw: str) -> list[dict]:
     )
     try:
         return json.loads(text)
-    except (json.JSONDecodeError, TypeError):
-        return []
+    except (json.JSONDecodeError, TypeError) as exc:
+        raise RuntimeError(
+            "open_tabs_urls присутствует в prefs, но не распарсился как JSON "
+            f"(AT-BUG-055) — похоже на обрезанный/повреждённый ответ "
+            f"run-as, не на легитимное отсутствие вкладок. Сырой текст ключа: "
+            f"{text!r}"
+        ) from exc
 
 
 @allure.step("Then в prefs open_tabs_urls зафиксировано РОВНО {expected_count} вкладок(и)")
@@ -396,11 +435,16 @@ def assert_persisted_marker_count(
 
     `expected_total`, если задан (critic-блокер B2, attempt 2): позитивный
     якорь источника — доказывает, что `_read_tabs_prefs_raw()` реально прочитал
-    непустой/валидный prefs-файл, а не отдал `""`/битый JSON (`adb.shell`
-    отбрасывает returncode/stderr, `_parse_persisted_tabs` на пустом/битом
-    чтении молча возвращает `[]`, из-за чего `actual == 0 == expected_count`
-    прошёл бы ВАКУУМНО, не прочитав реального состояния устройства). По
-    умолчанию `None` не меняет поведение существующих вызовов."""
+    непустой/валидный prefs-файл, а не отдал вакуумный `[]` (`actual == 0 ==
+    expected_count` прошло бы, не прочитав реального состояния устройства).
+    AT-BUG-055 (Fixed): САМ вакуумный `[]` на нечитаемом/отвалившемся
+    adb/run-as теперь закрыт у источника — `_read_tabs_prefs_raw`/
+    `_parse_persisted_tabs` кидают `RuntimeError` вместо молчаливого `""`/`[]`
+    (см. их докстринги), так что `expected_total` больше не единственная
+    линия защиты от этого конкретного класса; остаётся как ДОПОЛНИТЕЛЬНЫЙ
+    позитивный якорь целостности снимка (например, ловит рассинхрон ожиданий
+    вызывающего кода, не только транспортный отказ). По умолчанию `None` не
+    меняет поведение существующих вызовов."""
     tabs = _parse_persisted_tabs(_read_tabs_prefs_raw())
     if expected_total is not None:
         assert len(tabs) == expected_total, (
@@ -432,10 +476,14 @@ def assert_persisted_marker_absent_for(
     `assert_scroll_unchanged` в `browser_steps.py`).
 
     `expected_total`, если задан (critic-блокер B2, attempt 2): позитивный
-    якорь источника на КАЖДОЙ итерации опроса — без него `adb.shell` (по
-    отвалившемуся device/отказавшему `run-as`) молча отдаёт `""`, парсер на
-    пустом/битом чтении возвращает `[]`, и негатив «count==0» держится весь
-    бюджет, не прочитав ни одного реального состояния устройства."""
+    якорь источника на КАЖДОЙ итерации опроса — доказывает, что негатив
+    «count==0» держится на реально прочитанном состоянии, не на вакуумном
+    снимке. AT-BUG-055 (Fixed): отвалившийся device/`run-as` больше НЕ
+    отдаёт молчаливый `""`/`[]` — `_read_tabs_prefs_raw`/`_parse_persisted_tabs`
+    кидают `RuntimeError`, который здесь прокинется из `_check()` и прервёт
+    `assert_holds_for` немедленно (не «держит негатив» на отказавшем
+    транспорте); `expected_total` остаётся дополнительным семантическим
+    якорем поверх этого."""
     def _check() -> bool:
         tabs = _parse_persisted_tabs(_read_tabs_prefs_raw())
         if expected_total is not None:
