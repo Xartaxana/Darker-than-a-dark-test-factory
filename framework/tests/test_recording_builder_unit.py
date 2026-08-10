@@ -223,6 +223,31 @@ def test_listing_paginated_all_blurb_works_have_recorded_work_pages(
         assert work.url in listing_paginated_recorded_urls
 
 
+# --- AT-BUG-054: у фабрики не было ни одной проверки, что содержимое `.mitm`-записи
+# соответствует своему генератору — `listing_paginated.mitm` разошёлся руками-правкой
+# со СВОИМ генератором (`_blurb_html` выпускает `class="work blurb ..."`, запись несла
+# `class="work blurp ..."` на всех 5 страницах): тест не видел блёрбы (`open_listing`
+# ждёт `li[id^="work_"].work.blurb`), И приложение тоже (`ao3_bridge.js:530`
+# infinite-scroll гейт на том же селекторе). Класс, не экземпляр (CLAUDE.md п.9):
+# та же побайтовая сверка «блёрб записи == `_blurb_html(work)` СЕЙЧАС» повторена ниже
+# для `listing_basic.mitm`/`works_multi.mitm`/`listing_duplicate_work.mitm` — любых
+# записей, встраивающих блёрб в `render_listing_html`, — ловит будущий дрейф
+# записи от генератора за секунды device-free юнитом, а не 40-минутным device-прогоном.
+@pytest.mark.p2
+@allure.id("recording-builder-listing-paginated-blurb-matches-generator")
+@allure.title("listing_paginated.mitm: разметка блёрба КАЖДОЙ страницы побайтово совпадает с recording_builder._blurb_html (AT-BUG-054)")
+@pytest.mark.parametrize("page", [1, 2, 3, 4, 5])
+def test_listing_paginated_blurb_markup_matches_generator(page, listing_paginated_flows):
+    body = _listing_page_body(listing_paginated_flows, page)
+    work = ALL_WORKS[page - 1]
+    expected = rb._blurb_html(work)
+    assert expected in body, (
+        f"блёрб страницы {page} разошёлся со своим генератором _blurb_html (AT-BUG-054) — "
+        "запись правили руками мимо recording_builder; перегенерируй: "
+        "framework/.venv/Scripts/python.exe scripts/build_replay_recordings.py"
+    )
+
+
 # --- listing_basic.mitm (AT-BUG-029, доработка attempt 2 — B3 критик-входа) ---
 
 
@@ -267,6 +292,49 @@ def test_listing_basic_all_blurb_works_have_recorded_work_pages(listing_basic_fl
         f"work-страницы не записаны для: {missing} — клик/long-press по этим блёрбам "
         "листинга ушёл бы в live-forward (тот же класс, что AT-BUG-006/AT-BUG-029)"
     )
+
+
+@pytest.mark.p2
+@allure.id("recording-builder-listing-basic-blurb-matches-generator")
+@allure.title("listing_basic.mitm: разметка блёрба КАЖДОЙ работы побайтово совпадает с recording_builder._blurb_html (AT-BUG-054, класс)")
+def test_listing_basic_blurb_markup_matches_generator(listing_basic_flows):
+    flow = next(f for f in listing_basic_flows if f.request.url == rb.LISTING_BASIC_URL)
+    body = flow.response.get_text()
+    for work in ALL_WORKS:
+        expected = rb._blurb_html(work)
+        assert expected in body, (
+            f"блёрб {work.ao3_id} разошёлся со своим генератором _blurb_html (AT-BUG-054, класс) — "
+            "перегенерируй: framework/.venv/Scripts/python.exe scripts/build_replay_recordings.py"
+        )
+
+
+# --- listing_duplicate_work.mitm (TC-012, AT-BUG-004 инкремент 3) ---
+
+
+@pytest.fixture(scope="module")
+def listing_duplicate_work_flows():
+    path = settings.RECORDINGS_DIR / rb.LISTING_DUPLICATE_FILENAME
+    assert path.exists(), (
+        f"фикстура не собрана — прогони framework/.venv/Scripts/python.exe scripts/build_replay_recordings.py ({path})"
+    )
+    return _read_flows(path)
+
+
+@pytest.mark.p2
+@allure.id("recording-builder-listing-duplicate-work-blurb-matches-generator")
+@allure.title("listing_duplicate_work.mitm: разметка блёрба побайтово совпадает с recording_builder._blurb_html (AT-BUG-054, класс)")
+def test_listing_duplicate_work_blurb_markup_matches_generator(listing_duplicate_work_flows):
+    flow = next(f for f in listing_duplicate_work_flows if f.request.url == rb.LISTING_DUPLICATE_URL)
+    body = flow.response.get_text()
+    work = ALL_WORKS[0]
+    expected = rb._blurb_html(work)
+    assert expected in body, (
+        f"блёрб {work.ao3_id} разошёлся со своим генератором _blurb_html (AT-BUG-054, класс) — "
+        "перегенерируй: framework/.venv/Scripts/python.exe scripts/build_replay_recordings.py"
+    )
+    # Given TC-012 требует ДВА вхождения одного и того же work_id — блёрб обязан
+    # встречаться в записи ровно дважды (сама разметка, не только счётчик id).
+    assert body.count(expected) == 2
 
 
 # --- works_multi.mitm ---
@@ -314,6 +382,20 @@ def test_works_multi_listing_contains_both_work_hrefs(works_multi_flows):
 def test_works_multi_urls_unique(works_multi_flows):
     urls = [f.request.url for f in works_multi_flows]
     assert len(urls) == len(set(urls))
+
+
+@pytest.mark.p2
+@allure.id("recording-builder-works-multi-blurb-matches-generator")
+@allure.title("works_multi.mitm: разметка блёрбов ОБЕИХ работ побайтово совпадает с recording_builder._blurb_html (AT-BUG-054, класс)")
+def test_works_multi_blurb_markup_matches_generator(works_multi_flows):
+    flow = next(f for f in works_multi_flows if f.request.url == rb.WORKS_MULTI_LISTING_URL)
+    body = flow.response.get_text()
+    for work in (ALL_WORKS[0], ALL_WORKS[1]):
+        expected = rb._blurb_html(work)
+        assert expected in body, (
+            f"блёрб {work.ao3_id} разошёлся со своим генератором _blurb_html (AT-BUG-054, класс) — "
+            "перегенерируй: framework/.venv/Scripts/python.exe scripts/build_replay_recordings.py"
+        )
 
 
 # --- AT-BUG-030 (доработка attempt 2, критик-вход B4, S-3): device-free юниты
