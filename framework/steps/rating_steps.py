@@ -6,13 +6,39 @@
 """
 from __future__ import annotations
 
+import re
+
 import allure
 
+from framework.core import contexts
 from framework.core.waits import wait_until
 from framework.screens.browser_screen import BrowserScreen
 from framework.screens.navigation import BottomNav
 from framework.screens.rating_overlay import RatingOverlay
 from framework.steps import browser_steps
+
+# AT-BUG-057: тот же regex, что `BrowserViewModel.onPageLoaded` (app-under-test,
+# BrowserViewModel.kt:476) использует для вычисления `isWorkPage` из URL —
+# диагностика ниже обязана согласовываться с реальным условием приложения, а не
+# с приблизительной эвристикой.
+_WORK_URL_RE = re.compile(r"/works/(\d+)")
+
+
+def _work_page_diagnosis(driver) -> str:
+    """Читает текущий URL активной WebView-вкладки и признак work-page (тот же
+    regex, что вычисляет `isWorkPage` в приложении) для сообщения об ошибке —
+    AT-BUG-057: голое «меню рейтинга не появилось» не отличало «навигация не
+    дошла до work-page» (URL не совпал) от «панель не отрендерилась на верной
+    странице» (URL совпал, а `RatingMenu` всё равно не появился — состояние
+    `isWorkPage` не успело примениться или панель скрыта чем-то ещё). Не
+    бросает исключений — падение самой диагностики не должно маскировать
+    исходный assert падением другого класса."""
+    try:
+        with contexts.in_webview(driver):
+            url = driver.current_url or ""
+    except Exception as exc:  # noqa: BLE001 — диагностика best-effort
+        return f"url=<не удалось прочитать: {exc!r}>"
+    return f"url={url!r} work_page={bool(_WORK_URL_RE.search(url))}"
 
 
 @allure.step("When открыта страница работы {work_id}")
@@ -28,7 +54,10 @@ def rate_current_work(driver, rating: str):
     # раскрываем её тем же механизмом, что и BottomNav.
     BottomNav(driver).ensure_visible()
     overlay = RatingOverlay(driver)
-    assert overlay.is_visible(), "меню рейтинга не появилось на странице работы"
+    if not overlay.is_visible():
+        raise AssertionError(
+            f"меню рейтинга не появилось на странице работы ({_work_page_diagnosis(driver)})"
+        )
     overlay.choose(rating)
 
 
@@ -42,7 +71,10 @@ def add_tag_via_panel(driver, tag: str):
     перед использованием `RatingOverlay`."""
     BottomNav(driver).ensure_visible()
     overlay = RatingOverlay(driver)
-    assert overlay.is_visible(), "меню рейтинга не появилось на странице работы"
+    if not overlay.is_visible():
+        raise AssertionError(
+            f"меню рейтинга не появилось на странице работы ({_work_page_diagnosis(driver)})"
+        )
     overlay.toggle_tags()
     overlay.enter_tag_input(tag)
     overlay.confirm_tag_input()
@@ -76,7 +108,11 @@ def assert_rating_panel_present_and_clickable(driver):
     в отличие от `rate_current_work`)."""
     BottomNav(driver).ensure_visible()
     overlay = RatingOverlay(driver)
-    assert overlay.is_visible(), "меню рейтинга не появилось на странице работы (font_scale=1.3)"
+    if not overlay.is_visible():
+        raise AssertionError(
+            f"меню рейтинга не появилось на странице работы (font_scale=1.3) "
+            f"({_work_page_diagnosis(driver)})"
+        )
     assert overlay.is_clickable_attr(overlay.button_container_locator("SAVE")), (
         "кнопка рейтинга Favorite не кликабельна (font_scale=1.3)"
     )
@@ -89,7 +125,10 @@ def capture_panel_rating_baseline(driver, rating: str) -> float:
     (TC-010, см. `RatingOverlay.button_avg_luma`)."""
     BottomNav(driver).ensure_visible()
     overlay = RatingOverlay(driver)
-    assert overlay.is_visible(), "меню рейтинга не появилось на странице работы"
+    if not overlay.is_visible():
+        raise AssertionError(
+            f"меню рейтинга не появилось на странице работы ({_work_page_diagnosis(driver)})"
+        )
     return overlay.button_avg_luma(rating)
 
 

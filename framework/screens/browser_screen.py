@@ -72,6 +72,25 @@ class BrowserScreen(BaseScreen):
                 lambda d: f"/works/{work_id}" in (d.current_url or ""),
                 message="страница работы не открылась",
             )
+            # AT-BUG-057: `current_url` — свойство навигационной записи chromedriver,
+            # обновляется на navigation commit; РЕНДЕР встроенной панели RatingMenu
+            # (`WorkRatingPanel` в `BottomBar.kt`: `if (selectedTab == AppTab.BROWSE
+            # && isWorkPage)`) гейтится состоянием `isWorkPage`, которое приложение
+            # выставляет в `BrowserViewModel.onPageLoaded` — вызывается СИНХРОННО
+            # ИЗ `onPageFinished` (BrowserScreen.kt:594), т.е. позже commit'а на
+            # неопределённое время (сеть/ресурсы страницы). Тот же класс гонки, что
+            # уже задокументирован в `wait_home_page_loaded` для домашней страницы —
+            # тем же приёмом (маркер `window.__ao3AppDark`, инжектится ТЕМ ЖЕ
+            # `onPageFinished` НЕПОСРЕДСТВЕННО ПОСЛЕ `onPageLoaded`, BrowserScreen.kt:600)
+            # ждём здесь, чтобы `rate_current_work`/`add_tag_via_panel` и другие шаги,
+            # раскрывающие RatingMenu сразу после `open_work_page`, не опрашивали
+            # overlay до того, как приложение вообще узнало, что это work-page.
+            wait_until(
+                self.driver,
+                lambda d: d.execute_script("return typeof window.__ao3AppDark !== 'undefined'"),
+                timeout=settings.WEBVIEW_LOAD_TIMEOUT,
+                message="страница работы не завершила загрузку (onPageFinished/window.__ao3AppDark не появился)",
+            )
 
     # --- Управление вкладками (tab bar виден, когда открыто >1 вкладки) ---
     _CLOSE_TAB_LOCATOR = (AppiumBy.ANDROID_UIAUTOMATOR,

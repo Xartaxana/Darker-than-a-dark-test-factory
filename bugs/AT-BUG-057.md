@@ -4,19 +4,19 @@ title: "Нестабильный TC-016 (p0, live): RatingOverlay не откр�
 type: test_debt
 debt_kind: flaky_test
 severity: major
-status: Open
+status: Fixed
 found_in: "framework commit 8e4ff25 (тестируемая сборка приложения 1.11 (versionCode 12), build bfc8f41a — от сборки НЕ зависит, см. «Почему не сборка»)"
-fixed_in: ""
+fixed_in: "framework/screens/browser_screen.py::open_work() + framework/steps/rating_steps.py (не закоммичено этим ходом — диф в рабочем дереве, см. «Починка»)"
 last_seen_in: "RUN-20260805-0432 (2026-08-05)"
 test_cases: ["TC-016"]
 runs: ["RUN-20260805-0432"]
 duplicates: []
 regression_of: ""
-status_since: "2026-08-05T03:20:00Z"
-updated: "2026-08-05T03:20:00Z"
+status_since: "2026-08-10T11:20:00Z"
+updated: "2026-08-10T11:20:00Z"
 reopen_count: 0
 dispute_count: 0
-awaiting: none
+awaiting: qa
 resolution: ""
 resolution_comment: ""
 known_issue: "false"
@@ -101,12 +101,90 @@ Invoke-Pytest -k test_change_rating_moves_work_between_tabs -v
 3. Снять карантин (`automation_status: active`) после зелёной серии на
    исправленном тесте.
 
-## Карантин
+## Карантин (снят — см. «Починка»)
 
-`test-cases/library/TC-016.md`: `automation_status: quarantined`,
-`quarantine_owner: test-maintainer`, `quarantine_since: 2026-08-05T03:20:00Z`,
-`quarantine_expiry` не задан (действует `sla.quarantine_max`).
+Было: `automation_status: quarantined`, `quarantine_owner: test-maintainer`,
+`quarantine_since: 2026-08-05T03:20:00Z`, `quarantine_expiry` не задан.
+`test-cases/library/TC-016.md`: `automation_status: quarantined → active`
+(guard-переход, `schemas/transitions.yaml`), `quarantine_*`-поля очищены.
 
-## Верификация (заполняет fix-verifier)
+## Починка (test-maintainer, 2026-08-10)
+
+**Найден код-грунтованный корень (не только диагностика).** `RatingMenu`
+(`WorkRatingPanel` в `BottomBar.kt`) рендерится по условию `if (selectedTab ==
+AppTab.BROWSE && isWorkPage)`. `isWorkPage` — состояние `BrowserViewModel`,
+выставляется в `onPageLoaded(tabId, url)` (`BrowserViewModel.kt:474-487`, regex
+`/works/(\d+)`), который вызывается СИНХРОННО из `WebViewClient.onPageFinished`
+(`BrowserScreen.kt:594`). `framework/screens/browser_screen.py::open_work()`
+до фикса ждал только `driver.current_url` — свойство navigation commit'а
+chromedriver, которое обновляется РАНЬШЕ `onPageFinished` (тот же класс гонки,
+что уже задокументирован в `wait_home_page_loaded` для домашней страницы). Тест
+мог начать опрашивать `RatingOverlay.is_visible()` до того, как `isWorkPage`
+вообще стало `true` — на быстрой сети `is_visible()`-поллинг (8s) успевал
+догнать; на медленной/интерстишл-сети (задокументированный разброс 71s→131s
+в изолированных прогонах 2026-08-05) — не всегда.
+
+1. **`framework/screens/browser_screen.py::open_work()`** — добавлено явное
+   ожидание маркера `window.__ao3AppDark` ПОСЛЕ commit'а URL (тот же приём,
+   что `wait_home_page_loaded`: маркер инжектится ТЕМ ЖЕ `onPageFinished`
+   сразу после `onPageLoaded`, его появление в свежем `window` детерминированно
+   доказывает, что `isWorkPage` уже применилось). Разделяемый метод — фикс
+   защищает ВСЕ вызовы `rate_current_work`/`add_tag_via_panel`/
+   `assert_rating_panel_present_and_clickable`/`capture_panel_rating_baseline`
+   после `open_work_page`, не только TC-016 (правило 9, класс, а не экземпляр).
+2. **`framework/steps/rating_steps.py`** — усилена диагностика ассерта «меню
+   рейтинга не появилось на странице работы» ВО ВСЕХ 4 местах, где он
+   встречался (тот же класс, cм. п.1): сообщение теперь называет URL активной
+   WebView-вкладки и признак `work_page` (тот же regex `/works/(\d+)`, что
+   вычисляет `isWorkPage` в приложении, — диагностика согласована с реальным
+   условием, не эвристика). `_work_page_diagnosis()` вычисляется ТОЛЬКО при
+   провале (не на зелёном пути — не тратит лишний webview round-trip).
+3. **Replay-двойник (п.2 «Что сделать») — оценён, НЕ сделан: дорого.**
+   Сценарий формально не требует живого AO3 (работа сидится в Room, проверка —
+   межвкладочное перемещение в Library), но САМ триггер — панель `RatingMenu`
+   на `/works/{id}` — существует только внутри реальной WebView-страницы AO3;
+   двойник потребовал бы либо mitm-записи полной страницы работы (уже есть
+   похожие записи для TC-114/115, но там rating выставляется НЕ через панель
+   work-page, а тег правится — другой путь), либо мок-страницы, воспроизводящей
+   структуру, которую `ao3_bridge.js`/приложение ожидают от `/works/{id}` —
+   риск разъехаться с реальным AO3 DOM тем же классом, что уже ловился в
+   `AT-BUG-054` (испорченный класс блёрба в записи). Учитывая, что явное
+   ожидание (п.1) устраняет причину race напрямую и дёшево, а replay-двойник
+   добавляет содержательный риск драфта без замера выигрыша — не делаю;
+   явная строка по DoD.
+
+**Дефекты-собратья (доклад по правилу 9, не расширяю scope):** ни одного НОВОГО
+блокера не обнаружено. Единственное найденное во время работы падение
+(`test_edit_tag_on_already_saved_work_via_panel_does_not_redownload`, TC-114,
+`@pytest.mark.replay`, разовый регрессионный прогон после правки shared
+`open_work()`) — уже задокументированный `BUG-014` (app_bug, `status: Open`,
+`red_lock` для TC-114/TC-115): сигнатура падения совпадает буква в букву с
+тем, что описано в `bugs/BUG-014.md` (`assert_download_icon_shown` +
+autouse-варнинг `download_oracle` про тот же файл
+`ao3_A Loved Test Work_900000001.html`) — известный app-баг про ретроактивное
+авто-скачивание, а не регрессия от этой правки (правка в `open_work()`
+касается только ожидания загрузки страницы, не логики скачивания). Новый
+test_debt-баг не заводится — уже покрыт открытым `BUG-014`.
+
+## Верификация
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-08-10T11:15:00Z | framework (без изменения сборки приложения, test_debt) | TC-016, изолированно, 3 независимых вызова `Invoke-Pytest -k test_change_rating_moves_work_between_tabs -v` подряд | PASSED / PASSED / PASSED — `1 passed, 321 deselected in 53.88s` `PYTEST_EXIT=0`; `... in 51.88s` `PYTEST_EXIT=0`; `... in 52.27s` `PYTEST_EXIT=0` | test-maintainer: 3/3 зелёных с усиленной диагностикой — карантин снят, `awaiting: qa` для fix-verifier |
+
+## Обсуждение
+
+**[test-maintainer @ 2026-08-10T11:20:00Z]** Root-cause найден чтением кода
+приложения (МЕСТО РЕНДЕРА `WorkRatingPanel`/`BottomBar.kt`) — race между
+navigation commit и `onPageFinished`/`isWorkPage`, тот же класс, что уже
+задокументирован в `wait_home_page_loaded`. Красная проба диагностики:
+временный тест `test_at_bug_057_red_probe` (вызов `rate_current_work` на
+домашней странице AO3, НЕ work-page) дал `AssertionError: меню рейтинга не
+появилось на странице работы (url='https://archiveofourown.org/'
+work_page=False)` — сообщение называет URL и признак work-page, как требовал
+DoD. Проба удалена откатом по байтовой копии в этом же ходе (`git status
+--porcelain` пуст ДО и ПОСЛЕ отката, сверено). `awaiting: qa` — жду
+fix-verifier (правило D1/B4, сборка приложения не нужна). Диф НЕ закоммичен
+этим ходом (правила git-safety для субагента) — лежит в рабочем дереве
+репозитория; путь: `framework/screens/browser_screen.py`,
+`framework/steps/rating_steps.py`, `test-cases/library/TC-016.md`,
+`bugs/AT-BUG-057.md`.
