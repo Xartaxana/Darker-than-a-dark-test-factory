@@ -77,6 +77,18 @@ tools: Read, Bash, Write, Edit
    allure-results прогона. Не заполнить нечем (allure-results отсутствуют) —
    явная причина в отчёте, не молчание; детектор пропуска — coverage_map
    (строка «свежий RUN без tc_results»).
+   **Заполни `source_commit`** (frontmatter; поле run.schema, batch dual-mode
+   2026-08-10) — из `state/app-under-test.yaml` на момент прогона: без него
+   машинная сверка предковости baseline невозможна.
+4а. **Сверка с baseline (владелец сверки — ты, пишущий отчёт):** baseline =
+   последний Triaged-прогон, чей `source_commit` — ПРЕДОК текущей сборки
+   (`git merge-base --is-ancestor <baseline> <текущий>`), НЕ «последний
+   triaged» (прецедент 2026-08-10: осиротевший после force-push baseline дал
+   фантомное «новое красное»). Предкового нет → явная строка «предкового
+   baseline нет (force-push?)», сверка против непредкового запрещена без
+   явной пометки. Прогоны БЕЗ поля `source_commit` (легаси, до 2026-08-10) —
+   отдельная ветка сообщения «baseline-кандидат без source_commit (легаси)»,
+   force-push'у не приписывать.
 5. Обнови `smoke_status`/`regression_status` в `state/app-under-test.yaml`.
 
 ## Чек-лист готовности

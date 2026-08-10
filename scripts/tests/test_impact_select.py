@@ -225,6 +225,69 @@ def test_render_full_regression_still_mentions_smoke(repo, monkeypatch):
     assert "TC-001" in text.split("## smoke")[1]
 
 
+# --- M-C.4: маркер «ОСИРОТЕВШИЙ ДИАПАЗОН» (честная формулировка, НЕ фикс) ---
+
+def test_is_ancestor_true_on_linear_history(repo, monkeypatch):
+    _patch(repo, monkeypatch)
+    app = _init_app_repo(repo.root)
+    c1 = _commit(app, {"a.txt": "1"}, "c1")
+    c2 = _commit(app, {"a.txt": "2"}, "c2")
+    assert isel.is_ancestor(c1, c2) is True
+
+
+def test_is_ancestor_false_on_diverged_orphan_history(repo, monkeypatch):
+    """Синтетическая переписанная история (аналог force-push): c3 создан на
+    ОСИРОТЕВШЕЙ (--orphan) ветке, не имеющей общих предков с c1/c2."""
+    _patch(repo, monkeypatch)
+    app = _init_app_repo(repo.root)
+    c1 = _commit(app, {"a.txt": "1"}, "c1")
+    c2 = _commit(app, {"a.txt": "2"}, "c2")
+    _git(["checkout", "--orphan", "rewritten"], cwd=app)
+    _git(["rm", "-rf", "--cached", "."], cwd=app)
+    c3 = _commit(app, {"a.txt": "9"}, "переписанная история")
+
+    assert isel.is_ancestor(c2, c3) is False
+
+
+def test_select_and_render_mark_orphaned_range_but_do_not_change_outcome(repo, monkeypatch):
+    """Юнит-маркер (M-C.4): select() выставляет orphaned_range, render()
+    печатает явную строку — исход (full_regression) НЕ меняется этим
+    признаком (уже FULL по fail-safe через wide/unknown, как и раньше)."""
+    _patch(repo, monkeypatch)
+    _write_map(repo)
+    app = _init_app_repo(repo.root)
+    c1 = _commit(app, {"README.md": "a"}, "c1")
+    c2 = _commit(app, {"README.md": "b"}, "c2")
+    _git(["checkout", "--orphan", "rewritten"], cwd=app)
+    _git(["rm", "-rf", "--cached", "."], cwd=app)
+    c3 = _commit(app, {
+        "app/src/main/java/com/example/ao3_wrapper/MainActivity.kt": "x"}, "wide, rewritten")
+
+    cmap = isel.load_map()
+    result = isel.select(c2, c3, cmap)
+    assert result["orphaned_range"] is True
+    assert result["full_regression"] is True   # исход не меняется маркером
+
+    text = isel.render(c2, c3, result)
+    assert "ОСИРОТЕВШИЙ ДИАПАЗОН" in text
+    assert "FULL REGRESSION" in text
+
+
+def test_select_normal_linear_range_not_marked_orphaned(repo, monkeypatch):
+    _patch(repo, monkeypatch)
+    _write_map(repo)
+    app = _init_app_repo(repo.root)
+    c1 = _commit(app, {"README.md": "a"}, "init")
+    c2 = _commit(app, {
+        "app/src/main/java/com/example/ao3_wrapper/ui/browser/TabStrip.kt": "x"}, "tabs")
+
+    cmap = isel.load_map()
+    result = isel.select(c1, c2, cmap)
+    assert result["orphaned_range"] is False
+    text = isel.render(c1, c2, result)
+    assert "ОСИРОТЕВШИЙ ДИАПАЗОН" not in text
+
+
 # --- Диапазон по умолчанию из state/app-under-test.yaml ---
 
 def test_default_range_no_coalesced_uses_source_commit_parent(repo, monkeypatch):

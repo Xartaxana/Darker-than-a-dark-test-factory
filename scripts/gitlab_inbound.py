@@ -152,6 +152,41 @@ test-strategist); заголовок/тело айтема — внешние д
 Ограничение (докстринг, по evidence первого случая): GitLab Issues API —
 только issues; новые типы work items (epic/task премиум-иерархий) вне
 охвата.
+
+--- A3(б): verify_build_ref из нот (spec-build-source-dual-mode v4) ---
+
+При переносе КАЖДОЙ ноты (process_bug, тот же батч/курсор, что и сама
+реплика — "реестр как у нот", отдельного скана НЕ заводим) тело ноты
+сканируется на URL пайплайна/джоба GitLab СВОЕГО repo (host+path сверяются
+с `gs.parse_project(gs.read_repo_url())`; URL чужого repo НЕ матчится).
+Найден — из него берётся ТОЛЬКО число (iid/id), пишется в frontmatter бага
+поле `verify_build_ref: "pipeline:<iid>"|"job:<id>"` (idемпотентно:
+байт-безопасный writeback без изменений, если значение уже такое же).
+Endpoint для скачивания артефакта этим модулем НЕ строится — это делает
+fix-verifier.md (Lead-слой, вне скоупа этого файла) через build_watch's
+download-функцию; consumed:/stale: маркеры (C10/E2 спеки) — тоже
+исключительно его жизненный цикл, не этого скрипта.
+
+--- M-D: обратный словарь QAready — GitLab label-события -> Fixed ---
+
+Носитель — СОБЫТИЯ (`GET /issues/:iid/resource_label_events`), не текущее
+состояние ярлыка (D2): edge-триггер с монотонными id, курсор —
+ОТДЕЛЬНЫЙ файл `state/gitlab-label-cursor.json` (плоская `{bug_id:
+max_event_id}`; НЕ gitlab-qaready.json — E6-прунинг чистит его по чужим
+iid и вычищал бы наши; НЕ gitlab-cursor.json — вложенный ключ там
+запрещён докстрингом самого файла).
+
+D5: переиспользуется ОТВЕТ уже выполняемого E7-скана
+(`fetch_qaready_issues`) — `scan_qaready` дополнительно возвращает
+`our_qaready_iids` (наши iid, присутствующие в выдаче label `qa-status::
+QAready`); label-события точечно запрашиваются ТОЛЬКО по нашим багам,
+чей ВНУТРЕННИЙ статус Open|Reopened (наш уже-Fixed баг легально несёт
+эту метку через STATUS_LABEL_ALIASES — инвариант D5: не второй флип).
+
+Событие `add qa-status::QAready` на нашем issue при внутреннем Open|
+Reopened -> Fixed (D2/D3): apply_status(..., "Fixed") + реплика в
+Обсуждение с cid/created_at САМОГО события, БЕЗ awaiting (D3 — потребитель
+сигнала D1 fix-verifier, не qa; awaiting: qa зажёг бы холостой D6-диспатч).
 """
 from __future__ import annotations
 
@@ -182,6 +217,219 @@ TERMINAL_STATUSES = {"Verified", "Rejected", "Intended"}
 # фикстур капа/границы (правило 6а CLAUDE.md: тест НА границе и ЗА ней).
 PER_PAGE = 100
 MAX_PAGES = 3
+
+# --- A3(б): verify_build_ref из нот -----------------------------------------
+
+# Пайплайн/джоб URL СВОЕГО или чужого repo, встреченный в теле ноты:
+# https://<host>/<namespace>/<project>/-/pipelines/<iid>
+# https://<host>/<namespace>/<project>/-/jobs/<id>
+# ИЗ ВНЕШНЕГО ТЕКСТА берётся ТОЛЬКО число (iid/id) — endpoint строится
+# отдельно, из api_base(read_repo_url()) (build_watch.py), никогда из этой
+# строки целиком (граница инъекции закрыта на уровне извлечения). Критик-
+# вход (мелочь 4): [0-9], не \d — \d по умолчанию матчит ЛЮБОЙ Unicode-
+# символ категории Nd (не только ASCII 0-9), а тело ноты — внешний
+# непроверенный текст.
+PIPELINE_JOB_URL_RE = re.compile(
+    r'https?://([^/\s]+)/([A-Za-z0-9_.\-/]+?)/-/(pipelines|jobs)/([0-9]+)\b')
+
+_FIELD_LINE_RE_CACHE: dict[str, re.Pattern] = {}
+
+
+def _field_line_re(field: str) -> "re.Pattern":
+    if field not in _FIELD_LINE_RE_CACHE:
+        _FIELD_LINE_RE_CACHE[field] = re.compile(
+            rf"^{re.escape(field)}[ \t]*:[^\r\n]*", re.MULTILINE)
+    return _FIELD_LINE_RE_CACHE[field]
+
+
+def write_frontmatter_field(path: Path, field: str, value: str) -> bool:
+    """Байт-безопасный writeback ОДНОГО поля frontmatter (тот же образец, что
+    gs.writeback_gitlab_issue — байтовый ввод/вывод, замена СУЩЕСТВУЮЩЕЙ
+    строки поля если есть, иначе вставка перед закрывающим '---'). Локальная
+    копия, не импорт: gs.writeback_gitlab_issue заточена под ОДНО конкретное
+    поле gitlab_issue. Возвращает True, если значение реально изменилось
+    (идемпотентность: байт-в-байт то же значение — не трогаем файл/mtime)."""
+    raw = path.read_bytes()
+    text = raw.decode("utf-8")
+    m = gs.FRONTMATTER_RE.match(text)
+    if not m:
+        return False
+    body_start, body_end = m.start(1), m.end(1)
+    body = text[body_start:body_end]
+    field_re = _field_line_re(field)
+    fm = field_re.search(body)
+    new_line = f"{field}: {value}"
+    if fm:
+        current_line = body[fm.start():fm.end()]
+        if current_line.strip() == new_line.strip():
+            return False
+        abs_start, abs_end = body_start + fm.start(), body_start + fm.end()
+        new_text = text[:abs_start] + new_line + text[abs_end:]
+    else:
+        insert_at = body_end
+        eol = "\r\n" if text[insert_at:insert_at + 2] == "\r\n" else "\n"
+        new_text = text[:insert_at] + f"{eol}{new_line}" + text[insert_at:]
+    path.write_bytes(new_text.encode("utf-8"))
+    return True
+
+
+def _extract_own_build_ref(body: str, own_host: str, own_path: str) -> str | None:
+    """A3(б): первый URL пайплайна/джоба ТОЛЬКО СВОЕГО repo (host+path
+    сверяются регистронезависимо с read_repo_url()) — URL чужого repo не
+    матчится (сравнение, не просто «похоже на GitLab-ссылку»)."""
+    for m in PIPELINE_JOB_URL_RE.finditer(body or ""):
+        host, path, kind_word, num = m.group(1), m.group(2), m.group(3), m.group(4)
+        if host.lower() != own_host.lower():
+            continue
+        if path.strip("/").lower() != own_path.strip("/").lower():
+            continue
+        kind = "pipeline" if kind_word == "pipelines" else "job"
+        return f"{kind}:{num}"
+    return None
+
+
+# --- M-D: label-события QAready ---------------------------------------------
+
+LABEL_CURSOR_PATH = REPO / "state" / "gitlab-label-cursor.json"
+# Модульные константы (не литералы) — тесты монкипатчат для дешёвых
+# фикстур капа/границы (правило 6а CLAUDE.md).
+LABEL_EVENTS_PER_PAGE = 100
+LABEL_EVENTS_MAX_PAGES = 3
+
+
+def load_label_cursor() -> dict:
+    import json
+    if not LABEL_CURSOR_PATH.exists():
+        return {}
+    try:
+        return json.loads(LABEL_CURSOR_PATH.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+
+def _write_label_cursor_atomic(cursor: dict) -> None:
+    import json
+    LABEL_CURSOR_PATH.parent.mkdir(parents=True, exist_ok=True)
+    tmp = LABEL_CURSOR_PATH.with_name(LABEL_CURSOR_PATH.name + ".tmp")
+    tmp.write_text(json.dumps(cursor, indent=2, ensure_ascii=False, sort_keys=True),
+                    encoding="utf-8")
+    os.replace(tmp, LABEL_CURSOR_PATH)
+
+
+def _bump_label_cursor(bug_id: str, event_id: int) -> None:
+    cursor = load_label_cursor()
+    cursor[bug_id] = event_id
+    _write_label_cursor_atomic(cursor)
+
+
+def fetch_label_events(client: gs.GitLabClient, iid: int,
+                       cursor_id: int | None) -> list[dict] | None:
+    """GET /issues/:iid/resource_label_events, постранично. None — кап
+    LABEL_EVENTS_MAX_PAGES страниц пройден без исчерпания выдачи (громкий
+    отказ, тот же паттерн, что fetch_new_notes [R1])."""
+    collected: list[dict] = []
+    page = 1
+    while page <= LABEL_EVENTS_MAX_PAGES:
+        _status, events = client.get(f"/issues/{iid}/resource_label_events", params={
+            "per_page": LABEL_EVENTS_PER_PAGE, "page": page})
+        events = events or []
+        if not events:
+            break
+        for ev in events:
+            eid = ev.get("id")
+            if cursor_id is not None and eid is not None and eid <= cursor_id:
+                continue
+            collected.append(ev)
+        if len(events) < LABEL_EVENTS_PER_PAGE:
+            break
+        page += 1
+    else:
+        return None
+    return collected
+
+
+def process_label_events(path: Path, bug_id: str, status: str, events: list[dict],
+                          *, dry: bool) -> dict:
+    """D2/D3: событие `add qa-status::QAready` на НАШЕМ issue при внутреннем
+    Open|Reopened -> Fixed. Один переход на батч событий достаточен (при
+    нескольких `add` в батче — берём первый, дальше уже не Open/Reopened)."""
+    applied = False
+    for ev in events:
+        if applied:
+            break
+        if ev.get("action") != "add":
+            continue
+        label_name = (ev.get("label") or {}).get("name")
+        if label_name != QAREADY_LABEL:
+            continue
+        if status not in ("Open", "Reopened"):
+            continue   # [инвариант D5] наш Fixed и т.п. — НЕ второй флип
+        applied = True
+        if not dry:
+            bi.apply_status(path, "Fixed", dry=False)
+            username = (ev.get("user") or {}).get("username") or "unknown"
+            comment = bi.Comment(
+                key=bug_id, author=f"gitlab:{username}",
+                created=ev.get("created_at", ""),
+                body=(f"Метка `{QAREADY_LABEL}` выставлена на GitLab issue — "
+                      f"переход Open→Fixed зафиксирован автоматически "
+                      f"(второй канал, docs/06 §3а, gitlab-label)."),
+                cid=f"label-{ev.get('id')}")
+            bi.append_discussion(path, comment, dry=False, set_awaiting=False)
+    return {"applied": applied}
+
+
+def run_gitlab_labels(client: gs.GitLabClient, selected: list[tuple[Path, str, int, str]],
+                      our_qaready_iids: set[int] | None, *, dry: bool) -> dict:
+    """M-D.1/D5: `our_qaready_iids` — переиспользованный ответ E7-скана (наши
+    iid, присутствующие в выдаче label qa-status::QAready); None — QAready-
+    скан не выполнялся (капитуляция/деградация) -> outcome "skipped".
+
+    Возвращает {"outcome": "ok"|"skipped"|"degraded", "applied_bugs": [...],
+    "cap_bugs": [...], "degraded": bool, "degraded_reason": str} — та же
+    сигнатура degraded-полей, что run_qaready (401/сеть на ЛЮБОМ точечном
+    запросе -> глобальная деградация ЭТОГО скана, прочие HTTP-коды —
+    локальный сбой по одному багу, батч продолжается)."""
+    if our_qaready_iids is None:
+        return {"outcome": "skipped", "applied_bugs": [], "cap_bugs": [],
+                "degraded": False, "degraded_reason": ""}
+
+    by_iid = {iid: (path, bug_id, status) for path, bug_id, iid, status in selected}
+    applied_bugs: list[str] = []
+    cap_bugs: list[str] = []
+    for iid in sorted(our_qaready_iids & by_iid.keys()):
+        path, bug_id, status = by_iid[iid]
+        if status not in ("Open", "Reopened"):
+            continue   # [инвариант D5]
+        cursor = load_label_cursor()
+        cursor_id = cursor.get(bug_id)
+        try:
+            events = fetch_label_events(client, iid, cursor_id)
+        except gs.GitLabHTTPError as e:
+            if e.status in (0, 401):
+                return {"outcome": "degraded", "applied_bugs": applied_bugs,
+                        "cap_bugs": cap_bugs, "degraded": True, "degraded_reason": str(e)}
+            print(f"  [WARN] gitlab_inbound: label-события {bug_id} — HTTP ошибка ({e})")
+            continue
+        if events is None:
+            if not dry:
+                bi._append_escalation(
+                    bug_id, "label-событий больше LABEL_EVENTS_MAX_PAGES страниц — "
+                            "разобрать вручную (scripts/gitlab_inbound.py)")
+            cap_bugs.append(bug_id)
+            continue
+        if not events:
+            continue
+        result = process_label_events(path, bug_id, status, events, dry=dry)
+        if not dry:
+            max_id = max((e.get("id") for e in events if e.get("id") is not None), default=None)
+            if max_id is not None:
+                _bump_label_cursor(bug_id, max_id)
+        if result["applied"]:
+            applied_bugs.append(bug_id)
+    return {"outcome": "ok", "applied_bugs": applied_bugs, "cap_bugs": cap_bugs,
+            "degraded": False, "degraded_reason": ""}
+
 
 # --- E7: QAready-подхват ---------------------------------------------------
 
@@ -349,11 +597,18 @@ def fetch_new_notes(client: gs.GitLabClient, iid: int,
 # --- Обработка одного бага --------------------------------------------------
 
 def process_bug(client: gs.GitLabClient, path: Path, bug_id: str, iid: int,
-                 status: str, *, dry: bool) -> dict:
+                 status: str, *, dry: bool,
+                 own_repo: tuple[str, str] | None = None) -> dict:
     """Возвращает {"outcome": "ok"|"cap", "written": int, "skipped_system": int}.
 
     Может бросить gs.GitLabHTTPError (404/401/сеть) — обрабатывает вызывающая
-    сторона (run()), это НЕ ошибка одного бага по построению."""
+    сторона (run()), это НЕ ошибка одного бага по построению.
+
+    `own_repo` — (host, path) СВОЕГО repo (A3(б)): каждая обрабатываемая нота
+    (тот же батч, что и сама реплика — "реестр как у нот") сканируется на
+    URL пайплайна/джоба СВОЕГО repo; найден -> verify_build_ref писется в
+    frontmatter бага idемпотентно. None — сканирование ref пропускается
+    (напр. read_repo_url() недоступен)."""
     cursor = load_cursor()
     cursor_id = cursor.get(bug_id)
     notes = fetch_new_notes(client, iid, cursor_id)
@@ -405,6 +660,16 @@ def process_bug(client: gs.GitLabClient, path: Path, bug_id: str, iid: int,
             existing.add(key)
             written += 1
 
+            # A3(б): verify_build_ref из ЭТОЙ же ноты — тот же батч/курсор,
+            # что реплика (не отдельный скан). --check (dry) не пишет.
+            if own_repo is not None and not dry:
+                ref = _extract_own_build_ref(raw_body, own_repo[0], own_repo[1])
+                if ref:
+                    changed = write_frontmatter_field(path, "verify_build_ref", ref)
+                    if changed:
+                        print(f"  [INFO] gitlab_inbound: {bug_id} verify_build_ref <- "
+                              f"{ref} (нота {note.get('id')})")
+
         if not dry:
             max_id = max((n.get("id") for n in notes if n.get("id") is not None),
                          default=None)
@@ -421,6 +686,16 @@ def process_bug(client: gs.GitLabClient, path: Path, bug_id: str, iid: int,
 
 # --- Оркестрация прохода -----------------------------------------------------
 
+def _own_repo_host_path() -> tuple[str, str] | None:
+    """A3(б): (host, path) СВОЕГО repo — best-effort, None при недоступности
+    (read_repo_url()/parse_project() не должны валить весь pre_step ради
+    вспомогательного extraction'а)."""
+    try:
+        return gs.parse_project(gs.read_repo_url())
+    except (SystemExit, Exception):
+        return None
+
+
 def run(client: gs.GitLabClient, selected: list[tuple[Path, str, int, str]],
         *, dry: bool) -> dict:
     """Обрабатывает список отобранных багов. Глобальная деградация (сеть/401)
@@ -432,9 +707,11 @@ def run(client: gs.GitLabClient, selected: list[tuple[Path, str, int, str]],
         "skipped_system_total": 0, "closed_with_notes": [],
         "partial_failures": [], "cap_bugs": [],
     }
+    own_repo = _own_repo_host_path()
     for path, bug_id, iid, status in selected:
         try:
-            result = process_bug(client, path, bug_id, iid, status, dry=dry)
+            result = process_bug(client, path, bug_id, iid, status, dry=dry,
+                                 own_repo=own_repo)
         except gs.GitLabHTTPError as e:
             if e.status in (0, 401):
                 summary["degraded"] = True
@@ -509,7 +786,13 @@ def _qaready_key_already_pending(key: str) -> bool:
 
 
 def scan_qaready(client: gs.GitLabClient, our_iids: set[int], *, dry: bool = False) -> dict:
-    """Возвращает {"outcome": "ok"|"cap", "new_keys": [...], "n_new": int}.
+    """Возвращает {"outcome": "ok"|"cap", "new_keys": [...], "n_new": int,
+    "our_qaready_iids": set[int]|None}.
+
+    D5: `our_qaready_iids` — переиспользование ОТВЕТА этого же скана для
+    M-D (run_gitlab_labels) — НАШИ iid (из our_iids), присутствующие в
+    ТЕКУЩЕЙ выдаче label qa-status::QAready; None ТОЛЬКО при outcome "cap"
+    (выдача не может считаться полной/достоверной).
 
     Может бросить gs.GitLabHTTPError (401/сеть/прочее) — обрабатывает
     вызывающая сторона (run_qaready), не эта функция."""
@@ -520,13 +803,17 @@ def scan_qaready(client: gs.GitLabClient, our_iids: set[int], *, dry: bool = Fal
             bi._append_escalation(
                 "QAREADY-CAP",
                 "QAready-выдача переполнена — разобрать вручную")
-        return {"outcome": "cap", "new_keys": [], "n_new": 0}
+        return {"outcome": "cap", "new_keys": [], "n_new": 0, "our_qaready_iids": None}
 
+    all_iids = {int(issue["iid"]) for issue in issues if issue.get("iid") is not None}
     foreign = {
-        int(issue["iid"]): issue for issue in issues
-        if issue.get("iid") is not None and _is_foreign_qaready(issue, our_iids)
+        iid: issue for iid, issue in ((int(i["iid"]), i) for i in issues if i.get("iid") is not None)
+        if _is_foreign_qaready(issue, our_iids)
     }
     current_iids = set(foreign.keys())
+    # [D5] "ours" = complement дискриминатора _is_foreign_qaready в ЭТОЙ ЖЕ
+    # выдаче — переиспользуется run_gitlab_labels, отдельного запроса нет.
+    our_qaready_iids = all_iids - current_iids
 
     registry = load_qaready_registry()
     try:
@@ -557,7 +844,8 @@ def scan_qaready(client: gs.GitLabClient, our_iids: set[int], *, dry: bool = Fal
         # qaready_registry) — записываем прямо current_iids, эквивалентно и проще.
         _write_qaready_registry_atomic({str(i): True for i in current_iids})
 
-    return {"outcome": "ok", "new_keys": new_keys, "n_new": len(new_keys)}
+    return {"outcome": "ok", "new_keys": new_keys, "n_new": len(new_keys),
+            "our_qaready_iids": our_qaready_iids}
 
 
 def run_qaready(client: gs.GitLabClient, our_iids: set[int], *, dry: bool = False) -> dict:
@@ -569,10 +857,12 @@ def run_qaready(client: gs.GitLabClient, our_iids: set[int], *, dry: bool = Fals
     except gs.GitLabHTTPError as e:
         if e.status in (0, 401):
             return {"degraded": True, "degraded_reason": str(e),
-                    "outcome": "degraded", "new_keys": [], "n_new": 0}
+                    "outcome": "degraded", "new_keys": [], "n_new": 0,
+                    "our_qaready_iids": None}
         print(f"  [WARN] gitlab_inbound: QAready-скан — HTTP ошибка ({e})")
         return {"degraded": False, "degraded_reason": "",
-                "outcome": "error", "new_keys": [], "n_new": 0}
+                "outcome": "error", "new_keys": [], "n_new": 0,
+                "our_qaready_iids": None}
     result["degraded"] = False
     result["degraded_reason"] = ""
     return result
@@ -632,6 +922,20 @@ def _qaready_summary_line(qr: dict) -> str:
     return f"gitlab_inbound: QAready: {n} новых{detail}"
 
 
+def _labels_summary_line(lr: dict | None) -> str:
+    if lr is None:
+        return "gitlab_inbound: label-события: не сканировались"
+    if lr["outcome"] == "skipped":
+        return "gitlab_inbound: label-события: пропущено (QAready-скан капнул/деградировал)"
+    if lr["outcome"] == "degraded":
+        return f"gitlab_inbound: label-события: деградация ({lr['degraded_reason']})"
+    applied = lr.get("applied_bugs") or []
+    cap = lr.get("cap_bugs") or []
+    detail = f" ({', '.join(applied)})" if applied else ""
+    cap_detail = f"; в капе: {', '.join(cap)}" if cap else ""
+    return f"gitlab_inbound: label-события: {len(applied)} применено{detail}{cap_detail}"
+
+
 def _print_run(summary: dict) -> int:
     if summary["degraded"]:
         # Деградация МОГЛА наступить ПОСЛЕ того, как часть багов уже
@@ -648,17 +952,25 @@ def _print_run(summary: dict) -> int:
         # «отсканировали, новых нет» — печатаем явную строку статуса.
         if summary.get("qaready") is None:
             print("gitlab_inbound: QAready: не сканировался (деградация канала)")
+        if summary.get("labels") is None:
+            print(_labels_summary_line(None))
         return 0
     print(_summary_line(summary))
     qr = summary.get("qaready")
     if qr is not None:
         print(_qaready_summary_line(qr))
+    print(_labels_summary_line(summary.get("labels")))
     return 0
 
 
-def _print_check(summary: dict) -> int:
+def _print_check(summary: dict, label_check: dict | None = None) -> int:
     if summary["degraded"]:
         print(f"gitlab_inbound --check: деградация ({summary['degraded_reason']})")
+        # Критик-вход (мелочь 5): не молчать про label-канал — деградация
+        # нотного скана означает, что main() даже НЕ ПЫТАЛСЯ сделать
+        # точечный QAready/label-скан (см. main(): `if not summary["degraded"]`)
+        # — молчание неотличимо от «проверили, чисто».
+        print("gitlab_inbound --check: label-inbound: не проверялся (деградация нотного скана)")
         return 0
 
     # [E2] QAready --check — чисто файловая проверка escalations.md, сети не
@@ -669,7 +981,19 @@ def _print_check(summary: dict) -> int:
     pending += [b for b in summary["cap_bugs"] if b not in pending]
     n = summary["written_total"] + len(summary["cap_bugs"])
 
-    if n > 0 or qaready_pending:
+    # [D6] label-inbound — СЕТЕВОЙ чек (в отличие от файловой QAready-части
+    # E2 выше): сверка наших Open|Reopened против label-событий.
+    label_pending: list[str] = []
+    label_degraded_line: str | None = None
+    if label_check is not None:
+        if label_check.get("degraded"):
+            label_degraded_line = f"label-inbound: деградация ({label_check['degraded_reason']})"
+        else:
+            label_pending = list(label_check.get("applied_bugs") or [])
+            label_pending += [b for b in (label_check.get("cap_bugs") or [])
+                              if b not in label_pending]
+
+    if n > 0 or qaready_pending or label_pending:
         parts = []
         if n > 0:
             # Капнутый баг несёт МИНИМУМ MAX_PAGES*PER_PAGE нот (300 по
@@ -682,11 +1006,17 @@ def _print_check(summary: dict) -> int:
         if qaready_pending:
             parts.append(f"QAready необработанных {len(qaready_pending)}: "
                          f"{', '.join(qaready_pending)}")
+        if label_pending:
+            parts.append(f"label-inbound несведённых {len(label_pending)}: "
+                         f"{', '.join(label_pending)}")
         print(f"gitlab_inbound --check: {'; '.join(parts)}")
         return 1
     if summary["partial_failures"]:
         print("gitlab_inbound --check: частичная деградация: "
               f"{', '.join(summary['partial_failures'])} недоступны")
+        return 0
+    if label_degraded_line:
+        print(f"gitlab_inbound --check: чисто; {label_degraded_line}")
         return 0
     print("gitlab_inbound --check: чисто")
     return 0
@@ -703,6 +1033,9 @@ def main(argv: list[str] | None = None) -> int:
     if not token:
         if args.check:
             print("gitlab_inbound --check: деградация (нет GITLAB_TOKEN)")
+            # [D6] label-inbound — деградация видима отдельной строкой, не
+            # молчаливый 0 (та же дисциплина, что F-30 CLAUDE.md).
+            print("gitlab_inbound --check: label-inbound: не проверялся (нет токена)")
         else:
             print("[WARN] gitlab_inbound: деградация (нет GITLAB_TOKEN)")
         return 0
@@ -717,9 +1050,21 @@ def main(argv: list[str] | None = None) -> int:
     summary = run(client, selected, dry=args.check)
 
     if args.check:
-        # [E2] QAready --check не делает живой скан (см. _print_check) —
-        # QAready-раздел вычисляется там же, из escalations.md.
-        return _print_check(summary)
+        # [E2] QAready-обязанность --check не делает живой скан (файловая
+        # проверка escalations.md) — НО [D6] label-inbound ОБЯЗАН быть
+        # сетевым: точечный скан (dry=True — ничего не пишет) только для
+        # получения our_qaready_iids/label-событий.
+        label_check = None
+        if not summary["degraded"]:
+            our_iids = {iid for _p, _b, iid, _s in selected}
+            qr_check = run_qaready(client, our_iids, dry=True)
+            if qr_check["degraded"]:
+                label_check = {"outcome": "degraded", "applied_bugs": [], "cap_bugs": [],
+                              "degraded": True, "degraded_reason": qr_check["degraded_reason"]}
+            else:
+                label_check = run_gitlab_labels(
+                    client, selected, qr_check.get("our_qaready_iids"), dry=True)
+        return _print_check(summary, label_check)
 
     # E7 QAready-скан — второй, ПОСЛЕ нот, ТОЛЬКО если ноты не деградировали
     # (общая деградация канала — реестр QAready тоже остаётся нетронутым).
@@ -730,8 +1075,17 @@ def main(argv: list[str] | None = None) -> int:
         if qr["degraded"]:
             summary["degraded"] = True
             summary["degraded_reason"] = qr["degraded_reason"]
+            summary["labels"] = None
+        else:
+            # M-D/D5: label-события — ПОСЛЕ QAready, переиспользует его ответ.
+            lr = run_gitlab_labels(client, selected, qr.get("our_qaready_iids"), dry=False)
+            summary["labels"] = lr
+            if lr.get("degraded"):
+                summary["degraded"] = True
+                summary["degraded_reason"] = lr["degraded_reason"]
     else:
         summary["qaready"] = None
+        summary["labels"] = None
 
     return _print_run(summary)
 

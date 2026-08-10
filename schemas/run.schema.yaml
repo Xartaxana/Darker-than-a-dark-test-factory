@@ -31,3 +31,10 @@ fields:
   # отсутствие в НОВОМ прогоне ловит coverage_map (строка деградации,
   # симметрично tc_results).
   recoveries: { pattern: "^\\d+/\\d+$" }
+  # M-C.1 (spec-build-source-dual-mode v4): source_commit сборки, на которой
+  # прогнан ЭТОТ run — первичный идентификатор для машинной предковости
+  # baseline (git merge-base --is-ancestor found_in..source_commit), не
+  # versionCode (неразличим между local-сборками, немонотонен при смене
+  # источника — B6). Пишет test-runner. Опционален для прогонов до
+  # 2026-08-10 (легаси-развязка C7 — см. test-runner.md/failure-analyst.md).
+  source_commit: {}

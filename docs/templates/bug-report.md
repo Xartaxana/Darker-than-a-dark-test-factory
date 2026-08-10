@@ -10,7 +10,7 @@ type: app_bug          # app_bug | test_debt (B4: долг тестовой си
 debt_kind: ""          # только для test_debt: flaky_test | slow_test | missing_fixture | weak_locator | obsolete_test_case | missing_evidence | broken_environment
 severity: major        # blocker | critical | major | minor | trivial
 status: Open           # Open | Fixed | Verified | Reopened | Rejected | Intended | Blocked
-found_in: "1.10 (versionCode 11), build <hash>"   # из state/app-under-test.yaml
+found_in: "source_commit <sha> (versionName <name>, versionCode <N>)"   # ПЕРВИЧНЫЙ идентификатор — source_commit (batch dual-mode 2026-08-10, B6: versionCode немонотонен между local/CI-источниками — dev-local(12) у всех локальных, dev-<IID> у CI); версии — вторичные, брать ФАКТИЧЕСКИЕ из output-metadata.json рядом с APK, не из полей state-yaml
 fixed_in: ""           # заполняет человек при переводе в Fixed
 last_seen_in: ""       # последняя сборка, где репро подтверждено (fix-verifier, mode=still-repro)
 test_cases: [TC-031]   # связанные тест-кейсы

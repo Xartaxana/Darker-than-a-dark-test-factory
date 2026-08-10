@@ -67,6 +67,17 @@ rules:
     when: "bug.status == Fixed И (есть сборка новее bug.found_in ИЛИ bug.type == test_debt —
       долг фреймворка не ждёт сборку приложения, B4)"
     dispatch: fix-verifier
+    # «Сборка новее found_in» (уточнение батча dual-mode 2026-08-10, B6):
+    # коммит found_in — ПРЕДОК source_commit кандидата (git merge-base
+    # --is-ancestor, направление обязательно) И built_at новее; сравнение
+    # по versionCode НЕвалидно (dev-local(12) у всех локальных сборок,
+    # dev-<IID> у CI — немонотонно между источниками). Несравнимые линии
+    # (force-push) — считается новее с явной пометкой в таблице верификации.
+    # bug.verify_build_ref (канал ноты разработчика «билд для проверки»,
+    # docs/06 §3а): непустой ref формата pipeline:<iid>|job:<id> —
+    # верификация НА УКАЗАННОМ билде (адресная установка, глобальный
+    # app-under-test.yaml не трогается); consumed:/stale: маркеры — no-op
+    # (потреблён / артефакт протух, см. промпт fix-verifier).
 
   - name: "Перепроверить отклонённый баг"            # docs/06 D4
     when: "bug.status == Rejected И нет строки верификации на актуальной сборке"

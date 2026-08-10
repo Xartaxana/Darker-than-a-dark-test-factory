@@ -61,3 +61,11 @@ fields:
   # поля = не сеяный (обе формы валидны, чтобы копирование конвенции
   # known_issue не ломало pre_step — некрит-1 критик-входа 2026-08-09).
   seeded: { enum: ["true", "false"] }
+  # A3(б) (spec-build-source-dual-mode v4): адресный канал provided —
+  # разработчик указывает в ноте GitLab-issue билд, на котором тестить фикс.
+  # gitlab_inbound.py извлекает ЧИСЛО из URL пайплайна/джоба СВОЕГО repo
+  # (никогда сырой URL/чужой repo) и пишет поле idемпотентно. Жизненный
+  # цикл consumed:/stale: — fix-verifier.md (C10/E2), не gitlab_inbound.py.
+  # Критик-вход (мелочь 4): [0-9], не \d — \d матчит любой Unicode Nd, не
+  # только ASCII-цифры.
+  verify_build_ref: { pattern: "^$|^pipeline:[0-9]+$|^job:[0-9]+$|^consumed:.+$|^stale:.+$" }

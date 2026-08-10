@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import datetime
+import hashlib
 import json
 import re
 import shutil
@@ -195,6 +196,44 @@ class Check:
         return "OK" if self.ok else ("WARN" if self.warn else "FAIL")
 
 
+def _sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _apk_sha256_check(apk_path: Path | None, apk_exists: bool, aut_text: str) -> Check:
+    """A2/C1 (spec-build-source-dual-mode v4): три состояния границы, НЕ
+    наивный FAIL. См. вызывающий код (run_checks) за обоснованием."""
+    name = "APK sha256 соответствует yaml"
+    if apk_path is None or not apk_exists:
+        return Check(name, "run", False,
+                    "н/п — файла нет (см. чек 'APK по apk_path')", warn=True)
+
+    m_sha = re.search(r'(?m)^apk_sha256:\s*"?([^"\r\n#]*)"?\s*(#.*)?$', aut_text)
+    yaml_sha = (m_sha.group(1).strip() if m_sha else "")
+    m_vname = re.search(r'(?m)^version_name:\s*"?([^"\r\n#]*)"?\s*(#.*)?$', aut_text)
+    m_vcode = re.search(r'(?m)^version_code:\s*([^\r\n#]*)\s*(#.*)?$', aut_text)
+    versions_unknown = any(
+        m and m.group(1).strip().lower() == "unknown" for m in (m_vname, m_vcode))
+
+    if not yaml_sha or yaml_sha.lower() == "unknown" or versions_unknown:
+        return Check(name, "run", False,
+                    f"apk_sha256/версии пусты или 'unknown' в yaml (apk_sha256={yaml_sha!r}) "
+                    "— сверка невозможна, сборка не полностью зафиксирована", warn=True)
+
+    actual_sha = _sha256_file(apk_path)
+    if actual_sha == yaml_sha:
+        return Check(name, "run", True, f"совпадает ({actual_sha[:12]}…)")
+    return Check(name, "run", False,
+                f"НЕ совпадает: файл={actual_sha[:12]}… yaml={yaml_sha[:12]}… — APK "
+                "подменён/перезаписан мимо build_watch; путь восстановления: перепрогнать "
+                "`python scripts/build_watch.py [--provided <ref>]` либо восстановить APK "
+                "вручную")
+
+
 def run_checks() -> list[Check]:
     checks: list[Check] = []
     env = _env_paths()
@@ -300,15 +339,30 @@ def run_checks() -> list[Check]:
     checks.append(Check("app-under-test git-глубина", "run", True, detail))
 
     apk_ok, apk_detail = False, "state/app-under-test.yaml не найден"
+    apk_path_for_sha: Path | None = None
+    aut_text_for_sha = ""
     if AUT_PATH.exists():
-        m = re.search(r"(?m)^apk_path:\s*(\S+)", AUT_PATH.read_text(encoding="utf-8"))
+        aut_text_for_sha = AUT_PATH.read_text(encoding="utf-8")
+        m = re.search(r"(?m)^apk_path:\s*(\S+)", aut_text_for_sha)
         if m:
             apk = REPO / m.group(1)
             apk_ok, apk_detail = apk.exists(), str(apk)
+            apk_path_for_sha = apk
         else:
             apk_detail = "apk_path не указан"
     # APK может законно отсутствовать до первой сборки build_watch — это WARN, не FAIL
     checks.append(Check("APK по apk_path", "run", apk_ok, apk_detail, warn=not apk_ok))
+
+    # A2/C1 (spec-build-source-dual-mode v4): sha256-чек APK против yaml —
+    # ловит подмену/перезапись APK мимо build_watch (напр. следующий локальный
+    # assembleDebug молча перезаписал canonical-путь под провайденной yaml-
+    # записью). Границы НЕ наивный FAIL: файла нет -> WARN (отдаётся
+    # существующему чеку выше — «APK может законно отсутствовать»);
+    # apk_sha256 пуст/unknown ИЛИ версии unknown (M-B.2 незавершённая запись)
+    # -> WARN (сверка невозможна/сборка не полностью зафиксирована); ОБА есть
+    # и различаются -> FAIL с путём восстановления (иначе фабрика стоит
+    # молча-надолго — FAIL снимает env-правила прохода, SKILL.md:84-87).
+    checks.append(_apk_sha256_check(apk_path_for_sha, apk_ok, aut_text_for_sha))
 
     # M1/R4 (plan-m1-m4.md v3, 2026-08-09): сирота-детектор для heartbeat-обёртки.
     checks.append(_heartbeat_lock_dead_pid_check())

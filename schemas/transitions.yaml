@@ -31,7 +31,7 @@ actors:
     factory: [qa-loop, test-runner, failure-analyst, bug-reporter, fix-verifier,
               test-automator, test-designer, test-maintainer, test-strategist,
               test-reviewer, sla_sweep, board_inbound, stale_locks, build_watch,
-              exploratory-tester, charter-designer]
+              exploratory-tester, charter-designer, gitlab_inbound]
     # lead — Lead-сессия (координатор Fable-яруса) как актор переходов
     # вне групп human/factory: добавлен 2026-07-29 вместе с переходом
     # отката Verified->Fixed (актор был использован в переходе, но не
@@ -52,10 +52,17 @@ machines:
     statuses: [Open, Reopened, Fixed, Verified, Rejected, Intended, Blocked]
     transitions:
       # --- действия человека (разработчика) ---
-      - {from: Open,     to: Fixed,    by: [human], via_board: true, ref: "D1/D2: пофиксил"}
+      - {from: Open,     to: Fixed,    by: [human], via_board: true, via_gitlab: true,
+         ref: "D1/D2: пофиксил (второй канал — GitLab label-событие
+           qa-status::QAready, gitlab_inbound.py проводник; актор — тот же
+           человек-разработчик, E3 spec-build-source-dual-mode v4: флаг
+           МЕНЯЕТ машинную матрицу, не только аннотация)"}
       - {from: Open,     to: Rejected, by: [human], via_board: true, ref: "D4: не баг / не воспроизводится"}
       - {from: Open,     to: Intended, by: [human], via_board: true, ref: "D5: так задумано"}
-      - {from: Reopened, to: Fixed,    by: [human], via_board: true, ref: "D1: пофиксил после реопена"}
+      - {from: Reopened, to: Fixed,    by: [human], via_board: true, via_gitlab: true,
+         ref: "D1: пофиксил после реопена (критик B3, 2026-08-10: второй
+           канал флипает ОБА перехода Open->Fixed и Reopened->Fixed —
+           матрица обязана описывать оба)"}
       - {from: Reopened, to: Rejected, by: [human], via_board: true, ref: "D4"}
       - {from: Reopened, to: Intended, by: [human], via_board: true, ref: "D5"}
       - {from: "*",      to: Open,     by: [human], via_board: true, ref: "ручное переоткрытие из любого статуса"}

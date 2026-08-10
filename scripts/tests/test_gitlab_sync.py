@@ -48,6 +48,11 @@ def bugs_dir(tmp_path, monkeypatch):
         encoding="utf-8",
     )
     monkeypatch.setattr(gs, "AUT_PATH", aut, raising=True)
+    # D4/E4 safeguard: эскалации — ОТДЕЛЬНЫЙ файл в tmp_path, не реальный
+    # state/escalations.md репозитория (класс бага LABEL_CURSOR_PATH,
+    # найденный при построении test_gitlab_inbound.py).
+    monkeypatch.setattr(gs, "ESCALATIONS_PATH", tmp_path / "state" / "escalations.md",
+                        raising=True)
     return d
 
 
@@ -539,6 +544,180 @@ def test_label_changes_helper_in_sync_returns_empty():
     add, remove = gs._label_changes(current, desired)
     assert add == []
     assert remove == []
+
+
+# =============================================================================
+# D4/E4: safeguard против уничтожения QAready-сигнала гонкой (M-D)
+# =============================================================================
+
+def test_qaready_removal_safeguard_skips_label_on_open_bug(bugs_dir, capsys):
+    """Гонка: dev поставил qa-status::QAready вручную, внутренний статус
+    ещё Open (gitlab_inbound не отработал) — sync НЕ снимает ярлык."""
+    p = _write_bug(bugs_dir, "BUG-100", status="Open")
+    meta, body = gs.load_bug(p)
+    title = gs.build_title("BUG-100", meta["title"])
+    description = gs.build_description(meta, body)
+
+    remote_issue = {
+        "iid": 950, "title": title, "description": description,
+        "labels": ["qa-factory", "severity::major", "qa-status::QAready"],
+        "state": "opened",
+    }
+    client, transport = _client([
+        (200, remote_issue),   # GET /issues/950
+        # add_labels qa-status::Open (desired), никакого remove — PUT всё же
+        # нужен ради add_labels.
+        (200, {}),
+    ])
+
+    result = gs.sync_bug(client, p, {**meta, "gitlab_issue": 950}, body)
+
+    assert result == "updated"
+    put_json = next(c["json"] for c in transport.calls if c["method"] == "PUT")
+    assert "remove_labels" not in put_json or "qa-status::QAready" not in put_json.get(
+        "remove_labels", "")
+    assert put_json.get("add_labels") == "qa-status::Open"
+
+    out = capsys.readouterr().out
+    assert "[WARN]" in out and "qa-status::QAready" in out
+    esc = gs.ESCALATIONS_PATH.read_text(encoding="utf-8")
+    assert "QAREADY-SYNC-RACE-BUG-100" in esc
+    assert "Open" in esc
+
+
+def test_qaready_removal_safeguard_allows_removal_on_fixed_bug(bugs_dir, capsys):
+    """Внутренний статус УЖЕ Fixed — qa-status::QAready ЖЕЛАЕМАЯ метка сама
+    по себе (STATUS_LABEL_ALIASES), remove вообще не должен её касаться;
+    safeguard — no-op в штатном случае."""
+    p = _write_bug(bugs_dir, "BUG-101", status="Fixed")
+    meta, body = gs.load_bug(p)
+
+    remote_issue = {
+        "iid": 951, "title": gs.build_title("BUG-101", meta["title"]),
+        "description": gs.build_description(meta, body),
+        "labels": ["qa-factory", "severity::major", "qa-status::QAready"],
+        "state": "opened",
+    }
+    client, transport = _client([(200, remote_issue)])   # без изменений -> нет PUT
+
+    result = gs.sync_bug(client, p, {**meta, "gitlab_issue": 951}, body)
+
+    assert result == "unchanged"
+    assert not any(c["method"] == "PUT" for c in transport.calls)
+    assert not gs.ESCALATIONS_PATH.exists()
+
+
+def test_qaready_removal_safeguard_reopened_bug_is_also_guarded(bugs_dir, capsys):
+    """Reopened — тот же класс "сигнал ещё не сведён", что Open (v4.1
+    границы QAREADY_SAFEGUARD_STATUSES): снятие пропускается."""
+    p = _write_bug(bugs_dir, "BUG-104", status="Reopened")
+    meta, body = gs.load_bug(p)
+    remote_issue = {
+        "iid": 954, "title": gs.build_title("BUG-104", meta["title"]),
+        "description": gs.build_description(meta, body),
+        "labels": ["qa-factory", "severity::major", "qa-status::QAready"],
+        "state": "opened",
+    }
+    client, transport = _client([(200, remote_issue), (200, {})])
+
+    gs.sync_bug(client, p, {**meta, "gitlab_issue": 954}, body)
+
+    put_json = next(c["json"] for c in transport.calls if c["method"] == "PUT")
+    assert "qa-status::QAready" not in put_json.get("remove_labels", "")
+    esc = gs.ESCALATIONS_PATH.read_text(encoding="utf-8")
+    assert "QAREADY-SYNC-RACE-BUG-104" in esc
+
+
+@pytest.mark.parametrize("status", ["Verified", "Rejected", "Intended"])
+def test_qaready_removal_safeguard_terminal_status_allows_removal_no_escalation(
+        bugs_dir, capsys, status):
+    """v4.1 (регресс живого прогона 2026-08-10, BUG-001/BUG-057): на
+    терминальных статусах наша проекция УЖЕ ушла дальше сигнала
+    разработчика (issue закрыт) — снятие qa-status::QAready ЛЕГИТИМНО,
+    ярлык-сирота НЕ должен оставаться, эскалация НЕ заводится."""
+    p = _write_bug(bugs_dir, "BUG-105", status=status)
+    meta, body = gs.load_bug(p)
+    remote_issue = {
+        "iid": 955, "title": gs.build_title("BUG-105", meta["title"]),
+        "description": gs.build_description(meta, body),
+        "labels": ["qa-factory", "severity::major", "qa-status::QAready"],
+        "state": "closed",
+    }
+    client, transport = _client([(200, remote_issue), (200, {})])
+
+    gs.sync_bug(client, p, {**meta, "gitlab_issue": 955}, body)
+
+    put_json = next(c["json"] for c in transport.calls if c["method"] == "PUT")
+    assert "qa-status::QAready" in put_json.get("remove_labels", "")
+    out = capsys.readouterr().out
+    assert "[WARN]" not in out
+    assert not gs.ESCALATIONS_PATH.exists()
+
+
+def test_qaready_removal_safeguard_other_own_labels_still_removed(bugs_dir):
+    """Safeguard снимает ТОЛЬКО qa-status::QAready — устаревшая severity
+    по-прежнему уходит в remove_labels штатно."""
+    p = _write_bug(bugs_dir, "BUG-102", status="Open", severity="major")
+    meta, body = gs.load_bug(p)
+
+    remote_issue = {
+        "iid": 952, "title": gs.build_title("BUG-102", meta["title"]),
+        "description": gs.build_description(meta, body),
+        "labels": ["qa-factory", "severity::minor", "qa-status::QAready"],
+        "state": "opened",
+    }
+    client, transport = _client([(200, remote_issue), (200, {})])
+
+    gs.sync_bug(client, p, {**meta, "gitlab_issue": 952}, body)
+
+    put_json = next(c["json"] for c in transport.calls if c["method"] == "PUT")
+    assert "severity::minor" in put_json.get("remove_labels", "")
+    assert "qa-status::QAready" not in put_json.get("remove_labels", "")
+
+
+def test_qaready_removal_safeguard_escalation_deduped_across_runs(bugs_dir):
+    """Дедуп ключа (E4): гонка длится несколько прогонов sync подряд —
+    ОДНА строка эскалации, не по строке на прогон."""
+    p = _write_bug(bugs_dir, "BUG-103", status="Open")
+    meta, body = gs.load_bug(p)
+    remote_issue = {
+        "iid": 953, "title": gs.build_title("BUG-103", meta["title"]),
+        "description": gs.build_description(meta, body),
+        "labels": ["qa-factory", "severity::major", "qa-status::QAready"],
+        "state": "opened",
+    }
+
+    client1, _t1 = _client([(200, remote_issue), (200, {})])
+    gs.sync_bug(client1, p, {**meta, "gitlab_issue": 953}, body)
+    client2, _t2 = _client([(200, remote_issue), (200, {})])
+    gs.sync_bug(client2, p, {**meta, "gitlab_issue": 953}, body)
+
+    esc = gs.ESCALATIONS_PATH.read_text(encoding="utf-8")
+    assert esc.count("QAREADY-SYNC-RACE-BUG-103") == 1
+
+
+def test_qaready_removal_safeguard_helper_unit_boundary(bugs_dir):
+    """Юнит на саму границу условия (v4.1): только remove qa-status::QAready
+    + status ∈ {Open, Reopened} триггерит; иначе (Fixed И терминальные —
+    Verified/Rejected/Intended/Blocked) — no-op (список как есть).
+
+    КРИТИК-ВХОД (B1): фикстура `bugs_dir` ОБЯЗАТЕЛЬНА — она монкипатчит
+    gs.ESCALATIONS_PATH на tmp_path. Без неё срабатывание guard'а (первые
+    два ассерта — Open/Reopened с QAREADY_LABEL в remove_labels) реально
+    пишет строку `QAREADY-SYNC-RACE-BUG-X` в РЕАЛЬНЫЙ state/escalations.md
+    репозитория (доказано живьём: строка от 2026-08-10T10:22:45Z, найдена
+    и вычищена критиком/оператором). bugs_dir не используется в теле теста
+    напрямую — вызывается ради побочного эффекта фикстуры (monkeypatch)."""
+    assert gs._qaready_removal_safeguard(
+        "BUG-X", "Open", ["qa-status::QAready", "severity::minor"]
+    ) == ["severity::minor"]
+    assert gs._qaready_removal_safeguard(
+        "BUG-X", "Reopened", ["qa-status::QAready"]) == []
+    for status in ("Fixed", "Verified", "Rejected", "Intended", "Blocked"):
+        assert gs._qaready_removal_safeguard(
+            "BUG-X", status, ["qa-status::QAready"]) == ["qa-status::QAready"], status
+    assert gs._qaready_removal_safeguard(
+        "BUG-X", "Open", ["severity::minor"]) == ["severity::minor"]
 
 
 # --- Адверсариальная батарея -----------------------------------------------

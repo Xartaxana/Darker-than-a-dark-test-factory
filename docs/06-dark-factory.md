@@ -178,6 +178,35 @@ responder, fix-verifier, test-maintainer, failure-analyst, координато�
 (SKILL qa-loop §4); `--check` держит обязанность видимой до
 resolved-пометки.
 
+**ОБРАТНЫЙ словарь QAready (M-D, слово владельца 2026-08-10: «фабрика
+должна видеть баги с qa-status::QAready как Fixed, а не застревать»):**
+ярлык `qa-status::QAready`, поставленный РАЗРАБОТЧИКОМ на НАШ bug-issue
+при внутреннем `Open|Reopened`, — человеческий переход `Open→Fixed`
+(актор — разработчик; скрипт-проводник — gitlab_inbound, паттерн
+board_inbound; `via_gitlab: true` в transitions.yaml). Носитель —
+СОБЫТИЯ `resource_label_events` (edge, монотонные id; не состояние
+метки), курсор `state/gitlab-label-cursor.json`; реплика в Обсуждение с
+cid/created_at события, БЕЗ `awaiting` (потребитель — D1). Прецедент:
+BUG-001 (ярлык от dev висел ~11ч невидимым, поймал владелец). Защита
+исходящей стороны: sync НЕ снимает `qa-status::QAready` с бага в
+`Open|Reopened` (skip метки + персистентная эскалация с дедупом ключа)
+— сигнал разработчика не уничтожается; для Verified/Rejected/Intended
+снятие легитимно. Детекторы: сетевой QAready-чек `--check` (без токена
+— явная строка деградации) + эскалация исходящей стороны.
+
+**Канал «билд для проверки» (M-A(б), слово владельца 2026-08-10):**
+нота разработчика с URL пайплайна/джоба СВОЕГО repo («тестируйте фикс
+на этом билде») → gitlab_inbound извлекает ЧИСЛО (iid/job id; сырой URL
+не хранится и не исполняется — endpoint строится из собственного
+repo-URL) → поле `verify_build_ref` frontmatter бага → fix-verifier
+верифицирует НА УКАЗАННОМ билде адресно (глобальный app-under-test.yaml
+не трогается; после верификации канонический APK восстанавливается на
+устройстве). Жизненный цикл: `consumed:<ref>` при Verified,
+`stale:<ref>` при протухшем артефакте (эскалация + awaiting: dev, D1
+больше не пересрабатывает). Второй канал provided-билда — аргумент
+оператора при запуске /qa-loop (URL пайплайна → `build_watch
+--provided`, SKILL qa-loop).
+
 ## 4. SLA и эскалации
 
 Пороги — в `state/sla.yaml` (создан). sla-sweep выполняется на шаге 0 каждого

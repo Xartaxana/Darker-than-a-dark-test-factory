@@ -423,15 +423,101 @@ def _label_changes(current_labels: set[str], desired: list[str]) -> tuple[list[s
     return add, remove
 
 
+# --- M-D/D4/E4: safeguard против уничтожения QAready-сигнала гонкой --------
+#
+# gitlab_sync НЕ бежит в проходе /qa-loop (только session-handoff/ad-hoc) —
+# окно «разработчик поставил qa-status::QAready вручную, gitlab_inbound
+# (M-D) ещё не перевёл внутренний статус бага в Fixed, человек тем временем
+# запустил gitlab_sync» НЕ ограничено проходом. Без safeguard'а _label_changes
+# считал бы qa-status::QAready «устаревшей своей меткой» (desired_labels()
+# для НЕ-Fixed статуса хочет qa-status::<Open|Reopened|...>, не QAready) и
+# remove_labels стёр бы сигнал разработчика молча. Вес защиты — здесь: при
+# remove qa-status::QAready с бага в Open|Reopened — skip ИМЕННО этой метки
+# (остальные add/remove в том же PUT остаются штатными) + персистентная
+# эскалация с дедупом ключа (образец gitlab_inbound._qaready_key_already_pending,
+# gitlab_inbound.py:490-508) + [WARN] в stdout.
+#
+# v4.1 (2026-08-10, разбор ПЕРВОГО живого прогона с этим safeguard'ом):
+# граница изначальной v4 («НЕ-Fixed») оказалась ШИРЕ задуманного — на
+# Verified/Rejected/Intended (BUG-001/BUG-057, issue #1/#18 УЖЕ закрыты)
+# guard молча пропустил снятие ярлыка-сироты + завёл 2 ложные эскалации.
+# Сужено до Open|Reopened (QAREADY_SAFEGUARD_STATUSES) — терминальные и
+# Fixed-статусы означают, что наша проекция УЖЕ ушла дальше сигнала
+# разработчика, снятие qa-status::QAready там легитимно.
+QAREADY_LABEL = "qa-status::QAready"
+ESCALATIONS_PATH = REPO / "state" / "escalations.md"
+
+
+def _escalation_key_already_pending(key: str) -> bool:
+    """Дедуп по ключу (та же якорная детекция `[resolved:...]`, что
+    gitlab_inbound._qaready_key_already_pending) — одна строка на ключ, не
+    строка на каждый прогон sync, пока гонка длится."""
+    if not ESCALATIONS_PATH.exists():
+        return False
+    pat = re.compile(r"\*\*" + re.escape(key) + r"\*\*(\s*\[resolved:[^\]]*\])?")
+    for line in ESCALATIONS_PATH.read_text(encoding="utf-8", errors="replace").splitlines():
+        if key not in line:
+            continue
+        m = pat.search(line)
+        if m and not m.group(1):
+            return True
+    return False
+
+
+def _append_escalation(key: str, reason: str) -> None:
+    import datetime
+    stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    header = "" if ESCALATIONS_PATH.exists() else (
+        "# Эскалации фабрики\n\nАктивные варнинги, требующие человека "
+        "(docs/06 §4). Живёт до разрешения; запись не удаляется, а "
+        "помечается resolved при закрытии.\n\n")
+    ESCALATIONS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with ESCALATIONS_PATH.open("a", encoding="utf-8") as f:
+        if header:
+            f.write(header)
+        f.write(f"- [{stamp}] **{key}** — {reason}\n")
+
+
+QAREADY_SAFEGUARD_STATUSES = ("Open", "Reopened")
+
+
+def _qaready_removal_safeguard(bug_id: str, status: str, remove_labels: list[str]) -> list[str]:
+    """D4/E4 (v4.1, разбор живого прогона builder-смока 2026-08-10): remove
+    qa-status::QAready — skip ЭТОЙ метки ТОЛЬКО на Open|Reopened (сигнал
+    разработчика ещё НЕ сведён внутренним статусом). Границу «НЕ-Fixed»
+    (изначальная v4) сузили: живой sync поймал ложные срабатывания на
+    Verified/Rejected/Intended (BUG-001/BUG-057) — там наша проекция УЖЕ
+    ушла дальше (issue закрыт), снятие qa-status::QAready легитимно и
+    обязано проходить, иначе ярлык-сирота остаётся рядом с закрытым issue
+    навсегда. Персистентная эскалация (дедуп по ключу) + [WARN] — только
+    для реального срабатывания guard'а. Прочие remove_labels не трогаются."""
+    if QAREADY_LABEL not in remove_labels or status not in QAREADY_SAFEGUARD_STATUSES:
+        return remove_labels
+    key = f"QAREADY-SYNC-RACE-{bug_id}"
+    if not _escalation_key_already_pending(key):
+        _append_escalation(
+            key,
+            f"{bug_id}: gitlab_sync собрался снять ярлык {QAREADY_LABEL} "
+            f"(внутренний статус {status} — Open|Reopened, сигнал ещё не "
+            f"сведён) — вероятная гонка с gitlab_inbound (ярлык поставлен "
+            f"разработчиком, ещё не обработан). Ярлык СОХРАНЁН, снятие "
+            f"пропущено; разберитесь и пометьте [resolved:<task_id>] после "
+            f"проверки.")
+    print(f"[WARN] gitlab_sync: {bug_id} — снятие {QAREADY_LABEL} пропущено "
+          f"(внутренний статус {status}, см. эскалацию {key})")
+    return [label for label in remove_labels if label != QAREADY_LABEL]
+
+
 def _diff_and_update(client: GitLabClient, iid: int, issue: dict, *,
                       title: str, description: str, labels: list[str],
-                      desired_state: str) -> str:
+                      desired_state: str, bug_id: str, status: str) -> str:
     current_title = issue.get("title", "")
     current_description = issue.get("description") or ""
     current_labels = set(issue.get("labels") or [])
     current_state = issue.get("state", "")
 
     add_labels, remove_labels = _label_changes(current_labels, labels)
+    remove_labels = _qaready_removal_safeguard(bug_id, status, remove_labels)
 
     changes: dict = {}
     if current_title != title:
@@ -475,7 +561,8 @@ def sync_bug(client: GitLabClient, path: Path, meta: dict, body: str) -> str:
         _status, issue = client.get(f"/issues/{iid}")
         return _diff_and_update(client, iid, issue or {}, title=title,
                                  description=description, labels=labels,
-                                 desired_state=desired_state)
+                                 desired_state=desired_state, bug_id=bug_id,
+                                 status=status)
 
     # Adopt-защита от дублей: поиск существующего issue по заголовку ДО create.
     # Условие сужено (рекомендация 2 критик-ревью): чистый startswith(bug_id)
@@ -495,7 +582,8 @@ def sync_bug(client: GitLabClient, path: Path, meta: dict, body: str) -> str:
         writeback_gitlab_issue(path, iid)
         return "adopted:" + _diff_and_update(
             client, iid, found, title=title, description=description,
-            labels=labels, desired_state=desired_state)
+            labels=labels, desired_state=desired_state, bug_id=bug_id,
+            status=status)
 
     _status, created = client.post("/issues", {
         "title": title, "description": description,

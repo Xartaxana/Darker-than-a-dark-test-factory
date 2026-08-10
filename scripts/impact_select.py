@@ -66,6 +66,22 @@ class RangeError(Exception):
     """Диапазон коммитов не восстановим — честный отказ с подсказкой про --from/--to."""
 
 
+def is_ancestor(frm: str, to: str) -> bool | None:
+    """M-C.4 (spec-build-source-dual-mode v4, честная формулировка — вердикт
+    критика): `frm` — предок `to`? Видимый МАРКЕР осиротевшего (force-push/
+    переписанная история) диапазона, НЕ фикс прецедента 2026-08-10 (тот в
+    выборе baseline при триаже, не здесь — impact_select baseline не знает,
+    подтверждено чтением default_range). Возвращает None, если git не смог
+    ответить (rc не 0/1, напр. недостижимый sha — незнание НЕ равно
+    «осиротел»; маркер в этом случае не ставится)."""
+    rc, _out = _run(["git", "-C", str(APP), "merge-base", "--is-ancestor", frm, to])
+    if rc == 0:
+        return True
+    if rc == 1:
+        return False
+    return None
+
+
 # --- Глоб-матчинг карты (fnmatch-подобный, с поддержкой "**") ---
 
 def _glob_to_regex(pattern: str) -> re.Pattern:
@@ -189,16 +205,30 @@ def select(frm: str, to: str, cmap: dict) -> dict:
             unknown.append(f)
 
     full_regression = bool(wide) or bool(unknown)
+    # M-C.4: маркер, НЕ фикс — исход (full_regression) не меняется по этому
+    # признаку; is_ancestor()==None (git не смог ответить) НЕ помечается
+    # осиротевшим (незнание не есть осиротение).
+    orphaned_range = is_ancestor(frm, to) is False
     return {
         "files": files, "ignored": ignored, "wide": wide, "unknown": unknown,
         "matched": matched, "areas": sorted(areas), "full_regression": full_regression,
+        "orphaned_range": orphaned_range,
     }
 
 
 def render(frm: str, to: str, result: dict) -> str:
-    lines = [
-        "# Impact selection",
-        "",
+    lines = ["# Impact selection", ""]
+    if result.get("orphaned_range"):
+        # M-C.4: видимый маркер мусорного диапазона, НЕ фикс — исход и так
+        # FULL REGRESSION по fail-safe (wide/unknown почти неизбежны на
+        # несвязанной истории), это диагностика для человека.
+        lines += [
+            "**ОСИРОТЕВШИЙ ДИАПАЗОН** — `frm` не является предком `to` "
+            "(force-push/переписанная история app-under-test?); маркер, не "
+            "фикс — исход селекции ниже не меняется этим признаком.",
+            "",
+        ]
+    lines += [
         f"Диапазон: `{frm}`..`{to}` (app-under-test/)",
         f"Файлов изменено: **{len(result['files'])}**",
         "",

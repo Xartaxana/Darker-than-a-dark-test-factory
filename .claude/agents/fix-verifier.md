@@ -30,9 +30,39 @@ tools: Read, Bash, Write, Edit
 ## Режимы (оркестратор передаёт `mode` в задаче; по умолчанию `verify`)
 
 ### mode=verify (docs/06 D1) — триггер: bug `Fixed` И есть сборка новее `found_in`
+«Новее found_in» (batch dual-mode 2026-08-10): коммит found_in — ПРЕДОК
+source_commit кандидата (`git merge-base --is-ancestor`) И built_at новее;
+versionCode для сравнения НЕвалиден (dev-local(12) у всех локальных сборок,
+dev-<IID> у CI — немонотонен между источниками). Несравнимые линии
+(force-push) — считается новее с явной пометкой в таблице.
+0. **Проверь `bug.verify_build_ref`** (канал «билд для проверки» от
+   разработчика, docs/06 §3а): непустой `pipeline:<iid>`/`job:<id>` →
+   верификация НА УКАЗАННОМ билде. Точные команды:
+   - скачать БЕЗ побочных эффектов: `python scripts/build_watch.py
+     --download-only <ref> --dest <scratchpad-каталог>` — печатает
+     `APK: <путь>` / `METADATA: <путь>`; yaml и канонический APK-файл
+     НЕ трогаются (КАНОНИЧЕСКИЙ файл перезаписывать ЗАПРЕЩЕНО — иначе
+     doctor-FAIL по sha следующим проходом);
+   - установить адресно: `powershell -NoProfile -ExecutionPolicy Bypass
+     -Command ". D:\AO3_tests\scripts\env.ps1; adb install -r -d
+     <путь скачанного APK>"`; отказ `INSTALL_FAILED_UPDATE_INCOMPATIBLE`
+     (подписи CI/local расходятся — известное состояние, HANDOFF п.5а) →
+     `adb uninstall com.example.ao3_wrapper` + повторный install, потерю
+     app state назови в витнессе;
+   - после верификации ВОССТАНОВИ канонический билд на устройстве:
+     `Install-App` (tasks.ps1; сам ставит файл по каноническому пути и
+     несёт `-r -d` + fallback подписей) — шаг обязателен, витнесс несёт
+     ОБЕ установки.
+   При Verified перепиши поле маркером `consumed:<ref>`; 404/протухший
+   артефакт → маркер `stale:<ref>` + эскалация + `awaiting: dev`
+   (верификация на другом билде молча НЕ ведётся). Маркеры
+   `consumed:`/`stale:` в поле → шаг no-op (обычная верификация на
+   текущей сборке).
 1. Установи новую сборку (`Install-App`), подними окружение.
 2. Прогони связанные `test_cases` + минимальный smoke вокруг области.
-3. Занеси строку в таблицу «Верификация» (дата, версия, TC, результат).
+3. Занеси строку в таблицу «Верификация» (дата; сборка — source_commit
+   ПЕРВИЧНО + фактические versionName/Code из output-metadata.json рядом
+   с APK; TC; результат).
 4. Прошли → `status: Verified` (закрыт), `fixed_in` подтверждён.
    Репро осталось → `status: Reopened`, `reopen_count += 1`, новые логи/скриншот.
    Если `reopen_count >= sla.reopened_pingpong` (state/sla.yaml) — не гоняй по кругу:

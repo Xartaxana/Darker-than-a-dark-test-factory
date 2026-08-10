@@ -382,9 +382,31 @@ function Wait-PackageServiceReady {
 function Install-App {
     # AT-BUG-013: короткое ожидание готовности package-сервиса перед первой
     # попыткой install - гонка с boot_completed=1 (см. Wait-PackageServiceReady).
+    # C9/E1 (spec-build-source-dual-mode v4): -d (allow version downgrade) -
+    # носитель принципа "любая установка при смене источника" в ШТАТНОМ пути,
+    # закрывает ВСЕ вызывающие роли разом (test-runner, fix-verifier,
+    # test-automator, run-suite, чартеры) без правки их промптов. Сборки
+    # отладочные, pm сохраняет данные при -d.
+    # B4 (критик-решение Lead, 2026-08-10): -d НЕ спасает от несовпадения
+    # подписи (INSTALL_FAILED_UPDATE_INCOMPATIBLE) - живой замер builder-
+    # смока показал, что CI-артефакт (провайдед) и local-сборка в этом
+    # проекте подписаны РАЗНЫМИ debug-ключами (KEYSTORE_BASE64 не настроен
+    # в .gitlab-ci.yml проекта) - переход provided<->local падает на этой
+    # ошибке НЕЗАВИСИМО от -d. Fallback: детект строки в выводе adb ->
+    # громкий WARN -> uninstall (пакет com.example.ao3_wrapper,
+    # settings.py:24 APP_PACKAGE) -> повторный install.
     param([int]$PackageServiceTimeoutSec = 30)
     Wait-PackageServiceReady -TimeoutSec $PackageServiceTimeoutSec | Out-Null
-    & "$env:ANDROID_HOME\platform-tools\adb.exe" install -r "$root\app-under-test\app\build\outputs\apk\debug\app-debug.apk"
+    $apk = "$root\app-under-test\app\build\outputs\apk\debug\app-debug.apk"
+    $adb = "$env:ANDROID_HOME\platform-tools\adb.exe"
+    $out = & $adb install -r -d $apk 2>&1
+    $out | ForEach-Object { Write-Output $_ }
+    if (($out -join "`n") -match "INSTALL_FAILED_UPDATE_INCOMPATIBLE") {
+        Write-Warning ("Install-App: подписи не совпадают (INSTALL_FAILED_UPDATE_INCOMPATIBLE) - " +
+            "uninstall+install, app state (данные приложения) будет потерян.")
+        & $adb uninstall com.example.ao3_wrapper | ForEach-Object { Write-Output $_ }
+        & $adb install -r -d $apk | ForEach-Object { Write-Output $_ }
+    }
 }
 
 function Invoke-Smoke {

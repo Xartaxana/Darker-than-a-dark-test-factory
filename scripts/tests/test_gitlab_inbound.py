@@ -104,6 +104,11 @@ def env(tmp_path, monkeypatch):
                         raising=True)
     monkeypatch.setattr(gi, "QAREADY_REGISTRY_PATH",
                         tmp_path / "state" / "gitlab-qaready.json", raising=True)
+    # M-D: курсор label-событий — ОТДЕЛЬНЫЙ файл (D2), тоже обязан жить в
+    # tmp_path — иначе тесты пишут в РЕАЛЬНЫЙ state/gitlab-label-cursor.json
+    # репозитория (класс бага CURSOR_PATH/QAREADY_REGISTRY_PATH выше).
+    monkeypatch.setattr(gi, "LABEL_CURSOR_PATH",
+                        tmp_path / "state" / "gitlab-label-cursor.json", raising=True)
     monkeypatch.setattr(bi, "ESCALATIONS_PATH", tmp_path / "state" / "escalations.md",
                         raising=True)
     return bugs_dir
@@ -400,7 +405,9 @@ def test_pagination_cap_exceeded_zero_writes_cursor_untouched_escalation(env, mo
 def test_check_clean_exit0(env, monkeypatch, capsys):
     _write_bug(env, "BUG-050", gitlab_issue=50)
     monkeypatch.setenv("GITLAB_TOKEN", "tok-123")
-    transport = FakeTransport([(200, [_note(1, system=True)])])
+    # [D6] --check с токеном ТЕПЕРЬ сетевой и для label-inbound: второй
+    # ответ — точечный QAready-скан (dry), пустая выдача -> ничего в капе.
+    transport = FakeTransport([(200, [_note(1, system=True)]), (200, [])])
     monkeypatch.setattr(gs, "_default_transport", transport, raising=True)
 
     code = gi.main(["--check"])
@@ -427,7 +434,7 @@ def test_check_no_token_degrades_exit0(env, monkeypatch, capsys):
 def test_check_pending_notes_exit1(env, monkeypatch, capsys):
     _write_bug(env, "BUG-051", gitlab_issue=51)
     monkeypatch.setenv("GITLAB_TOKEN", "tok-123")
-    transport = FakeTransport([(200, [_note(1, body="ещё не перенесено")])])
+    transport = FakeTransport([(200, [_note(1, body="ещё не перенесено")]), (200, [])])
     monkeypatch.setattr(gs, "_default_transport", transport, raising=True)
 
     code = gi.main(["--check"])
@@ -447,6 +454,7 @@ def test_check_partial_degradation_exit0_when_reachable_clean(env, monkeypatch, 
     transport = FakeTransport([
         (404, {"message": "Not Found"}),        # BUG-052
         (200, [_note(1, system=True)]),          # BUG-053 — доступен, чисто
+        (200, []),                               # [D6] QAready-скан (dry)
     ])
     monkeypatch.setattr(gs, "_default_transport", transport, raising=True)
 
@@ -468,6 +476,7 @@ def test_check_pending_takes_priority_over_partial_degradation(env, monkeypatch,
     transport = FakeTransport([
         (404, {"message": "Not Found"}),                 # BUG-054
         (200, [_note(1, body="висит непрочитанная")]),    # BUG-055
+        (200, []),                                        # [D6] QAready-скан (dry)
     ])
     monkeypatch.setattr(gs, "_default_transport", transport, raising=True)
 
@@ -543,6 +552,282 @@ def test_body_with_heading_line_does_not_close_section_chronological_order(env):
     assert first_i < second_i < checklist_i
     # квотированный '## ' не закрыл секцию для второй вставки
     assert "> ## Подзаголовок в теле ноты" in text
+
+
+# =============================================================================
+# A3(б): verify_build_ref из нот (spec-build-source-dual-mode v4)
+# =============================================================================
+
+def test_note_with_own_repo_pipeline_url_writes_verify_build_ref(env):
+    p = _write_bug(env, "BUG-070", gitlab_issue=70)
+    body = ("Проверь фикс на этом билде: "
+            "https://gitlab.com/Xartaxana1/ao3-wrapper/-/pipelines/999123")
+    client, _t = _client([(200, [_note(1, body=body)])])
+
+    gi.run(client, _selected(env), dry=False)
+
+    text = p.read_text(encoding="utf-8")
+    assert 'verify_build_ref: pipeline:999123' in text
+
+
+def test_note_with_own_repo_job_url_writes_verify_build_ref(env):
+    p = _write_bug(env, "BUG-071", gitlab_issue=71)
+    body = "job: https://gitlab.com/Xartaxana1/ao3-wrapper/-/jobs/555777"
+    client, _t = _client([(200, [_note(1, body=body)])])
+
+    gi.run(client, _selected(env), dry=False)
+
+    text = p.read_text(encoding="utf-8")
+    assert 'verify_build_ref: job:555777' in text
+
+
+def test_note_with_foreign_repo_url_does_not_match(env):
+    """Из внешнего текста берётся ТОЛЬКО число СВОЕГО repo — чужой repo-URL
+    (даже валидный GitLab pipeline URL другого проекта) не матчится."""
+    p = _write_bug(env, "BUG-072", gitlab_issue=72,
+                   extra='verify_build_ref: ""\n')
+    body = "See https://gitlab.com/someone-else/other-repo/-/pipelines/1 instead"
+    client, _t = _client([(200, [_note(1, body=body)])])
+
+    gi.run(client, _selected(env), dry=False)
+
+    text = p.read_text(encoding="utf-8")
+    assert 'verify_build_ref: ""' in text
+    assert "pipeline:1" not in text
+
+
+def test_note_without_url_leaves_verify_build_ref_untouched(env):
+    p = _write_bug(env, "BUG-073", gitlab_issue=73, extra='verify_build_ref: ""\n')
+    client, _t = _client([(200, [_note(1, body="просто комментарий без ссылок")])])
+
+    gi.run(client, _selected(env), dry=False)
+
+    text = p.read_text(encoding="utf-8")
+    assert 'verify_build_ref: ""' in text
+
+
+def test_check_dry_run_does_not_write_verify_build_ref(env, monkeypatch, capsys):
+    p = _write_bug(env, "BUG-074", gitlab_issue=74)
+    body = "https://gitlab.com/Xartaxana1/ao3-wrapper/-/pipelines/42"
+    monkeypatch.setenv("GITLAB_TOKEN", "tok-123")
+    transport = FakeTransport([(200, [_note(1, body=body)]), (200, [])])
+    monkeypatch.setattr(gs, "_default_transport", transport, raising=True)
+
+    gi.main(["--check"])
+
+    text = p.read_text(encoding="utf-8")
+    assert "verify_build_ref" not in text
+
+
+def test_new_note_overwrites_previous_verify_build_ref_perezapis(env):
+    """Reopened-жизненный цикл (C10, вне скоупа этого файла) — но writeback
+    ЭТОГО модуля обязан быть безусловной перезаписью: новая нота с новым
+    ref заменяет ЛЮБОЕ прежнее значение поля (consumed:/stale:/старый ref),
+    без специальной логики на стороне gitlab_inbound."""
+    p = _write_bug(env, "BUG-075", gitlab_issue=75,
+                   extra='verify_build_ref: "consumed:pipeline:1"\n')
+    body = "https://gitlab.com/Xartaxana1/ao3-wrapper/-/pipelines/2"
+    client, _t = _client([(200, [_note(1, body=body)])])
+
+    gi.run(client, _selected(env), dry=False)
+
+    text = p.read_text(encoding="utf-8")
+    assert 'verify_build_ref: pipeline:2' in text
+    assert "consumed:pipeline:1" not in text
+
+
+# =============================================================================
+# M-D: label-события QAready -> Fixed (spec-build-source-dual-mode v4)
+# =============================================================================
+
+def _label_event(event_id, *, action="add", label=gi.QAREADY_LABEL, username="dev",
+                 created="2026-08-09T10:00:00Z"):
+    return {"id": event_id, "action": action, "label": {"name": label},
+            "user": {"username": username}, "created_at": created}
+
+
+def test_run_gitlab_labels_add_event_on_open_bug_applies_fixed(env):
+    p = _write_bug(env, "BUG-080", status="Open", gitlab_issue=80)
+    selected = _selected(env)
+    client, transport = _client([(200, [_label_event(1)])])
+
+    result = gi.run_gitlab_labels(client, selected, {80}, dry=False)
+
+    assert result["outcome"] == "ok"
+    assert result["applied_bugs"] == ["BUG-080"]
+    text = p.read_text(encoding="utf-8")
+    assert "status: Fixed" in text
+    assert "awaiting: qa" not in text   # [D3] БЕЗ awaiting
+    assert "qa-status::QAready" in text or "выставлена на GitLab issue" in text
+    assert gi.load_label_cursor().get("BUG-080") == 1
+    assert len(transport.calls) == 1
+
+
+def test_run_gitlab_labels_reply_carries_event_created_at(env):
+    p = _write_bug(env, "BUG-081", status="Open", gitlab_issue=81)
+    client, _t = _client([(200, [_label_event(1, created="2026-08-09T12:34:56Z")])])
+
+    gi.run_gitlab_labels(client, _selected(env), {81}, dry=False)
+
+    text = p.read_text(encoding="utf-8")
+    assert "2026-08-09T12:34:56Z" in text
+
+
+def test_run_gitlab_labels_reopened_bug_also_triggers(env):
+    p = _write_bug(env, "BUG-082", status="Reopened", gitlab_issue=82)
+    client, _t = _client([(200, [_label_event(1)])])
+
+    result = gi.run_gitlab_labels(client, _selected(env), {82}, dry=False)
+
+    assert result["applied_bugs"] == ["BUG-082"]
+    assert "status: Fixed" in p.read_text(encoding="utf-8")
+
+
+def test_run_gitlab_labels_invariant_our_fixed_bug_not_second_flip(env):
+    """[Инвариант D5, обязателен]: наш ФИКСед баг, законно несущий QAready-
+    проекцию, НЕ триггерит второй флип — статус остаётся Fixed, cursor не
+    трогается, транспорт не опрашивается (status-гейт срабатывает ДО
+    сетевого запроса)."""
+    p = _write_bug(env, "BUG-083", status="Fixed", gitlab_issue=83)
+    client, transport = _client([])   # ни одного вызова не ожидается
+
+    result = gi.run_gitlab_labels(client, _selected(env), {83}, dry=False)
+
+    assert result["applied_bugs"] == []
+    assert "status: Fixed" in p.read_text(encoding="utf-8")
+    assert len(transport.calls) == 0
+    assert gi.load_label_cursor() == {}
+
+
+def test_run_gitlab_labels_non_add_action_ignored(env):
+    p = _write_bug(env, "BUG-084", status="Open", gitlab_issue=84)
+    client, _t = _client([(200, [_label_event(1, action="remove")])])
+
+    result = gi.run_gitlab_labels(client, _selected(env), {84}, dry=False)
+
+    assert result["applied_bugs"] == []
+    assert "status: Open" in p.read_text(encoding="utf-8")
+
+
+def test_run_gitlab_labels_other_label_ignored(env):
+    p = _write_bug(env, "BUG-085", status="Open", gitlab_issue=85)
+    client, _t = _client([(200, [_label_event(1, label="severity::major")])])
+
+    result = gi.run_gitlab_labels(client, _selected(env), {85}, dry=False)
+
+    assert result["applied_bugs"] == []
+    assert "status: Open" in p.read_text(encoding="utf-8")
+
+
+def test_run_gitlab_labels_idempotent_second_run_via_cursor(env):
+    p = _write_bug(env, "BUG-086", status="Open", gitlab_issue=86)
+    selected = _selected(env)
+    client1, _t1 = _client([(200, [_label_event(1)])])
+    gi.run_gitlab_labels(client1, selected, {86}, dry=False)
+    assert p.read_text(encoding="utf-8").count("status: Fixed") == 1
+
+    # Второй прогон: баг уже Fixed -> status-гейт исключает даже опрос сети
+    # (см. test_run_gitlab_labels_invariant_..._not_second_flip); здесь же
+    # подтверждаем реальный повторный select_bugs() видит Fixed.
+    selected2 = _selected(env)
+    assert selected2[0][3] == "Fixed"
+
+
+def test_run_gitlab_labels_repeat_add_after_remove_retriggers(env):
+    """Ре-триггер честный по построению: повторный `add` ПОСЛЕ `remove` —
+    новое событие с новым id, курсор его видит и триггерит снова (проверяем
+    на артефакте, вручную возвращённом в Open между вызовами — имитация
+    ручного reopen dev'ом)."""
+    p = _write_bug(env, "BUG-087", status="Open", gitlab_issue=87)
+    selected = _selected(env)
+    client1, _t1 = _client([(200, [_label_event(1, action="add")])])
+    gi.run_gitlab_labels(client1, selected, {87}, dry=False)
+    assert "status: Fixed" in p.read_text(encoding="utf-8")
+
+    # Человек переоткрыл баг руками (частая практика при откате).
+    bi.apply_status(p, "Reopened", dry=False)
+    selected2 = _selected(env)
+
+    client2, _t2 = _client([(200, [
+        _label_event(2, action="remove"), _label_event(3, action="add"),
+    ])])
+    result2 = gi.run_gitlab_labels(client2, selected2, {87}, dry=False)
+
+    assert result2["applied_bugs"] == ["BUG-087"]
+    assert "status: Fixed" in p.read_text(encoding="utf-8")
+    assert gi.load_label_cursor().get("BUG-087") == 3
+
+
+def test_run_gitlab_labels_pagination_cap_boundary_over_limit(env, monkeypatch):
+    monkeypatch.setattr(gi, "LABEL_EVENTS_PER_PAGE", 2, raising=True)
+    monkeypatch.setattr(gi, "LABEL_EVENTS_MAX_PAGES", 2, raising=True)
+    p = _write_bug(env, "BUG-088", status="Open", gitlab_issue=88)
+    client, transport = _client([
+        (200, [_label_event(1), _label_event(2)]),
+        (200, [_label_event(3), _label_event(4)]),
+    ])
+
+    result = gi.run_gitlab_labels(client, _selected(env), {88}, dry=False)
+
+    assert result["cap_bugs"] == ["BUG-088"]
+    assert "status: Open" in p.read_text(encoding="utf-8")   # ничего не применено
+    esc = bi.ESCALATIONS_PATH.read_text(encoding="utf-8")
+    assert "BUG-088" in esc
+    assert len(transport.calls) == 2
+
+
+def test_run_gitlab_labels_401_degrades_globally(env):
+    p = _write_bug(env, "BUG-089", status="Open", gitlab_issue=89)
+    p2 = _write_bug(env, "BUG-090", status="Open", gitlab_issue=90)
+    client, transport = _client([(401, {"message": "401 Unauthorized"})])
+
+    result = gi.run_gitlab_labels(client, _selected(env), {89, 90}, dry=False)
+
+    assert result["degraded"] is True
+    assert len(transport.calls) == 1   # второй баг не опрашивался
+
+
+def test_run_gitlab_labels_none_our_qaready_iids_is_skipped():
+    result = gi.run_gitlab_labels(object(), [], None, dry=False)
+    assert result["outcome"] == "skipped"
+
+
+def test_scan_qaready_returns_our_qaready_iids_for_d5_reuse(env):
+    """D5: scan_qaready переиспользуется run_gitlab_labels через
+    our_qaready_iids — наш Fixed-баг (несущий QAready-проекцию) присутствует
+    в выдаче и попадает в our_qaready_iids, НЕ в new_keys/foreign."""
+    _write_bug(env, "BUG-091", status="Fixed", gitlab_issue=91)
+    our_iids = {iid for _p, _b, iid, _s in _selected(env)}
+    client, _t = _client([
+        (200, [_qaready_issue(91, title="Наш баг", labels=["qa-status::QAready"]),
+              _qaready_issue(500, title="Чужая фича", labels=["qa-status::QAready"])]),
+    ])
+
+    result = gi.scan_qaready(client, our_iids, dry=False)
+
+    assert result["our_qaready_iids"] == {91}
+    assert result["new_keys"] == ["QAREADY-500"]
+
+
+def test_main_full_pass_applies_label_fixed_and_prints_summary(env, monkeypatch, capsys):
+    """Полный main() без --check: notes -> QAready E7 -> label-события M-D,
+    один общий вызов E7-выдачи (D5), точечный label-events запрос."""
+    p = _write_bug(env, "BUG-092", status="Open", gitlab_issue=92)
+    monkeypatch.setenv("GITLAB_TOKEN", "tok-123")
+    transport = FakeTransport([
+        (200, [_note(1, system=True)]),                                   # notes BUG-092
+        (200, [_qaready_issue(92, labels=["qa-status::QAready"])]),        # E7 (D5 общий)
+        (200, [_label_event(1)]),                                         # M-D точечный
+    ])
+    monkeypatch.setattr(gs, "_default_transport", transport, raising=True)
+
+    code = gi.main([])
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert "status: Fixed" in p.read_text(encoding="utf-8")
+    assert "label-события: 1 применено" in out
+    assert len(transport.calls) == 3
 
 
 # =============================================================================
@@ -715,12 +1000,14 @@ def test_sanitize_qaready_title_collapses_and_truncates():
 # --- --check [E2]: ключуется на обязанности escalations.md, не на реестре --
 
 def test_check_qaready_unresolved_line_gives_exit1(env, monkeypatch, capsys):
+    """[E2] Файловая QAready-обязанность НЕ делает живой скан для СЕБЯ
+    (ключуется на escalations.md) — но [D6] label-inbound делает точечный
+    сетевой QAready-скан (dry) для реконсиляции; здесь он пуст/безобиден,
+    exit1 даёт именно QAready-обязанность E2."""
     bi._append_escalation("QAREADY-999", "фича разработчика помечена QAready")
     monkeypatch.setenv("GITLAB_TOKEN", "tok-123")
-
-    def _boom(*_a, **_kw):
-        raise AssertionError("--check QAready не должен трогать сеть")
-    monkeypatch.setattr(gs, "_default_transport", _boom, raising=True)
+    transport = FakeTransport([(200, [])])   # [D6] точечный QAready-скан (dry)
+    monkeypatch.setattr(gs, "_default_transport", transport, raising=True)
 
     code = gi.main(["--check"])
     out = capsys.readouterr().out
@@ -742,10 +1029,8 @@ def test_check_qaready_resolved_line_is_clean(env, monkeypatch, capsys):
     bi.ESCALATIONS_PATH.write_text(text, encoding="utf-8")
 
     monkeypatch.setenv("GITLAB_TOKEN", "tok-123")
-
-    def _boom(*_a, **_kw):
-        raise AssertionError("--check QAready не должен трогать сеть")
-    monkeypatch.setattr(gs, "_default_transport", _boom, raising=True)
+    transport = FakeTransport([(200, [])])   # [D6] точечный QAready-скан (dry)
+    monkeypatch.setattr(gs, "_default_transport", transport, raising=True)
 
     code = gi.main(["--check"])
     out = capsys.readouterr().out
@@ -849,10 +1134,8 @@ def test_check_qaready_registry_does_not_gate_outcome(env, monkeypatch, capsys):
     gi._write_qaready_registry_atomic({"999": True})
     bi._append_escalation("QAREADY-999", "фича разработчика помечена QAready")
     monkeypatch.setenv("GITLAB_TOKEN", "tok-123")
-
-    def _boom(*_a, **_kw):
-        raise AssertionError("--check QAready не должен трогать сеть")
-    monkeypatch.setattr(gs, "_default_transport", _boom, raising=True)
+    transport = FakeTransport([(200, [])])   # [D6] точечный QAready-скан (dry)
+    monkeypatch.setattr(gs, "_default_transport", transport, raising=True)
 
     code = gi.main(["--check"])
 

@@ -46,8 +46,12 @@ def env(repo, monkeypatch):
     touch("state/rules.yaml")
     touch("state/sla.yaml")
     touch("schemas/transitions.yaml")
-    touch("state/app-under-test.yaml", "apk_path: app-under-test/app.apk\n")
-    touch("app-under-test/app.apk")
+    apk_p = touch("app-under-test/app.apk")
+    import hashlib
+    apk_sha = hashlib.sha256(apk_p.read_bytes()).hexdigest()
+    touch("state/app-under-test.yaml",
+          f'apk_path: app-under-test/app.apk\napk_sha256: "{apk_sha}"\n'
+          f'version_name: "1.10"\nversion_code: 11\n')
     # env.ps1 использует $root репозитория — подменяем подстановку на tmp-корень
     monkeypatch.setattr(dr, "_env_paths", lambda: {
         "JAVA_HOME": root / "tools" / "jdk",
@@ -90,6 +94,93 @@ def test_missing_apk_is_warn_not_fail(repo, env):
     apk = next(c for c in checks if c.name == "APK по apk_path")
     assert not apk.ok and apk.warn
     assert dr.main([]) == 0            # WARN не валит doctor
+
+
+# ---------------------------------------------------------------------------
+# A2/C1 (spec-build-source-dual-mode v4): sha256-чек APK против yaml —
+# ТРИ состояния границы, не наивный FAIL.
+# ---------------------------------------------------------------------------
+
+def _sha256_hex(data: bytes) -> str:
+    import hashlib
+    return hashlib.sha256(data).hexdigest()
+
+
+def test_apk_sha256_check_missing_file_is_warn(repo, env):
+    """Файла нет -> WARN (отдаётся существующему чеку «APK по apk_path»)."""
+    (repo.root / "app-under-test" / "app.apk").unlink()
+
+    checks = dr.run_checks()
+    chk = next(c for c in checks if c.name == "APK sha256 соответствует yaml")
+    assert not chk.ok and chk.warn
+    assert "файла нет" in chk.detail
+    assert dr.main([]) == 0
+
+
+def test_apk_sha256_check_empty_yaml_sha_is_warn(repo, env):
+    """apk_sha256 пуст в yaml -> WARN (сверка невозможна), не FAIL."""
+    env("state/app-under-test.yaml",
+        'apk_path: app-under-test/app.apk\napk_sha256: ""\n')
+
+    checks = dr.run_checks()
+    chk = next(c for c in checks if c.name == "APK sha256 соответствует yaml")
+    assert not chk.ok and chk.warn
+    assert dr.main([]) == 0
+
+
+def test_apk_sha256_check_unknown_yaml_sha_is_warn(repo, env):
+    env("state/app-under-test.yaml",
+        'apk_path: app-under-test/app.apk\napk_sha256: unknown\n')
+
+    checks = dr.run_checks()
+    chk = next(c for c in checks if c.name == "APK sha256 соответствует yaml")
+    assert not chk.ok and chk.warn
+    assert dr.main([]) == 0
+
+
+def test_apk_sha256_check_unknown_versions_is_warn(repo, env):
+    """M-B.2: версии 'unknown' (незавершённая запись сборки) -> WARN, даже
+    если apk_sha256 формально заполнен."""
+    apk = repo.root / "app-under-test" / "app.apk"
+    sha = _sha256_hex(apk.read_bytes())
+    env("state/app-under-test.yaml",
+        f'apk_path: app-under-test/app.apk\napk_sha256: "{sha}"\n'
+        f'version_name: "unknown"\nversion_code: unknown\n')
+
+    checks = dr.run_checks()
+    chk = next(c for c in checks if c.name == "APK sha256 соответствует yaml")
+    assert not chk.ok and chk.warn
+    assert dr.main([]) == 0
+
+
+def test_apk_sha256_check_matching_sha_is_ok(repo, env):
+    apk = repo.root / "app-under-test" / "app.apk"
+    sha = _sha256_hex(apk.read_bytes())
+    env("state/app-under-test.yaml",
+        f'apk_path: app-under-test/app.apk\napk_sha256: "{sha}"\n'
+        f'version_name: "1.10"\nversion_code: 11\n')
+
+    checks = dr.run_checks()
+    chk = next(c for c in checks if c.name == "APK sha256 соответствует yaml")
+    assert chk.ok and not chk.warn
+    assert dr.main([]) == 0
+
+
+def test_apk_sha256_check_mismatch_is_fail_with_recovery_path(repo, env):
+    """ОБА присутствуют И различаются -> FAIL с текстом пути восстановления."""
+    env("state/app-under-test.yaml",
+        'apk_path: app-under-test/app.apk\n'
+        'apk_sha256: "0000000000000000000000000000000000000000000000000000000000000000"\n'
+        'version_name: "1.10"\nversion_code: 11\n')
+
+    checks = dr.run_checks()
+    chk = next(c for c in checks if c.name == "APK sha256 соответствует yaml")
+    assert not chk.ok and not chk.warn
+    assert "build_watch.py" in chk.detail and "--provided" in chk.detail
+
+    assert dr.main([]) == 1   # FAIL валит doctor
+    esc = repo.read_artifact("state/escalations.md")
+    assert "APK sha256 соответствует yaml" in esc
 
 
 def test_shallow_clone_check_is_informational_not_fail(repo, env, monkeypatch):

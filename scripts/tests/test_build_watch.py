@@ -29,16 +29,23 @@ smoke_status: passed     # not_run | passed | failed
 regression_status: passed
 """
 
-GRADLE_KTS = 'android { defaultConfig { versionCode = 12\nversionName = "1.11" } }\n'
+METADATA_JSON = (
+    '{"version":3,"artifactType":{"type":"APK","kind":"Directory"},'
+    '"elements":[{"type":"SINGLE","versionCode":12,"versionName":"1.11",'
+    '"outputFile":"app-debug.apk"}]}'
+)
 
 
 def _setup(repo, *, new_commits=(MID_SHA, TIP_SHA)):
     aut = repo.root / "state" / "app-under-test.yaml"
     aut.parent.mkdir(parents=True, exist_ok=True)
     aut.write_text(AUT_TEXT, encoding="utf-8")
-    gradle = repo.root / "app-under-test" / "app" / "build.gradle.kts"
-    gradle.parent.mkdir(parents=True, exist_ok=True)
-    gradle.write_text(GRADLE_KTS, encoding="utf-8")
+    # M-B.1: источник версий — output-metadata.json РЯДОМ с APK (regex по
+    # gradle убран); FakeRunner создаёт APK при "успешной" gradlew-сборке,
+    # metadata кладём статически (не meняется по ходу теста).
+    metadata = repo.root / "app-under-test" / bw.METADATA_REL
+    metadata.parent.mkdir(parents=True, exist_ok=True)
+    metadata.write_text(METADATA_JSON, encoding="utf-8")
     return aut, list(new_commits)
 
 

@@ -187,6 +187,41 @@ def test_test_debt_guard_lets_factory_fix():
     assert tr.is_allowed("bug", "Open", "Fixed", "human", meta=debt)
 
 
+# --- M-D/E3 (spec-build-source-dual-mode v4): второй канал via_gitlab ------
+
+def test_open_to_fixed_by_human_carries_via_gitlab_flag():
+    """(C11/E3): флаг-сиблинг via_gitlab: true на строке Open->Fixed by human
+    — МЕНЯЕТ машинную матрицу (не просто аннотация в ref); актор остаётся
+    human (проводник — gitlab_inbound.py, тот же человек-разработчик)."""
+    matrix = yaml.safe_load((SCHEMAS / "transitions.yaml").read_text(encoding="utf-8"))
+    transitions = matrix["machines"]["bug"]["transitions"]
+    t = next(x for x in transitions if x["from"] == "Open" and x["to"] == "Fixed"
+             and x.get("by") == ["human"])
+    assert t.get("via_gitlab") is True
+    assert t.get("via_board") is True   # оба канала на одной строке
+
+
+def test_reopened_to_fixed_by_human_also_carries_via_gitlab_flag():
+    """(B3, критик-раунд 2026-08-10): код M-D флипает Open->Fixed И
+    Reopened->Fixed одинаково (process_label_events принимает status ∈
+    {Open, Reopened}) — матрица обязана описывать ОБА перехода, не только
+    Open->Fixed."""
+    matrix = yaml.safe_load((SCHEMAS / "transitions.yaml").read_text(encoding="utf-8"))
+    transitions = matrix["machines"]["bug"]["transitions"]
+    t = next(x for x in transitions if x["from"] == "Reopened" and x["to"] == "Fixed"
+             and x.get("by") == ["human"])
+    assert t.get("via_gitlab") is True
+    assert t.get("via_board") is True
+
+
+def test_gitlab_inbound_registered_in_factory_actor_group():
+    """gitlab_inbound — новый актор группы factory (проводник второго
+    канала M-D); validate() обязан знать его (иначе неизвестный актор был
+    бы найден чеком целостности)."""
+    matrix = yaml.safe_load((SCHEMAS / "transitions.yaml").read_text(encoding="utf-8"))
+    assert "gitlab_inbound" in matrix["actors"]["groups"]["factory"]
+
+
 # --- паритет board-whitelist (регрессия на переезд с литерала) --------------
 
 LEGACY_WHITELIST = {
