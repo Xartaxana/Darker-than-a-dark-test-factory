@@ -15,26 +15,38 @@ import json
 from pathlib import Path
 
 from board_sync import (  # переиспользуем парсер и метаданные статусов — один источник
-    REPO, STATUSES, STATUS_MAP, _assignee_for, _board_status_for, _iter_artifacts,
-    _labels_for, _priority_for,
+    REPO, STATUSES, STATUS_MAP, STORY_STAGE_IDS, _assignee_for, _board_status_for,
+    _iter_artifacts, _labels_for, _priority_for,
 )
+# Общий сборщик story-данных (M-SB2 спеки story-board) — импортируется КАК
+# ФУНКЦИЯ; board_sync.REPO читается ВНУТРИ collect_stories() в момент вызова,
+# не в момент импорта этого модуля (conftest.py:144-149 патчит bs.REPO/bv.REPO
+# по отдельности именно из-за копии REPO ниже — сама функция не копия, ссылка
+# на неё разрешает REPO лениво через модульный namespace board_sync).
+import board_sync as bs
 
 OUT = REPO / "board-view.html"
 
 STATUS_NAME = {sid: name for sid, name, _ in STATUSES}
 STATUS_CAT = {sid: cat for sid, _, cat in STATUSES}
 CAT_COLOR = {"new": "#b23", "indeterminate": "#b70", "done": "#264"}
-TYPE_TITLE = {"test-case": "Test Cases", "bug": "Bugs", "run": "Test Runs"}
+TYPE_TITLE = {"test-case": "Test Cases", "bug": "Bugs", "run": "Test Runs", "story": "Stories"}
 # Порядок колонок по типам (наши статусные машины)
 COLUMNS = {
     "test-case": ["tc-draft", "tc-review", "tc-approved", "tc-awaiting-review", "tc-automated"],
     "bug": ["bug-open", "bug-reopened", "bug-blocked", "bug-fixed", "bug-verified", "bug-rejected", "bug-intended"],
     "run": ["run-needstriage", "run-triaged", "run-closed"],
+    "story": STORY_STAGE_IDS,
 }
 
 
-def collect():
-    by_type: dict[str, list[dict]] = {"test-case": [], "bug": [], "run": []}
+def _collect_with_story_meta():
+    """Как collect(), но ДОПОЛНИТЕЛЬНО возвращает (stories, warnings) сырыми —
+    build() печатает WARN/строки story-<iid> без ВТОРОГО вызова
+    bs.collect_stories() (тот же вызов, что уже отработал внутри, печатает
+    Б5-строки игнора CAP/SYNC-RACE — повторный вызов дублировал бы их в
+    выводе)."""
+    by_type: dict[str, list[dict]] = {"test-case": [], "bug": [], "run": [], "story": []}
     for itype, meta, body, src in _iter_artifacts():
         status_id = STATUS_MAP[itype].get(str(meta.get("status", "")))
         derived_status = _board_status_for(itype, meta)
@@ -57,6 +69,28 @@ def collect():
             "src": src.relative_to(REPO).as_posix(),
             "body": body.strip(),
         })
+
+    # Story-цепочка (spec-story-board v3, M-SB3): общий сборщик — карточки НЕ
+    # файловые артефакты, поэтому мимо _iter_artifacts() выше; READ-ONLY, БЕЗ
+    # priority/severity/src/approve — story-карточка их не несёт (заметка 3
+    # спеки: без POST-контролов approve/priority/severity).
+    stories, warnings = bs.collect_stories()
+    for s in stories:
+        by_type["story"].append({
+            "key": f"story-{s['iid']}",
+            "itype": "story",
+            "summary": s["title"] or f"story-{s['iid']}",
+            "status": s["stage_id"],
+            "status_name": s["stage_name"],
+            "badges": s["badges"],
+            "tc_keys": s["tc_keys"],
+            "bug_keys": s["bug_keys"],
+        })
+    return by_type, stories, warnings
+
+
+def collect():
+    by_type, _stories, _warnings = _collect_with_story_meta()
     return by_type
 
 
@@ -131,6 +165,46 @@ def render(by_type, live: bool = False) -> str:
             f'<div class="board">{"".join(cols_html)}</div>'
         )
 
+    # Story-цепочка (M-SB3): отдельный, упрощённый шаблон карточки — READ-ONLY,
+    # БЕЗ approve/priority/severity-контролов (заметка 3 спеки), с бейджами и
+    # списками TC/багов зоны прямо на карточке.
+    story_tickets = by_type.get("story", [])
+    total += len(story_tickets)
+    story_cols_html = []
+    for sid in COLUMNS["story"]:
+        cards = [t for t in story_tickets if t["status"] == sid]
+        for t in cards:
+            detail_map[t["key"]] = {
+                "summary": t["summary"],
+                "body": (
+                    f"Стадия: {t['status_name']}\n\n"
+                    f"Бейджи: {', '.join(t['badges']) if t['badges'] else '—'}\n\n"
+                    f"TC зоны: {', '.join(t['tc_keys']) if t['tc_keys'] else '—'}\n\n"
+                    f"Баги: {', '.join(t['bug_keys']) if t['bug_keys'] else '—'}"
+                ),
+                "src": "story (escalations.md + feature-registry.yaml)",
+                "status": t["status_name"], "priority": "—",
+            }
+        card_html = "".join(
+            f'<div class="card story-card" data-key="{esc(t["key"])}" '
+            f'onclick="openDetail(event, \'{esc(t["key"])}\')">'
+            f'<div class="k">{esc(t["key"])}</div>'
+            f'<div class="s">{esc(t["summary"])}</div>'
+            f'<div class="lbls">{"".join(f"<span>{esc(b)}</span>" for b in t["badges"])}</div>'
+            f'<div class="storylinks">TC: {esc(", ".join(t["tc_keys"]) or "—")}<br>'
+            f'Баги: {esc(", ".join(t["bug_keys"]) or "—")}</div>'
+            f'</div>'
+            for t in cards
+        )
+        story_cols_html.append(
+            f'<div class="col"><div class="colhead" style="border-color:{CAT_COLOR[STATUS_CAT[sid]]}">'
+            f'{esc(STATUS_NAME[sid])} <b>{len(cards)}</b></div>{card_html or "<div class=empty>—</div>"}</div>'
+        )
+    sections.append(
+        f'<h2>{esc(TYPE_TITLE["story"])} <span class="cnt">{len(story_tickets)}</span></h2>'
+        f'<div class="board">{"".join(story_cols_html)}</div>'
+    )
+
     if live:
         # На сервере каждый GET пересобирает доску из артефактов, поэтому кнопка = reload.
         refresh_btn = '<button class="refresh" onclick="location.reload()" title="Пересобрать из артефактов">↻ Обновить</button>'
@@ -160,6 +234,7 @@ h2{{margin:26px 0 10px;font-size:16px}} .cnt{{color:#888;font-weight:normal}}
 .pP0{{background:#c0392b;color:#fff}}.pP1{{background:#e08600;color:#fff}}.pP2{{background:#dfd8cf;color:#333}}.pP3{{background:#eee;color:#777}}
 .pri-select{{border:none;font:700 10px system-ui;cursor:pointer;appearance:none;-webkit-appearance:none}}
 .lbls span{{display:inline-block;font-size:10px;color:#777;background:#f1ece7;border-radius:6px;padding:0 5px;margin:2px 3px 0 0}}
+.storylinks{{font-size:10.5px;color:#888;margin-top:4px;line-height:1.4}}
 .agentrow{{margin-top:3px}}
 .agent{{display:inline-block;font-size:10px;font-weight:600;color:#fff;background:#5b3fa0;border-radius:8px;padding:1px 6px}}
 .empty{{color:#bbb;text-align:center;padding:6px}}
@@ -377,10 +452,18 @@ async function approveCard(key, btn) {{
 
 
 def build():
-    by_type = collect()
+    by_type, stories, warnings = _collect_with_story_meta()
     OUT.write_text(render(by_type), encoding="utf-8")
     n = sum(len(v) for v in by_type.values())
     print(f"board-view.html собран: {n} тикетов -> {OUT}")
+
+    # M-SB3/M-SB4: строки story-<iid> + WARN двусторонний в выводе (оператор
+    # видит) — ИЗ ТОГО ЖЕ вызова collect_stories() внутри _collect_with_story_meta(),
+    # не повторного (иначе Б5-строки игнора CAP/SYNC-RACE задублировались бы).
+    for w in warnings:
+        print(f"  [WARN] {w}")
+    for s in stories:
+        print(f"story-{s['iid']}: стадия {s['stage_name']}")
 
 
 if __name__ == "__main__":

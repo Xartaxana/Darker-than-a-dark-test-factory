@@ -334,6 +334,10 @@ def render(data: dict, generated_at: str) -> str:
         f"generated_at: {generated_at} · генератор: `scripts/queue_snapshot.py`",
         "Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). "
         "Ручные числа в HANDOFF/докках не имеют силы.",
+        # Критик-вход (spec-story-board v3, доработка Б-пакет): story-карточки
+        # борды сами не отражены в этом файле (борда, не очередь) — ссылка на
+        # легенду, чтобы читатель шапки не искал их здесь напрасно.
+        "story-карточки: стадии см. docs/05-board.md §Story",
         "",
     ]
     lines += _render_release_readiness(data, generated_at)

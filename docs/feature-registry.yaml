@@ -204,6 +204,9 @@ features:
     title: "Фоновое открытие вкладки подтверждается снекбаром «Opened in background (N tabs)» со счётчиком всех вкладок; следующее открытие подряд заменяет сообщение новым счётчиком, а не встаёт в очередь"
     screen: browse
     source: "app/src/main/java/com/example/ao3_wrapper/MainActivity.kt"
+    # spec-story-board v3 (Б8): затронута зоной QAREADY-26 (library card ->
+    # open in background tab) — общий путь фонового открытия, тот же снекбар.
+    story: 26
   - id: browse-tab-switch-active
     title: "Тап по чипу неактивной вкладки делает её активной: показываемый контент WebView переключается на эту вкладку, индикатор активности перемещается (switchTab)"
     screen: browse
@@ -413,6 +416,9 @@ features:
     title: "Смена сортировки сбрасывает скролл списка на верх (сравнение с сохранённым lastSort — на повторном входе во вкладку без смены сортировки сброса НЕТ)"
     screen: library
     source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+    # spec-story-board v3 (Б8): затронута зоной QAREADY-28 (та же грань
+    # LibraryScreen.kt lastSort/scroll механизма, уточнённая тем же коммитом).
+    story: 28
   # НОВАЯ запись (test-strategist 2026-08-09; коммит 6f884d97 / #28,
   # QAREADY-28). Наблюдаемо различимое поведение: позиция скролла КАЖДОЙ
   # вкладки Library сохраняется при переключении между вкладками и возврате.
@@ -426,6 +432,8 @@ features:
     title: "Позиция скролла каждой вкладки Library сохраняется при переключении на другую вкладку и возврате обратно"
     screen: library
     source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+    # spec-story-board v3 (Б8): затронута зоной QAREADY-28 (коммит 6f884d97 / #28).
+    story: 28
   # НОВАЯ запись (test-strategist 2026-08-09; вторая грань того же коммита).
   # Then отличается и от «скролл сохранился», и от «сортировка сбросила
   # скролл»: сортировка сменена, ПОКА вкладка была вне экрана, — сброс
@@ -437,6 +445,9 @@ features:
     title: "Сортировка, изменённая пока вкладка Library была вне экрана, сбрасывает её скролл на верх при возврате на эту вкладку (а не показывает новый порядок со старым смещением)"
     screen: library
     source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+    # spec-story-board v3 (Б8): затронута зоной QAREADY-28 (та же грань
+    # отложенного сброса скролла, коммит 6f884d97).
+    story: 28
   # ПРОБЕЛ РЕЕСТРА (переинвентаризация 2026-08-09; фича жила и на 63f6aac).
   # Выбор сортировки ОДИН на весь экран и хранится в `MainActivity`
   # (`:289` `var librarySortBy by remember` — НЕ saveable, не persisted). Если
@@ -560,6 +571,8 @@ features:
     title: "Действие «Open in background tab» в overlay длинного нажатия по карточке Library открывает работу (на Files — её локальный файл) в фоновой вкладке, НЕ уходя с экрана Library"
     screen: library
     source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+    # spec-story-board v3 (Б8): рождена зоной QAREADY-26 (коммит 6e43b14 / #26).
+    story: 26
   - id: library-card-comment-tags
     title: "Индикатор комментария (note-иконка) и личных тегов на карточке"
     screen: library
