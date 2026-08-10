@@ -1,0 +1,67 @@
+2961:9:websocket;0:~8:response;1569:6:reason;2:OK,11:status_code;3:200#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;1342:<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>TC-186 Scraped Work Title | Archive of Our Own</title></head>
+<body>
+<div id="main" class="works-show region" role="main">
+  <div id="workskin">
+    <div class="preface group">
+      <h2 class="title heading">TC-186 Scraped Work Title</h2>
+      <h3 class="byline heading"><a rel="author" href="/users/scraped_author_186/pseuds/scraped_author_186">scraped_author_186</a></h3>
+      <h5 class="fandom tags"><a class="tag" href="/tags/Scraped Fandom One/works">Scraped Fandom One</a></h5>
+    </div>
+    <dl class="work meta group">
+      <dt class="fandom tags">Fandom:</dt>
+      <dd class="fandom tags">
+        <ul class="commas">
+          <li><a class="tag" href="/tags/Scraped Fandom One/works">Scraped Fandom One</a></li>
+        </ul>
+      </dd>
+    </dl>
+    <div class="wrapper">
+      <p>Test fixture body for metadata-fetch recording (AT-BUG-061).</p>
+      <dl class="stats">
+        <dt class="words">Words:</dt><dd class="words">4321</dd>
+        <dt class="chapters">Chapters:</dt><dd class="chapters">1/1</dd>
+        <dt class="comments">Comments:</dt><dd class="comments">0</dd>
+        <dt class="kudos">Kudos:</dt><dd class="kudos">0</dd>
+        <dt class="hits">Hits:</dt><dd class="hits">1</dd>
+      </dl>
+    </div>
+  </div>
+</div>
+</body>
+</html>
+,7:headers;77:44:12:Content-Type,24:text/html; charset=utf-8,]25:14:content-length,4:1342,]]12:http_version;8:HTTP/1.1,}7:request;271:4:path;32:/works/900000186?view_adult=true,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:da6cb450-c986-9550-0771-3954ea0a4d51;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:7558a764-0e58-7ae8-f72a-4f94c7b2555b;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:b1ac339d-74d1-b549-957e-2e9953cfad8a;4:type;4:http;7:version;2:21#}2975:9:websocket;0:~8:response;1583:6:reason;2:OK,11:status_code;3:200#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;1356:<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>TC-187 Second Scraped Work Title | Archive of Our Own</title></head>
+<body>
+<div id="main" class="works-show region" role="main">
+  <div id="workskin">
+    <div class="preface group">
+      <h2 class="title heading">TC-187 Second Scraped Work Title</h2>
+      <h3 class="byline heading"><a rel="author" href="/users/scraped_author_187/pseuds/scraped_author_187">scraped_author_187</a></h3>
+      <h5 class="fandom tags"><a class="tag" href="/tags/Scraped Fandom Two/works">Scraped Fandom Two</a></h5>
+    </div>
+    <dl class="work meta group">
+      <dt class="fandom tags">Fandom:</dt>
+      <dd class="fandom tags">
+        <ul class="commas">
+          <li><a class="tag" href="/tags/Scraped Fandom Two/works">Scraped Fandom Two</a></li>
+        </ul>
+      </dd>
+    </dl>
+    <div class="wrapper">
+      <p>Test fixture body for metadata-fetch recording (AT-BUG-061).</p>
+      <dl class="stats">
+        <dt class="words">Words:</dt><dd class="words">1234</dd>
+        <dt class="chapters">Chapters:</dt><dd class="chapters">1/1</dd>
+        <dt class="comments">Comments:</dt><dd class="comments">0</dd>
+        <dt class="kudos">Kudos:</dt><dd class="kudos">0</dd>
+        <dt class="hits">Hits:</dt><dd class="hits">1</dd>
+      </dl>
+    </div>
+  </div>
+</div>
+</body>
+</html>
+,7:headers;77:44:12:Content-Type,24:text/html; charset=utf-8,]25:14:content-length,4:1356,]]12:http_version;8:HTTP/1.1,}7:request;271:4:path;32:/works/900000187?view_adult=true,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:644171d2-210f-aeb5-94b8-2f23d0b4b558;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:28d23c99-4bad-fce2-8b1f-13d3b0d50abe;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:9fda731f-c5eb-6f54-a2a1-58568cca95e2;4:type;4:http;7:version;2:21#}1724:9:websocket;0:~8:response;333:6:reason;9:Not Found,11:status_code;3:404#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;101:<!DOCTYPE html><html><head><title>Page Not Found</title></head><body><h1>Error 404</h1></body></html>,7:headers;76:44:12:Content-Type,24:text/html; charset=utf-8,]24:14:content-length,3:101,]]12:http_version;8:HTTP/1.1,}7:request;271:4:path;32:/works/900000188?view_adult=true,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:7d2b2e80-5443-25d0-756d-c8e01857e39c;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:9a75b399-1abc-65e9-abde-937486ed1df4;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:bb011594-6c67-49d4-80d3-09e8314f223f;4:type;4:http;7:version;2:21#}

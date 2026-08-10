@@ -180,6 +180,37 @@ def build_works_multi() -> Path:
     return path
 
 
+def build_work_metadata_fetch() -> Path:
+    """AT-BUG-061: HttpURLConnection-путь «Fetch missing metadata»
+    (`SettingsViewModel.fetchAo3WorkPage`, `works/<id>?view_adult=true`) — ТРИ
+    flow, закрывающие TC-186 (работа A — успешный скрейп; работа B — HTTP 404,
+    скрейп не даёт результата) и TC-187 (работа A переиспользуется как D —
+    первая обработанная до Stop; работа SECOND как E — вторая, записана НА
+    СЛУЧАЙ, если таймингом реального устройства запрос всё же успеет уйти до
+    отмены, хотя код `fetchMissingMetadata` проверяет `isActive` ДО вызова
+    `fetchAo3WorkPage` и обычно вовсе не отправляет его для E, см.
+    `bugs/AT-BUG-061.md`). `render_work_metadata_page_html` — ОТДЕЛЬНЫЙ рендер
+    от `render_work_page_html` (см. её докстринг в `recording_builder.py`) —
+    под РЕГЕКС-парсер `parseAo3WorkHtml`, не под bridge-JS/листинг."""
+    work_a_flow = rb.make_html_get_flow(
+        rb.work_metadata_fetch_url(rb.METADATA_FETCH_WORK_A.ao3_id),
+        rb.render_work_metadata_page_html(rb.METADATA_FETCH_WORK_A),
+    )
+    work_second_flow = rb.make_html_get_flow(
+        rb.work_metadata_fetch_url(rb.METADATA_FETCH_WORK_SECOND.ao3_id),
+        rb.render_work_metadata_page_html(rb.METADATA_FETCH_WORK_SECOND),
+    )
+    work_b_404_flow = rb.make_html_get_flow(
+        rb.work_metadata_fetch_url(rb.METADATA_FETCH_WORK_B_AO3_ID),
+        "<!DOCTYPE html><html><head><title>Page Not Found</title></head>"
+        "<body><h1>Error 404</h1></body></html>",
+        status=404,
+    )
+    path = settings.RECORDINGS_DIR / rb.WORK_METADATA_FETCH_FILENAME
+    rb.write_flows(path, [work_a_flow, work_second_flow, work_b_404_flow])
+    return path
+
+
 def main() -> None:
     for path in (
         build_listing_basic(),
@@ -188,6 +219,7 @@ def main() -> None:
         build_tab_markers(),
         build_listing_paginated(),
         build_works_multi(),
+        build_work_metadata_fetch(),
     ):
         print(f"written: {path}")
 

@@ -235,8 +235,18 @@ def _server_conn(host: str, url: str) -> connection.Server:
     )
 
 
-def make_html_get_flow(url: str, body: str) -> http.HTTPFlow:
-    """Один flow: `GET {url}` -> `200 text/html`, тело `body`.
+def make_html_get_flow(url: str, body: str, status: int = 200) -> http.HTTPFlow:
+    """Один flow: `GET {url}` -> `{status} text/html`, тело `body`.
+
+    `status` (AT-BUG-061, доработка): по умолчанию `200` — сигнатура/поведение
+    для ВСЕХ существующих вызовов (без явного `status=`) байт-в-байт та же, что
+    до этого параметра. Явный `status=404` (и т.п.) — синтетическая ошибка
+    HTTP на РЕАЛЬНОМ пути через server-replay (не исключение транспорта): нужен
+    `build_work_metadata_fetch` — `fetchAo3WorkPage` (SettingsScreen.kt:259-284)
+    трактует код 404 как «работа не существует» и возвращает `null` НЕМЕДЛЕННО,
+    без ретраев/`delay()` (в отличие от прочих кодов/исключений — до 3 попыток
+    по 5с) — детерминированный и быстрый способ смоделировать «скрейп не дал
+    результата» без ожидания реального таймаута.
 
     Все таймстемпы/id зафиксированы на детерминированные значения: `Flow.__init__`,
     `Request.make`/`Response.make` по умолчанию берут `uuid.uuid4()`/`time.time()`
@@ -252,7 +262,7 @@ def make_html_get_flow(url: str, body: str) -> http.HTTPFlow:
     flow.request.timestamp_start = 0
     flow.request.timestamp_end = 0
     flow.response = http.Response.make(
-        200, body.encode("utf-8"), {"Content-Type": "text/html; charset=utf-8"}
+        status, body.encode("utf-8"), {"Content-Type": "text/html; charset=utf-8"}
     )
     flow.response.timestamp_start = 0
     flow.response.timestamp_end = 0
@@ -645,6 +655,120 @@ def render_downloaded_work_html(work: Work) -> str:
 <div id="chapters">
   <div class="userstuff">
     <p>Downloaded fixture body for {title}.</p>
+  </div>
+</div>
+</body>
+</html>
+"""
+
+
+# --- AT-BUG-061: work-страница для HttpURLConnection-пути «Fetch missing
+# metadata» (`SettingsViewModel.fetchAo3WorkPage`/`parseAo3WorkHtml`,
+# SettingsScreen.kt:259-319) — URL-шаблон `works/<id>?view_adult=true`,
+# ДРУГОЙ сетевой стек (голый `HttpURLConnection`, не WebView-навигация и не
+# `OkHttpClient` download-flow) И ДРУГОЙ парсер (`parseAo3WorkHtml` — узкие
+# regex на СЫРОЙ HTML-строке, не `document.querySelector`/bridge-JS). Матчинг
+# server-replay не зависит от сетевого стека клиента (см. модульный докстринг —
+# только scheme+method+path+query+host+port, без заголовков), поэтому тот же
+# приём (`make_html_get_flow`) годится и для этого класса трафика; факт, что
+# device-wide прокси реально перехватывает ИМЕННО `HttpURLConnection` этого
+# пути (не только уже проверенные WebView/`OkHttpClient`), — эмпирически
+# сверен отдельным мини-прогоном приложения в replay, задокументированным в
+# `bugs/AT-BUG-061.md` §Обсуждение (по образцу проверки `work_with_download.mitm`
+# в AT-BUG-004), не только выведен из кода.
+#
+# `parseAo3WorkHtml` регексы ОТЛИЧАЮТСЯ от `render_work_page_html`/`_blurb_html`
+# (download-flow/листинг): fandom ищет `<dd[^>]+class="fandom tags"[^>]*>(.*?)</dd>`
+# — ПОЛНЫЙ tags-список реального AO3 (`dl.work.meta.group`, "Associated names"),
+# НЕ `<h5 class="fandom tags">` preface-строку (`render_work_page_html`); word
+# count ищет `<dd[^>]+class="words"[^>]*>([\d,]+)</dd>` статистики (`dl.stats`),
+# которой `render_work_page_html` вовсе не несёт (та функция строит
+# download-flow страницу — `dl.stats` там не нужен). Поэтому — ОТДЕЛЬНЫЙ рендер,
+# не переиспользование `render_work_page_html`/`_blurb_html`: смешение сломало
+# бы позиционные инварианты существующих юнитов AT-BUG-030/035 (порядок узлов
+# относительно `_download_list_html`/`.wrapper` в `render_work_page_html`) и
+# дало бы разметку, НЕ бьющую с реальным regex-парсером этого пути.
+WORK_METADATA_FETCH_FILENAME = "work_metadata_fetch.mitm"
+
+# ao3_id из «безопасного» синтетического диапазона (конвенция `works.py`) — НЕ
+# пересекается ни с одним ao3_id, зарезервированным в `framework/data/works.py`
+# (сверено: 900000001-5, 900000901-10, 900000038/039/031/271/272/103).
+# `title`/`author`/`fandom`/`word_count` этих `Work` — ЦЕЛЕВОЙ (скрейпнутый)
+# результат, а НЕ текущее состояние строки Room: Given TC-186/187 засевает
+# строку с ЭТИМ ЖЕ `ao3_id`, но `title=""` (см. `bugs/AT-BUG-061.md` критерий
+# готовности) — сравнение "before/after" и есть проверяемый факт кейсов.
+METADATA_FETCH_WORK_A = Work(
+    "900000186", "TC-186 Scraped Work Title", "scraped_author_186",
+    "Scraped Fandom One", 4321,
+)
+METADATA_FETCH_WORK_SECOND = Work(
+    "900000187", "TC-187 Second Scraped Work Title", "scraped_author_187",
+    "Scraped Fandom Two", 1234,
+)
+# Работа B (TC-186 Given, "скрейп НЕ даёт результата"): записана как HTTP 404
+# (`make_html_get_flow(status=404)`) на ЭТОТ ao3_id — `fetchAo3WorkPage` трактует
+# 404 как «работы не существует» и возвращает `null` НЕМЕДЛЕННО (без ретраев/
+# `delay()`, в отличие от прочих кодов/исключений). Без отдельного `Work`
+# (title/author/fandom для несуществующей страницы не нужны).
+METADATA_FETCH_WORK_B_AO3_ID = "900000188"
+
+
+def work_metadata_fetch_url(ao3_id: str) -> str:
+    """`fetchAo3WorkPage` строит URL как
+    `"https://archiveofourown.org/works/$ao3Id?view_adult=true"`
+    (SettingsScreen.kt:260) — воспроизводим 1:1 (server-replay матчит по
+    scheme+method+path+query+host+port, см. модульный докстринг)."""
+    return f"https://archiveofourown.org/works/{ao3_id}?view_adult=true"
+
+
+def render_work_metadata_page_html(work: Work) -> str:
+    """Work-страница под РЕГЕКСЫ `parseAo3WorkHtml` (SettingsScreen.kt:287-318),
+    не под bridge-JS/`document.querySelector` (см. блочный докстринг выше):
+    - title: `<h2[^>]+class="[^"]*title[^"]*"[^>]*>...</h2>` — та же форма, что
+      `render_work_page_html`/`_blurb_html` уже используют (`h2.title.heading`).
+    - author: `<a[^>]+rel="author"[^>]*>...</a>` — форма не зависит от
+      родительского тега (`h3.byline.heading`, как у реального AO3/download-flow).
+    - fandom: `<dd[^>]+class="fandom tags"[^>]*>(.*?)</dd>` (DOT_MATCHES_ALL),
+      внутри — `<a[^>]+class="tag"[^>]*>...</a>`. РЕАЛЬНЫЙ AO3 несёт fandom
+      ДВАЖДЫ (preface `h5.fandom.tags` для людей + tags-список `dl.work.meta.group`
+      `dd.fandom.tags` для машинного разбора) — эта фикстура несёт ОБА узла:
+      preface (человекочитаемый, той же формы, что `render_work_page_html`) И
+      `dd.fandom.tags` (то, что реально парсит приложение).
+    - word count: `<dd[^>]+class="words"[^>]*>([\\d,]+)</dd>` — статистика
+      `dl.stats`, отдельная от preface."""
+    title = html.escape(work.title)
+    author = html.escape(work.author)
+    fandom = html.escape(work.fandom)
+    word_count = work.word_count if work.word_count is not None else 0
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>{title} | Archive of Our Own</title></head>
+<body>
+<div id="main" class="works-show region" role="main">
+  <div id="workskin">
+    <div class="preface group">
+      <h2 class="title heading">{title}</h2>
+      <h3 class="byline heading"><a rel="author" href="/users/{author}/pseuds/{author}">{author}</a></h3>
+      <h5 class="fandom tags"><a class="tag" href="/tags/{fandom}/works">{fandom}</a></h5>
+    </div>
+    <dl class="work meta group">
+      <dt class="fandom tags">Fandom:</dt>
+      <dd class="fandom tags">
+        <ul class="commas">
+          <li><a class="tag" href="/tags/{fandom}/works">{fandom}</a></li>
+        </ul>
+      </dd>
+    </dl>
+    <div class="wrapper">
+      <p>Test fixture body for metadata-fetch recording (AT-BUG-061).</p>
+      <dl class="stats">
+        <dt class="words">Words:</dt><dd class="words">{word_count}</dd>
+        <dt class="chapters">Chapters:</dt><dd class="chapters">1/1</dd>
+        <dt class="comments">Comments:</dt><dd class="comments">0</dd>
+        <dt class="kudos">Kudos:</dt><dd class="kudos">0</dd>
+        <dt class="hits">Hits:</dt><dd class="hits">1</dd>
+      </dl>
+    </div>
   </div>
 </div>
 </body>

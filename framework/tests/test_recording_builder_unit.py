@@ -696,3 +696,132 @@ def test_works_multi_work_pages_have_kudo_submit_node(works_multi_flows):
         assert 'id="kudo_submit"' in body
         onclick_js = _extract_kudo_onclick(body)
         assert "data-kudo-clicked" in onclick_js
+
+
+# --- work_metadata_fetch.mitm (AT-BUG-061) — HttpURLConnection-путь «Fetch
+# missing metadata» (`SettingsViewModel.fetchAo3WorkPage`/`parseAo3WorkHtml`,
+# `works/<id>?view_adult=true`), закрывает блокер TC-186/TC-187.
+#
+# Регекс-эквивалент `parseAo3WorkHtml` (SettingsScreen.kt:287-318), извлечённый
+# в Python — ТЕ ЖЕ regex-строки, что читает приложение, не переписанный от руки
+# пересказ: тест доказывает, что ЗАПИСАННАЯ страница парсится РЕАЛЬНЫМ regex'ом
+# приложения в непустой результат, а не только что она "похожа на разметку".
+_APP_TITLE_RE = re.compile(r'<h2[^>]+class="[^"]*title[^"]*"[^>]*>\s*(.*?)\s*</h2>', re.DOTALL)
+_APP_AUTHOR_RE = re.compile(r'<a[^>]+rel="author"[^>]*>(.*?)</a>')
+_APP_FANDOM_BLOCK_RE = re.compile(r'<dd[^>]+class="fandom tags"[^>]*>(.*?)</dd>', re.DOTALL)
+_APP_FANDOM_TAG_RE = re.compile(r'<a[^>]+class="tag"[^>]*>(.*?)</a>')
+_APP_WORDS_RE = re.compile(r'<dd[^>]+class="words"[^>]*>([\d,]+)</dd>')
+
+
+def _app_parse_title(body: str) -> str:
+    """`stripTags`/`decodeEntities` не нужны для этой синтетической разметки
+    (никаких вложенных тегов/сущностей в title кроме экранированных html.escape) —
+    узкая проверка домена этого генератора, не полный порт Kotlin-функции."""
+    m = _APP_TITLE_RE.search(body)
+    return m.group(1).strip() if m else ""
+
+
+@pytest.fixture(scope="module")
+def work_metadata_fetch_flows():
+    path = settings.RECORDINGS_DIR / rb.WORK_METADATA_FETCH_FILENAME
+    assert path.exists(), (
+        f"фикстура не собрана — прогони framework/.venv/Scripts/python.exe scripts/build_replay_recordings.py ({path})"
+    )
+    return _read_flows(path)
+
+
+def _metadata_flow_for(work_metadata_fetch_flows, ao3_id: str):
+    url = rb.work_metadata_fetch_url(ao3_id)
+    return next(f for f in work_metadata_fetch_flows if f.request.url == url)
+
+
+@pytest.mark.p2
+@allure.id("recording-builder-work-metadata-fetch-has-three-flows-unique-urls")
+@allure.title("work_metadata_fetch.mitm: несёт РОВНО 3 flow (работа A, работа SECOND, работа B 404), URL уникальны (AT-BUG-061)")
+def test_work_metadata_fetch_has_three_unique_flows(work_metadata_fetch_flows):
+    assert len(work_metadata_fetch_flows) == 3
+    urls = [f.request.url for f in work_metadata_fetch_flows]
+    assert len(urls) == len(set(urls))
+
+
+@pytest.mark.p2
+@allure.id("recording-builder-work-metadata-fetch-urls-match-app-url-builder")
+@allure.title("work_metadata_fetch.mitm: URL каждого flow совпадает с fetchAo3WorkPage (works/<id>?view_adult=true) (AT-BUG-061)")
+def test_work_metadata_fetch_urls_match_app_url_shape(work_metadata_fetch_flows):
+    for f in work_metadata_fetch_flows:
+        assert f.request.url.startswith("https://archiveofourown.org/works/")
+        assert f.request.url.endswith("?view_adult=true")
+
+
+@pytest.mark.p2
+@allure.id("recording-builder-work-metadata-fetch-work-a-parses-nonempty-title-author-fandom-words")
+@allure.title("work_metadata_fetch.mitm: работа A парсится РЕГЕКСАМИ parseAo3WorkHtml в непустые title/author/fandom/words (AT-BUG-061, TC-186 позитив)")
+def test_work_metadata_fetch_work_a_parses_via_app_regexes(work_metadata_fetch_flows):
+    flow = _metadata_flow_for(work_metadata_fetch_flows, rb.METADATA_FETCH_WORK_A.ao3_id)
+    assert flow.response.status_code == 200
+    body = flow.response.get_text()
+
+    title = _app_parse_title(body)
+    assert title == rb.METADATA_FETCH_WORK_A.title
+    assert title != ""
+
+    authors = _APP_AUTHOR_RE.findall(body)
+    assert rb.METADATA_FETCH_WORK_A.author in authors
+
+    fandom_block = _APP_FANDOM_BLOCK_RE.search(body)
+    assert fandom_block is not None, "dd.fandom.tags не найден — parseAo3WorkHtml вернул бы fandom=null"
+    fandom_tags = _APP_FANDOM_TAG_RE.findall(fandom_block.group(1))
+    assert rb.METADATA_FETCH_WORK_A.fandom in fandom_tags
+
+    words_match = _APP_WORDS_RE.search(body)
+    assert words_match is not None, "dd.words не найден — parseAo3WorkHtml вернул бы wordCount=null"
+    assert int(words_match.group(1).replace(",", "")) == rb.METADATA_FETCH_WORK_A.word_count
+
+
+@pytest.mark.p2
+@allure.id("recording-builder-work-metadata-fetch-work-second-parses-nonempty")
+@allure.title("work_metadata_fetch.mitm: работа SECOND (TC-187 работа E) тоже парсится в непустые title/author (AT-BUG-061)")
+def test_work_metadata_fetch_work_second_parses_via_app_regexes(work_metadata_fetch_flows):
+    flow = _metadata_flow_for(work_metadata_fetch_flows, rb.METADATA_FETCH_WORK_SECOND.ao3_id)
+    assert flow.response.status_code == 200
+    body = flow.response.get_text()
+    title = _app_parse_title(body)
+    assert title == rb.METADATA_FETCH_WORK_SECOND.title
+    authors = _APP_AUTHOR_RE.findall(body)
+    assert rb.METADATA_FETCH_WORK_SECOND.author in authors
+
+
+@pytest.mark.p2
+@allure.id("recording-builder-work-metadata-fetch-work-b-is-404")
+@allure.title("work_metadata_fetch.mitm: работа B — HTTP 404 (fetchAo3WorkPage возвращает null НЕМЕДЛЕННО, без ретраев) (AT-BUG-061, TC-186 негатив)")
+def test_work_metadata_fetch_work_b_is_404(work_metadata_fetch_flows):
+    flow = _metadata_flow_for(work_metadata_fetch_flows, rb.METADATA_FETCH_WORK_B_AO3_ID)
+    assert flow.response.status_code == 404
+
+
+# --- AT-BUG-054, класс: разметка ОБЕИХ успешных work-страниц побайтово
+# совпадает со своим генератором — та же дисциплина дрейфа, что уже покрывает
+# listing_paginated/listing_basic/listing_duplicate_work/works_multi выше.
+@pytest.mark.p2
+@allure.id("recording-builder-work-metadata-fetch-markup-matches-generator")
+@allure.title("work_metadata_fetch.mitm: разметка работ A/SECOND побайтово совпадает с render_work_metadata_page_html (AT-BUG-054, класс)")
+def test_work_metadata_fetch_markup_matches_generator(work_metadata_fetch_flows):
+    for work in (rb.METADATA_FETCH_WORK_A, rb.METADATA_FETCH_WORK_SECOND):
+        flow = _metadata_flow_for(work_metadata_fetch_flows, work.ao3_id)
+        assert flow.response.get_text() == rb.render_work_metadata_page_html(work), (
+            f"work-страница {work.ao3_id} разошлась со своим генератором "
+            "render_work_metadata_page_html (AT-BUG-054, класс) — перегенерируй: "
+            "framework/.venv/Scripts/python.exe scripts/build_replay_recordings.py"
+        )
+
+
+# --- Негатив формы (класс F-34, CLAUDE.md «Дисциплина команд» п.6): регекс
+# `_APP_FANDOM_BLOCK_RE`/`_APP_WORDS_RE` обязаны ЛОВИТЬ отсутствие своего блока
+# (h5.fandom.tags preface БЕЗ dd.fandom.tags не должен пройти), не только
+# пропускать присутствие — иначе позитивные проверки выше могли бы быть слепы.
+@pytest.mark.p2
+@allure.id("recording-builder-work-metadata-fetch-fandom-regex-rejects-preface-only-markup")
+@allure.title("Негатив F-34: dd.fandom.tags-regex НЕ находит fandom в preface-only (h5.fandom.tags) разметке — доказывает, что позитив выше бьёт именно по dd, не по h5")
+def test_app_fandom_regex_does_not_match_preface_only_markup():
+    preface_only = '<h5 class="fandom tags"><a class="tag" href="/tags/X/works">X</a></h5>'
+    assert _APP_FANDOM_BLOCK_RE.search(preface_only) is None
