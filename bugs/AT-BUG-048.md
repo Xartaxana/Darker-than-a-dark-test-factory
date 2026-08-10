@@ -4,16 +4,16 @@ title: "BaseScreen.swipe_to_text проскакивает искомую сек�
 type: test_debt
 debt_kind: flaky_test
 severity: minor
-status: Open
+status: Fixed
 found_in: "framework commit e42eb8bb (тестируемая сборка приложения 1.10 (versionCode 11), build 6455af0c — от сборки НЕ зависит)"
-fixed_in: ""
+fixed_in: "тестовая система: framework/screens/base_screen.py (swipe_to_text/swipe_up_to_text — общий _swipe_search: не-fling короткие свайпы на полную дистанцию раунда + settle-поллинг poll_for после каждого раунда вместо одного снимка; _scroll_fingerprint различает «конец списка» от «строка не найдена»), framework/core/waits.py (новый примитив poll_for), framework/tests/test_swipe_to_text_settle_unit.py (новая device-free регресс-проба, 5 сценариев); коммит присвоит координатор при приёмке — сборка приложения не при чём"
 last_seen_in: "RUN-20260803-2012 (2026-08-03)"
 test_cases: ["TC-093"]
 runs: ["RUN-20260803-2012"]
 duplicates: []
 regression_of: ""
-status_since: "2026-08-03T20:35:00Z"
-updated: "2026-08-03T20:35:00Z"
+status_since: "2026-08-10T11:30:11Z"
+updated: "2026-08-10T11:30:11Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -108,24 +108,61 @@ ratings») — т.е. «Display mode» был проскочен, а не отс
 
 ## Критерий готовности (Fixed)
 
-- [ ] Сделать поиск устойчивым к инерции: опрашивать наличие текста в цикле ДО
+- [x] Сделать поиск устойчивым к инерции: опрашивать наличие текста в цикле ДО
       оседания скролла (например, короткий поллинг после каждого свайпа вместо
       одиночного `is_present(timeout=1)`), либо перейти на прокрутку без fling
       (несколько коротких свайпов / `mobile: scrollGesture` с percent), либо
       детектировать «список упёрся в конец» и не тратить остаток `max_swipes`.
-- [ ] Класс, а не экземпляр: фикс — в `BaseScreen.swipe_to_text` (и симметрично
-      `swipe_up_to_text`, `base_screen.py:89-105`), чтобы его получили все 10
-      call sites (`settings_screen.is_rating_hidden`/`set_hide_rating`/
-      `tap_display_mode`, `saf_steps.open_settings_scrolled_to`,
-      `open_clear_all_dialog`, `_swipe_to_profile` и др.), а не один TC-093.
-- [ ] Диагностика вместо ложного вывода: при неуспехе сообщение ассерта должно
-      различать «строки нет в списке» и «прокрутка дошла до конца, строка не
-      поймана» (в текущем виде обе ситуации выглядят как «секция не найдена»).
-- [ ] Красная проба: воспроизвести проскок искусственно (замедлить опрос /
-      увеличить инерцию) — ДО фикса `swipe_to_text` возвращает `False` при
-      существующей строке, ПОСЛЕ — `True`.
-- [ ] 3 зелёных прогона подряд TC-093 изолированно + зелёный `test_visibility.py`
-      и `test_settings.py` целиком.
+      Сделано: `_swipe_search` (новый общий хелпер) режет один длинный fling-свайп
+      на `SWIPE_MICRO_STEPS=3` коротких контролируемых свайпа (та же ПОЛНАЯ
+      дистанция раунда — landing-позиция не изменилась относительно исходного
+      кода, только способ её достичь), затем `poll_for` (новый примитив,
+      `framework/core/waits.py`) опрашивает settle-окно (1.2s/0.3s шаг, ~5
+      опросов) вместо одного `is_present(timeout=1)`.
+- [x] Класс, а не экземпляр: фикс — в `BaseScreen._swipe_search`, общем для
+      `swipe_to_text` И `swipe_up_to_text` (`base_screen.py`), сигнатуры (bool)
+      не менялись — все 10 call sites (`settings_screen.is_rating_hidden`/
+      `set_hide_rating`/`tap_display_mode`/`open_clear_all_dialog`/
+      `_swipe_to_profile`, `saf_steps.open_settings_scrolled_to`,
+      `library_steps` и др.) получили фикс без правки самих call sites.
+- [x] Диагностика вместо ложного вывода: `_swipe_search` возвращает
+      `(found, diagnostic)`; `swipe_to_text`/`swipe_up_to_text` кладут
+      diagnostic в `self.last_swipe_diagnostic` И прикладывают к Allure
+      (`_attach_swipe_diagnostic`, best-effort) при неуспехе — сообщение
+      различает «КОНЕЦ СПИСКА» (отпечаток видимых текстов не изменился после
+      раунда, `_scroll_fingerprint`) от «НЕ НАЙДЕНА ... список ещё двигался»
+      (лимит `max_swipes` исчерпан, конец не достигнут).
+- [x] Красная проба: `framework/tests/test_swipe_to_text_settle_unit.py` (сценарий
+      `test_swipe_to_text_catches_narrow_visibility_window`, фейковые часы +
+      фейковый driver, целевой текст «виден» только в узком окне фейкового
+      времени [2.0, 2.5]) прогнан против ДОКОММИТНОЙ `base_screen.py` (git HEAD
+      `e42eb8bb`, изолированная загрузка в отдельном процессе, репо не тронуто)
+      standalone-скриптом с тем же фейковым driver+сценарием: `found=False`
+      (8 свайпов, 12.01s реального времени — старый код ждёт РЕАЛЬНЫМ
+      `time.sleep`, а фейковые часы без `poll_for` не продвигаются, окно
+      видимости [2.0,2.5] никогда не наступает). Тот же сценарий против
+      ПОСЛЕФИКСНОГО кода (постоянная проба) — `found=True` (5/5 в пермутации
+      `Invoke-Pytest tests/test_swipe_to_text_settle_unit.py`). Дословный вывод
+      обеих сторон — в отчёте test-maintainer этой сессии.
+- [x] 3 зелёных прогона подряд TC-093 изолированно (`Invoke-Pytest
+      tests/test_visibility.py::test_display_mode_hide_to_dim_live_push`,
+      44.06s/44.67s/46.29s) + зелёный `test_visibility.py` целиком (6 passed,
+      248.89s) и `test_settings.py` целиком (8 passed, 405.97s) — все
+      `PYTEST_EXIT=0`.
+
+**Регрессия, пойманная и починенная в ходе фикса (не осталась в дереве):**
+первая версия фикса разбивала ПОЛНУЮ дистанцию раунда на 3 коротких свайпа и
+возвращала `True`, как только текст замечен ВНУТРИ раунда (после 1-го/2-го
+мини-свайпа) — это сокращало фактическую дистанцию прокрутки относительно
+исходного кода и ломало `test_clear_all_ratings_badge_persists_without_reload`
+(`test_settings.py`, TC-020): `open_clear_all_dialog` ищет соседний узел
+`textStartsWith("Clear")` РЯДОМ с «Clear all ratings» СРАЗУ после
+`swipe_to_text` — при частичной дистанции этот сосед ещё не был в кадре.
+Исправлено до сдачи: полная дистанция раунда проходится ВСЕГДА (как в
+исходном коде), проверка присутствия — только ПОСЛЕ полного раунда, но
+settle-окном (несколько опросов), а не одним снимком. Обнаружено ПОЛНЫМ
+прогоном `test_settings.py` (шаг 4 DoD, не только TC-093) — иллюстрация,
+зачем DoD требует полных прогонов файлов-соседей, а не только целевого TC.
 
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
@@ -137,3 +174,15 @@ ratings») — т.е. «Display mode» был проскочен, а не отс
 падения TC-093 в `runs/RUN-20260803-2012.md`. Собрат по классу «ожидание слабее,
 чем требует шаг» — `AT-BUG-047` (барьер перед WebView-навигацией), заведён тем же
 ходом; кода общего нет, фиксы независимы.
+
+**[test-maintainer @ 2026-08-10T11:30:11Z]** Fixed. Класс закрыт в
+`BaseScreen._swipe_search` (общий хелпер `swipe_to_text`/`swipe_up_to_text`) +
+новый `waits.poll_for`; все 5 пунктов критерия выполнены (см. чеклист выше,
+дословный вывод red-probe и прогонов — там же). Первая версия фикса словила
+СВОЙ собственный регресс (сократила дистанцию прокрутки за раунд, сломав
+`test_clear_all_ratings_badge_persists_without_reload`/TC-020) — поймано
+полным прогоном `test_settings.py`, а не изолированным TC-093, и починено до
+сдачи (детали — в чеклисте). Новый device-free регресс-гвард
+`framework/tests/test_swipe_to_text_settle_unit.py` (5 сценариев) добавлен в
+дерево постоянно. Диф не закоммичен — коммит узким списком за координатором.
+Лок снят.

@@ -4,17 +4,36 @@
 """
 from __future__ import annotations
 
+import allure
 from appium.webdriver.common.appiumby import AppiumBy
 from selenium.webdriver.support import expected_conditions as EC
 
 from framework.core import contexts
-from framework.core.waits import wait_until
+from framework.core.waits import poll_for, wait_until
+
+# --- Тюнинг свайп-поиска (AT-BUG-048) ---
+# Один длинный быстрый свайп (55% высоты за 400мс) — это fling: Android/Compose
+# продолжает ехать по инерции ПОСЛЕ возврата вызова driver.swipe. Вместо него
+# та же ПОЛНАЯ дистанция раунда разбита на несколько КОРОТКИХ подряд идущих
+# свайпов меньшей скорости (ниже порога fling — список останавливается сразу по
+# отпускании, без инерции, а итоговая landing-позиция раунда не меняется). После
+# ЗАВЕРШЕНИЯ полного раунда опрашивается всё settle-окно (`poll_for`), а не один
+# снимок сразу после возврата — это и есть исправление самой сути дефекта
+# (редкий одиночный опрос под нагрузкой мог не застать искомый текст).
+SWIPE_MICRO_STEPS = 3
+SWIPE_MICRO_DURATION_MS = 300
+SWIPE_SETTLE_TIMEOUT_S = 1.2
+SWIPE_SETTLE_POLL_INTERVAL_S = 0.3
 
 
 class BaseScreen:
     def __init__(self, driver):
         self.driver = driver
         contexts.to_native(driver)
+        # Диагностика последнего неуспешного swipe_to_text/swipe_up_to_text
+        # (AT-BUG-048) — различает «строки нет в списке» от «прокрутка
+        # дошла до конца, строка не поймана»; пусто, пока не было неуспеха.
+        self.last_swipe_diagnostic = ""
 
     # --- Локаторы: предпочтение content-desc > text > доступный XPath ---
     def by_desc(self, desc: str):
@@ -71,35 +90,94 @@ class BaseScreen:
         text = el.get_attribute("text") or el.text or ""
         return desc, text
 
-    def swipe_to_text(self, text: str, max_swipes: int = 8) -> bool:
-        """Прокручивает экран свайпами, пока не покажется текст. Устойчиво к Compose,
-        где UiScrollable не всегда распознаёт скроллируемый контейнер."""
+    def _probe_present(self, locator) -> bool:
+        """Немедленная проверка присутствия БЕЗ ожидания — прямой
+        `find_elements`, а не `is_present`/`wait_until` (поллинг поверх
+        поллинга исказил бы бюджет settle-окна `_swipe_search`)."""
+        return len(self.driver.find_elements(*locator)) > 0
+
+    def _scroll_fingerprint(self) -> tuple:
+        """Дешёвый отпечаток текущей прокрученной позиции — набор видимых
+        непустых текстов. Не изменился после свайпа => список уткнулся в
+        конец (AT-BUG-048: различает «строки нет в списке» от «прокрутка
+        дошла до конца, строка не поймана»)."""
+        els = self.driver.find_elements(
+            AppiumBy.ANDROID_UIAUTOMATOR, 'new UiSelector().textMatches(".+")')
+        return tuple(sorted((e.get_attribute("text") or "") for e in els))
+
+    def _swipe_search(self, text: str, max_swipes: int, y1_frac: float, y2_frac: float) -> tuple[bool, str]:
+        """Общая реализация `swipe_to_text`/`swipe_up_to_text` (AT-BUG-048).
+        Возвращает `(found, diagnostic)` — `diagnostic` пуст при `found=True`."""
         loc = self.by_text(text)
         if self.is_present(loc, timeout=2):
-            return True
+            return True, ""
         size = self.driver.get_window_size()
         x = size["width"] // 2
-        y1, y2 = int(size["height"] * 0.8), int(size["height"] * 0.25)
+        y1 = int(size["height"] * y1_frac)
+        y2 = int(size["height"] * y2_frac)
+        step_ys = [y1 + (y2 - y1) * i // SWIPE_MICRO_STEPS for i in range(SWIPE_MICRO_STEPS + 1)]
+        fingerprint = self._scroll_fingerprint()
         for _ in range(max_swipes):
-            self.driver.swipe(x, y1, x, y2, 400)
-            if self.is_present(loc, timeout=1):
-                return True
-        return False
+            # Полная дистанция раунда (y1->y2, как в исходном одиночном свайпе)
+            # ВСЕГДА проходится целиком, короткими не-fling шагами — landing-
+            # позиция после раунда остаётся той же, что и раньше (соседние
+            # элементы вроде кнопки «Clear…» рядом с «Clear all ratings»
+            # оказываются в кадре так же, как при одном большом свайпе); проверка
+            # присутствия — ПОСЛЕ раунда, но settle-окном из нескольких опросов
+            # (не один снимок сразу после возврата, AT-BUG-048).
+            for i in range(SWIPE_MICRO_STEPS):
+                self.driver.swipe(x, step_ys[i], x, step_ys[i + 1], SWIPE_MICRO_DURATION_MS)
+            if poll_for(lambda: self._probe_present(loc),
+                       timeout=SWIPE_SETTLE_TIMEOUT_S, interval=SWIPE_SETTLE_POLL_INTERVAL_S):
+                return True, ""
+            new_fingerprint = self._scroll_fingerprint()
+            if new_fingerprint == fingerprint:
+                return False, (
+                    f"«{text}»: КОНЕЦ СПИСКА (позиция не изменилась после "
+                    f"свайпа) — строка не поймана, список исчерпан"
+                )
+            fingerprint = new_fingerprint
+        return False, f"«{text}»: НЕ НАЙДЕНА в списке за {max_swipes} свайпов (список ещё двигался, конец не достигнут)"
+
+    def swipe_to_text(self, text: str, max_swipes: int = 8) -> bool:
+        """Прокручивает экран свайпами, пока не покажется текст. Устойчиво к Compose,
+        где UiScrollable не всегда распознаёт скроллируемый контейнер.
+
+        AT-BUG-048: короткие контролируемые свайпы (не fling) + поллинг всего
+        settle-окна после каждого — искомый текст больше не проскакивает
+        вьюпорт незамеченным между редкими опросами. Неуспех логируется
+        диагностикой, различающей «список исчерпан» от «список ещё двигался»
+        (`self.last_swipe_diagnostic`) — сигнатура метода (bool) не меняется,
+        чтобы все 10 существующих call site получили фикс бесплатно."""
+        found, diagnostic = self._swipe_search(text, max_swipes, y1_frac=0.8, y2_frac=0.25)
+        self.last_swipe_diagnostic = diagnostic
+        if not found:
+            self._attach_swipe_diagnostic(diagnostic)
+        return found
 
     def swipe_up_to_text(self, text: str, max_swipes: int = 8) -> bool:
         """Прокручивает экран свайпами в ОБРАТНОМ направлении к `swipe_to_text` —
         нужно, когда искомый текст находится ВЫШЕ текущей позиции скролла (например,
         после подтверждения диалога, который сам не сбрасывает скролл, нужно
         вернуться к разделу, расположенному выше того, где сейчас находимся —
-        см. TC-021, `framework/steps/saf_steps.py::open_settings_scrolled_to`)."""
-        loc = self.by_text(text)
-        if self.is_present(loc, timeout=2):
-            return True
-        size = self.driver.get_window_size()
-        x = size["width"] // 2
-        y1, y2 = int(size["height"] * 0.25), int(size["height"] * 0.8)
-        for _ in range(max_swipes):
-            self.driver.swipe(x, y1, x, y2, 400)
-            if self.is_present(loc, timeout=1):
-                return True
-        return False
+        см. TC-021, `framework/steps/saf_steps.py::open_settings_scrolled_to`).
+
+        AT-BUG-048: та же fling-устойчивая реализация, что `swipe_to_text`
+        (симметрично, `_swipe_search`)."""
+        found, diagnostic = self._swipe_search(text, max_swipes, y1_frac=0.25, y2_frac=0.8)
+        self.last_swipe_diagnostic = diagnostic
+        if not found:
+            self._attach_swipe_diagnostic(diagnostic)
+        return found
+
+    def _attach_swipe_diagnostic(self, diagnostic: str) -> None:
+        """Прикладывает диагностику неуспешного swipe-поиска к Allure — иначе
+        вызывающий `assert self.swipe_to_text(...), "статичное сообщение"`
+        схлопывает «конец списка» и «строки нет» в одинаковый на вид провал
+        (AT-BUG-048). Best-effort: недоступность Allure-раннера не должна
+        рушить сам тест."""
+        try:
+            allure.attach(diagnostic, name="swipe_to_text diagnostic",
+                          attachment_type=allure.attachment_type.TEXT)
+        except Exception:  # noqa: BLE001
+            pass

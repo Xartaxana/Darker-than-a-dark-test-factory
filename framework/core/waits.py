@@ -43,6 +43,25 @@ def wait_for(predicate: Callable[[], bool], timeout: int | None = None,
     raise TimeoutError(f"{message} (after {timeout}s){f'; last error: {last}' if last else ''}")
 
 
+def poll_for(predicate: Callable[[], bool], timeout: float, interval: float = 0.4) -> bool:
+    """Опрашивает `predicate()` в течение `timeout` секунд с шагом `interval`,
+    возвращает `True` при ПЕРВОМ успехе. В отличие от `wait_for`, НЕ поднимает
+    исключение при неуспехе — возвращает `False`, когда бюджет исчерпан
+    (вызывающий код сам решает, что делать дальше, например попробовать
+    следующий свайп — `BaseScreen.swipe_to_text`, AT-BUG-048). Первый опрос —
+    сразу (t=0), без начальной паузы (симметрично `assert_holds_for`)."""
+    deadline = time.time() + timeout
+    while True:
+        try:
+            if predicate():
+                return True
+        except Exception:  # noqa: BLE001
+            pass
+        if time.time() >= deadline:
+            return False
+        time.sleep(interval)
+
+
 def assert_holds_for(check: Callable[[], bool], budget_s: float, interval_s: float,
                       msg: str = "condition violated during budget") -> None:
     """Опрашивает `check()` ВЕСЬ бюджет `budget_s` (шаг `interval_s`), падает
