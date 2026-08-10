@@ -64,10 +64,45 @@ ReadTimeoutError|MaxRetryError`).** `pytest_rerunfailures._try_match_error`
 строка матчинга `_try_match_error` выглядит как
 `"TimeoutError: ReadTimeoutError: <исходное сообщение>"`, и подстрока
 `ReadTimeoutError`/`MaxRetryError` в ней присутствует — regex продолжает
-матчить, compensating rerun не сломан ни на одном из 5 call-site'ов."""
+матчить, compensating rerun не сломан ни на одном из 5 call-site'ов.
+
+**AT-BUG-047, attempt 3 (choke point 1 из 2 — реконструкция attempt 2 после
+утраты байтовой копии, см. `bugs/AT-BUG-047.md`, критик-диагноз и обсуждение
+2026-08-04).** `wait_ui_ready` (`framework/steps/app_steps.py`) — барьер
+только по присутствию нативной оболочки (`android.webkit.WebView` в дереве),
+БЕЗ ожидания оседания стартовой загрузки домашней вкладки. Под нагрузкой
+длинного прогона это открывает узкое окно гонки: следующий же шаг зовёт
+`navigate()` (`driver.get`), пока WebView-процесс/страница ещё "in flight",
+и chromedriver теряет цель:
+
+```
+selenium.common.exceptions.WebDriverException: Message: unknown error:
+cannot determine loading status from no such window
+```
+
+Ретрай — ТОЧЕЧНЫЙ и РЕАКТИВНЫЙ: перехватывается ТОЛЬКО эта узкая сигнатура
+(подстрока сообщения), не любой `WebDriverException` — иначе это была бы
+маскировка (CLAUDE.md test-maintainer: «не чини падение маскировкой»),
+глушащая настоящие поломки навигации под тем же общим типом исключения.
+Bounded retry (не sleep вместо ожидания, а сам `driver.get()` пробуется
+заново — тот же класс решения, что и `driver_factory._verify_app_installed_with_retry`,
+AT-BUG-026): окно гонки — единицы секунд (WebView-процесс догружается), не
+структурная поломка навигации."""
 from __future__ import annotations
 
+import time
+
+from selenium.common.exceptions import WebDriverException
 from urllib3.exceptions import MaxRetryError, ReadTimeoutError
+
+# AT-BUG-047: узкая сигнатура транзиентной гонки "wait_ui_ready ещё не
+# гарантирует оседание стартовой загрузки Home" — см. докстринг модуля.
+# НЕ переиспользуется в contexts.py::in_webview (там ДРУГОЙ choke point,
+# ДРУГАЯ сигнатура — критик-диагноз AT-BUG-047 явно требует раздельных
+# маркеров ретрая, не одной общей "WebView race" ловушки).
+_TRANSIENT_RACE_SIGNATURE = "cannot determine loading status from no such window"
+_TRANSIENT_RACE_RETRIES = 3
+_TRANSIENT_RACE_BACKOFF = 1.0
 
 
 def navigate(driver, url: str, timeout: float) -> None:
@@ -88,13 +123,32 @@ def navigate(driver, url: str, timeout: float) -> None:
             чтобы вызывающему коду в `framework/steps/` не требовался импорт
             `urllib3.exceptions`. Сообщение несёт имя ИСХОДНОГО urllib3-класса
             первым токеном (см. докстринг модуля — почему это важно для
-            `framework/pytest.ini --only-rerun`)."""
+            `framework/pytest.ini --only-rerun`).
+
+    Транзиентная гонка `wait_ui_ready` vs стартовая загрузка Home
+    (AT-BUG-047, см. докстринг модуля) поглощается ВНУТРИ этой функции
+    bounded-ретраем узкой сигнатуры `cannot determine loading status from
+    no such window` — наружу не долетает, вызывающему коду ничего не
+    нужно менять. Любой ДРУГОЙ `WebDriverException` (в т.ч. родственная,
+    но иная сигнатура choke point'а `contexts.in_webview`) перебрасывается
+    как есть, без ретрая — это НЕ общая ловушка WebView-гонок."""
     client_config = driver.command_executor._client_config
     original_timeout = client_config.timeout
     client_config.timeout = timeout
+    last_race_exc: WebDriverException | None = None
     try:
-        driver.get(url)
-    except (ReadTimeoutError, MaxRetryError) as exc:
-        raise TimeoutError(f"{type(exc).__name__}: {exc}") from exc
+        for attempt in range(1, _TRANSIENT_RACE_RETRIES + 1):
+            try:
+                driver.get(url)
+                return
+            except (ReadTimeoutError, MaxRetryError) as exc:
+                raise TimeoutError(f"{type(exc).__name__}: {exc}") from exc
+            except WebDriverException as exc:
+                if _TRANSIENT_RACE_SIGNATURE not in str(exc):
+                    raise
+                last_race_exc = exc
+                if attempt < _TRANSIENT_RACE_RETRIES:
+                    time.sleep(_TRANSIENT_RACE_BACKOFF)
+        raise last_race_exc
     finally:
         client_config.timeout = original_timeout
