@@ -122,6 +122,30 @@ def delete_via_overlay(driver, title: str, action: str):
         raise ValueError(f"неизвестное действие overlay: {action}")
 
 
+@allure.step("When long-press по карточке «{title}», в overlay выбрано «Open in background tab»")
+def open_in_background_via_overlay(driver, title: str):
+    """TC-173/174/175/176/189: overlay действий — тот же, что открывает
+    `delete_via_overlay` (long-press карточки), первый пункт — «Open in
+    background tab» (`WorkActionsSheetContent`, LibraryScreen.kt)."""
+    lib = LibraryScreen(driver)
+    assert lib.has_work(title), f"работа «{title}» не найдена"
+    lib.long_press_work(title)
+    assert lib.delete_overlay_visible(), "overlay действий не появился после long-press"
+    lib.tap_open_in_background()
+
+
+@allure.step("Then overlay действий Library закрыт")
+def assert_actions_overlay_closed(driver, timeout: int | None = None):
+    """TC-175: `pendingActions` сбрасывается в `null` СРАЗУ по тапу пункта
+    overlay (LibraryScreen.kt), независимо от исхода самого действия —
+    проверяется через отсутствие соседнего пункта «Delete work» того же
+    bottom sheet (не заводит отдельный локатор — переиспользует
+    `delete_overlay_visible`)."""
+    assert not LibraryScreen(driver).delete_overlay_visible(timeout=timeout if timeout is not None else 2), (
+        "overlay действий Library неожиданно остался открыт"
+    )
+
+
 @allure.step("Then карточка «{title}» показывает download-иконку (файл не скачан)")
 def assert_download_icon_shown(driver, title: str):
     lib = LibraryScreen(driver)

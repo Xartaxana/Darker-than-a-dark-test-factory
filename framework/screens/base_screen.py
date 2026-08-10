@@ -66,6 +66,18 @@ class BaseScreen:
         except Exception:  # noqa: BLE001
             return False
 
+    def wait_absent(self, locator, timeout: int | None = None) -> None:
+        """Опрашивает ОТСУТСТВИЕ локатора — дожидается, пока ни один узел ему не
+        соответствует (например, полное исчезновение snackbar с экрана). Симметрично
+        `is_present`, но поднимает при неуспехе, а не возвращает bool: вызывающему
+        коду (TC-176) нужно именно дождаться, не просто узнать текущее состояние."""
+        wait_until(
+            self.driver,
+            lambda d: len(d.find_elements(*locator)) == 0,
+            timeout=timeout,
+            message=f"элемент не исчез с экрана: {locator}",
+        )
+
     def is_enabled(self, locator, timeout: int = 5) -> bool:
         """Читает accessibility-атрибут `enabled` найденного элемента (не требует
         видимости/кликабельности — сам факт enabled=false и есть проверяемое состояние)."""

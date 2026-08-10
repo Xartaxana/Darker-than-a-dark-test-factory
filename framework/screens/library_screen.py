@@ -151,6 +151,13 @@ class LibraryScreen(BaseScreen):
         self.tap(self.by_text("Delete downloaded file"))
         return self
 
+    # --- Overlay action «Open in background tab» (WorkActionsSheetContent,
+    # LibraryScreen.kt ~376-384: первый пункт того же overlay, что «Delete
+    # work»/«Delete downloaded file» выше) — TC-173/174/175/176/189. ---
+    def tap_open_in_background(self):
+        self.tap(self.by_text("Open in background tab"))
+        return self
+
     # --- Filter panel (MainActivity top bar "Filter library" -> LibraryScreen.kt
     # FilterSheetContent, ModalBottomSheet). Сверено на живом дереве
     # (scripts/ui_snapshot.py, lib_filter_sheet.xml) — Min/Max word count поля

@@ -237,6 +237,19 @@ def assert_tab_strip_visible(driver, timeout: int | None = None):
         "TabStrip должен быть виден (tabs>1, не в fullscreen)"
 
 
+@allure.step("Then TabStrip НЕ виден (экран не переключился на Browse)")
+def assert_tab_strip_not_visible(driver, timeout: int = 3):
+    """TC-173/175: TabStrip рендерится ТОЛЬКО при `selectedTab == AppTab.BROWSE`
+    (MainActivity.kt:408), НЕЗАВИСИМО от числа открытых вкладок — его отсутствие
+    после фонового открытия из Library доказывает, что экран не переключился на
+    Browse (в отличие от TC-136/TC-137, где тап по телу карточки переключает
+    экран безусловно). Мгновенный снимок (не `assert_holds_for`) — действие уже
+    завершилось синхронной рекомпозицией к моменту вызова, не async-эффект."""
+    assert not BrowserScreen(driver).is_tab_strip_visible(timeout=timeout), (
+        "TabStrip неожиданно виден — похоже, экран переключился на Browse"
+    )
+
+
 @allure.step("Then TabStrip остаётся скрыт весь бюджет (fullscreen активен)")
 def assert_tab_strip_hidden(driver, timeout: int = 10, poll_interval: float = 0.3):
     """Доработка (батч мелочей D-0081, 2026-07-29): был одноразовый
@@ -1967,6 +1980,42 @@ def switch_to_tab(driver, position: int) -> None:
 def assert_undo_snackbar_visible(driver, timeout: int = 5) -> None:
     assert BrowserScreen(driver).undo_snackbar_visible(timeout=timeout), (
         "snackbar с действием Undo не появился после закрытия вкладки"
+    )
+
+
+# --- Snackbar «Opened in background» (TC-173/175/176) ---
+
+@allure.step("Then snackbar «Opened in background» НЕ появился")
+def assert_opened_in_background_snackbar_not_shown(driver, timeout: int = 3) -> None:
+    """TC-175: на потолке MAX_TABS `openTab` возвращает `false` ДО записи сигнала
+    `backgroundTabOpen` — snackbar не должен появляться вовсе."""
+    assert not BrowserScreen(driver).opened_in_background_snackbar_visible(timeout=timeout), (
+        "snackbar «Opened in background» неожиданно появился при отказе на потолке MAX_TABS"
+    )
+
+
+@allure.step("When снекбар «Opened in background» показан, затем дожидаемся его полного исчезновения")
+def wait_opened_in_background_snackbar_shown_then_gone(driver, timeout: int | None = None) -> None:
+    """TC-176: сначала доказывает, что snackbar реально появился (иначе
+    последующее ожидание «отсутствия» тривиально истинно, даже если снекбар
+    вовсе не показался), затем опрашивает его ПОЛНОЕ исчезновение — не таймер,
+    см. докстринг `BrowserScreen.wait_opened_in_background_snackbar_gone`."""
+    screen = BrowserScreen(driver)
+    assert screen.opened_in_background_snackbar_visible(timeout=timeout if timeout is not None else 5), (
+        "snackbar «Opened in background» не появился после фонового открытия"
+    )
+    screen.wait_opened_in_background_snackbar_gone(timeout=timeout if timeout is not None else 10)
+
+
+@allure.step("Then снекбар «Opened in background» показывает дословно «{expected_text}»")
+def assert_opened_in_background_snackbar_text(driver, expected_text: str, timeout: int | None = None) -> None:
+    screen = BrowserScreen(driver)
+    assert screen.opened_in_background_snackbar_visible(timeout=timeout if timeout is not None else 8), (
+        "snackbar «Opened in background» не появился"
+    )
+    actual = screen.opened_in_background_snackbar_text(timeout=timeout)
+    assert actual == expected_text, (
+        f"текст snackbar не совпадает дословно: {actual!r} != {expected_text!r}"
     )
 
 

@@ -430,6 +430,25 @@ class BrowserScreen(BaseScreen):
     def tab_title_visible(self, title_substring: str, timeout: int | None = None) -> bool:
         return self.is_present(self.by_text_contains(title_substring), timeout=timeout if timeout is not None else 5)
 
+    # --- Snackbar подтверждения фонового открытия (MainActivity.kt:270-278,
+    # LaunchedEffect(uiState.backgroundTabOpen)) — TC-173/175/176. ---
+    OPENED_IN_BACKGROUND_TEXT = "Opened in background"
+
+    def opened_in_background_snackbar_visible(self, timeout: int | None = None) -> bool:
+        return self.is_present(self.by_text_contains(self.OPENED_IN_BACKGROUND_TEXT),
+                               timeout=timeout if timeout is not None else 5)
+
+    def opened_in_background_snackbar_text(self, timeout: int | None = None) -> str:
+        return self.text_of(self.by_text_contains(self.OPENED_IN_BACKGROUND_TEXT), timeout)
+
+    def wait_opened_in_background_snackbar_gone(self, timeout: int | None = None) -> None:
+        """TC-176: опрашивает ПОЛНОЕ исчезновение snackbar'а (не таймер) — нужно
+        между двумя последовательными фоновыми открытиями, чтобы второе началось
+        уже после того, как первый snackbar сошёл с экрана (директива координации
+        CH-009/TC-176.md: сценарий явно ждёт исчезновения, не полагается на
+        тайминг замены сигнала)."""
+        self.wait_absent(self.by_text_contains(self.OPENED_IN_BACKGROUND_TEXT), timeout=timeout)
+
     def swipe_scroll_active_tab_down(self, distance_px: int = 1400) -> None:
         """Нативный свайп вверх по видимой WebView-области — реальный физический
         скролл активной вкладки (в отличие от JS `scrollTo`, не подвержен

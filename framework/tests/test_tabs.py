@@ -879,3 +879,62 @@ def test_library_card_open_work_opens_new_active_browse_tab(loved_work_seeded, r
     # (`browser_screen.py:113-129`). Проба выполнена и откачена, в дереве не
     # остаётся.
     app_steps.assert_bottom_nav_collapsed(driver)
+
+
+@pytest.fixture()
+def two_works_same_tab_seeded():
+    """TC-176: 2 РАЗЛИЧИМЫЕ работы на ОДНОЙ рейтинговой вкладке Library (Favorite)
+    — нужно для проверки счётчика снекбара по ДВУМ последовательным фоновым
+    открытиям РАЗНЫХ карточек (не Files — цель overlay должна быть AO3-URL, не
+    локальный файл, см. TC-173/174). Локальная фикстура (не в `conftest.py`) —
+    тот же приём, что `file_access_probe_seeded` в `test_security_file_access.py`."""
+    app_steps.clean_state()
+    app_steps.seed_library([(W.LOVED, "SAVE"), (W.KUDOSED, "SAVE")])
+    yield W.LOVED, W.KUDOSED
+
+
+@pytest.mark.p1
+@allure.id("TC-176")
+@allure.title(
+    "Снекбар подтверждения фонового открытия называет число вкладок, ОТКРЫТЫХ В "
+    "ФОНЕ, не общее число вкладок (ожидаемо-красный до фикса BUG-059)"
+)
+def test_background_open_snackbar_counts_background_opens_not_total(
+    two_works_same_tab_seeded, driver,
+):
+    """TC-176: намеренно-красный до фикса BUG-059 (прецедент TC-139/BUG-015) —
+    ассерт от ОЖИДАЕМОГО поведения спецификации (счётчик = числу вкладок,
+    открытых В ФОНЕ за сессию), а не от факта текущей сборки (см. `red_lock` во
+    frontmatter кейса и `bugs/BUG-059.md`). `MainActivity.kt:283
+    tabCount = newTabs.size` реально считает ОБЩЕЕ число вкладок — на момент
+    второго открытия фактический текст «Opened in background (3 tabs)»
+    (Home + 2 фоновых), тест падает на сравнении с ожидаемым «(2 tabs)»."""
+    work1, work2 = two_works_same_tab_seeded
+
+    # Given приложение на экране Library, открыта ровно 1 вкладка (Home)
+    app_steps.wait_ui_ready(driver)
+    app_steps.set_fast_idle_timeout(driver)
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_work_in_tab(driver, "SAVE", work1.title)
+    app_steps.wait_persisted_tab_count(1, timeout=10)
+
+    # When пользователь long-press по карточке №1 открывает overlay и тапает
+    # «Open in background tab» (первое фоновое открытие сессии)
+    library_steps.open_in_background_via_overlay(driver, work1.title)
+    app_steps.wait_persisted_tab_count(2, timeout=15)
+
+    # And дожидается, пока снекбар полностью исчезнет с экрана (поллинг
+    # отсутствия текста, не таймер)
+    browser_steps.wait_opened_in_background_snackbar_shown_then_gone(driver)
+
+    # And долгим нажатием по карточке №2 (ДРУГАЯ работа) открывает overlay и
+    # тапает «Open in background tab» (второе фоновое открытие сессии)
+    library_steps.open_in_background_via_overlay(driver, work2.title)
+    app_steps.wait_persisted_tab_count(3, timeout=15)
+
+    # Then снекбар после ВТОРОГО открытия показывает дословно «Opened in
+    # background (2 tabs)» — «2» означает число вкладок, открытых В ФОНЕ за эту
+    # сессию (спецификация); фактическая сборка (BUG-059) покажет «(3 tabs)» —
+    # ОЖИДАЕМОЕ падение, см. docstring выше.
+    browser_steps.assert_opened_in_background_snackbar_text(
+        driver, "Opened in background (2 tabs)")

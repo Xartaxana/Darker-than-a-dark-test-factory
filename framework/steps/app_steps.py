@@ -126,6 +126,16 @@ def open_tab(driver, tab: str):
     BottomNav(driver).open(tab)
 
 
+@allure.step("Given UiAutomator2 waitForIdleTimeout снижен до {ms}мс")
+def set_fast_idle_timeout(driver, ms: int = 100) -> None:
+    """TC-176 (CH-009 test-automator note #4): дефолтный `waitForIdleTimeout`
+    подвесил `find_elements` на 12.9-13.7с во время анимации snackbar'а
+    (UiAutomator2 ждёт «покоя» дерева) — без этой настройки бюджет ожидания
+    появления/исчезновения snackbar'а ненадёжен. Не локатор — настройка
+    драйвера, поэтому живёт здесь, а не в screens/."""
+    driver.update_settings({"waitForIdleTimeout": ms})
+
+
 @allure.step("Then нижняя навигация свёрнута (панель не видна за ручкой-пилюлей)")
 def assert_bottom_nav_collapsed(driver) -> None:
     """TC-136: доказывает `navExpanded = false` (MainActivity.kt:332) — после
