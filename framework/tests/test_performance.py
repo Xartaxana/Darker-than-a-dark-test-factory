@@ -10,6 +10,7 @@ import statistics
 import allure
 import pytest
 
+from framework.core import driver_factory
 from framework.data import recording_builder as rb
 from framework.data import works as W
 from framework.steps import app_steps, browser_steps, library_steps, perf_steps, rating_steps, settings_steps
@@ -44,9 +45,22 @@ MIN_WEBVIEW_LOAD_BUDGET_S = 1.0
 @allure.id("TC-096")
 @allure.title("Холодный старт укладывается в относительный бюджет TotalTime/WaitTime (am start -W)")
 def test_cold_start_within_relative_budget(driver):
+    # AT-BUG-058: замер холодного старта (force-stop+pm clear+am start -W)
+    # ПОД активной Appium-сессией виснет — запуск не рапортует завершение
+    # (TimeoutError 60s). Контрольный замер той же последовательности БЕЗ
+    # сессии: 6/6 успешных, ~6s (bugs/AT-BUG-058.md «Контрольный замер»).
+    # `driver` запрошен фикстурой намеренно (НЕ убран из сигнатуры) —
+    # только чтобы device-liveness guard (B1, conftest.py::pytest_runtest_setup,
+    # триггерится по "driver" in item.fixturenames) сработал ДО setup, как и
+    # для любого другого device-теста; сама сессия закрывается немедленно и
+    # НЕ участвует в замерах — пересоздаётся заново только ради финальной
+    # проверки `wait_ui_ready` ниже.
+    driver_factory.quit_driver(driver)
+
     # Given baseline — BASELINE_RUNS холодных стартов на этом же эмуляторе
     # (force-stop+pm clear перед КАЖДЫМ — гарантирует, что это действительно
-    # холодные старты, а не тёплые no-op с TotalTime=0, см. TC-096.md)
+    # холодные старты, а не тёплые no-op с TotalTime=0, см. TC-096.md), БЕЗ
+    # активной Appium-сессии (см. AT-BUG-058 выше)
     baseline = perf_steps.cold_start_baseline(BASELINE_RUNS)
     median_total = statistics.median(m["TotalTime"] for m in baseline)
     median_wait = statistics.median(m["WaitTime"] for m in baseline)
@@ -54,7 +68,8 @@ def test_cold_start_within_relative_budget(driver):
     budget_wait_ms = max(median_wait * BUDGET_MULTIPLIER, MIN_COLD_START_BUDGET_MS)
 
     # When ещё один холодный старт замеряется как наблюдаемый (независимый
-    # прогон, не входит в baseline — не самосравнение с самим собой)
+    # прогон, не входит в baseline — не самосравнение с самим собой), тоже
+    # БЕЗ активной Appium-сессии
     observed = perf_steps.measure_cold_start()
 
     # Then TotalTime и WaitTime укладываются в щедрый относительный бюджет
@@ -68,8 +83,15 @@ def test_cold_start_within_relative_budget(driver):
         f"бюджет {budget_wait_ms:.0f}ms (медиана {BASELINE_RUNS} baseline-прогонов="
         f"{median_wait:.0f}ms x{BUDGET_MULTIPLIER})"
     )
-    # And приложение фактически запущено (нативная оболочка отрисована)
-    app_steps.wait_ui_ready(driver)
+    # And приложение фактически запущено (нативная оболочка отрисована) —
+    # сессия создаётся ЗАНОВО только сейчас, ради этой единственной проверки
+    # (AT-BUG-058: приложение уже запущено `observed`-замером выше, no_reset
+    # не трогает его состояние, просто подключается к текущему процессу)
+    live_driver = driver_factory.create_driver(no_reset=True)
+    try:
+        app_steps.wait_ui_ready(live_driver)
+    finally:
+        driver_factory.quit_driver(live_driver)
 
 
 @pytest.mark.p1

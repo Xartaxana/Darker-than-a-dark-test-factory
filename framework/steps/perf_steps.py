@@ -23,20 +23,47 @@ from framework.steps import browser_steps
 
 # --- TC-096: холодный старт (am start -W TotalTime/WaitTime) ---
 
+#: AT-BUG-058 п.3 «Что сделать»: цикл 2 контрольного замера бага вернул
+#: вывод `am start -W` БЕЗ `TotalTime` (тёплый no-op старт) ДАЖЕ несмотря на
+#: предшествующие `force_stop()`+`clear_app_data()` — редкая гонка (процесс
+#: ещё не успел полностью умереть/данные ещё не успели очиститься к моменту
+#: `am start`), не причина исходного зависания (см. само расследование бага
+#: — различающая переменная была живая Appium-сессия, не эта гонка). Конечный
+#: кап — переживает единичную гонку, НЕ маскирует настоящую поломку: после
+#: исчерпания попыток честно поднимается исходный `RuntimeError`
+#: `adb.parse_am_start_metrics`.
+COLD_START_TOTALTIME_RETRIES = 3
+
+
 @allure.step("Given/When холодный старт приложения замерен (force-stop+pm clear+am start -W)")
 def measure_cold_start(timeout: float | None = None) -> dict[str, int]:
     """Гарантирует ХОЛОДНЫЙ старт: `force_stop()` + `clear_app_data()` ДО
     запуска — иначе `am start -W` для уже запущенного процесса тривиально
     вернёт `TotalTime: 0` (см. `adb.parse_am_start_metrics`), не измеряя
     реальный холодный путь (TC-096.md «Заметки для автоматизации»/«Given»).
+    Ретраит ДО `COLD_START_TOTALTIME_RETRIES` раз (каждая попытка — свежий
+    `force_stop`+`clear_app_data`+`am start -W`), если вывод не содержит
+    `TotalTime` (AT-BUG-058 п.3 — тёплый no-op старт, наблюдался даже с
+    предшествующим force-stop/clear); честный `RuntimeError` после
+    исчерпания попыток, не молчаливый проброс последней гонки.
     Возвращает `{'TotalTime': мс, 'WaitTime': мс}`."""
-    adb.force_stop()
-    adb.clear_app_data()
-    output = adb.shell(
-        f"am start -W -n {settings.APP_PACKAGE}/{settings.APP_ACTIVITY}",
-        timeout=timeout or settings.ADB_LAUNCH_TIMEOUT,
-    )
-    return adb.parse_am_start_metrics(output)
+    last_exc: RuntimeError | None = None
+    for attempt in range(1, COLD_START_TOTALTIME_RETRIES + 1):
+        adb.force_stop()
+        adb.clear_app_data()
+        output = adb.shell(
+            f"am start -W -n {settings.APP_PACKAGE}/{settings.APP_ACTIVITY}",
+            timeout=timeout or settings.ADB_LAUNCH_TIMEOUT,
+        )
+        try:
+            return adb.parse_am_start_metrics(output)
+        except RuntimeError as exc:
+            last_exc = exc
+    raise RuntimeError(
+        f"холодный старт не вернул 'TotalTime' за {COLD_START_TOTALTIME_RETRIES} "
+        "попытки(-ок) подряд (AT-BUG-058 п.3, каждая попытка — свежий "
+        f"force_stop+clear_app_data+am start -W); последняя ошибка: {last_exc}"
+    ) from last_exc
 
 
 @allure.step("Given baseline холодного старта: {n} прогонов на этом эмуляторе")
