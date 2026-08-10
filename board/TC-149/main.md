@@ -2,7 +2,7 @@
 key: "TC-149"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p2"
 summary: "Вычисленный контраст DOM-контента WebView (инжектированные Rate/Note/бейджи + ключевые узлы replay-фикстур) держит WCAG-порог 4.5:1/3:1 в light и dark"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-03T12:00:00Z"
-updated: "2026-08-03T12:00:00Z"
+created: "2026-08-10T14:20:00Z"
+updated: "2026-08-10T14:20:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Вычисленный контраст DOM-контента WebView (инжектированные Rate/Note/бейджи + ключевые узлы replay-фикстур) держит WCAG-порог 4.5:1/3:1 в light и dark
 
 _Спроецировано из `test-cases/accessibility/TC-149.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-149 — Свип контраста: инжектированные bridge-элементы и наши фикстуры держат WCAG-порог
 

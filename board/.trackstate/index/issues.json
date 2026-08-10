@@ -99,7 +99,7 @@
     "epicPath": null,
     "summary": "Вычисленный контраст DOM-контента WebView (инжектированные Rate/Note/бейджи + ключевые узлы replay-фикстур) держит WCAG-порог 4.5:1/3:1 в light и dark",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -107,7 +107,7 @@
       "area:accessibility",
       "risk:R-13"
     ],
-    "updated": "2026-08-03T12:00:00Z",
+    "updated": "2026-08-10T14:20:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -121,7 +121,7 @@
     "epicPath": null,
     "summary": "Bounding-rect'ы интерактивных элементов нативного слоя не пересекаются (перекрытие = недостижимый интерактив)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -129,7 +129,7 @@
       "area:accessibility",
       "risk:R-13"
     ],
-    "updated": "2026-08-03T12:00:00Z",
+    "updated": "2026-08-10T14:20:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -166,7 +166,7 @@
     "epicPath": null,
     "summary": "Экспортированный backup-файл содержит РОВНО контрактные ключи {version, works, filterProfiles} и поля работы; ни одна настройка приложения в файл не попадает",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -174,7 +174,7 @@
       "area:backup",
       "risk:R-01"
     ],
-    "updated": "2026-08-03T19:00:00Z",
+    "updated": "2026-08-10T13:55:16Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -188,15 +188,15 @@
     "epicPath": null,
     "summary": "Restore возвращает локально удалённый фильтр-профиль и НЕ откатывает локальное переименование другого — скип/импорт по id, имя не сравнивается",
     "issueType": "test-case",
-    "status": "tc-review",
-    "priority": "p1",
+    "status": "tc-approved",
+    "priority": "p3",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:backup",
       "risk:R-09"
     ],
-    "updated": "2026-08-03T19:00:00Z",
+    "updated": "2026-08-10T14:20:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -210,15 +210,15 @@
     "epicPath": null,
     "summary": "Restore не-JSON файла показывает «Restore failed» и НЕ изменяет данные (полусостояния нет)",
     "issueType": "test-case",
-    "status": "tc-review",
-    "priority": "p2",
+    "status": "tc-approved",
+    "priority": "p3",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:backup",
       "risk:R-01"
     ],
-    "updated": "2026-08-03T19:00:00Z",
+    "updated": "2026-08-10T14:20:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -232,15 +232,15 @@
     "epicPath": null,
     "summary": "Restore пустого файла показывает «Restore failed» с текстом, отличным от не-JSON случая, и НЕ изменяет данные",
     "issueType": "test-case",
-    "status": "tc-review",
-    "priority": "p2",
+    "status": "tc-approved",
+    "priority": "p3",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:backup",
       "risk:R-01"
     ],
-    "updated": "2026-08-03T19:00:00Z",
+    "updated": "2026-08-10T14:20:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -254,15 +254,15 @@
     "epicPath": null,
     "summary": "Restore в непустую базу: работа с уже существующим ao3Id остаётся с ЛОКАЛЬНОЙ версией (не откатывается на бэкапную), локально удалённая работа возвращается из бэкапа целиком; диалог сообщает только число скипнутых",
     "issueType": "test-case",
-    "status": "tc-review",
-    "priority": "p1",
+    "status": "tc-approved",
+    "priority": "p3",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:backup",
       "risk:R-01"
     ],
-    "updated": "2026-08-04T20:00:00Z",
+    "updated": "2026-08-10T14:20:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -276,15 +276,15 @@
     "epicPath": null,
     "summary": "Restore: работа, пересозданная локально после Clear all с тем же ao3Id, что и файл на диске, пропускается по id, НО scanForOrphanedDownloads всё равно релинкует файл в том же объединённом диалоге (шов merge × downloads)",
     "issueType": "test-case",
-    "status": "tc-review",
-    "priority": "p2",
+    "status": "tc-approved",
+    "priority": "p3",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:backup",
       "risk:R-01"
     ],
-    "updated": "2026-08-04T20:00:00Z",
+    "updated": "2026-08-10T14:20:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -597,7 +597,7 @@
     "epicPath": null,
     "summary": "Гейт infinite-scroll на границе навигации: ON→append→OFF→Next — новая страница загружается БЕЗ подписки (номерная пагинация видима, дальнейший скролл не подгружает)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -605,7 +605,7 @@
       "area:browser",
       "risk:R-11"
     ],
-    "updated": "2026-08-03T19:00:00Z",
+    "updated": "2026-08-10T13:55:46Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -619,7 +619,7 @@
     "epicPath": null,
     "summary": "Гейт infinite-scroll на границе навигации: OFF→ON→Next — новая страница загружается С подпиской (номерная пагинация скрыта, скролл подгружает с эвикцией)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -627,7 +627,7 @@
       "area:browser",
       "risk:R-11"
     ],
-    "updated": "2026-08-03T19:00:00Z",
+    "updated": "2026-08-10T13:55:51Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -641,7 +641,7 @@
     "epicPath": null,
     "summary": "checkPageDensity: страница листинга, опустошённая фильтром скрытия, автоматически переводит на следующую страницу (infinite_scroll ON)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -649,7 +649,7 @@
       "area:browser",
       "risk:R-11"
     ],
-    "updated": "2026-08-03T19:00:00Z",
+    "updated": "2026-08-10T13:55:58Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -663,7 +663,7 @@
     "epicPath": null,
     "summary": "checkPageDensity: цепочка из нескольких подряд опустошённых фильтром страниц даёт каскад полных навигаций до первой непустой страницы",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -671,7 +671,7 @@
       "area:browser",
       "risk:R-11"
     ],
-    "updated": "2026-08-03T19:00:00Z",
+    "updated": "2026-08-10T13:56:06Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -685,7 +685,7 @@
     "epicPath": null,
     "summary": "checkPageDensity: НЕ переводит на следующую страницу, когда infinite_scroll OFF — пользователь остаётся на полностью скрытой странице",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -693,7 +693,7 @@
       "area:browser",
       "risk:R-11"
     ],
-    "updated": "2026-08-03T19:00:00Z",
+    "updated": "2026-08-10T13:56:09Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -707,7 +707,7 @@
     "epicPath": null,
     "summary": "Эвикция окна PAGE_WINDOW=3 удаляет DOM старейшей подгруженной страницы и обновляет точку восстановления (listingRestoreUrl/scrollY) в prefs при каскаде подгрузок",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -715,7 +715,7 @@
       "area:browser",
       "risk:R-16"
     ],
-    "updated": "2026-08-03T19:00:00Z",
+    "updated": "2026-08-10T13:56:13Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1489,7 +1489,7 @@
     "summary": "Restore from backup сворачивает результат scanForOrphanedDownloads в один диалог",
     "issueType": "test-case",
     "status": "tc-automated",
-    "priority": "p2",
+    "priority": "p3",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
@@ -1497,7 +1497,7 @@
       "risk:R-05",
       "automation:active"
     ],
-    "updated": "2026-07-15T15:55:00Z",
+    "updated": "2026-08-10T14:20:00Z",
     "resolution": "done",
     "children": [],
     "archived": false
@@ -1649,7 +1649,7 @@
     "epicPath": null,
     "summary": "Повторный ручной Scan for downloads при двух файлах одного ao3Id сходится к нулю relinked (идемпотентность), а не повторяет relinked=2 (ожидаемо-красный до фикса BUG-046)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1657,7 +1657,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-08-03T18:10:00Z",
+    "updated": "2026-08-10T13:56:24Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1671,7 +1671,7 @@
     "epicPath": null,
     "summary": "Удаление скачанного файла НЕ воскрешает работу последующим сканом, если на диске остаётся второй файл того же ao3Id (ожидаемо-красный до фикса BUG-047)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1679,7 +1679,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-08-09T13:05:00Z",
+    "updated": "2026-08-10T13:56:34Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1693,7 +1693,7 @@
     "epicPath": null,
     "summary": "Скачанная работа без рейтинга (rating=null, downloadPath!=null) видна ТОЛЬКО на вкладке FILES и ни на одной рейтинговой вкладке Library",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -1701,7 +1701,7 @@
       "area:downloads",
       "risk:R-16"
     ],
-    "updated": "2026-08-03T18:25:00Z",
+    "updated": "2026-08-10T13:56:41Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1715,15 +1715,15 @@
     "epicPath": null,
     "summary": "Restore в НЕпустую библиотеку: работа скипается по ao3Id, а её файл релинкуется сканом в ОДНОМ и том же диалоге результата",
     "issueType": "test-case",
-    "status": "tc-review",
-    "priority": "p1",
+    "status": "tc-approved",
+    "priority": "p3",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-08-03T19:00:00Z",
+    "updated": "2026-08-10T14:20:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1863,6 +1863,116 @@
     ],
     "updated": "2026-07-21T10:31:08Z",
     "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-181",
+    "path": "board/TC-181/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "«Auto-apply on navigation» включён по умолчанию и переключение в Settings доезжает до Browser без рестарта",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:filter-profiles",
+      "risk:R-09"
+    ],
+    "updated": "2026-08-10T13:57:07Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-182",
+    "path": "board/TC-182/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "ON: переход на филируемую страницу листинга автоматически дописывает queryString активного профиля",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:filter-profiles",
+      "risk:R-09"
+    ],
+    "updated": "2026-08-10T13:57:17Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-183",
+    "path": "board/TC-183/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "ON: страница, уже несущая work_search, НЕ получает повторного авто-применения фильтра (guard, идемпотентность)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:filter-profiles",
+      "risk:R-09"
+    ],
+    "updated": "2026-08-10T13:57:22Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-184",
+    "path": "board/TC-184/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "OFF: обычная навигация не дописывает фильтр И снимает активный профиль (регрессионный замок фактического поведения)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:filter-profiles",
+      "risk:R-09"
+    ],
+    "updated": "2026-08-10T13:57:25Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-185",
+    "path": "board/TC-185/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "OFF: навигация, вызванная самой кнопкой применения фильтра, не снимает только что применённый профиль",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:filter-profiles",
+      "risk:R-09"
+    ],
+    "updated": "2026-08-10T13:57:30Z",
+    "resolution": null,
     "children": [],
     "archived": false
   },
@@ -2253,6 +2363,212 @@
     ],
     "updated": "2026-08-02T02:49:10Z",
     "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-173",
+    "path": "board/TC-173/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "«Open in background tab» из overlay Library открывает работу в фоновой вкладке, не покидая экран Library",
+    "issueType": "test-case",
+    "status": "tc-automated",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:library",
+      "risk:R-08",
+      "automation:active"
+    ],
+    "updated": "2026-08-10T16:10:49Z",
+    "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-174",
+    "path": "board/TC-174/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "«Open in background tab» с вкладки Files открывает ЛОКАЛЬНУЮ копию, а не AO3-URL",
+    "issueType": "test-case",
+    "status": "tc-automated",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:library",
+      "risk:R-08",
+      "automation:active"
+    ],
+    "updated": "2026-08-10T16:10:49Z",
+    "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-175",
+    "path": "board/TC-175/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Потолок MAX_TABS через «Open in background tab» из Library: диалог лимита, снекбара НЕТ, экран остаётся Library",
+    "issueType": "test-case",
+    "status": "tc-automated",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:library",
+      "risk:R-08",
+      "automation:active"
+    ],
+    "updated": "2026-08-10T18:38:18Z",
+    "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-177",
+    "path": "board/TC-177/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Скролл-позиция вкладки Library сохраняется при переключении на другую вкладку и возврате",
+    "issueType": "test-case",
+    "status": "tc-automated",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:library",
+      "risk:R-06",
+      "automation:active"
+    ],
+    "updated": "2026-08-10T17:36:35Z",
+    "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-178",
+    "path": "board/TC-178/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Скролл сохраняется у ОБЕИХ вкладок при переключении, даже когда активна Files-only сортировка Rating",
+    "issueType": "test-case",
+    "status": "tc-automated",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:library",
+      "risk:R-06",
+      "automation:active"
+    ],
+    "updated": "2026-08-10T17:36:35Z",
+    "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-179",
+    "path": "board/TC-179/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Смена сортировки, пока вкладка Library вне экрана, сбрасывает её скролл на верх при возврате",
+    "issueType": "test-case",
+    "status": "tc-automated",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:library",
+      "risk:R-06",
+      "automation:active"
+    ],
+    "updated": "2026-08-10T17:36:35Z",
+    "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-180",
+    "path": "board/TC-180/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Выбор сортировки Rating, недопустимый вне Files, замещается Last read в отображении, но сохраняется и снова действует на Files",
+    "issueType": "test-case",
+    "status": "tc-automated",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:library",
+      "risk:R-06",
+      "automation:active"
+    ],
+    "updated": "2026-08-10T17:36:35Z",
+    "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-189",
+    "path": "board/TC-189/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Фоновая вкладка на локальный файл (открытая с вкладки Files) переживает kill+relaunch с тем же file://-URL",
+    "issueType": "test-case",
+    "status": "tc-automated",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:library",
+      "risk:R-08",
+      "automation:active"
+    ],
+    "updated": "2026-08-10T16:10:49Z",
+    "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-190",
+    "path": "board/TC-190/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Фоновая вкладка на удалённый локальный файл: наблюдаемое состояние после релонча (регрессионный замок фактического поведения, см. BUG-060)",
+    "issueType": "test-case",
+    "status": "tc-draft",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:library",
+      "risk:R-08"
+    ],
+    "updated": "2026-08-10T15:45:00Z",
+    "resolution": null,
     "children": [],
     "archived": false
   },
@@ -2839,7 +3155,7 @@
     "epicPath": null,
     "summary": "Повторный тап по выбранному рейтингу на ПАНЕЛИ work-страницы у скачанной работы с заметкой и тегом сохраняет downloadPath, тег, заметку и метаданные",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2847,7 +3163,7 @@
       "area:rating",
       "risk:R-01"
     ],
-    "updated": "2026-08-03T18:00:00Z",
+    "updated": "2026-08-10T13:58:23Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2861,7 +3177,7 @@
     "epicPath": null,
     "summary": "Повторный тап по выбранному рейтингу через OVERLAY листинга у скачанной работы с заметкой и тегом сохраняет downloadPath и тег (ожидаемо-красный до фикса BUG-021)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2869,7 +3185,7 @@
       "area:rating",
       "risk:R-01"
     ],
-    "updated": "2026-08-03T18:05:00Z",
+    "updated": "2026-08-10T13:58:27Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2883,7 +3199,7 @@
     "epicPath": null,
     "summary": "Панель work-страницы сохраняет downloadPath, заметку и теги скачанной работы при смене рейтинга и добавлении нового тега",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2891,7 +3207,7 @@
       "area:rating",
       "risk:R-01"
     ],
-    "updated": "2026-08-03T18:20:00Z",
+    "updated": "2026-08-10T14:20:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3296,7 +3612,7 @@
     "epicPath": null,
     "summary": "Слайдер размера шрифта на экране Settings меняет текст WebView на обеих границах диапазона (0/6)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -3304,7 +3620,7 @@
       "area:settings",
       "risk:R-11"
     ],
-    "updated": "2026-08-03T12:00:00Z",
+    "updated": "2026-08-10T14:20:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3318,7 +3634,7 @@
     "epicPath": null,
     "summary": "Слайдер яркости на экране Settings снижает реальную яркость и включает чёрный overlay ниже минимума (второй вход к жесту TC-055)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -3326,7 +3642,7 @@
       "area:settings",
       "risk:R-11"
     ],
-    "updated": "2026-08-03T12:00:00Z",
+    "updated": "2026-08-10T14:20:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3340,7 +3656,7 @@
     "epicPath": null,
     "summary": "Позиция side panel Left/Right зеркалит handle, переживает рестарт и пишет одни и те же prefs в ОБЕИХ позициях",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -3348,7 +3664,7 @@
       "area:settings",
       "risk:R-11"
     ],
-    "updated": "2026-08-03T12:00:00Z",
+    "updated": "2026-08-10T14:20:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3362,7 +3678,7 @@
     "epicPath": null,
     "summary": "Tap to scroll: включение тумблера доезжает БЕЗ reload до СТАРОЙ (не активной на момент переключения) вкладки — live-push пробрасывается на ВСЕ открытые WebView, не только на активный",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -3370,7 +3686,7 @@
       "area:settings",
       "risk:R-11"
     ],
-    "updated": "2026-08-03T19:00:00Z",
+    "updated": "2026-08-10T14:20:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3384,7 +3700,7 @@
     "epicPath": null,
     "summary": "Reset brightness on start ON: каждый холодный старт берёт ТЕКУЩУЮ системную яркость, ручная правка слайдера не переживает kill+relaunch",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -3392,7 +3708,7 @@
       "area:settings",
       "risk:R-11"
     ],
-    "updated": "2026-08-04T18:00:00Z",
+    "updated": "2026-08-10T14:20:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3406,7 +3722,7 @@
     "epicPath": null,
     "summary": "Reset brightness on start OFF: тумблер немедленно фиксирует ТЕКУЩУЮ яркость при переключении, и сохранённое значение (включая последующую ручную правку) переживает kill+relaunch",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -3414,7 +3730,73 @@
       "area:settings",
       "risk:R-11"
     ],
-    "updated": "2026-08-04T20:00:00Z",
+    "updated": "2026-08-10T14:20:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-186",
+    "path": "board/TC-186/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Fetch missing metadata дозаполняет ТОЛЬКО работы с пустым title, показывает прогресс N/total и пишет в Room лишь непустые результаты скрейпа",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:settings",
+      "risk:R-01"
+    ],
+    "updated": "2026-08-10T14:20:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-187",
+    "path": "board/TC-187/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Fetch missing metadata: Stop останавливает процесс мид-fetch — Stopped(N) с частичным счётчиком, оставшиеся работы не тронуты",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:settings",
+      "risk:R-01"
+    ],
+    "updated": "2026-08-10T14:20:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-188",
+    "path": "board/TC-188/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Show copy-URL button: обе стороны тумблера переключаются немедленно, без перекрытия инжектированного интерактива",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:settings",
+      "risk:R-13"
+    ],
+    "updated": "2026-08-10T14:20:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3782,6 +4164,28 @@
     ],
     "updated": "2026-08-10T10:18:15Z",
     "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-176",
+    "path": "board/TC-176/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Снекбар подтверждения фонового открытия называет число вкладок, ОТКРЫТЫХ В ФОНЕ, не общее число вкладок (ожидаемо-красный до фикса BUG-059)",
+    "issueType": "test-case",
+    "status": "tc-awaiting-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:tabs",
+      "risk:R-08"
+    ],
+    "updated": "2026-08-10T14:20:00Z",
+    "resolution": null,
     "children": [],
     "archived": false
   },
@@ -4967,7 +5371,7 @@
     "epicPath": null,
     "summary": "Гонка «wait_ui_ready → немедленная WebView-навигация»: стартовая загрузка Home ещё в полёте, chromedriver теряет цель (`cannot determine loading status from no such window`) — 27 call sites, экземпляр TC-043 в RUN-20260803-2012",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -4976,8 +5380,8 @@
       "run:RUN-20260803-2012",
       "sev:major"
     ],
-    "updated": "2026-08-03T20:35:00Z",
-    "resolution": null,
+    "updated": "2026-08-10T15:53:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -5111,7 +5515,7 @@
     "epicPath": null,
     "summary": "TC-096 замеряет холодный старт (force-stop+pm clear+am start -W) ПОД активной Appium-сессией — запуск не рапортует завершение, TimeoutError 60s; та же последовательность без сессии — 6/6 успешных, ~6.0-6.3s",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5120,8 +5524,74 @@
       "run:RUN-20260805-0437",
       "sev:major"
     ],
-    "updated": "2026-08-10T11:38:00Z",
+    "updated": "2026-08-10T12:56:34Z",
+    "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-059",
+    "path": "board/AT-BUG-059/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "arch_check C1: юнит-тест импортирует framework.screens.base_screen в недопустимой локации (запрет docs/08 C1)",
+    "issueType": "bug",
+    "status": "bug-fixed",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:minor"
+    ],
+    "updated": "2026-08-10T13:40:00Z",
     "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-060",
+    "path": "board/AT-BUG-060/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "ОШИБКА НУМЕРАЦИИ (самоисправлено тем же ходом) — этот номер уже занят app_bug `bugs/BUG-060.md`; реальный тикет заведён как `bugs/AT-BUG-061.md`, здесь тикет не действует",
+    "issueType": "bug",
+    "status": "bug-rejected",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "duplicate:AT-BUG-061",
+      "sev:minor"
+    ],
+    "updated": "2026-08-10T13:50:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-061",
+    "path": "board/AT-BUG-061/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Нет replay-записи work-страниц archiveofourown.org/works/<id>?view_adult=true для HttpURLConnection-пути «Fetch missing metadata» — блокирует TC-186/TC-187",
+    "issueType": "bug",
+    "status": "bug-verified",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-186",
+      "test_case:TC-187",
+      "sev:minor"
+    ],
+    "updated": "2026-08-10T14:03:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -5641,6 +6111,50 @@
     "archived": false
   },
   {
+    "key": "BUG-059",
+    "path": "board/BUG-059/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Счётчик снекбара «Opened in background (N tabs)» показывает общее число вкладок вместо числа открытых в фоне",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-176",
+      "sev:minor"
+    ],
+    "updated": "2026-08-10T13:05:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-060",
+    "path": "board/BUG-060/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Фоновая вкладка на удалённый локальный файл вечна: после релонча показывает ERR_FILE_NOT_FOUND, Retry не работает, чип деградирует",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-190",
+      "sev:minor"
+    ],
+    "updated": "2026-08-10T13:05:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "RUN-20260702-0300",
     "path": "board/RUN-20260702-0300/main.md",
     "parent": null,
@@ -5837,6 +6351,72 @@
     ],
     "updated": "2026-08-10T03:50:00Z",
     "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "RUN-20260810-1529",
+    "path": "board/RUN-20260810-1529/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "RUN-20260810-1529",
+    "issueType": "run",
+    "status": "run-closed",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "run"
+    ],
+    "updated": "2026-07-02T00:00:00Z",
+    "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "story-26",
+    "path": "board/story-26/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Открывать работы из библиотеки в фоновой вкладке",
+    "issueType": "story",
+    "status": "story-writing-cases",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "stage:story-writing-cases",
+      "регресс сборки: smoke RUN-20260810-0145 48/49 · разобрано · regression RUN-20260810-0146 158/165 · разобрано · новых багов в прогоне: 0",
+      "фич без кейсов: 0/2",
+      "черновиков: 1",
+      "багов на кейсах стори: 2"
+    ],
+    "updated": "2026-08-09T23:04:10Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "story-28",
+    "path": "board/story-28/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Сохранять позицию скролла при переключении между вкладками библиотеки",
+    "issueType": "story",
+    "status": "story-covered",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "stage:story-covered",
+      "регресс сборки: smoke RUN-20260810-0145 48/49 · разобрано · regression RUN-20260810-0146 158/165 · разобрано · новых багов в прогоне: 0",
+      "багов на кейсах стори: 0"
+    ],
+    "updated": "2026-08-09T23:04:10Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   }

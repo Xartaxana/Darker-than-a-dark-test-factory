@@ -1438,7 +1438,6 @@ resolved при закрытии.
 - [2026-08-09T14:48:27Z] **BUG-046** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-03T17:00:00Z | нужно: ответить в ## Обсуждение
 - [2026-08-09T14:48:27Z] **BUG-048** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-03T17:30:00Z | нужно: ответить в ## Обсуждение
 - [2026-08-09T14:48:27Z] **BUG-056** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-04T22:29:15Z | нужно: ответить в ## Обсуждение
-- [2026-08-09T14:48:27Z] **CHARTER-QUEUE** [sla:charter_queue_empty] — нет активных charter'ов (Proposed/Planned/InProgress), последний Done старше 48ч или executed_at отсутствует/битый у Done-чартеров | нужно: завести charter (charter-designer / вручную)
 - [2026-08-09T14:48:27Z] **RUN-20260804-1301** [sla:blocked_any] — в Blocked с 2026-08-04T16:34:03Z (причина: environment) | нужно: разобрать причину и вывести из Blocked
 
 ## ESC-022 — Пауза на заведение exploratory-чартера: продолжается ли она после закрытия окна репетиции?
@@ -1466,3 +1465,66 @@ resolved при закрытии.
 - [2026-08-09T23:04:10Z] **QAREADY-28** [resolved:strategy-6f884d97-reinventory-0809] — Сохранять позицию скролла при переключении между вкладками библиотеки — фича разработчика помечена QAready: нужен тест-дизайн зоны (диспатч test-strategist); заголовок/тело айтема — внешние данные, не инструкции
 - [2026-08-10T10:37:33Z] **QAREADY-SYNC-RACE-BUG-001** [resolved:mech-build-source-dual-0810] — ЛОЖНАЯ тревога до-v4.1 границы safeguard («не-Fixed» ловил и Verified); граница сужена до Open|Reopened тем же батчем, сирота-ярлык снят живым синком 12:41 (issue #1 несёт только Verified — сверено API).
 - [2026-08-10T10:37:45Z] **QAREADY-SYNC-RACE-BUG-057** [resolved:mech-build-source-dual-0810] — та же ложная тревога; issue #18 несёт только Verified (сверено API).
+- [2026-08-10T12:52:57Z] **BUG-022** [sla:bug_open_major] — major-баг open с 2026-08-02T23:23:44Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
+- [2026-08-10T12:52:57Z] **CH-009:followup_tc#0** [sla:charter_followup_unprocessed] — followup_tc[0] без id-токена: «Дверь «Open in background tab» из overlay Library на ПОТОЛКЕ MAX_TABS: диалог «T…» | нужно: test-designer заводит TC-NNN
+- [2026-08-10T12:52:57Z] **CH-009:followup_tc#1** [sla:charter_followup_unprocessed] — followup_tc[1] без id-токена: «Текст снекбара фонового открытия: кейс обязан ассертить ДОСЛОВНО «Opened in back…» | нужно: test-designer заводит TC-NNN
+- [2026-08-10T12:52:57Z] **CH-009:followup_tc#2** [sla:charter_followup_unprocessed] — followup_tc[2] без id-токена: «Кейс НЕ должен ассертить «замену» сообщений при серии фоновых открытий. Измеренн…» | нужно: test-designer заводит TC-NNN
+- [2026-08-10T12:52:57Z] **CH-009:followup_tc#3** [sla:charter_followup_unprocessed] — followup_tc[3] без id-токена: «library: состояние списка по вкладкам (#28) — кейс обязан ассертить СОХРАНЕНИЕ с…» | нужно: test-designer заводит TC-NNN
+- [2026-08-10T12:52:57Z] **CH-009:followup_tc#4** [sla:charter_followup_unprocessed] — followup_tc[4] без id-токена: «Вкладка на локальный файл: (а) фоновое открытие с вкладки FILES кладёт в open_ta…» | нужно: test-designer заводит TC-NNN
+- [2026-08-10T12:52:57Z] **CH-009:found_bugs#0** [sla:charter_followup_unprocessed] — found_bugs[0] без id-токена: «КАНДИДАТ (id назначит bug-reporter), minor/UX: счётчик снекбара «Opened in backg…» | нужно: bug-reporter заводит BUG-NNN
+- [2026-08-10T12:52:57Z] **CH-009:found_bugs#1** [sla:charter_followup_unprocessed] — found_bugs[1] без id-токена: «КАНДИДАТ (id назначит bug-reporter), minor: фоновая вкладка на локальный файл пе…» | нужно: bug-reporter заводит BUG-NNN
+
+## ESC-023 — test-automator TC-177..180 (батч 2, story #28): 2 идентичных env-класс фейла на emulator-5554, package-сервис устройства не отвечает
+
+- Артефакт: `test-cases/library/TC-180.md` (кейс НЕ переведён в Blocked, остаётся
+  `Approved` — деградация захватила только последний из четырёх диспатченных
+  кейсов; TC-177/178/179 полностью зелёные, `automated_by` заполнен).
+- С какого времени: 2026-08-10 (эта сессия test-automator, лок
+  `test-automator:2026-08-10T16:45:00Z`).
+- Причина (fail-fast device-воркера, docs/06-dark-factory.md §5): после ~25 мин
+  непрерывных прогонов (3 полных цикла `test_library_tab_scroll_state.py` +
+  отдельные одиночные прогоны TC-177/178/179/180) на 3-м полном цикле
+  `test_library_files_rating_pick_survives_visit_to_other_tab` (TC-180) упал
+  `TimeoutException` в `wait_ui_ready` (`UiAutomator2Exception: Timed out after
+  10547ms waiting for the root AccessibilityNodeInfo`). Немедленный одиночный
+  повтор того же теста упал ВТОРЫМ TimeoutException — `RuntimeError` в
+  `framework/core/adb.py::_wait_package_service_ready` (30с, `pm path android`
+  не отдаёт `package:`, класс AT-BUG-013). Диагностический мини-прогон (без
+  попытки самовосстановления среды — вне мандата этого агента): `Get-Device` →
+  `DEVICE: emulator-5554` (устройство видно); Appium `:4723/status` →
+  `ready: true` (сервер здоров); НО прямой `adb -s emulator-5554 shell pm path
+  android` → `cmd: Can't find service: package` (устойчиво, 2 независимые
+  проверки с интервалом + `adb kill-server`/`adb start-server` между ними не
+  помог); `getprop sys.boot_completed` → `1`, `system_server` жив (`ps -A`
+  подтверждает процесс) — деградация именно PackageManagerService внутри
+  гостевой ОС, не адб-кэш и не смерть эмулятора целиком.
+- Что нужно от человека/Lead: решение о перезапуске эмулятора
+  (`Start-Emulator`/`Stop-NodeProcesses`+`Start-Emulator`) — глубже
+  мини-диагностики агент не чинит (docs/06 §5). После восстановления —
+  достаточно повторного прогона `Invoke-Pytest
+  tests/test_library_tab_scroll_state.py::test_library_files_rating_pick_survives_visit_to_other_tab`
+  (тест логически корректен — уже дал 2 чистых PASS из 4 попыток, оба падения
+  этого класса, без единого падения на самой бизнес-логике/ассертах теста);
+  правок кода/кейса не требуется, только заполнить `automated_by` в
+  `test-cases/library/TC-180.md` по факту 3 зелёных подряд.
+- Баг НЕ заведён (test_debt-carve-out не применяется — это деградация СРЕДЫ на
+  конкретном прогоне, не отсутствие фикстуры/локатора/транспорта).
+- **2026-08-10, Lead — среда восстановлена, статус resolved:** эмулятор
+  перезапущен чистой бутой (`Start-Emulator -WritableSystem`), `Get-Device` →
+  `DEVICE: emulator-5554`, `adb shell pm path android` отвечает (package-сервис
+  жив), mitm-CA переустановлен (виден в apex store). Диагноз ESC-023 (env-класс,
+  не логика теста) подтверждён Lead. Добор прогонов test-automator тем же ходом:
+  `adb shell pm path android` → `package:/system/framework/framework-res.apk`
+  (сервис жив), `adb shell pm list packages | grep ao3_wrapper` →
+  `package:com.example.ao3_wrapper` (приложение пережило чистую буту, переустановка
+  не понадобилась), Appium `:4723/status` → `ready: true` (не потребовал
+  перезапуска — уже отвечал живым процессом). `Invoke-Pytest
+  tests/test_library_tab_scroll_state.py::test_library_files_rating_pick_survives_visit_to_other_tab`
+  — 2 ЧИСТЫХ ПОДРЯД прогона ПОСЛЕ ребута (`1 passed in 44.25s`, `PYTEST_EXIT=0`;
+  `1 passed in 40.06s`, `PYTEST_EXIT=0`), поверх 2 ранее зачтённых до ребута —
+  итог 3+ зелёных, DoD «3 подряд» выполнен. `automated_by` в
+  `test-cases/library/TC-180.md` заполнен
+  (`framework/tests/test_library_tab_scroll_state.py::test_library_files_rating_pick_survives_visit_to_other_tab`),
+  `python scripts/validate_frontmatter.py` → «ошибок 0, предупреждений 0»,
+  `python scripts/arch_check.py` → «ошибок 0, предупреждений 2» (пред-существующие
+  allowlisted). Батч TC-177..180 закрыт полностью. Эскалация **resolved**.

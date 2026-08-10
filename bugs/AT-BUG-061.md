@@ -4,7 +4,7 @@ title: "Нет replay-записи work-страниц archiveofourown.org/works
 type: test_debt
 debt_kind: missing_fixture
 severity: minor
-status: Fixed
+status: Verified
 found_in: "test-designer, проектирование области `docs/01-test-strategy.md` §9 «settings: контролы, отсутствовавшие в реестре», пункт 1 «Fetch missing metadata» (needs-design, P1), 2026-08-10"
 fixed_in: "framework (test-only, без сборки приложения) — framework/data/recording_builder.py, scripts/build_replay_recordings.py, framework/data/recordings/work_metadata_fetch.mitm, framework/tests/test_recording_builder_unit.py"
 last_seen_in: ""
@@ -12,8 +12,8 @@ test_cases: ["TC-186", "TC-187"]
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-08-10T16:40:00Z"
-updated: "2026-08-10T16:40:00Z"
+status_since: "2026-08-10T14:03:00Z"
+updated: "2026-08-10T14:03:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -125,6 +125,7 @@ WebView»-класса). Обнаружен при проектировании 
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-08-10 | source_commit 6f884d97 (versionCode 12, dev-local); test_debt-фикс — коммит 52346c3 в HEAD (`git log` подтверждает: `52346c3c1ef5ba95ed1b4a53f9ddbfce0b6df246`, файлы `framework/data/recording_builder.py`, `framework/data/recordings/work_metadata_fetch.mitm` (7678 байт, на диске совпадает), `scripts/build_replay_recordings.py`, `framework/tests/test_recording_builder_unit.py`) | TC-186/TC-187: `automated_by` пуст у обоих (автоматизация вынесена test-automator'у по DoD этого тикета, см. «Критерий готовности») — прогон кейсов НЕВОЗМОЖЕН; заменено device-free юнит-слайсом `Invoke-Pytest tests/test_recording_builder_unit.py -q` (независимый повторный прогон fix-verifier) + принятая живая device-проба test-maintainer (emulator-5554, replay `work_metadata_fetch.mitm`, 3/3 зелёных, `PYTEST_EXIT=0` каждый раз, см. «Обсуждение» 2026-08-10T16:40:00Z — не перепрогонялась, дорогая и воспроизводимая при сомнении, сомнений не возникло) | Юнит-слайс: `59 passed in 0.28s`, `PYTEST_EXIT=0`, 0 failed (ожидалось ~59+ вкл. 7 новых AT-BUG-061 — совпало); device liveness guard 0/2 recoveries; файл записи и коммит в HEAD подтверждены | Verified |
 
 ## Обсуждение
 
@@ -198,6 +199,27 @@ One"`/`4321`) — `HttpURLConnection` (`fetchAo3WorkPage`, вызван БЕЗ W
 указывают на блокер как на актуальный; следующий проход test-automator
 обновит эти заметки заодно со своей автоматизацией. Никакого нового
 блокера не найдено — заводить дополнительный test_debt-баг не по чему.
+
+**2026-08-10T14:03:00Z — fix-verifier (D1 verify):** независимый прогон
+`Invoke-Pytest tests/test_recording_builder_unit.py -q` → `59 passed in
+0.28s`, `PYTEST_EXIT=0`, device liveness guard 0/2 recoveries — совпадает с
+заявленным test-maintainer числом (59, включая 7 новых юнитов). Проверено
+фактом: коммит `52346c3` (`fix(framework): AT-BUG-061 ...`) — в HEAD
+(`git log -1 --format=%H 52346c3` резолвится, `git show --stat` подтверждает
+изменённые файлы: `recording_builder.py`, `recordings/work_metadata_fetch.mitm`,
+`test_recording_builder_unit.py`, `build_replay_recordings.py`);
+`framework/data/recordings/work_metadata_fetch.mitm` существует на диске,
+7678 байт — совпадает с размером в коммите. TC-186/TC-187 не прогонялись
+напрямую: `automated_by` пуст у обоих (сверено чтением фронтматтера
+`test-cases/settings/TC-186.md`/`TC-187.md`) — автоматизация сознательно
+вынесена за рамки этого фикса (см. «Критерий готовности»), прогон кейсов
+физически невозможен без неё. Замена — device-free юнит-слайс (выше) +
+ПРИНЯТАЯ живая device-проба test-maintainer (запись 2026-08-10T16:40:00Z
+выше, emulator-5554, replay `work_metadata_fetch.mitm`, 3/3 зелёных
+`PYTEST_EXIT=0`): не перепрогонялась (дорогая, воспроизводима при сомнении;
+сомнений к предъявленным фактам — побайтовое совпадение
+title/author/fandom/word_count — не возникло). `known_issue` уже был
+`"false"` — без изменений. `status: Fixed` → `Verified`, лок снят.
 
 ## Чек-лист качества
 - [x] Проверены дубликаты среди открытых test_debt-багов — не совпадает с

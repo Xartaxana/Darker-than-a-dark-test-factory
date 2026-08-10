@@ -2,8 +2,8 @@
 key: "TC-172"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
-priority: "p2"
+status: "tc-approved"
+priority: "p3"
 summary: "Restore: работа, пересозданная локально после Clear all с тем же ao3Id, что и файл на диске, пропускается по id, НО scanForOrphanedDownloads всё равно релинкует файл в том же объединённом диалоге (шов merge × downloads)"
 assignee: "qa-agents"
 reporter: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-04T20:00:00Z"
-updated: "2026-08-04T20:00:00Z"
+created: "2026-08-10T14:20:00Z"
+updated: "2026-08-10T14:20:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Restore: работа, пересозданная локально после Clear all с тем же ao3Id, что и файл на диске, пропускается по id, НО scanForOrphanedDownloads всё равно релинкует файл в том же объединённом диалоге (шов merge × downloads)
 
 _Спроецировано из `test-cases/backup/TC-172.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-172 — Restore: скип по id и релинк файла сканом — независимые эффекты одного вызова
 

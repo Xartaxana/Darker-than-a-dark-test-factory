@@ -2,7 +2,7 @@
 key: "TC-157"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Гейт infinite-scroll на границе навигации: ON→append→OFF→Next — новая страница загружается БЕЗ подписки (номерная пагинация видима, дальнейший скролл не подгружает)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-03T19:00:00Z"
-updated: "2026-08-03T19:00:00Z"
+created: "2026-08-10T13:55:46Z"
+updated: "2026-08-10T13:55:46Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Гейт infinite-scroll на границе навигации: ON→append→OFF→Next — новая страница загружается БЕЗ подписки (номерная пагинация видима, дальнейший скролл не подгружает)
 
 _Спроецировано из `test-cases/browser/TC-157.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-157 — ON→append→OFF→Next: новая страница листинга загружается БЕЗ подписки infinite-scroll
 

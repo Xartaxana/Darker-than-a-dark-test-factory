@@ -2,7 +2,7 @@
 key: "TC-169"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Reset brightness on start ON: каждый холодный старт берёт ТЕКУЩУЮ системную яркость, ручная правка слайдера не переживает kill+relaunch"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-04T18:00:00Z"
-updated: "2026-08-04T18:00:00Z"
+created: "2026-08-10T14:20:00Z"
+updated: "2026-08-10T14:20:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Reset brightness on start ON: каждый холодный старт берёт ТЕКУЩУЮ системную яркость, ручная правка слайдера не переживает kill+relaunch
 
 _Спроецировано из `test-cases/settings/TC-169.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-169 — Reset brightness on start ON: старт всегда берёт системную яркость
 

@@ -2,7 +2,7 @@
 key: "TC-147"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Позиция side panel Left/Right зеркалит handle, переживает рестарт и пишет одни и те же prefs в ОБЕИХ позициях"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-03T12:00:00Z"
-updated: "2026-08-03T12:00:00Z"
+created: "2026-08-10T14:20:00Z"
+updated: "2026-08-10T14:20:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Позиция side panel Left/Right зеркалит handle, переживает рестарт и пишет одни и те же prefs в ОБЕИХ позициях
 
 _Спроецировано из `test-cases/settings/TC-147.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-147 — Позиция side panel: обе стороны зеркалятся, персистятся и пишут одни prefs
 

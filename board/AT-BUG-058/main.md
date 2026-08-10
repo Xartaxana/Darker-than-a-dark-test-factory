@@ -2,7 +2,7 @@
 key: "AT-BUG-058"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p1"
 summary: "TC-096 замеряет холодный старт (force-stop+pm clear+am start -W) ПОД активной Appium-сессией — запуск не рапортует завершение, TimeoutError 60s; та же последовательность без сессии — 6/6 успешных, ~6.0-6.3s"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-10T11:38:00Z"
-updated: "2026-08-10T11:38:00Z"
+created: "2026-08-10T12:56:34Z"
+updated: "2026-08-10T12:56:34Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # TC-096 замеряет холодный старт (force-stop+pm clear+am start -W) ПОД активной Appium-сессией — запуск не рапортует завершение, TimeoutError 60s; та же последовательность без сессии — 6/6 успешных, ~6.0-6.3s
 
 _Спроецировано из `bugs/AT-BUG-058.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # AT-BUG-058 — TC-096: замер холодного старта под живой Appium-сессией виснет на 60s
 
@@ -201,3 +201,4 @@ restart_app_via_adb_asserting_new_process` — TC-133/134), тоже вызыв�
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-08-10 | test_debt (framework), fix `4eeddf4` в HEAD; source_commit приложения `6f884d97` (versionCode 12, dev-local — сборка не менялась, долг тестовой обвязки) | TC-096 (`test_cold_start_within_relative_budget`), независимый одиночный прогон `Invoke-Pytest -k test_cold_start_within_relative_budget -v` | `1 passed, 344 deselected in 46.72s`, `PYTEST_EXIT=0`; никакого 60s TimeoutError на baseline (характерный симптом бага), wall укладывается в тот же порядок, что и 3 прогона maintainer'а (43.64/46.25/45.39s) | Verified |

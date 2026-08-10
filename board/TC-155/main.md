@@ -2,7 +2,7 @@
 key: "TC-155"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Панель work-страницы сохраняет downloadPath, заметку и теги скачанной работы при смене рейтинга и добавлении нового тега"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-03T18:20:00Z"
-updated: "2026-08-03T18:20:00Z"
+created: "2026-08-10T14:20:00Z"
+updated: "2026-08-10T14:20:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Панель work-страницы сохраняет downloadPath, заметку и теги скачанной работы при смене рейтинга и добавлении нового тега
 
 _Спроецировано из `test-cases/rating/TC-155.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-155 — Панель work-страницы не теряет состояние скачанной работы при смене рейтинга и добавлении тега
 

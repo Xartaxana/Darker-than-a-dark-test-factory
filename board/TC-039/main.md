@@ -3,7 +3,7 @@ key: "TC-039"
 project: "AO3"
 issueType: "test-case"
 status: "tc-automated"
-priority: "p2"
+priority: "p3"
 summary: "Restore from backup сворачивает результат scanForOrphanedDownloads в один диалог"
 assignee: "qa-agents"
 reporter: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-15T15:55:00Z"
-updated: "2026-07-15T15:55:00Z"
+created: "2026-08-10T14:20:00Z"
+updated: "2026-08-10T14:20:00Z"
 archived: false
 resolution: "done"
 ---

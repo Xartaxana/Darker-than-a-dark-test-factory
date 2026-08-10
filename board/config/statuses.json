@@ -83,5 +83,30 @@
     "id": "run-blocked",
     "name": "Blocked",
     "category": "indeterminate"
+  },
+  {
+    "id": "story-detected",
+    "name": "\u041e\u0431\u043d\u0430\u0440\u0443\u0436\u0435\u043d\u0430",
+    "category": "new"
+  },
+  {
+    "id": "story-writing-cases",
+    "name": "\u041a\u0435\u0439\u0441\u044b \u043f\u0438\u0448\u0443\u0442\u0441\u044f",
+    "category": "indeterminate"
+  },
+  {
+    "id": "story-review",
+    "name": "\u041d\u0430 \u0440\u0435\u0432\u044c\u044e",
+    "category": "indeterminate"
+  },
+  {
+    "id": "story-automation",
+    "name": "\u0410\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u0437\u0430\u0446\u0438\u044f",
+    "category": "indeterminate"
+  },
+  {
+    "id": "story-covered",
+    "name": "\u041f\u043e\u043a\u0440\u044b\u0442\u0430",
+    "category": "done"
   }
 ]

@@ -2,7 +2,7 @@
 key: "TC-162"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p2"
 summary: "Эвикция окна PAGE_WINDOW=3 удаляет DOM старейшей подгруженной страницы и обновляет точку восстановления (listingRestoreUrl/scrollY) в prefs при каскаде подгрузок"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-03T19:00:00Z"
-updated: "2026-08-03T19:00:00Z"
+created: "2026-08-10T13:56:13Z"
+updated: "2026-08-10T13:56:13Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Эвикция окна PAGE_WINDOW=3 удаляет DOM старейшей подгруженной страницы и обновляет точку восстановления (listingRestoreUrl/scrollY) в prefs при каскаде подгрузок
 
 _Спроецировано из `test-cases/browser/TC-162.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-162 — Эвикция окна PAGE_WINDOW=3: состав DOM после каскада и обновление точки восстановления в prefs
 

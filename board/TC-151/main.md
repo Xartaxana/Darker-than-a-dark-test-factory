@@ -2,7 +2,7 @@
 key: "TC-151"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Повторный тап по выбранному рейтингу на ПАНЕЛИ work-страницы у скачанной работы с заметкой и тегом сохраняет downloadPath, тег, заметку и метаданные"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-03T18:00:00Z"
-updated: "2026-08-03T18:00:00Z"
+created: "2026-08-10T13:58:23Z"
+updated: "2026-08-10T13:58:23Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Повторный тап по выбранному рейтингу на ПАНЕЛИ work-страницы у скачанной работы с заметкой и тегом сохраняет downloadPath, тег, заметку и метаданные
 
 _Спроецировано из `test-cases/rating/TC-151.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-151 — Deselect на панели work-страницы сохраняет downloadPath/тег/заметку скачанной работы
 

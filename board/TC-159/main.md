@@ -2,7 +2,7 @@
 key: "TC-159"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "checkPageDensity: страница листинга, опустошённая фильтром скрытия, автоматически переводит на следующую страницу (infinite_scroll ON)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-03T19:00:00Z"
-updated: "2026-08-03T19:00:00Z"
+created: "2026-08-10T13:55:58Z"
+updated: "2026-08-10T13:55:58Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # checkPageDensity: страница листинга, опустошённая фильтром скрытия, автоматически переводит на следующую страницу (infinite_scroll ON)
 
 _Спроецировано из `test-cases/browser/TC-159.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-159 — checkPageDensity уводит с полностью скрытой фильтром страницы на следующую (ON)
 

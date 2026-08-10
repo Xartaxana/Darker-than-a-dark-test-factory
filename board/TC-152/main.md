@@ -2,7 +2,7 @@
 key: "TC-152"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Повторный тап по выбранному рейтингу через OVERLAY листинга у скачанной работы с заметкой и тегом сохраняет downloadPath и тег (ожидаемо-красный до фикса BUG-021)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-03T18:05:00Z"
-updated: "2026-08-03T18:05:00Z"
+created: "2026-08-10T13:58:27Z"
+updated: "2026-08-10T13:58:27Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Повторный тап по выбранному рейтингу через OVERLAY листинга у скачанной работы с заметкой и тегом сохраняет downloadPath и тег (ожидаемо-красный до фикса BUG-021)
 
 _Спроецировано из `test-cases/rating/TC-152.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-152 — Deselect через overlay листинга НЕ теряет downloadPath и личные теги скачанной работы (ожидаемо-красный, BUG-021 расширен)
 

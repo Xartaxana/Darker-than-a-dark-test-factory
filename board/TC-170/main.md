@@ -2,7 +2,7 @@
 key: "TC-170"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Reset brightness on start OFF: тумблер немедленно фиксирует ТЕКУЩУЮ яркость при переключении, и сохранённое значение (включая последующую ручную правку) переживает kill+relaunch"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-04T20:00:00Z"
-updated: "2026-08-04T20:00:00Z"
+created: "2026-08-10T14:20:00Z"
+updated: "2026-08-10T14:20:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Reset brightness on start OFF: тумблер немедленно фиксирует ТЕКУЩУЮ яркость при переключении, и сохранённое значение (включая последующую ручную правку) переживает kill+relaunch
 
 _Спроецировано из `test-cases/settings/TC-170.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-170 — Reset brightness on start OFF: тап тумблера фиксирует значение, ручная правка переживает рестарт
 

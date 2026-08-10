@@ -247,6 +247,18 @@ def placeholder_seeded_work(request):
     yield work
 
 
+def _seed_downloaded_work_default() -> tuple[Work, str]:
+    """Общий сидинг LOVED/SAVE + скачанный локальный HTML-файл — один вызов,
+    используемый ОБОИМИ `downloaded_work_seeded` (ниже, только `Work`) и
+    `downloaded_work_seeded_with_path` (`Work` + device-путь, TC-174/TC-189) —
+    не копия сидинг-логики (F1-ревью TC-174 замечание 2, D-0043 «чини класс, а не
+    экземпляр»: было — тест-файл дублировал эту фикстуру почти дословно ради
+    единственного отличия, возврата пути)."""
+    app_steps.clean_state()
+    device_path = app_steps.seed_downloaded_work(W.LOVED, "SAVE", _DOWNLOADED_WORK_FIXTURE)
+    return W.LOVED, device_path
+
+
 @pytest.fixture()
 def downloaded_work_seeded():
     """Работа LOVED засеяна с рейтингом Loved (SAVE) и уже «скачанным» локальным
@@ -254,9 +266,22 @@ def downloaded_work_seeded():
     без сетевого скачивания (DownloadRepository не задействован), см.
     TC-034/TC-035/TC-036. Тот же порядок (clean_state до сессии Appium), что и
     seeded_library/loved_work_seeded — обязателен."""
-    app_steps.clean_state()
-    app_steps.seed_downloaded_work(W.LOVED, "SAVE", _DOWNLOADED_WORK_FIXTURE)
-    yield W.LOVED
+    work, _device_path = _seed_downloaded_work_default()
+    yield work
+
+
+@pytest.fixture()
+def downloaded_work_seeded_with_path():
+    """Как `downloaded_work_seeded` (тот же сидинг через общий хелпер
+    `_seed_downloaded_work_default`, без копии логики), но ДОПОЛНИТЕЛЬНО
+    возвращает device-путь `downloadPath` (нужен TC-174/TC-189, чтобы собрать
+    ожидаемый `file://`-URL той же формулой, что `WorkRating.localFileUrl()`
+    (LibraryScreen.kt:345-347: `file://$path`, path уже НЕ несёт схему), не
+    хардкодя путь — тот же приём, что
+    `test_security_file_access.py::_PROBE_TARGET_ABS_PATH`, только путь здесь
+    получен из фактического возврата сидинга, а не собран вручную)."""
+    work, device_path = _seed_downloaded_work_default()
+    yield work, device_path
 
 
 @pytest.fixture()
@@ -461,6 +486,50 @@ def library_mixed_download_status_seeded():
     app_steps.seed_library([(W.PENDING, "PENDING")])
     app_steps.seed_downloaded_work(W.DISLIKED, "PENDING", _DOWNLOADED_WORK_FIXTURE)
     yield W.PENDING, W.DISLIKED
+
+
+@pytest.fixture()
+def library_favorite_scroll_and_disliked_neighbor_seeded():
+    """TC-177 (library batch 2, story #28): вкладка Favorite (SAVE) прокручиваема
+    (5 эталонных `W.ALL` + `W.SCROLL_FILLERS`, тот же приём, что TC-030/TC-063 —
+    сортировка НЕ трогается, остаётся дефолтной Last read). Вкладка Disliked
+    засеяна ОТДЕЛЬНОЙ работой (не входит в `W.ALL`, чтобы не задваивать её
+    рейтинг) — нужна только как «соседняя вкладка, достаточно далеко, чтобы
+    Favorite была утилизирована пейджером», прокручиваемость Disliked не
+    требуется (см. Предусловия TC-177)."""
+    app_steps.clean_state()
+    disliked_neighbor = Work("900000177", "TC-177 Disliked Neighbor Work",
+                              "seed_author_tc177", "Fandom TC177", 500)
+    rows = [(w, "SAVE") for w in W.ALL] + [(w, "SAVE") for w in W.SCROLL_FILLERS] + [
+        (disliked_neighbor, "DISLIKE"),
+    ]
+    app_steps.seed_library(rows)
+    yield {"favorite": W.ALL, "disliked_neighbor": disliked_neighbor}
+
+
+@pytest.fixture()
+def library_favorite_and_files_scroll_seeded():
+    """TC-178/TC-179 (library batch 2, story #28) — общая фикстура (заметки
+    обоих кейсов допускают переиспользование): ОБЕ вкладки прокручиваемы.
+
+    - Favorite (SAVE) — 5 эталонных `W.ALL` + `W.SCROLL_FILLERS` (без
+      downloadPath), тот же приём, что TC-030/TC-063/TC-177.
+    - Files — `W.FILES_SCROLL_FILLERS` (10 работ, downloadPath заполнен через
+      `seed_downloaded_works`, рейтинг PENDING — сама вкладка Files определяется
+      наличием `downloadPath`, не рейтингом, `LibraryViewModel.kt:67/:75`),
+      каждая с УНИКАЛЬНЫМ word_count (21..30) — нужно для TC-179 (немедленный
+      Word-count-реордер активной вкладки Files, в отличие от отложенного
+      сброса Favorite).
+
+    Порядок вызовов ОБЯЗАТЕЛЕН: `seed_library` (Favorite) первым кладёт
+    baseline, `seed_downloaded_works` (Files) вторым добавляет свои строки
+    рядом (тот же контракт, что `library_mixed_download_status_seeded` выше)."""
+    app_steps.clean_state()
+    favorite_rows = [(w, "SAVE") for w in W.ALL] + [(w, "SAVE") for w in W.SCROLL_FILLERS]
+    app_steps.seed_library(favorite_rows)
+    files_rows = [(w, "PENDING", _DOWNLOADED_WORK_FIXTURE) for w in W.FILES_SCROLL_FILLERS]
+    app_steps.seed_downloaded_works(files_rows)
+    yield {"favorite": W.ALL, "files": W.FILES_SCROLL_FILLERS}
 
 
 @pytest.fixture()

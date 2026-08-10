@@ -2,7 +2,7 @@
 key: "TC-146"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Слайдер яркости на экране Settings снижает реальную яркость и включает чёрный overlay ниже минимума (второй вход к жесту TC-055)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-03T12:00:00Z"
-updated: "2026-08-03T12:00:00Z"
+created: "2026-08-10T14:20:00Z"
+updated: "2026-08-10T14:20:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Слайдер яркости на экране Settings снижает реальную яркость и включает чёрный overlay ниже минимума (второй вход к жесту TC-055)
 
 _Спроецировано из `test-cases/settings/TC-146.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-146 — Слайдер яркости в Settings: второй вход к жесту TC-055
 

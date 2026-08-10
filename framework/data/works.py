@@ -82,6 +82,21 @@ WORD_COUNT_MIN_BOUNDARY = Work("900000271", "TC-027 Word Count Min Boundary",
 WORD_COUNT_MAX_BOUNDARY = Work("900000272", "TC-027 Word Count Max Boundary",
                                "seed_author_wc_max", "Fandom WC Max", 5000)
 
+# TC-178/TC-179 (library batch 2, story #28) — филлер-пул для вкладки Files, С
+# downloadPath (в отличие от `SCROLL_FILLERS`, который в этих же фикстурах
+# одновременно используется для филлеров Favorite БЕЗ downloadPath) — отдельный
+# пул нужен, т.к. обе фикстуры сеют Favorite (SAVE, SCROLL_FILLERS) И Files
+# (downloadPath) в одном прогоне; переиспользование SCROLL_FILLERS для Files
+# дало бы те же ao3_id/заголовки на обеих вкладках одновременно. word_count у
+# каждой работы уникален (21..30) — нужно для TC-179 (проверка, что смена
+# сортировки на Word count немедленно переупорядочивает АКТИВНУЮ вкладку Files,
+# в отличие от отложенного сброса Favorite при возврате).
+FILES_SCROLL_FILLERS = [
+    Work(f"9000010{i:02d}", f"Files Filler Scroll Work {i:02d}", f"files_filler_author_{i:02d}",
+         "Files Filler Fandom", 20 + i)
+    for i in range(1, 11)
+]
+
 # TC-103 (security/file-access) — работа со скачанным файлом, HTML которого
 # дополнен (сверх базовой фикстуры TC-034) одной тестовой file:// ссылкой на
 # реально существующий internal-путь приложения (Room DB), вне директории

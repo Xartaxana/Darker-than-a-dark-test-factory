@@ -2,7 +2,7 @@
 key: "TC-160"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p2"
 summary: "checkPageDensity: цепочка из нескольких подряд опустошённых фильтром страниц даёт каскад полных навигаций до первой непустой страницы"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-03T19:00:00Z"
-updated: "2026-08-03T19:00:00Z"
+created: "2026-08-10T13:56:06Z"
+updated: "2026-08-10T13:56:06Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # checkPageDensity: цепочка из нескольких подряд опустошённых фильтром страниц даёт каскад полных навигаций до первой непустой страницы
 
 _Спроецировано из `test-cases/browser/TC-160.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-160 — Цепочка checkPageDensity доходит до первой непустой страницы (3 подряд пустых → страница 4)
 

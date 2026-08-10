@@ -2,7 +2,7 @@
 key: "TC-161"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "checkPageDensity: НЕ переводит на следующую страницу, когда infinite_scroll OFF — пользователь остаётся на полностью скрытой странице"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-03T19:00:00Z"
-updated: "2026-08-03T19:00:00Z"
+created: "2026-08-10T13:56:09Z"
+updated: "2026-08-10T13:56:09Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # checkPageDensity: НЕ переводит на следующую страницу, когда infinite_scroll OFF — пользователь остаётся на полностью скрытой странице
 
 _Спроецировано из `test-cases/browser/TC-161.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-161 — checkPageDensity не срабатывает при infinite_scroll OFF: пользователь остаётся на пустой странице
 

@@ -4,16 +4,16 @@ title: "Гонка «wait_ui_ready → немедленная WebView-навиг
 type: test_debt
 debt_kind: flaky_test
 severity: major
-status: Fixed
+status: Verified
 found_in: "framework commit e42eb8bb (тестируемая сборка приложения 1.10 (versionCode 11), build 6455af0c — от сборки НЕ зависит)"
-fixed_in: "framework (test-only, без сборки приложения) — framework/core/navigate.py, framework/core/contexts.py, framework/tests/test_navigate_transient_race_unit.py, framework/tests/test_in_webview_transient_race_unit.py (test-maintainer, attempt 3, 2026-08-10; дифф НЕ закоммичен — сдан на приёмку координатору/critic, CLAUDE.md test-maintainer правило «дифф не коммитить»)"
+fixed_in: "framework commit f3c6930 (test-only, без сборки приложения) — framework/core/navigate.py, framework/core/contexts.py, framework/tests/test_navigate_transient_race_unit.py, framework/tests/test_in_webview_transient_race_unit.py (test-maintainer, attempt 3, 2026-08-10; дифф закоммичен в HEAD, сверено fix-verifier'ом при верификации — git log -1 -- framework/core/navigate.py framework/core/contexts.py = f3c6930)"
 last_seen_in: "RUN-20260803-2012 (2026-08-03)"
 test_cases: ["TC-043"]
 runs: ["RUN-20260803-2012"]
 duplicates: []
 regression_of: ""
-status_since: "2026-08-10T17:35:00Z"
-updated: "2026-08-10T17:35:00Z"
+status_since: "2026-08-10T15:53:00Z"
+updated: "2026-08-10T15:53:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -161,6 +161,7 @@ TC-057 (2026-07-17) воспроизводился детерминирован�
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-08-10 | framework fix f3c6930 (HEAD; test-only, framework/core/navigate.py + framework/core/contexts.py — от сборки приложения не зависит, `found_in` подтверждает); установленная сборка приложения на устройстве на момент прогона — `source_commit 6f884d979a5c19465c6d8647737376864f424555` (2026-06-28), `version_name dev-local`, `version_code 12`, `built_at 2026-08-10T10:38:57Z` (`state/app-under-test.yaml`) | TC-043 (`test_comment_only_visible_on_listing_and_absent_from_rating_tabs`) — прогнан изолированно, единственный связанный `test_cases` баги; плюс device-free юнит-пробы `test_navigate_transient_race_unit.py`+`test_in_webview_transient_race_unit.py` (10 проб, choke point 1 и 2 раздельно) как обязательная часть DoD фикса | `Invoke-Pytest tests/test_navigate_transient_race_unit.py tests/test_in_webview_transient_race_unit.py -q` → `10 passed in 0.10s`, `PYTEST_EXIT=0`; `Invoke-Pytest -k test_comment_only_visible_on_listing_and_absent_from_rating_tabs -v` → `1 passed, 366 deselected in 66.82s`, `PYTEST_EXIT=0`. Красная проба чек-листа критерия готовности принята НЕ как отдельное доказательство фикса, а по механизму+юнитам (структурное соответствие обеих сигнатур ретрая живым падениям + device-free юниты, доказывающие поведение ретрая на реальных классах исключений) — прецедент AT-BUG-043 (4 живые попытки throttle не воспроизвели гонку ни на pre-fix, ни на post-fix, race остался неподтверждён/неопровергнут живой пробой; та же честная non-reproduction атрибуция принята в AT-BUG-043 для порта 8080). Полный regression-suite в рамках этой верификации НЕ гонялся — DoD ограничен изолированным TC-043 + юнитами по решению координатора (последний открытый долг репо, framework-only фикс без зависимости от сборки); run-артефакт в `runs/` не создавался (точечный прогон, не полный suite — named-not-covered) | **Verified**. Оба шага DoD зелёные, лок снят. |
 
 ## Обсуждение
 
@@ -361,3 +362,34 @@ owns этого хода (Фаза B): `bugs/AT-BUG-047.md` (этот файл).
 рамках этого же хода, никогда не коммичен. `framework/core/navigate.py`/
 `framework/core/contexts.py`/две юнит-пробы — без изменений с Фазы A (сверено
 sha256 после отката красной пробы, см. п.1). Дифф по-прежнему НЕ закоммичен.
+
+**[fix-verifier @ 2026-08-10T15:53:00Z]** `Fixed → Verified`. Фикс уже
+закоммичен в HEAD (`f3c6930`, сверено `git log -1 -- framework/core/navigate.py
+framework/core/contexts.py` = `f3c6930`) — `test_debt` не ждёт сборку
+приложения (`found_in`/`fixed_in` явно фиксируют это), так что дефект
+верифицирован на актуальном состоянии `framework/` без привязки к
+`state/app-under-test.yaml` (записан в таблице для протокола, не как условие
+готовности). DoD: (1) юнит-слайсы обоих choke point'ов —
+`Invoke-Pytest tests/test_navigate_transient_race_unit.py
+tests/test_in_webview_transient_race_unit.py -q` → `10 passed in 0.10s`,
+`PYTEST_EXIT=0`; (2) единственный связанный `test_cases` (TC-043) изолированно
+— `Invoke-Pytest -k
+test_comment_only_visible_on_listing_and_absent_from_rating_tabs -v` →
+`1 passed, 366 deselected in 66.82s`, `PYTEST_EXIT=0`. Оба зелёные, регрессий
+нет. Красная проба чек-листа критерия готовности остаётся честно
+не-отмеченной (attempt 3, Фаза B) — принимаю это НЕ как дефект приёмки, а по
+механизму+юнитам: обе сигнатуры ретрая структурно соответствуют дословным
+исключениям из живых падений (choke point 1 — `RUN-20260803-2012`,
+choke point 2 — critic-диагнозу attempt 2), device-free юниты детерминированно
+доказывают поведение ретрая на реальных классах исключений, и non-reproduction
+живой throttle-пробы (4 попытки, честно задокументированы) согласуется с уже
+известной трудностью бага («0 из 3 при изолированном перезапуске», раздел
+«Частота») — прямой прецедент AT-BUG-043 (race принят по механизму+юнитам без
+живого воспроизведения). Полный regression-suite (`test_rating_listing.py` +
+`test_visibility.py`) уже прогнан test-maintainer'ом дважды в Фазе B (см.
+выше) — повторный full-run в рамках этой верификации избыточен, ограничился
+точечным TC-043 + юнитами по решению координатора (это последний открытый
+долг репо, framework-only). Собратьев по классу вне уже названного в бэклоге
+(`AT-BUG-048`, зафиксирован failure-analyst'ом при заведении) не заметил.
+`known_issue` уже `"false"` — сброс не требуется. Лок `fix-verifier:
+2026-08-10T15:52:00Z` снят.

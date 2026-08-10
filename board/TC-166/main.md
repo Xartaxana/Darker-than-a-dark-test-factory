@@ -2,8 +2,8 @@
 key: "TC-166"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
-priority: "p1"
+status: "tc-approved"
+priority: "p3"
 summary: "Restore возвращает локально удалённый фильтр-профиль и НЕ откатывает локальное переименование другого — скип/импорт по id, имя не сравнивается"
 assignee: "qa-agents"
 reporter: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-03T19:00:00Z"
-updated: "2026-08-03T19:00:00Z"
+created: "2026-08-10T14:20:00Z"
+updated: "2026-08-10T14:20:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Restore возвращает локально удалённый фильтр-профиль и НЕ откатывает локальное переименование другого — скип/импорт по id, имя не сравнивается
 
 _Спроецировано из `test-cases/backup/TC-166.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-166 — Restore: удалённый локально профиль возвращается, переименованный — остаётся под новым именем
 

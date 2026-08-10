@@ -2,7 +2,7 @@
 key: "TC-153"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Повторный ручной Scan for downloads при двух файлах одного ao3Id сходится к нулю relinked (идемпотентность), а не повторяет relinked=2 (ожидаемо-красный до фикса BUG-046)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-03T18:10:00Z"
-updated: "2026-08-03T18:10:00Z"
+created: "2026-08-10T13:56:24Z"
+updated: "2026-08-10T13:56:24Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Повторный ручной Scan for downloads при двух файлах одного ao3Id сходится к нулю relinked (идемпотентность), а не повторяет relinked=2 (ожидаемо-красный до фикса BUG-046)
 
 _Спроецировано из `test-cases/downloads/TC-153.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-153 — Повторный ручной скан при двух файлах одного ao3Id сходится к нулю relinked (ожидаемо-красный, BUG-046)
 

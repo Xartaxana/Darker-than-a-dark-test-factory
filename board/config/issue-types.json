@@ -19,5 +19,12 @@
     "hierarchyLevel": 0,
     "icon": "task",
     "workflow": "run-workflow"
+  },
+  {
+    "id": "story",
+    "name": "Story",
+    "hierarchyLevel": 0,
+    "icon": "epic",
+    "workflow": "story-workflow"
   }
 ]

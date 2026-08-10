@@ -1,0 +1,105 @@
+---
+key: "TC-181"
+project: "AO3"
+issueType: "test-case"
+status: "tc-approved"
+priority: "p1"
+summary: "«Auto-apply on navigation» включён по умолчанию и переключение в Settings доезжает до Browser без рестарта"
+assignee: "qa-agents"
+reporter: "qa-agents"
+labels: ["test-case", "area:filter-profiles", "risk:R-09"]
+components: []
+fixVersions: []
+watchers: []
+parent: null
+epic: null
+created: "2026-08-10T13:57:07Z"
+updated: "2026-08-10T13:57:07Z"
+archived: false
+resolution: null
+---
+
+# «Auto-apply on navigation» включён по умолчанию и переключение в Settings доезжает до Browser без рестарта
+
+_Спроецировано из `test-cases/filter-profiles/TC-181.md` (источник правды).
+Статус в нашей машине: **Approved**._
+
+# TC-181 — Тумблер Auto-apply on navigation: дефолт ON, переключение доезжает до Browser без рестарта
+
+## Предусловия
+- Чистая установка/`pm clear` — SharedPreferences `ao3_settings` без ключа
+  `auto_apply_filter`.
+- Открыт экран Settings, секция «Saved AO3 Filters» видна (прокрутка при
+  необходимости).
+
+## Сценарий (Given-When-Then)
+
+**Given** приложение только что запущено на чистых данных
+
+**Then** тумблер «Auto-apply on navigation» в состоянии **ON** (дефолт,
+`prefs.getBoolean("auto_apply_filter", true)` — ключ ещё не записан, значение
+берётся из дефолта функции чтения)
+
+**When** пользователь переключает тумблер в **OFF**
+
+**Then** SharedPreferences `ao3_settings` немедленно содержит
+`auto_apply_filter=false` (`assert_auto_apply_filter_pref(false)`, тот же
+приём, что `assert_theme_mode_pref`/`assert_font_size_step_pref`)
+
+**When** пользователь (без рестарта приложения, без ухода из Settings) сразу
+переходит на экран Browse и открывает любую филируемую листинговую страницу
+
+**Then** `BrowserViewModel.autoApplyFilter` учитывает НОВОЕ значение (OFF) —
+наблюдаемо косвенно через TC-184/185 этой же области (авто-применение НЕ
+срабатывает) — здесь предмет кейса ограничен ФАКТОМ немедленной
+реактивности связки Settings→MainActivity→BrowserViewModel, а не полным
+поведением ON/OFF-путей (те — отдельные кейсы)
+
+**Инвариант:** тумблер `auto_apply_filter` — глобальная persisted-настройка
+без отдельного состояния на вкладку; переключение из Settings отражается на
+поведении Browser СРАЗУ (реактивная связка `LaunchedEffect`), без
+необходимости убивать/перезапускать процесс.
+
+## Проверяемые данные
+| Параметр | Значение |
+|---|---|
+| Дефолт (чистая установка) | ON |
+| После тапа | OFF, `auto_apply_filter=false` в prefs |
+| Пропагация | без рестарта, реактивно |
+
+## Заметки для автоматизации
+- Дефолт ON — сверяется явным чтением состояния Switch (не предполагается по
+  умолчанию, тот же принцип, что TC-123 «Given-предпосылка тумблера сверена
+  явным assert, а не предположена»); локатор — рутинный XPath `following::`
+  по образцу `_TAP_TO_SCROLL_SWITCH`/`_AUTO_DOWNLOAD_SWITCH`
+  (`settings_screen.py:91-132`): `(//*[@text="Auto-apply on navigation"]/
+  following::*[@checkable="true"])[1]`, метод по образцу `set_tap_to_scroll`/
+  `is_tap_to_scroll_checked` (идемпотентный тап только при несовпадении
+  желаемого состояния) — рутинное добавление, не блокер.
+- Чтение prefs — `adb.run_as("cat shared_prefs/ao3_settings.xml")`, тот же
+  приём, что `assert_theme_mode_pref` (`settings_steps.py:467-470`); ключ
+  `auto_apply_filter` подтверждён кодом (`SettingsScreen.kt:539`) в ТОМ ЖЕ
+  файле `ao3_settings`, что и `active_filter_profile_id`
+  (`BrowserViewModel.kt:580-583`) — оба читаются одной командой (файл общий
+  для `MainActivity`/`BrowserViewModel`/`SettingsViewModel`,
+  `MainActivity.kt:77/83/108`).
+- Финальный Then (реактивность до Browse) — не самостоятельно проверяемый
+  ассерт этим кейсом отдельно от TC-184/185; здесь достаточно факта записи
+  prefs сразу после тапа + перехода на Browse без падений/белого экрана,
+  полное поведение ON/OFF путей закрывают отдельные кейсы той же области.
+- Блокера автоматизации нет.
+
+## Чек-лист качества (test-designer проходит перед `Review`)
+- [x] Один сценарий — один кейс; нет «и ещё проверить...» (дефолт + один тап
+      + факт немедленной пропагации — три грани ОДНОГО утверждения «тумблер
+      работает как обычный, глобальный, реактивный»)
+- [x] Given описывает полное состояние, воспроизводимое фикстурами (чистая
+      установка)
+- [x] Then проверяет наблюдаемое поведение (значение Switch, prefs), а не
+      реализацию
+- [x] Заголовок сформулирован от ожидаемого поведения
+- [x] Указаны приоритет (P1), область (filter-profiles) и источник требования
+- [x] Кейс независим от порядка выполнения других кейсов
+- [x] Блокер автоматизации отсутствует — рутинный локатор тумблера
+- [x] Тумблер без множества/отношения элементов — не C4-семьи; строка
+      `Инвариант:` дана для полноты (глобальность+реактивность настройки)

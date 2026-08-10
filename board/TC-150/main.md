@@ -2,7 +2,7 @@
 key: "TC-150"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p2"
 summary: "Bounding-rect'ы интерактивных элементов нативного слоя не пересекаются (перекрытие = недостижимый интерактив)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-03T12:00:00Z"
-updated: "2026-08-03T12:00:00Z"
+created: "2026-08-10T14:20:00Z"
+updated: "2026-08-10T14:20:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Bounding-rect'ы интерактивных элементов нативного слоя не пересекаются (перекрытие = недостижимый интерактив)
 
 _Спроецировано из `test-cases/accessibility/TC-150.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-150 — Свип перекрытий: bounding-rect'ы нативных интерактивных элементов не пересекаются
 

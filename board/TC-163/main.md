@@ -2,7 +2,7 @@
 key: "TC-163"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Tap to scroll: включение тумблера доезжает БЕЗ reload до СТАРОЙ (не активной на момент переключения) вкладки — live-push пробрасывается на ВСЕ открытые WebView, не только на активный"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-03T19:00:00Z"
-updated: "2026-08-03T19:00:00Z"
+created: "2026-08-10T14:20:00Z"
+updated: "2026-08-10T14:20:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Tap to scroll: включение тумблера доезжает БЕЗ reload до СТАРОЙ (не активной на момент переключения) вкладки — live-push пробрасывается на ВСЕ открытые WebView, не только на активный
 
 _Спроецировано из `test-cases/settings/TC-163.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-163 — Tap to scroll ON пробрасывается БЕЗ reload на старую (фоновую на момент переключения) вкладку
 

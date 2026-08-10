@@ -1,0 +1,289 @@
+---
+key: "TC-175"
+project: "AO3"
+issueType: "test-case"
+status: "tc-automated"
+priority: "p1"
+summary: "Потолок MAX_TABS через «Open in background tab» из Library: диалог лимита, снекбара НЕТ, экран остаётся Library"
+assignee: "qa-agents"
+reporter: "qa-agents"
+labels: ["test-case", "area:library", "risk:R-08", "automation:active"]
+components: []
+fixVersions: []
+watchers: []
+parent: null
+epic: null
+created: "2026-08-10T18:38:18Z"
+updated: "2026-08-10T18:38:18Z"
+archived: false
+resolution: "done"
+---
+
+# Потолок MAX_TABS через «Open in background tab» из Library: диалог лимита, снекбара НЕТ, экран остаётся Library
+
+_Спроецировано из `test-cases/library/TC-175.md` (источник правды).
+Статус в нашей машине: **Automated**._
+
+# TC-175 — «Open in background tab» на потолке 10 вкладок: диалог лимита поверх Library, вкладка не создаётся
+
+## Предусловия
+- Приложение запущено, replay-режим (`tab_markers.mitm` — запись под набор
+  потолка детерминированными маркерными страницами, рецепт TC-131; правка
+  ревьюера 2026-08-10, было `listing_basic.mitm` — та запись обслуживает
+  листинг, а не 9 различимых вкладок), в Room засеяны
+  работы, покрывающие как минимум 10 РАЗЛИЧИМЫХ URL для набора потолка (либо
+  переиспользование одного URL повторными открытиями — `openTab` не проверяет
+  дедупликацию, CH-009 Г8 — набор потолка допустим и повторными открытиями
+  одной карточки).
+- Открыт экран Library, любая вкладка, активна ровно 1 вкладка Browse на
+  старте; предварительно набрано 9 фоновых/передних вкладок (итого 10 с
+  учётом Home) через штатные двери (кнопка `+`/deep-link/фоновое открытие —
+  любая комбинация, лишь бы `wait_persisted_tab_count(10)` подтверждал
+  потолок ДО When).
+- Карточка работы, которую попробуют открыть 11-й, видна в списке Library.
+
+## Сценарий (Given-When-Then)
+
+**Given** приложение на экране Library, `wait_persisted_tab_count(10)`
+подтверждает потолок, карточка работы для 11-й попытки видна
+
+**When** пользователь долгим нажатием по карточке открывает overlay и тапает
+«Open in background tab»
+
+**Then** диалог «Tab limit reached» с дословным текстом «You have 10 tabs
+open. Close some tabs before opening a new one.» появляется ПОВЕРХ экрана
+Library (не Browse)
+**And** снекбара «Opened in background» НЕТ — `openTab` возвращает `false` ДО
+записи сигнала `backgroundTabOpen`, `LaunchedEffect` не срабатывает
+**And** overlay действий Library уже закрыт (пункт меню закрывает
+`pendingActions` ПОСЛЕ вызова `onOpenInBackground`, независимо от исхода)
+**And** экран НЕ переключается — остаётся Library (в отличие от TC-136/TC-137,
+где тап по ТЕЛУ карточки на потолке диалог тоже показывает, но экран
+безусловно переключает на Browse: `onOpenWork`/`onOpenFile` трогают
+`selectedTab`, `onOpenInBackground` — нет)
+**And** `wait_persisted_tab_count(10)` держится (не выросло) — вкладка не
+создана
+**And** позиция списка Library до и после диалога идентична (первая видимая
+карточка та же)
+**And** отклонённый URL не приезжает отложенно —
+`assert_persisted_marker_absent_for` держит бюджет (напр. 4с) без появления
+новой вкладки после закрытия диалога
+
+**Инвариант:** отказ на потолке MAX_TABS=10 идентичен по факту («вкладка не
+создана, сигнал не выставлен») независимо от ДВЕРИ, которой достигнута
+попытка (кнопка `+` — TC-022, deep-link — TC-131..135, тело карточки —
+TC-137, эта дверь — «Open in background tab»); наблюдаемо различается только
+судьба ЭКРАНА (эта дверь и дверь `+`/deep-link не переключают экран, дверь
+тела карточки — переключает всегда, даже при отказе).
+
+## Проверяемые данные
+| Параметр | Значение |
+|---|---|
+| Вкладок до попытки | 10 (потолок) |
+| Вкладок после попытки | 10 (не изменилось) |
+| Диалог | «Tab limit reached» / «You have 10 tabs open. Close some tabs before opening a new one.» |
+| Снекбар | отсутствует |
+| Активный экран до/после | Library / Library |
+
+## Заметки для автоматизации
+- Набор потолка — по образцу TC-022/CH-009 seed 1 (повторные фоновые открытия
+  одной карточки допустимы, дедупликации нет — Г8).
+- Диалог — `browser_screen.tab_limit_dialog_visible()`/
+  `tab_limit_dialog_message()`/`dismiss_tab_limit_dialog()` (готовы,
+  `browser_screen.py:397-404`), уже используются TC-022/TC-131..137 —
+  сверить, что они читаемы находясь на экране Library (не только Browse) —
+  диалог рендерится в общем дереве MainActivity, не внутри BrowserScreen,
+  поэтому не должен зависеть от активного экрана; если проверка вскроет
+  зависимость от экрана — это находка для триажа, не повод менять кейс
+  заранее.
+- Отсутствие снекбара — polling-негатив (`is_present` с коротким таймаутом на
+  `by_text_contains("Opened in background")`, НЕ `swipe_dismiss_snackbar` —
+  тот умеет гасить только «Tab closed», см. заметки TC-176).
+- Оракулы счёта/URL — persisted-prefs примитивы, тот же класс, что TC-173.
+- Блокера автоматизации нет.
+
+## Ревью автотеста — круг 2 (F1, test-reviewer, 2026-08-10T18:38:18Z)
+
+**Вердикт: ПРОЙДЕНО** — `Approved → Automated`, `automation_status: active`,
+`red_probe` проставлен. Блокер круга 1 (живая зависимость при заявленном
+replay) устранён по существу; чек-лист пройден заново целиком, свежим взглядом.
+
+1. **Архитектура (C1):** `python scripts/arch_check.py` → `arch_check: ошибок 0,
+   предупреждений 2`; оба WARN — в чужом файле
+   (`tests/test_swipe_to_text_settle_unit.py`, известное исключение AT-BUG-059);
+   `test_library_background_open.py` в ALLOWLIST не добавлен (единственная запись
+   ALLOWLIST — тот самый чужой файл). Импорты теста: только `framework.data` +
+   `framework.steps`, ни `screens`, ни `driver_factory`; `sleep` нет — ожидания
+   через шаги (`assert_tab_title_visible`, `wait_persisted_tab_count`,
+   `assert_holds_for` внутри `assert_persisted_marker_absent_for`).
+2. **Traceability:** `@allure.id("TC-175")` == id кейса; `@pytest.mark.p1` ==
+   `priority: P1`; НОВЫЙ `@pytest.mark.replay` == строка Предусловий про
+   replay-режим (маркер объявлен в `framework/pytest.ini`, `--strict-markers`);
+   `automated_by` резолвится в существующую функцию (прогон её выбрал по `-k`).
+3. **Соответствие GWT / инвариант:** реализованы все Then — дословный текст
+   диалога (`expected_message=...`, побуквенно, не подстрока), отсутствие
+   снекбара (negative-окно 3 с ДО `dismiss`, пока снекбар был бы ещё жив),
+   overlay закрыт, TabStrip не появился (экран не ушёл на Browse — именно та
+   грань, которой кейс отличается от TC-136/137), счёт вкладок держится 10,
+   позиция списка идентична, отложенного приезда URL нет
+   (`assert_persisted_marker_absent_for(..., expected_total=10)` — негатив с
+   позитивным якорем источника на каждой итерации). Инвариант кейса (отказ на
+   потолке одинаков по факту независимо от ДВЕРИ, различается судьба ЭКРАНА)
+   проверяется как СВОЙСТВО: «вкладка не создана» — по persisted-prefs
+   (счёт + отсутствие URL весь бюджет), «сигнал не выставлен» — по отсутствию
+   снекбара, «экран не переключён» — по TabStrip + карточке Library.
+4. **Фикстуры и данные:** порядок `loved_work_seeded, replay, driver` —
+   сидинг (`clean_state` + `seed_library`) ДО Appium-сессии, `replay` (прокси +
+   mitmdump) тоже до `driver`; teardown `replay` возвращает прокси и глушит
+   mitmdump независимо от исхода; тест не зависит от порядка (собственный
+   сидинг + собственный набор вкладок; прогнан изолированно по `-k`).
+5. **Flake-риск (блокер круга 1 — устранён):** набор потолка переведён на
+   `@pytest.mark.replay` + indirect-параметризацию `[tab_markers.mitm]`, 9
+   deep-link'ов на детерминированные маркерные страницы, КАЖДЫЙ подтверждён
+   `assert_tab_title_visible(rb.tab_marker_title(i))` (нативный TabChip, не
+   WebView-контекст) — вместо 9 живых загрузок home прежней версии. Живой
+   остаётся только первая Home-загрузка `wait_home_ready_for_deep_link`
+   (`server_replay_extra=forward` тянет незаписанный home с апстрима) — тот же
+   принятый минимум класса, что у TC-131/TC-137 на этом рецепте; расхождение с
+   заявленным replay снято. Гонок с анимациями Compose не добавилось: тап —
+   по пункту overlay через `library_steps`/`LibraryScreen`, негативы — polling,
+   а не `sleep`.
+6. **Независимое зелёное воспроизведение (1x, мой прогон):**
+   `Invoke-Pytest tests/test_library_background_open.py -k 'at_tab_limit' -v
+   --no-header -p no:randomly` →
+   `tests/test_library_background_open.py::test_library_overlay_open_in_background_at_tab_limit_shows_dialog[tab_markers.mitm] PASSED`,
+   `1 passed, 3 deselected in 72.24s`, `PYTEST_EXIT=0`. Суффикс node id
+   `[tab_markers.mitm]` — доказательство, что replay-параметризация активна в
+   фактическом прогоне, а не только в исходнике. (Первый прогон того же хода в
+   `-q`: `1 passed, 3 deselected in 73.24s`, `PYTEST_EXIT=0`.) Устройство сверено
+   канонически ДО прогонов: `. env.ps1; . tasks.ps1; Get-Device` →
+   `DEVICE: emulator-5554`.
+7. **Красная проба (НОВАЯ, на переделанном Given) — тест падать умеет.**
+   Порча (одна, контролируемая, на условии Given «потолок достигнут»):
+   `framework/tests/test_library_background_open.py:137,140` — цикл набора
+   `(1,2,3,4,5,6,7,1,2)` → `(1,2,3,4,5,6,7,1)` и охранный
+   `wait_persisted_tab_count(10, timeout=15)` → `(9, timeout=15)`, т.е. симуляция
+   «потолок MAX_TABS не достигнут / не enforce'ится». Прогон:
+   `Invoke-Pytest tests/test_library_background_open.py -k 'at_tab_limit' -v
+   --no-header --tb=line -p no:randomly` →
+   `...at_tab_limit_shows_dialog[tab_markers.mitm] FAILED`,
+   `1 failed, 3 deselected in 64.08s`, `PYTEST_EXIT=1`. Падение — на
+   СОДЕРЖАТЕЛЬНОМ ассерте Then, не таймаут-мусор:
+   `browser_steps.py:1942: AssertionError: диалог «Tab limit reached» не появился
+   при достижении MAX_TABS` (в консоли текст в mojibake — кодовая страница
+   Windows-консоли, не содержимое файла).
+   **Откат — по байтовой копии (CLAUDE.md «Дисциплина команд» п.8;
+   `git checkout` НЕЛЕГАЛЕН: до порчи porcelain был НЕ пуст — файл нёс
+   незакоммиченные правки автора).** До порчи зафиксировано:
+   `git status --porcelain -- framework/tests/test_library_background_open.py` →
+   ` M framework/tests/test_library_background_open.py`;
+   `git hash-object framework/tests/test_library_background_open.py` →
+   `5ddc4eb3acce1f466546bb09cae75160af77bab4`; байтовая копия снята в scratchpad
+   (`git hash-object` копии → тот же `5ddc4eb3...`). После восстановления копии
+   дословно: `git status --porcelain -- framework/tests/test_library_background_open.py`
+   → ` M framework/tests/test_library_background_open.py`;
+   `git hash-object framework/tests/test_library_background_open.py` →
+   `5ddc4eb3acce1f466546bb09cae75160af77bab4` — совпадает с зафиксированным ДО
+   порчи побайтово, незакоммиченные правки автора на месте
+   (`git diff --stat` → `1 file changed, 42 insertions(+), 34 deletions(-)`).
+
+### Правка ревьюера в теле кейса (не в коде)
+
+- Предусловия называли запись `listing_basic.mitm`, фактически (и правильно для
+  набора 9 различимых вкладок) используется `tab_markers.mitm` — строка кейса
+  приведена к реальности явно, с пометкой. Существо Предусловий («replay-режим»,
+  набор потолка любыми штатными дверями с подтверждением
+  `wait_persisted_tab_count(10)` ДО When) не менялось.
+- Не-блокирующее замечание круга 1 (опечатка «openTap» в комментарии) автором
+  устранено — проверено (`test_library_background_open.py:153`).
+
+## Ревью автотеста — круг 1 (АРХИВ, F1, test-reviewer, 2026-08-10T16:10:49Z)
+
+**Вердикт круга 1: `review: changes_requested`** — кейс оставался `Approved`,
+`automation_status`/`red_probe` НЕ проставлялись. Ниже — исторический текст;
+блокер устранён, см. круг 2.
+
+### Блокер (устранён в круге 2)
+
+1. **Незаявленная зависимость от ЖИВОГО AO3 при заявленном replay** — пункт
+   чек-листа 5 (+ пункт 2: маркеры не соответствуют кейсу).
+   `framework/tests/test_library_background_open.py:131-137`: Given набирает
+   потолок через `app_steps.wait_home_ready_for_deep_link(driver)` +
+   `open_deep_link(browser_steps.HOME_URL)` + 8 тапов «New tab», но тест НЕ
+   берёт фикстуру `replay` и не несёт ни `@pytest.mark.replay`, ни
+   `@pytest.mark.live`. Предусловия ЭТОГО кейса: «replay-режим
+   (`listing_basic.mitm`)».
+   Измерено (не предположение): `adb shell settings get global http_proxy` →
+   `:0` — прокси на устройстве не выставлен, мой зелёный прогон ходил на живой
+   archiveofourown.org (9 загрузок home за прогон).
+   Зависимость НЕСУЩАЯ, а не косметическая: `wait_home_ready_for_deep_link`
+   ждёт JS-маркер `window.__ao3AppDark`, который инжектится только в
+   `onPageFinished` НЕ-error страницы — при сетевой ошибке
+   `BrowserScreen.kt:575-583` подменяет страницу error-html с baseUrl
+   `about:blank`, и about-guard пропускает инжект. То есть при недоступном/
+   изменившемся AO3 тест падает ТАЙМАУТОМ НА GIVEN (инфраструктурный мусор),
+   а не на содержательном ассерте, — ровно тот класс, ради которого TC-131
+   (тот же сценарий потолка, другая дверь) сделан на replay.
+   Как чинить — готовый образец в репозитории: `framework/tests/test_tabs.py:319-324`
+   (TC-131): `@pytest.mark.replay` + `@pytest.mark.parametrize("replay",
+   [rb.TAB_MARKER_FILENAME], indirect=True)`, фикстура `replay` в сигнатуре
+   ПОСЛЕ сидинга и ПЕРЕД `driver` (порядок как в `test_tabs.py:821`:
+   `loved_work_seeded, replay, driver`). Альтернатива — если дверь набора
+   потолка сознательно живая, тест обязан нести `@pytest.mark.live` (конвенция
+   `test_accessibility.py` TC-106/107/108/148), а Предусловия кейса — потерять
+   строку про replay; но для сценария потолка replay предпочтительнее
+   (детерминизм + 9 живых загрузок на прогон).
+
+### Что уже пройдено (перепроверять при следующем круге не обязательно, кроме затронутого правкой)
+
+- **Архитектура (C1):** `python scripts/arch_check.py` — ошибок 0, файл теста
+  чист; `sleep` нет; локатор пункта overlay — в `screens/`, шаги — в `steps/`.
+- **Traceability:** `@allure.id("TC-175")`, `@pytest.mark.p1` == `priority: P1`,
+  `automated_by` резолвится в существующую функцию.
+- **Соответствие GWT:** реализованы все Then — дословный текст диалога
+  (`expected_message=...`, побуквенно), отсутствие снекбара
+  («Opened in background» не появился — negative-окно 3 с ДО dismiss, пока
+  снекбар был бы ещё жив, ловушка CH-009 ~3.5 с учтена), overlay закрыт,
+  TabStrip не появился (экран не ушёл на Browse), счёт вкладок держится 10,
+  позиция списка та же, отложенного приезда URL нет
+  (`assert_persisted_marker_absent_for(..., expected_total=10)` — негатив с
+  позитивным якорем источника).
+- **Фикстуры:** `loved_work_seeded` перед `driver` — сидинг до Appium-сессии.
+- **Зелёное воспроизведение (независимое, 1x):**
+  `Invoke-Pytest tests/test_library_background_open.py -k 'at_tab_limit' -q`
+  → `1 passed, 3 deselected in 89.16s`, `PYTEST_EXIT=0` (на ЖИВОМ AO3 — см.
+  блокер).
+- **Красная проба (мутационная) — выполнена, тест падать умеет:** порча —
+  недобор потолка (`range(8)` → `range(7)` и охранный
+  `wait_persisted_tab_count(10)` → `(9)`,
+  `framework/tests/test_library_background_open.py:134-137`), т.е. симуляция
+  «потолок не достигнут / не enforce'ится». Прогон:
+  `Invoke-Pytest tests/test_library_background_open.py -k 'at_tab_limit or persists_after_kill_relaunch' -q --no-header --tb=line`
+  → `2 failed, 2 deselected in 133.04s`, `PYTEST_EXIT=1`; падение по сути порчи:
+  `AssertionError: диалог «Tab limit reached» не появился при достижении MAX_TABS`
+  (`browser_steps.py:1942`). Откат — по байтовой копии (CLAUDE.md п.8): до порчи
+  `git status --porcelain -- framework/tests/test_library_background_open.py`
+  ПУСТ, blob `5229e0fa00bb06b4b6a9b1e9799d30e978bdeee3`; после отката дословно:
+  `git status --porcelain -- framework/tests/test_library_background_open.py` →
+  пустой вывод, `git hash-object framework/tests/test_library_background_open.py`
+  → `5229e0fa00bb06b4b6a9b1e9799d30e978bdeee3` (совпадает с зафиксированным до
+  порчи). `red_probe` при этом НЕ проставляется — поле ставится только вместе с
+  переводом в `Automated`; при следующем круге ревью проба будет повторена на
+  исправленной версии.
+
+### Замечание (не блокирующее)
+
+- Опечатка в комментарии `test_library_background_open.py:150`: «openTap» →
+  `openTab`.
+
+## Чек-лист качества (test-designer проходит перед `Review`)
+- [x] Один сценарий — один кейс; нет «и ещё проверить...»
+- [x] Given описывает полное состояние, воспроизводимое фикстурами (набор
+      потолка штатными дверями)
+- [x] Then проверяет наблюдаемое поведение, а не реализацию
+- [x] Заголовок сформулирован от ожидаемого поведения
+- [x] Указаны приоритет (P1), область (library) и источник требования
+- [x] Кейс независим от порядка выполнения других кейсов
+- [x] Блокер автоматизации отсутствует
+- [x] Строка `Инвариант:` дана — граница потолка как СЕМЕЙСТВО дверей
+      (TC-022/131-137/175), общий и различающийся факт назван явно

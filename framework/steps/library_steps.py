@@ -331,6 +331,21 @@ def assert_scroll_reset_to_top(driver, title: str, baseline_y: int, tolerance: i
     )
 
 
+@allure.step("Then список остался на прежней позиции (карточка «{title}» на Y≈{baseline_y})")
+def assert_scroll_retained(driver, title: str, baseline_y: int, tolerance: int = 60):
+    """TC-177/TC-178: парник `assert_scroll_reset_to_top`, ПРОТИВОПОЛОЖНЫЙ по смыслу
+    оракул — здесь ожидание «осталось где было», а не «вернулось к верху». Тело
+    намеренно идентично (сравнение с произвольным `baseline_y`, снятым уже ПОСЛЕ
+    скролла вниз, а не с Y верхней позиции) — заметки TC-177 называют это рутинным
+    добавлением по образцу существующего оракула."""
+    lib = LibraryScreen(driver)
+    y = lib.visible_card_y(title)
+    assert y is not None, f"карточка «{title}» не видна после переключения вкладок"
+    assert abs(y - baseline_y) <= tolerance, (
+        f"скролл неожиданно сместился: карточка «{title}» на Y={y}, ожидалось около {baseline_y}"
+    )
+
+
 # --- Пустая вкладка (TC-037: Library остаётся пустой после диалога Scan "0 файлов") ---
 
 @allure.step("Then текущая вкладка Library пуста («Nothing here yet»)")

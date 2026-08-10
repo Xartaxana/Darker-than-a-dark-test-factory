@@ -2,7 +2,7 @@
 key: "TC-156"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p2"
 summary: "Скачанная работа без рейтинга (rating=null, downloadPath!=null) видна ТОЛЬКО на вкладке FILES и ни на одной рейтинговой вкладке Library"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-03T18:25:00Z"
-updated: "2026-08-03T18:25:00Z"
+created: "2026-08-10T13:56:41Z"
+updated: "2026-08-10T13:56:41Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Скачанная работа без рейтинга (rating=null, downloadPath!=null) видна ТОЛЬКО на вкладке FILES и ни на одной рейтинговой вкладке Library
 
 _Спроецировано из `test-cases/downloads/TC-156.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-156 — Скачанная работа без рейтинга видна только на вкладке FILES
 

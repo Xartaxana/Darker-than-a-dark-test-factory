@@ -14,31 +14,19 @@ TC-189 (персистентность фоновой вкладки на лок
 
 TC-176 (снекбар подтверждения, area=tabs, красный замок BUG-059) — в `test_tabs.py`,
 не здесь: другая область (`tabs`), другой feature-тег (`browse-background-open-
-snackbar`)."""
+snackbar`).
+
+`downloaded_work_seeded_with_path` (TC-174/TC-189) — фикстура `conftest.py`, НЕ
+локальная копия `downloaded_work_seeded` (F1-ревью TC-174, замечание 2, D-0043):
+оба conftest-фикстуры делят один сидинг-хелпер `_seed_downloaded_work_default`,
+эта дополнительно возвращает device-путь `downloadPath`."""
 from __future__ import annotations
 
 import allure
 import pytest
 
-from framework.config import settings
-from framework.data import works as W
+from framework.data import recording_builder as rb
 from framework.steps import app_steps, browser_steps, library_steps
-
-_DOWNLOADED_WORK_FIXTURE = settings.DATA_DIR / "fixtures" / "downloaded_work.html"
-
-
-@pytest.fixture()
-def downloaded_work_seeded_with_path():
-    """Работа LOVED засеяна с рейтингом SAVE и скачанным локальным файлом — тот же
-    приём, что `downloaded_work_seeded` в `conftest.py`, но ДОПОЛНИТЕЛЬНО возвращает
-    device-путь `downloadPath` (нужен TC-174/TC-189, чтобы собрать ожидаемый
-    `file://`-URL той же формулой, что `WorkRating.localFileUrl()`
-    (LibraryScreen.kt:345-347: `file://$path`, path уже НЕ несёт схему), не хардкодя
-    путь — тот же приём, что `test_security_file_access.py::_PROBE_TARGET_ABS_PATH`,
-    только путь здесь получен из фактического возврата сидинга, а не собран вручную)."""
-    app_steps.clean_state()
-    device_path = app_steps.seed_downloaded_work(W.LOVED, "SAVE", _DOWNLOADED_WORK_FIXTURE)
-    yield W.LOVED, device_path
 
 
 @pytest.mark.p1
@@ -105,35 +93,50 @@ def test_library_files_tab_overlay_open_in_background_targets_local_file(
     # «Open in background tab»
     library_steps.open_in_background_via_overlay(driver, work.title)
 
-    # Then число вкладок становится 2, активная вкладка не меняется (те же три
-    # инварианта, что TC-173) — и новая (фоновая) вкладка несёт URL ЛОКАЛЬНОГО
-    # файла (file://<downloadPath>), а НЕ https://archiveofourown.org/works/<id>
+    # Then число вкладок становится 2, активная вкладка не меняется, экран остаётся
+    # Library (те же три инварианта, что TC-173 — F1-ревью замечание 1: третий
+    # инвариант, TabStrip не появился, был назван в Then, но не проверен) — и
+    # новая (фоновая) вкладка несёт URL ЛОКАЛЬНОГО файла (file://<downloadPath>),
+    # а НЕ https://archiveofourown.org/works/<id>
     app_steps.wait_persisted_tab_count(2, timeout=15)
     app_steps.assert_persisted_active_tab_index(0)
+    browser_steps.assert_tab_strip_not_visible(driver)
     app_steps.assert_persisted_tab_url_at(1, expected_url)
 
 
 @pytest.mark.p1
+@pytest.mark.replay
 @allure.id("TC-175")
 @allure.title(
     "Потолок MAX_TABS через «Open in background tab» из Library: диалог лимита, "
     "снекбара НЕТ, экран остаётся Library"
 )
+@pytest.mark.parametrize("replay", [rb.TAB_MARKER_FILENAME], indirect=True)
 def test_library_overlay_open_in_background_at_tab_limit_shows_dialog(
-    loved_work_seeded, driver,
+    loved_work_seeded, replay, driver,
 ):
+    """F1-ревью TC-175 (блокер): прежняя версия набирала потолок deep-link'ом на
+    `HOME_URL` + 8 тапами «New tab» (TabStrip.kt onNewTab -> `openTab(HOME_URL)`) —
+    КАЖДЫЙ тап заново грузит живой archiveofourown.org (9 загрузок home за прогон,
+    измерено `adb shell settings get global http_proxy` -> `:0`), без фикстуры
+    `replay`/маркера. При недоступном/изменившемся AO3 Given падал ТАЙМАУТОМ (страница
+    ошибки с baseUrl about:blank не инжектит `__ao3AppDark`), не содержательным
+    ассертом. Рецепт TC-131 (тот же потолок, дверь deep-link) избегает этого: набор
+    потолка — deep-link'и на детерминированные маркерные страницы `tab_markers.mitm`
+    (`marker1..marker7` + повтор `marker1`/`marker2`, `openTab` не дедуплицирует URL),
+    ЖИВОЙ остаётся только САМЫЙ ПЕРВЫЙ безусловный старт-ап загрузки Home-вкладки
+    (`wait_home_ready_for_deep_link` — тот же принятый минимум зависимости, что у
+    ЛЮБОГО теста этого рецепта, TC-131/TC-137), а не девять."""
     work = loved_work_seeded
 
-    # Given открыто 10 вкладок Browse (MAX_TABS) — рецепт TC-022/TC-137: стартовая
-    # Home-вкладка (index 0) + 1 deep-link на HOME_URL (TabStrip ещё скрыт при
-    # tabs.size==1) + 8 тапов «New tab». Каждый промежуточный тап не должен
-    # преждевременно упереться в диалог лимита.
+    # Given открыто 10 вкладок Browse (MAX_TABS) — рецепт TC-131: стартовая
+    # Home-вкладка (index 0) + 9 deep-link'ов на маркерные страницы (marker1..marker7,
+    # затем повтор marker1/marker2 — `openTab` не дедуплицирует URL, повтор штатно
+    # даёт отдельную вкладку). Каждый маркер обслуживается replay детерминированно.
     app_steps.wait_home_ready_for_deep_link(driver)
-    app_steps.open_deep_link(browser_steps.HOME_URL)
-    browser_steps.assert_tab_strip_visible(driver, timeout=10)
-    for _ in range(8):
-        browser_steps.open_new_tab(driver)
-        browser_steps.assert_tab_limit_dialog_not_shown(driver)
+    for i in (1, 2, 3, 4, 5, 6, 7, 1, 2):
+        app_steps.open_deep_link(rb.tab_marker_url(i))
+        browser_steps.assert_tab_title_visible(driver, rb.tab_marker_title(i), timeout=15)
     app_steps.wait_persisted_tab_count(10, timeout=15)
 
     # Given пользователь на экране Library — карточка работы видна (засеяна
@@ -147,7 +150,7 @@ def test_library_overlay_open_in_background_at_tab_limit_shows_dialog(
     library_steps.open_in_background_via_overlay(driver, work.title)
 
     # Then диалог «Tab limit reached» с дословным текстом появляется ПОВЕРХ экрана
-    # Library — И снекбара «Opened in background» НЕТ (openTap возвращает false ДО
+    # Library — И снекбара «Opened in background» НЕТ (openTab возвращает false ДО
     # записи сигнала backgroundTabOpen, до dismiss — дольше живое окно проверки)
     browser_steps.assert_tab_limit_dialog_shown(
         driver, expected_max=10,
@@ -211,10 +214,15 @@ def test_background_local_file_tab_persists_after_kill_relaunch(
     app_steps.wait_persisted_tab_count(2, timeout=20)
     app_steps.assert_persisted_tab_url_at(1, expected_url)
 
-    # And при переключении на эту вкладку WebView рендерит содержимое файла —
+    # And при переключении на эту вкладку WebView РЕАЛЬНО рендерит содержимое файла
+    # (не только схему URL — F1-ревью замечание: `assert_local_file_opened` одна
+    # доказывает лишь `file://`-схему current_url, не факт рендера DOM; вторая
+    # строка по образцу TC-034, `test_downloads.py:110-111`, доказывает, что
+    # мобильный viewport/reader.css реально инжектированы, т.е. DOM загрузился) —
     # сводим число вкладок к одной (закрываем Home), т.к. chromedriver прилипает
     # к вкладке-0 при >1 живой WebView (см. модульный докстринг test_tabs.py)
     app_steps.open_tab(driver, "Browse")
     browser_steps.switch_to_tab(driver, 1)
     browser_steps.close_other_tabs(driver)
     browser_steps.assert_local_file_opened(driver)
+    browser_steps.assert_downloaded_page_styled(driver)

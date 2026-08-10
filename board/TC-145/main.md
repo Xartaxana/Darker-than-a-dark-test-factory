@@ -2,7 +2,7 @@
 key: "TC-145"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Слайдер размера шрифта на экране Settings меняет текст WebView на обеих границах диапазона (0/6)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-03T12:00:00Z"
-updated: "2026-08-03T12:00:00Z"
+created: "2026-08-10T14:20:00Z"
+updated: "2026-08-10T14:20:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Слайдер размера шрифта на экране Settings меняет текст WebView на обеих границах диапазона (0/6)
 
 _Спроецировано из `test-cases/settings/TC-145.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-145 — Font size row на Settings меняет размер текста WebView на границах диапазона
 

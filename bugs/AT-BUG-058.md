@@ -4,7 +4,7 @@ title: "TC-096 замеряет холодный старт (force-stop+pm clear
 type: test_debt
 debt_kind: broken_environment
 severity: major
-status: Fixed
+status: Verified
 found_in: "framework commit 8e4ff25 (тестируемая сборка приложения 1.11 (versionCode 12), build bfc8f41a — от сборки НЕ зависит, см. «Контрольный замер»)"
 fixed_in: "framework (test-maintainer, 2026-08-10) — framework/tests/test_performance.py, framework/steps/perf_steps.py"
 last_seen_in: "RUN-20260805-0437 (2026-08-05)"
@@ -12,8 +12,8 @@ test_cases: ["TC-096"]
 runs: ["RUN-20260805-0437"]
 duplicates: []
 regression_of: ""
-status_since: "2026-08-10T11:38:00Z"
-updated: "2026-08-10T11:38:00Z"
+status_since: "2026-08-10T12:56:34Z"
+updated: "2026-08-10T12:56:34Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -202,3 +202,4 @@ restart_app_via_adb_asserting_new_process` — TC-133/134), тоже вызыв�
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-08-10 | test_debt (framework), fix `4eeddf4` в HEAD; source_commit приложения `6f884d97` (versionCode 12, dev-local — сборка не менялась, долг тестовой обвязки) | TC-096 (`test_cold_start_within_relative_budget`), независимый одиночный прогон `Invoke-Pytest -k test_cold_start_within_relative_budget -v` | `1 passed, 344 deselected in 46.72s`, `PYTEST_EXIT=0`; никакого 60s TimeoutError на baseline (характерный симптом бага), wall укладывается в тот же порядок, что и 3 прогона maintainer'а (43.64/46.25/45.39s) | Verified |
