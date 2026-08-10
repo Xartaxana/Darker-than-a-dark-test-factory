@@ -77,7 +77,15 @@ LOCATOR_LITERAL_NEEDLE = "UiSelector("
 
 # Известные исключения (test debt, см. докстринг). Ключ: (rel_posix_из_framework, rule_id).
 # rule_id: "locators" | "allure_id". Пусто — устраняй причину, не добавляй сюда.
-ALLOWLIST: set[tuple[str, str]] = set()
+ALLOWLIST: set[tuple[str, str]] = {
+    # AT-BUG-059 (Lead 2026-08-10): юнит-проба САМОГО BaseScreen (регресс-гвард
+    # AT-BUG-048) — импорт screens по существу необходим для тестирования класса
+    # screens-слоя; это НЕ обход layering продуктовым тестом (C1 писан против
+    # tests->локаторы мимо steps). Перенос невозможен: сканер зеркалит
+    # pytest testpaths (инвариант докстринга) — вне tests/ файл выпал бы из
+    # штатного прогона.
+    ("tests/test_swipe_to_text_settle_unit.py", "locators"),
+}
 
 
 class Finding:
