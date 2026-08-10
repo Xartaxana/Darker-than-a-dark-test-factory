@@ -6155,6 +6155,27 @@
     "archived": false
   },
   {
+    "key": "BUG-061",
+    "path": "board/BUG-061/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "CI молчаливо генерирует throwaway-keystore при отсутствии переменной KEYSTORE_BASE64 — установка поверх падает INSTALL_FAILED_UPDATE_INCOMPATIBLE",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:major"
+    ],
+    "updated": "2026-08-10T17:05:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "RUN-20260702-0300",
     "path": "board/RUN-20260702-0300/main.md",
     "parent": null,
