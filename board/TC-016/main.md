@@ -7,14 +7,14 @@ priority: "p0"
 summary: "Смена рейтинга перемещает work из одной вкладки Library в другую"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:library", "risk:R-04", "automation:quarantined"]
+labels: ["test-case", "area:library", "risk:R-04", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-05T03:20:00Z"
-updated: "2026-08-05T03:20:00Z"
+created: "2026-08-10T11:20:00Z"
+updated: "2026-08-10T11:20:00Z"
 archived: false
 resolution: "done"
 ---
@@ -77,3 +77,22 @@ _Спроецировано из `test-cases/library/TC-016.md` (источни�
   вкладку READ, `assert_work_not_in_tab(LIKE)` при этом прошёл — работа корректно
   покинула KUDOSED). Осмысленный assert, не таймаут. Порча откачена в том же ходе
   (`git checkout -- framework/tests/test_library.py`), дифф чист. Тест умеет падать.
+
+## Снятие карантина (test-maintainer, 2026-08-10, AT-BUG-057)
+`automation_status: quarantined → active` (guard-переход, `schemas/transitions.yaml`
+`{from: quarantined, to: active, by: [test-maintainer]}`), `quarantine_*`-поля
+очищены. Причина карантина: `AssertionError: меню рейтинга не появилось на
+странице работы` — гонка между navigation commit (`current_url`) и реальным
+применением состояния `isWorkPage` (`BrowserViewModel.onPageLoaded`, вызывается
+из `onPageFinished`, т.е. позже commit'а), от которой зависит рендер `RatingMenu`
+(`BottomBar.kt`: `if (selectedTab == AppTab.BROWSE && isWorkPage)`). Починка —
+`framework/screens/browser_screen.py::open_work()` теперь ждёт маркер
+`window.__ao3AppDark` (инжектится тем же `onPageFinished` сразу после
+`onPageLoaded`) ПОСЛЕ commit'а URL, тем же приёмом, что уже `wait_home_page_loaded`
+использует для домашней страницы — доказывает, что `isWorkPage` уже применилось,
+прежде чем `rate_current_work`/`add_tag_via_panel` и другие шаги начинают
+опрашивать `RatingOverlay`. Диагностика падения усилена (`rating_steps.py`):
+сообщение ассерта теперь называет URL активной вкладки и признак work-page.
+3/3 зелёных изолированных прогона (`Invoke-Pytest -k
+test_change_rating_moves_work_between_tabs -v`, 53.88s/51.88s/52.27s,
+`PYTEST_EXIT=0` каждый раз) — детали в `bugs/AT-BUG-057.md`.

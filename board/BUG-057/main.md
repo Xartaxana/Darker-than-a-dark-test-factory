@@ -2,7 +2,7 @@
 key: "BUG-057"
 project: "AO3"
 issueType: "bug"
-status: "bug-open"
+status: "bug-verified"
 priority: "p1"
 summary: "Авто-скачивание НЕ запускается при первичной простановке Favorite через панель work-страницы (регрессия фикса BUG-014, путь onRateWorkRequested)"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-05T03:25:00Z"
-updated: "2026-08-05T03:25:00Z"
+created: "2026-08-10T09:16:46Z"
+updated: "2026-08-10T09:16:46Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Авто-скачивание НЕ запускается при первичной простановке Favorite через панель work-страницы (регрессия фикса BUG-014, путь onRateWorkRequested)
 
 _Спроецировано из `bugs/BUG-057.md` (источник правды).
-Статус в нашей машине: **Open**._
+Статус в нашей машине: **Verified**._
 
 # BUG-057 — Авто-скачивание НЕ срабатывает на рейтинг-оверлей (регрессия BUG-014)
 
@@ -109,8 +109,38 @@ BUG-014 описывает класс ошибки: **edge-vs-level** (пров�
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-08-10T09:16:46Z | source_commit 6f884d979 (state/app-under-test.yaml пишет version_name 1.10/versionCode 11 — известный залипший парсер; фактические метаданные APK `app-under-test/app/build/outputs/apk/debug/output-metadata.json`: versionCode 12, versionName "dev-local"), apk_sha256 034c0df5b3... | TC-032 (`test_downloads.py::test_auto_download_triggers_on_loved_rating`), изолированный прогон `Invoke-Pytest -k test_auto_download_triggers_on_loved_rating --reruns 0` | `collected 314 items / 313 deselected / 1 selected` → `tests\test_downloads.py .` → `AT-BUG-026 device-liveness guard: recoveries this session = 0/2` → `1 passed, 313 deselected in 86.53s (0:01:26)` → `PYTEST_EXIT=0` | **Verified** (verified-by-construction). Нестандартный контекст: история app-under-test переписана force-push'ем (source_commit 6f884d979, от 63f6aac) — ни дефектный патч 77d65bc4, ни числившийся фиксом revert fdcbad9 в текущей линии физически не существуют; failure-analyst подтвердил grep'ом (`grep -rn "previousRating" app-under-test/` = 0 совпадений, позитивный контроль `autoDownloadSaved` = 11 совпадений — труба вызова доказана). Оракул чувствителен: TC-032 был красным на предыдущей сборке (RUN-20260805-0437) и в TC-114/115 (тот же класс предиката, другой баг BUG-014) до сих пор красный в свежей полной регрессии RUN-20260810-0146 — TC-114/115 НЕ реопенят BUG-057, они привязаны к BUG-014. Изолированный прогон TC-032 на текущей сборке зелёный. |
 
 ## Обсуждение
+
+**[Lead @ 2026-08-09T13:25:00Z] Open→Fixed — ход владельца** (слово в чате
+на разборе репетиции: «ок, ставь BUG-057 Fixed»; легальный переход
+`Open→Fixed by human`, исполнен Lead'ом по слову — канал T0-ходов
+репетиции). Фикс = revert-пуш владельца: патч A (`77d65bc4`), породивший
+регрессию (чтение рейтинга ПОСЛЕ апсерта, `BrowserViewModel.kt:1063`),
+отозван коммитами `e8c948b`/`fdcbad9` (app-under-test, main); сборка
+1.10 (vc11, `fdcbad9`) собрана 2026-08-09T13:17:11Z — новее `found_in`
+1.11/12. Верификация — штатный D1 (fix-verifier): TC-032 должен
+зазеленеть на этой сборке; очередь следующего /qa-loop (нужен девайс).
+
+**[gitlab:dyakagreen @ 2026-08-09T19:12:42.987Z]** > ready for testing
+
+**[fix-verifier @ 2026-08-10T09:16:46Z] Fixed→Verified.** Изолированный прогон
+TC-032 (`Invoke-Pytest -k test_auto_download_triggers_on_loved_rating --reruns 0`)
+зелёный на текущей сборке (source_commit 6f884d979, APK versionCode 12/
+"dev-local" по output-metadata.json — `app-under-test.yaml` версии 1.10/11
+не годятся, известный залипший парсер). Вердикт **verified-by-construction**,
+не «фикс сработал»: история app-under-test была переписана force-push'ем —
+ни дефектный патч `77d65bc4` (чтение `previousRating` ПОСЛЕ `upsertWorkRating`
+в `onRateWorkRequested`), ни числившийся `fixed_in` revert `fdcbad9` в текущей
+линии физически не существуют (осиротевшая ветка). failure-analyst подтвердил
+кодом: `grep -rn "previousRating" app-under-test/` → 0 совпадений; позитивный
+контроль вызова тем же grep — `autoDownloadSaved` → 11 совпадений (труба не
+сломана, дефектной строки действительно нет). Оракул чувствителен: TC-032 сам
+был красным на дефектной сборке (`RUN-20260805-0437`), а сосед по предикату
+TC-114/115 (другой баг, `BUG-014`) до сих пор красный в свежей полной
+регрессии `RUN-20260810-0146` — не реопеню BUG-057 по ним, это чужой дефект.
+`known_issue` сброшен в `false`, лок снят.
 
 ## Чек-лист качества (bug-reporter проходит перед публикацией)
 - [x] Проверены дубликаты среди открытых багов (`bugs/`, status != Verified/Rejected) — дубликата не найдено; BUG-014 — родительский баг (регрессия, не дубль)

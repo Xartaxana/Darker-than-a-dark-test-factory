@@ -4,7 +4,7 @@ title: "settings_screen.rename_filter_button_locator ищет content-desc «Ren
 type: test_debt
 debt_kind: weak_locator
 severity: major
-status: Fixed
+status: Verified
 found_in: "framework commit 2f26f8a (тестируемая сборка приложения 1.10 (versionCode 11), build 6455af0c — от сборки НЕ зависит)"
 fixed_in: "d96eef9"
 last_seen_in: "RUN-20260810-0146 (2026-08-10)"
@@ -12,8 +12,8 @@ test_cases: ["TC-085", "TC-086"]
 runs: ["RUN-20260804-1624", "RUN-20260810-0146"]
 duplicates: []
 regression_of: ""
-status_since: "2026-08-10T09:34:00Z"
-updated: "2026-08-10T09:34:00Z"
+status_since: "2026-08-10T12:26:19Z"
+updated: "2026-08-10T12:26:19Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -76,6 +76,7 @@ return (AppiumBy.XPATH, f'(//*[@text="{name}"]/following::*[@content-desc="Renam
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
 | 2026-08-10 | 1.10 (11), сборка приложения не тронута (test_debt в обвязке) | `Invoke-Pytest -k "test_rename_filter_profile" -v` (TC-085 `test_rename_filter_profile_keeps_query_string`, TC-086 `test_rename_filter_profile_to_duplicate_name`) — 3 прогона подряд | run1 `2 passed, 312 deselected in 131.56s (0:02:11)`, run2 `2 passed, 312 deselected in 131.26s (0:02:11)`, run3 `2 passed, 312 deselected in 126.87s (0:02:06)`, все три `PYTEST_EXIT=0` | Fixed (test-maintainer; таблица верификации D1 — за fix-verifier следующим проходом) |
+| 2026-08-10T12:26:19Z | source_commit 6f884d97, APK versionCode 12/dev-local (test_debt в обвязке фреймворка, сборка приложения не тронута фиксом) | fix-verifier, независимый прогон: `Invoke-Pytest -k "test_rename_filter_profile" -v` — TC-085 `test_rename_filter_profile_keeps_query_string`, TC-086 `test_rename_filter_profile_to_duplicate_name` (оба прогнаны, 1 прогон) | `2 passed, 338 deselected in 138.62s (0:02:18)` `PYTEST_EXIT=0` | **Verified** — fix-verifier, D1 mode=verify, независимое подтверждение поверх 3x-серии maintainer'а |
 
 ## Обсуждение
 
@@ -122,6 +123,16 @@ content-desc). Новых аналогичных дефектов не найд�
 не затронуты, живое дерево доступно штатно).
 
 Статус: `Open` → `Fixed`. Лок снят.
+
+**2026-08-10T12:26:19Z — fix-verifier (D1, mode=verify):** независимый прогон
+`Invoke-Pytest -k "test_rename_filter_profile" -v` на актуальном HEAD (фикс
+`d96eef9` в дереве, `git log` подтверждает), device `emulator-5554`
+(`Get-Device` → `DEVICE`) — `2 passed, 338 deselected in 138.62s (0:02:18)`,
+`PYTEST_EXIT=0`. Оба связанных TC (TC-085, TC-086) зелёные. Сборка
+приложения — `source_commit 6f884d97`, установленный APK `versionCode
+12`/`dev-local` (`app-under-test/app/build/outputs/apk/debug/output-metadata.json`),
+долг сугубо в обвязке, от сборки не зависит (см. «Окружение»). `Fixed` →
+`Verified`, лок снят.
 
 ## Ссылки
 

@@ -17,8 +17,8 @@ updated: "2026-08-10T11:38:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
-resolution: "fixed"
-resolution_comment: "Развязаны замер и Appium-сессия: driver-фикстура запрошена только ради device-liveness guard (B1) и немедленно quit_driver()'ится ДО baseline/observed; пересоздаётся заново только для финального wait_ui_ready. Плюс капнутый ретрай (3 попытки) в measure_cold_start на отсутствие TotalTime (побочная находка п.3). 3/3 зелёных изолированных прогона (43.64s/46.25s/45.39s, PYTEST_EXIT=0 каждый) — бюджет не подгонялся, красных по бюджету не было."
+resolution: ""
+resolution_comment: ""
 known_issue: "false"
 blocked_reason: ""
 lock: ""

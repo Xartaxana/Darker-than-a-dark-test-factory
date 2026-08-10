@@ -7,7 +7,7 @@ priority: "p1"
 summary: "Авто-клик kudos на AO3 срабатывает ретроактивно при правке тега ранее отмеченной работы"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["bug", "test_case:TC-138", "test_case:TC-139", "test_case:TC-140", "test_case:TC-141", "test_case:TC-142", "test_case:TC-143", "test_case:TC-144", "sev:major"]
+labels: ["bug", "test_case:TC-138", "test_case:TC-139", "test_case:TC-140", "test_case:TC-141", "test_case:TC-142", "test_case:TC-143", "test_case:TC-144", "run:RUN-20260810-0146", "sev:major"]
 components: []
 fixVersions: []
 watchers: []

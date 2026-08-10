@@ -52,7 +52,56 @@
 # грань). Обоснование и код-якоря — в комментариях у самих записей;
 # решение и §9-метки — docs/01 §10 (ц). inventoried_at_commit НЕ меняется:
 # сборка та же (63f6aac), это коррекция гранулярности, а не новый build.
-inventoried_at_commit: "63f6aac3b1ea1dfad82f68b8196aa6cf56f41853"
+# ПЕРЕИНВЕНТАРИЗАЦИЯ 2026-08-09/10 (test-strategist; вход: триггер rules.yaml
+# «приложение изменилось» + E7 QAREADY-26/28). Сборка 6f884d97 (9 коммитов
+# поверх 63f6aac, включая 94a124b «Align PROJECT.md and DESIGN.md with actual
+# UI labels and filtering model»). Инвентаризация сделана ПО КОДУ
+# (app/src/main/**), PROJECT.md использован только как оглавление.
+# `inventoried_at_commit` поднят до 6f884d97 — это НОВЫЙ build, а не коррекция
+# гранулярности (отличие от правок 2026-07-28 / 2026-08-03).
+#
+# ДЕЛЬТА (полный список; обоснование каждой записи — в комментарии у неё):
+#  A. Новое в этой сборке (продуктовое поведение):
+#     + library-card-open-background-tab      (коммит 6e43b14 / #26, QAREADY-26)
+#     + library-tab-scroll-retained           (коммит 6f884d97 / #28, QAREADY-28)
+#     + library-sort-change-offscreen-reset   (тот же коммит; вторая грань lastSort)
+#     ~ library-sort-scroll-reset             (title уточнён: сброс только на РЕАЛЬНОЙ
+#                                              смене сортировки, а не на каждом входе
+#                                              вкладки в композицию)
+#     ~ browse-tab-open-background-link       (комментарий: снекбар вынесен в свою
+#                                              запись, TC-026 его не покрывает)
+#  B. Пробелы САМОГО РЕЕСТРА, вскрытые переинвентаризацией (код существовал и на
+#     63f6aac — для контролов Settings доказано UI-дампом сессии CH-007 от
+#     2026-08-02, для снекбара — git-сверкой критик-входа 2026-08-10; то есть
+#     это не дельта сборки, а дыра инвентаря — фича жила без записи и потому не
+#     могла попасть даже в секцию «Фичи без единого кейса»):
+#     + settings-auto-apply-filter-toggle
+#     + browse-filter-autoapply-on-navigation
+#     + browse-filter-autoapply-off-drops-active
+#     + settings-fetch-missing-metadata
+#     + settings-debug-copy-url-toggle
+#     + library-sort-invalid-pick-fallback
+#     + library-filters-clear-all-topbar
+#     + browse-background-open-snackbar       (ПЕРЕКЛАССИФИЦИРОВАНА из A по
+#                                              критик-входу 2026-08-10: снекбар
+#                                              фонового открытия существовал уже
+#                                              на 63f6aac — `MainActivity.kt`
+#                                              стр.271-273 того коммита, текст
+#                                              «Opened in new tab», сигнал
+#                                              Boolean `tabOpenedInBackground`,
+#                                              тот же путь long-press. 6e43b14
+#                                              изменил ТЕКСТ и семантику сигнала,
+#                                              а не завёл эффект)
+#     + browse-scroll-to-top-fab
+#  C. Удалённых/переименованных фич не найдено: ни одна существующая запись не
+#     потеряла свой код-якорь (проверено чтением source каждой затронутой
+#     записи; id стабильны, ре-теггинг кейсов НЕ требуется).
+#  D. Инфраструктурные коммиты пачки (GitLab CI `.gitlab-ci.yml`, схема версий
+#     `app/build.gradle.kts`: versionCode = CI_PIPELINE_IID+12, versionName =
+#     тег без «v» / `dev-<IID>` / `dev-local`, общий debug-keystore) записей НЕ
+#     получают: это не наблюдаемое поведение приложения, а конвейер поставки.
+#     Их следствие для QA (формат `found_in:`) отражено в docs/01 §1.
+inventoried_at_commit: "6f884d979a5c19465c6d8647737376864f424555"
 
 features:
   # ── Browse/WebView ──────────────────────────────────────────────────────
@@ -109,10 +158,52 @@ features:
     title: "Список вкладок (URL, порядок, количество) переживает принудительный рестарт процесса приложения (SharedPreferences)"
     screen: browse
     source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt"
+  # Комментарий покрытия (test-strategist 2026-08-09, уточнён по критик-входу
+  # 2026-08-10): у фичи есть ВТОРОЙ наблюдаемый эффект — снекбар подтверждения
+  # фонового открытия. Он НЕ появился в этой сборке: на 63f6aac он уже был
+  # (`MainActivity.kt` стр.271-273 того коммита, текст «Opened in new tab»,
+  # Boolean-сигнал `tabOpenedInBackground`), а 6e43b14 переписал ТЕКСТ и
+  # семантику сигнала («Opened in background (N tabs)»,
+  # `BackgroundTabOpen(seq, tabCount)`; `BrowserViewModel.openTab:283`,
+  # `MainActivity.kt:273-278`). Эффект вынесен в ОТДЕЛЬНУЮ запись
+  # `browse-background-open-snackbar` (ниже), а не дописан в title: TC-026
+  # (единственный кейс этой записи) ассертит только «новая вкладка создана,
+  # активная не переключилась» и снекбар не проверяет — дописав его в title, мы
+  # зачли бы непокрытую грань покрытой (урок hide/dim).
   - id: browse-tab-open-background-link
     title: "Long-press по ссылке в WebView открывает её в новой фоновой вкладке без переключения активной"
     screen: browse
     source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserScreen.kt"
+  # НОВАЯ ЗАПИСЬ, но НЕ новое поведение (классификация исправлена критик-входом
+  # 2026-08-10, git-сверка по 63f6aac): снекбар подтверждения фонового открытия
+  # существовал и в прошлой сборке — `MainActivity.kt` стр.271-273 коммита
+  # 63f6aac, текст «Opened in new tab», Boolean-сигнал `tabOpenedInBackground`,
+  # тот же путь long-press. Записи в реестре у него не было ⇒ это ДЕВЯТЫЙ
+  # экземпляр класса B этого прохода («фича в коде, записи нет»), а не дельта
+  # сборки. Что реально сделал 6e43b14: переписал ВИДИМУЮ СТРОКУ и семантику
+  # сигнала (Boolean → `BackgroundTabOpen(seq, tabCount)`, замена сообщения
+  # вместо очереди). Тест-долга это не создало — старую строку не ассертил ни
+  # один кейс и ни один автотест (проверено критик-входом), но факт назван явно:
+  # видимая пользователю строка покрытой области сменилась молча.
+  # Отдельное наблюдаемо различимое поведение, общее для ОБОИХ входов фонового
+  # открытия (long-press по ссылке в WebView и long-press по карточке Library):
+  #  - эффект: снекбар с ДОСЛОВНЫМ текстом «Opened in background (N tabs)», где
+  #    N — общее число вкладок ПОСЛЕ открытия (`MainActivity.kt:275-276`,
+  #    единственное число при N==1: «(1 tab)»);
+  #  - вторая грань, ради которой заведена своя запись: сигнал — не Boolean, а
+  #    `BackgroundTabOpen(seq, tabCount)` (`BrowserViewModel.kt:100`, `:283`), и
+  #    `LaunchedEffect` ключуется ЦЕЛИКОМ на сигнале (`MainActivity.kt:273`) ⇒
+  #    два открытия подряд ЗАМЕНЯЮТ видимый снекбар новым счётчиком, а не
+  #    ставят два сообщения в очередь. Then «второе сообщение заменило первое»
+  #    отличается от Then самого открытия вкладки;
+  #  - границы: при отказе на потолке MAX_TABS сигнал не выставляется
+  #    (`openTab:272-275` возвращает false до `copy`) — снекбара нет, есть
+  #    диалог лимита; открытие в ПЕРЕДНЕЙ вкладке (`background=false`) снекбар
+  #    не показывает и вдобавок ГАСИТ уже показанный (`:283` пишет null).
+  - id: browse-background-open-snackbar
+    title: "Фоновое открытие вкладки подтверждается снекбаром «Opened in background (N tabs)» со счётчиком всех вкладок; следующее открытие подряд заменяет сообщение новым счётчиком, а не встаёт в очередь"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/MainActivity.kt"
   - id: browse-tab-switch-active
     title: "Тап по чипу неактивной вкладки делает её активной: показываемый контент WebView переключается на эту вкладку, индикатор активности перемещается (switchTab)"
     screen: browse
@@ -306,13 +397,84 @@ features:
     title: "Сортировка Rating, доступна только на вкладке Files"
     screen: library
     source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+  # title уточнён test-strategist 2026-08-09 (сборка 6f884d97, коммит 6f884d97
+  # «Keep each Library tab's scroll position…»): МЕХАНИЗМ сброса изменился, и
+  # прежняя формулировка теперь описывала бы и то, чего код больше не делает.
+  # Было: `LaunchedEffect(sort)` срабатывал при КАЖДОМ входе вкладки в
+  # композицию (pager утилизирует off-screen страницы) и тем самым выбрасывал
+  # только что восстановленный скролл. Стало (`LibraryScreen.kt:905-912`):
+  # `listState` + saveable `lastSort`, `scrollToItem(0)` только когда
+  # `sort != lastSort`. id НЕ меняется (TC-030/TC-063 ссылаются на него и
+  # по-прежнему проверяют именно этот Then — сброс на реальной смене
+  # сортировки); две ДРУГИЕ грани того же механизма вынесены в отдельные
+  # записи ниже (`library-tab-scroll-retained`,
+  # `library-sort-change-offscreen-reset`), потому что их Then различимы.
   - id: library-sort-scroll-reset
-    title: "Сброс скролла списка на верх при смене сортировки"
+    title: "Смена сортировки сбрасывает скролл списка на верх (сравнение с сохранённым lastSort — на повторном входе во вкладку без смены сортировки сброса НЕТ)"
     screen: library
     source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+  # НОВАЯ запись (test-strategist 2026-08-09; коммит 6f884d97 / #28,
+  # QAREADY-28). Наблюдаемо различимое поведение: позиция скролла КАЖДОЙ
+  # вкладки Library сохраняется при переключении между вкладками и возврате.
+  # Код: `LibraryScreen.kt:905` `rememberLazyListState()` (saveable) внутри
+  # `WorkList`, вызываемого из страницы `HorizontalPager` (`:232-262`) — pager
+  # сохраняет saveable-состояние утилизированной страницы; то, что раньше
+  # выбрасывало позицию, — эффект сброса, теперь ограниченный реальной сменой
+  # сортировки (см. запись выше). НЕ покрывается ни TC-030/TC-063 (их Then —
+  # сброс), ни кейсами вкладок Library (TC-003/016/017 — состав вкладок).
+  - id: library-tab-scroll-retained
+    title: "Позиция скролла каждой вкладки Library сохраняется при переключении на другую вкладку и возврате обратно"
+    screen: library
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+  # НОВАЯ запись (test-strategist 2026-08-09; вторая грань того же коммита).
+  # Then отличается и от «скролл сохранился», и от «сортировка сбросила
+  # скролл»: сортировка сменена, ПОКА вкладка была вне экрана, — сброс
+  # применяется ОТЛОЖЕННО, в момент возврата на неё (saveable `lastSort`
+  # переживает утилизацию страницы, `LibraryScreen.kt:906-912`). Именно ради
+  # этой грани в коде выбран `rememberSaveable`, а не `remember`, — то есть
+  # это заявленное поведение, а не побочный эффект.
+  - id: library-sort-change-offscreen-reset
+    title: "Сортировка, изменённая пока вкладка Library была вне экрана, сбрасывает её скролл на верх при возврате на эту вкладку (а не показывает новый порядок со старым смещением)"
+    screen: library
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+  # ПРОБЕЛ РЕЕСТРА (переинвентаризация 2026-08-09; фича жила и на 63f6aac).
+  # Выбор сортировки ОДИН на весь экран и хранится в `MainActivity`
+  # (`:289` `var librarySortBy by remember` — НЕ saveable, не persisted). Если
+  # сохранённый выбор недопустим для активной вкладки (Rating выбран на Files,
+  # затем переход на любую другую вкладку), он НЕ теряется, но и НЕ
+  # применяется: и сортировка (`LibraryScreen.kt:228-229` `effectiveSort`), и
+  # иконка-триггер в топ-баре (`MainActivity.kt:372-373`, content-desc
+  # «Sort library: <label>») откатываются к Last read, а при возврате на Files
+  # снова показывают Rating. Then отличается от TC-065 (тот проверяет, что
+  # опции Rating НЕТ в выпадающем списке вне Files) — здесь наблюдается судьба
+  # уже сделанного выбора, то есть «молчаливо не применённый пользовательский
+  # ввод» (класс R-16).
+  - id: library-sort-invalid-pick-fallback
+    title: "Выбор сортировки, недопустимый для активной вкладки (Rating вне Files), молча заменяется на Last read в списке и в иконке топ-бара, но сохраняется и снова действует при возврате на Files"
+    screen: library
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+  # ПРОБЕЛ РЕЕСТРА (переинвентаризация 2026-08-09; фича жила и на 63f6aac).
+  # Топ-бар Library: бейдж с числом активных фильтров на иконке фильтра и
+  # отдельная иконка «Clear filters», появляющаяся ТОЛЬКО при activeCount > 0 и
+  # сбрасывающая ВСЕ фильтры разом (`MainActivity.kt:341-362`,
+  # `libraryFilters = LibraryFilters()`). Отдельные фильтры покрыты
+  # (TC-027..029, TC-060/061) через лист фильтров, но ни бейдж-счётчик, ни
+  # массовый сброс из топ-бара не ассертит ни один кейс.
+  - id: library-filters-clear-all-topbar
+    title: "Топ-бар Library: бейдж с числом активных фильтров и кнопка «Clear filters» (видна только при активных фильтрах) сбрасывают все фильтры разом"
+    screen: library
+    source: "app/src/main/java/com/example/ao3_wrapper/MainActivity.kt"
   # library-card-actions раздроблена test-strategist 2026-07-17 (правило
   # гранулярности; след LibraryScreen.kt): одна запись склеивала ПЯТЬ разных
   # Then. WorkCard (стр.969-1009) + overlay DeleteWorkSheetContent (стр.352-365):
+  # ВНИМАНИЕ (сверка 2026-08-10, критик-вход): якоря этого исторического
+  # комментария устарели на сборке 6f884d97 — `WorkCard` теперь :945,
+  # `DeleteWorkSheetContent` переименован в `WorkActionsSheetContent` (:349-400,
+  # три действия вместо двух). Строки ниже НЕ переписываю (это исторический
+  # след дробления, а не паспорт текущего кода); актуальные якоря — в
+  # комментарии записи `library-card-open-background-tab` ниже. Тот же
+  # устаревший символ живёт в `framework/screens/library_screen.py:135` — вне
+  # owns этой роли, доложено координатору.
   #   - тап по телу карточки → onOpenWork(work.url), открытие работы в браузере
   #     (стр.878/927, комбинированный клик Column) — НИ ОДНОГО кейса не было;
   #     «открыть» умбреллы это действие маскировал (тот же класс, что hide/dim);
@@ -363,6 +525,39 @@ features:
     source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
   - id: library-card-delete-work
     title: "Overlay «Delete work» удаляет файл и строку WorkRating целиком"
+    screen: library
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+  # НОВАЯ запись (test-strategist 2026-08-09; коммит 6e43b14 / #26, QAREADY-26).
+  # Третье действие в overlay длинного нажатия по карточке (сам overlay уже
+  # существовал двумя удаляющими действиями — `library-card-delete-file`/
+  # `library-card-delete-work`; компонент переименован
+  # `DeleteWorkSheetContent` → `WorkActionsSheetContent`, `LibraryScreen.kt:349`).
+  # Then наблюдаемо отличается от обоих удаляющих и от `library-card-open-work`
+  # (тап по телу карточки), который УХОДИТ на Browse:
+  #  - `LibraryScreen.kt:376-384` пункт «Open in background tab» (подпись
+  #    дословно; описание «Opens without leaving the library, so you can queue
+  #    up several works.»), `:321-324` закрывает overlay и зовёт
+  #    `onOpenInBackground(target.openUrl)` → `MainActivity.kt:529`
+  #    `browserViewModel.openTab(url, background = true)` — экран НЕ
+  #    переключается на Browse и активная вкладка не меняется (в отличие от
+  #    `onOpenWork` `:331-335` и `onOpenFile` `:522-526`);
+  #  - цель зависит от вкладки: на Files это ЛОКАЛЬНАЯ копия
+  #    (`localFileUrl()`), на остальных — AO3-URL работы
+  #    (`LibraryScreen.kt:256-259`), то есть совпадает с тем, что делает тап по
+  #    той же карточке;
+  #  - граница потолка принадлежит ЭТОЙ же записи (прецедент
+  #    `browse-deep-link-new-tab` / `library-card-open-work`): на MAX_TABS=10
+  #    `openTab:272-275` ничего не открывает, поднимает диалог лимита и НЕ
+  #    показывает снекбар;
+  #  - пункт `enabled = canOpen` (`:320`, `openUrl.isNotBlank()`) практически
+  #    недостижим: все пути создания строки пишут непустой `url`
+  #    (в т.ч. stub-строки orphan-скана, `DownloadRepository.kt:117`) —
+  #    отмечено как краевая ветка, отдельного кейса не требует.
+  # Связь с дефектом: `bugs/BUG-016.md` (Undo на потолке молча теряет вкладку)
+  # получает третий естественный путь занять освободившийся слот — комментарий
+  # разработчика в самом баге, «Вариант В».
+  - id: library-card-open-background-tab
+    title: "Действие «Open in background tab» в overlay длинного нажатия по карточке Library открывает работу (на Files — её локальный файл) в фоновой вкладке, НЕ уходя с экрана Library"
     screen: library
     source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
   - id: library-card-comment-tags
@@ -490,6 +685,42 @@ features:
     title: "Ручная кнопка Scan for downloads — relink .html-файлов, потерянных базой"
     screen: settings
     source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  # ТРИ записи ниже — ПРОБЕЛ РЕЕСТРА, вскрытый переинвентаризацией 2026-08-09.
+  # Все три контрола существовали и на 63f6aac (видны в UI-дампе сессии CH-007
+  # от 2026-08-02) и при этом не имели записи вовсе — то есть не могли попасть
+  # даже в секцию «Фичи без единого кейса» state/coverage-map.md. Класс дыры
+  # опаснее нулевого покрытия: невидимую фичу не показывает ни один детектор.
+  - id: settings-auto-apply-filter-toggle
+    title: "Тумблер «Auto-apply on navigation» (Settings, по умолчанию ВКЛЮЧЁН): дописывать ли активный AO3-фильтр к страницам листинга автоматически"
+    screen: settings
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  # «Fetch missing metadata» — единственное место, где приложение ходит на AO3
+  # МИМО WebView. Сверено чтением кода:
+  # `SettingsScreen.kt:1006-1030` (строка настройки, кнопки «Fetch»/«Stop»,
+  # текст состояния), `:231-255` (`fetchMissingMetadata`: очередь берётся из
+  # `repo.getWorksNeedingMetadata()` = строки с ПУСТЫМ title, то есть stub-и
+  # orphan-скана; на каждую — `fetchAo3WorkPage` c cookie AO3, задержка 1500 мс
+  # между работами, до 3 попыток на работу), `:243-245`
+  # (`repo.updateWorkMetadata` пишет title/author/fandom/wordCount только когда
+  # скрейп вернул непустой title), `:251-252` (Done/Stopped со счётчиком),
+  # `RatingRepository.kt:62/66` (запрос и апдейт). Прямых `HttpURLConnection`
+  # запросов к archiveofourown.org: `:259-262`.
+  - id: settings-fetch-missing-metadata
+    title: "«Fetch missing metadata»: дозаполнение title/author/fandom/wordCount для строк с пустым названием запросами к AO3 мимо WebView (прогресс N/total, кнопка Stop, результат Done/Stopped со счётчиком обновлённых)"
+    screen: settings
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  # Отладочный тумблер (`SettingsScreen.kt:1064-1067`, prefs `debug_copy_url`,
+  # по умолчанию OFF) → `MainActivity.kt:179-181` → `BrowserScreen.kt:179-181`,
+  # `:598-602` (`window.__ao3DebugCopyUrl`) → `ao3_bridge.js:1055-1074`: в КАЖДУЮ
+  # AO3-страницу инжектируется фиксированная кнопка «Copy URL»
+  # (position:fixed; bottom:12px; left:12px; z-index:99999), копирующая
+  # `location.href` в буфер и меняющая подпись на «Copied!» на 1.5 с.
+  # Смежность: пересечение с интерактивом страницы — тот же класс, что
+  # `nf-a11y-interactive-overlap`.
+  - id: settings-debug-copy-url-toggle
+    title: "Отладочный тумблер «Show copy-URL button»: включает в каждой AO3-странице плавающую кнопку Copy URL (копирует адрес страницы, подпись меняется на Copied!), выключение её прячет"
+    screen: settings
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
   - id: settings-filter-profiles-list
     title: "Список сохранённых AO3-фильтр-профилей"
     screen: settings
@@ -513,6 +744,51 @@ features:
     title: "Применение сохранённого фильтр-профиля из FilterPanel листинга"
     screen: browse
     source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BottomBar.kt"
+  # ДВЕ записи ниже — ПРОБЕЛ РЕЕСТРА, вскрытый переинвентаризацией 2026-08-09
+  # (не дельта сборки: тумблер «Auto-apply on navigation» виден в UI-дампе
+  # сессии CH-007 от 2026-08-02, то есть жил и на 63f6aac без единой записи).
+  # Это ПРАВИЛО-РЕАКЦИЯ по п.2а роли (чтение настройки ВНЕ экрана настроек, на
+  # общем пути навигации), поэтому запись несёт полный паспорт правила:
+  #  - семантический ТРИГГЕР: пользователь переходит на фильтруемую страницу
+  #    листинга, когда выбран активный фильтр-профиль и тумблер включён;
+  #  - ФАКТИЧЕСКИЕ места чтения предиката (поиском по символу, ВСЕ):
+  #    `BrowserScreen.kt:616-631` (`shouldOverrideUrlLoading` →
+  #    `viewModel.getActiveFilterQueryString()` → перезапуск загрузки
+  #    `view.post { view.loadUrl(url+qs) }` и `return true`);
+  #    `BrowserViewModel.getActiveFilterQueryString:572-576` (сам предикат
+  #    `if (!autoApplyFilter) return null`);
+  #    `BrowserViewModel.onPageLoaded:501-504` (ВЕТКА OFF — побочный эффект,
+  #    см. вторую запись); `applyFilter:600` (взводит `pendingFilterApplication`,
+  #    чтобы намеренное применение не было съедено веткой OFF);
+  #    `MainActivity.kt:176-178` (проводка настройки в ViewModel);
+  #  - ЭФФЕКТ (ON): к URL дописывается `queryString` профиля через `?`/`&`
+  #    (`stripDisplayParams`), страница грузится ПОВТОРНО как новая запись
+  #    истории; guard: только `FILTERABLE_PAGE` и только если в URL нет
+  #    `work_search` (то есть ручной фильтр AO3 не перетирается);
+  #  - наблюдаемая ПОВЕРХНОСТЬ: итоговый URL вкладки и состав листинга.
+  # КРАСНЫЙ ФЛАГ (б) п.2а — асимметрия эффектов: включённый тумблер ДОПИСЫВАЕТ
+  # фильтр, а выключенный не просто «ничего не делает», а СБРАСЫВАЕТ активный
+  # профиль на ближайшей загрузке страницы (вторая запись). Доложено Lead как
+  # кандидат app_bug/вопрос разработчику; §9 несёт дизайн-метку.
+  - id: browse-filter-autoapply-on-navigation
+    title: "При включённом «Auto-apply on navigation» переход на фильтруемую страницу листинга автоматически перезагружает её с дописанным queryString активного фильтр-профиля (кроме URL с work_search)"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserScreen.kt"
+  - id: browse-filter-autoapply-off-drops-active
+    title: "При ВЫКЛЮЧЕННОМ «Auto-apply on navigation» первая же загрузка страницы после применения снимает активный фильтр-профиль (activeFilterId → null), кроме самой навигации, инициированной кнопкой применения"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt"
+  # ПРОБЕЛ РЕЕСТРА (переинвентаризация 2026-08-09): FAB «Scroll to top»
+  # существует и уже фигурирует в §9 как побочная деталь разбора TC-084, но
+  # своей записи не имел. Код: `MainActivity.kt:442-468` — FAB виден только
+  # когда активна секция Browse, страница НЕ является страницей работы,
+  # `activeScrollY > 600`, нижняя панель свёрнута и не открыт rating-overlay;
+  # тап вызывает `BrowserViewModel.scrollToTop:308-311` (`window.scrollTo(0,0)`
+  # в активной вкладке). `_activeScrollY` сбрасывается в 0 при `switchTab:303`.
+  - id: browse-scroll-to-top-fab
+    title: "FAB «Scroll to top» на листинге: появляется после прокрутки (activeScrollY > 600) вне страницы работы и прокручивает активную вкладку в начало"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/MainActivity.kt"
   # Три записи ниже добавлены Lead при приёмке trace-matrix-impl-2 (2026-07-17):
   # пропуски инвентаризации scout, вскрытые бэкфилом (кейсы TC-046/056/001 не
   # маппились); каждая заземлена в коде сверкой Lead.

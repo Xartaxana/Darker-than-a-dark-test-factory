@@ -7,14 +7,14 @@ priority: "p1"
 summary: "Deep-link на холодном старте переиспользует единственную незагруженную home-вкладку (positive-reuse)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:tabs", "risk:R-08", "automation:quarantined"]
+labels: ["test-case", "area:tabs", "risk:R-08", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-31T18:12:23Z"
-updated: "2026-07-31T18:12:23Z"
+created: "2026-08-10T10:18:15Z"
+updated: "2026-08-10T10:18:15Z"
 archived: false
 resolution: "done"
 ---
@@ -211,6 +211,27 @@ ALLOWLIST; `validate_frontmatter` 0/0) — в `test-cases/tabs/TC-131.md`.
 Второе (косметическое): комментарий-заметка для test-reviewer в теле теста
 (`test_tabs.py`, конец функции) после этой пробы устарел — при следующем
 касании файла его стоит снять.
+
+## Карантин снят (test-maintainer, AT-BUG-055, 2026-08-10T10:18:15Z)
+
+`automation_status: quarantined -> active`. Причина карантина (RUN-20260804-1624:
+`TimeoutError: маркер …/works?ao3_tab_marker=1 не появился в ao3_settings.xml
+за 20с`) устранена у ИСТОЧНИКА, не замаскирована: `wait_tabs_persisted`
+(опрос, на который опирается Then этого кейса) теперь читает `ao3_settings.xml`
+через честный `_read_tabs_prefs_raw` -> `adb.run_as_file_or_raise`
+(`framework/core/adb.py`, echo-sentinel RC — тот же приём, что закрыл
+AT-BUG-044/045), который явно кидает `RuntimeError` на отвалившемся/
+неоднозначном `run-as` вместо молчаливого `""` — отвалившийся транспорт
+больше не маскируется под «сентинел ещё не появился» (`wait_for` ретраит,
+финальный таймаут несёт `; last error: ...` с диагнозом, не тихую пустоту).
+Таймаут кейса (20с, с 3x запасом над измеренным окном персиста маркера
+6.3-7.3с) не менялся — фикс адресует ТОЛЬКО честность чтения, не тайминг.
+Полный разбор класса, красная проба и witness — `bugs/AT-BUG-055.md`.
+
+Изолированный перепрогон ЭТОГО кейса — 3/3 зелёных подряд (`Invoke-Pytest
+tests/test_tabs.py -k test_cold_start_deep_link_reuses_single_home_tab`,
+каждый `1 passed, 12 deselected`, `PYTEST_EXIT=0`), плюс полный
+`test_tabs.py` (13/13 passed) — witness дословно в `bugs/AT-BUG-055.md`.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»

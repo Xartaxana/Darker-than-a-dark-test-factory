@@ -1,0 +1,1 @@
+css_selector='li.download a[title="HTML"]' rect={'height': 18.666667938232422, 'innerHeight': 1603, 'left': 88, 'top': 187.0357208251953, 'width': 43.32143020629883, 'fraction_of_innerHeight': 0.12250096992783002} dispatched_clientY=196.4 fraction_of_innerHeight=0.123

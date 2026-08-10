@@ -4,7 +4,7 @@ title: "Replay-фикстура listing_paginated.mitm несёт class=\"work b
 type: test_debt
 debt_kind: missing_fixture
 severity: major
-status: Fixed
+status: Verified
 found_in: "framework commit 2f26f8a (тестируемая сборка приложения 1.10 (versionCode 11), build 6455af0c — от сборки НЕ зависит)"
 fixed_in: "350f852"
 last_seen_in: "RUN-20260810-0146 (2026-08-10)"
@@ -12,8 +12,8 @@ test_cases: ["TC-129", "TC-130"]
 runs: ["RUN-20260804-1624", "RUN-20260810-0146"]
 duplicates: []
 regression_of: ""
-status_since: "2026-08-10T09:52:00Z"
-updated: "2026-08-10T09:52:00Z"
+status_since: "2026-08-10T12:27:46Z"
+updated: "2026-08-10T12:27:46Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -91,6 +91,7 @@ device-прогоном.
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
 | 2026-08-10 | 1.10 (11), сборка приложения не тронута (test_debt в обвязке) | `Invoke-Pytest -k test_infinite_scroll -v` (TC-129 `test_infinite_scroll_on_loads_next_page_in_background`, TC-130 `test_infinite_scroll_off_keeps_native_pagination`) — 3 прогона подряд | run1 `2 passed, 320 deselected in 84.05s (0:01:24)`, run2 `2 passed, 320 deselected in 84.44s (0:01:24)`, run3 `2 passed, 320 deselected in 85.35s (0:01:25)`, все три `PYTEST_EXIT=0` | Fixed (test-maintainer; таблица верификации D1 — за fix-verifier следующим проходом) |
+| 2026-08-10T12:27:46Z | source_commit 6f884d97, APK versionCode 12/dev-local (test_debt в обвязке фреймворка, сборка приложения не тронута фиксом) | fix-verifier, независимый прогон: `Invoke-Pytest -k test_infinite_scroll -v` — TC-129/TC-130 (оба); device-free юнит-слайс `Invoke-Pytest tests/test_recording_builder_unit.py -v` (52 кейса, включая guard-параметризацию всех сиблингов) | device: `2 passed, 338 deselected in 87.03s (0:01:27)` `PYTEST_EXIT=0`; юнит: 52 из 52 passed в составе объединённого прогона (см. «Обсуждение») `PYTEST_EXIT=0` | **Verified** — fix-verifier, D1 mode=verify, независимое подтверждение поверх 3x-серии maintainer'а |
 
 ## Обсуждение
 
@@ -152,6 +153,21 @@ blurb_markup_matches_generator -v` → `5 failed, 3 passed` — все 5
 Новых блокеров/долгов в ходе работы не найдено.
 
 Статус: `Open` → `Fixed`. Лок снят.
+
+**2026-08-10T12:27:46Z — fix-verifier (D1, mode=verify):** независимый
+прогон на актуальном HEAD (фикс `350f852` в дереве). Device-free юнит-слайс
+`Invoke-Pytest tests/test_recording_builder_unit.py tests/test_adb_run_as_file_or_raise_unit.py
+tests/test_parse_persisted_tabs_unit.py -v` (объединённый прогон трёх
+файлов, засчитан и для AT-BUG-055) — `70 passed in 0.37s`, `PYTEST_EXIT=0`;
+из них 52 принадлежат `test_recording_builder_unit.py`, включая все 5
+параметризаций `test_listing_paginated_blurb_markup_matches_generator` и
+сиблинг-гарды `listing_basic`/`listing_duplicate_work`/`works_multi`.
+Device-прогон `Invoke-Pytest -k test_infinite_scroll -v` на `emulator-5554`
+(`Get-Device` → `DEVICE`) — TC-129/TC-130 оба зелёные: `2 passed, 338
+deselected in 87.03s (0:01:27)`, `PYTEST_EXIT=0`. Сборка приложения —
+`source_commit 6f884d97`, установленный APK `versionCode 12`/`dev-local`
+(`output-metadata.json`), долг в обвязке (фикстура), от сборки не зависит.
+`Fixed` → `Verified`, лок снят.
 
 ## Ссылки
 

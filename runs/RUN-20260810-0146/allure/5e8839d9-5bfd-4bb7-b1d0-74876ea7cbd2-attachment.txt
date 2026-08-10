@@ -1,0 +1,1 @@
+y_fraction=0.833 innerHeight=1603 innerWidth=980 clientX=490.0 clientY=1335.8 target_tag='P' interactive=False

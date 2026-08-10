@@ -1,0 +1,568 @@
+[  81.66s 14:00:47] === CH-009 SEED 1 «Набираю очередь» ===
+[ 100.47s 14:01:06]   СНИМОК [baseline (1 вкладка HOME, Favorite сверху)]: tabs(prefs)=1 active=0 экран=Library верхняя карточка=('A Loved Test Work', 486) снекбар={'bg': None, 'tab_closed': False, 'undo': False}
+[ 100.47s 14:01:06]            open_tabs_urls=['https://archiveofourown.org/']
+[ 101.11s 14:01:07]   [screenshot] 01-baseline-favorite.png
+[ 101.11s 14:01:07] ПРОВЕРКА ПРЕДУСЛОВИЯ СИДА: прокручиваемость FAVORITE
+[ 109.48s 14:01:15]   FAVORITE прокручен до «Filler Scroll Work 07»: True
+[ 112.88s 14:01:19]   верхняя карточка после скролла: ('Filler Scroll Work 01', 580)
+[ 115.03s 14:01:21] ПРОВЕРКА ПРЕДУСЛОВИЯ СИДА: прокручиваемость FILES
+[ 122.91s 14:01:29]   FILES прокручен до «Filler Scroll Work 07»: True
+[ 126.44s 14:01:32]   верхняя карточка FILES после скролла: ('Filler Scroll Work 01', 580)
+[ 127.78s 14:01:33] --- Г3: прокрутить Favorite вниз, зафиксировать позицию, открыть в фоне ---
+[ 132.05s 14:01:38]   ПОЗИЦИЯ ДО: ('Filler Scroll Work 01', 580)
+[ 136.56s 14:01:42]   long-press+«Open in background tab» по «Filler Scroll Work 01»
+[ 137.36s 14:01:43]   снекбар сразу после тапа (+0.80s): {'bg': 'Opened in background (2 tabs)', 'tab_closed': False, 'undo': False}
+[ 137.36s 14:01:43]   --- опрос канала снекбаров «первое фоновое открытие (Г1: текст и счётчик при 2 вкладках)», бюджет 6s ---
+[ 138.17s 14:01:44]       t= 138.17s  {'bg': 'Opened in background (2 tabs)', 'tab_closed': False, 'undo': False}
+[ 139.00s 14:01:45]       t= 139.00s  (без изменений)
+[ 139.97s 14:01:46]       t= 139.97s  (без изменений)
+[ 140.67s 14:01:46]       t= 140.67s  {'bg': None, 'tab_closed': False, 'undo': False}
+[ 141.45s 14:01:47]       t= 141.45s  (без изменений)
+[ 142.34s 14:01:48]       t= 142.34s  (без изменений)
+[ 143.02s 14:01:49]       t= 143.02s  (без изменений)
+[ 143.73s 14:01:49]       t= 143.73s  (без изменений)
+[ 143.73s 14:01:49]   --- конец опроса «первое фоновое открытие (Г1: текст и счётчик при 2 вкладках)» ---
+[ 148.66s 14:01:54]   СНИМОК [после 1-го фонового открытия]: tabs(prefs)=2 active=0 экран=Library верхняя карточка=('Filler Scroll Work 01', 580) снекбар={'bg': None, 'tab_closed': False, 'undo': False}
+[ 148.66s 14:01:54]            open_tabs_urls=['https://archiveofourown.org/', 'https://archiveofourown.org/works/900000901']
+[ 148.73s 14:01:54]            OK: wait_persisted_tab_count(2) подтверждён
+[ 152.03s 14:01:58]   ПОЗИЦИЯ ПОСЛЕ: ('Filler Scroll Work 01', 580)   (было ('Filler Scroll Work 01', 580))
+[ 152.44s 14:01:58]   [screenshot] 02-after-first-bg-open.png
+[ 152.52s 14:01:58]   OK: вкладка[1] несёт https://archiveofourown.org/works/900000901
+[ 152.59s 14:01:58]   OK: active_tab_index=0 (экран/активная вкладка не переключились)
+[ 152.59s 14:01:58] --- Г8 (вариация): повтор ТОЙ ЖЕ карточки ---
+[ 156.91s 14:02:03]   --- опрос канала снекбаров «дубль той же карточки», бюджет 5s ---
+[ 157.75s 14:02:03]       t= 157.75s  {'bg': 'Opened in background (3 tabs)', 'tab_closed': False, 'undo': False}
+[ 158.56s 14:02:04]       t= 158.56s  (без изменений)
+[ 159.41s 14:02:05]       t= 159.41s  (без изменений)
+[ 160.25s 14:02:06]       t= 160.25s  (без изменений)
+[ 161.08s 14:02:07]       t= 161.08s  {'bg': None, 'tab_closed': False, 'undo': False}
+[ 161.94s 14:02:08]       t= 161.94s  (без изменений)
+[ 161.94s 14:02:08]   --- конец опроса «дубль той же карточки» ---
+[ 167.31s 14:02:13]   СНИМОК [после дубля]: tabs(prefs)=3 active=0 экран=Library верхняя карточка=('Filler Scroll Work 01', 580) снекбар={'bg': None, 'tab_closed': False, 'undo': False}
+[ 167.31s 14:02:13]            open_tabs_urls=['https://archiveofourown.org/', 'https://archiveofourown.org/works/900000901', 'https://archiveofourown.org/works/900000901']
+[ 167.41s 14:02:13]            OK: wait_persisted_tab_count(3) подтверждён
+[ 167.48s 14:02:13]   OK: два вхождения https://archiveofourown.org/works/900000901 в open_tabs_urls -> дедупликации нет
+[ 167.48s 14:02:13] --- Г9: серия фоновых открытий (разные карточки, интервал ~300мс) ---
+[ 174.58s 14:02:20]   open «Filler Scroll Work 02»  tabs 3->4  (+5.52s) снекбар={'bg': 'Opened in background (4 tabs)', 'tab_closed': False, 'undo': False}
+[ 178.14s 14:02:24]      верхняя карточка: ('Filler Scroll Work 01', 580)
+[ 184.03s 14:02:30]   open «Filler Scroll Work 03»  tabs 4->5  (+5.48s) снекбар={'bg': 'Opened in background (5 tabs)', 'tab_closed': False, 'undo': False}
+[ 187.55s 14:02:33]      верхняя карточка: ('Filler Scroll Work 01', 580)
+[ 193.41s 14:02:39]   open «Filler Scroll Work 04»  tabs 5->6  (+5.48s) снекбар={'bg': 'Opened in background (6 tabs)', 'tab_closed': False, 'undo': False}
+[ 197.00s 14:02:43]      верхняя карточка: ('Filler Scroll Work 01', 580)
+[ 202.75s 14:02:48]   open «Filler Scroll Work 05»  tabs 6->7  (+5.38s) снекбар={'bg': 'Opened in background (7 tabs)', 'tab_closed': False, 'undo': False}
+[ 206.41s 14:02:52]      верхняя карточка: ('Filler Scroll Work 01', 580)
+[ 211.98s 14:02:58]   open «Filler Scroll Work 06»  tabs 7->8  (+5.26s) снекбар={'bg': 'Opened in background (8 tabs)', 'tab_closed': False, 'undo': False}
+[ 216.03s 14:03:02]      верхняя карточка: ('Filler Scroll Work 01', 580)
+[ 221.77s 14:03:07]   open «Filler Scroll Work 07»  tabs 8->9  (+5.38s) снекбар={'bg': 'Opened in background (9 tabs)', 'tab_closed': False, 'undo': False}
+[ 225.09s 14:03:11]      верхняя карточка: ('Filler Scroll Work 01', 580)
+[ 225.19s 14:03:11]   после серии: tabs(prefs)=9
+[ 225.19s 14:03:11]   --- опрос канала снекбаров «хвост серии — сколько сообщений реально показано», бюджет 6s ---
+[ 225.86s 14:03:12]       t= 225.86s  {'bg': None, 'tab_closed': False, 'undo': False}
+[ 226.55s 14:03:12]       t= 226.55s  (без изменений)
+[ 227.22s 14:03:13]       t= 227.22s  (без изменений)
+[ 227.86s 14:03:14]       t= 227.86s  (без изменений)
+[ 228.52s 14:03:14]       t= 228.52s  (без изменений)
+[ 229.08s 14:03:15]       t= 229.08s  (без изменений)
+[ 229.73s 14:03:15]       t= 229.73s  (без изменений)
+[ 230.58s 14:03:16]       t= 230.58s  (без изменений)
+[ 231.33s 14:03:17]       t= 231.33s  (без изменений)
+[ 231.33s 14:03:17]   --- конец опроса «хвост серии — сколько сообщений реально показано» ---
+[ 236.36s 14:03:22]   СНИМОК [после серии Г9]: tabs(prefs)=9 active=0 экран=Library верхняя карточка=('Filler Scroll Work 01', 580) снекбар={'bg': None, 'tab_closed': False, 'undo': False}
+[ 236.36s 14:03:22]            open_tabs_urls=['https://archiveofourown.org/', 'https://archiveofourown.org/works/900000901', 'https://archiveofourown.org/works/900000901', 'https://archiveofourown.org/works/900000902', 'https://archiveofourown.org/works/900000903', 'https://archiveofourown.org/works/900000904', 'https://archiveofourown.org/works/900000905', 'https://archiveofourown.org/works/900000906', 'https://archiveofourown.org/works/900000907']
+[ 236.73s 14:03:22]   [screenshot] 03-after-amplification.png
+[ 248.89s 14:03:35]   СНИМОК [ПОТОЛОК набран (10 вкладок)]: tabs(prefs)=10 active=0 экран=Library верхняя карточка=('Filler Scroll Work 01', 580) снекбар={'bg': None, 'tab_closed': False, 'undo': False}
+[ 248.89s 14:03:35]            open_tabs_urls=['https://archiveofourown.org/', 'https://archiveofourown.org/works/900000901', 'https://archiveofourown.org/works/900000901', 'https://archiveofourown.org/works/900000902', 'https://archiveofourown.org/works/900000903', 'https://archiveofourown.org/works/900000904', 'https://archiveofourown.org/works/900000905', 'https://archiveofourown.org/works/900000906', 'https://archiveofourown.org/works/900000907', 'https://archiveofourown.org/works/900000901']
+[ 248.89s 14:03:35]   --- опрос канала снекбаров «канал на 10 вкладках», бюджет 5s ---
+[ 249.56s 14:03:35]       t= 249.56s  {'bg': None, 'tab_closed': False, 'undo': False}
+[ 250.19s 14:03:36]       t= 250.19s  (без изменений)
+[ 250.89s 14:03:37]       t= 250.89s  (без изменений)
+[ 251.64s 14:03:37]       t= 251.64s  (без изменений)
+[ 252.30s 14:03:38]       t= 252.30s  (без изменений)
+[ 252.94s 14:03:39]       t= 252.94s  (без изменений)
+[ 253.73s 14:03:39]       t= 253.73s  (без изменений)
+[ 254.48s 14:03:40]       t= 254.48s  (без изменений)
+[ 254.48s 14:03:40]   --- конец опроса «канал на 10 вкладках» ---
+[ 254.88s 14:03:41]   [screenshot] 04-ten-tabs-library.png
+[ 254.88s 14:03:41] --- Г2: 11-я попытка фонового открытия НА ПОТОЛКЕ ---
+[ 256.36s 14:03:42]   канал перед пробой: {'bg': None, 'tab_closed': False, 'undo': False}
+[ 271.34s 14:03:57]   цель 11-й вкладки: «A Loved Test Work» (https://archiveofourown.org/works/900000001); позиция списка ДО: ('Filler Scroll Work 01', 580)
+[  23.16s 14:06:09] === CH-009 SEED 1 «Набираю очередь» ===
+[  42.88s 14:06:29]   СНИМОК [baseline (1 вкладка HOME, Favorite сверху)]: tabs(prefs)=1 active=0 экран=Library верхняя карточка=('A Loved Test Work', 486) снекбар={'bg': None, 'tab_closed': False, 'undo': False}
+[  42.88s 14:06:29]            open_tabs_urls=['https://archiveofourown.org/']
+[  43.49s 14:06:29]   [screenshot] 01-baseline-favorite.png
+[  43.49s 14:06:29] ПРОВЕРКА ПРЕДУСЛОВИЯ СИДА: прокручиваемость FAVORITE
+[  52.41s 14:06:38]   FAVORITE прокручен до «Filler Scroll Work 07»: True
+[  56.20s 14:06:42]   верхняя карточка после скролла: ('Filler Scroll Work 01', 580)
+[  58.33s 14:06:44] ПРОВЕРКА ПРЕДУСЛОВИЯ СИДА: прокручиваемость FILES
+[  66.24s 14:06:52]   FILES прокручен до «Filler Scroll Work 07»: True
+[  69.92s 14:06:56]   верхняя карточка FILES после скролла: ('Filler Scroll Work 01', 580)
+[  71.25s 14:06:57] --- Г3: прокрутить Favorite вниз, зафиксировать позицию, открыть в фоне ---
+[  75.20s 14:07:01]   ПОЗИЦИЯ ДО: ('Filler Scroll Work 01', 580)
+[  79.20s 14:07:05]   long-press+«Open in background tab» по «Filler Scroll Work 01»
+[  81.20s 14:07:07]   снекбар сразу после тапа (+2.00s): {'bg': 'Opened in background (2 tabs)', 'tab_closed': False, 'undo': False}
+[  81.20s 14:07:07]   --- опрос канала снекбаров «первое фоновое открытие (Г1: текст и счётчик при 2 вкладках)», бюджет 6s ---
+[  82.06s 14:07:08]       t=  82.06s  {'bg': 'Opened in background (2 tabs)', 'tab_closed': False, 'undo': False}
+[  82.89s 14:07:09]       t=  82.89s  (без изменений)
+[  83.94s 14:07:10]       t=  83.94s  (без изменений)
+[  84.84s 14:07:10]       t=  84.84s  {'bg': None, 'tab_closed': False, 'undo': False}
+[  85.62s 14:07:11]       t=  85.62s  (без изменений)
+[  86.41s 14:07:12]       t=  86.41s  (без изменений)
+[  87.11s 14:07:13]       t=  87.11s  (без изменений)
+[  87.84s 14:07:13]       t=  87.84s  (без изменений)
+[  87.84s 14:07:13]   --- конец опроса «первое фоновое открытие (Г1: текст и счётчик при 2 вкладках)» ---
+[  93.24s 14:07:19]   СНИМОК [после 1-го фонового открытия]: tabs(prefs)=2 active=0 экран=Library верхняя карточка=('Filler Scroll Work 01', 580) снекбар={'bg': None, 'tab_closed': False, 'undo': False}
+[  93.24s 14:07:19]            open_tabs_urls=['https://archiveofourown.org/', 'https://archiveofourown.org/works/900000901']
+[  93.33s 14:07:19]            OK: wait_persisted_tab_count(2) подтверждён
+[  96.77s 14:07:22]   ПОЗИЦИЯ ПОСЛЕ: ('Filler Scroll Work 01', 580)   (было ('Filler Scroll Work 01', 580))
+[  97.12s 14:07:23]   [screenshot] 02-after-first-bg-open.png
+[  97.22s 14:07:23]   OK: вкладка[1] несёт https://archiveofourown.org/works/900000901
+[  97.30s 14:07:23]   OK: active_tab_index=0 (экран/активная вкладка не переключились)
+[  97.30s 14:07:23] --- Г8 (вариация): повтор ТОЙ ЖЕ карточки ---
+[ 101.44s 14:07:27]   --- опрос канала снекбаров «дубль той же карточки», бюджет 5s ---
+[ 102.28s 14:07:28]       t= 102.28s  {'bg': 'Opened in background (3 tabs)', 'tab_closed': False, 'undo': False}
+[ 103.22s 14:07:29]       t= 103.22s  (без изменений)
+[ 104.27s 14:07:30]       t= 104.27s  (без изменений)
+[ 105.17s 14:07:31]       t= 105.17s  (без изменений)
+[ 105.89s 14:07:32]       t= 105.89s  {'bg': None, 'tab_closed': False, 'undo': False}
+[ 106.61s 14:07:32]       t= 106.61s  (без изменений)
+[ 106.61s 14:07:32]   --- конец опроса «дубль той же карточки» ---
+[ 111.64s 14:07:37]   СНИМОК [после дубля]: tabs(prefs)=3 active=0 экран=Library верхняя карточка=('Filler Scroll Work 01', 580) снекбар={'bg': None, 'tab_closed': False, 'undo': False}
+[ 111.64s 14:07:37]            open_tabs_urls=['https://archiveofourown.org/', 'https://archiveofourown.org/works/900000901', 'https://archiveofourown.org/works/900000901']
+[ 111.74s 14:07:37]            OK: wait_persisted_tab_count(3) подтверждён
+[ 111.84s 14:07:37]   OK: два вхождения https://archiveofourown.org/works/900000901 в open_tabs_urls -> дедупликации нет
+[ 111.84s 14:07:37] --- Г9: серия фоновых открытий (разные карточки, интервал ~300мс) ---
+[ 118.75s 14:07:44]   open «Filler Scroll Work 02»  tabs 3->4  (+5.28s) снекбар={'bg': 'Opened in background (4 tabs)', 'tab_closed': False, 'undo': False}
+[ 122.17s 14:07:48]      верхняя карточка: ('Filler Scroll Work 01', 580)
+[ 127.66s 14:07:53]   open «Filler Scroll Work 03»  tabs 4->5  (+5.19s) снекбар={'bg': 'Opened in background (5 tabs)', 'tab_closed': False, 'undo': False}
+[ 131.02s 14:07:57]      верхняя карточка: ('Filler Scroll Work 01', 580)
+[ 136.94s 14:08:03]   open «Filler Scroll Work 04»  tabs 5->6  (+5.58s) снекбар={'bg': 'Opened in background (6 tabs)', 'tab_closed': False, 'undo': False}
+[ 139.94s 14:08:06]      верхняя карточка: ('Filler Scroll Work 01', 580)
+[ 145.61s 14:08:11]   open «Filler Scroll Work 05»  tabs 6->7  (+5.33s) снекбар={'bg': 'Opened in background (7 tabs)', 'tab_closed': False, 'undo': False}
+[ 149.49s 14:08:15]      верхняя карточка: ('Filler Scroll Work 01', 580)
+[ 154.91s 14:08:21]   open «Filler Scroll Work 06»  tabs 7->8  (+5.09s) снекбар={'bg': 'Opened in background (8 tabs)', 'tab_closed': False, 'undo': False}
+[ 157.91s 14:08:24]      верхняя карточка: ('Filler Scroll Work 01', 580)
+[ 163.77s 14:08:29]   open «Filler Scroll Work 07»  tabs 8->9  (+5.53s) снекбар={'bg': 'Opened in background (9 tabs)', 'tab_closed': False, 'undo': False}
+[ 167.05s 14:08:33]      верхняя карточка: ('Filler Scroll Work 01', 580)
+[ 167.14s 14:08:33]   после серии: tabs(prefs)=9
+[ 167.14s 14:08:33]   --- опрос канала снекбаров «хвост серии — сколько сообщений реально показано», бюджет 6s ---
+[ 167.83s 14:08:33]       t= 167.83s  {'bg': None, 'tab_closed': False, 'undo': False}
+[ 168.52s 14:08:34]       t= 168.52s  (без изменений)
+[ 169.14s 14:08:35]       t= 169.14s  (без изменений)
+[ 169.84s 14:08:35]       t= 169.84s  (без изменений)
+[ 170.56s 14:08:36]       t= 170.56s  (без изменений)
+[ 171.31s 14:08:37]       t= 171.31s  (без изменений)
+[ 172.06s 14:08:38]       t= 172.06s  (без изменений)
+[ 172.74s 14:08:38]       t= 172.74s  (без изменений)
+[ 173.50s 14:08:39]       t= 173.50s  (без изменений)
+[ 173.50s 14:08:39]   --- конец опроса «хвост серии — сколько сообщений реально показано» ---
+[ 178.59s 14:08:44]   СНИМОК [после серии Г9]: tabs(prefs)=9 active=0 экран=Library верхняя карточка=('Filler Scroll Work 01', 580) снекбар={'bg': None, 'tab_closed': False, 'undo': False}
+[ 178.59s 14:08:44]            open_tabs_urls=['https://archiveofourown.org/', 'https://archiveofourown.org/works/900000901', 'https://archiveofourown.org/works/900000901', 'https://archiveofourown.org/works/900000902', 'https://archiveofourown.org/works/900000903', 'https://archiveofourown.org/works/900000904', 'https://archiveofourown.org/works/900000905', 'https://archiveofourown.org/works/900000906', 'https://archiveofourown.org/works/900000907']
+[ 178.95s 14:08:45]   [screenshot] 03-after-amplification.png
+[ 190.78s 14:08:56]   СНИМОК [ПОТОЛОК набран (10 вкладок)]: tabs(prefs)=10 active=0 экран=Library верхняя карточка=('Filler Scroll Work 01', 580) снекбар={'bg': None, 'tab_closed': False, 'undo': False}
+[ 190.78s 14:08:56]            open_tabs_urls=['https://archiveofourown.org/', 'https://archiveofourown.org/works/900000901', 'https://archiveofourown.org/works/900000901', 'https://archiveofourown.org/works/900000902', 'https://archiveofourown.org/works/900000903', 'https://archiveofourown.org/works/900000904', 'https://archiveofourown.org/works/900000905', 'https://archiveofourown.org/works/900000906', 'https://archiveofourown.org/works/900000907', 'https://archiveofourown.org/works/900000901']
+[ 190.78s 14:08:56]   --- опрос канала снекбаров «канал на 10 вкладках», бюджет 5s ---
+[ 191.41s 14:08:57]       t= 191.41s  {'bg': None, 'tab_closed': False, 'undo': False}
+[ 192.09s 14:08:58]       t= 192.09s  (без изменений)
+[ 192.74s 14:08:58]       t= 192.74s  (без изменений)
+[ 193.38s 14:08:59]       t= 193.38s  (без изменений)
+[ 193.92s 14:09:00]       t= 193.92s  (без изменений)
+[ 194.55s 14:09:00]       t= 194.55s  (без изменений)
+[ 195.24s 14:09:01]       t= 195.24s  (без изменений)
+[ 196.39s 14:09:02]       t= 196.39s  (без изменений)
+[ 196.39s 14:09:02]   --- конец опроса «канал на 10 вкладках» ---
+[ 196.75s 14:09:02]   [screenshot] 04-ten-tabs-library.png
+[ 196.75s 14:09:02] --- Г2: 11-я попытка фонового открытия НА ПОТОЛКЕ ---
+[ 198.03s 14:09:04]   канал перед пробой: {'bg': None, 'tab_closed': False, 'undo': False}
+[ 210.62s 14:09:16]   цель 11-й вкладки: «A Loved Test Work» (https://archiveofourown.org/works/900000001); позиция списка ДО: ('A Loved Test Work', 486)
+[ 216.41s 14:09:22]   диалог «Tab limit reached» присутствует: True
+[ 216.49s 14:09:22]   ДОСЛОВНЫЙ текст диалога: 'You have 10 tabs open. Close some tabs before opening a new one.'
+[ 216.66s 14:09:22]   экран под диалогом: ?
+[ 216.78s 14:09:22]   снекбар при диалоге: {'bg': None, 'tab_closed': False, 'undo': False}
+[ 216.84s 14:09:22]   bottom-sheet overlay ещё виден: False
+[ 217.20s 14:09:23]   [screenshot] 05-tab-limit-dialog-over-library.png
+[ 221.36s 14:09:27]   OK: отклонённый URL не приезжает отложенно (негатив держится 4с, total=10)
+[ 227.02s 14:09:33]   после закрытия диалога: экран=Library верхняя карточка=('A Loved Test Work', 486) (было ('A Loved Test Work', 486))
+[ 231.56s 14:09:37]   СНИМОК [после диалога лимита]: tabs(prefs)=10 active=0 экран=Library верхняя карточка=('A Loved Test Work', 486) снекбар={'bg': None, 'tab_closed': False, 'undo': False}
+[ 231.56s 14:09:37]            open_tabs_urls=['https://archiveofourown.org/', 'https://archiveofourown.org/works/900000901', 'https://archiveofourown.org/works/900000901', 'https://archiveofourown.org/works/900000902', 'https://archiveofourown.org/works/900000903', 'https://archiveofourown.org/works/900000904', 'https://archiveofourown.org/works/900000905', 'https://archiveofourown.org/works/900000906', 'https://archiveofourown.org/works/900000907', 'https://archiveofourown.org/works/900000901']
+[ 231.91s 14:09:38]   [screenshot] 06-after-dialog-dismiss.png
+[ 231.91s 14:09:38] --- SEED 1 прерывание: kill+релонч на 10 вкладках ---
+[ 241.97s 14:09:48]   вкладок ДО kill: 10 (active=0); ПОСЛЕ релонча: 10 (active=0)
+[ 241.97s 14:09:48]   список ПОСЛЕ: ['https://archiveofourown.org/', 'https://archiveofourown.org/works/900000901', 'https://archiveofourown.org/works/900000901', 'https://archiveofourown.org/works/900000902', 'https://archiveofourown.org/works/900000903', 'https://archiveofourown.org/works/900000904', 'https://archiveofourown.org/works/900000905', 'https://archiveofourown.org/works/900000906', 'https://archiveofourown.org/works/900000907', 'https://archiveofourown.org/works/900000901']
+[ 241.97s 14:09:48]   совпадение списков: True
+[ 245.94s 14:09:52]   экран после релонча: Browse
+[ 246.42s 14:09:52]   [screenshot] 07-after-relaunch-10-tabs.png
+[ 246.42s 14:09:52] === CH-009 SEED 2 «Две тревоги в одном канале» ===
+[ 262.49s 14:10:08]   СНИМОК [seed2 старт]: tabs(prefs)=10 active=0 экран=Library верхняя карточка=('A Loved Test Work', 486) снекбар={'bg': None, 'tab_closed': False, 'undo': False}
+[ 262.49s 14:10:08]            open_tabs_urls=['https://archiveofourown.org/', 'https://archiveofourown.org/works/900000901', 'https://archiveofourown.org/works/900000901', 'https://archiveofourown.org/works/900000902', 'https://archiveofourown.org/works/900000903', 'https://archiveofourown.org/works/900000904', 'https://archiveofourown.org/works/900000905', 'https://archiveofourown.org/works/900000906', 'https://archiveofourown.org/works/900000907', 'https://archiveofourown.org/works/900000901']
+[ 262.49s 14:10:08] --- Г1(а): фоновое открытие при ЖИВОМ «Tab closed / Undo» (старт 10) ---
+[ 264.64s 14:10:10]   канал перед пробой: {'bg': None, 'tab_closed': False, 'undo': False}
+[ 268.05s 14:10:14]   закрыл вкладку (тап по иконке Close tab) в t=267.66s
+[ 270.14s 14:10:16]   снекбар сразу после закрытия: {'bg': None, 'tab_closed': True, 'undo': True}
+[ 270.31s 14:10:16]   ДИФФ prefs: закрылась вкладка с url {'https://archiveofourown.org/'}; tabs 10->9
+[ 280.66s 14:10:26]   ушёл в Library (+13.00s от закрытия), цель: ('A Loved Test Work', 486)
+[ 281.34s 14:10:27]   снекбар в Library: {'bg': None, 'tab_closed': False, 'undo': False}
+[ 285.47s 14:10:31]   фоновое открытие сделано (+17.81s от закрытия)
+[ 285.47s 14:10:31]   --- опрос канала снекбаров «Г1(а): два производителя в одном канале», бюджет 9s ---
+[ 286.44s 14:10:32]       t= 286.44s  {'bg': 'Opened in background (10 tabs)', 'tab_closed': False, 'undo': False}
+[ 287.24s 14:10:33]       t= 287.24s  (без изменений)
+[ 288.11s 14:10:34]       t= 288.11s  (без изменений)
+[ 288.91s 14:10:35]       t= 288.91s  (без изменений)
+[ 289.83s 14:10:35]       t= 289.83s  {'bg': None, 'tab_closed': False, 'undo': False}
+[ 290.58s 14:10:36]       t= 290.58s  (без изменений)
+[ 291.31s 14:10:37]       t= 291.31s  (без изменений)
+[ 292.00s 14:10:38]       t= 292.00s  (без изменений)
+[ 292.77s 14:10:38]       t= 292.77s  (без изменений)
+[ 293.56s 14:10:39]       t= 293.56s  (без изменений)
+[ 294.33s 14:10:40]       t= 294.33s  (без изменений)
+[ 295.14s 14:10:41]       t= 295.14s  (без изменений)
+[ 295.14s 14:10:41]   --- конец опроса «Г1(а): два производителя в одном канале» ---
+[ 300.86s 14:10:47]   СНИМОК [Г1(а) после наложения]: tabs(prefs)=10 active=0 экран=Library верхняя карточка=('A Loved Test Work', 486) снекбар={'bg': None, 'tab_closed': False, 'undo': False}
+[ 300.86s 14:10:47]            open_tabs_urls=['https://archiveofourown.org/works/900000901', 'https://archiveofourown.org/works/900000901', 'https://archiveofourown.org/works/900000902', 'https://archiveofourown.org/works/900000903', 'https://archiveofourown.org/works/900000904', 'https://archiveofourown.org/works/900000905', 'https://archiveofourown.org/works/900000906', 'https://archiveofourown.org/works/900000907', 'https://archiveofourown.org/works/900000901', 'https://archiveofourown.org/works/900000001']
+[ 300.94s 14:10:47]            OK: wait_persisted_tab_count(10) подтверждён
+[ 301.34s 14:10:47]   [screenshot] 08-g1a-two-producers.png
+[ 302.25s 14:10:48]   Undo к этому моменту уже не на экране
+[ 302.25s 14:10:48] --- Г1(а) контроль: закрыть -> сразу Undo (слот свободен) ---
+[ 304.06s 14:10:50]   канал перед пробой: {'bg': None, 'tab_closed': False, 'undo': False}
+[ 308.39s 14:10:54]   снекбар: {'bg': None, 'tab_closed': True, 'undo': True}; tabs 10->9
+[ 311.56s 14:10:57]   после Undo (контроль): tabs(prefs)=10 снекбар={'bg': None, 'tab_closed': False, 'undo': False}
+[ 311.56s 14:10:57] --- ОСВОБОЖДЕНИЕ СЛОТОВ перед Г1(б): нужно 9 ---
+[ 321.05s 14:11:07]   [инструментально] tabs 10 -> 9
+[ 321.24s 14:11:07]   СЧЁТ ПЕРЕД ПРОБОЙ (prefs): 9 — подтверждён примитивом
+[ 324.22s 14:11:10]   канал перед пробой: {'bg': None, 'tab_closed': False, 'undo': False}
+[ 324.22s 14:11:10] --- Г1(б): фоновое открытие -> НЕМЕДЛЕННОЕ закрытие вкладки ---
+[ 339.27s 14:11:25]   фоновое открытие «Filler Scroll Work 01»; снекбар: {'bg': 'Opened in background (10 tabs)', 'tab_closed': False, 'undo': False}
+[ 341.03s 14:11:27]   закрыл вкладку через +2.53s после фонового открытия
+[ 341.03s 14:11:27]   --- опрос канала снекбаров «Г1(б): успел ли «Tab closed» с ДЕЙСТВИЕМ на экран», бюджет 9s ---
+[ 353.95s 14:11:40]       t= 353.95s  {'bg': None, 'tab_closed': False, 'undo': False}
+[ 353.95s 14:11:40]   --- конец опроса «Г1(б): успел ли «Tab closed» с ДЕЙСТВИЕМ на экран» ---
+[ 357.09s 14:11:43]   СНИМОК [Г1(б) итог]: tabs(prefs)=9 active=0 экран=Browse верхняя карточка=None снекбар={'bg': None, 'tab_closed': False, 'undo': False}
+[ 357.09s 14:11:43]            open_tabs_urls=['https://archiveofourown.org/works/900000902', 'https://archiveofourown.org/works/900000903', 'https://archiveofourown.org/works/900000904', 'https://archiveofourown.org/works/900000905', 'https://archiveofourown.org/works/900000906', 'https://archiveofourown.org/works/900000907', 'https://archiveofourown.org/works/900000901', 'https://archiveofourown.org/works/900000001', 'https://archiveofourown.org/works/900000901']
+[ 357.53s 14:11:43]   [screenshot] 09-g1b-reverse-order.png
+[ 357.53s 14:11:43] --- ОСВОБОЖДЕНИЕ СЛОТОВ перед Г1(г): нужно 8 ---
+[ 366.78s 14:11:52]   [инструментально] tabs 9 -> 8
+[ 366.95s 14:11:53]   СЧЁТ ПЕРЕД ПРОБОЙ (prefs): 8 — подтверждён примитивом
+[ 369.47s 14:11:55]   канал перед пробой: {'bg': None, 'tab_closed': False, 'undo': False}
+[ 369.47s 14:11:55] --- Г1(г): фоновое открытие -> сразу тап по ТЕЛУ карточки (передняя дверь) ---
+[ 385.24s 14:12:11]   фоновое открытие «Filler Scroll Work 01» -> tabs=9; снекбар={'bg': 'Opened in background (9 tabs)', 'tab_closed': False, 'undo': False}
+[ 385.52s 14:12:11]   тап по ТЕЛУ карточки (+1.23s) -> onOpenWork
+[ 388.36s 14:12:14]   экран: Browse; tabs=10; снекбар={'bg': None, 'tab_closed': False, 'undo': False}
+[ 388.36s 14:12:14]   --- опрос канала снекбаров «Г1(г): гасит ли передняя дверь сигнал», бюджет 7s ---
+[ 388.80s 14:12:14]       t= 388.80s  {'bg': None, 'tab_closed': False, 'undo': False}
+[ 389.30s 14:12:15]       t= 389.30s  (без изменений)
+[ 389.81s 14:12:15]       t= 389.81s  (без изменений)
+[ 390.25s 14:12:16]       t= 390.25s  (без изменений)
+[ 390.81s 14:12:16]       t= 390.81s  (без изменений)
+[ 391.28s 14:12:17]       t= 391.28s  (без изменений)
+[ 391.81s 14:12:17]       t= 391.81s  (без изменений)
+[ 392.36s 14:12:18]       t= 392.36s  (без изменений)
+[ 392.83s 14:12:18]       t= 392.83s  (без изменений)
+[ 393.33s 14:12:19]       t= 393.33s  (без изменений)
+[ 393.78s 14:12:19]       t= 393.78s  (без изменений)
+[ 394.28s 14:12:20]       t= 394.28s  (без изменений)
+[ 394.78s 14:12:20]       t= 394.78s  (без изменений)
+[ 395.31s 14:12:21]       t= 395.31s  (без изменений)
+[ 395.78s 14:12:21]       t= 395.78s  (без изменений)
+[ 395.78s 14:12:21]   --- конец опроса «Г1(г): гасит ли передняя дверь сигнал» ---
+[ 398.78s 14:12:24]   СНИМОК [Г1(г) итог]: tabs(prefs)=10 active=9 экран=Browse верхняя карточка=None снекбар={'bg': None, 'tab_closed': False, 'undo': False}
+[ 398.78s 14:12:24]            open_tabs_urls=['https://archiveofourown.org/works/900000903', 'https://archiveofourown.org/works/900000904', 'https://archiveofourown.org/works/900000905', 'https://archiveofourown.org/works/900000906', 'https://archiveofourown.org/works/900000907', 'https://archiveofourown.org/works/900000901', 'https://archiveofourown.org/works/900000001', 'https://archiveofourown.org/works/900000901', 'https://archiveofourown.org/works/900000901', 'https://archiveofourown.org/works/900000901']
+[ 399.27s 14:12:25]   [screenshot] 10-g1g-front-door.png
+[ 399.27s 14:12:25] --- ОСВОБОЖДЕНИЕ СЛОТОВ перед вариацией Г1(в): нужно 7 ---
+[ 408.14s 14:12:34]   [инструментально] tabs 10 -> 9
+[ 410.78s 14:12:36]   [инструментально] tabs 9 -> 8
+[ 413.52s 14:12:39]   [инструментально] tabs 8 -> 7
+[ 413.66s 14:12:39]   СЧЁТ ПЕРЕД ПРОБОЙ (prefs): 7 — подтверждён примитивом
+[ 419.24s 14:12:45]   канал перед пробой: {'bg': None, 'tab_closed': False, 'undo': False}
+[ 419.24s 14:12:45] --- Г1(в): своё закрытие (7->6) + три фоновых открытия подряд ---
+[ 426.34s 14:12:52]   закрытие-триггер: tabs -> 6; снекбар={'bg': None, 'tab_closed': True, 'undo': True}
+[ 442.77s 14:13:08]   открытие 1/3 «A Loved Test Work» (цикл двери 3.38s, +16.02s от триггера): снекбар СРАЗУ={'bg': 'Opened in background (7 tabs)', 'tab_closed': False, 'undo': False} tabs=7
+[ 450.80s 14:13:16]   открытие 2/3 «A Kudosed Test Work» (цикл двери 3.41s, +24.24s от триггера): снекбар СРАЗУ={'bg': 'Opened in background (8 tabs)', 'tab_closed': False, 'undo': False} tabs=8
+[ 458.88s 14:13:25]   открытие 3/3 «A Read Test Work» (цикл двери 3.50s, +32.36s от триггера): снекбар СРАЗУ={'bg': 'Opened in background (9 tabs)', 'tab_closed': False, 'undo': False} tabs=9
+[ 458.88s 14:13:25]   --- опрос канала снекбаров «Г1(в): сколько сообщений дошло и с какими счётчиками», бюджет 10s ---
+[ 459.66s 14:13:25]       t= 459.66s  {'bg': 'Opened in background (9 tabs)', 'tab_closed': False, 'undo': False}
+[ 460.52s 14:13:26]       t= 460.52s  (без изменений)
+[ 461.33s 14:13:27]       t= 461.33s  (без изменений)
+[ 462.33s 14:13:28]       t= 462.33s  {'bg': None, 'tab_closed': False, 'undo': False}
+[ 463.14s 14:13:29]       t= 463.14s  (без изменений)
+[ 463.83s 14:13:29]       t= 463.83s  (без изменений)
+[ 464.61s 14:13:30]       t= 464.61s  (без изменений)
+[ 465.33s 14:13:31]       t= 465.33s  (без изменений)
+[ 466.14s 14:13:32]       t= 466.14s  (без изменений)
+[ 466.84s 14:13:32]       t= 466.84s  (без изменений)
+[ 467.61s 14:13:33]       t= 467.61s  (без изменений)
+[ 468.36s 14:13:34]       t= 468.36s  (без изменений)
+[ 469.19s 14:13:35]       t= 469.19s  (без изменений)
+[ 469.19s 14:13:35]   --- конец опроса «Г1(в): сколько сообщений дошло и с какими счётчиками» ---
+[ 474.77s 14:13:40]   СНИМОК [Г1(в) итог]: tabs(prefs)=9 active=5 экран=Library верхняя карточка=('Filler Scroll Work 03', 486) снекбар={'bg': None, 'tab_closed': False, 'undo': False}
+[ 474.77s 14:13:40]            open_tabs_urls=['https://archiveofourown.org/works/900000903', 'https://archiveofourown.org/works/900000904', 'https://archiveofourown.org/works/900000905', 'https://archiveofourown.org/works/900000906', 'https://archiveofourown.org/works/900000901', 'https://archiveofourown.org/works/900000901', 'https://archiveofourown.org/works/900000001', 'https://archiveofourown.org/works/900000002', 'https://archiveofourown.org/works/900000003']
+[ 475.20s 14:13:41]   [screenshot] 11-g1v-three-in-busy-channel.png
+[ 475.20s 14:13:41] --- SEED 2 прерывание: home + возврат при висящем снекбаре ---
+[ 477.06s 14:13:43]   канал перед пробой: {'bg': None, 'tab_closed': False, 'undo': False}
+[ 486.74s 14:13:52]   снекбар до home: {'bg': 'Opened in background (10 tabs)', 'tab_closed': False, 'undo': False}
+[ 504.05s 14:14:10]   после возврата: экран=Browse снекбар={'bg': None, 'tab_closed': False, 'undo': False} tabs=10
+[ 504.58s 14:14:10]   [screenshot] 12-after-home-return.png
+[ 504.58s 14:14:10] === SEED 1+2 завершены ===
+[  24.97s 14:14:52] === CH-009 SEED 3 «Сортировка за спиной» ===
+[  39.06s 14:15:06] --- Г4: база+скролл на FAVORITE ---
+[  45.41s 14:15:12]   [FAVORITE] верхняя карточка НА ВЕРХУ: ('A Loved Test Work', 486)
+[  59.01s 14:15:26]   [FAVORITE] baseline_y=486 (capture_topmost_card_y)
+[  72.09s 14:15:39]   [FAVORITE] после скролла верхняя карточка: ('Filler Scroll Work 01', 580)
+[  72.09s 14:15:39] --- Г4: база+скролл на FILES ---
+[  78.51s 14:15:45]   [FILES] верхняя карточка НА ВЕРХУ: ('A Loved Test Work', 486)
+[  89.69s 14:15:57]   [FILES] baseline_y=486 (capture_topmost_card_y)
+[ 103.39s 14:16:10]   [FILES] после скролла верхняя карточка: ('Filler Scroll Work 01', 580)
+[ 103.39s 14:16:10] --- Г6/Г4: выбор сортировки Rating (допустима только на Files) ---
+[ 108.22s 14:16:15]   OK: триггер сортировки показывает «Rating»
+[ 112.44s 14:16:19]   FILES после выбора Rating: верхняя карточка=('A Loved Test Work', 486) (baseline_y был 486)
+[ 112.88s 14:16:20]   [screenshot] 20-files-rating-sorted.png
+[ 112.88s 14:16:20] --- Г4 сторона 1: уйти на FAVORITE, где сортировку никто не трогал ---
+[ 118.33s 14:16:25]   FAVORITE после возврата: верхняя карточка=('Filler Scroll Work 01', 580) (база была «A Loved Test Work» y=486)
+[ 120.45s 14:16:27]   ИЗМЕРЕНИЕ: скролл FAVORITE НЕ сброшен — карточка «A Loved Test Work» не видна после сортировки
+[ 120.45s 14:16:27] --- Г6: content-desc триггера вне Files ---
+[ 120.70s 14:16:28]   content-desc триггера на FAVORITE: «Sort library: Last read»
+[ 126.62s 14:16:34]   OK: опция Rating недоступна вне Files (меню закрыто без выбора)
+[ 127.84s 14:16:35]   [screenshot] 21-favorite-after-files-rating.png
+[ 127.84s 14:16:35] --- Г4 сторона 2: вернуться на FILES ---
+[ 134.05s 14:16:41]   FILES после возврата: верхняя карточка=('A Loved Test Work', 486) (база «A Loved Test Work» y=486)
+[ 134.34s 14:16:41]   ИЗМЕРЕНИЕ: скролл FILES сброшен на верх
+[ 134.59s 14:16:42]   триггер на FILES: «Rating» (выбор Rating ожил?)
+[ 134.59s 14:16:42] --- Г4 чистая проба #28 при активном Rating: скролл Files -> Favorite -> Files ---
+[ 147.48s 14:16:54]   FILES прокручен, верхняя карточка: ('Filler Scroll Work 01', 580)
+[ 155.89s 14:17:03]   FILES после круга: верхняя карточка=('Filler Scroll Work 01', 580) (была ('Filler Scroll Work 01', 580))
+[ 155.89s 14:17:03]   ВЕРДИКТ ПРОБЫ: позиция СОХРАНИЛАСЬ
+[ 156.28s 14:17:03]   [screenshot] 22-files-after-roundtrip-rating.png
+[ 156.28s 14:17:03] --- КОНТРОЛЬ: сортировка Word count (high to low), допустима везде ---
+[ 161.31s 14:17:08]   триггер: «Word count (high to low)»
+[ 165.39s 14:17:12]   FILES прокручен при Word count: ('A Pending Test Work', 486)
+[ 172.73s 14:17:20]   FILES после круга при Word count: ('A Pending Test Work', 486) (была ('A Pending Test Work', 486))
+[ 172.73s 14:17:20]   ВЕРДИКТ КОНТРОЛЯ: позиция СОХРАНИЛАСЬ
+[ 173.09s 14:17:20]   [screenshot] 23-control-wordcount-roundtrip.png
+[ 173.09s 14:17:20] --- Г5: смена сортировки, пока FILES вне экрана ---
+[ 177.78s 14:17:25]   FILES прокручен: ('A Pending Test Work', 486)
+[ 183.86s 14:17:31]   сортировка сменена на Last read, пока FILES вне экрана (триггер: «Last read»)
+[ 189.03s 14:17:36]   FILES после возврата: ('A Loved Test Work', 486) (было ('A Pending Test Work', 486))
+[ 189.03s 14:17:36]   Г5 ВЕРДИКТ: сброшен на верх
+[ 189.41s 14:17:36]   [screenshot] 24-g5-offscreen-sort-change.png
+[ 189.41s 14:17:36] --- Г5 возмущение: фоновое открытие -> сразу смена сортировки ---
+[ 206.56s 14:17:54]   фоновое открытие «Filler Scroll Work 01», снекбар={'bg': 'Opened in background (2 tabs)', 'tab_closed': False, 'undo': False}, tabs=2
+[ 211.31s 14:17:58]   сортировка при живом снекбаре -> триггер «Rating»
+[ 216.76s 14:18:04]   позиция после: ('A Loved Test Work', 486) (было ('Filler Scroll Work 01', 580)); снекбар={'bg': None, 'tab_closed': False, 'undo': False}
+[ 217.17s 14:18:04]   [screenshot] 25-g5-sort-under-snackbar.png
+[ 217.17s 14:18:04] === SEED 3 завершён ===
+[  86.03s 14:20:15] === CH-009 ТУГАЯ ПРОБА Г1(а)/Г1(б): наложение двух производителей ===
+[ 117.38s 14:20:46]   подготовка: tabs(prefs)=5
+[ 117.38s 14:20:46] --- Г1(б) повтор 1: bg-открытие, затем закрытие через ~1.5с ---
+[ 124.78s 14:20:53]   t0: фоновое открытие исполнено; снекбар={'bg': 'Opened in background (6 tabs)', 'tab_closed': False, 'undo': False}
+[ 126.45s 14:20:55]   закрытие вкладки исполнено через +3.45s от t0
+[ 126.45s 14:20:55]   ~~~ частый опрос «Г1(б) повтор 1» 8s ~~~
+[ 140.11s 14:21:09]       +17.11s от t0: {'bg': None, 'tab_closed': False, 'undo': False}  <== СМЕНА
+[ 140.22s 14:21:09]   итог: tabs 5 -> 5
+[ 140.22s 14:21:09] --- Г1(а) повтор 1: закрытие, затем bg-открытие через ~2.5с ---
+[ 148.11s 14:21:17]   на Browse одновременно видны: nav Library=False, иконок Close tab=2
+[ 149.97s 14:21:19]   t0: закрытие исполнено; снекбар={'bg': None, 'tab_closed': True, 'undo': True}
+[ 159.47s 14:21:28]   ПЕРЕД тапом по пункту (+11.26s): {'bg': None, 'tab_closed': False, 'undo': False}
+[ 159.75s 14:21:28]   bg-открытие исполнено через +11.55s от закрытия
+[ 159.75s 14:21:28]   ~~~ частый опрос «Г1(а) повтор 1» 9s ~~~
+[ 161.58s 14:21:30]       +13.38s от t0: {'bg': 'Opened in background (5 tabs)', 'tab_closed': False, 'undo': False}  <== СМЕНА
+[ 162.62s 14:21:31]       +14.42s от t0: {'bg': 'Opened in background (5 tabs)', 'tab_closed': False, 'undo': False}
+[ 163.64s 14:21:32]       +15.44s от t0: {'bg': 'Opened in background (5 tabs)', 'tab_closed': False, 'undo': False}
+[ 164.78s 14:21:33]       +16.58s от t0: {'bg': 'Opened in background (5 tabs)', 'tab_closed': False, 'undo': False}
+[ 165.67s 14:21:34]       +17.47s от t0: {'bg': None, 'tab_closed': False, 'undo': False}  <== СМЕНА
+[ 166.51s 14:21:35]       +18.31s от t0: {'bg': None, 'tab_closed': False, 'undo': False}
+[ 167.36s 14:21:36]       +19.16s от t0: {'bg': None, 'tab_closed': False, 'undo': False}
+[ 168.22s 14:21:37]       +20.01s от t0: {'bg': None, 'tab_closed': False, 'undo': False}
+[ 169.08s 14:21:38]       +20.88s от t0: {'bg': None, 'tab_closed': False, 'undo': False}
+[ 169.25s 14:21:38]   итог: tabs 5 -> 5; active=0
+[ 169.75s 14:21:38]   [screenshot] 13-g1a-overlap-rep1.png
+[ 169.75s 14:21:38] --- Г1(б) повтор 2: bg-открытие, затем закрытие через ~1.5с ---
+[ 176.45s 14:21:45]   t0: фоновое открытие исполнено; снекбар={'bg': 'Opened in background (6 tabs)', 'tab_closed': False, 'undo': False}
+[ 178.03s 14:21:47]   закрытие вкладки исполнено через +3.16s от t0
+[ 178.03s 14:21:47]   ~~~ частый опрос «Г1(б) повтор 2» 8s ~~~
+[ 180.75s 14:21:49]       + 5.88s от t0: {'bg': None, 'tab_closed': True, 'undo': True}  <== СМЕНА
+[ 181.66s 14:21:50]       + 6.78s от t0: {'bg': None, 'tab_closed': True, 'undo': True}
+[ 182.66s 14:21:51]       + 7.78s от t0: {'bg': None, 'tab_closed': True, 'undo': True}
+[ 183.64s 14:21:52]       + 8.76s от t0: {'bg': None, 'tab_closed': True, 'undo': False}  <== СМЕНА
+[ 184.56s 14:21:53]       + 9.69s от t0: {'bg': None, 'tab_closed': False, 'undo': False}  <== СМЕНА
+[ 185.44s 14:21:54]       +10.56s от t0: {'bg': None, 'tab_closed': False, 'undo': False}
+[ 186.22s 14:21:55]       +11.34s от t0: {'bg': None, 'tab_closed': False, 'undo': False}
+[ 186.33s 14:21:55]   итог: tabs 5 -> 5
+[ 186.33s 14:21:55] --- Г1(а) повтор 2: закрытие, затем bg-открытие через ~2.5с ---
+[ 194.06s 14:22:03]   на Browse одновременно видны: nav Library=False, иконок Close tab=2
+[ 195.97s 14:22:05]   t0: закрытие исполнено; снекбар={'bg': None, 'tab_closed': True, 'undo': True}
+[ 205.45s 14:22:14]   ПЕРЕД тапом по пункту (+11.27s): {'bg': None, 'tab_closed': False, 'undo': False}
+[ 205.94s 14:22:15]   bg-открытие исполнено через +11.75s от закрытия
+[ 205.94s 14:22:15]   ~~~ частый опрос «Г1(а) повтор 2» 9s ~~~
+[ 207.38s 14:22:16]       +13.19s от t0: {'bg': 'Opened in background (5 tabs)', 'tab_closed': False, 'undo': False}  <== СМЕНА
+[ 208.39s 14:22:17]       +14.20s от t0: {'bg': 'Opened in background (5 tabs)', 'tab_closed': False, 'undo': False}
+[ 209.50s 14:22:18]       +15.31s от t0: {'bg': 'Opened in background (5 tabs)', 'tab_closed': False, 'undo': False}
+[ 210.86s 14:22:20]       +16.67s от t0: {'bg': None, 'tab_closed': False, 'undo': False}  <== СМЕНА
+[ 211.76s 14:22:20]       +17.58s от t0: {'bg': None, 'tab_closed': False, 'undo': False}
+[ 212.72s 14:22:21]       +18.53s от t0: {'bg': None, 'tab_closed': False, 'undo': False}
+[ 213.55s 14:22:22]       +19.36s от t0: {'bg': None, 'tab_closed': False, 'undo': False}
+[ 214.45s 14:22:23]       +20.27s от t0: {'bg': None, 'tab_closed': False, 'undo': False}
+[ 215.31s 14:22:24]       +21.12s от t0: {'bg': None, 'tab_closed': False, 'undo': False}
+[ 215.50s 14:22:24]   итог: tabs 5 -> 5; active=0
+[ 215.98s 14:22:25]   [screenshot] 13-g1a-overlap-rep2.png
+[ 215.98s 14:22:25] === тугая проба Г1 завершена ===
+[  24.70s 14:23:00] === CH-009 seed 3b: Г4 на СОСЕДНЕЙ странице пейджера ===
+[  39.16s 14:23:14] --- Rating (Files-only) активен, круг FILES -> DISLIKED (СОСЕД) -> FILES ---
+[  43.66s 14:23:19]   сортировка Rating выбрана на FILES
+[  52.86s 14:23:28]   [Rating, повтор 1] FILES прокручен, верхняя карточка: ('Filler Scroll Work 01', 580)
+[  54.95s 14:23:30]   [Rating, повтор 1] ушли на DISLIKED
+[  61.16s 14:23:36]   [Rating, повтор 1] FILES после круга: ('Filler Scroll Work 01', 580) (было ('Filler Scroll Work 01', 580))
+[  61.16s 14:23:36]   [Rating, повтор 1] ВЕРДИКТ: позиция СОХРАНИЛАСЬ
+[  61.50s 14:23:37]   триггер после круга: «Rating»
+[  69.44s 14:23:44]   [Rating, повтор 2] FILES прокручен, верхняя карточка: ('Filler Scroll Work 01', 580)
+[  71.31s 14:23:46]   [Rating, повтор 2] ушли на DISLIKED
+[  77.25s 14:23:52]   [Rating, повтор 2] FILES после круга: ('Filler Scroll Work 01', 580) (было ('Filler Scroll Work 01', 580))
+[  77.25s 14:23:52]   [Rating, повтор 2] ВЕРДИКТ: позиция СОХРАНИЛАСЬ
+[  77.55s 14:23:53]   триггер после круга: «Rating»
+[  78.06s 14:23:53]   [screenshot] 26-g4-adjacent-rating.png
+[  78.06s 14:23:53] --- КОНТРОЛЬ: Word count (допустима ВЕЗДЕ), тот же круг через соседа ---
+[  82.58s 14:23:58]   триггер: «Word count (high to low)»
+[  90.16s 14:24:05]   [Word count, повтор 1] FILES прокручен, верхняя карточка: ('Filler Scroll Work 07', 580)
+[  92.01s 14:24:07]   [Word count, повтор 1] ушли на DISLIKED
+[  97.69s 14:24:13]   [Word count, повтор 1] FILES после круга: ('Filler Scroll Work 07', 580) (было ('Filler Scroll Work 07', 580))
+[  97.69s 14:24:13]   [Word count, повтор 1] ВЕРДИКТ: позиция СОХРАНИЛАСЬ
+[ 104.55s 14:24:20]   [Word count, повтор 2] FILES прокручен, верхняя карточка: ('Filler Scroll Work 07', 580)
+[ 106.42s 14:24:21]   [Word count, повтор 2] ушли на DISLIKED
+[ 112.17s 14:24:27]   [Word count, повтор 2] FILES после круга: ('Filler Scroll Work 07', 580) (было ('Filler Scroll Work 07', 580))
+[ 112.17s 14:24:27]   [Word count, повтор 2] ВЕРДИКТ: позиция СОХРАНИЛАСЬ
+[ 112.53s 14:24:28]   [screenshot] 27-g4-adjacent-control-wordcount.png
+[ 112.53s 14:24:28] --- КОНТРОЛЬ-2: Rating, круг через ДАЛЁКУЮ вкладку FAVORITE (не сосед) ---
+[ 123.95s 14:24:39]   [Rating через далёкую, повтор 1] FILES прокручен, верхняя карточка: ('Filler Scroll Work 01', 580)
+[ 126.08s 14:24:41]   [Rating через далёкую, повтор 1] ушли на FAVORITE
+[ 131.81s 14:24:47]   [Rating через далёкую, повтор 1] FILES после круга: ('Filler Scroll Work 01', 580) (было ('Filler Scroll Work 01', 580))
+[ 131.81s 14:24:47]   [Rating через далёкую, повтор 1] ВЕРДИКТ: позиция СОХРАНИЛАСЬ
+[ 138.70s 14:24:54]   [Rating через далёкую, повтор 2] FILES прокручен, верхняя карточка: ('Filler Scroll Work 01', 580)
+[ 140.51s 14:24:56]   [Rating через далёкую, повтор 2] ушли на FAVORITE
+[ 146.53s 14:25:02]   [Rating через далёкую, повтор 2] FILES после круга: ('Filler Scroll Work 01', 580) (было ('Filler Scroll Work 01', 580))
+[ 146.53s 14:25:02]   [Rating через далёкую, повтор 2] ВЕРДИКТ: позиция СОХРАНИЛАСЬ
+[ 146.94s 14:25:02]   [screenshot] 28-g4-far-page-rating.png
+[ 146.94s 14:25:02] --- Г5 (пересъём): смена сортировки, пока FILES вне экрана (сосед) ---
+[ 155.39s 14:25:10]   FILES прокручен: ('Filler Scroll Work 01', 580)
+[ 160.36s 14:25:15]   сортировка сменена вне FILES -> триггер «Word count (high to low)»
+[ 166.38s 14:25:21]   FILES после возврата: ('A Pending Test Work', 486) (было ('Filler Scroll Work 01', 580))
+[ 166.38s 14:25:21]   Г5 ВЕРДИКТ: сброшен на верх
+[ 166.86s 14:25:22]   [screenshot] 29-g5-offscreen-neighbour.png
+[ 166.86s 14:25:22] === seed 3b завершён ===
+[  23.50s 14:25:57] === CH-009 Г1(а), заход 3: координатная проба наложения ===
+[  52.53s 14:26:26]   подготовка: tabs(prefs)=5
+[  58.50s 14:26:32]   разучено: карточка=(214, 507) пункт=(373, 1700) nav Browse=(173, 2232)
+[  62.83s 14:26:36]   разучено: пилюля=(540, 2248) nav Library=(539, 2232)
+[  64.62s 14:26:38] --- Г1(а) координатный повтор 1: старт tabs=5 ---
+[  67.75s 14:26:41]   ПУТЬ ПРОЙДЕН за 3.12с от закрытия (long-press завершился на +2.75с)
+[  68.84s 14:26:42]       + 4.22s: {'bg': None, 'tab_closed': True, 'undo': True}  <== СМЕНА
+[  69.53s 14:26:43]       + 4.91s: {'bg': None, 'tab_closed': False, 'undo': False}  <== СМЕНА
+[  70.20s 14:26:43]       + 5.58s: {'bg': None, 'tab_closed': False, 'undo': False}
+[  70.89s 14:26:44]       + 6.27s: {'bg': None, 'tab_closed': False, 'undo': False}
+[  71.58s 14:26:45]       + 6.95s: {'bg': None, 'tab_closed': False, 'undo': False}
+[  72.30s 14:26:45]       + 7.67s: {'bg': None, 'tab_closed': False, 'undo': False}
+[  73.05s 14:26:46]       + 8.42s: {'bg': None, 'tab_closed': False, 'undo': False}
+[  73.66s 14:26:47]       + 9.03s: {'bg': None, 'tab_closed': False, 'undo': False}
+[  74.30s 14:26:47]       + 9.67s: {'bg': None, 'tab_closed': False, 'undo': False}
+[  74.95s 14:26:48]       +10.33s: {'bg': None, 'tab_closed': False, 'undo': False}
+[  75.64s 14:26:49]       +11.02s: {'bg': None, 'tab_closed': False, 'undo': False}
+[  76.22s 14:26:49]       +11.59s: {'bg': None, 'tab_closed': False, 'undo': False}
+[  76.39s 14:26:49]   итог повтора 1: tabs 5 -> 4; active=0
+[  77.05s 14:26:50]   [screenshot] 14-g1a-coord-rep1.png
+[  79.28s 14:26:52] --- Г1(а) координатный повтор 2: старт tabs=4 ---
+[  82.78s 14:26:56]   ПУТЬ ПРОЙДЕН за 3.50с от закрытия (long-press завершился на +3.03с)
+[  84.49s 14:26:58]       + 5.20s: {'bg': None, 'tab_closed': False, 'undo': False}  <== СМЕНА
+[  85.44s 14:26:58]       + 6.16s: {'bg': 'Opened in background (4 tabs)', 'tab_closed': False, 'undo': False}  <== СМЕНА
+[  86.38s 14:26:59]       + 7.09s: {'bg': 'Opened in background (4 tabs)', 'tab_closed': False, 'undo': False}
+[  87.27s 14:27:00]       + 7.98s: {'bg': 'Opened in background (4 tabs)', 'tab_closed': False, 'undo': False}
+[  88.74s 14:27:02]       + 9.45s: {'bg': 'Opened in background (4 tabs)', 'tab_closed': False, 'undo': False}
+[  89.53s 14:27:03]       +10.25s: {'bg': None, 'tab_closed': False, 'undo': False}  <== СМЕНА
+[  90.41s 14:27:03]       +11.12s: {'bg': None, 'tab_closed': False, 'undo': False}
+[  91.20s 14:27:04]       +11.92s: {'bg': None, 'tab_closed': False, 'undo': False}
+[  91.38s 14:27:04]   итог повтора 2: tabs 4 -> 4; active=0
+[  91.78s 14:27:05]   [screenshot] 14-g1a-coord-rep2.png
+[  94.49s 14:27:07] --- Г1(а) координатный повтор 3: старт tabs=4 ---
+[  97.70s 14:27:11]   ПУТЬ ПРОЙДЕН за 3.22с от закрытия (long-press завершился на +2.80с)
+[  99.33s 14:27:12]       + 4.84s: {'bg': None, 'tab_closed': True, 'undo': False}  <== СМЕНА
+[ 100.19s 14:27:13]       + 5.70s: {'bg': 'Opened in background (4 tabs)', 'tab_closed': False, 'undo': False}  <== СМЕНА
+[ 101.14s 14:27:14]       + 6.66s: {'bg': 'Opened in background (4 tabs)', 'tab_closed': False, 'undo': False}
+[ 102.06s 14:27:15]       + 7.58s: {'bg': 'Opened in background (4 tabs)', 'tab_closed': False, 'undo': False}
+[ 102.91s 14:27:16]       + 8.42s: {'bg': 'Opened in background (4 tabs)', 'tab_closed': False, 'undo': False}
+[ 103.80s 14:27:17]       + 9.31s: {'bg': None, 'tab_closed': False, 'undo': False}  <== СМЕНА
+[ 104.47s 14:27:17]       + 9.98s: {'bg': None, 'tab_closed': False, 'undo': False}
+[ 105.22s 14:27:18]       +10.73s: {'bg': None, 'tab_closed': False, 'undo': False}
+[ 106.12s 14:27:19]       +11.64s: {'bg': None, 'tab_closed': False, 'undo': False}
+[ 106.28s 14:27:19]   итог повтора 3: tabs 4 -> 4; active=0
+[ 106.64s 14:27:20]   [screenshot] 14-g1a-coord-rep3.png
+[ 108.55s 14:27:22] === координатная проба Г1(а) завершена ===
+[  22.91s 14:28:01] === CH-009 визуальный свип (обе темы) ===
+[  43.98s 14:28:22]   overlay длинного нажатия (светлая тема), цель «A Loved Test Work»
+[  45.00s 14:28:23]   пункты overlay: [('Open in background tab', {'height': 49, 'width': 448, 'x': 149, 'y': 1676}), ('Delete work', {'height': 49, 'width': 223, 'x': 149, 'y': 1873}), ('Delete downloaded file', {'height': 49, 'width': 431, 'x': 149, 'y': 2070})]
+[  45.52s 14:28:23]   [screenshot] 40-overlay-light.png
+[  52.92s 14:28:31]   снекбар (светлая): {'bg': 'Opened in background (2 tabs)', 'tab_closed': False, 'undo': False}
+[  53.31s 14:28:31]   bounds снекбара: {'height': 43, 'width': 493, 'x': 74, 'y': 1947}
+[  94.84s 14:29:13] === CH-009 SEED 4 «Вкладка на удалённый файл» (бонус) ===
+[ 108.77s 14:29:27]   цель: «A Loved Test Work», downloadPath=/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html
+[ 113.22s 14:29:31]   --- опрос канала снекбаров «Г7: фоновое открытие file://-вкладки», бюджет 5s ---
+[ 114.19s 14:29:32]       t= 114.19s  {'bg': 'Opened in background (2 tabs)', 'tab_closed': False, 'undo': False}
+[ 115.06s 14:29:33]       t= 115.06s  (без изменений)
+[ 115.92s 14:29:34]       t= 115.92s  (без изменений)
+[ 116.92s 14:29:35]       t= 116.92s  (без изменений)
+[ 117.80s 14:29:36]       t= 117.80s  {'bg': None, 'tab_closed': False, 'undo': False}
+[ 118.69s 14:29:37]       t= 118.69s  (без изменений)
+[ 118.69s 14:29:37]   --- конец опроса «Г7: фоновое открытие file://-вкладки» ---
+[ 118.84s 14:29:37]   open_tabs_urls: ['https://archiveofourown.org/', 'file:///data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html']
+[ 119.67s 14:29:38]   экран: Library
+[ 120.19s 14:29:38]   [screenshot] 30-file-bg-open.png
+[ 120.19s 14:29:38] --- Г7 (1): kill+релонч с file://-вкладкой ---
+[ 129.52s 14:29:47]   после релонча: tabs=['https://archiveofourown.org/', 'file:///data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html'] active=0
+[ 134.64s 14:29:53]   переключился на вкладку 1; tabs=2 active=1
+[ 135.02s 14:29:53]   [screenshot] 31-file-tab-after-relaunch.png
+[ 135.02s 14:29:53] --- Г7 (2): удалить скачанный файл, пока вкладка на него открыта ---
+[ 135.08s 14:29:53]   ls ДО удаления: '-rw-rw-rw- 1 u0_a147 u0_a147 1913 2026-08-10 12:28 /data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html\n'
+[ 149.22s 14:30:07]   ls ПОСЛЕ удаления: ''
+[ 154.12s 14:30:12]   active=1 tabs=['https://archiveofourown.org/', 'file:///data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html']
+[ 154.44s 14:30:12]   [screenshot] 32-file-tab-after-delete.png
+[ 154.44s 14:30:12] --- Г7 (2б): релонч после удаления файла ---
+[ 165.00s 14:30:23]   после релонча: tabs=['https://archiveofourown.org/', 'file:///data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html'] active=1 экран=Browse
+[ 165.33s 14:30:23]   [screenshot] 33-file-tab-relaunch-after-delete.png
+[ 165.33s 14:30:23] === SEED 4 завершён ===
+[  23.64s 14:32:53] === CH-009 визуальный свип, часть 2 (тёмная тема, чипы, prefs) ===
+[  36.14s 14:33:05] --- тёмная тема (cmd uimode night yes) ---
+[  40.00s 14:33:09]   экран: Library
+[  40.64s 14:33:10]   [screenshot] 42-library-dark.png
+[  44.97s 14:33:14]   верхняя карточка в тёмной теме: ('A Loved Test Work', 486)
+[  49.69s 14:33:19]   пункты overlay (тёмная): [('Open in background tab', {'height': 49, 'width': 448, 'x': 149, 'y': 1676}), ('Delete work', {'height': 49, 'width': 223, 'x': 149, 'y': 1873}), ('Delete downloaded file', {'height': 49, 'width': 431, 'x': 149, 'y': 2070})]
+[  50.09s 14:33:19]   [screenshot] 43-overlay-dark.png
+[  56.24s 14:33:26]   снекбар (тёмная): {'bg': 'Opened in background (2 tabs)', 'tab_closed': False, 'undo': False}
+[  56.61s 14:33:26]   [screenshot] 44-snackbar-dark.png
+[  58.78s 14:33:28]   тема возвращена в light (сверка ниже по кадру 45)
+[  58.78s 14:33:28] --- лента чипов TabStrip при многих вкладках (ВИЗУАЛЬНО, счёт из prefs) ---
+[ 111.19s 14:34:21]   вкладок ПО PREFS: 10; состав: ['https://archiveofourown.org/', 'https://archiveofourown.org/works/900000001', 'https://archiveofourown.org/works/900000002', 'https://archiveofourown.org/works/900000003', 'https://archiveofourown.org/works/900000004', 'https://archiveofourown.org/works/900000005', 'https://archiveofourown.org/works/900000901', 'https://archiveofourown.org/works/900000902', 'https://archiveofourown.org/works/900000001', 'https://archiveofourown.org/works/900000002']
+[ 114.20s 14:34:24]   иконок Close tab в дереве: 2 — АРТЕФАКТ ВИРТУАЛИЗАЦИИ, НЕ число вкладок (в prefs 10)
+[ 115.11s 14:34:24]   подписи видимых чипов: ['Home | Archive of Our Own', 'A Loved Test Work | Archive of Our Own']
+[ 115.55s 14:34:25]   [screenshot] 45-tabstrip-many-tabs-light.png
+[ 115.55s 14:34:25] --- prefs тумблеров (ловушка BUG-014/015) ---
+[ 115.62s 14:34:25]   ключей тумблеров в ao3_settings.xml нет — значения дефолтные (приложение пишет ключ только при изменении); ни один тумблер сессией не трогался
+[ 115.62s 14:34:25] === свип часть 2 завершена ===
+[  23.64s 14:35:00] === CH-009 SEED 4 «Вкладка на удалённый файл» (бонус) ===
+[  37.52s 14:35:14]   цель: «A Loved Test Work», downloadPath=/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html
+[  41.89s 14:35:19]   --- опрос канала снекбаров «Г7: фоновое открытие file://-вкладки», бюджет 5s ---
+[  42.95s 14:35:20]       t=  42.95s  {'bg': 'Opened in background (2 tabs)', 'tab_closed': False, 'undo': False}
+[  43.99s 14:35:21]       t=  43.99s  (без изменений)
+[  44.94s 14:35:22]       t=  44.94s  (без изменений)
+[  46.02s 14:35:23]       t=  46.02s  (без изменений)
+[  46.89s 14:35:24]       t=  46.89s  {'bg': None, 'tab_closed': False, 'undo': False}
+[  46.89s 14:35:24]   --- конец опроса «Г7: фоновое открытие file://-вкладки» ---
+[  47.05s 14:35:24]   open_tabs_urls: ['https://archiveofourown.org/', 'file:///data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html']
+[  47.97s 14:35:25]   экран: Library
+[  48.47s 14:35:25]   [screenshot] 30-file-bg-open.png
+[  48.47s 14:35:25] --- Г7 (1): kill+релонч с file://-вкладкой ---
+[  57.59s 14:35:34]   после релонча: tabs=['https://archiveofourown.org/', 'file:///data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html'] active=0
+[  63.52s 14:35:40]   переключился на вкладку 1; tabs=2 active=1
+[  63.89s 14:35:41]   [screenshot] 31-file-tab-after-relaunch.png
+[  63.89s 14:35:41] --- Г7 (2): удалить скачанный файл, пока вкладка на него открыта ---
+[  63.97s 14:35:41]   ls ДО удаления: '-rw-rw-rw- 1 u0_a147 u0_a147 1913 2026-08-10 12:34 /data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html\n'
+[  78.08s 14:35:55]   ls ПОСЛЕ удаления: ''
+[  82.95s 14:36:00]   active=1 tabs=['https://archiveofourown.org/', 'file:///data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html']
+[  83.27s 14:36:00]   [screenshot] 32-file-tab-after-delete.png
+[  83.27s 14:36:00] --- Г7 (2б): релонч после удаления файла ---
+[  93.95s 14:36:11]   после релонча: tabs=['https://archiveofourown.org/', 'file:///data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html'] active=1 экран=Browse
+[  94.27s 14:36:11]   [screenshot] 33-file-tab-relaunch-after-delete.png
+[  94.27s 14:36:11] === SEED 4 завершён ===

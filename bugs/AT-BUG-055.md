@@ -4,16 +4,16 @@ title: "Нестабильные TC-134/TC-135: наблюдение вклад�
 type: test_debt
 debt_kind: flaky_test
 severity: major
-status: Fixed
+status: Verified
 found_in: "framework commit 1822554 (тестируемая сборка приложения 1.10 (versionCode 11), build 6455af0c — от сборки НЕ зависит)"
-fixed_in: ""
+fixed_in: "3582c7e"
 last_seen_in: "RUN-20260804-1624 (2026-08-04)"
 test_cases: ["TC-134", "TC-135"]
 runs: ["RUN-20260803-2012", "RUN-20260804-1624"]
 duplicates: []
 regression_of: ""
-status_since: "2026-08-10T10:18:15Z"
-updated: "2026-08-10T10:18:15Z"
+status_since: "2026-08-10T12:28:39Z"
+updated: "2026-08-10T12:28:39Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -98,6 +98,11 @@ gitlab_issue: ""
    (транзиентная пустая запись `open_tabs_urls` / потеря deep-link при
    холодном старте), падение переезжает на вердикт `APP_BUG` и заводится
    `BUG-*`; карантин снимается только после установленной причины.
+
+## Верификация (заполняет fix-verifier)
+| Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
+|---|---|---|---|---|
+| 2026-08-10T12:28:39Z | source_commit 6f884d97, APK versionCode 12/dev-local (test_debt в обвязке фреймворка, сборка приложения не тронута фиксом) | fix-verifier, независимый прогон: device-free `Invoke-Pytest tests/test_adb_run_as_file_or_raise_unit.py tests/test_parse_persisted_tabs_unit.py -v` (18 кейсов) + device `Invoke-Pytest -k "test_kill_relaunch_without_deep_link_keeps_tabs_unchanged or test_cold_start_deep_link_reuses_single_home_tab" -v` (TC-134, TC-135) | юнит: `70 passed in 0.37s` (объединённый прогон с AT-BUG-054, из них 14+4=18 принадлежат этим двум файлам), `PYTEST_EXIT=0`; device: `2 passed, 338 deselected in 52.51s`, `PYTEST_EXIT=0` | **Verified** — fix-verifier, D1 mode=verify, независимое подтверждение поверх серии maintainer'а (юниты 20/175 passed, живые 3x3 прогона TC-134/135, полный `test_tabs.py` 13/13) |
 
 ## Обсуждение (test-maintainer, 2026-08-10T10:18:15Z) — Fixed
 
@@ -270,6 +275,26 @@ test-cases/tabs/TC-134.md, test-cases/tabs/TC-135.md) НЕ закоммичен 
 координатор заполнит хэшем при коммите узким списком (пути этой задачи НЕ
 пересекаются с параллельным builder'ом, правящим `scripts/`/`schemas/`/
 `tasks.ps1`).
+
+**2026-08-10T12:28:39Z — fix-verifier (D1, mode=verify):** координатор
+закоммитил дифф узким списком коммитом `3582c7e` (`git log`/`git show
+--stat` подтверждают: `framework/core/adb.py`, `framework/steps/app_steps.py`,
+`framework/tests/test_adb_run_as_file_or_raise_unit.py`,
+`framework/tests/test_parse_persisted_tabs_unit.py`, `bugs/AT-BUG-055.md`,
+`test-cases/tabs/TC-134.md`, `test-cases/tabs/TC-135.md`) — `fixed_in`
+проставлен, коммит в HEAD, дальше можно верифицировать. Независимый
+прогон на этом HEAD: device-free `Invoke-Pytest
+tests/test_adb_run_as_file_or_raise_unit.py
+tests/test_parse_persisted_tabs_unit.py -v` — `70 passed in 0.37s`
+(объединённый прогон с AT-BUG-054, 18 из 70 — этих двух файлов),
+`PYTEST_EXIT=0`; device `Invoke-Pytest -k
+"test_kill_relaunch_without_deep_link_keeps_tabs_unchanged or
+test_cold_start_deep_link_reuses_single_home_tab" -v` на `emulator-5554`
+(`Get-Device` → `DEVICE`) — `2 passed, 338 deselected in 52.51s`,
+`PYTEST_EXIT=0`. Оба связанных TC (TC-134, TC-135) зелёные. Сборка
+приложения — `source_commit 6f884d97`, установленный APK `versionCode
+12`/`dev-local`, долг в обвязке, от сборки не зависит. `Fixed` →
+`Verified`, лок снят.
 
 ## Ссылки
 

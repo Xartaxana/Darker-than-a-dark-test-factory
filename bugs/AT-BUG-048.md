@@ -4,7 +4,7 @@ title: "BaseScreen.swipe_to_text проскакивает искомую сек�
 type: test_debt
 debt_kind: flaky_test
 severity: minor
-status: Fixed
+status: Verified
 found_in: "framework commit e42eb8bb (тестируемая сборка приложения 1.10 (versionCode 11), build 6455af0c — от сборки НЕ зависит)"
 fixed_in: "тестовая система: framework/screens/base_screen.py (swipe_to_text/swipe_up_to_text — общий _swipe_search: не-fling короткие свайпы на полную дистанцию раунда + settle-поллинг poll_for после каждого раунда вместо одного снимка; _scroll_fingerprint различает «конец списка» от «строка не найдена»), framework/core/waits.py (новый примитив poll_for), framework/tests/test_swipe_to_text_settle_unit.py (новая device-free регресс-проба, 5 сценариев); коммит присвоит координатор при приёмке — сборка приложения не при чём"
 last_seen_in: "RUN-20260803-2012 (2026-08-03)"
@@ -12,8 +12,8 @@ test_cases: ["TC-093"]
 runs: ["RUN-20260803-2012"]
 duplicates: []
 regression_of: ""
-status_since: "2026-08-10T11:30:11Z"
-updated: "2026-08-10T11:30:11Z"
+status_since: "2026-08-10T11:35:07Z"
+updated: "2026-08-10T11:35:07Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -167,6 +167,7 @@ settle-окном (несколько опросов), а не одним сни
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-08-10 | framework fix commit `1ff003d` (HEAD); тестируемая сборка приложения source_commit `6f884d979a5c19465c6d8647737376864f424555` (`6f884d97`), version_name `dev-local`, version_code `12`, built_at `2026-08-10T10:38:57Z` — от сборки приложения долг не зависит, версия приведена для полноты строки | (1) `tests/test_swipe_to_text_settle_unit.py` — device-free юнит-слайс, 5 сценариев: `Invoke-Pytest tests/test_swipe_to_text_settle_unit.py -q` → `5 passed in 0.05s`, `PYTEST_EXIT=0`; (2) TC-093 изолированно на устройстве: `Invoke-Pytest -k test_display_mode_hide_to_dim_live_push` → `1 passed, 344 deselected in 46.09s`, `PYTEST_EXIT=0` | оба прогона зелёные, независимо от witness maintainer'а в «Обсуждении» | Verified |
 
 ## Обсуждение
 
@@ -186,3 +187,13 @@ settle-окном (несколько опросов), а не одним сни
 `framework/tests/test_swipe_to_text_settle_unit.py` (5 сценариев) добавлен в
 дерево постоянно. Диф не закоммичен — коммит узким списком за координатором.
 Лок снят.
+
+**[fix-verifier @ 2026-08-10T11:35:07Z]** Verified. Дифф уже в HEAD коммитом
+`1ff003d` (проверено `git log`). Независимое подтверждение двумя прогонами:
+(1) device-free `Invoke-Pytest tests/test_swipe_to_text_settle_unit.py -q` →
+`5 passed in 0.05s`, `PYTEST_EXIT=0`; (2) device, TC-093 изолированно
+`Invoke-Pytest -k test_display_mode_hide_to_dim_live_push` →
+`1 passed, 344 deselected in 46.09s`, `PYTEST_EXIT=0` (эмулятор
+`emulator-5554` присутствовал, сверено `Get-Device`). Оба зелёные, витнесс
+maintainer'а в верхней реплике подтверждён вживую. Fixed→Verified, лок снят
+(не переустанавливался, был уже закрыт maintainer'ом).

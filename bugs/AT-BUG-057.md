@@ -4,19 +4,19 @@ title: "Нестабильный TC-016 (p0, live): RatingOverlay не откр�
 type: test_debt
 debt_kind: flaky_test
 severity: major
-status: Fixed
+status: Verified
 found_in: "framework commit 8e4ff25 (тестируемая сборка приложения 1.11 (versionCode 12), build bfc8f41a — от сборки НЕ зависит, см. «Почему не сборка»)"
-fixed_in: "framework/screens/browser_screen.py::open_work() + framework/steps/rating_steps.py (не закоммичено этим ходом — диф в рабочем дереве, см. «Починка»)"
+fixed_in: "72adfc1"
 last_seen_in: "RUN-20260805-0432 (2026-08-05)"
 test_cases: ["TC-016"]
 runs: ["RUN-20260805-0432"]
 duplicates: []
 regression_of: ""
-status_since: "2026-08-10T11:20:00Z"
-updated: "2026-08-10T11:20:00Z"
+status_since: "2026-08-10T12:29:29Z"
+updated: "2026-08-10T12:29:29Z"
 reopen_count: 0
 dispute_count: 0
-awaiting: qa
+awaiting: none
 resolution: ""
 resolution_comment: ""
 known_issue: "false"
@@ -170,6 +170,7 @@ test_debt-баг не заводится — уже покрыт открыты�
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
 | 2026-08-10T11:15:00Z | framework (без изменения сборки приложения, test_debt) | TC-016, изолированно, 3 независимых вызова `Invoke-Pytest -k test_change_rating_moves_work_between_tabs -v` подряд | PASSED / PASSED / PASSED — `1 passed, 321 deselected in 53.88s` `PYTEST_EXIT=0`; `... in 51.88s` `PYTEST_EXIT=0`; `... in 52.27s` `PYTEST_EXIT=0` | test-maintainer: 3/3 зелёных с усиленной диагностикой — карантин снят, `awaiting: qa` для fix-verifier |
+| 2026-08-10T12:29:29Z | source_commit 6f884d97, APK versionCode 12/dev-local (test_debt в обвязке, сборка приложения не тронута фиксом) | fix-verifier, независимый прогон: TC-016, `Invoke-Pytest -k test_change_rating_moves_work_between_tabs -v` — 1 прогон (live-тест, единичный прогон легален per манифест диспатча, поверх 3x-серии maintainer'а) | `1 passed, 339 deselected in 49.90s`, `PYTEST_EXIT=0` | **Verified** — fix-verifier, D1 mode=verify, независимое подтверждение |
 
 ## Обсуждение
 
@@ -188,3 +189,16 @@ fix-verifier (правило D1/B4, сборка приложения не ну�
 репозитория; путь: `framework/screens/browser_screen.py`,
 `framework/steps/rating_steps.py`, `test-cases/library/TC-016.md`,
 `bugs/AT-BUG-057.md`.
+
+**2026-08-10T12:29:29Z — fix-verifier (D1, mode=verify):** координатор
+закоммитил дифф коммитом `72adfc1` (`git log`/`git show --stat`
+подтверждают: `bugs/AT-BUG-057.md`, `framework/screens/browser_screen.py`,
+`framework/steps/rating_steps.py`, `test-cases/library/TC-016.md`) —
+`fixed_in` исправлен на `72adfc1` (было: описательная строка «не
+закоммичено этим ходом», устаревшая после коммита координатора).
+Независимый прогон TC-016 (live, единичный прогон достаточен per
+манифест) на этом HEAD, `emulator-5554` (`Get-Device` → `DEVICE`):
+`1 passed, 339 deselected in 49.90s`, `PYTEST_EXIT=0`. Сборка приложения —
+`source_commit 6f884d97`, установленный APK `versionCode 12`/`dev-local`,
+долг в обвязке (race в ожидании `onPageFinished`), от сборки не зависит.
+`Fixed` → `Verified`, `awaiting: qa` → `awaiting: none`, лок снят.

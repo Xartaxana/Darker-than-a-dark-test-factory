@@ -2,7 +2,7 @@
 key: "BUG-001"
 project: "AO3"
 issueType: "bug"
-status: "bug-rejected"
+status: "bug-verified"
 priority: "p2"
 summary: "PROJECT.md расходится с кодом: подписи вкладок Library/меню рейтинга; несуществующий глобальный «Enable filtering»"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-04T16:43:21Z"
-updated: "2026-08-04T16:43:21Z"
+created: "2026-08-10T09:25:05Z"
+updated: "2026-08-10T09:25:05Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # PROJECT.md расходится с кодом: подписи вкладок Library/меню рейтинга; несуществующий глобальный «Enable filtering»
 
 _Спроецировано из `bugs/BUG-001.md` (источник правды).
-Статус в нашей машине: **Rejected**._
+Статус в нашей машине: **Verified**._
 
 # BUG-001 — Расхождения PROJECT.md с кодом (коллекция примеров)
 
@@ -71,6 +71,19 @@ ui/components/RatingOverlay.kt (ratingOptions). Требует решения ч
 app-under-test (зафиксировано фидбеком оператора ранее).
 
 ## Обсуждение
+
+**[Lead @ 2026-08-10T09:25:00Z] Open→Fixed — сигнал разработчика, подтверждён
+словом владельца.** Разработчик пометил issue #1 ярлыком `qa-status::QAready`
+(замер API: label на месте, updated 2026-08-09T22:28Z; не наша проекция — 
+внутренний статус был Open) и приземлил фикс коммитом `94a124b` («Align
+PROJECT.md and DESIGN.md with actual UI labels and filtering model», называет
+issue #1), входящим в текущую линию `6f884d97`. Слово владельца в чате
+2026-08-10: QAready от разработчика ≡ наш Fixed. Оба исходных примера
+устранены (сверка критика 2026-08-09: подписи вкладок выровнены, «There is no
+global master filtering switch» написано явно). Верификация — штатный D1.
+Примечание: НОВЫЙ пример того же класса («No network calls» vs
+HttpURLConnection/OkHttp) заведён ОТДЕЛЬНЫМ багом BUG-058 — этот баг
+закрывается по своим двум исходным примерам, не расширяется.
 
 **Решение владельца (2026-07-17, слово оператора в Lead-сессии): эталон =
 фактический UI/код.** Оба примера — баг ДОКУМЕНТАЦИИ (PROJECT.md устарел),
@@ -130,7 +143,74 @@ PROJECT.md — прямо противоречит записанному реш
 перечисленных двух в этом баге (сверка ограничена заявленными в манифесте
 файлами — расширять scope не стал).
 
+**[Lead @ 2026-08-09T13:05:00Z] РАЗБОР РЕПЕТИЦИИ — ОТКАТ СЕЯНОГО Rejected.**
+Переход Open→Rejected 2026-08-04T12:32:15Z был подкладкой П6 карты сева
+(REHEARSAL-2026-08-04): реальный minor-баг с ЖИВЫМ репро намеренно
+переведён владельцем в Rejected для упражнения ветки D4. Механика D4
+исполнена образцово (спор recheck-rejected выше — настоящая работа с
+witness, остаётся как evidence); финализация Rejected по спеке была
+недостижима — это находка СТОРОНЫ СПЕКИ (N8: цель recheck-подкладки
+обязана иметь мёртвое репро). Разбором восстановлен до-севный статус:
+`Open` (ход владельца), `dispute_count` 1→0 (спор был реакцией на сев,
+не на решение разработчика). Баг остаётся Open как коллекция класса
+документации — как до репетиции.
+
+**[fix-verifier @ 2026-08-10T09:25:05Z] mode=verify (D1) — Fixed→Verified.**
+Проверка ДОКУМЕНТНАЯ по манифесту задачи: девайс/эмулятор/pytest не трогались
+(параллельный test-maintainer занимал устройство), TC-006/TC-015 (оба
+`status: Automated`, device-based) НЕ перепрогонялись — замена device-free
+doc inspection'ом, обоснование: сам баг — расхождение ТЕКСТА PROJECT.md с
+УЖЕ СУЩЕСТВУЮЩИМ кодом (не поведением приложения), фикс — правка только
+`PROJECT.md`/`DESIGN.md` коммитом `94a124b`; код (`LibraryScreen.kt`,
+`RatingOverlay.kt`, `SettingsScreen.kt`), который TC-006/TC-015 гоняли бы
+против, не менялся с 2026-06-28 (см. запись recheck-rejected выше) — живой
+прогон против неизменного кода не добавил бы данных к прямой построчной
+сверке PROJECT.md с этим кодом.
+
+Подтверждение фикса в текущей линии: `git -C app-under-test merge-base
+--is-ancestor 94a124b HEAD` → код возврата 0 (IS ANCESTOR); `HEAD` =
+`6f884d979a5c...` (сообщение «Keep each Library tab's scroll position when
+switching tabs (#28)», 2026-08-10), source_commit задачи `6f884d97` совпадает.
+
+Пример 1 (вкладки/меню рейтинга) — устранён:
+- `app-under-test/PROJECT.md:50` — `Tabbed layout: **Favorite** · **Kudosed**
+  · **Read** · **Pending** · **Disliked** · **Files**`.
+- `LibraryScreen.kt:73-79` — `enum class LibTab`: `SUPER_LIKE("Favorite",
+  Rating.SAVE)`, `LIKE("Kudosed", Rating.LIKE)`, `READ("Read", Rating.READ)`,
+  `PENDING("Pending", Rating.PENDING)`, `DISLIKE("Disliked", Rating.DISLIKE)`,
+  `DOWNLOADED("Files", null)`.
+- `RatingOverlay.kt:52-57` — `val ratingOptions = listOf(RatingOption(
+  Rating.SAVE, ..., "Favorite"), RatingOption(Rating.LIKE, ..., "Kudosed"),
+  RatingOption(Rating.READ, ..., "Read"), RatingOption(Rating.PENDING, ...,
+  "Pending"), RatingOption(Rating.DISLIKE, ..., "Dislike"))`.
+Подписи совпадают дословно между PROJECT.md и обоими файлами кода.
+
+Пример 2 (глобальный «Enable filtering») — устранён:
+- `app-under-test/PROJECT.md:63` — «There is no global master filtering
+  switch — turning filtering off means clearing the individual toggles»;
+  `PROJECT.md:119` — «There is no global "enable filtering" switch —
+  filtering is off for a rating exactly when its "Hide {rating} works"
+  toggle is off».
+- `SettingsScreen.kt:66-67` — `SettingsUiState`: `val hiddenRatings:
+  Set<Rating> = setOf(Rating.DISLIKE)`, `val filterDisplayMode: String =
+  "hide"` — ни `enableFiltering`, ни его аналога нет.
+- Негативный grep `grep -rni "enable filtering" app/src/main/` по всему
+  исходнику приложения → 0 совпадений; позитивный контроль той же формой
+  вызова — `filterDisplayMode` в `SettingsScreen.kt` → 4 совпадения (труба
+  рабочая, пустой негатив не промах вызова).
+PROJECT.md теперь явно утверждает отсутствие глобального тумблера — то же,
+что подтверждает код.
+
+Оба исходных примера тела бага устранены → `Fixed` → `Verified`,
+`known_issue`-поля в frontmatter этого бага нет (не заводилось). Лок снят.
+
+**Дефекты-собратья (D-0043):** новых аналогов класса «PROJECT.md расходится
+с кодом» в затронутых файлах не замечено; известный третий пример того же
+класса («No network calls») уже вынесен в отдельный BUG-058 — вне скоупа
+этой верификации, не расширяю.
+
 ## Верификация
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
-| 2026-08-04 | 1.10 (versionCode 11), commit 63f6aac | TC-006, TC-015: девайс не нужен (класс — статичные строки/отсутствие фичи в коде), заменено код-инспекцией (сверка исходников + git-история файлов) | Расхождение подтверждено на актуальной сборке; репетиционный Rejected НЕ подтверждён — обе части исходного репро живы без изменений с 2026-07-17 | recheck-rejected: воспроизвелось, спор |
+| 2026-08-04 | 1.10 (versionCode 11), commit 63f6aac | TC-006, TC-015: девайс не нужен (класс — статичные строки/отсутствие фичи в коде), заменено код-инспекцией (сверка исходников + git-история файлов) | Расхождение подтверждено на актуальной сборке; репетиционный Rejected НЕ подтверждён — обе части исходного репро живы без изменений с 2026-07-17 | recheck-rejected: воспроизвелось, спор (сев П6, см. запись разбора выше) |
+| 2026-08-10 | source_commit `6f884d97` (versionCode 12, versionName `dev-local` по `app/build/outputs/apk/debug/output-metadata.json` — актуальнее `1.10`/`11` из yaml, тот парсер залипший), фикс `94a124b` подтверждён `git merge-base --is-ancestor 94a124b HEAD` = IS ANCESTOR | TC-006, TC-015: девайс/pytest НЕ прогонялись (запрещено манифестом задачи — верификация документная); замена — doc inspection: построчная сверка текущего `app-under-test/PROJECT.md` против текущего кода (`LibraryScreen.kt`, `RatingOverlay.kt`, `SettingsScreen.kt`) + негативный grep по всему `app/src/main/` с позитивным контролем | Пример 1 (вкладки/рейтинг): PROJECT.md:50 `**Favorite** · **Kudosed** · **Read** · **Pending** · **Disliked** · **Files**` = `LibraryScreen.kt:74-79` (`SUPER_LIKE("Favorite",...)`, `LIKE("Kudosed",...)`, `READ("Read",...)`, `PENDING("Pending",...)`, `DISLIKE("Disliked",...)`, `DOWNLOADED("Files",...)`) и `RatingOverlay.kt:53-57` (`RatingOption(Rating.SAVE,...,"Favorite")`, `"Kudosed"`, `"Read"`, `"Pending"`, `"Dislike"`) — совпадает дословно, устранено. Пример 2 (Enable filtering): PROJECT.md:63 «There is no global master filtering switch — turning filtering off means clearing the individual toggles» и PROJECT.md:119 «There is no global "enable filtering" switch...» = `SettingsScreen.kt:66-67` (`hiddenRatings: Set<Rating>`, `filterDisplayMode: String = "hide"`, никакого `enableFiltering`) и `grep -rni "enable filtering" app/src/main/` = 0 совпадений (позитивный контроль `filterDisplayMode` в том же файле = 4 совпадения, форма вызова рабочая) — устранено | verify: оба примера устранены → Verified |

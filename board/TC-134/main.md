@@ -7,14 +7,14 @@ priority: "p1"
 summary: "Kill+relaunch приложения не переоткрывает уже обработанный deep-link"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:tabs", "risk:R-08", "automation:quarantined"]
+labels: ["test-case", "area:tabs", "risk:R-08", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-31T18:12:23Z"
-updated: "2026-07-31T18:12:23Z"
+created: "2026-08-10T10:18:15Z"
+updated: "2026-08-10T10:18:15Z"
 archived: false
 resolution: "done"
 ---
@@ -177,6 +177,24 @@ in 391.91s, PYTEST_EXIT=0**, включая регресс старых TC-022..
 Не блокирующие замечания батча (мёртвая диагностика
 `wait_persisted_tab_count`, `app_steps.py:311-328`) — в
 `test-cases/tabs/TC-131.md`; касаются общего шага и этого кейса тоже.
+
+## Карантин снят (test-maintainer, AT-BUG-055, 2026-08-10T10:18:15Z)
+
+`automation_status: quarantined -> active`. Причина карантина (RUN-20260804-1624:
+`AssertionError: позиция 0 вне диапазона: всего вкладок в prefs 0` сразу после
+успешного `wait_persisted_tab_count`) устранена у ИСТОЧНИКА, не замаскирована:
+`_read_tabs_prefs_raw`/`_parse_persisted_tabs`/`wait_tabs_persisted`
+(`framework/steps/app_steps.py`) теперь честно читают `ao3_settings.xml` через
+новый `adb.run_as_file_or_raise` (`framework/core/adb.py`, echo-sentinel RC —
+тот же приём, что закрыл AT-BUG-044/045) и явно кидают `RuntimeError` вместо
+молчаливого `""`/`[]` на отвалившемся/неоднозначном `run-as`; ассерт по-прежнему
+проверяет то же самое (позицию/URL вкладки), не ослаблен. Полный разбор класса,
+красная проба и witness — `bugs/AT-BUG-055.md`.
+
+Изолированный перепрогон ЭТОГО кейса — 3/3 зелёных подряд (`Invoke-Pytest
+tests/test_tabs.py -k test_kill_relaunch_without_deep_link_keeps_tabs_unchanged`,
+каждый `1 passed, 12 deselected`, `PYTEST_EXIT=0`), плюс полный
+`test_tabs.py` (13/13 passed) — witness дословно в `bugs/AT-BUG-055.md`.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»
