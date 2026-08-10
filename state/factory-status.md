@@ -1,15 +1,15 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-10T17:41:30Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-10T20:13:21Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
 - Сборка: dev-local (versionCode 12), commit `6f884d97`, built_at 2026-08-10T10:38:57Z
-- smoke: Triaged · smoke_freshness_hours: **13.9** (RUN-20260810-0145)
-- regression: Triaged · regression_freshness_hours: **13.9** (RUN-20260810-0146)
-- canary: Triaged · canary_freshness_hours: **150.0** (RUN-20260804-1317)
+- smoke: Triaged · smoke_freshness_hours: **16.5** (RUN-20260810-0145)
+- regression: Triaged · regression_freshness_hours: **16.4** (RUN-20260810-0146)
+- canary: Triaged · canary_freshness_hours: **152.5** (RUN-20260804-1317)
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **2**
 - p0_automation_coverage: **100%** (37/37)
@@ -48,9 +48,9 @@ story-карточки: стадии см. docs/05-board.md §Story
 | tabs |  |  | 1 | 11 |  |
 | visibility |  |  |  | 6 |  |
 
-## Баги (25)
+## Баги (26)
 
-- Open: **22** · Verified: **2** · Intended: **1**
+- Open: **23** · Verified: **2** · Intended: **1**
 - BUG-011 [major] Open — Restore from backup пропускает работы молча, если файл с тем же ao3Id уже лежит в папке загрузок
 - BUG-013 [minor] Open — Смена темы, затем немедленный kill процесса (<100 мс) теряет theme_mode — выбор темы не персистится
 - BUG-014 [major] Open — Авто-скачивание Favorite срабатывает ретроактивно при правке тега ранее отмеченной работы
@@ -73,6 +73,7 @@ story-карточки: стадии см. docs/05-board.md §Story
 - BUG-058 [minor] Open — PROJECT.md ложно отрицает сетевые запросы из приложения; сетевые вызовы присутствуют в SettingsScreen и DownloadRepository
 - BUG-059 [minor] Open — Счётчик снекбара «Opened in background (N tabs)» показывает общее число вкладок вместо числа открытых в фоне
 - BUG-060 [minor] Open — Фоновая вкладка на удалённый локальный файл вечна: после релонча показывает ERR_FILE_NOT_FOUND, Retry не работает, чип деградирует
+- BUG-061 [major] Open — CI молчаливо генерирует throwaway-keystore при отсутствии переменной KEYSTORE_BASE64 — установка поверх падает INSTALL_FAILED_UPDATE_INCOMPATIBLE
 
 ## Известные проблемы, known_issue (2)
 
