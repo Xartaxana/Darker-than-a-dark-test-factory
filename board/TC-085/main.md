@@ -7,14 +7,14 @@ priority: "p1"
 summary: "Переименование фильтр-профиля обновляет отображаемое имя и не меняет queryString"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:filter-profiles", "risk:R-09", "automation:active"]
+labels: ["test-case", "area:filter-profiles", "risk:R-09", "automation:quarantined"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-21T10:31:08Z"
-updated: "2026-07-21T10:31:08Z"
+created: "2026-08-11T02:40:00Z"
+updated: "2026-08-11T02:40:00Z"
 archived: false
 resolution: "done"
 ---
