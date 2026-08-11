@@ -32,7 +32,13 @@ python_functions = test_*/python_classes = Test* в pytest.ini) обязана �
 
 test_smoke.py устранён (AT-BUG-002, test-debt/B4): импорты screens вынесены за
 steps/, все 5 тестов имеют @allure.id. ALLOWLIST ниже содержит известные
-исключения (AT-BUG-059); новые — только с отдельным test-debt тикетом.
+исключения ОДНОГО легального класса — «device-free юнит-проба САМОГО
+screens-класса» (категория установлена AT-BUG-059; C1 писан против
+tests->локаторы мимо steps в ПРОДУКТОВЫХ тестах, а не против тестирования
+самого screens-слоя). Каждая запись обязана называть тикет-источник и
+обоснование; исключение ВНЕ этого класса — только с отдельным test-debt
+тикетом, чей предмет и есть это исключение (решение Lead 2026-08-11 при
+добавлении второй записи, AT-BUG-062).
 
 Запуск:      python scripts/arch_check.py
 Коды выхода: 0 — чисто (WARN/известные исключения допустимы), 1 — есть ERROR.
@@ -85,6 +91,14 @@ ALLOWLIST: set[tuple[str, str]] = {
     # pytest testpaths (инвариант докстринга) — вне tests/ файл выпал бы из
     # штатного прогона.
     ("tests/test_swipe_to_text_settle_unit.py", "locators"),
+    # AT-BUG-062 (test-maintainer rework attempt 2, критик-вход opus,
+    # 2026-08-11): device-free юнит-проба verification-веток самого
+    # `SettingsScreen.enter_rename_name`/`settings_steps.assert_filter_profile_listed`
+    # (блокер «новые ветки отказа не исполнены ни разу» — импорт `SettingsScreen`
+    # по существу необходим для тестирования конкретно ЭТОГО класса screens-слоя,
+    # тот же случай, что AT-BUG-059/test_swipe_to_text_settle_unit.py выше;
+    # перенос вне tests/ выпал бы из штатного прогона — тот же инвариант).
+    ("tests/test_rename_name_verification_unit.py", "locators"),
 }
 
 
