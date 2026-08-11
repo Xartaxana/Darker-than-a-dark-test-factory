@@ -1,8 +1,13 @@
 """Создание и закрытие сессии Appium. Ядро не знает об экранах приложения."""
 from __future__ import annotations
 
+import json
+import os
+import re
 import subprocess
+import sys
 import time
+from datetime import datetime, timezone
 
 from appium import webdriver
 from appium.webdriver.client_config import AppiumClientConfig
@@ -11,6 +16,22 @@ from framework.config import capabilities, settings
 from framework.core import adb
 
 _TASKS_PS1 = settings.REPO_ROOT / "scripts" / "tasks.ps1"
+# AT-BUG-063 (F1/F4, rework attempt 2): состояние, которое `scripts/tasks.ps1
+# ::Start-Emulator` пишет СРАЗУ после разрешения `-Gpu`/`-AvdName` (параметр >
+# env > дефолт) -- единственный способ recovery узнать РЕАЛЬНО действующие
+# значения, включая случай явного CLI-параметра МИМО переменной окружения
+# (критик-вход attempt 2, воспроизведённый сценарий RUN-20260811-0405).
+_EMULATOR_SESSION_STATE_FILE = settings.REPO_ROOT / "state" / "emulator-session.json"
+# Реальный список GPU-бэкендов, используемых в этом проекте (tasks.ps1:178-182,
+# docs/environment-setup.md "Полный canary-регресс", bugs/AT-BUG-021.md) --
+# белый список, не character-escaping: значение вне списка молча отбрасывается
+# (recovery падает на дефолт tasks.ps1), а не передаётся дальше непроверенным.
+_VALID_GPU_BACKENDS = frozenset({"host", "swiftshader_indirect", "angle_indirect"})
+# AVD-имена в этом проекте — простые идентификаторы (ao3_test_api34/29/26,
+# AT-BUG-024/028); регекс, а не закрытый enum, чтобы новый AVD не требовал
+# правки этого файла -- но пробел/`;`/кавычка/что угодно небезопасное для
+# аргумента отбрасываются так же, как невалидный GPU-бэкенд.
+_AVD_NAME_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
 # AT-BUG-026, находка красной пробы w1 (2026-07-28, живое устройство): сразу
 # после Start-Emulator (boot_completed=1 уже подтверждён) `adb install`
 # иногда падает `NullPointerException: StorageManager.getVolumes() on a null
@@ -48,6 +69,116 @@ class DeviceRecoveryError(RuntimeError):
     (failure-analyst/run-артефакт), см. `schemas/evidence.yaml::ENV_ISSUE`."""
 
 
+def _warn_recovery(message: str) -> None:
+    """AT-BUG-063 (B3, критик-вход rework attempt 3): единая точка диагностики
+    recovery-параметров. До неё python-сторона механизма молчала ПОЛНОСТЬЮ —
+    отсутствующий/битый state-файл, отброшенное белым списком значение и
+    «применён дефолт» были неотличимы друг от друга в логе прогона, при том
+    что сам заголовок этого бага — «молча деградирует», а PS-сторона
+    (`tasks.ps1::Set-EmulatorSessionState`) уже пишет `Write-Warning` на своём
+    отказе. Односторонняя асимметрия закрыта.
+
+    `stderr`, а не `logging`: тот же приём, что `framework/core/mitm.py`
+    (AT-BUG-043) — `framework/pytest.ini` не настраивает `log_cli`/уровни,
+    поэтому `logging`-запись в дефолтной конфигурации не дошла бы ни до
+    консоли, ни до Captured-секции отчёта; `stderr` попадает в обе и в
+    Allure-аттачмент. Диагностика НЕ бросает и не меняет поведение —
+    исключительно наблюдаемость."""
+    print(f"AT-BUG-063 recovery: {message}", file=sys.stderr)
+
+
+def _read_emulator_session_state() -> dict[str, str]:
+    """AT-BUG-063 (F1/F4, rework attempt 2): читает `state/emulator-session.json`,
+    которое `tasks.ps1::Start-Emulator` пишет СРАЗУ после разрешения
+    `-Gpu`/`-AvdName` (параметр > env > дефолт) — т.е. уже РАЗРЕШЁННОЕ,
+    фактически действующее значение, независимо от того, пришло оно явным
+    CLI-параметром (сценарий RUN-20260811-0405, не закрытый attempt 1) или
+    переменной окружения `AO3_EMU_GPU`.
+
+    Отсутствующий/битый/пустой файл — штатный случай (эмулятор ещё ни разу не
+    поднимался этой сессией через канонический `Start-Emulator`, либо файл
+    гитигнорится и просто не существует на свежем чекауте) — возвращает `{}`,
+    вызывающий код сам решает дефолт. Значения ВСЕГДА проходят через тот же
+    белый список/regex, что и env-фолбэк ниже — файл на диске ничем не
+    привилегированнее непроверенной строки, а `subprocess.run(..., env=...)`
+    (не строковая интерполяция в `-Command`, см. докстринг
+    `_restart_emulator_writable_system`) само по себе уже закрывает
+    инъекцию — валидация здесь чисто про корректность (не передать qemu
+    заведомо бессмысленный `-gpu`/`-avd`)."""
+    try:
+        # `utf-8-sig`, не `utf-8`: устойчиво к BOM (найдено красной пробой этой
+        # задачи -- `Set-Content -Encoding UTF8` PowerShell 5.1 пишет BOM; сам
+        # писатель `tasks.ps1::Set-EmulatorSessionState` уже это не делает, но
+        # чтение остаётся защищённым от ЛЮБОГО BOM-пишущего пути без будущей
+        # хрупкой связки с конкретной реализацией записи).
+        raw = _EMULATOR_SESSION_STATE_FILE.read_text(encoding="utf-8-sig")
+        data = json.loads(raw)
+    except FileNotFoundError:
+        # ШТАТНЫЙ случай (файл гитигнорится, эмулятор ещё не поднимался этой
+        # машиной через канонический Start-Emulator) — не шумим, итоговая
+        # строка `_restart_emulator_writable_system` всё равно назовёт
+        # применённый источник (`default`).
+        return {}
+    except (OSError, ValueError) as exc:
+        _warn_recovery(
+            f"WARNING: state-файл {_EMULATOR_SESSION_STATE_FILE} нечитаем/битый "
+            f"({type(exc).__name__}: {exc}) — параметры изначального подъёма "
+            "недоступны, применяется фолбэк (env/дефолт tasks.ps1)."
+        )
+        return {}
+    if not isinstance(data, dict):
+        _warn_recovery(
+            f"WARNING: state-файл {_EMULATOR_SESSION_STATE_FILE} содержит "
+            f"{type(data).__name__}, а не JSON-объект — игнорируется целиком, "
+            "применяется фолбэк (env/дефолт tasks.ps1)."
+        )
+        return {}
+    result: dict[str, str] = {}
+    gpu = data.get("gpu")
+    if isinstance(gpu, str) and gpu in _VALID_GPU_BACKENDS:
+        result["gpu"] = gpu
+    elif gpu is not None:
+        _warn_recovery(
+            f"WARNING: gpu={gpu!r} из state-файла ОТБРОШЕН (не в белом списке "
+            f"{sorted(_VALID_GPU_BACKENDS)}) — GPU-предпосылка прогона этим "
+            "recovery НЕ восстанавливается."
+        )
+    avd_name = data.get("avd_name")
+    if isinstance(avd_name, str) and _AVD_NAME_RE.match(avd_name):
+        result["avd_name"] = avd_name
+    elif avd_name is not None:
+        _warn_recovery(
+            f"WARNING: avd_name={avd_name!r} из state-файла ОТБРОШЕН (не "
+            f"соответствует {_AVD_NAME_RE.pattern}) — recovery поднимет AVD по "
+            "дефолту tasks.ps1."
+        )
+    # B3/риск «протухание»: `updated_utc` писался с attempt 2, но НЕ читался
+    # никем — теперь он попадает в диагностику (возраст state). TTL/отсечка
+    # НЕ вводится (это меняло бы поведение ядра, которое эта итерация не
+    # переделывает) — см. «Остаточные риски» в bugs/AT-BUG-063.md.
+    updated_utc = data.get("updated_utc")
+    if isinstance(updated_utc, str):
+        result["updated_utc"] = updated_utc
+    return result
+
+
+def _state_age_note(updated_utc: str | None) -> str:
+    """Человекочитаемый возраст state-файла для диагностической строки
+    recovery (B3). Отдельная функция — чтобы битый/отсутствующий
+    `updated_utc` НИКОГДА не ронял сам recovery (диагностика не имеет права
+    быть источником отказа)."""
+    if not updated_utc:
+        return "возраст state неизвестен (updated_utc отсутствует)"
+    try:
+        ts = datetime.fromisoformat(updated_utc)
+    except (TypeError, ValueError):
+        return f"возраст state неизвестен (updated_utc={updated_utc!r} не разобран)"
+    if ts.tzinfo is None:
+        ts = ts.replace(tzinfo=timezone.utc)
+    age_h = (datetime.now(timezone.utc) - ts).total_seconds() / 3600.0
+    return f"state записан {updated_utc} (возраст {age_h:.1f} ч)"
+
+
 def _restart_emulator_writable_system(timeout: float = _EMULATOR_RESTART_TIMEOUT) -> None:
     """Канонический перезапуск эмулятора ОДНИМ вызовом `Start-Emulator
     -WritableSystem` (`scripts/tasks.ps1`) — НЕ самодельный поллинг
@@ -60,13 +191,106 @@ def _restart_emulator_writable_system(timeout: float = _EMULATOR_RESTART_TIMEOUT
     КОГДА передан этот флаг (см. tasks.ps1:124-132) — единственный способ
     гарантировать переустановку CA, которая иначе стирается ЛЮБЫМ ребутом
     эмулятора (HANDOFF runbook) и превратила бы recovery сам в источник
-    каскада `ReadTimeoutError` на следующих replay-тестах."""
+    каскада `ReadTimeoutError` на следующих replay-тестах.
+
+    AT-BUG-063 (F1/F4, rework attempt 2 — критик-вход отклонил attempt 1).
+    Attempt 1 читал ТОЛЬКО `AO3_EMU_GPU` из окружения ЭТОГО python-процесса —
+    критик показал эмпирически, что это НИЧЕГО не меняло: `tasks.ps1:188-189`
+    уже сама фолбэчилась на `$env:AO3_EMU_GPU` при отсутствии явного `-Gpu`, и
+    `subprocess.run` без `env=` и так наследует полное окружение. Реальный
+    воспроизведённый сценарий (RUN-20260811-0405) — `-Gpu host` передан
+    ЯВНЫМ CLI-параметром НАЧАЛЬНОМУ `Start-Emulator`, БЕЗ переменной
+    окружения на сессию; такой случай attempt 1 не закрывал вовсе.
+
+    Источник истины теперь — `state/emulator-session.json`
+    (`_read_emulator_session_state`), которое `Start-Emulator` пишет сама
+    СРАЗУ после разрешения параметров (параметр > env > дефолт) — видит и
+    явный CLI-флаг, и переменную окружения, и дефолт одинаково, потому что
+    все три уже схлопнуты в одно значение к моменту записи. `AO3_EMU_GPU`
+    из окружения ЭТОГО процесса остаётся вторичным фолбэком (обратная
+    совместимость: до первого `Start-Emulator` в сессии state-файла может не
+    быть, а старый путь всё ещё штатно работает).
+
+    F3 (critic, attempt 2): значения НЕ интерполируются в строку `-Command`
+    (та инъекция ловилась: пробел ломал биндинг параметра, `;` исполнялся
+    отдельной командой, кавычка валила парсер). Вместо этого они кладутся в
+    `env=` дочернего процесса (`AO3_RECOVERY_GPU`/`AO3_RECOVERY_AVD_NAME`), а
+    сама `-Command`-строка — ФИКСИРОВАННЫЙ литерал (без f-string подстановки
+    непроверенных данных): PowerShell резолвит `$env:AO3_RECOVERY_*` как
+    ОБЪЕКТ-значение параметра, не перепарсивает его содержимое как скрипт —
+    пробел/`;`/кавычка внутри значения инертны. Белый список
+    (`_VALID_GPU_BACKENDS`) и regex (`_AVD_NAME_RE`) в
+    `_read_emulator_session_state`/ниже — не защита от инъекции (она уже
+    закрыта механизмом передачи), а санитизация мусора (не звать qemu с
+    выдуманным `-gpu`)."""
+    state = _read_emulator_session_state()
+    gpu_arg = state.get("gpu", "")
+    gpu_source = "state" if gpu_arg else "default"
+    if not gpu_arg:
+        env_gpu = os.environ.get("AO3_EMU_GPU", "")
+        if env_gpu and env_gpu not in _VALID_GPU_BACKENDS:
+            _warn_recovery(
+                f"WARNING: AO3_EMU_GPU={env_gpu!r} ОТБРОШЕНА (не в белом списке "
+                f"{sorted(_VALID_GPU_BACKENDS)}) — применяется дефолт tasks.ps1."
+            )
+        if env_gpu in _VALID_GPU_BACKENDS:
+            gpu_arg = env_gpu
+            gpu_source = "env AO3_EMU_GPU"
+    else:
+        # B3/риск «инверсия приоритета»: state ПЕРЕКРЫВАЕТ `AO3_EMU_GPU`
+        # текущей сессии, хотя runbook (docs/HANDOFF.md, docs/environment-
+        # setup.md) называет переменную окружения каноническим способом
+        # ЗАЯВИТЬ предпосылку прогона. Порядок приоритета этой итерацией
+        # НЕ меняется (это семантика ядра, доказанного критиком), но
+        # расхождение больше не проходит МОЛЧА — оператор видит, что его
+        # env-заявка перекрыта историческим state. См. «Остаточные риски»
+        # в bugs/AT-BUG-063.md.
+        env_gpu = os.environ.get("AO3_EMU_GPU", "")
+        if env_gpu and env_gpu != gpu_arg:
+            _warn_recovery(
+                f"WARNING: КОНФЛИКТ источников GPU — state-файл несёт "
+                f"{gpu_arg!r}, а AO3_EMU_GPU текущей сессии — {env_gpu!r}. "
+                f"Применяется {gpu_arg!r} (state имеет приоритет: он отражает "
+                "параметры РЕАЛЬНО поднятого эмулятора). Если предпосылка "
+                "сессии другая — подними эмулятор канонической формой заново "
+                "или удали state/emulator-session.json."
+            )
+    avd_arg = state.get("avd_name", "")  # без state-файла флаг просто не передаётся -
+    # tasks.ps1 применит собственный дефолт `ao3_test_api34`, как и раньше (F4:
+    # у AvdName нет env-эквивалента AO3_EMU_GPU, только state-файл).
+
+    child_env = dict(os.environ)
+    child_env.pop("AO3_RECOVERY_GPU", None)
+    child_env.pop("AO3_RECOVERY_AVD_NAME", None)
+    if gpu_arg:
+        child_env["AO3_RECOVERY_GPU"] = gpu_arg
+    if avd_arg:
+        child_env["AO3_RECOVERY_AVD_NAME"] = avd_arg
+
+    ps_command = (
+        f". \"{_TASKS_PS1}\"; "
+        "$seArgs = @{ WritableSystem = $true }; "
+        "if ($env:AO3_RECOVERY_GPU) { $seArgs.Gpu = $env:AO3_RECOVERY_GPU }; "
+        "if ($env:AO3_RECOVERY_AVD_NAME) { $seArgs.AvdName = $env:AO3_RECOVERY_AVD_NAME }; "
+        "Start-Emulator @seArgs"
+    )
     cmd = [
-        "powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
-        f". \"{_TASKS_PS1}\"; Start-Emulator -WritableSystem",
+        "powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", ps_command,
     ]
+    # B3: одна строка на КАЖДЫЙ recovery — что фактически применено и откуда.
+    # `default` значит «флаг не передан вовсе, решает tasks.ps1» (её дефолты:
+    # gpu=swiftshader_indirect, avd=ao3_test_api34) — именно этот молчаливый
+    # путь и был исходным дефектом бага, теперь он ВИДЕН в логе прогона.
+    _warn_recovery(
+        f"перезапуск эмулятора: gpu={gpu_arg or '<tasks.ps1 default>'} "
+        f"(source: {gpu_source}), "
+        f"avd={avd_arg or '<tasks.ps1 default>'} "
+        f"(source: {'state' if avd_arg else 'default'}); "
+        f"{_state_age_note(state.get('updated_utc'))}; "
+        f"state-файл: {_EMULATOR_SESSION_STATE_FILE}"
+    )
     try:
-        cp = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        cp = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, env=child_env)
     except subprocess.TimeoutExpired as exc:
         raise DeviceRecoveryError(
             f"ENV_ISSUE (AT-BUG-026): Start-Emulator -WritableSystem не "

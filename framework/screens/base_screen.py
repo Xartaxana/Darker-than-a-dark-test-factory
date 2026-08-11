@@ -193,3 +193,26 @@ class BaseScreen:
                           attachment_type=allure.attachment_type.TEXT)
         except Exception:  # noqa: BLE001
             pass
+
+    def _attach_pre_fallback_snapshot(self, text: str) -> None:
+        """AT-BUG-062, класс (не экземпляр): любой вызывающий, использующий приём
+        `swipe_to_text(...) or swipe_up_to_text(...)`, теряет ПОЗИЦИЮ ОТКАЗА —
+        фолбэк `swipe_up_to_text` всегда возвращает список НАВЕРХ, поэтому
+        `page_source`, снятый пайплайном при итоговом провале теста
+        (`framework/core/reporting.py::attach_failure_artifacts`, teardown),
+        фиксирует экран УЖЕ ПОСЛЕ этого возврата, а не позицию, где прямой
+        проход не поймал `text`. Снимок ЗДЕСЬ, ДО фолбэка — единственный
+        источник, различающий «текста там нет» от «прокрутка проскочила
+        строку» (AT-BUG-048). Best-effort, симметрично `_attach_swipe_diagnostic`.
+        Изначально жил только в `SettingsScreen` (`_swipe_to_profile`) — поднят
+        в `BaseScreen`, т.к. тот же паттерн `swipe_to_text(...) or
+        swipe_up_to_text(...)` есть и в `framework/steps/saf_steps.py::
+        _scroll_settings_to` (сиблинг, доклад AT-BUG-062 test-maintainer)."""
+        try:
+            allure.attach(
+                self.driver.page_source,
+                name=f"page_source pre-fallback (после неуспешного swipe_to_text «{text}»)",
+                attachment_type=allure.attachment_type.XML,
+            )
+        except Exception:  # noqa: BLE001
+            pass

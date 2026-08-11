@@ -2,7 +2,7 @@
 key: "BUG-021"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p1"
 summary: "Снятие рейтинга через overlay листинга у скачанной работы обнуляет downloadPath и личные теги; правка заметки — то же"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-11T00:00:00Z"
-updated: "2026-08-11T00:00:00Z"
+created: "2026-08-11T15:39:42Z"
+updated: "2026-08-11T15:39:42Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Снятие рейтинга через overlay листинга у скачанной работы обнуляет downloadPath и личные теги; правка заметки — то же
 
 _Спроецировано из `bugs/BUG-021.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # BUG-021 — Правка заметки скачанной работы через overlay листинга обнуляет downloadPath
 
@@ -180,6 +180,7 @@ Room `upsert` на существующую запись **ПЕРЕЗАПИСЫ�
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-08-11 (fix-verifier, D1) | source_commit `cc201f789f0fb123722bbba7b29b8e0c6412dac1` (coalesced_commits включает `7b29bf03` — фикс в сборке); app `com.example.ao3_wrapper` versionName=`dev-local` versionCode=`12` (сверено `app-under-test/app/build/outputs/apk/debug/output-metadata.json`); built_at `2026-08-10T23:52:58Z`; emulator-5554 (API 34, writable-system, mitm-CA переустановлен в этом ходе — прежний boot сессии был БЕЗ `-WritableSystem`, что и вызвало 3 ложных `ReadTimeoutError` до перезапуска, см. «Обсуждение») | TC-151, TC-152 — оба `automated_by: ""` (design-only, автоматизация — мандат test-automator, не этой роли; AT-BUG-046 checkbox 3 явно оставляет automation TC-151/152/155/156 вне своего мандата). **Прогон невозможен штатной автоматизацией** (её нет) → заменён ЖИВЫМ device-driven пробником, дословно воспроизводящим Given-When-Then обоих кейсов через примитивы AT-BUG-046 (`seed_db.seed_with_comment_and_download` — baseline A одним вызовом: rating=SAVE, comment="note A", tags=["tagA"], downloadPath на реальный файл; `seed_db.read_work_ratings_full()` — чтение ПОЛНОЙ строки после действия). Пробник: `bug021_verify_probe.py` (scratchpad сессии fix-verifier, временный артефакт, НЕ заявляется как automated_by для TC-151/152). TC-152 (door 2, overlay — фиксящаяся ветка `applyRating` `:807-813`): `test_tc152_overlay_deselect_preserves_downloadpath_and_tags` — deselect повторным тапом Favorite в overlay листинга. TC-151 (door 2, панель — контрольный случай, `savePanelRating`/`existing.copy` уже был корректен до фикса): `test_tc151_panel_deselect_preserves_downloadpath_and_tags` — тот же deselect через встроенную панель work-страницы. | Дословный вывод (`Invoke-Pytest bug021_verify_probe.py -s -q -p no:randomly`): `TC152 ROW: {"author": "seed_author_a", "comment": "note A", "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Fandom Alpha", "rating": null, "tags": ["tagA"], "timestamp": 1786462716177, "title": "A Loved Test Work", "url": "https://archiveofourown.org/works/900000001", "word_count": 4200}`; `TC151 ROW: {"author": "seed_author_a", "comment": "note A", "downloadPath": "/data/user/0/com.example.ao3_wrapper/files/ao3_test_downloads/900000001.html", "fandom": "Fandom Alpha", "rating": null, "tags": ["tagA"], "timestamp": 1786462752920, "title": "A Loved Test Work", "url": "https://archiveofourown.org/works/900000001", "word_count": 4200}`; `2 passed in 76.28s (0:01:16)`, `PYTEST_EXIT=0`. Оба ассерта (`rating is None`, `downloadPath == device_path` засеянный, `tags == ["tagA"]`, `comment == "note A"`) прошли для ОБЕИХ дверей — `downloadPath`/`tags`/`comment` пережили deselect и через overlay (было сломано, BUG-021 дверь 2), и через панель (контроль). | fix-verifier: **Fixed -> Verified**. Обе двери зелёные на сборке новее `found_in` (63f6aac); класс дефекта (пересборка `WorkRating` конструктором без `downloadPath`/`existing.tags`) устранён именно в проверенной ветке. Дверь 1 (Save note, CH-007) отдельного TC не имеет (по TC-152 «Заметки для автоматизации» покрыта тем же кодовым путём `:807-813` — не перепрогонялась отдельно этим ходом, репро её door 1 — `exploratory-charters/attachments/CH-007/test_ch007_probe.py::test_r1_save_note_vs_downloadpath`, доступно для будущей сверки при необходимости). `known_issue` уже был `"false"`. |
 
 ## Обсуждение
 
@@ -225,6 +226,50 @@ Awaiting: dev
 Фикс получен. Перепрогон TC-151/TC-152 пойдёт стандартным D1-циклом fix-verifier на новой сборке cc201f78. Код 7b29bf0 соответствует классу дефекта (пересборка WorkRating из данных страницы без сохранения downloadPath/tags) — причина зафиксирована верно.
 
 **Статус для фабрики:** awaiting-dev (fix-verifier начнёт верификацию на построении cc201f78).
+
+**[fix-verifier @ 2026-08-11T15:39:42Z]**
+
+D1 верификация выполнена. TC-151/TC-152 остаются `automated_by: ""` (design-only —
+automation этих кейсов вне мандата test-maintainer/fix-verifier, явно оставлено
+test-automator в `bugs/AT-BUG-046.md` checkbox 3) — штатной автоматизации для
+прогона не существует. Заменено ЖИВЫМ device-driven пробником (`bug021_verify_probe.py`,
+временный артефакт сессии, scratchpad, НЕ заявляется как `automated_by` кейсов —
+тот же класс, что `exploratory-charters/attachments/CH-007/test_ch007_probe.py`),
+использующим ГОТОВЫЕ примитивы AT-BUG-046 (`seed_db.seed_with_comment_and_download`
+для baseline A одним вызовом, `seed_db.read_work_ratings_full()` для чтения ПОЛНОЙ
+строки) — построение состояния НЕ зависит от других дверей приложения, деcелект
+дословно повторяет Given-When-Then TC-151 (панель) и TC-152 (overlay).
+
+Обе ветки зелёные на сборке `cc201f789...` (содержит `7b29bf03`): `downloadPath`,
+личный тег `tagA` и заметка `note A` пережили deselect и через overlay листинга
+(TC-152, была сломанная ветка `applyRating :807-813`), и через панель work-страницы
+(TC-151, контроль). Дословный вывод и версия сборки — в таблице «Верификация».
+
+По пути наткнулся на **тулинговый затык, не относящийся к продукту**: первый
+и второй прогоны пробника (2× подряд) падали идентичным `ReadTimeoutError`
+на первой же команде WebView-контекста (120s таймаут) — диагностика (`Get-Device`
+DEVICE, Appium `/status` ready, `adb dumpsys` показал живой процесс приложения)
+не выявила проблемы, но контрольный прогон СУЩЕСТВУЮЩЕГО framework-теста того же
+класса (`tests/test_rating_listing.py::test_rate_work_from_listing_overlay`)
+сразу дал явную (не 120s-таймаут) причину: `RuntimeError: mitm-CA недоступен
+в системном разделе устройства` (`AT-BUG-011`) — эмулятор в этой сессии был
+поднят БЕЗ `-WritableSystem`, мой пробник (в отличие от штатной `replay`-фикстуры
+conftest.py) не нёс предохранитель `_ensure_replay_ca()`, поэтому вместо быстрого
+явного отказа тихо висел до 120s трижды. Устранено: `Start-Emulator -WritableSystem`
+(переустановка CA) + переустановка APK + чистый рестарт Appium — после этого оба
+теста прошли с первого раза (`76.28s`). Это НЕ находка о состоянии приложения и
+не повод для отдельного бага — временный пробник не копировал CA-предохранитель
+штатной фикстуры; если временный live-пробник понадобится fix-verifier снова, стоит
+копировать `_ensure_replay_ca()`/`_ensure_upstream_fast()` из `conftest.py`, а не
+голые `mitm.set_device_proxy()`/`start_replay()`.
+
+Дефекты-собратья рядом не замечены (поверхность узкая — deselect-ветка
+`applyRating`, уже перечисленные в разделе «Класс дефекта» места — вне
+скоупа этой верификации, не проверялись отдельно).
+
+`known_issue` переведён в `"false"` (уже был). Статус `Fixed` -> `Verified`.
+
+Awaiting: none.
 
 ## Чек-лист качества
 - [x] Проверены дубликаты среди открытых багов — совпадений не найдено; сравнено с BUG-014 (ретроактивное скачивание), BUG-015 (kudos-клик), BUG-011 (race скана) — диагностика другая

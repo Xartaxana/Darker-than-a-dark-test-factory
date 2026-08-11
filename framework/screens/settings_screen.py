@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from appium.webdriver.common.appiumby import AppiumBy
 
+from framework.core.waits import poll_for
 from framework.screens.base_screen import BaseScreen
 
 THEME_LABELS = {"LIGHT": "Light", "DARK": "Dark", "SYSTEM": "System"}
@@ -221,14 +222,35 @@ class SettingsScreen(BaseScreen):
     # деревом: строки профилей физически ОТСУТСТВУЮТ в дампе, пока не проскроллено —
     # это НЕ просто bounds за экраном, узлов нет вовсе, `is_present` без свайпа
     # детерминированно возвращает False).
-    def _swipe_to_profile(self, name: str) -> bool:
+    def _swipe_to_profile(self, name: str, expect_absent: bool = False) -> bool:
         """Свайп вниз, а если не нашли (например, экран уже проскроллен НИЖЕ секции
         предыдущим вызовом — свайп вверх/вниз не сбрасывает позицию сам) — фолбэк
-        свайпом вверх."""
-        return self.swipe_to_text(name) or self.swipe_up_to_text(name)
+        свайпом вверх.
 
-    def has_filter_profile(self, name: str, timeout: int | None = None) -> bool:
-        if not self._swipe_to_profile(name):
+        AT-BUG-062: если прямой (вниз) проход не поймал `name`, ПЕРЕД фолбэком
+        снимаем page_source в Allure — фолбэк `swipe_up_to_text` всегда возвращает
+        список НАВЕРХ, поэтому page_source, снятый пайплайном при итоговом провале
+        теста (`framework/core/reporting.py::attach_failure_artifacts`, выполняется
+        в teardown), фиксирует экран УЖЕ после этого возврата (верх Settings —
+        Theme/Reader/…), а не позицию, где прямой проход не поймал профиль. Этот
+        промежуточный снимок — единственный источник, различающий «профиля там нет»
+        от «прокрутка проскочила строку» (см. AT-BUG-048).
+
+        `expect_absent=True` (rework AT-BUG-062, критик-вход, non-blocker (а)):
+        вызывающий ЖДЁТ, что `name` не найдётся (негативный ассерт,
+        `assert_filter_profile_not_listed`, TC-085/TC-042) — тогда «не поймали
+        прямым проходом» это ОЖИДАЕМЫЙ/успешный исход, а не диагностируемый
+        отказ, и снимок пропускается: без этого он писал XML-аттачку в Allure
+        на КАЖДОМ зелёном прогоне негативного ассерта (шум, доклад критика)."""
+        if self.swipe_to_text(name):
+            return True
+        if not expect_absent:
+            self._attach_pre_fallback_snapshot(name)
+        return self.swipe_up_to_text(name)
+
+    def has_filter_profile(self, name: str, timeout: int | None = None,
+                           expect_absent: bool = False) -> bool:
+        if not self._swipe_to_profile(name, expect_absent=expect_absent):
             return False
         return self.is_present(self.by_text(name), timeout=timeout if timeout is not None else 8)
 
@@ -277,9 +299,41 @@ class SettingsScreen(BaseScreen):
         return self.is_present(self.by_text("Rename filter"), timeout=timeout if timeout is not None else 5)
 
     def enter_rename_name(self, new_name: str):
+        """AT-BUG-062: `clear()`+`send_keys` без верификации фактического
+        содержимого поля позволял ложно-зелёному подтверждению уйти с
+        неполным/сконкатенированным именем (гонка ввода/recomposition) — тогда
+        `confirm_rename` сохранял профиль под ДРУГИМ именем, и падение
+        всплывало не здесь, а много позже — на ассерте списка Settings, с
+        сообщением, неотличимым от промаха прокрутки (AT-BUG-062, гипотеза 1).
+        Короткий опрос (не единичное чтение сразу после `send_keys`) —
+        симметрично `_swipe_search`/`assert_filter_profile_count`: даёт полю
+        шанс на recomposition, но НЕ маскирует настоящее расхождение ввода —
+        падает здесь, до подтверждения, с точным диагнозом."""
         field = self.find(self._RENAME_NAME_FIELD)
         field.clear()
         field.send_keys(new_name)
+
+        def _field_text() -> str:
+            """Защищённое чтение (rework AT-BUG-062, критик-вход): `IMPLICIT_WAIT=0`
+            (`framework/config/settings.py`) — если поле к моменту чтения stale/
+            исчезло (recomposition), незащищённый `find_element` кинул бы сырой
+            `NoSuchElementException` вместо диагностического `AssertionError`.
+            Внутри `poll_for` это и так безопасно (его собственный except-guard),
+            но ПОСЛЕДНЕЕ чтение (для сообщения после неуспеха) шло НЕ через
+            `poll_for` — тем же классом дыры, что и любой незащищённый вызов
+            в выражении assert-сообщения."""
+            try:
+                return self.driver.find_element(*self._RENAME_NAME_FIELD).get_attribute("text") or ""
+            except Exception as exc:  # noqa: BLE001
+                return f"<поле недоступно при чтении: {exc.__class__.__name__}>"
+
+        ok = poll_for(lambda: _field_text() == new_name, timeout=1.5, interval=0.3)
+        if not ok:
+            actual = _field_text()
+            assert False, (
+                f"поле «Rename filter» после clear()+send_keys содержит «{actual}», "
+                f"ожидали «{new_name}» — расхождение поймано ДО подтверждения (AT-BUG-062)"
+            )
         return self
 
     def confirm_rename(self):

@@ -1836,9 +1836,9 @@
       "test-case",
       "area:filter-profiles",
       "risk:R-09",
-      "automation:quarantined"
+      "automation:active"
     ],
-    "updated": "2026-08-11T02:40:00Z",
+    "updated": "2026-08-11T17:13:00Z",
     "resolution": "done",
     "children": [],
     "archived": false
@@ -5604,7 +5604,7 @@
     "epicPath": null,
     "summary": "Нестабильный TC-085 (rename filter-profile): «профиль «My renamed search» не найден в списке Settings» в полном регрессе, 3/3 зелёный в изоляции; артефакт падения не содержит секцию Saved AO3 Filters (фолбэк swipe_up возвращает список наверх)",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5613,7 +5613,7 @@
       "run:RUN-20260811-0406",
       "sev:major"
     ],
-    "updated": "2026-08-11T02:40:00Z",
+    "updated": "2026-08-11T17:13:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5627,7 +5627,7 @@
     "epicPath": null,
     "summary": "device-liveness recovery не пробрасывает GPU-параметр → env-предпосылка TC-078 (host-GPU) молча деградирует до swiftshader_indirect",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5636,7 +5636,7 @@
       "run:RUN-20260811-0405",
       "sev:major"
     ],
-    "updated": "2026-08-11T09:31:00Z",
+    "updated": "2026-08-11T17:51:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5650,7 +5650,7 @@
     "epicPath": null,
     "summary": "Остаточный device-прокси переживает перезапуск эмулятора",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -5658,7 +5658,31 @@
       "run:RUN-20260811-0405",
       "sev:minor"
     ],
-    "updated": "2026-08-11T09:31:00Z",
+    "updated": "2026-08-11T17:33:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-066",
+    "path": "board/AT-BUG-066/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Персистентные системные настройки font_scale/night mode защищены только in-process try/finally — тот же класс остатка, что AT-BUG-064 (http_proxy)",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-049",
+      "test_case:TC-107",
+      "test_case:TC-110",
+      "sev:minor"
+    ],
+    "updated": "2026-08-11T17:35:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5724,7 +5748,7 @@
       "test_case:TC-020",
       "sev:minor"
     ],
-    "updated": "2026-08-02T12:35:00Z",
+    "updated": "2026-08-11T16:39:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5923,7 +5947,7 @@
     "epicPath": null,
     "summary": "Снятие рейтинга через overlay листинга у скачанной работы обнуляет downloadPath и личные теги; правка заметки — то же",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5934,8 +5958,8 @@
       "run:CH-008",
       "sev:major"
     ],
-    "updated": "2026-08-11T00:00:00Z",
-    "resolution": null,
+    "updated": "2026-08-11T15:39:42Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -5948,15 +5972,15 @@
     "epicPath": null,
     "summary": "Панель рейтинга work-страницы при dispose переписывает рейтинг, который пользователь не менял — возврат на Browse после Clear all ratings воскрешает удалённую запись",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:major"
     ],
-    "updated": "2026-08-10T23:51:45Z",
-    "resolution": null,
+    "updated": "2026-08-11T16:01:10Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -5969,7 +5993,7 @@
     "epicPath": null,
     "summary": "Ручной скан при двух файлах одного ao3Id не сходится: счётчик relinked=2 на одну работу, повторный скан рапортует то же, не становясь 0",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5978,8 +6002,8 @@
       "run:CH-008",
       "sev:major"
     ],
-    "updated": "2026-08-11T00:00:00Z",
-    "resolution": null,
+    "updated": "2026-08-11T16:11:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -5992,7 +6016,7 @@
     "epicPath": null,
     "summary": "Удаление скачанного файла из карточки удаляет только один файл; при двух файлах одного ao3Id второй остаётся на диске и воскрешает работу при повторном сканировании",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -6001,8 +6025,8 @@
       "run:CH-008",
       "sev:major"
     ],
-    "updated": "2026-08-11T00:00:00Z",
-    "resolution": null,
+    "updated": "2026-08-11T16:33:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -6015,7 +6039,7 @@
     "epicPath": null,
     "summary": "Overlay листинга молча перезаписывает title/fandom/wordCount скрейпом текущей страницы — работа исчезает из фандом-фильтра, прыгает в сортировке, а при rating=null пропадает со всех вкладок Library без какого-либо сообщения",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -6024,8 +6048,8 @@
       "run:CH-008",
       "sev:major"
     ],
-    "updated": "2026-08-10T23:51:46Z",
-    "resolution": null,
+    "updated": "2026-08-11T15:53:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },

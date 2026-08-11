@@ -2,7 +2,7 @@
 key: "AT-BUG-062"
 project: "AO3"
 issueType: "bug"
-status: "bug-open"
+status: "bug-fixed"
 priority: "p1"
 summary: "Нестабильный TC-085 (rename filter-profile): «профиль «My renamed search» не найден в списке Settings» в полном регрессе, 3/3 зелёный в изоляции; артефакт падения не содержит секцию Saved AO3 Filters (фолбэк swipe_up возвращает список наверх)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-11T02:40:00Z"
-updated: "2026-08-11T02:40:00Z"
+created: "2026-08-11T17:13:00Z"
+updated: "2026-08-11T17:13:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Нестабильный TC-085 (rename filter-profile): «профиль «My renamed search» не найден в списке Settings» в полном регрессе, 3/3 зелёный в изоляции; артефакт падения не содержит секцию Saved AO3 Filters (фолбэк swipe_up возвращает список наверх)
 
 _Спроецировано из `bugs/AT-BUG-062.md` (источник правды).
-Статус в нашей машине: **Open**._
+Статус в нашей машине: **Fixed**._
 
 # AT-BUG-062 — карантин TC-085: после переименования профиль не найден в списке Settings; в изоляции не воспроизводится
 
@@ -165,8 +165,127 @@ Invoke-Pytest -k test_rename_filter_profile_keeps_query_string -q
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-08-11 | dev-local (versionCode 12, та же сборка cc201f789) | `test_rename_filter_profile_keeps_query_string` ×3 подряд + `tests/test_filter_profiles.py` целиком | `1 passed, 373 deselected in 84.66s`; `1 passed, 373 deselected in 83.19s`; `1 passed, 373 deselected in 81.27s`; файловый прогон: `5 passed in 285.34s` — все PYTEST_EXIT=0 | test-maintainer (fix), D1-верификация fix-verifier — отдельным проходом (B4, сборку ждать не нужно) |
 
 ## Обсуждение
+
+**[test-maintainer @ 2026-08-11T17:13:00Z, rework attempt 2 — критик-вход opus
+вернул ДОРАБОТАТЬ].** Три блокера критика закрыты, все правки device-free
+(эмулятор в этом окне занят параллельной задачей, не потребовался):
+
+1. **Честность корпуса (TC-085.md).** Формулировки «фикс — диагностический
+   (устраняет причину...)» и «точный диагноз... — bugs/AT-BUG-062.md»
+   противоречили этому же файлу (причина НЕ установлена эмпирически, все 4
+   контрольных прогона зелёные). `test-cases/filter-profiles/TC-085.md`
+   переформулирован: «гонка ввода исключена как класс (устранена
+   возможность, не подтверждена как причина)», «причина исходного падения НЕ
+   установлена эмпирически, остаётся открытым вопросом — см.
+   bugs/AT-BUG-062.md». Перепрогона не требовало.
+2. **Новые ветки отказа исполнены.** Все 4 верификационных прогона attempt 1
+   были зелёными — новый код (`enter_rename_name` verification poll,
+   `assert_filter_profile_listed` DB-truth) ни разу не сработал по красной
+   ветке. Добавлен device-free `framework/tests/test_rename_name_verification_unit.py`
+   (фейковый driver/фейковые часы, по образцу
+   `test_swipe_to_text_settle_unit.py`, AT-BUG-048) — 4 пробы: (а) поле весь
+   бюджет 1.5с показывает ДРУГОЙ текст -> диагностический `AssertionError`,
+   не таймаут; (б) поле догоняет в пределах бюджета -> зелёный; (в)
+   `assert_filter_profile_listed` на провале несёт фактические имена из БД
+   (`seed_db.read_filter_profiles` мокнута); (г) попутный дефект — защищённое
+   чтение `_field_text()` не протекает `NoSuchElementException` при
+   stale-поле (`IMPLICIT_WAIT=0`, `framework/config/settings.py:50`) —
+   `settings_screen.py::enter_rename_name` дочитан try/except-хелпером,
+   значение читается ОДИН раз в переменную перед подстановкой в сообщение
+   (было: незащищённый повторный вызов прямо в f-string). Красная проба
+   (временно снята защита try/except — байтовая копия файла в scratchpad,
+   сверка порчи/отката по `CLAUDE.md` permission-hygiene п.8): проба 3
+   упала ОСМЫСЛЕННО — `NoSuchElementException` протёк вместо
+   `AssertionError`, сигнатура падения ровно на строке незащищённого чтения;
+   откачено байтовой копией, `git diff --stat` после отката снова показывает
+   только намеренные правки. 3/3 зелёных прогона нового файла (вместе с
+   `test_swipe_to_text_settle_unit.py`, регресса на сиблинге нет) после
+   отката.
+3. **`saf_steps.py:84` — переклассифицирован, не отфутболен повторно.**
+   Критик прав: класс DoD п.2 — «фолбэк `swipe_to_text or swipe_up_to_text`
+   теряет ПОЗИЦИЮ ОТКАЗА до снимка», а не «качество текста сообщения»; моя
+   прошлая формулировка («честный AssertionError, класс не применяется»)
+   переопределяла класс вместо того чтобы его оценить.
+   `_scroll_settings_to` несёт ТОТ ЖЕ паттерн `swipe_to_text(...) or
+   swipe_up_to_text(...)` — применил вариант (а): снимок `page_source` ДО
+   фолбэка. Общий хелпер `_attach_pre_fallback_snapshot` поднят из
+   `SettingsScreen` в `BaseScreen` (класс, не экземпляр — правило 9;
+   единственная точка теперь используется обоими сиблингами:
+   `settings_screen.py::_swipe_to_profile` и `saf_steps.py::_scroll_settings_to`).
+
+Non-blockers критика (оба закрыты попутно):
+(а) `assert_filter_profile_not_listed`/`_swipe_to_profile`/`has_filter_profile`
+получили параметр `expect_absent: bool = False` — негативный ассерт
+(TC-085/TC-042, ожидает профиль ОТСУТСТВУЮЩИМ) передаёт `expect_absent=True`
+и больше не пишет шумную pre-fallback XML-аттачку в Allure на каждом
+зелёном прогоне (снимок нужен только когда «не нашли» — это ОТКАЗ, не
+ожидаемый успешный исход).
+(б) **Остаточный риск.** Бюджет верификации `enter_rename_name`
+(`timeout=1.5s, interval=0.3s`) подобран по прогонам изолированного теста;
+под нагрузкой ПОЛНОГО регресса (тот самый контекст, где случилось исходное
+падение `RUN-20260811-0406`) recomposition/событийная очередь Compose могут
+быть медленнее — бюджет НЕ проверен под такой нагрузкой (изолированные
+прогоны — не то же самое, что 70-минутный full regression). Если
+`enter_rename_name` начнёт падать НОВЫМ диагностическим сообщением
+(«поле содержит X, ожидали Y») именно в full regression — это будет
+означать, что 1.5с недостаточно под нагрузкой, не гонку ввода как баг
+приложения; тогда бюджет стоит расширить, а не считать находку новым
+багом.
+
+Изменённые файлы этим rework: `framework/screens/settings_screen.py`,
+`framework/screens/base_screen.py`, `framework/steps/settings_steps.py`,
+`framework/steps/saf_steps.py`, `framework/tests/test_rename_name_verification_unit.py`
+(новый), `scripts/arch_check.py` (ALLOWLIST-запись для нового device-free
+теста — тот же класс исключения, что AT-BUG-059), `test-cases/filter-profiles/TC-085.md`.
+`bugs/AT-BUG-062.md`/`test-cases/filter-profiles/TC-085.md` locks сняты.
+`python scripts/validate_frontmatter.py` и `python scripts/arch_check.py` —
+оба чисто (0 ошибок).
+
+**[test-maintainer @ 2026-08-11T16:53:33Z]** Долг устранён на уровне тестовой
+обвязки (диагностика + защита от гонки), `automation_status: quarantined → active`
+(`test-cases/filter-profiles/TC-085.md`). Изменения — только `framework/`:
+
+1. `settings_screen.py::enter_rename_name` — после `clear()`+`send_keys` опрашивает
+   `get_attribute("text")` поля (poll_for, таймаут 1.5с) до совпадения с ожидаемым
+   именем ДО `confirm_rename` — расхождение теперь падает здесь, с точным
+   диагнозом, а не молча уходит на ассерт списка Settings под чужим сообщением
+   (устраняет гипотезу 1 навсегда, DoD п.3).
+2. `settings_screen.py::_swipe_to_profile` (единственная точка `swipe_to_text(...) or
+   swipe_up_to_text(...)` для профилей — покрывает разом `has_filter_profile`,
+   `delete_filter_profile`, `count_filter_profile_occurrences`, `open_rename_dialog`)
+   — перед фолбэком `swipe_up_to_text` прикладывает `page_source` к Allure на
+   позиции, где прямой проход не поймал профиль, ДО того как фолбэк вернёт список
+   наверх (DoD п.2).
+3. `settings_steps.py::assert_filter_profile_listed` — на провале дочитывает
+   фактический список имён из БД (`seed_db.read_filter_profiles()`, host-side, без
+   остановки приложения — тот же контракт, что уже использует
+   `assert_filter_profiles_have_query_strings`) — следующее падение само отличит
+   «имя другое» (гипотеза 1) от «строка не поймана прокруткой» (гипотеза 2, DoD п.1).
+
+**Расхождение с диагнозом failure-analyst — явно фиксирую.** Все 4 контрольных
+прогона (3× целевой тест + 1× файл) прошли ЗЕЛЁНЫМ на здоровом окружении
+(`Get-Device` → `emulator-5554`, Appium `:4723` ready) — исходная сигнатура
+падения НЕ воспроизвелась ни разу, симметрично изолированным 3/3 зелёным
+failure-analyst. Значит, эмпирически подтвердить, какая из двух гипотез стреляла
+в `RUN-20260811-0406`, я НЕ смог — это по-прежнему открытый вопрос для
+следующего падения (если оно случится, теперь оно само укажет причину через
+пп. 1-3 выше). Не заявляю «починил гонку ввода» как доказанную причину — заявляю
+«гонка ввода как класс исключена превентивной проверкой, а диагностический
+пробел закрыт для обеих гипотез» (калибровка №3: без исключающего прогона не
+пишу «причина установлена»).
+
+**Дефекты-собратья (доклад по правилу 9, scope не расширяю, новых test_debt не
+завожу):** тот же паттерн `swipe_to_text(...) or swipe_up_to_text(...)` есть в
+`framework/steps/saf_steps.py:84` (`_scroll_settings_to`) — НЕ фиксировал: это
+Given-шаг докрутки (setup), а не Then-ассерт с неоднозначным сообщением о
+состоянии профиля; при неуспехе там честный `AssertionError` без апелляции к
+«найден/не найден» конкретного бизнес-объекта — класс диагностического пробела
+AT-BUG-062/AT-BUG-048 к нему не применим впрямую. `AT-BUG-043`/`AT-BUG-026`,
+отмеченные failure-analyst как шумящие рядом, не трогал — вне скоупа этого долга,
+уже свои открытые долги.
 
 **[failure-analyst @ 2026-08-11T02:40:00Z]** Заведён по вердикту `FLAKY` падения
 TC-085 в `runs/RUN-20260811-0406.md` (таблица «Падения и триаж»). Дедуп проверен:

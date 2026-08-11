@@ -1226,15 +1226,20 @@
   },
   "AT-BUG-062": {
     "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
+    "artifact_status": "Fixed",
+    "board_status": "Fixed"
   },
   "AT-BUG-063": {
     "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
+    "artifact_status": "Fixed",
+    "board_status": "Fixed"
   },
   "AT-BUG-064": {
+    "itype": "bug",
+    "artifact_status": "Fixed",
+    "board_status": "Fixed"
+  },
+  "AT-BUG-066": {
     "itype": "bug",
     "artifact_status": "Open",
     "board_status": "Open"
@@ -1296,28 +1301,28 @@
   },
   "BUG-021": {
     "itype": "bug",
-    "artifact_status": "Fixed",
-    "board_status": "Fixed"
+    "artifact_status": "Verified",
+    "board_status": "Verified"
   },
   "BUG-022": {
     "itype": "bug",
-    "artifact_status": "Fixed",
-    "board_status": "Fixed"
+    "artifact_status": "Verified",
+    "board_status": "Verified"
   },
   "BUG-046": {
     "itype": "bug",
-    "artifact_status": "Fixed",
-    "board_status": "Fixed"
+    "artifact_status": "Verified",
+    "board_status": "Verified"
   },
   "BUG-047": {
     "itype": "bug",
-    "artifact_status": "Fixed",
-    "board_status": "Fixed"
+    "artifact_status": "Verified",
+    "board_status": "Verified"
   },
   "BUG-048": {
     "itype": "bug",
-    "artifact_status": "Fixed",
-    "board_status": "Fixed"
+    "artifact_status": "Verified",
+    "board_status": "Verified"
   },
   "BUG-049": {
     "itype": "bug",

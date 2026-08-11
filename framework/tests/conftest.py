@@ -34,8 +34,48 @@ def pytest_configure(config):
     )
 
 
+def _ensure_no_residual_device_proxy() -> None:
+    """AT-BUG-064, кандидат фикса (а): снимает ОСТАТОЧНЫЙ device-прокси,
+    переживший рестарт эмулятора/аварийное завершение предыдущей
+    сессии-worker'а (`mitm.ensure_no_residual_proxy()` — подробный докстринг
+    там), ДО ЛЮБОЙ работы сессии — не только replay-тестов. Вынесена в
+    отдельную ЧИСТУЮ функцию (тот же приём, что `_ensure_replay_ca`/
+    `_ensure_upstream_fast` ниже, N2 критик-вход attempt 4): pytest 9
+    запрещает прямой вызов декорированной fixture-функции, а device-free
+    юнит-проба (`test_residual_proxy_guard_unit.py`) обязана звать эту
+    логику напрямую с монки-патченным `mitm.ensure_no_residual_proxy`, без
+    реального adb.
+
+    ВТОРАЯ точка вызова (B2, критик-вход rework attempt 2): также из
+    `pytest_runtest_setup()` ниже, СРАЗУ после `_reset_ca_check()`, если
+    в ЭТОМ тесте случился device-liveness recovery — см. докстринг хука.
+    Без второй точки проверка была недостижима ровно для сценария из
+    заголовка бага (остаток переживает ПЕРЕЗАПУСК эмулятора): session-
+    scoped `_ensure_app_installed` инстанцируется один раз ДО первого
+    теста сессии, recovery же может произойти В ЛЮБОЙ момент прогона
+    (АО3_EMU device-liveness guard, AT-BUG-026)."""
+    stale = mitm.ensure_no_residual_proxy()
+    if stale is not None:
+        warnings.warn(
+            f"AT-BUG-064: остаточный device-прокси '{stale}' обнаружен на "
+            "старте прогона (пережил рестарт эмулятора или аварийное "
+            "завершение предыдущей сессии/worker'а) -- снят автоматически."
+        )
+
+
 @pytest.fixture(scope="session", autouse=True)
 def _ensure_app_installed():
+    """AT-BUG-064, кандидат фикса (а): подключает `_ensure_no_residual_device_
+    proxy()` (см. её докстринг) именно СЮДА, а не отдельной новой `autouse`-
+    фикстурой: эта фикстура — УЖЕ единственная session-scoped autouse точка
+    входа conftest.py, которую ~20 существующих device-free юнит-проб
+    (`test_*_unit.py`) переопределяют no-op'ом, чтобы не трогать устройство
+    при сборе полного набора (см. `test_mitm_proxy_reachable_unit.py` и
+    сиблинги); отдельная новая session-autouse фикстура заставила бы КАЖДУЮ
+    из них ловить реальный adb-вызов, если её тоже не переопределить —
+    присоединение к уже переопределяемой точке даёт классовую полноту без
+    правки полутора десятков файлов."""
+    _ensure_no_residual_device_proxy()
     if not adb.is_installed():
         adb.install()
     yield
@@ -113,7 +153,23 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
     самом конце прогона, без per-тестовой атрибуции). Плагин `warnings`
     захватывает предупреждения из ЛЮБОЙ фазы протокола, включая хуки
     setup, поэтому перенос не меняет видимость WARN на happy path,
-    только чинит путь падения соседних фикстур."""
+    только чинит путь падения соседних фикстур.
+
+    B2 (AT-BUG-064, критик-вход rework attempt 2): `_ensure_no_residual_
+    device_proxy()` вызывается ЗДЕСЬ же, СРАЗУ рядом с `_reset_ca_check()`
+    — ТЕМ ЖЕ твин-паттерном (recovery ребутит эмулятор через snapshot-boot
+    `tasks.ps1::Start-Emulator`, module/session-level проверка об этом не
+    знает сама по себе, если её единственная точка вызова —
+    `_ensure_app_installed`, session-scoped и потому инстанцируемая РОВНО
+    ОДИН раз на весь прогон, до первого теста, а не после КАЖДОГО
+    recovery). Заголовок AT-BUG-064 — «остаточный прокси переживает
+    ПЕРЕЗАПУСК ЭМУЛЯТОРА»: recovery-путь — ровно тот перезапуск, и до
+    этой правки проверка (а), добавленная attempt 1, была НЕДОСТИЖИМА
+    для него (снята только на старте сессии, session-scope не
+    переинстанцируется). `ensure_no_residual_proxy()` не кеширует
+    результат сама (в отличие от `_ca_checked`) — каждый вызов заново
+    читает `adb shell settings get global http_proxy`, поэтому
+    достаточно позвать функцию повторно, без отдельного flag-сброса."""
     global _pending_recovery_warning
     _pending_recovery_warning = None
     if "driver" not in item.fixturenames:
@@ -121,6 +177,7 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
     _pending_recovery_warning = _DEVICE_GUARD.ensure_ready()
     if _pending_recovery_warning is not None:
         _reset_ca_check()
+        _ensure_no_residual_device_proxy()
         warnings.warn(_pending_recovery_warning)
 
 

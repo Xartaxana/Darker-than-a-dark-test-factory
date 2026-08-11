@@ -2,7 +2,7 @@
 key: "BUG-046"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p1"
 summary: "Ручной скан при двух файлах одного ao3Id не сходится: счётчик relinked=2 на одну работу, повторный скан рапортует то же, не становясь 0"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-11T00:00:00Z"
-updated: "2026-08-11T00:00:00Z"
+created: "2026-08-11T16:11:00Z"
+updated: "2026-08-11T16:11:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Ручной скан при двух файлах одного ao3Id не сходится: счётчик relinked=2 на одну работу, повторный скан рапортует то же, не становясь 0
 
 _Спроецировано из `bugs/BUG-046.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # BUG-046 — Ручной скан не сходится при двух файлах одного ao3Id
 
@@ -136,6 +136,7 @@ fun scanForDownloads(coroutineContext: CoroutineDispatcher = Dispatchers.IO) {
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-08-11 (fix-verifier, D1) | `source_commit cc201f789f0fb123722bbba7b29b8e0c6412dac1` (coalesced: `a968f6ba` — `git merge-base --is-ancestor a968f6ba HEAD` в `app-under-test` → EXIT=0, ЯВЛЯЕТСЯ предком); установленный APK: `com.example.ao3_wrapper` versionCode=`12`/versionName=`dev-local` (`app-under-test/app/build/outputs/apk/debug/output-metadata.json`); `built_at: 2026-08-10T23:52:58Z`; emulator-5554, Appium уже поднят с прошлого раунда сессии | **TC-037** (`automated_by: framework/tests/test_downloads.py::test_manual_scan_for_downloads_shows_dialog_on_zero_files`) — прогнан штатно. **TC-038** (`automated_by: ...test_change_download_folder_triggers_silent_scan_and_relinks_orphan_file`) — прогнан штатно. **TC-039** (`automated_by: ...test_restore_folds_orphan_scan_into_single_dialog`) — прогнан штатно. Все три вместе: `Invoke-Pytest tests/test_downloads.py -k '...' --reruns 0` → `3 passed in 156.92s`, `PYTEST_EXIT=0`. **TC-153** (`test_cases`, design-only, `automated_by: ""`) — прогон штатной автоматизацией невозможен (кейса нет) → заменён ЖИВЫМ device-driven пробником `test_bug046_scan_idempotency_probe.py` (scratchpad сессии, удалён после использования, НЕ заявлен как `automated_by`). Given бага (2 файла одного ao3Id на диске, `downloadPath` уже указывает на один из них) построен через SAF-подпапку публичного хранилища (`saf_steps.saf_pick_folder`/`adb.push_external`, приём TC-038/TC-039) — НЕ через adb-push в ДЕФОЛТНУЮ папку загрузок (TC-153.md «Заметки для автоматизации» предлагали её, но прямой `adb push`/`run-as` в app-specific external storage падает на API 34, задокументировано `seed_db.py:417-427`) и НЕ через сценарий BUG-021 (та дверь ЗАКРЫТА его же фиксом — `existing.copy(...)` теперь сохраняет `downloadPath` при правке заметки, повторное скачивание для уже привязанной работы больше не триггерится; см. «Обсуждение» ниже) | TC-037/038/039: allure result.json всех трёх — `status: passed`, дословные тексты шагов: TC-037 `«No .html files found in the download folder.»`; TC-038 `«Found 1 files — relinked 1, added 0 new.»`; TC-039 `«Found 1 files — relinked 0, added 1 new.»` (silent-скан при смене папки) и `«Restored 1 works, 0 filters. Also relinked 1 and added 0 downloaded file(s).»` (объединённый диалог Restore+scan), второй «Scan complete» не появился — все ожидаемые тексты совпали. TC-153-пробник: 3 прогона подряд, все `PYTEST_EXIT=0`, `1 passed` (56.44s/63.71s/60.28s); дословный текст диалога трёх ручных сканов подряд (без изменений на диске между ними), сверено allure/UTF-8-witness: **скан #1** `Found 2 files — relinked 1, added 0 new.` (устанавливающий скан — `downloadPath` строки был `null` до этого момента, ни один файл группы ещё не был «текущим»); **скан #2** `Found 2 files — relinked 0, added 0 new.`; **скан #3** `Found 2 files — relinked 0, added 0 new.` — идентичен скану #2, счётчик `relinked` сошёлся к 0 и остался там | fix-verifier: **Fixed → Verified**. Идемпотентность подтверждена: 2-й и 3-й скан дали ИДЕНТИЧНЫЙ ноль при неизменном диске — ровно инвариант TC-153 («relinked второго и последующих сканов ограничен числом путей, РЕАЛЬНО изменившихся с предыдущего скана»). Отличие от pre-fix поведения (все три скана давали идентичный `relinked 2`, CH-008/этот баг) — качественное: пост-фикс счётчик СХОДИТСЯ, а не повторяет полный размер группы на каждом проходе; механизм фикса (группировка `files.groupBy { it.first }`, правило «строка уже указывает на любой файл группы → не трогаем») напрямую объясняет наблюдаемый переход `1→0→0`. TC-037/038/039 (контрольные N=0/N=1/orphan) остаются зелёными — регрессии в соседних ветках `scanForOrphanedDownloads` нет. `fixed_in` заполнен. `known_issue` переведён в `"false"` (уже был). |
 
 ## Обсуждение
 
@@ -188,6 +189,49 @@ Awaiting: dev
 - TC-037, TC-038, TC-039 (контрольные: граничные случаи скана с N=0, N=1, N=orphan)
 
 Результаты верификации приложу в этот баг после завершения D1-цикла. Статус перейдёт в `Verified` при успешном прохождении всех TC.
+
+**[fix-verifier @ 2026-08-11T16:11:00Z]**
+
+D1-верификация выполнена на сборке `cc201f789...` (содержит `a968f6ba`, сверено
+`git merge-base --is-ancestor` → ancestor). Контрольные TC-037/TC-038/TC-039
+прогнаны штатной автоматизацией (`Invoke-Pytest tests/test_downloads.py -k
+'...'`) — `3 passed`, `PYTEST_EXIT=0`, все три ожидаемых текста диалогов
+совпали дословно (см. таблицу «Верификация»). TC-153 (design-only, `automated_by`
+пуст) заменён временным device-driven пробником, воспроизводящим ИМЕННО
+инвариант кейса (3 ручных скана подряд без изменений на диске, `relinked`
+обязан сойтись к 0) — 3 прогона подряд, все зелёные, идентичный результат:
+`relinked 1 → relinked 0 → relinked 0` (2-й и 3-й скан буквально совпадают).
+
+**Важное отступление от буквальных инструкций репро (дефект-собрат D-0043,
+докладываю, не расширяя scope):** построить Given бага через сценарий BUG-021
+(«Save note» через overlay листинга обнуляет `downloadPath`, повторное
+скачивание создаёт второй файл) на ЭТОЙ сборке НЕ УДАЛОСЬ БЫ — BUG-021 сам
+`Verified` в этой же сессии, и его фикс (`existing.copy(...)`) теперь СОХРАНЯЕТ
+`downloadPath` при правке заметки: карточка остаётся с open-иконкой, кнопка
+«Download» для повторного скачивания не появляется, натуральный путь создания
+второго файла для уже привязанной работы закрыт. Тело этого бага (раздел
+«Шаги воспроизведения») по-прежнему ссылается на этот путь как на инструмент
+получения двух файлов — актуализация текста вне мандата этой верификации,
+называю здесь явно. Аналогично не подошла техника adb-push в ДЕФОЛТНУЮ папку
+загрузок, которую TC-153.md рекомендует «Заметкам для автоматизации»: прямой
+`adb push`/`run-as` в app-specific external storage (`getExternalFilesDir`)
+падает на API 34 («secure_mkdirs failed»/«Permission denied»), задокументировано
+`seed_db.py:417-427` — это ЗАРАНЕЕ известное ограничение теста, не находка этой
+сессии, но стоит учесть, если TC-153 когда-нибудь получит `automated_by`
+(технику нужно заменить на SAF-подпапку публичного хранилища, как в этом
+пробнике/TC-038/TC-039). Обе замены задокументированы явной строкой в
+таблице «Верификация» — carve-out не применялся, это обычная замена
+device-free замены отсутствующего automated-кейса живым device-driven
+пробником (test_cases не был `[]`, только `automated_by` пуст).
+
+`status: Fixed` → **Verified**. `fixed_in`: `source_commit
+cc201f789f0fb123722bbba7b29b8e0c6412dac1` (coalesced `a968f6ba`); установленный
+APK versionCode=12/versionName=dev-local. `known_issue` переведён в `"false"`
+(уже был). `app-under-test/` не менял (только чтение, ничего не правил).
+Временный пробник `test_bug046_scan_idempotency_probe.py` удалён после
+использования — `git status --porcelain` по `framework/tests/` пуст.
+
+Awaiting: none.
 
 ## Чек-лист качества
 - [x] Проверены дубликаты среди открытых багов — совпадений не найдено; BUG-011 (race скана при restore) — related но другой класс (цикл скана vs. restore-race)

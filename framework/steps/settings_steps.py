@@ -504,14 +504,33 @@ def dismiss_scan_dialog(driver) -> None:
 
 @allure.step("Then в Settings в секции «Saved AO3 Filters» отображается профиль «{name}»")
 def assert_filter_profile_listed(driver, name: str, timeout: int | None = None):
-    assert SettingsScreen(driver).has_filter_profile(name, timeout=timeout), (
-        f"фильтр-профиль «{name}» не найден в списке Settings"
+    """AT-BUG-062: на провале сообщает ФАКТИЧЕСКИЙ список имён профилей из БД
+    (`seed_db.read_filter_profiles()`, host-side, не требует остановленного
+    приложения — тот же контракт, что `assert_filter_profiles_have_query_strings`
+    уже использует), чтобы отличить «профиль сохранён под ДРУГИМ именем» (гипотеза
+    1: гонка ввода в диалоге) от «имя в БД верное, но UI-прокрутка его не поймала»
+    (гипотеза 2, AT-BUG-048) — раньше падение сообщало только факт отсутствия, обе
+    гипотезы давали неотличимое сообщение (см. `bugs/AT-BUG-062.md`)."""
+    if SettingsScreen(driver).has_filter_profile(name, timeout=timeout):
+        return
+    try:
+        actual_names = sorted(row["name"] for row in seed_db.read_filter_profiles())
+    except Exception as exc:  # noqa: BLE001
+        actual_names = [f"<не удалось прочитать БД: {exc}>"]
+    raise AssertionError(
+        f"фильтр-профиль «{name}» не найден в списке Settings; "
+        f"фактические имена в БД filter_profiles: {actual_names}"
     )
 
 
 @allure.step("Then в Settings в секции «Saved AO3 Filters» профиль «{name}» отсутствует")
 def assert_filter_profile_not_listed(driver, name: str, timeout: int = 3):
-    assert not SettingsScreen(driver).has_filter_profile(name, timeout=timeout), (
+    """`expect_absent=True` (rework AT-BUG-062, non-blocker (а)): негативный
+    ассерт ОЖИДАЕТ, что прямой свайп-проход не поймает `name` — это штатный
+    успешный исход, не отказ, требующий диагностического page_source-снимка
+    ДО фолбэка (тот снимок писал шумную XML-аттачку в Allure на каждом
+    зелёном прогоне этого ассерта)."""
+    assert not SettingsScreen(driver).has_filter_profile(name, timeout=timeout, expect_absent=True), (
         f"фильтр-профиль «{name}» всё ещё виден в списке Settings — ожидали удалённым"
     )
 

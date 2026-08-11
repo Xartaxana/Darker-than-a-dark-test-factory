@@ -161,6 +161,41 @@ function Set-GuestIPv4Pin {
     }
 }
 
+function Set-EmulatorSessionState {
+    # AT-BUG-063 (F1/F4, rework attempt 2, критик-вход): единственное место,
+    # где device-liveness recovery (`framework/core/driver_factory.py`) может
+    # узнать, каким GPU-бэкендом/AVD эмулятор был поднят ИЗНАЧАЛЬНО -- в т.ч.
+    # когда `-Gpu`/`-AvdName` переданы ЯВНЫМ CLI-параметром МИМО переменной
+    # окружения (исходный воспроизведённый сценарий RUN-20260811-0405, который
+    # attempt 1 не закрыл -- та правка полагалась ТОЛЬКО на `$env:AO3_EMU_GPU`,
+    # унаследованный python-подпроцессом, и никогда не видела явный `-Gpu host`
+    # ручного вызова). Вызывается из `Start-Emulator` СРАЗУ ПОСЛЕ разрешения
+    # `$Gpu` (параметр > env > дефолт, комментарий выше) -- пишет уже
+    # РАЗРЕШЁННОЕ значение, не сырой параметр. Не блокирующая: ошибка записи
+    # (нет прав/диска) не должна ронять сам Start-Emulator -- WARN и
+    # продолжение, тот же класс отказоустойчивости, что Set-GuestIPv4Pin выше.
+    param([Parameter(Mandatory)][string]$Gpu, [Parameter(Mandatory)][string]$AvdName)
+    try {
+        $stateDir = "$root\state"
+        if (-not (Test-Path $stateDir)) { New-Item -ItemType Directory -Path $stateDir -Force | Out-Null }
+        $payload = [ordered]@{
+            gpu         = $Gpu
+            avd_name    = $AvdName
+            updated_utc = (Get-Date).ToUniversalTime().ToString("o")
+        } | ConvertTo-Json -Compress
+        # `Set-Content -Encoding UTF8` в Windows PowerShell 5.1 пишет UTF-8 С BOM --
+        # найдено красной пробой AT-BUG-063 attempt 2: `json.loads` на python-стороне
+        # (`driver_factory._read_emulator_session_state`) падал
+        # `JSONDecodeError: Unexpected UTF-8 BOM` на РЕАЛЬНО записанном файле.
+        # `[System.IO.File]::WriteAllText` с явным `UTF8Encoding($false)` пишет
+        # БЕЗ BOM.
+        $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+        [System.IO.File]::WriteAllText("$stateDir\emulator-session.json", $payload, $utf8NoBom)
+    } catch {
+        Write-Warning "WARNING: emulator-session.json state write failed ($_) - device-liveness recovery may fall back to defaults (AT-BUG-063)."
+    }
+}
+
 function Start-Emulator {
     # -WritableSystem: нужен для replay-режима (установка CA mitmproxy в системное
     # хранилище, scripts/install-mitm-ca.sh). Для live-прогонов не требуется.
@@ -187,6 +222,10 @@ function Start-Emulator {
     # appium-chromedriver; api26 AVD оставлен на диске неиспользуемым).
     param([switch]$WritableSystem, [int]$SnapshotBootTimeoutSec = 45, [string]$Gpu = "", [string]$AvdName = "ao3_test_api34")
     if (-not $Gpu) { $Gpu = if ($env:AO3_EMU_GPU) { $env:AO3_EMU_GPU } else { "swiftshader_indirect" } }
+    # AT-BUG-063: фиксируем РАЗРЕШЁННЫЕ (пост-фолбэк) значения -- это единственный
+    # момент, когда известно фактическое намерение вызова (CLI-параметр, env-переменная
+    # или дефолт), см. Set-EmulatorSessionState выше.
+    Set-EmulatorSessionState -Gpu $Gpu -AvdName $AvdName
     $adb = "$env:ANDROID_HOME\platform-tools\adb.exe"
     $emu = "$env:ANDROID_HOME\emulator\emulator.exe"
 

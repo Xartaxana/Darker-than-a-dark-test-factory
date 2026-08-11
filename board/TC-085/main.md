@@ -7,14 +7,14 @@ priority: "p1"
 summary: "Переименование фильтр-профиля обновляет отображаемое имя и не меняет queryString"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:filter-profiles", "risk:R-09", "automation:quarantined"]
+labels: ["test-case", "area:filter-profiles", "risk:R-09", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-11T02:40:00Z"
-updated: "2026-08-11T02:40:00Z"
+created: "2026-08-11T17:13:00Z"
+updated: "2026-08-11T17:13:00Z"
 archived: false
 resolution: "done"
 ---
@@ -98,6 +98,37 @@ _Спроецировано из `test-cases/filter-profiles/TC-085.md` (ист�
   queryString профиля (LISTING_FILTERED), assert не совпал —
   TimeoutException «URL активной вкладки не стал <LISTING_BASIC>». Откачено
   (`git checkout`), дифф framework/ чист.
+
+## Карантин снят (test-maintainer, 2026-08-11)
+
+`AT-BUG-062` (`type: test_debt`, `debt_kind: flaky_test`): падение
+`AssertionError: фильтр-профиль «My renamed search» не найден в списке Settings»`
+не различало две живые гипотезы (гонка ввода в диалоге rename vs промах поиска
+прокруткой, AT-BUG-048-класс). Фикс — диагностический (закрывает диагностический
+пробел и превентивно исключает гипотезу 1 как класс; причина исходного падения
+эмпирически НЕ установлена — см. ниже):
+
+1. `settings_screen.py::enter_rename_name` — после `clear()`+`send_keys` опрашивает
+   `get_attribute("text")` поля до совпадения с ожидаемым именем (таймаут 1.5с) ДО
+   `confirm_rename`; расхождение теперь падает здесь, с точным сообщением, а не
+   молча уходит дальше под другим именем.
+2. `settings_screen.py::_swipe_to_profile` — перед фолбэком `swipe_up_to_text`
+   (который всегда возвращает список наверх) прикладывает `page_source` к Allure
+   на позиции, где прямой проход не поймал профиль — устраняет диагностический
+   пробел «снимок падения не содержит нужную секцию».
+3. `settings_steps.py::assert_filter_profile_listed` — на провале сообщает
+   фактический список имён профилей из БД (`seed_db.read_filter_profiles()`),
+   различая «имя другое» от «строка не поймана прокруткой» на будущих падениях.
+
+Верификация: `test_rename_filter_profile_keeps_query_string` зелёный 3/3 подряд
++ `tests/test_filter_profiles.py` целиком зелёный (5 passed). Все контрольные
+прогоны прошли зелёным — гонка ввода исключена как ВОЗМОЖНОСТЬ (превентивная
+проверка теперь ловит её на месте), но НЕ подтверждена как причина исходного
+падения `RUN-20260811-0406`: причина этого конкретного падения эмпирически НЕ
+установлена и остаётся открытым вопросом (различить гипотезы 1/2 не удалось —
+ни одна не воспроизвелась при повторных прогонах). Подробности прогонов и
+разбор обеих гипотез — `bugs/AT-BUG-062.md` (`## Верификация`/`## Обсуждение`).
+`automation_status: quarantined → active`.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»

@@ -33,3 +33,8 @@ dump.xml
 logs/heartbeat.log
 state/loop.lock
 state/loop-lock-reaps.json
+# AT-BUG-063: локальное session-состояние Start-Emulator (GPU-бэкенд/AVD,
+# фактически разрешённые post-фолбэк) — машинно-специфично, пишется при
+# КАЖДОМ подъёме эмулятора, версионирование давало бы бессмысленные диффы
+# (тот же класс, что loop.lock/loop-lock-reaps.json выше).
+state/emulator-session.json

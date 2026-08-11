@@ -79,9 +79,21 @@ def _scroll_settings_to(driver, text: str) -> None:
     Compose-дискуссии AT-BUG-005 про `verticalScroll`) — это не значит, что экран
     не Settings, только что мы не наверху. Проверку «мы вообще на Settings»
     делают вызывающие (`open_settings_scrolled_to` — по свежему открытию;
-    `rescroll_settings_to` полагается на уже пройденную ранее в этой сессии)."""
+    `rescroll_settings_to` полагается на уже пройденную ранее в этой сессии).
+
+    AT-BUG-062 (класс, не экземпляр — доклад test-maintainer, критик-вход
+    rework): тот же паттерн `swipe_to_text(...) or swipe_up_to_text(...)`, что
+    `SettingsScreen._swipe_to_profile` — фолбэк `swipe_up_to_text` всегда
+    возвращает список НАВЕРХ, поэтому итоговый page_source провала (teardown)
+    не содержит позицию, где прямой проход не поймал `text`. Снимок ДО
+    фолбэка (`BaseScreen._attach_pre_fallback_snapshot`, поднят туда из
+    `SettingsScreen` этим же фиксом) закрывает тот же диагностический пробел
+    здесь."""
     ss = SettingsScreen(driver)
-    found = ss.swipe_to_text(text) or ss.swipe_up_to_text(text)
+    if ss.swipe_to_text(text):
+        return
+    ss._attach_pre_fallback_snapshot(text)
+    found = ss.swipe_up_to_text(text)
     assert found, f"не удалось проскроллить до «{text}» (ни вниз, ни вверх)"
 
 

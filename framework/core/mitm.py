@@ -538,3 +538,55 @@ def clear_device_proxy() -> None:
             f"adb shell settings put http_proxy (clear_device_proxy) не "
             f"ответил за {settings.ADB_SHELL_TIMEOUT}s (AT-BUG-009)"
         ) from exc
+
+
+def get_device_proxy() -> str:
+    """Читает ТЕКУЩЕЕ значение `global http_proxy` устройства
+    (`adb shell settings get global http_proxy`) — сырой вывод adb,
+    обрезанный по краям (`"null"` — настройка никогда не выставлялась;
+    `":0"` — штатное «снято»; иначе — выставленный прокси, например
+    `10.0.2.2:8080`). Тот же конечный `timeout`/`TimeoutError`-паттерн, что
+    `set_device_proxy`/`clear_device_proxy` (AT-BUG-009) — используется
+    fail-safe проверкой AT-BUG-064 (`ensure_no_residual_proxy`)."""
+    cmd = [settings.ADB, "shell", "settings", "get", "global", "http_proxy"]
+    try:
+        cp = subprocess.run(
+            cmd, capture_output=True, text=True, check=False,
+            timeout=settings.ADB_SHELL_TIMEOUT,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise TimeoutError(
+            f"adb shell settings get http_proxy (get_device_proxy) не "
+            f"ответил за {settings.ADB_SHELL_TIMEOUT}s (AT-BUG-064)"
+        ) from exc
+    return cp.stdout.strip()
+
+
+def ensure_no_residual_proxy() -> str | None:
+    """AT-BUG-064, кандидат фикса (а): fail-safe снятие ОСТАТОЧНОГО
+    device-прокси на подъёме окружения/сессии.
+
+    `set_device_proxy()` выставляет persistent Android-настройку (`settings
+    put global http_proxy`), которая переживает snapshot-boot эмулятора, если
+    снапшот был сохранён/восстановлен с уже выставленным прокси — типовой
+    путь: worker/pytest-сессия аварийно завершилась МЕЖДУ `set_device_proxy()`
+    и `clear_device_proxy()` (hard-kill процесса, креш машины — НЕ штатное
+    Python-исключение; `try/finally` вокруг них в `conftest.py::replay`
+    (AT-BUG-043 attempt 2) покрывает только штатные исключения ВНУТРИ живого
+    Python-процесса, не эти случаи). Следующий live-прогон на таком
+    устройстве ловит `net::ERR_PROXY_CONNECTION_FAILED` — ДАЖЕ если ни один
+    replay-тест не выполнялся в текущей сессии (наблюдение RUN-20260811-0405:
+    фикстура `replay` ни разу не инстанцировалась, прокси уже стоял на
+    свежем буде).
+
+    Читает текущее значение (`get_device_proxy`) и, если оно НЕ «чистое»
+    (не пусто, не `"null"`, не `":0"`), снимает его (`clear_device_proxy()`)
+    и возвращает СТАРОЕ значение — вызывающий код (`conftest.py`) решает, как
+    это залогировать. Возвращает `None`, если устройство уже было чистым
+    (ничего не сделано — счастливый путь, дешёвый: одно adb-чтение, без
+    записи)."""
+    current = get_device_proxy()
+    if current in ("", "null", ":0"):
+        return None
+    clear_device_proxy()
+    return current
