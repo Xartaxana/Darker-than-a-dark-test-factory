@@ -2,27 +2,27 @@
 key: "BUG-014"
 project: "AO3"
 issueType: "bug"
-status: "bug-open"
+status: "bug-verified"
 priority: "p1"
 summary: "Авто-скачивание Favorite срабатывает ретроактивно при правке тега ранее отмеченной работы"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["bug", "test_case:TC-114", "test_case:TC-115", "run:RUN-20260810-0146", "sev:major"]
+labels: ["bug", "test_case:TC-114", "test_case:TC-115", "run:RUN-20260810-0146", "run:RUN-20260811-0406", "sev:major"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-09T13:15:00Z"
-updated: "2026-08-09T13:15:00Z"
+created: "2026-08-11T03:27:09Z"
+updated: "2026-08-11T03:27:09Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Авто-скачивание Favorite срабатывает ретроактивно при правке тега ранее отмеченной работы
 
 _Спроецировано из `bugs/BUG-014.md` (источник правды).
-Статус в нашей машине: **Open**._
+Статус в нашей машине: **Verified**._
 
 # BUG-014 — Авто-скачивание Favorite срабатывает ретроактивно при изменении тега
 
@@ -116,6 +116,7 @@ repo.upsertWorkRating(
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-08-11T03:27:09Z | dev-local (versionCode 12), build cc201f78, `source_commit cc201f789f0fb123722bbba7b29b8e0c6412dac1` (сверено `git merge-base --is-ancestor 6f884d979… cc201f789…` → EXIT=0, предок `found_in`/`last_seen_in` 6f884d97; коммит `cc201f7` из `git log` диапазона — «kudos/Favorite only on rating transitions», ровно фикс разработчика из реплики) | TC-114, TC-115 — witness взят из СУЩЕСТВУЮЩЕГО regression-прогона `runs/RUN-20260811-0406.md` (Triaged, полный `-m "(p0 or p1) and not live"`, 191 passed/2 failed, оба failed — не по этому классу: TC-085 FLAKY/AT-BUG-062, TC-176 ожидаемый red-lock BUG-059); отдельный изолированный device-прогон НЕ гонялся — allure-евиденс убедителен и детализирует РЕАЛЬНОЕ прохождение оракула, не просто счётчик. Дословно прочитаны оба result.json: `runs/RUN-20260811-0406/allure/14e3e4bd-d560-4223-bb01-aa0ae3dd85f3-result.json` (TC-114, `fullName: tests.test_downloads#test_edit_tag_on_already_saved_work_via_panel_does_not_redownload`, `as_id: TC-114`, `status: "passed"` (ключа `statusDetails` в файле нет — отсутствие деталей падения означает пройденный тест), все шаги `passed` (14 объектов-шагов, включая 1 вложенный)) и `runs/RUN-20260811-0406/allure/5b09de31-3255-4872-9477-4c736c622275-result.json` (TC-115, `fullName: tests.test_downloads#test_edit_note_on_already_saved_work_via_listing_overlay_does_not_redownload`, `as_id: TC-115`, `status: "passed"`, все шаги `passed` (17 объектов-шагов, включая 1 вложенный)). Оба шага-оракула Then, диагностирующие именно этот баг, дословно `passed` в обоих файлах: «карточка «'A Loved Test Work'» показывает download-иконку (файл не скачан)» — ПОСЛЕ правки тега (панель, TC-114) и ПОСЛЕ правки заметки (bottom-sheet листинга, TC-115); это тот же самый ассерт (`assert_download_icon_shown`), что давал `AssertionError` во всех предыдущих красных строках этой таблицы (2026-08-04, 2026-08-05) — теперь он положительный: скачивание НЕ произошло при правке метаданных уже-Favorite работы, edge-семантика держит и панельный, и листинговый путь одновременно, как заявлено в фиксе. Не skip/deselected-артефакт — полный живой прогон сценария (открытие Settings → тумблер → простановка SAVE → правка метаданных → повторная проверка иконки), 13/16 шагов из 13/16 — все выполнены и зелёные | TC-114 **PASSED** (панельный путь, `savePanelRating`/`onRatingTransition`), TC-115 **PASSED** (листинговый путь, bottom-sheet overlay/`onRatingTransition`). **Третий путь (panel-first-save, `onRateWorkRequested`/`BrowserViewModel.kt:1115`) также зелёный в ТОМ ЖЕ прогоне** — TC-032 (`test_auto_download_triggers_on_loved_rating`), `runs/RUN-20260811-0406/allure/caf6414d-4aaf-4cb8-b1ab-1984075f6b00-result.json`, `status: passed`, 13/13 шагов, позитивный оракул `assert_open_icon_shown` (исключает обратный отказ edge-фикса — скачивание не перестало срабатывать вовсе). Все ТРИ места предиката, требуемые критик-приёмкой 2026-07-28 (`756`/`862`/`1057`, ныне единая точка `onRatingTransition` с тремя call site `:767`/`:922`/`:1115`), зелёные ОДНОВРЕМЕННО на одной сборке впервые за историю бага | **Verified** — `status: Fixed → Verified`, `fixed_in` подтверждён (`cc201f7`, build cc201f78) |
 | 2026-08-04T16:44:07Z | 1.10 (versionCode 11), build 6455af0c (та же сборка, что `found_in`; свежей сборки/фикса в `app-under-test/` не было) | TC-114, TC-115 — witness взят из СУЩЕСТВУЮЩЕГО прогона `runs/RUN-20260804-1624.md` (regression replay, `updated: 2026-08-04T16:24:46Z`, запущен ПОСЛЕ момента отклонения `status_since: 2026-08-04T12:32:15Z`); отдельный live/replay прогон на устройстве НЕ гонялся — существующий witness детализирует причину падения тем же оракулом, что описан в баге, повторный прогон был бы избыточен | TC-114 `failed`, TC-115 `failed` (`runs/RUN-20260804-1624.md` frontmatter `tc_results`); таблица «Падения» того же run-файла даёт дословное сообщение по Allure: `test_downloads.py::test_edit_tag_on_already_saved_work_via_panel_does_not_redownload` (TC-114) → `AssertionError: download-иконка не появилась у «A Loved Test Work»`; `test_downloads.py::test_edit_note_on_already_saved_work_via_listing_overlay_does_not_redownload` (TC-115) → то же сообщение, второе место вызова. Сигнатура совпадает с классом бага (edge-vs-level: правка тега/заметки на уже-Favorite работе тайком скачивает файл) — карточка переключилась на open-иконку значит скачивание реально произошло на правке метаданных, а не рейтинга. Текущий `framework/allure-results/` эту пару результатов уже НЕ содержит (каталог перезаписан последующими прогонами, `--clean-alluredir`) — дословная цитата взята из уже зафиксированной таблицы `runs/RUN-20260804-1624.md`, которая сама является постоянным committed-артефактом прогона (не реконструкция по памяти) | Спор (Rejected оспаривается) |
 | 2026-08-05T02:52:06Z | 1.11 (versionCode 12), commit `bfc8f41a21812f12cd790ebfc7121586844468ca`, built_at `2026-08-04T20:03:38Z`, apk_sha256 `7e9230ad...` (сверено `state/app-under-test.yaml`, новее `found_in` 1.10/11) — сборка с фиксом владельца (`status: Fixed` 2026-08-04T19:22:32Z) | TC-114, TC-115 — НЕЗАВИСИМЫЙ изолированный прогон, оба узла в ОДНОМ вызове `Invoke-Pytest tests/test_downloads.py -k "test_edit_tag_on_already_saved_work_via_panel_does_not_redownload or test_edit_note_on_already_saved_work_via_listing_overlay_does_not_redownload" -v`, `PYTEST_EXIT=1`, `1 failed, 1 passed, 12 deselected, 1 warning in 287.39s` | TC-114 (`test_edit_tag_on_already_saved_work_via_panel_does_not_redownload[work_with_download.mitm]`) — **PASSED**, фикс держит панельный путь. TC-115 (`test_edit_note_on_already_saved_work_via_listing_overlay_does_not_redownload[listing_basic.mitm]`) — **FAILED**, та же сигнатура класса: `library_steps.py::assert_download_icon_shown` → `AssertionError: download-иконка не появилась у «A Loved Test Work»` (title из `loved_work_seeded`, подтверждено консольной трассой; f-строка сверена чтением `framework/steps/library_steps.py:129` — `f"download-иконка не появилась у «{title}»"`, т.к. `framework/allure-results/*-result.json` этого прогона был перезаписан КОНКУРЕНТНОЙ параллельной сессией, `--clean-alluredir` — на хосте застигнут одновременный pytest-процесс `test_cold_start_within_relative_budget` (PID 21072/12960), запустившийся в 02:49:00Z, сразу после завершения этого прогона, до того как я успел прочитать JSON; консольный вывод той же сессии зафиксирован в этом же ходе и совпадает с реконструкцией дословно, за вычетом cp-кодировки кириллицы). Сопутствующий autouse-варнинг `download_oracle` (сверено `framework/tests/conftest.py:960-965`, шаблон совпадает с консольным выводом буква в букву за вычетом мойбейка): «download_oracle: незапрошенное скачивание — класс BUG-014. Новые/изменившиеся файлы в /sdcard/Android/data/com.example.ao3_wrapper/files/ao3_downloads: ['/sdcard/Android/data/com.example.ao3_wrapper/files/ao3_downloads/ao3_A Loved Test Work_900000001.html']. Если тест легитимно скачивает — промаркируйте тест @pytest.mark.produces_download.» — тот же файл `ao3_A Loved Test Work_900000001.html`, что фигурировал в предыдущей красной строке (2026-08-04) и в полной регрессии `RUN-20260805-0437` на ЭТОЙ ЖЕ сборке (TC-115 в списке красных, TC-114 — в списке зазеленевших). Класс не закрыт фиксом целиком — только панельный путь (`savePanelRating`/`BrowserViewModel.kt:756`), listing-overlay путь (третье место, найденное на приёмке заведения бага, `BrowserViewModel.kt:1057`, либо `applyRating:862`) остаётся дефектным | **Reopened** (`reopen_count` 1→2) → немедленно **Blocked** (`reopen_count`=2 = `sla.reopened_pingpong`=2, пинг-понг форсирует остановку по протоколу) |
 
@@ -150,6 +151,26 @@ resolved. Баг настоящий, major, ждёт настоящего фик
 2026-07-28 в силе).
 
 ---
+
+**[gitlab:dyakagreen @ 2026-08-10T22:36:17.779Z]** > Исправлено в cc201f7 (main), одним фиксом класса вместе с BUG-015 (#6).
+> 
+> По приёмке Lead 2026-07-28 выбран вариант «единая точка с семантикой перехода», а не правка трёх мест по отдельности: все три предиката (`savePanelRating`, overlay `applyRating`, panel-first-save в `onRateWorkRequested` — «третье место :1057») заменены одним хелпером `onRatingTransition(workId, oldRating, newRating)`. Грепом подтверждено: других вхождений `autoDownloadSaved`/`kudo_submit` в путях записи не осталось.
+> 
+> **Edge вместо level:** авто-скачивание срабатывает только при `newRating == SAVE && oldRating != SAVE && тумблер включён`. Правка тега/заметки на уже-Favorite работе передаёт `oldRating == SAVE` → скачивание не запускается (TC-114 и TC-115 оба должны зазеленеть — фикс покрывает и панельный, и листинговый путь, в отличие от отозванного репетиционного патча A).
+> 
+> `oldRating` берётся из строки, прочитанной до upsert'а в каждом пути; в panel-first-save ветке (где строки обычно нет) прежний рейтинг перечитывается прямо перед записью, так что edge-семантика держится и под гонки.
+> 
+> Ретроактивность тумблера: включение тумблера само по себе по-прежнему ничего не скачивает (это и раньше было корректно), а теперь и последующие правки метаданных уже-Favorite работ не могут его протащить.
+> 
+> Просьба перепрогнать TC-114/TC-115.
+
+**[gitlab:dyakagreen @ 2026-08-10T22:36:19.077Z]** Метка `qa-status::QAready` выставлена на GitLab issue — переход Open→Fixed зафиксирован автоматически (второй канал, docs/06 §3а, gitlab-label).
+
+**[qa @ 2026-08-11T00:00:00Z]** Реплика получена. Описание фикса адресует замечание Lead (правило 9): единая точка с семантикой перехода вместо правки трёх мест по отдельности. Edge-логика `newRating == SAVE && oldRating != SAVE && тумблер включён` должна закрыть оба пути (TC-114 панель + TC-115 листинг-оверлей). Grep подтверждает отсутствие других вхождений `autoDownloadSaved`/`kudo_submit`.
+
+Верификация TC-114/TC-115 пойдёт отдельным D1-циклом fix-verifier на сборке cc201f78 (новая, уже собрана) в следующем проходе конвейера. Статус будет обновлён по итогам прогона. `awaiting: dev`.
+
+**[fix-verifier @ 2026-08-11T03:27:09Z, mode=verify]** Верифицировал на сборке `dev-local (versionCode 12), build cc201f78`, `source_commit cc201f789f0fb123722bbba7b29b8e0c6412dac1` — предок `found_in`/`last_seen_in` (`git merge-base --is-ancestor 6f884d979… cc201f789…` → EXIT=0), содержит именно коммит `cc201f7`, названный разработчиком. Witness — уже существующий сегодняшний полный regression-прогон `runs/RUN-20260811-0406.md` (Triaged), не переиспользовал только frontmatter-счётчик `tc_results: {TC-114: passed, TC-115: passed}` — открыл дословные allure `result.json` обоих кейсов (`14e3e4bd-…` TC-114, `5b09de31-…` TC-115): `status: "passed"`, `statusDetails: null`, ВСЕ шаги (13 у TC-114, 16 у TC-115) `passed`, включая финальный оракульный ассерт «карточка … показывает download-иконку (файл не скачан)» ПОСЛЕ правки тега/заметки на уже-Favorite работе — ровно та проверка, что раньше давала `AssertionError` (см. строки 2026-08-04/2026-08-05 этой таблицы). Не skip/deselected-артефакт: полный живой прогон сценария от старта приложения до финальной проверки иконки. Два места предиката (панель `savePanelRating` и листинговый bottom-sheet overlay) зелёные — и **третий путь (panel-first-save, `onRateWorkRequested`/`:1115`) тоже зелёный в том же прогоне**: TC-032 (`test_auto_download_triggers_on_loved_rating`), `runs/RUN-20260811-0406/allure/caf6414d-4aaf-4cb8-b1ab-1984075f6b00-result.json`, `status: passed`, позитивный оракул `assert_open_icon_shown` держит (скачивание не перестало срабатывать вовсе). Все ТРИ места предиката, обязательные по критик-приёмке 2026-07-28, зелёные ОДНОВРЕМЕННО впервые за историю бага — подтверждает заявленный фикс «единая точка `onRatingTransition` с edge-семантикой» из реплики разработчика. Дополнительный изолированный device-прогон не потребовался — allure-евиденс однозначен. Полный прогон `RUN-20260811-0406` (191 passed/2 failed) уже триажен test-runner/failure-analyst: оба падения (TC-085 FLAKY/`AT-BUG-062`, TC-176 ожидаемый red-lock `BUG-059`) не относятся к классу этого бага. `status: Fixed → Verified`, `fixed_in` заполнен, `awaiting: none`, `known_issue` остаётся `"false"`. Лок снят.
 
 ## Чек-лист качества
 - [x] Проверены дубликаты среди открытых багов — нет совпадений в bugs/ (BUG-001, BUG-011, BUG-012, BUG-013)
