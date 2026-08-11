@@ -1369,6 +1369,11 @@
     "artifact_status": "Verified",
     "board_status": "Verified"
   },
+  "BUG-065": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
   "RUN-20260702-0300": {
     "itype": "run",
     "artifact_status": "Closed",
