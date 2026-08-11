@@ -31,8 +31,8 @@ python_functions = test_*/python_classes = Test* в pytest.ini) обязана �
     replay/quarantine — это режим прогона, а не suite, и не считаются.
 
 test_smoke.py устранён (AT-BUG-002, test-debt/B4): импорты screens вынесены за
-steps/, все 5 тестов имеют @allure.id. ALLOWLIST ниже пуст — новые исключения не
-добавлять без отдельного test-debt тикета.
+steps/, все 5 тестов имеют @allure.id. ALLOWLIST ниже содержит известные
+исключения (AT-BUG-059); новые — только с отдельным test-debt тикетом.
 
 Запуск:      python scripts/arch_check.py
 Коды выхода: 0 — чисто (WARN/известные исключения допустимы), 1 — есть ERROR.
