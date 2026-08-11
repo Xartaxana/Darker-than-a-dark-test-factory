@@ -151,7 +151,77 @@ def check_meta(meta: dict, schema: dict, rel: str) -> tuple[list[str], list[str]
         if "pattern" in spec and sval and not re.match(spec["pattern"], sval):
             errors.append(f"{rel}: `{name}: {sval}` не соответствует `{spec['pattern']}`")
     errors += check_cross_field(meta, schema, rel)
+    errors += check_future_timestamps(meta, rel)
     return errors, warns
+
+
+# --- AT-BUG-029 (2 инцидента 2026-08-11): будущий timestamp во frontmatter ---
+# haiku-агенты фабриковали `updated` на +4..11ч в будущее (не сверяли настоящее
+# время), валидатор молчал — поле проходило только pattern-проверку формата,
+# не смысловую. `updated`/`status_since` — единственные поля, где frontmatter
+# несёт ISO-таймстамп СОБЫТИЯ (не диапазон/оценку) во всех трёх схемах,
+# парсящих их как дату (test-case/bug/run; charter incident-поля вне скоупа
+# этой задачи).
+
+FUTURE_TIMESTAMP_FIELDS = ("updated", "status_since")
+# Допуск на clock skew между машиной агента и часами проверки (см. дисциплину
+# команд CLAUDE.md п.6: env-негатив требует сверки, а не веры собственным часам).
+FUTURE_TIMESTAMP_SLACK = datetime.timedelta(minutes=10)
+
+
+def _parse_iso_dt(value) -> datetime.datetime | None:
+    """ISO-таймстамп frontmatter → aware datetime (UTC). None — не парсится
+    (форматную валидность уже проверяет `pattern` схемы отдельно; здесь только
+    парсинг для сравнения с now(), тихий отказ — не ошибка этой функции)."""
+    if isinstance(value, datetime.datetime):
+        dt = value
+    elif isinstance(value, datetime.date):
+        dt = datetime.datetime(value.year, value.month, value.day)
+    elif isinstance(value, str):
+        s = value.strip()
+        if not s:
+            return None
+        s = s.replace(" ", "T", 1)
+        if s.endswith("Z"):
+            s = s[:-1] + "+00:00"
+        try:
+            dt = datetime.datetime.fromisoformat(s)
+        except ValueError:
+            return None
+    else:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=datetime.timezone.utc)
+    return dt
+
+
+def _fmt_delta(delta: datetime.timedelta) -> str:
+    total = int(delta.total_seconds())
+    m, s = divmod(total, 60)
+    h, m = divmod(m, 60)
+    if h:
+        return f"{h}h{m:02d}m{s:02d}s"
+    return f"{m}m{s:02d}s"
+
+
+def check_future_timestamps(meta: dict, rel: str) -> list[str]:
+    """`updated`/`status_since` строго в будущем (за вычетом допуска на clock
+    skew, `FUTURE_TIMESTAMP_SLACK`) — ERROR: событие не могло ещё произойти."""
+    errors: list[str] = []
+    now = datetime.datetime.now(datetime.timezone.utc)
+    threshold = now + FUTURE_TIMESTAMP_SLACK
+    for name in FUTURE_TIMESTAMP_FIELDS:
+        if name not in meta:
+            continue
+        dt = _parse_iso_dt(meta.get(name))
+        if dt is None:
+            continue
+        if dt > threshold:
+            delta = dt - now
+            errors.append(
+                f"{rel}: `{name}: {_s(meta[name])}` в будущем на +{_fmt_delta(delta)} "
+                f"относительно now(UTC) (допуск {int(FUTURE_TIMESTAMP_SLACK.total_seconds() // 60)}м)")
+    return errors
 
 
 def check_cross_field(meta: dict, schema: dict, rel: str) -> list[str]:

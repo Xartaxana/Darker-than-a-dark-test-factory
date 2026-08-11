@@ -1,6 +1,7 @@
 """Юнит-тесты validate_frontmatter (scripts/validate_frontmatter.py)."""
 from __future__ import annotations
 
+import datetime as dt
 from pathlib import Path
 
 import pytest
@@ -8,6 +9,10 @@ import pytest
 import validate_frontmatter as vf
 
 SCHEMAS_SRC = Path(__file__).resolve().parents[2] / "schemas"
+
+
+def _iso(value: dt.datetime) -> str:
+    return value.isoformat().replace("+00:00", "Z")
 
 
 @pytest.fixture()
@@ -442,3 +447,47 @@ def test_red_lock_bad_format_is_error(repo, schemas):
 
     errors, _warns = vf.validate()
     assert any("TC-083" in e and "red_lock" in e for e in errors)
+
+
+# --- AT-BUG-029 (2 инцидента 2026-08-11): будущий `updated`/`status_since` ---
+
+def test_future_updated_over_slack_is_error(repo, schemas):
+    """ЗА границей допуска (10м): +10м01с в будущее — ERROR."""
+    future = dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=10, seconds=1)
+    p = repo.bug("BUG-100", "Open")
+    text = p.read_text(encoding="utf-8").replace(
+        'updated: "2026-07-01T00:00:00Z"', f'updated: "{_iso(future)}"')
+    p.write_text(text, encoding="utf-8")
+
+    errors, _warns = vf.validate()
+    assert any("BUG-100" in e and "updated" in e and "будущем" in e for e in errors)
+
+
+def test_future_updated_under_slack_is_clean(repo, schemas):
+    """НА границе допуска (10м), но ещё внутри: +9м59с — чисто (clock skew)."""
+    future = dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=9, seconds=59)
+    p = repo.bug("BUG-101", "Open")
+    text = p.read_text(encoding="utf-8").replace(
+        'updated: "2026-07-01T00:00:00Z"', f'updated: "{_iso(future)}"')
+    p.write_text(text, encoding="utf-8")
+
+    errors, _warns = vf.validate()
+    assert not any("BUG-101" in e and "будущем" in e for e in errors)
+
+
+def test_past_updated_is_clean(repo, schemas):
+    """Прошлое (дефолт фикстуры, 2026-07-01) — чисто."""
+    repo.bug("BUG-102", "Open")
+
+    errors, _warns = vf.validate()
+    assert not any("BUG-102" in e and "будущем" in e for e in errors)
+
+
+def test_future_status_since_is_error(repo, schemas):
+    """Тот же детектор — на `status_since`, не только на `updated` (второй
+    инцидент AT-BUG-029: +4..11ч в будущее)."""
+    future = dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=4)
+    repo.bug("BUG-103", "Open", extra=f'status_since: "{_iso(future)}"\n')
+
+    errors, _warns = vf.validate()
+    assert any("BUG-103" in e and "status_since" in e and "будущем" in e for e in errors)
