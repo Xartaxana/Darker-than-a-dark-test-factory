@@ -32,6 +32,8 @@ fields:
   resolution_comment: {}
   # B2 (docs/06 D14): подтверждённый баг, релиз идёт с ним — в digest, дедуп APP_BUG
   # сверяется с ним в первую очередь, still-repro (D3) проверяет вне зависимости от severity.
+  # D14-Intended (ESC-029): у status Intended держится "true" навсегда (гард D3
+  # для принятого поведения; сброс ловит WARN validate_frontmatter) — см. docs/06.
   known_issue: { enum: ["true", "false"] }
   # B5: причина простоя в Blocked → SLA/digest. Обязателен по смыслу при status: Blocked
   # (validate_frontmatter.py — WARN, не ERROR: человек с борды может не успеть заполнить

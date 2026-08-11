@@ -289,6 +289,18 @@ def check_cross_field_warn(meta: dict, schema: dict, rel: str) -> list[str]:
     # B4: test_debt без категории хуже виден в digest.
     if _s(meta.get("type")) == "test_debt" and not _s(meta.get("debt_kind")).strip():
         warns.append(f"{rel}: type test_debt без `debt_kind` — указать категорию долга (B4)")
+    # D14-Intended (ESC-029, решение Lead 2026-08-12): Intended-баг держит
+    # known_issue "true" НАВСЕГДА — это единственный флаг, по которому D3
+    # still-repro перепрогоняет регресс-замок ПРИНЯТОГО поведения на новых
+    # сборках (P3-кейсы вроде TC-020 отсечены фильтром `(p0 or p1)` штатного
+    # регресса). Сброс поля = молчаливое выключение единственного гарда;
+    # правило fix-verifier «сбросить known_issue при Verified» к Intended не
+    # применяется (перехода Intended->Verified в transitions.yaml нет).
+    if "known_issue" in fields and _s(meta.get("status")) == "Intended" \
+            and _s(meta.get("known_issue")) != "true":
+        warns.append(
+            f"{rel}: status Intended с known_issue `{_s(meta.get('known_issue'))}` — "
+            "Intended держит known_issue \"true\" (гард D3 still-repro, ESC-029)")
     return warns
 
 

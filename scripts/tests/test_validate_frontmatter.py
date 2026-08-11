@@ -176,6 +176,44 @@ def test_blocked_with_reason_no_warn(repo, schemas):
     assert not any("blocked_reason" in w for w in warns)
 
 
+# --- D14-Intended (ESC-029, решение Lead 2026-08-12): Intended держит
+# known_issue "true" — единственный гард D3 still-repro для принятого
+# поведения (P3-замки отсечены фильтром штатного регресса).
+
+def test_intended_without_known_issue_warns(repo, schemas):
+    repo.bug("BUG-054", "Intended",
+             extra="resolution_comment: принято владельцем\n")
+
+    errors, warns = vf.validate()
+    assert errors == []
+    assert any("Intended" in w and "known_issue" in w for w in warns)
+
+
+def test_intended_with_known_issue_false_warns(repo, schemas):
+    """Граница: явный сброс в \"false\" — тот же WARN, что и отсутствие."""
+    repo.bug("BUG-055", "Intended",
+             extra='known_issue: "false"\nresolution_comment: принято\n')
+
+    _errors, warns = vf.validate()
+    assert any("Intended" in w and "known_issue" in w for w in warns)
+
+
+def test_intended_with_known_issue_true_no_warn(repo, schemas):
+    repo.bug("BUG-056", "Intended",
+             extra='known_issue: "true"\nresolution_comment: принято\n')
+
+    _errors, warns = vf.validate()
+    assert not any("Intended" in w and "known_issue" in w for w in warns)
+
+
+def test_open_with_known_issue_false_no_intended_warn(repo, schemas):
+    """За границей: чек стреляет ТОЛЬКО на Intended — Open с false легален."""
+    repo.bug("BUG-057", "Open", extra='known_issue: "false"\n')
+
+    _errors, warns = vf.validate()
+    assert not any("Intended" in w and "known_issue" in w for w in warns)
+
+
 def test_quarantine_without_reason_or_since_is_error(repo, schemas):
     """B3: карантин без причины/времени — слепое пятно SLA-надзора."""
     repo.test_case("TC-060", "Automated", extra="automation_status: quarantined\n")

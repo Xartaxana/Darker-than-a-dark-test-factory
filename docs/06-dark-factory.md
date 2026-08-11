@@ -56,6 +56,19 @@
 | D13 | Явно принял риск / решил не чинить в этом релизе (`resolution: accepted_risk\|wontfix`) | Держим linked TC активными, не блокируем release-gate. Обязателен `resolution_comment` (обоснование человека — validate_frontmatter ловит отсутствие как ошибку). sla-sweep больше не шлёт периодический SLA-варнинг по severity для этого бага — решение уже принято, нагрузка была бы шумом | sla-sweep (гасит bug_open_*), test-strategist (учитывает в стратегии) |
 | D14 | Пометил `known_issue: true` («баг подтверждён, релиз идёт с ним») | Баг остаётся `Open`/`Reopened`, попадает в отдельную секцию дайджеста `factory-status.md`; bug-reporter при новом `APP_BUG` сверяется с known-issue багами В ПЕРВУЮ очередь (не плодит дубли); still-repro (D3) проверяет его на каждой новой сборке независимо от severity («не ухудшился»); sla-sweep не шлёт периодический SLA-варнинг по severity (как D13) | bug-reporter (дедуп), fix-verifier (mode=still-repro), sla-sweep |
 
+**D14-Intended (ESC-029, решение Lead 2026-08-12):** у бага в `status:
+Intended` (поведение принято владельцем как окончательное) `known_issue`
+остаётся `"true"` НАВСЕГДА — семантика поля здесь не «нерешённая
+проблема», а «принятое поведение под периодическим D3-гардом»: D3
+still-repro — единственный механизм, перепрогоняющий регресс-замок
+принятого поведения на новых сборках (P3-кейсы вроде TC-020 отсечены
+фильтром `(p0 or p1)` штатного регресса). Правило fix-verifier «сбросить
+`known_issue` при `Verified`» к `Intended` не применяется (перехода
+`Intended → Verified` в `transitions.yaml` нет — статус терминален).
+Детектор сброса: код-чек `validate_frontmatter.py::check_cross_field_warn`
+(WARN `Intended` без `known_issue: "true"`) — на пути preflight каждого
+прохода qa-loop. Прецедент: BUG-012, D3-проверка 2026-08-11.
+
 Новые поля frontmatter бага для поддержки матрицы (внесены в шаблон
 `docs/templates/bug-report.md`): `status_since`, `last_seen_in`, `reopen_count`,
 `dispute_count`, `regression_of`, `awaiting` (`dev|qa|none`) + раздел `## Обсуждение`

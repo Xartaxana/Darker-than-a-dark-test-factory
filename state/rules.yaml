@@ -97,6 +97,11 @@ rules:
       «не ухудшился» проверяем на каждой сборке независимо от severity)"
     dispatch: fix-verifier
     args: { mode: still-repro }
+    # D14-Intended (ESC-029, Lead 2026-08-12): ветка known_issue:true ловит и
+    # status Intended — это ЕДИНСТВЕННЫЙ механизм, перепрогоняющий регресс-замок
+    # принятого поведения на новых сборках (P3-кейсы отсечены фильтром штатного
+    # регресса). known_issue у Intended держится "true" навсегда; сброс ловит
+    # WARN validate_frontmatter (preflight). Полный текст — docs/06 D14-Intended.
 
   - name: "Починить автотест в карантине/на обслуживании"   # B3, приоритет ВЫШЕ новой автоматизации
     when: "test-case.automation_status == quarantined|needs_maintenance"
