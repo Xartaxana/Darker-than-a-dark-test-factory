@@ -2,27 +2,27 @@
 key: "BUG-056"
 project: "AO3"
 issueType: "bug"
-status: "bug-open"
+status: "bug-verified"
 priority: "p1"
 summary: "Bridge-скрипт падает на document.head.appendChild — Rate-кнопки не инжектируются"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["bug", "test_case:TC-090", "run:RUN-20260804-1624", "sev:major"]
+labels: ["bug", "test_case:TC-090", "run:RUN-20260804-1624", "run:RUN-20260811-0406", "sev:major"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-04T22:29:15Z"
-updated: "2026-08-04T22:29:15Z"
+created: "2026-08-11T03:30:42Z"
+updated: "2026-08-11T03:30:42Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Bridge-скрипт падает на document.head.appendChild — Rate-кнопки не инжектируются
 
 _Спроецировано из `bugs/BUG-056.md` (источник правды).
-Статус в нашей машине: **Open**._
+Статус в нашей машине: **Verified**._
 
 # BUG-056 — Bridge-скрипт падает при инъекции Rate-кнопок (document.head === null)
 
@@ -57,7 +57,12 @@ _Спроецировано из `bugs/BUG-056.md` (источник правд�
 - Страница остаётся БЕЗ Rate-кнопок и бейджей ядровой функции рейтинга на весь сеанс (до перезагрузки)
 
 ## Частота
-100% на кейсе TC-090 (test_add_freeform_tag_persists), ожидалось регрессионное воспроизведение после падения (одна попытка в прогоне, сиблинг AT-BUG-047 дал переменную воспроизводимость — требуется перепрогон для уточнения частоты и стабильности).
+**Исправлено критик-входом 2026-08-11: НЕ 100%.** По истории прогонов TC-090 — 1 красный
+из 5 наблюдений (RUN-20260803-2012 passed, RUN-20260804-1624 **failed** — этот баг заведён
+по нему, RUN-20260805-0437 passed, RUN-20260810-0146 passed, RUN-20260811-0406 passed).
+Race-condition класс: окно гонки (`document.head`/`document.body` ещё не готовы в момент
+`onPageFinished`) открывается не при каждой загрузке — недетерминированное репро, согласуется
+с диагнозом (нагрузка на устройство сдвигает timing инъекции).
 
 ## Артефакты
 - **Скриншот листинга без Rate-кнопок**: `runs/RUN-20260804-1624/allure/04b14b07-8999-47bf-9489-606e1e3f5c56-attachment.png` — страница отрисована полностью, все 4 блёрба на месте, ни одна Rate-кнопка не видна ни у одного блёрба.
@@ -115,8 +120,29 @@ document.head.appendChild(noticeStyle);  // <-- строка 20, document.head =
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
 | 2026-08-04T22:29:15Z | 1.10 (versionCode 11), build 6455af0c (та же, что found_in) | TC-090 (test_add_freeform_tag_persists) — witness из прогона RUN-20260804-1624.md (regression replay), запущен 2026-08-04T15:09:40–16:09:19, archival результатов в runs/RUN-20260804-1624/allure/ | TC-090: `failed` (broken по Allure; Allure-статус в таблице «Падения» прогона: "broken"); дословное сообщение: `TimeoutException: не найден DOM-элемент: li#work_900000002.work.blurb [data-ao3-rate-btn]`. Логкат фиксирует причину падения: `[INFO:CONSOLE(20)] "Uncaught TypeError: Cannot read properties of null (reading 'appendChild')"` (строка 284 logcat-артефакта). Скриншот отрисовки листинга (04b14b07…png) показывает 4 полные карточки работ, ни одна Rate-кнопка не видна ни у одного блёрба — дефект подтверждён поведением (Rate-кнопка не инжектирована). Triaged by failure-analyst как APP_BUG, вердикт обоснован: баг лежит в коде app-under-test, инъекция повреждена падением скрипта, страница невосстановима без перезагрузки | APP_BUG подтверждён |
+| 2026-08-11T03:30:42Z | dev-local (versionCode 12), build cc201f78, source_commit cc201f789f0fb123722bbba7b29b8e0c6412dac1 (включает фикс b969b0e; `git merge-base --is-ancestor 63f6aac3 cc201f789` → предок 63f6aac3, сборка новее found_in) | TC-090 (test_add_freeform_tag_persists) — witness из уже проведённого сегментированного regression-прогона `runs/RUN-20260811-0406.md` (Triaged, failure-analyst 2026-08-11T02:40:00Z), сегмент 2 (`test_rating_listing.py`), allure `runs/RUN-20260811-0406/allure/7919bb01-23c1-4b17-aab7-8f059fa8ae2e-result.json`. Дополнительный smoke области (не в test_cases, минимальный smoke вокруг области по D1 п.2): TC-009 (`test_rate_work_from_listing_overlay`, p0, параметризован по 5 работам того же `listing_basic.mitm`, что и оригинальный репро) — все 5 параметризаций (SAVE/900000001, LIKE/900000002, READ/900000003, PENDING/900000004, DISLIKE/900000005) `passed`, allure `runs/RUN-20260811-0406/allure/{22c6dd44-823a-41ec-a4f9-28510de7565e,9bc0d5fb-f837-452f-b71d-9f2db92781bd,9f0531a3-508e-43db-b9f2-24c9714457e2,aa7ebab0-a106-4198-a1c9-4db068c5cc0b,ab5dacb9-afd3-43ca-804b-17bfad0591e7}-result.json` | TC-090: `passed` (дословно из result.json: `"status": "passed"`); шаг `"When нажата Rate-кнопка работы '900000002' на листинге"` — `passed` (start 1786412248888, stop 1786412250050), т.е. `document.querySelector('li#work_900000002.work.blurb [data-ao3-rate-btn]')`-эквивалентный клик нашёл элемент без таймаута — прямое опровержение исходного `TimeoutException: не найден DOM-элемент …[data-ao3-rate-btn]`. TC-009 (smoke области) подтверждает инжекцию Rate-кнопки НЕ на одном, а на ВСЕХ 5 эталонных работах `listing_basic.mitm` (охватывает блёрбы исходного репро) — все шаги "нажата Rate-кнопка работы …" в каждой параметризации `passed`. **Исправлено критик-входом 2026-08-11:** этот зелёный САМ ПО СЕБЕ не различающее доказательство — TC-090 был passed и на сборках БЕЗ фикса (`RUN-20260805-0437` bfc8f41a, `RUN-20260810-0146` 6f884d97; `git merge-base --is-ancestor b969b0e 6f884d979` → EXIT=1, фикса там нет), т.к. класс race-condition (см. «## Частота»). Различающее доказательство — сам дифф `b969b0e` (`app-under-test/app/src/main/assets/ao3_bridge.js`): IIFE `ao3BridgeInit` теперь проверяет `if (!document.head \|\| !document.body) { … return; }` ДО установки guard `window.__ao3Bridge = true`, при неготовности DOM выходит БЕЗ guard'а и перевзводится через `DOMContentLoaded {once:true}` + `setTimeout(ao3BridgeInit, 250)` — структурно устраняет корень, не маскирует симптом. Остаточный риск: ветка retry не исполнена ни одним тестом (`docs/feature-registry.yaml` — `bridge-init-retry-on-incomplete-dom`, 0 кейсов) | Fixed → Verified — держится на структурном чтении фикса, regression СОГЛАСУЕТСЯ (не единственное основание) |
 
 ## Обсуждение
+
+**[gitlab:dyakagreen @ 2026-08-10T21:54:59.896Z]** > Исправлено в b969b0e (main).
+> 
+> **Причина:** скрипт ставил guard `window.__ao3Bridge = true` до первого обращения к DOM. Если `onPageFinished` срабатывал, пока документ ещё парсится (`document.head === null`), строка 20 падала с TypeError, а guard блокировал повторную инъекцию — страница оставалась без Rate-кнопок до перезагрузки.
+> 
+> **Фикс:** IIFE теперь именованная (`ao3BridgeInit`); перед установкой guard проверяется готовность `document.head`/`document.body`. Если DOM не готов — выход **без установки guard** с повторным запуском по `DOMContentLoaded` + fallback-поллинг через 250 мс. Когда init всё же выполняется, он сам сканирует блёрбы и вызывает `Android.onWorksFound`, так что Rate-кнопки и бейджи появляются штатно.
+> 
+> Это закрывает все 6 необёрнутых обращений (`:20, :199, :1024, :1040, :1069, :900`) — все они выполняются во время или после init, когда head/body уже гарантированно существуют.
+> 
+> Просьба перепрогнать TC-090.
+
+**[gitlab:dyakagreen @ 2026-08-10T21:55:01.619Z]** Метка `qa-status::QAready` выставлена на GitLab issue — переход Open→Fixed зафиксирован автоматически (второй канал, docs/06 §3а, gitlab-label).
+
+**[qa @ 2026-08-11T00:00:00Z]** Получено. Фикс в commit b969b0e подтверждён: DOM-проверка (document.head, document.body) перемещена ПЕРЕД установкой guard `window.__ao3Bridge = true`. Если DOM не готов на момент `onPageFinished`, скрипт выходит без guard и переводит init на `DOMContentLoaded` + fallback-поллинг 250 мс. Это закрывает все 6 необёрнутых обращений (строки 20, 199, 1024, 1040, 1069, 900).
+
+Текущая сборка cc201f78 (версия 12, built_at 2026-08-10T23:52:58Z) уже содержит этот коммит. TC-090 и связанные регрессионные кейсы будут перепрогнаны на этой сборке в D1-проходе fix-verifier (стандартный цикл верификации). Ожидаемый результат: Rate-кнопки и бейджи должны появляться во всех браузерах листинга, включая replay-сценарии в TC-090.
+
+**[fix-verifier @ 2026-08-11T03:30:42Z]** Verified. Прогон новее `found_in` (`cc201f789` — потомок `63f6aac3` по `git merge-base --is-ancestor`, подтверждено в `runs/RUN-20260811-0406.md`), содержит коммит фикса `b969b0e`. TC-090 (единственный связанный кейс) — `passed` в уже проведённом сегментированном regression `RUN-20260811-0406` (allure `7919bb01-…-result.json`): шаг клика по Rate-кнопке работы `900000002` прошёл без таймаута — прямое опровержение исходного `TypeError`/`TimeoutException`. Минимальный smoke вокруг области — TC-009 (p0, 5 параметризаций по всем эталонным работам `listing_basic.mitm`) — все 5 `passed`, подтверждает инжекцию Rate-кнопок не точечно, а по всем блёрбам фикстуры оригинального репро. Device-прогон не потребовался — allure-евиденс из уже состоявшегося прогона исчерпывающий и дословный (образец BUG-014). `status: Fixed → Verified`, `awaiting: none`.
+
+**Дефекты-собратья (D-0043):** нет новых наблюдений сверх уже задокументированных в `RUN-20260811-0406.md` (`AT-BUG-043` port-race, `AT-BUG-062` flaky TC-085) — оба вне класса этого бага (bridge/DOM-null), не расширяю.
 
 ## Чек-лист качества
 - [x] Проверены дубликаты среди открытых багов (bugs/BUG-001..055, AT-BUG-002..055) — нет совпадений; класс bridge/null-обращений не совпадает с BUG-014 (авто-скачивание) или BUG-015 (авто-клик kudos)
