@@ -1,33 +1,33 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-10T20:13:21Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-11T03:58:17Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
-- Сборка: dev-local (versionCode 12), commit `6f884d97`, built_at 2026-08-10T10:38:57Z
-- smoke: Triaged · smoke_freshness_hours: **16.5** (RUN-20260810-0145)
-- regression: Triaged · regression_freshness_hours: **16.4** (RUN-20260810-0146)
-- canary: Triaged · canary_freshness_hours: **152.5** (RUN-20260804-1317)
+- Сборка: dev-local (versionCode 12), commit `cc201f78`, built_at 2026-08-10T23:52:58Z
+- smoke: Triaged · smoke_freshness_hours: **1.2** (RUN-20260811-0405)
+- regression: Triaged · regression_freshness_hours: **24.1** (RUN-20260810-0146)
+- canary: Triaged · canary_freshness_hours: **160.2** (RUN-20260804-1317)
 - Открытые blocker/critical: **0**
-- Известные проблемы (known_issue): **2**
+- Известные проблемы (known_issue): **1**
 - p0_automation_coverage: **100%** (37/37)
 - p1_automation_coverage: **78%** (85/109)
-- Test debt открыт: **0**
-- Карантин автотестов: **0**
+- Test debt открыт: **1** — AT-BUG-062
+- Карантин автотестов: **1** — TC-085
 - Automated без red_probe: **0**
 - Untriaged: **0** · untriaged_failure_age: **0**
 
 ## Сборка под тестом
 
-- dev-local (versionCode 12), commit `6f884d97`, built_at 2026-08-10T10:38:57Z
-- smoke: not_run · regression: not_run
+- dev-local (versionCode 12), commit `cc201f78`, built_at 2026-08-10T23:52:58Z
+- smoke: failed · regression: failed
 
 ## Тест-кейсы (190)
 
 - Draft: **1** · Approved: **38** · Automated: **151**
-- автотесты (B3): active: **151**
+- автотесты (B3): active: **150** · quarantined: **1**
 
 | Область | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
@@ -50,43 +50,33 @@ story-карточки: стадии см. docs/05-board.md §Story
 
 ## Баги (26)
 
-- Open: **23** · Verified: **2** · Intended: **1**
+- Open: **14** · Fixed: **5** · Verified: **6** · Intended: **1**
 - BUG-011 [major] Open — Restore from backup пропускает работы молча, если файл с тем же ao3Id уже лежит в папке загрузок
 - BUG-013 [minor] Open — Смена темы, затем немедленный kill процесса (<100 мс) теряет theme_mode — выбор темы не персистится
-- BUG-014 [major] Open — Авто-скачивание Favorite срабатывает ретроактивно при правке тега ранее отмеченной работы
-- BUG-015 [major] Open — Авто-клик kudos на AO3 срабатывает ретроактивно при правке тега ранее отмеченной работы
 - BUG-016 [major] Open — Undo закрытия вкладки на потолке 10 молча теряет вкладку и её снапшот
 - BUG-017 [major] Open — Быстрое закрытие вкладок → долгий парад снекбаров; подозрение на потерю Undo-токенов при задержке показа
 - BUG-018 [major] Open — DOM-ссылка «Next →» указывает на уже показанную страницу; тап уводит назад
 - BUG-019 [major] Open — Back после автопрыжка плотности не выводит назад — ловушка + рост истории
 - BUG-020 [major] Open — Простановка DISLIKE уводит пользователя со страницы; автонавигация live-push под открытым bottom-sheet
-- BUG-021 [major] Open — Снятие рейтинга через overlay листинга у скачанной работы обнуляет downloadPath и личные теги; правка заметки — то же
-- BUG-022 [major] Open — Панель рейтинга work-страницы при dispose переписывает рейтинг, который пользователь не менял — возврат на Browse после Clear all ratings воскрешает удалённую запись
-- BUG-046 [major] Open — Ручной скан при двух файлах одного ao3Id не сходится: счётчик relinked=2 на одну работу, повторный скан рапортует то же, не становясь 0
-- BUG-047 [major] Open — Удаление скачанного файла из карточки удаляет только один файл; при двух файлах одного ao3Id второй остаётся на диске и воскрешает работу при повторном сканировании
-- BUG-048 [major] Open — Overlay листинга молча перезаписывает title/fandom/wordCount скрейпом текущей страницы — работа исчезает из фандом-фильтра, прыгает в сортировке, а при rating=null пропадает со всех вкладок Library без какого-либо сообщения
 - BUG-049 [minor] Open [wontfix] — Снекбар «Tab closed» перекрывает нижнюю навигацию на узких экранах — кнопка Undo и таб Library недоступны одновременно
 - BUG-050 [minor] Open [accepted_risk] — Длинный заголовок работы в снекбаре Undo обрезается без многоточия — конец слова просто исчезает
 - BUG-051 [minor] Open [wontfix] — Поиск в Library принимает чисто пробельный запрос — список мигает пустой выдачей вместо игнорирования
 - BUG-052 [minor] Open [wontfix] — Scan for downloads не показывает прогресс при большом числе файлов — кнопка выглядит зависшей
-- BUG-056 [major] Open — Bridge-скрипт падает на document.head.appendChild — Rate-кнопки не инжектируются
 - BUG-058 [minor] Open — PROJECT.md ложно отрицает сетевые запросы из приложения; сетевые вызовы присутствуют в SettingsScreen и DownloadRepository
 - BUG-059 [minor] Open — Счётчик снекбара «Opened in background (N tabs)» показывает общее число вкладок вместо числа открытых в фоне
 - BUG-060 [minor] Open — Фоновая вкладка на удалённый локальный файл вечна: после релонча показывает ERR_FILE_NOT_FOUND, Retry не работает, чип деградирует
-- BUG-061 [major] Open — CI молчаливо генерирует throwaway-keystore при отсутствии переменной KEYSTORE_BASE64 — установка поверх падает INSTALL_FAILED_UPDATE_INCOMPATIBLE
 
-## Известные проблемы, known_issue (2)
+## Известные проблемы, known_issue (1)
 
 - BUG-012 [minor] Intended — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
-- BUG-015 [major] Open — Авто-клик kudos на AO3 срабатывает ретроактивно при правке тега ранее отмеченной работы
 
 ## Test debt (1)
 
-- AT-BUG-059 [broken_environment] Fixed — arch_check C1: юнит-тест импортирует framework.screens.base_screen в недопустимой локации (запрет docs/08 C1)
+- AT-BUG-062 [flaky_test] Open — Нестабильный TC-085 (rename filter-profile): «профиль «My renamed search» не найден в списке Settings» в полном регрессе, 3/3 зелёный в изоляции; артефакт падения не содержит секцию Saved AO3 Filters (фолбэк swipe_up возвращает список наверх)
 
-## Прогоны (11)
+## Прогоны (13)
 
-- Triaged: **7** · Closed: **3** · Blocked: **1**
+- Triaged: **9** · Closed: **3** · Blocked: **1**
 
 ## Exploratory
 
@@ -127,5 +117,5 @@ story-карточки: стадии см. docs/05-board.md §Story
 - [2026-08-10T12:52:57Z] **CH-009:followup_tc#2** [sla:charter_followup_unprocessed] — followup_tc[2] без id-токена: «Кейс НЕ должен ассертить «замену» сообщений при серии фоновых открытий. Измеренн…» | нужно: test-designer заводит TC-NNN
 - [2026-08-10T12:52:57Z] **CH-009:followup_tc#3** [sla:charter_followup_unprocessed] — followup_tc[3] без id-токена: «library: состояние списка по вкладкам (#28) — кейс обязан ассертить СОХРАНЕНИЕ с…» | нужно: test-designer заводит TC-NNN
 - [2026-08-10T12:52:57Z] **CH-009:followup_tc#4** [sla:charter_followup_unprocessed] — followup_tc[4] без id-токена: «Вкладка на локальный файл: (а) фоновое открытие с вкладки FILES кладёт в open_ta…» | нужно: test-designer заводит TC-NNN
-- [2026-08-10T12:52:57Z] **CH-009:found_bugs#0** [sla:charter_followup_unprocessed] — found_bugs[0] без id-токена: «КАНДИДАТ (id назначит bug-reporter), minor/UX: счётчик снекбара «Opened in backg…» | нужно: bug-reporter заводит BUG-NNN
-- [2026-08-10T12:52:57Z] **CH-009:found_bugs#1** [sla:charter_followup_unprocessed] — found_bugs[1] без id-токена: «КАНДИДАТ (id назначит bug-reporter), minor: фоновая вкладка на локальный файл пе…» | нужно: bug-reporter заводит BUG-NNN
+- [2026-08-10T23:50:04Z] **BUG-046** [sla:bug_open_major] — major-баг open с 2026-08-03T17:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом — **resolved 2026-08-11**: sla_sweep сработал до gitlab_inbound того же прохода; статус Fixed по GitLab-лейблу дев-коммитом a968f6b, D6-ответ дан
+- [2026-08-10T23:50:04Z] **BUG-048** [sla:bug_open_major] — major-баг open с 2026-08-03T17:30:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом — **resolved 2026-08-11**: та же гонка, статус Fixed по GitLab-лейблу дев-коммитами 7b29bf0/f7553ac, D6-ответ дан
