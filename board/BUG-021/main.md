@@ -2,7 +2,7 @@
 key: "BUG-021"
 project: "AO3"
 issueType: "bug"
-status: "bug-open"
+status: "bug-fixed"
 priority: "p1"
 summary: "Снятие рейтинга через overlay листинга у скачанной работы обнуляет downloadPath и личные теги; правка заметки — то же"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-03T18:35:00Z"
-updated: "2026-08-03T18:35:00Z"
+created: "2026-08-11T00:00:00Z"
+updated: "2026-08-11T00:00:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Снятие рейтинга через overlay листинга у скачанной работы обнуляет downloadPath и личные теги; правка заметки — то же
 
 _Спроецировано из `bugs/BUG-021.md` (источник правды).
-Статус в нашей машине: **Open**._
+Статус в нашей машине: **Fixed**._
 
 # BUG-021 — Правка заметки скачанной работы через overlay листинга обнуляет downloadPath
 
@@ -203,6 +203,28 @@ Regression-lock кейсы дизайн-этапа (follow-up CH-008, `test-desi
 — design-only, ждут test-automator.
 
 Awaiting: dev
+
+**[gitlab:dyakagreen @ 2026-08-10T22:04:19.724Z]** > Исправлено в 7b29bf0 (main).
+> 
+> **Причина:** обе ошибочные ветки overlay-`applyRating` («Save note»/deselect с заметкой и «рейтинг выбран») пересобирали `WorkRating` конструктором из данных страницы — upsert по существующей строке затирал `downloadPath`, `tags` и локальные `title/fandom/wordCount`.
+> 
+> **Фикс:** обе ветки переведены на образец панели work-страницы (`savePanelRating`): сначала `repo.getWorkRating(workId)`, при наличии строки — `existing.copy(rating/comment/tags/timestamp)`, и только при отсутствии строки — новый `WorkRating` из скрейпа (терять нечего). Обновление бейджей и broadcast теперь используют эффективные теги (`savedTags ?: existing.tags`), как в панели.
+> 
+> Покрыты обе двери:
+> - **Дверь 1 (Save note без рейтинга):** `downloadPath` сохраняется, карточка не деградирует до Download-иконки, повторного файла не возникает.
+> - **Дверь 2 (deselect при заметке/тегах):** `comment`, `tags`, `downloadPath` и локальные метаданные сохраняются — симметрично контрольному случаю панели (TC-151).
+> 
+> Побочный эффект: для существующих строк overlay больше не переписывает `title/fandom/wordCount` скрейпом — это пересекается с частью BUG-048 (#16), но BUG-048 остаётся открытым (ветки `rating=null` там шире).
+> 
+> Просьба перепрогнать TC-151/TC-152.
+
+**[gitlab:dyakagreen @ 2026-08-10T22:04:21.122Z]** Метка `qa-status::QAready` выставлена на GitLab issue — переход Open→Fixed зафиксирован автоматически (второй канал, docs/06 §3а, gitlab-label).
+
+**[qa @ 2026-08-11T00:00:00Z]**
+
+Фикс получен. Перепрогон TC-151/TC-152 пойдёт стандартным D1-циклом fix-verifier на новой сборке cc201f78. Код 7b29bf0 соответствует классу дефекта (пересборка WorkRating из данных страницы без сохранения downloadPath/tags) — причина зафиксирована верно.
+
+**Статус для фабрики:** awaiting-dev (fix-verifier начнёт верификацию на построении cc201f78).
 
 ## Чек-лист качества
 - [x] Проверены дубликаты среди открытых багов — совпадений не найдено; сравнено с BUG-014 (ретроактивное скачивание), BUG-015 (kudos-клик), BUG-011 (race скана) — диагностика другая
