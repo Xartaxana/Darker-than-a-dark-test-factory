@@ -2,7 +2,7 @@
 key: "AT-BUG-059"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p2"
 summary: "arch_check C1: юнит-тест импортирует framework.screens.base_screen в недопустимой локации (запрет docs/08 C1)"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-10T13:40:00Z"
-updated: "2026-08-10T13:40:00Z"
+created: "2026-08-11T00:02:00Z"
+updated: "2026-08-11T00:02:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # arch_check C1: юнит-тест импортирует framework.screens.base_screen в недопустимой локации (запрет docs/08 C1)
 
 _Спроецировано из `bugs/AT-BUG-059.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # AT-BUG-059 — Импорт framework.screens.base_screen в юнит-тесте нарушает arch_check C1
 
@@ -62,6 +62,7 @@ from framework.screens.base_screen import BaseScreen
 | Дата | Версия сборки | Решение | Статус |
 |---|---|---|---|
 | 2026-08-10 | framework commit `9247929` (ALLOWLIST-исключение `("tests/test_swipe_to_text_settle_unit.py", "locators")` в `scripts/arch_check.py`, внёс Lead по рекомендации test-maintainer, см. Обсуждение) | ALLOWLIST-исключение (кандидат 1) | Fixed |
+| 2026-08-11 | framework HEAD `d70f17e` (потомок fix-коммита `9247929`, `git log -1 -- scripts/arch_check.py` подтверждает `9247929` как последнюю правку файла) | Документная верификация (test_debt/broken_environment, устройство не требуется): `python scripts/arch_check.py` → `[WARN] framework/tests/test_swipe_to_text_settle_unit.py:43 ...` / `:44 ...` (обе строки дословно совпадают с зафиксированными в реплике test-maintainer 2026-08-10T13:40:00Z), `arch_check: ошибок 0, предупреждений 2`. `Invoke-Pytest tests/test_swipe_to_text_settle_unit.py -q` → `.....` (5 dots), `5 passed in 0.09s`, `PYTEST_EXIT=0`. `test_cases: []` — carve-out test_debt/broken_environment (DoD бага не содержит отдельной демонстрации сверх этих двух команд — они и есть DoD, буквально исполнены живым прогоном). | Verified |
 
 ## Обсуждение
 
@@ -140,6 +141,16 @@ ALLOWLIST — только предложение, правку `scripts/arch_ch
 Файл не переносился (никакого диффа в `framework/tests/*` этой сессией — предыдущая реплика
 это уже фиксировала). `status: Open → Fixed`. Лок не переустанавливался (был уже снят
 предыдущей репликой).
+
+**[fix-verifier @ 2026-08-11T00:02:00Z]** Верификация mode=verify (D1). `test_cases: []` —
+штатный carve-out для `type: test_debt` в инфраструктуре (docs/06, прецеденты AT-BUG-007/011/
+012/013/014/017/025/027/031): у долга «ALLOWLIST-исключение arch_check» привязываемых TC не
+существует в принципе. Замена — DoD-демонстрация из тела бага исполнена буквально живым
+прогоном (не чтением/пересказом кода): обе команды DoD прогнаны сейчас на HEAD `d70f17e`
+(потомок fix-коммита `9247929`, сверено `git log -1 -- scripts/arch_check.py`), вывод дословно
+совпал с ожидаемым по DoD и с зафиксированным в реплике test-maintainer 2026-08-10. Устройство
+не требовалось (test_debt/broken_environment, документная верификация). `status: Fixed →
+Verified`, `known_issue` уже `"false"` (изменений не требует).
 
 ## Чек-лист качества
 - [x] Проверено нарушение правила (docs/08 C1 и arch_check вывод)
