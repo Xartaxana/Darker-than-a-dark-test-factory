@@ -13,12 +13,26 @@ created. Details: session not created from no such execution context:
 loader has changed while resolving nodes
 ```
 
+**Рецидив НОВОЙ сигнатурой (test-maintainer, 2026-08-11, `runs/RUN-20260811-0405.md`,
+TC-009).** Тот же choke point оборвал handshake ДРУГИМ хвостом сообщения:
+
+```
+selenium.common.exceptions.WebDriverException: A new session could not be
+created. Details: session not created from no such execution context:
+uniqueContextId not found
+```
+
+Маркер расширен с одной строки до НАБОРА известных сигнатур
+(`_WEBVIEW_SWITCH_RACE_SIGNATURES`) — классовая форма, не общий `except
+WebDriverException`.
+
 Эта проба — синтетическая гонка БЕЗ реального устройства (тот же паттерн,
 что `test_navigate_transient_race_unit.py` для choke point 1): фейковый
 `driver.switch_to.context()` кидает РЕАЛЬНЫЙ `WebDriverException` заданное
 число раз перед успехом/никогда. Проверяет:
-1. Ровно эта сигнатура ретраится, `in_webview` прозрачно восстанавливается
-   (yield происходит, `to_native` вызывается в finally как обычно).
+1. Обе известные сигнатуры набора ретраятся по отдельности, `in_webview`
+   прозрачно восстанавливается (yield происходит, `to_native` вызывается в
+   finally как обычно).
 2. Ретрай bounded — исчерпание попыток поднимает исходный
    `WebDriverException` наружу `in_webview`.
 3. ЛЮБАЯ ДРУГАЯ сигнатура `WebDriverException` (в т.ч. родственная
@@ -42,7 +56,7 @@ from selenium.common.exceptions import WebDriverException
 
 from framework.core.contexts import (
     _WEBVIEW_SWITCH_RACE_RETRIES,
-    _WEBVIEW_SWITCH_RACE_SIGNATURE,
+    _WEBVIEW_SWITCH_RACE_SIGNATURES,
     in_webview,
 )
 
@@ -109,6 +123,16 @@ def _webview_switch_race_exc() -> WebDriverException:
     )
 
 
+def _webview_switch_race_exc_unique_context_id() -> WebDriverException:
+    """Рецидив 2026-08-11 (`RUN-20260811-0405.md`, TC-009) — ТОТ ЖЕ choke
+    point, ДРУГОЙ хвост сообщения chromedriver."""
+    return WebDriverException(
+        "A new session could not be created. Details: session not created "
+        "from no such execution context: uniqueContextId not found "
+        "(chrome=113.0.5672.136)"
+    )
+
+
 def _unrelated_webdriver_exc() -> WebDriverException:
     return WebDriverException("Message: chrome not reachable")
 
@@ -125,9 +149,14 @@ def _navigate_race_signature_exc() -> WebDriverException:
 @pytest.mark.p2
 @allure.id("AT-BUG-047-in-webview-retries-narrow-race-signature")
 @allure.title("Проба: in_webview() ретраит ТОЛЬКО узкую сигнатуру choke point 2 и входит в контекст без исключения (device-free)")
-def test_in_webview_retries_and_recovers_from_race_signature():
+@pytest.mark.parametrize(
+    "exc_factory",
+    [_webview_switch_race_exc, _webview_switch_race_exc_unique_context_id],
+    ids=["loader-has-changed", "unique-context-id-not-found"],
+)
+def test_in_webview_retries_and_recovers_from_race_signature(exc_factory):
     assert _WEBVIEW_SWITCH_RACE_RETRIES >= 3, "проба рассчитана на бюджет >=3 попыток"
-    driver = _FakeContextRacingDriver(_webview_switch_race_exc, fail_times=2)
+    driver = _FakeContextRacingDriver(exc_factory, fail_times=2)
 
     with in_webview(driver, timeout=5) as name:
         assert name == driver.webview_context_name
@@ -144,16 +173,24 @@ def test_in_webview_retries_and_recovers_from_race_signature():
 @pytest.mark.p2
 @allure.id("AT-BUG-047-in-webview-race-retry-is-bounded")
 @allure.title("Проба: ретрай choke point 2 bounded — исчерпание попыток поднимает исходное исключение наружу in_webview")
-def test_in_webview_race_retry_bounded_reraises_after_exhaustion():
+@pytest.mark.parametrize(
+    "exc_factory",
+    [_webview_switch_race_exc, _webview_switch_race_exc_unique_context_id],
+    ids=["loader-has-changed", "unique-context-id-not-found"],
+)
+def test_in_webview_race_retry_bounded_reraises_after_exhaustion(exc_factory):
     driver = _FakeContextRacingDriver(
-        _webview_switch_race_exc, fail_times=_WEBVIEW_SWITCH_RACE_RETRIES + 5
+        exc_factory, fail_times=_WEBVIEW_SWITCH_RACE_RETRIES + 5
     )
 
     with pytest.raises(WebDriverException) as exc_info:
         with in_webview(driver, timeout=5):
             pytest.fail("контекст не должен быть достигнут — все попытки провалены")
 
-    assert _WEBVIEW_SWITCH_RACE_SIGNATURE in str(exc_info.value)
+    assert any(sig in str(exc_info.value) for sig in _WEBVIEW_SWITCH_RACE_SIGNATURES), (
+        f"переброшенное исключение обязано нести один из известных маркеров "
+        f"набора {_WEBVIEW_SWITCH_RACE_SIGNATURES}, получили: {exc_info.value}"
+    )
     assert driver.switch_calls == _WEBVIEW_SWITCH_RACE_RETRIES, (
         f"ретрай обязан быть bounded ровно {_WEBVIEW_SWITCH_RACE_RETRIES} "
         f"попытками, получили {driver.switch_calls}"
