@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-10T13:56:24Z"
-updated: "2026-08-10T13:56:24Z"
+created: "2026-08-11T00:00:00Z"
+updated: "2026-08-11T00:00:00Z"
 archived: false
 resolution: null
 ---
