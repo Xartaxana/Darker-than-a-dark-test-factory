@@ -510,8 +510,12 @@ def test_no_non_whitelisted_onclick_candidates_on_live_work_page(driver):
     # автоматизации», явная граница, не убрана молча).
     app_steps.wait_ui_ready(driver)
     browser_steps.open_live_listing(driver, browser_steps.LIVE_LISTING_URL)
-    work_id = browser_steps.assert_blurb_selector_matches_headings(driver, min_count=1)[0]
-    rating_steps.open_work_page(driver, work_id)
+    work_ids = browser_steps.assert_blurb_selector_matches_headings(driver, min_count=1)
+    # TEST_BUG fix (test-maintainer, 2026-08-11, runs/RUN-20260811-0405.md):
+    # голова ленты «Latest Works» волатильна (работа может быть удалена/скрыта
+    # между скрапом листинга и навигацией) — перебор кандидатов с проверкой
+    # живучести вместо слепого work_ids[0].
+    work_id = rating_steps.open_live_work_page(driver, work_ids)
 
     # When в JS-контексте страницы выполняется ЕДИНЫЙ подсчёт, симметричный
     # предикату самого guard'а (`ao3_bridge.js:1155`): `[onclick]`-узлы

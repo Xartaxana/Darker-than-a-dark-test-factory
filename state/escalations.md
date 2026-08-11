@@ -1471,8 +1471,6 @@ resolved при закрытии.
 - [2026-08-10T12:52:57Z] **CH-009:followup_tc#2** [sla:charter_followup_unprocessed] — followup_tc[2] без id-токена: «Кейс НЕ должен ассертить «замену» сообщений при серии фоновых открытий. Измеренн…» | нужно: test-designer заводит TC-NNN
 - [2026-08-10T12:52:57Z] **CH-009:followup_tc#3** [sla:charter_followup_unprocessed] — followup_tc[3] без id-токена: «library: состояние списка по вкладкам (#28) — кейс обязан ассертить СОХРАНЕНИЕ с…» | нужно: test-designer заводит TC-NNN
 - [2026-08-10T12:52:57Z] **CH-009:followup_tc#4** [sla:charter_followup_unprocessed] — followup_tc[4] без id-токена: «Вкладка на локальный файл: (а) фоновое открытие с вкладки FILES кладёт в open_ta…» | нужно: test-designer заводит TC-NNN
-- [2026-08-10T12:52:57Z] **CH-009:found_bugs#0** [sla:charter_followup_unprocessed] — found_bugs[0] без id-токена: «КАНДИДАТ (id назначит bug-reporter), minor/UX: счётчик снекбара «Opened in backg…» | нужно: bug-reporter заводит BUG-NNN
-- [2026-08-10T12:52:57Z] **CH-009:found_bugs#1** [sla:charter_followup_unprocessed] — found_bugs[1] без id-токена: «КАНДИДАТ (id назначит bug-reporter), minor: фоновая вкладка на локальный файл пе…» | нужно: bug-reporter заводит BUG-NNN
 
 ## ESC-023 — test-automator TC-177..180 (батч 2, story #28): 2 идентичных env-класс фейла на emulator-5554, package-сервис устройства не отвечает
 
@@ -1528,3 +1526,167 @@ resolved при закрытии.
   `python scripts/validate_frontmatter.py` → «ошибок 0, предупреждений 0»,
   `python scripts/arch_check.py` → «ошибок 0, предупреждений 2» (пред-существующие
   allowlisted). Батч TC-177..180 закрыт полностью. Эскалация **resolved**.
+- [2026-08-10T23:50:04Z] **BUG-046** [sla:bug_open_major] — major-баг open с 2026-08-03T17:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом — **resolved 2026-08-11**: sla_sweep сработал до gitlab_inbound того же прохода; статус Fixed по GitLab-лейблу дев-коммитом a968f6b, D6-ответ дан
+- [2026-08-10T23:50:04Z] **BUG-048** [sla:bug_open_major] — major-баг open с 2026-08-03T17:30:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом — **resolved 2026-08-11**: та же гонка, статус Fixed по GitLab-лейблу дев-коммитами 7b29bf0/f7553ac, D6-ответ дан
+
+## ESC-024 — AT-BUG-047 рецидив новой сигнатурой сразу после Verified; переход Verified→Reopened отсутствует в transitions.yaml
+
+- Артефакт: `bugs/AT-BUG-047.md` (status: Verified), `runs/RUN-20260811-0405.md` (TC-009,
+  вердикт TEST_BUG failure-analyst 2026-08-11)
+- С какого времени: 2026-08-11T02:40:00Z (триаж smoke-прогона RUN-20260811-0405)
+- Причина: AT-BUG-047 (fail-open гонка WebView-контекста, replay-навигация) был доведён до
+  Verified фиксом f3c6930. Первый же smoke-прогон ПОСЛЕ этого верификации (RUN-20260811-0405,
+  сборка cc201f78) снова уронил TC-009 на том же choke point (`core/contexts.py:58`,
+  `_switch_to_webview_with_race_retry`), но с НОВОЙ сигнатурой ошибки
+  (`uniqueContextId not found` вместо `loader has changed while resolving nodes`) — узкий
+  retry-фильтр `contexts.py:45` (`_WEBVIEW_SWITCH_RACE_SIGNATURE`, одна литеральная подстрока)
+  не покрывает вариант, исключение переброшено на первой попытке. failure-analyst
+  классифицировал TEST_BUG, маршрут — test-maintainer (расширить набор сигнатур choke point,
+  классовая форма, не общий `except WebDriverException`).
+- **Схемный пробел:** `schemas/transitions.yaml` не содержит перехода `Verified → Reopened`
+  (только `Fixed → Reopened by fix-verifier`) — машина статусов не рассчитана на рецидив
+  ПОСЛЕ верификации той же новой сигнатурой. failure-analyst не трогал frontmatter бага
+  (не его мандат).
+- Сиблинг-находки того же прохода (D-0043, доклад failure-analyst, scope не расширял):
+  (а) `framework/core/driver_factory.py:64-67` восстанавливает эмулятор БЕЗ `-Gpu` —
+  env-предпосылка `AO3_EMU_GPU=host` (для TC-078/AT-BUG-021) молча деградирует до
+  `swiftshader_indirect` после первого device-recovery (подтверждено сменой GPU-параметра
+  в командной строке qemu между PID); (б) runbook-строка `AO3_EMU_GPU=host`, обещанная
+  решением 2026-08-04, отсутствует в docs/HANDOFF.md (grep пуст при позитивном контроле);
+  (в) тот же класс «retry-фильтр = одна литеральная подстрока» — `framework/core/
+  navigate.py::_TRANSIENT_RACE_SIGNATURE`, кандидат в тот же классовый фикс; (г) мёртвый
+  прокси-адрес `10.0.2.2:8080` пережил перезапуск эмулятора на свежей загрузке (снят вручную
+  канонической формой, teardown-цепочка `clear_device_proxy` не чинена).
+- Что нужно от полного Lead: (1) решение по AT-BUG-047 — новая test_debt-запись (сиблинг,
+  новая сигнатура того же choke point) ИЛИ схемная правка `transitions.yaml`
+  (`Verified → Reopened`, кто актор); (2) B4-диспатч test-maintainer на TC-118 (test_bug,
+  волатильная живая лента) и TC-009/AT-BUG-047-сиблинг тем же/следующим проходом (rules.yaml
+  правило 5, выше D1 по приоритету); (3) сиблинги (а)-(г) — в очередь механизмов/test_debt по
+  усмотрению Lead, не блокируют текущий проход.
+- Статус: **open**
+
+## ESC-025 — TC-118 (TEST_BUG fix, п.(2) ESC-024): фикс готов, 3х-зелёная верификация fail-fast остановлена — 3/3 идентичных `TimeoutException` на `wait_ui_ready` ДО кода фикса
+
+- Артефакт: `test-cases/canary/TC-118.md` (`status: Automated`, lock
+  `test-maintainer:2026-08-11T02:50:00Z` — НЕ снят, снимет координатор),
+  `framework/tests/canary/test_ao3_selectors.py`,
+  `framework/steps/browser_steps.py`, `framework/steps/rating_steps.py`
+- С какого времени: 2026-08-11T03:00:00Z (истинный UTC, `(Get-Date).
+  ToUniversalTime()`)
+- Причина: диспатч по правилу «Починить тест по TEST_BUG…» (п.(2) `ESC-024`,
+  root_cause failure-analyst `runs/RUN-20260811-0405.md`). Код фикса
+  завершён и статичен чист (`arch_check`: ошибок 0 по МОИМ файлам —
+  1 предсуществующая ошибка в `framework/tests/
+  test_zzz_at_bug_047_recidive_red_probe_SCRATCH.py`, untracked-файл ДРУГОЙ
+  параллельной сессии, не мой, не трогал; `validate_frontmatter`: ошибок 0,
+  предупреждений 0). Верификация «3 зелёных подряд»
+  (`Invoke-Pytest tests/canary/test_ao3_selectors.py -k
+  test_no_non_whitelisted_onclick_candidates_on_live_work_page -q`)
+  недостижима: **3 попытки подряд, 3 падения**, все на ОДНОМ и том же шаге
+  `app_steps.wait_ui_ready` (`steps/app_steps.py:100`,
+  `EC.presence_of_element_located(android.webkit.WebView)`) — это шаг
+  ДО первой строки, которую трогает мой фикс (`open_live_listing`/
+  `open_live_work_page` даже не начинают выполняться), поэтому падения НЕ
+  говорят о качестве самого фикса ни в одну сторону:
+  - Попытка 1: `TimeoutException`, стек — `NoSuchElementError` (элемент не
+    найден за бюджет).
+  - Попытка 2: `TimeoutException`, стек — `NoSuchDriverError: A session is
+    either terminated or not started` (сессия Appium умерла между setup и
+    этим шагом).
+  - Попытка 3 (ПОСЛЕ диагностического мини-прогона ниже, все сигналы
+    зелёные): `TimeoutException`, стек снова `NoSuchElementError` — идентично
+    попытке 1.
+- Диагностический мини-прогон (выполнен ПОСЛЕ попытки 2, ДО попытки 3, по
+  протоколу docs/06 §5): (1) `. tasks.ps1; Get-Device` → `DEVICE:
+  emulator-5554` (устройство живо); (2) Appium `GET :4723/status` →
+  `{"ready":true,...,"version":"3.5.2"}` (сервер здоров); (3)
+  `adb shell dumpsys window` → `mCurrentFocus=…com.example.ao3_wrapper/
+  …MainActivity` И `mFocusedApp` то же самое (приложение реально в фокусе на
+  экране, не крашнулось и не свёрнуто); (4) `adb shell ps -A | grep settings`
+  → `io.appium.settings` запущен (позитивный контроль формы: класс
+  AT-BUG-021 B4 «Appium Settings app is not running» — НЕ этот случай); (5)
+  `Get-CimInstance … qemu-system-x86_64.exe` → **ОДИН И ТОТ ЖЕ** `PID=1088`,
+  `CreationDate=11.08.2026 4:36:35`, все 3 попытки — процесс НЕ
+  перезапускался (device-liveness guard не сработал ни разу: `recoveries
+  this session = 0/2` во всех 3 логах); (6) Windows Event Log, узкое окно
+  15 минут вокруг всех 3 попыток (`Id=1000`, фильтр `qemu-system`) → **NO
+  MATCHING EVENTS** — качественно ДРУГОЙ класс отказа, НЕ qemu-краш
+  `0xc0000005` (единственный крэш в Event Log за 30 минут датирован
+  `4:36:10` местного — это ДО начала моих попыток, тот же краш, что уже
+  задокументирован в `runs/RUN-20260811-0405.md` retry_result попытки `h`
+  failure-analyst; после него эмулятор поднялся заново как PID 1088 и с тех
+  пор не падал).
+- Причинное заявление, которое ДАННЫЕ этой сессии ПОДТВЕРЖДАЮТ (калибровка №3
+  CLAUDE.md, не сильнее): устройство/Appium/приложение по всем позитивным
+  сверкам ЖИВЫ И В ФОКУСЕ, но Appium стабильно НЕ находит
+  `android.webkit.WebView` в дереве за бюджет `wait_ui_ready` — паттерн ближе
+  к «первая сессия после рестарта не осела» (AT-BUG-021 B4), но переживший
+  УЖЕ 3 отдельных Appium-сессии подряд (не только первую), что этим известным
+  классом не объясняется полностью — вклад остаточной деградации ПОСЛЕ
+  qemu-краха 4:36:10 (та же цепочка recovery, что и retry_result попытки `h`
+  отчёта failure-analyst) не исключён, но и не доказан изолированным A/B.
+- Почему остановился здесь (по протоколу, не по решению): 2 идентичных класса
+  `TimeoutException` на одном и том же шаге (`wait_ui_ready`) — буквальный
+  триггер CLAUDE.md «Fail-fast среды» (docs/06 §5); диагностический
+  мини-прогон выполнен (см. выше), 3-я попытка была ПОСЛЕ него (все сигналы
+  зелёные на момент попытки), тоже упала тем же классом — продолжать
+  «3 зелёных подряд» дальше означало бы отлаживать/верифицировать тест на
+  битой среде (правило прямо запрещает: падение по среде неотличимо от
+  падения по коду).
+- Что нужно от человека/Lead: (а) диагностика на живом окружении — почему
+  `android.webkit.WebView` не появляется в Appium-дереве при визуально живом
+  focused-приложении (не мандат test-maintainer; кандидат — остаточная
+  деградация после недавнего qemu-краха recovery, требует ремонта среды,
+  возможно холодного `Start-Emulator -WritableSystem` вместо доверия
+  унаследованному PID 1088); (б) после стабилизации — просто повторить 3х
+  прогон `Invoke-Pytest tests/canary/test_ao3_selectors.py -k
+  test_no_non_whitelisted_onclick_candidates_on_live_work_page -q` БЕЗ
+  изменений в `browser_steps.py`/`rating_steps.py`/тесте (фикс готов, диффы
+  проверены статически, ждут только живой верификации); (в) сиблинг: тот же
+  проход/эскалация (`ESC-024`) называет TC-009/AT-BUG-047-рецидив вторым
+  B4-пунктом на тот же прогон — я его НЕ трогал (чужие незакоммиченные пути
+  `framework/core/contexts.py`, `test-cases/rating/TC-009.md`,
+  `framework/tests/test_zzz_at_bug_047_recidive_red_probe_SCRATCH.py` уже
+  модифицированы/добавлены ДРУГОЙ параллельной сессией на момент этого
+  диспатча — правило 4 CLAUDE.md, не мой scope).
+- Статус: **open** — код-фикс TC-118 в дереве (не закоммичен), лок
+  `test-maintainer:2026-08-11T02:50:00Z` на `test-cases/canary/TC-118.md` НЕ
+  снят (снимет координатор вместе с решением по (а)).
+
+**Продолжение (attempt 2, тот же test-maintainer, 2026-08-11T03:22:16Z) —
+рецидив ТОГО ЖЕ класса, коллизия двух device-воркеров ИСКЛЮЧЕНА как фактор:**
+координатор подтвердил устройство здоровым непосредственно перед диспатчем,
+параллельного TC-009-воркера в этом окне не было (сериализовано). Свежая
+сверка НЕПОСРЕДСТВЕННО перед прогоном: `. tasks.ps1; Get-Device` →
+`DEVICE: emulator-5554`; Appium `GET :4723/status` → `{"ready":true,...,
+"version":"3.5.2"}`. Прогон 1/1 (дальше не продолжал — см. ниже):
+`Invoke-Pytest tests/canary/test_ao3_selectors.py -k
+test_no_non_whitelisted_onclick_candidates_on_live_work_page -q` →
+`1 failed in 26.63s`, `PYTEST_EXIT=1`, падение на ТОМ ЖЕ шаге
+`app_steps.wait_ui_ready` (`steps\app_steps.py:100`,
+`EC.presence_of_element_located(android.webkit.WebView)`),
+`TimeoutException` / `NoSuchElementError` — идентично попыткам 1 и 3
+предыдущего окна. Диагностика СРАЗУ ПОСЛЕ падения: `adb shell dumpsys window`
+→ `mCurrentFocus=Window{...com.example.ao3_wrapper/...MainActivity}` И
+`mFocusedApp` то же самое — приложение по-прежнему в фокусе, не крашнулось.
+
+Это 4-е падение подряд идентичным классом на идентичном шаге за два окна
+(3 в предыдущем + 1 сейчас), последнее — в изоляции (никакой параллельной
+device-работы, устройство подтверждено здоровым за секунды до прогона). Это
+ИСКЛЮЧАЕТ гипотезу «коллизия двух device-воркеров была вкладом» как
+достаточное объяснение (вклад не доказывался и раньше — калибровка №3
+CLAUDE.md; теперь есть прямое опровержение: рецидив без коллизии). Root
+cause глубже, чем PID 1088/остаточная деградация после qemu-краха —
+специфика ещё не локализована. По протоколу CLAUDE.md «Fail-fast среды»
+(2 идентичных env-класса на одном шаге = среда деградирована) дальнейшие
+прогоны ОСТАНОВЛЕНЫ после 1-й попытки этого окна — 2-я и 3-я попытки не
+выполнялись: продолжать означало бы отлаживать/верифицировать тест на
+битой среде, что правило прямо запрещает. `app_steps.wait_ui_ready` НЕ
+трогал (вне scope test-maintainer по этой задаче).
+
+Статус: **open**, эскалация усилена — рецидив в изоляции сужает
+диагностическое поле для Lead/человека (не device-контеншн; кандидаты уже
+глубже — WebView debug-bridge/chromedriver-маппинг/уровень
+uiautomator2-driver). Лок `test-maintainer:2026-08-11T02:50:00Z` на
+`test-cases/canary/TC-118.md` НЕ снят (координатор снимет вместе с решением).
+

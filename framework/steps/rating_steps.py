@@ -46,6 +46,47 @@ def open_work_page(driver, work_id: str):
     BrowserScreen(driver).open_work(work_id)
 
 
+@allure.step("When открыта первая ЖИВАЯ (не 404/интерстишл) work-страница из кандидатов {candidate_ids}")
+def open_live_work_page(driver, candidate_ids: list[str], max_attempts: int = 5) -> str:
+    """TC-118 (TEST_BUG fix, test-maintainer, 2026-08-11, `runs/RUN-20260811-0405.md`
+    root_cause): `open_work_page` сама по себе не проверяет живучесть id —
+    навигация на голову волатильной живой ленты AO3 («Latest Works»,
+    `browser_steps.LIVE_LISTING_URL`) может попасть на работу, удалённую/
+    скрытую между скрапом листинга и навигацией, AO3 в этом случае штатно
+    отдаёт 404 (не Cloudflare, как ошибочно предполагала прежняя диагностика).
+
+    Перебирает `candidate_ids` ПО ПОРЯДКУ (голова листинга — самый свежий
+    кандидат первым, порядок листинга не переставляется) и открывает каждый,
+    проверяя двойной якорь идентичности документа
+    (`browser_steps.probe_live_work_page_identity`: pathname `^/works/\\d` +
+    маркер реального контента, `selectors.WORK_PAGE_CONTENT_MARKERS`) — тот же
+    контракт, что финальный ассерт TC-118 использует ДЛЯ ЭТОЙ же страницы, но
+    здесь БЕЗ исключения при неудаче: неживой кандидат пропускается (с
+    Allure-заметкой, включающей `title` страницы — отличает штатную AO3 404 от
+    Cloudflare-интерстишла и прочего, не гадает вслепую), пробуется следующий.
+    Бюджет ограничен `max_attempts` (не безусловный перебор всей ленты).
+    Возвращает id первого живого кандидата; если ни один из `max_attempts`
+    первых кандидатов не живой — падает с перечнем всех попыток (сигнал того,
+    что живая лента AO3 деградировала сильнее, чем единичный мёртвый id, и
+    тест не должен угадывать дальше)."""
+    attempted: list[str] = []
+    for work_id in candidate_ids[:max_attempts]:
+        open_work_page(driver, work_id)
+        identity = browser_steps.probe_live_work_page_identity(driver)
+        attempted.append(f"{work_id}: {identity}")
+        if identity["is_live"]:
+            return work_id
+        allure.attach(
+            f"кандидат {work_id} НЕ живая work-страница: {identity}",
+            name=f"tc-118-fallback-skip-{work_id}",
+            attachment_type=allure.attachment_type.TEXT,
+        )
+    raise AssertionError(
+        f"ни один из {len(candidate_ids[:max_attempts])} кандидатов живой ленты AO3 не "
+        f"отдал реальный work-контент за {max_attempts} попыток: {attempted}"
+    )
+
+
 @allure.step("When на странице работы выставлен рейтинг {rating}")
 def rate_current_work(driver, rating: str):
     # Встроенная панель WorkRatingPanel (RatingMenu) на странице работы, как и

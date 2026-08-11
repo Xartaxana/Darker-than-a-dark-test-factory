@@ -539,6 +539,64 @@ def assert_tap_zone_div_tapped(driver) -> None:
     assert_tap_marker_tapped(driver, selectors.TAP_ZONE_DIV)
 
 
+# TC-118 (TEST_BUG fix, test-maintainer, 2026-08-11, runs/RUN-20260811-0405.md):
+# `open_live_listing` возвращает голову самой волатильной живой ленты AO3
+# («Latest Works») — работа за id может быть удалена/скрыта между скрапом
+# листинга и навигацией на её work-страницу, AO3 в этом случае штатно отдаёт
+# 404. Лёгкая (БЕЗ подсчёта onclick-кандидатов, БЕЗ исключения при неудаче)
+# проверка того же двойного якоря идентичности документа, что финальный ассерт
+# ниже (`pathname` + `WORK_PAGE_CONTENT_MARKERS`) — используется
+# `rating_steps.open_live_work_page` для перебора кандидатов ленты: пробует
+# каждого по очереди, пока не найдёт реально живую work-страницу.
+def probe_live_work_page_identity(driver) -> dict:
+    """Возвращает `{"pathname", "title", "has_content_marker", "is_live"}` —
+    `is_live` истинен ТОЛЬКО когда pathname матчит `^/works/\\d` (симметрично
+    guard'у `ao3_bridge.js:1154`) И присутствует хотя бы один узел реального
+    контента work-страницы (`selectors.WORK_PAGE_CONTENT_MARKERS`, те же узлы,
+    что читает сам `ao3_bridge.js:1139-1142`). `title` — `document.title`
+    страницы, диагностический сигнал, отличающий класс нештатной страницы
+    (штатная AO3 404 несёт `"404 Error | Archive of Our Own"` в title;
+    Cloudflare-интерстишл — `"Just a moment..."`) — не используется для
+    решения `is_live` (оба класса одинаково "не живые"), только для
+    последующей диагностики вызывающим кодом."""
+    with contexts.in_webview(driver):
+        wait_until(
+            driver,
+            lambda d: d.execute_script("return document.readyState;") == "complete",
+            timeout=settings.WEBVIEW_LOAD_TIMEOUT,
+            message="work-страница не завершила загрузку (readyState != complete)",
+        )
+        result = driver.execute_script(
+            "return {pathname: window.location.pathname, "
+            "        title: document.title, "
+            "        hasContentMarker: !!document.querySelector(arguments[0])};",
+            selectors.WORK_PAGE_CONTENT_MARKERS,
+        )
+    pathname = result["pathname"]
+    has_content_marker = bool(result["hasContentMarker"])
+    is_live = bool(re.match(r"^/works/\d", pathname)) and has_content_marker
+    return {
+        "pathname": pathname,
+        "title": result["title"],
+        "has_content_marker": has_content_marker,
+        "is_live": is_live,
+    }
+
+
+def _diagnose_non_live_page(title: str) -> str:
+    """TC-118 root_cause (`runs/RUN-20260811-0405.md`): прежняя диагностика
+    безусловно предполагала Cloudflare-интерстишл, хотя реальной причиной чаще
+    оказывается штатная страница AO3 «Error 404» (работа удалена/скрыта) —
+    разные классы, требующие разного триажа. Классифицирует ПО title страницы,
+    не гадает; неопознанный title называется явно, не подгоняется под один из
+    известных классов."""
+    if "404" in title:
+        return f"штатная страница ошибки AO3 (404), title={title!r}"
+    if "just a moment" in title.lower():
+        return f"вероятен Cloudflare bot-check интерстишл (R-03), title={title!r}"
+    return f"неопознанная нештатная страница, title={title!r}"
+
+
 # TC-118: числовая проба ПРЕДПОСЫЛКИ guard'а тап-зон на живой work-странице
 # (bridge-tap-zone-guard, docs/01 §9 «Дополнение области», доработка attempt 2
 # B1/B2). ЕДИНЫЙ предикат, симметричный `ao3_bridge.js:1155` (не два изолированных
@@ -578,6 +636,7 @@ def assert_no_non_whitelisted_onclick_candidates(driver) -> int:
             "  var nodes = Array.from(document.body.querySelectorAll('[onclick]'))"
             "    .filter(function(n) { return !n.closest(whitelist); });"
             "  return {pathname: window.location.pathname, "
+            "          title: document.title, "
             "          hasContentMarker: !!document.querySelector(contentMarkers), "
             "          count: nodes.length, "
             "          details: nodes.map(function(n) { return n.outerHTML.slice(0, 200); })};"
@@ -586,10 +645,11 @@ def assert_no_non_whitelisted_onclick_candidates(driver) -> int:
             selectors.WORK_PAGE_CONTENT_MARKERS,
         )
     pathname = result["pathname"]
+    title = result["title"]
     has_content_marker = bool(result["hasContentMarker"])
     count = int(result["count"])
     allure.attach(
-        f"pathname={pathname!r} has_content_marker={has_content_marker} "
+        f"pathname={pathname!r} title={title!r} has_content_marker={has_content_marker} "
         f"count={count} details={result['details']!r}",
         name="tc-118-non-whitelisted-onclick-candidates",
         attachment_type=allure.attachment_type.TEXT,
@@ -597,14 +657,19 @@ def assert_no_non_whitelisted_onclick_candidates(driver) -> int:
     assert re.match(r"^/works/\d", pathname), (
         f"pathname={pathname!r} не соответствует ^/works/\\d — открыта НЕ work-страница "
         f"(guard тап-зон тоже проверяет только этот паттерн, ao3_bridge.js:1154); "
-        f"N={count} неинтерпретируем без этого якоря идентичности документа"
+        f"N={count} неинтерпретируем без этого якоря идентичности документа "
+        f"({_diagnose_non_live_page(title)})"
     )
     assert has_content_marker, (
         f"на странице pathname={pathname!r} не найдено ни одного узла реального контента "
-        f"work-страницы ({selectors.WORK_PAGE_CONTENT_MARKERS!r}) — вероятен Cloudflare-"
-        f"интерстишл или иная нештатная страница с readyState=complete, но без контента "
-        f"(R-03); N={count} НЕ является доказательством отсутствия кандидатов, т.к. измерена "
-        f"пустая/нештатная страница, а не реальная work-страница"
+        f"work-страницы ({selectors.WORK_PAGE_CONTENT_MARKERS!r}) — {_diagnose_non_live_page(title)}; "
+        f"N={count} НЕ является доказательством отсутствия кандидатов, т.к. измерена "
+        f"пустая/нештатная страница, а не реальная work-страница. TC-118 root_cause "
+        f"(runs/RUN-20260811-0405.md): вызывающий код обязан пройти через "
+        f"`rating_steps.open_live_work_page` (перебор кандидатов с фолбэком) ДО этого "
+        f"ассерта — если он всё же сработал, значит либо фолбэк не был применён, либо "
+        f"страница деградировала МЕЖДУ проверкой фолбэка и этим вызовом (гонка, не тот "
+        f"же класс, что исходный root_cause)"
     )
     assert count == 0, (
         f"найдено {count} узл(ов) вне whitelist guard'а тап-зон с собственным "
