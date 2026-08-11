@@ -1,20 +1,20 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-11T03:58:17Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-11T09:43:04Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
 - Сборка: dev-local (versionCode 12), commit `cc201f78`, built_at 2026-08-10T23:52:58Z
-- smoke: Triaged · smoke_freshness_hours: **1.2** (RUN-20260811-0405)
-- regression: Triaged · regression_freshness_hours: **24.1** (RUN-20260810-0146)
-- canary: Triaged · canary_freshness_hours: **160.2** (RUN-20260804-1317)
+- smoke: Triaged · smoke_freshness_hours: **7.0** (RUN-20260811-0405)
+- regression: Triaged · regression_freshness_hours: **29.9** (RUN-20260810-0146)
+- canary: Triaged · canary_freshness_hours: **166.0** (RUN-20260804-1317)
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **1**
 - p0_automation_coverage: **100%** (37/37)
 - p1_automation_coverage: **78%** (85/109)
-- Test debt открыт: **1** — AT-BUG-062
+- Test debt открыт: **3** — AT-BUG-062, AT-BUG-063, AT-BUG-064
 - Карантин автотестов: **1** — TC-085
 - Automated без red_probe: **0**
 - Untriaged: **0** · untriaged_failure_age: **0**
@@ -70,9 +70,11 @@ story-карточки: стадии см. docs/05-board.md §Story
 
 - BUG-012 [minor] Intended — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
 
-## Test debt (1)
+## Test debt (3)
 
 - AT-BUG-062 [flaky_test] Open — Нестабильный TC-085 (rename filter-profile): «профиль «My renamed search» не найден в списке Settings» в полном регрессе, 3/3 зелёный в изоляции; артефакт падения не содержит секцию Saved AO3 Filters (фолбэк swipe_up возвращает список наверх)
+- AT-BUG-063 [broken_environment] Open — device-liveness recovery не пробрасывает GPU-параметр → env-предпосылка TC-078 (host-GPU) молча деградирует до swiftshader_indirect
+- AT-BUG-064 [broken_environment] Open — Остаточный device-прокси переживает перезапуск эмулятора
 
 ## Прогоны (13)
 

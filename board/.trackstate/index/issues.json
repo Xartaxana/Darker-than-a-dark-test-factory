@@ -1555,7 +1555,7 @@
     "epic": null,
     "parentPath": null,
     "epicPath": null,
-    "summary": "Правка личного тега уже-Favorite работы через панель работы не скачивает файл повторно (edge vs level, :756)",
+    "summary": "Правка личного тега уже-Favorite работы через панель работы не скачивает файл повторно (edge vs level, onRatingTransition:788)",
     "issueType": "test-case",
     "status": "tc-automated",
     "priority": "p1",
@@ -1578,7 +1578,7 @@
     "epic": null,
     "parentPath": null,
     "epicPath": null,
-    "summary": "Правка комментария уже-Favorite работы через bottom-sheet листинга не скачивает файл повторно (edge vs level, :862)",
+    "summary": "Правка комментария уже-Favorite работы через bottom-sheet листинга не скачивает файл повторно (edge vs level, onRatingTransition:788)",
     "issueType": "test-case",
     "status": "tc-automated",
     "priority": "p1",
@@ -5619,6 +5619,51 @@
     "archived": false
   },
   {
+    "key": "AT-BUG-063",
+    "path": "board/AT-BUG-063/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "device-liveness recovery не пробрасывает GPU-параметр → env-предпосылка TC-078 (host-GPU) молча деградирует до swiftshader_indirect",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-078",
+      "run:RUN-20260811-0405",
+      "sev:major"
+    ],
+    "updated": "2026-08-11T09:31:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-064",
+    "path": "board/AT-BUG-064/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Остаточный device-прокси переживает перезапуск эмулятора",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "run:RUN-20260811-0405",
+      "sev:minor"
+    ],
+    "updated": "2026-08-11T09:31:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "BUG-001",
     "path": "board/BUG-001/main.md",
     "parent": null,
@@ -5926,13 +5971,12 @@
     "issueType": "bug",
     "status": "bug-fixed",
     "priority": "p1",
-    "assignee": "bug-reporter",
+    "assignee": "qa-agents",
     "labels": [
       "bug",
       "test_case:TC-153",
       "run:CH-008",
-      "sev:major",
-      "wip:bug-reporter"
+      "sev:major"
     ],
     "updated": "2026-08-11T00:00:00Z",
     "resolution": null,
@@ -5973,13 +6017,12 @@
     "issueType": "bug",
     "status": "bug-fixed",
     "priority": "p1",
-    "assignee": "bug-reporter",
+    "assignee": "qa-agents",
     "labels": [
       "bug",
       "test_case:TC-152",
       "run:CH-008",
-      "sev:major",
-      "wip:bug-reporter"
+      "sev:major"
     ],
     "updated": "2026-08-10T23:51:46Z",
     "resolution": null,
@@ -6477,7 +6520,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-writing-cases",
-      "регресс сборки: smoke RUN-20260811-0405 46/49 · разобрано · regression RUN-20260811-0406 191/193 · разобрано · новых багов в прогоне: 1",
+      "регресс сборки: smoke RUN-20260811-0405 46/49 · разобрано · regression RUN-20260811-0406 191/193 · разобрано · новых багов в прогоне: 3",
       "фич без кейсов: 0/2",
       "черновиков: 1",
       "багов на кейсах стори: 2"
@@ -6501,7 +6544,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-covered",
-      "регресс сборки: smoke RUN-20260811-0405 46/49 · разобрано · regression RUN-20260811-0406 191/193 · разобрано · новых багов в прогоне: 1",
+      "регресс сборки: smoke RUN-20260811-0405 46/49 · разобрано · regression RUN-20260811-0406 191/193 · разобрано · новых багов в прогоне: 3",
       "зелёные в RUN-20260811-0406: 5/5",
       "багов на кейсах стори: 0"
     ],

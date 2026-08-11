@@ -5,9 +5,9 @@ issueType: "bug"
 status: "bug-fixed"
 priority: "p1"
 summary: "Ручной скан при двух файлах одного ao3Id не сходится: счётчик relinked=2 на одну работу, повторный скан рапортует то же, не становясь 0"
-assignee: "bug-reporter"
+assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["bug", "test_case:TC-153", "run:CH-008", "sev:major", "wip:bug-reporter"]
+labels: ["bug", "test_case:TC-153", "run:CH-008", "sev:major"]
 components: []
 fixVersions: []
 watchers: []

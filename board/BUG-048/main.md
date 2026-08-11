@@ -5,9 +5,9 @@ issueType: "bug"
 status: "bug-fixed"
 priority: "p1"
 summary: "Overlay листинга молча перезаписывает title/fandom/wordCount скрейпом текущей страницы — работа исчезает из фандом-фильтра, прыгает в сортировке, а при rating=null пропадает со всех вкладок Library без какого-либо сообщения"
-assignee: "bug-reporter"
+assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["bug", "test_case:TC-152", "run:CH-008", "sev:major", "wip:bug-reporter"]
+labels: ["bug", "test_case:TC-152", "run:CH-008", "sev:major"]
 components: []
 fixVersions: []
 watchers: []

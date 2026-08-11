@@ -4,7 +4,7 @@ project: "AO3"
 issueType: "test-case"
 status: "tc-automated"
 priority: "p1"
-summary: "Правка личного тега уже-Favorite работы через панель работы не скачивает файл повторно (edge vs level, :756)"
+summary: "Правка личного тега уже-Favorite работы через панель работы не скачивает файл повторно (edge vs level, onRatingTransition:788)"
 assignee: "qa-agents"
 reporter: "qa-agents"
 labels: ["test-case", "area:downloads", "risk:R-05", "automation:active"]
@@ -19,7 +19,7 @@ archived: false
 resolution: "done"
 ---
 
-# Правка личного тега уже-Favorite работы через панель работы не скачивает файл повторно (edge vs level, :756)
+# Правка личного тега уже-Favorite работы через панель работы не скачивает файл повторно (edge vs level, onRatingTransition:788)
 
 _Спроецировано из `test-cases/downloads/TC-114.md` (источник правды).
 Статус в нашей машине: **Automated**._
@@ -70,10 +70,13 @@ Library по-прежнему показывает download-иконку (не o
 | Replay | `rb.WORK_WITH_DOWNLOAD_FILENAME` (`work_with_download.mitm`) |
 
 ## Заметки для автоматизации
-- Точка кода: `BrowserViewModel.kt:756-758` внутри `savePanelRating`, ветка
-  `existing != null` (строка ~743) — предпосылка «строка в Room уже есть» выполнена
+- Точка кода: `BrowserViewModel.kt:752-767` внутри `savePanelRating`, ветка
+  `existing != null` (строка 754) — предпосылка «строка в Room уже есть» выполнена
   сидингом, а не первым переходом (в отличие от TC-032, который идёт через
-  `pendingPanelSave`/:1057, см. заметку ниже).
+  `pendingPanelSave`/:1115, см. заметку ниже). Сам предикат перехода (edge vs
+  level) с 2026-08-10 (фикс `cc201f7`) живёт в единой точке `onRatingTransition`
+  (:779-791, вызывается из :767), не в теле `savePanelRating` — см. `requirements`
+  выше.
 - Панель `RatingMenu` — ОБЩИЙ composable для встроенной панели work-page и bottom-sheet
   листинга (`app-under-test/CLAUDE.md`, `RatingOverlay.kt:70-73`); методы
   `framework/screens/rating_overlay.py` (`toggle_tags`/`enter_tag_input`/
@@ -82,9 +85,9 @@ Library по-прежнему показывает download-иконку (не o
   rate_current_work` (`BottomNav(driver).ensure_visible()` перед использованием
   `RatingOverlay(driver)`), рутинная автоматизация, не блокер.
 - Позитивная граница ЭТОГО ЖЕ правила-реакции (первый переход на SAVE, когда строки
-  в Room ещё не было — :1057, `onRateWorkRequested`/`pendingPanelSave`) уже покрыта
-  TC-032 (Automated) — отдельного нового кейса не требуется, см. правку
-  docs/01-test-strategy.md §9.
+  в Room ещё не было — `onRateWorkRequested`/`pendingPanelSave`, вызов
+  `onRatingTransition` на :1115) уже покрыта TC-032 (Automated) — отдельного нового
+  кейса не требуется, см. правку docs/01-test-strategy.md §9.
 - **Батарея правил-реакций:**
   - edge vs level — это и есть предмет кейса (место вызова #1 из 3, :756).
   - идемпотентность — н-п отдельным сценарием: негативный Then этого кейса УЖЕ
@@ -94,11 +97,14 @@ Library по-прежнему показывает download-иконку (не o
   - propagation — н-п: скачивание пишет файл+`downloadPath` ОДНОЙ работы, у эффекта
     нет множественных потребителей вкладок (в отличие от badge/kudos-broadcast,
     уже покрытого `bridge-badge-sync-multi`); других consumers нет.
-- Известная СИБЛИНГ-находка (не в скоупе этого кейса, докладываю по D-0043): та же
-  ветка `applyRating` (:862, см. TC-115) и panelSave-ветка (:1057) ТАКЖЕ авто-кликают
-  AO3 kudos-кнопку при LIKE/SAVE (`BrowserViewModel.kt:859`/`1054`) — это отдельный
-  открытый дефект BUG-015 (level-предикат на kudos), явно исключён из скоупа этой
-  области per NON-GOALS диспатча; не путать assert'ы.
+- Известная СИБЛИНГ-находка (не в скоупе этого кейса, докладываю по D-0043,
+  актуализировано 2026-08-11 — обе точки давно консолидированы в один хелпер): та
+  же `onRatingTransition` (:779-791, вызывается из `applyRating`/:922, см. TC-115, и
+  из `onRateWorkRequested`/`pendingPanelSave`/:1115) ТАКЖЕ авто-кликает AO3
+  kudos-кнопку при переходе в LIKE/SAVE (:782-787) — это отдельный дефект
+  BUG-015, историческая находка про level-предикат на kudos снята фиксом `cc201f7`
+  (Verified 2026-08-11) вместе с BUG-014 этого кейса; исключено из скоупа этого
+  кейса per NON-GOALS диспатча — не путать assert'ы.
 - **Тест написан и подключён** (2026-07-29, test-automator):
   `framework/tests/test_downloads.py::
   test_edit_tag_on_already_saved_work_via_panel_does_not_redownload`
