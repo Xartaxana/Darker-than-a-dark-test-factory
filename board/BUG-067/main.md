@@ -150,7 +150,7 @@ fun onWorkFinished(workId: String, title: String, author: String, fandom: String
 
 ## Обсуждение
 
-**[qa @ 2026-08-12T00:00:00Z]**
+**[qa @ 2026-08-11T22:58:00Z]** *(стамп исправлен Lead на приёмке: исходный `2026-08-12T00:00:00Z` был фабрикацией будущего времени, класс AT-BUG-029)*
 
 Заведение на основе ESC-026 (критик-вход приёмки BUG-021/BUG-048, D1 проход /qa-loop 10, 2026-08-11):
 - R1 (first-level находка критика BUG-021 D1): `Ao3JsBridge.onWorkFinished` `:1254-1274` пересобирает `WorkRating` конструктором при `existing?.rating == null`, теряет `downloadPath` и метаданные
