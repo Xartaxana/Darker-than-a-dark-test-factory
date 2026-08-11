@@ -156,20 +156,36 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
     только чинит путь падения соседних фикстур.
 
     B2 (AT-BUG-064, критик-вход rework attempt 2): `_ensure_no_residual_
-    device_proxy()` вызывается ЗДЕСЬ же, СРАЗУ рядом с `_reset_ca_check()`
-    — ТЕМ ЖЕ твин-паттерном (recovery ребутит эмулятор через snapshot-boot
+    device_proxy()` вызывается ЗДЕСЬ же, рядом с `_reset_ca_check()` —
+    твин уже существующего паттерна `_reset_ca_check`: СРАБАТЫВАЕТ на том же
+    условии (recovery произошёл в ЭТОМ тесте), но профиль отказа другой —
+    `_reset_ca_check()` только сбрасывает module-level флаг (без adb-вызова),
+    а `_ensure_no_residual_device_proxy()` реально ХОДИТ В ADB
+    (`mitm.ensure_no_residual_proxy()` → `settings get/put global
+    http_proxy`), то есть может кинуть `TimeoutError` на нездоровом
+    устройстве. Recovery ребутит эмулятор через snapshot-boot
     `tasks.ps1::Start-Emulator`, module/session-level проверка об этом не
     знает сама по себе, если её единственная точка вызова —
     `_ensure_app_installed`, session-scoped и потому инстанцируемая РОВНО
     ОДИН раз на весь прогон, до первого теста, а не после КАЖДОГО
-    recovery). Заголовок AT-BUG-064 — «остаточный прокси переживает
+    recovery. Заголовок AT-BUG-064 — «остаточный прокси переживает
     ПЕРЕЗАПУСК ЭМУЛЯТОРА»: recovery-путь — ровно тот перезапуск, и до
     этой правки проверка (а), добавленная attempt 1, была НЕДОСТИЖИМА
     для него (снята только на старте сессии, session-scope не
     переинстанцируется). `ensure_no_residual_proxy()` не кеширует
     результат сама (в отличие от `_ca_checked`) — каждый вызов заново
     читает `adb shell settings get global http_proxy`, поэтому
-    достаточно позвать функцию повторно, без отдельного flag-сброса."""
+    достаточно позвать функцию повторно, без отдельного flag-сброса.
+
+    F1 (критик-вход на AT-BUG-064, батч мелочей 0812): вызов
+    `_ensure_no_residual_device_proxy()` стоит ПОСЛЕ
+    `warnings.warn(_pending_recovery_warning)`, не до него — именно из-за
+    adb-профиля отказа выше: если adb на нездоровом устройстве кидает
+    `TimeoutError`, исключение из вызова, стоявшего РАНЬШЕ `warnings.warn`,
+    глушило recovery-WARN целиком (R2 выше существует именно чтобы этот WARN
+    гарантированно был виден per-тестово) — recovery-факт остался бы
+    незалогированным. Порядок ПОСЛЕ `warnings.warn` не теряет диагностику
+    recovery, даже если сама проверка остаточного прокси упадёт следом."""
     global _pending_recovery_warning
     _pending_recovery_warning = None
     if "driver" not in item.fixturenames:
@@ -177,8 +193,8 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
     _pending_recovery_warning = _DEVICE_GUARD.ensure_ready()
     if _pending_recovery_warning is not None:
         _reset_ca_check()
-        _ensure_no_residual_device_proxy()
         warnings.warn(_pending_recovery_warning)
+        _ensure_no_residual_device_proxy()
 
 
 def _reset_ca_check() -> None:

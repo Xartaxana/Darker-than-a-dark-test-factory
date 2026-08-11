@@ -540,14 +540,28 @@ def clear_device_proxy() -> None:
         ) from exc
 
 
-def get_device_proxy() -> str:
+def get_device_proxy() -> str | None:
     """Читает ТЕКУЩЕЕ значение `global http_proxy` устройства
     (`adb shell settings get global http_proxy`) — сырой вывод adb,
     обрезанный по краям (`"null"` — настройка никогда не выставлялась;
     `":0"` — штатное «снято»; иначе — выставленный прокси, например
     `10.0.2.2:8080`). Тот же конечный `timeout`/`TimeoutError`-паттерн, что
     `set_device_proxy`/`clear_device_proxy` (AT-BUG-009) — используется
-    fail-safe проверкой AT-BUG-064 (`ensure_no_residual_proxy`)."""
+    fail-safe проверкой AT-BUG-064 (`ensure_no_residual_proxy`).
+
+    F2 (критик-вход на AT-BUG-064, батч мелочей 0812): `adb` может
+    завершиться с НЕНУЛЕВЫМ `returncode` (устройство offline/unauthorized) и
+    при этом дать ПУСТОЙ `stdout` — раньше это молча читалось как «прокси
+    нет» (fail-open; тот же класс, что CLAUDE.md permission-hygiene п.6:
+    пустой вывод env-зависимого тула — не факт отсутствия объекта, а промах
+    вызова). Теперь ненулевой `returncode` даёт: warning в stderr (тот же
+    `print(..., file=sys.stderr)`-паттерн, что `_wait_port_released`/
+    `_spawn_and_wait_listening` выше в этом файле) + возврат `None` — явно
+    ОТЛИЧНЫЙ от «чисто» (`""`/`"null"`/`":0"`) результат, чтобы вызывающий
+    код мог различить «не удалось прочитать» от «прокси действительно нет».
+    Не бросает исключение на ненулевом `returncode` — fail-safe слой не
+    должен ронять сессию из-за недоступного adb (только зависший adb
+    по-прежнему даёт явную `TimeoutError` выше, тот же AT-BUG-009-паттерн)."""
     cmd = [settings.ADB, "shell", "settings", "get", "global", "http_proxy"]
     try:
         cp = subprocess.run(
@@ -559,6 +573,16 @@ def get_device_proxy() -> str:
             f"adb shell settings get http_proxy (get_device_proxy) не "
             f"ответил за {settings.ADB_SHELL_TIMEOUT}s (AT-BUG-064)"
         ) from exc
+    if cp.returncode != 0:
+        print(
+            f"AT-BUG-064 WARNING: adb shell settings get http_proxy вернул "
+            f"код {cp.returncode} (устройство offline/unauthorized?) -- "
+            f"stderr: {cp.stderr.strip()!r} -- get_device_proxy() не может "
+            "определить текущее значение прокси, возвращаю None (не путать "
+            "с \"прокси не выставлен\"); не бросаю, чтобы не ронять сессию.",
+            file=sys.stderr,
+        )
+        return None
     return cp.stdout.strip()
 
 

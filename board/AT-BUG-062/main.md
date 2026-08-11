@@ -167,6 +167,12 @@ Invoke-Pytest -k test_rename_filter_profile_keeps_query_string -q
 |---|---|---|---|---|
 | 2026-08-11 | dev-local (versionCode 12, та же сборка cc201f789) | `test_rename_filter_profile_keeps_query_string` ×3 подряд + `tests/test_filter_profiles.py` целиком | `1 passed, 373 deselected in 84.66s`; `1 passed, 373 deselected in 83.19s`; `1 passed, 373 deselected in 81.27s`; файловый прогон: `5 passed in 285.34s` — все PYTEST_EXIT=0 | test-maintainer (fix), D1-верификация fix-verifier — отдельным проходом (B4, сборку ждать не нужно) |
 
+**Условие критика раунда 2, обязательное для будущего D1:** D1 fix-verifier
+обязан захватить TC-085 + негативный ассерт TC-042 (`expect_absent`-ветка) +
+один rescroll-кейс TC-021 — верификационная таблица attempt 1 сделана ДО
+правок `enter_rename_name`/`expect_absent`/`_scroll_settings_to` (rework
+attempt 2, non-blockers (а)/(б) выше) и текущий device-код ими не покрыт.
+
 ## Обсуждение
 
 **[test-maintainer @ 2026-08-11T17:13:00Z, rework attempt 2 — критик-вход opus

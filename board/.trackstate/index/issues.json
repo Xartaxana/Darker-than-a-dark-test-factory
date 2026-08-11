@@ -1647,7 +1647,7 @@
     "epic": null,
     "parentPath": null,
     "epicPath": null,
-    "summary": "Повторный ручной Scan for downloads при двух файлах одного ao3Id сходится к нулю relinked (идемпотентность), а не повторяет relinked=2 (ожидаемо-красный до фикса BUG-046)",
+    "summary": "Повторный ручной Scan for downloads при двух файлах одного ao3Id сходится к relinked=0 (идемпотентность, регресс-замок BUG-046)",
     "issueType": "test-case",
     "status": "tc-approved",
     "priority": "p1",
@@ -1657,7 +1657,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-08-11T00:00:00Z",
+    "updated": "2026-08-11T23:02:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1669,7 +1669,7 @@
     "epic": null,
     "parentPath": null,
     "epicPath": null,
-    "summary": "Удаление скачанного файла НЕ воскрешает работу последующим сканом, если на диске остаётся второй файл того же ao3Id (ожидаемо-красный до фикса BUG-047)",
+    "summary": "Удаление скачанного файла подметает ОБА места загрузок и НЕ воскрешает работу последующим сканом (регресс-замок BUG-047)",
     "issueType": "test-case",
     "status": "tc-approved",
     "priority": "p1",
@@ -1679,7 +1679,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-08-10T13:56:34Z",
+    "updated": "2026-08-11T23:02:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3175,7 +3175,7 @@
     "epic": null,
     "parentPath": null,
     "epicPath": null,
-    "summary": "Повторный тап по выбранному рейтингу через OVERLAY листинга у скачанной работы с заметкой и тегом сохраняет downloadPath и тег (ожидаемо-красный до фикса BUG-021)",
+    "summary": "Повторный тап по выбранному рейтингу через OVERLAY листинга у скачанной работы с заметкой и тегом сохраняет downloadPath и тег",
     "issueType": "test-case",
     "status": "tc-approved",
     "priority": "p1",
@@ -5678,6 +5678,7 @@
     "labels": [
       "bug",
       "test_case:TC-049",
+      "test_case:TC-059",
       "test_case:TC-107",
       "test_case:TC-110",
       "sev:minor"
@@ -6287,6 +6288,27 @@
       "sev:minor"
     ],
     "updated": "2026-08-11T13:02:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-067",
+    "path": "board/BUG-067/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "auto-READ при дочитывании работы теряет downloadPath и перетирает метаданные у скачанной работы без рейтинга",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:major"
+    ],
+    "updated": "2026-08-11T22:58:00Z",
     "resolution": null,
     "children": [],
     "archived": false

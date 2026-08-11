@@ -1,0 +1,172 @@
+---
+key: "BUG-067"
+project: "AO3"
+issueType: "bug"
+status: "bug-open"
+priority: "p1"
+summary: "auto-READ при дочитывании работы теряет downloadPath и перетирает метаданные у скачанной работы без рейтинга"
+assignee: "qa-agents"
+reporter: "qa-agents"
+labels: ["bug", "sev:major"]
+components: []
+fixVersions: []
+watchers: []
+parent: null
+epic: null
+created: "2026-08-11T22:58:00Z"
+updated: "2026-08-11T22:58:00Z"
+archived: false
+resolution: null
+---
+
+# auto-READ при дочитывании работы теряет downloadPath и перетирает метаданные у скачанной работы без рейтинга
+
+_Спроецировано из `bugs/BUG-067.md` (источник правды).
+Статус в нашей машине: **Open**._
+
+# BUG-067 — auto-READ (`onWorkFinished`) теряет downloadPath и метаданные скачанной работы без рейтинга
+
+## Окружение
+- Версия: 1.10+ (живой AO3, вне replay-корпуса; `#chapters` в разметке обязателен)
+- Эмулятор: любой (логика UI-независима)
+- Режим: **live** (не replay — фикстуры не содержат `<div id="chapters">`)
+- Сценарий: автоматическая отметка READ при дочитывании работы (JS `onWorkFinished` →  Kotlin `Ao3JsBridge.onWorkFinished`)
+
+## Шаги воспроизведения (Given-When-Then)
+
+**Given**
+- Работа скачана из карточки Library (ao3_id 900000001)
+- Room содержит `downloadPath = "/data/…/ao3_Work_900000001.html"`
+- Файл лежит на диске
+- **Работа НЕ имеет рейтинга** (`rating = null`; допускается личная заметка/тег)
+- Пользователь открывает работу на живом archiveofourown.org
+
+**When**
+- Пользователь прочитывает ВСЕ главы работы (доходит до конца)
+- JavaScript-хук `onWorkFinished` срабатывает (скрейпит title/author/fandom/wordCount) и вызывает Kotlin `Ao3JsBridge.onWorkFinished`
+
+**Then (ожидалось)**
+- Рейтинг устанавливается в `Rating.READ` (красна дорожка + значок на карточке Library)
+- **Связь с файлом сохраняется:** `downloadPath` остаётся `= "/data/…/ao3_Work_900000001.html"`
+- Работа остаётся на вкладке Downloads в Library
+- Метаданные (title, fandom, wordCount, author) либо **сохраняют локальные значения**, либо **обновляются видимым диалогом** («Метаданные обновлены со страницы»)
+
+**Actual (фактически)**
+- Рейтинг устанавливается в `Rating.READ` ✓
+- **`downloadPath` обнулен** → `null` ✗
+- Карточка исчезает с вкладки Downloads (следствие)
+- Метаданные **молча перетираются скрейпом** (title/author/fandom/wordCount из живого AO3) — могут расходиться с локальными значениями:
+  - `fandom` **может быть пустой** `""` (сырой скрейп без `ifBlank`) → `backfillMetadata` не исправит (`?:` ловит только `null`)
+  - Сообщение об обновлении отсутствует
+
+## Механизм (по коду BrowserViewModel.kt)
+
+Метод `onWorkFinished` (`:1254-1274`) обрабатывает callback из JavaScript при дочитывании:
+
+```kotlin
+@JavascriptInterface
+fun onWorkFinished(workId: String, title: String, author: String, fandom: String, wordCount: String) {
+    viewModelScope.launch(Dispatchers.IO) {
+        val existing = repo.getWorkRating(workId)
+        if (existing?.rating != null) return@launch  // ← Условие: rating == null
+        val comment = existing?.comment
+        val existingTags = existing?.tags
+        repo.upsertWorkRating(
+            WorkRating(                               // ← КОНСТРУКТОР
+                ao3Id = workId,
+                title = title,
+                author = author,
+                url = "https://archiveofourown.org/works/$workId",
+                rating = Rating.READ,
+                timestamp = System.currentTimeMillis(),
+                fandom = fandom,                      // ← Сырой скрейп, может быть ""
+                wordCount = wordCount.toIntOrNull(),
+                comment = comment,                    // ← Сохраняет
+                tags = existingTags,                  // ← Сохраняет
+                // ↑ downloadPath ОТСУТСТВУЕТ → дефолт null (WorkRating.kt:17)
+            )
+        )
+        // ...
+    }
+}
+```
+
+**Два класса дефекта (идентичные BUG-021):**
+
+1. **Потеря `downloadPath`**: Конструктор `WorkRating(…)` не принимает `downloadPath` → получает дефолт `null`. Room `upsert` на существующую запись **перезаписывает** все колонки, включая `downloadPath`.
+
+2. **Молчаливая перезапись метаданных**:
+   - `title/author/fandom/wordCount` берутся из аргументов (JS-скрейп текущей страницы) БЕЗ `backfillMetadata`
+   - Локальные значения, отличающиеся от живой страницы, **затираются**
+   - `fandom` пишется СЫРЫМ (без `ifBlank { null }`) → может стать пустой строкой `""`
+   - `backfillMetadata` не исправит пустую строку (оператор `?:` ловит только `null`)
+
+**Класс идентичен:**
+- **BUG-021** (ветка `:807-813`): `applyRating` overlay листинга при `rating == null` теряет `downloadPath`
+- **BUG-048** (вариант А): overlay молча перетирает title/fandom/wordCount пересборщиком
+
+## Достижимость
+
+**ТОЛЬКО на живом AO3**, требует `<div id="chapters">` в разметке:
+- `ao3_bridge.js` хук выходит на строке `:1121`, если `!document.getElementById("chapters")`
+- Фикстурная work-страница НЕ содержит `#chapters` (строится `render_work_page_html` без этого узла; `:645` `id="chapters"` встречается только в `render_downloaded_work_html`)
+- На replay-корпусе **недостижимо** (CH-008 G6: `#chapters=False`; `PERTURBATIONS.md:394`)
+
+## Частота
+
+**100%, гарантированно**, если условия met:
+- Скачанная работа без рейтинга
+- Дочитывание на живом AO3 (должна существовать хотя бы одна глава)
+- JS-хук срабатывает при любом дочитывании
+
+## Артефакты
+
+- **Код якоря:** `app-under-test/app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt:1254-1274` (`onWorkFinished`)
+- **JS-хук:** `app-under-test/app/src/main/assets/ao3_bridge.js:1114-1147` (`onWorkFinished` вызов) + `:1121` (проверка `#chapters`)
+- **Related charter:** `exploratory-charters/CH-008.md:129-147` — раздел Out, пункт про `onWorkFinished`; находка 4 (метаданные уносят фильтруемость); follow-up (а): запрос фикстуры с `#chapters`
+
+## Анализ
+
+### Почему это баг приложения, а не теста/окружения
+
+1. **Воспроизведимо по коду:** Условие `existing?.rating == null` совпадает с ситуацией скачанной работы без рейтинга; конструктор WorkRating не содержит `downloadPath` — это ФАКТ кода, не окружения.
+
+2. **Контрольное сравнение существует:** Панель work-страницы (`savePanelRating` `:698-705`, `:746-753`) использует `existing.copy(…)`, сохраняя `downloadPath` и не перетирая метаданные. Разница — в двух "дверях" одного механизма, обе в `BrowserViewModel`.
+
+3. **Сценарий конечного пользователя:** Скачивание работы + дочитывание её на живом AO3 — штатный flow, не тестовая конструкция.
+
+### Почему это не дубликат BUG-021 и BUG-048
+
+- **BUG-021** закрывает потерю `downloadPath` и `tags` в overlay листинга (точечно — ветка `applyRating` при `rating == null`)
+- **BUG-048** закрывает молчаливую перезапись title/fandom/wordCount overlay'ем (общий класс, но ветка overlay листинга)
+- **BUG-067** — **`onWorkFinished` из JavaScript**, совсем другая дверь, фактически **не может быть протестирована текущим корпусом фикстур** (live-only)
+
+Фиксы **могут пересечься** в одну правку (оба используют конструктор WorkRating, оба теряют `downloadPath`), но это отдельная находка, мандат критиков-входов при приёмке BUG-021 и BUG-048 не включал эту дверь (она live-only, недостижимая в эксплораторном чартере).
+
+## Верификация (заполняет fix-verifier)
+
+| Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
+|---|---|---|---|---|
+
+## Обсуждение
+
+**[qa @ 2026-08-12T00:00:00Z]**
+
+Заведение на основе ESC-026 (критик-вход приёмки BUG-021/BUG-048, D1 проход /qa-loop 10, 2026-08-11):
+- R1 (first-level находка критика BUG-021 D1): `Ao3JsBridge.onWorkFinished` `:1254-1274` пересобирает `WorkRating` конструктором при `existing?.rating == null`, теряет `downloadPath` и метаданные
+- Дополнение критика BUG-048 (второй независимый критик, тот же проход): подтверждена находка R1 (downloadPath), добавлена деталь про `fandom = ""` сырого скрейпа
+- Live-only достижимость (нужен `#chapters`) задокументирована в CH-008 G6 и PERTURBATIONS.md
+- Запрос фикстуры с `#chapters` уже в follow-up CH-008 (a) — не изобретать заново
+- Резолюция разработчика BUG-048 («молчаливого канала обновления не осталось») неточна: этот канал жив, просто не протестируем текущими фикстурами
+
+Awaiting: none (информационная запись; фикс — в очереди after BUG-021 и BUG-048, если владелец обновит scope)
+
+## Чек-лист качества
+
+- [x] Проверены дубликаты: BUG-021 (related, не дубликат — другая дверь), BUG-048 (related, не дубликат — другая дверь), BUG-046/047 (следствия, не причина)
+- [x] Репро-шаги пользовательские (Given-When-Then по сценарию конечного пользователя)
+- [x] Severity обоснована: **major** — молчаливая потеря пользовательского состояния (downloadPath, связь файл-строка), следствие = исчезновение работы с вкладки Downloads
+- [x] Точная версия и код якоря приложены (BrowserViewModel.kt:1254-1274)
+- [x] Достижимость и ограничения задокументированы (live-only, live-only; фикстурные ограничения)
+- [x] Ни одного изменения в коде приложения не внесено; чтение только
+- [x] Класс дефекта идентифицирован (конструктор WorkRating без downloadPath, как в BUG-021); сиблинги перечислены

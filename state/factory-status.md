@@ -1,15 +1,15 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-11T17:53:54Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-11T23:06:07Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
 - Сборка: dev-local (versionCode 12), commit `cc201f78`, built_at 2026-08-10T23:52:58Z
-- smoke: Triaged · smoke_freshness_hours: **15.1** (RUN-20260811-0405)
-- regression: Triaged · regression_freshness_hours: **38.1** (RUN-20260810-0146)
-- canary: Triaged · canary_freshness_hours: **174.2** (RUN-20260804-1317)
+- smoke: Triaged · smoke_freshness_hours: **20.4** (RUN-20260811-0405)
+- regression: Triaged · regression_freshness_hours: **43.3** (RUN-20260810-0146)
+- canary: Triaged · canary_freshness_hours: **179.4** (RUN-20260804-1317)
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **1**
 - p0_automation_coverage: **100%** (37/37)
@@ -48,9 +48,9 @@ story-карточки: стадии см. docs/05-board.md §Story
 | tabs |  |  | 1 | 11 |  |
 | visibility |  |  |  | 6 |  |
 
-## Баги (27)
+## Баги (28)
 
-- Open: **15** · Verified: **11** · Intended: **1**
+- Open: **16** · Verified: **11** · Intended: **1**
 - BUG-011 [major] Open — Restore from backup пропускает работы молча, если файл с тем же ao3Id уже лежит в папке загрузок
 - BUG-013 [minor] Open — Смена темы, затем немедленный kill процесса (<100 мс) теряет theme_mode — выбор темы не персистится
 - BUG-016 [major] Open — Undo закрытия вкладки на потолке 10 молча теряет вкладку и её снапшот
@@ -66,6 +66,7 @@ story-карточки: стадии см. docs/05-board.md §Story
 - BUG-059 [minor] Open — Счётчик снекбара «Opened in background (N tabs)» показывает общее число вкладок вместо числа открытых в фоне
 - BUG-060 [minor] Open — Фоновая вкладка на удалённый локальный файл вечна: после релонча показывает ERR_FILE_NOT_FOUND, Retry не работает, чип деградирует
 - BUG-065 [minor] Open — PROJECT.md обещает quick rating-filter toggle icons в топ-баре Browse, но их нет в коде
+- BUG-067 [major] Open — auto-READ при дочитывании работы теряет downloadPath и перетирает метаданные у скачанной работы без рейтинга
 
 ## Известные проблемы, known_issue (1)
 

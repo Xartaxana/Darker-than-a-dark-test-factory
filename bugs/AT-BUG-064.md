@@ -332,8 +332,12 @@ $ adb shell settings get global http_proxy
 $ Invoke-Pytest -k test_app_launches_and_loads_ao3 -v
 tests/test_smoke.py::test_app_launches_and_loads_ao3 PASSED  [100%]
 UserWarning: AT-BUG-064: остаточный device-прокси '10.0.2.2:8080'
-  обнаружен на старте сессии (пережил рестарт эмулятора или аварийное
+  обнаружен на старте прогона (пережил рестарт эмулятора или аварийное
   завершение предыдущей сессии/worker'а) -- снят автоматически.
+  [поправка Lead-батча 0812, F4: цитата была не дословна («на старте
+  сессии»); фактическая строка кода — «на старте прогона», см.
+  `conftest.py:59-63`; сам прогон этим ходом не переснимался, дословность
+  сверена с исходником]
 1 passed, 410 deselected, 1 warning in 22.80s
 PYTEST_EXIT=0
 $ adb shell settings get global http_proxy

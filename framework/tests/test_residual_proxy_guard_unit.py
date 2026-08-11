@@ -33,6 +33,14 @@ B2 (критик-вход rework attempt 2, хвост файла): дополн
 остаточного прокси ПОСЛЕ device-liveness recovery (твин `_reset_ca_check`,
 AT-BUG-026 F4) — без этого ветка session-scoped проверки была недостижима
 ровно для сценария заголовка бага (прокси переживает ПЕРЕЗАПУСК эмулятора).
+
+F2 (критик-вход на AT-BUG-064, батч мелочей 0812): `get_device_proxy()`
+больше не молчит на ненулевом `returncode` adb (offline/unauthorized
+устройство) — раньше пустой `stdout` такого сбоя читался как «прокси
+нет» (fail-open, класс permission-hygiene п.6 CLAUDE.md). Теперь варнит в
+stderr и возвращает `None`, отличимый от «чисто» (`""`/`"null"`/`":0"`);
+два теста ниже покрывают саму ветку и её границу (`returncode == 0` —
+штатный путь, не ошибка).
 """
 from __future__ import annotations
 
@@ -87,6 +95,47 @@ def test_get_device_proxy_wraps_timeout_expired(monkeypatch):
         mitm.get_device_proxy()
 
     assert "AT-BUG-064" in str(exc_info.value)
+
+
+@pytest.mark.p1
+@allure.id("AT-BUG-064-get-device-proxy-nonzero-returncode-returns-none")
+@allure.title("Проба F2: get_device_proxy() при returncode != 0 не бросает, возвращает None (отличимо от \"чисто\"), варнит в stderr (device-free)")
+def test_get_device_proxy_nonzero_returncode_returns_none(monkeypatch, capsys):
+    def _run(args, **kw):
+        return subprocess.CompletedProcess(
+            args=args, returncode=1, stdout="", stderr="error: device offline"
+        )
+
+    monkeypatch.setattr(subprocess, "run", _run)
+
+    # When adb сбоит (offline/unauthorized) -- returncode != 0, пустой stdout
+    result = mitm.get_device_proxy()
+
+    # Then НЕ бросает, возвращает None (отличимо от "" -- "чисто") и варнит
+    assert result is None
+    captured = capsys.readouterr()
+    assert "AT-BUG-064" in captured.err
+    assert "device offline" in captured.err
+
+
+@pytest.mark.p1
+@allure.id("AT-BUG-064-get-device-proxy-returncode-boundary-zero-is-success")
+@allure.title("Проба F2 (граница): returncode == 0 -- это НЕ ошибочная ветка, читает stdout как обычно (device-free)")
+def test_get_device_proxy_returncode_zero_is_not_error_branch(monkeypatch, capsys):
+    def _run(args, **kw):
+        return subprocess.CompletedProcess(
+            args=args, returncode=0, stdout="  :0\n", stderr=""
+        )
+
+    monkeypatch.setattr(subprocess, "run", _run)
+
+    result = mitm.get_device_proxy()
+
+    # Then граница returncode == 0 остаётся штатным путём -- значение читается,
+    # предупреждения F2 нет
+    assert result == ":0"
+    captured = capsys.readouterr()
+    assert "AT-BUG-064" not in captured.err
 
 
 @pytest.mark.p1

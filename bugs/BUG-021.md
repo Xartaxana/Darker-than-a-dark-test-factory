@@ -167,7 +167,16 @@ Room `upsert` на существующую запись **ПЕРЕЗАПИСЫ�
   - panel `onRateWorkRequested` `:1027-1040` (ветка `existing == null`)
   - download-flow `:532-543` (stub перед скачиванием)
   - orphan-скан `DownloadRepository.kt:112-122` (stub от скана)
-  - `SettingsScreen.kt:355` (`updateWorkMetadata`)
+  - `Ao3JsBridge.onWorkFinished` (`BrowserViewModel.kt:1254-1274`) — конструктор при
+    `existing?.rating == null`, live-only; отдельный баг заводится параллельно (`BUG-067`)
+  - `SettingsScreen.kt:355` — **сверено чтением, подпись снята**: это НЕ
+    `updateWorkMetadata` (тот метод — `SettingsScreen.kt:244`, точечный
+    `repo.updateWorkMetadata(...)`, UPDATE 4 колонок title/author/fandom/wordCount, к
+    этому классу не относится); `:355` — цикл restore/импорта, конструирующий
+    `WorkRating` для КАЖДОЙ работы из импортируемого JSON, но охранён `if (id in
+    existingIds) { skippedCount++; continue }` — существующие строки пропускаются
+    целиком, конструктор достижим только для ID, которых в Room ещё нет (тот же
+    охранный принцип, что `existing == null` у соседних пунктов списка)
 
 ### Почему это баг приложения, а не теста
 

@@ -7,7 +7,7 @@ severity: minor
 status: Open
 found_in: "test-maintainer (Sonnet), 2026-08-11, B4 rework AT-BUG-064 attempt 2 — найдено критиком по правилу 9 CLAUDE.md (класс, не экземпляр) при проверке секции «Сиблинги» AT-BUG-064."
 last_seen_in: ""
-test_cases: ["TC-049", "TC-107", "TC-110"]
+test_cases: ["TC-049", "TC-059", "TC-107", "TC-110"]
 runs: []
 duplicates: []
 regression_of: ""
@@ -37,9 +37,12 @@ Android-`settings`, снимаемые ТОЛЬКО in-process `try/finally` —
 (б) уже существующий in-process `try/finally`).
 
 Тот же класс, БЕЗ слоя (а), обнаружен ещё в ДВУХ местах при рецензии
-критика (правило 9 CLAUDE.md — «чини класс, а не экземпляр», карта
-`SIBLING_MAP.md` внутренней оси AO3 «персистентный Android-`settings`-стейт,
-выставляемый обвязкой»):
+критика (правило 9 CLAUDE.md — «чини класс, а не экземпляр»).
+[Поправка Lead 2026-08-12, находка F3 критик-входа: на момент заведения
+этого файла оси «персистентный Android-settings-стейт» на карте
+`SIBLING_MAP.md` НЕ существовало — утверждение было ложным; ось заведена
+коммитом `7bd21cc` в OS-репо (под-ось Оси 6) 2026-08-12, теперь ссылка
+валидна]:
 
 1. **`framework/core/adb.py:179-186::set_font_scale()`** —
    `settings put system font_scale {scale}` (TC-107, `font_scale=1.3`).
@@ -47,10 +50,20 @@ Android-`settings`, снимаемые ТОЛЬКО in-process `try/finally` —
    (`framework/tests/test_accessibility.py:26-36`), восстанавливающей
    `1.0` (`DEFAULT_FONT_SCALE`).
 2. **`framework/core/adb.py:173-176::set_night_mode()`** —
-   `cmd uimode night yes/no` (TC-049 `test_settings.py:119-149`, TC-110
-   `test_compatibility.py:109-149`). Защищён только `try/finally`
-   в самих телах тестов (`app_steps.set_system_dark_mode(False)` в
-   `finally`).
+   `cmd uimode night yes/no` (TC-049 `test_settings.py:119-149`, TC-059
+   `test_settings.py:364-412`, TC-110 `test_compatibility.py:109-149` —
+   TC-059 добавлен поправкой Lead 2026-08-12, находка F5 критик-входа).
+   Защищён только `try/finally` в самих телах тестов
+   (`app_steps.set_system_dark_mode(False)` в `finally`).
+
+   Замер критик-входа AT-BUG-064 (2026-08-11, живое устройство):
+   `adb shell settings get secure ui_night_mode` → `1` — read-back у
+   night mode СУЩЕСТВУЕТ (прежнее обоснование «нет очевидного механизма
+   read-back» ослаблено: неизвестна только раскладка значений 0/1/2, не
+   наличие источника — это удешевляет пункт 2 плана). Смежный класс
+   (молчаливый no-op тех же adb-обёрток) — `bugs/AT-BUG-026.md:1290-1392`,
+   named-not-covered остаток; не дубль (там no-op, здесь остаток
+   персистентного стейта).
 
 Если worker/сессия умирает МЕЖДУ `set_font_scale(1.3)`/`set_night_mode(True)`
 и восстановительным вызовом (тот же класс, что описывал `AT-BUG-064` для
