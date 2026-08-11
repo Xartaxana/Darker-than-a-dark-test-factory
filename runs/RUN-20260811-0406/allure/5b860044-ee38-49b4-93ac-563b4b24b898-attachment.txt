@@ -1,0 +1,1 @@
+css_selector='[data-tap-marker-child="span"]' rect={'height': 58.476192474365234, 'innerHeight': 1603, 'left': 24.761905670166016, 'top': 641.827392578125, 'width': 198.4761962890625, 'fraction_of_innerHeight': 0.418630997389462} dispatched_clientY=671.1 fraction_of_innerHeight=0.419

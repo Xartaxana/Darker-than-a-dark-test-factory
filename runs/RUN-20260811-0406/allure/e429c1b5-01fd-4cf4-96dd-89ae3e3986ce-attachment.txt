@@ -1,0 +1,1 @@
+css_selector='[data-tap-marker="div"]' rect={'height': 61.52381134033203, 'innerHeight': 1603, 'left': 24, 'top': 801.3333740234375, 'width': 201.52381896972656, 'fraction_of_innerHeight': 0.5190862630652548} dispatched_clientY=832.1 fraction_of_innerHeight=0.519

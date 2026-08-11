@@ -1,0 +1,408 @@
+--------- beginning of main
+08-11 00:45:31.654 12947 12976 W tomator2.server: Accessing hidden field Lsun/nio/ch/SelectorImpl;->selectedKeys:Ljava/util/Set; (unsupported, reflection, allowed)
+08-11 00:45:31.655 12947 12976 W tomator2.server: Accessing hidden field Lsun/nio/ch/SelectorImpl;->publicSelectedKeys:Ljava/util/Set; (unsupported, reflection, allowed)
+08-11 00:45:31.679 12947 12976 D TrafficStats: tagSocket(97) with statsTag=0xffffffff, statsUid=-1
+08-11 00:45:31.698 12947 12976 D CompatibilityChangeReporter: Compat change id reported: 170188668; UID 10144; state: ENABLED
+08-11 00:45:31.696 12947 12947 W Thread-5: type=1400 audit(0.0:150): avc:  denied  { read } for  name="somaxconn" dev="proc" ino=59869 scontext=u:r:untrusted_app:s0:c144,c256,c512,c768 tcontext=u:object_r:proc_net:s0 tclass=file permissive=0 app=io.appium.uiautomator2.server
+08-11 00:45:31.701 12947 12976 W MacAddressUtil: Failed to find a usable hardware address from the network interfaces; using random bytes: bd:10:f8:fe:f9:0a:50:fc
+08-11 00:45:31.826 12947 12976 W ServerBootstrap: Unknown channel option 'SO_KEEPALIVE' for channel '[id: 0xf57da292]' of type 'class io.netty.channel.socket.nio.NioServerSocketChannel'
+08-11 00:45:31.826 12947 12976 W ServerBootstrap: Unknown channel option 'TCP_NODELAY' for channel '[id: 0xf57da292]' of type 'class io.netty.channel.socket.nio.NioServerSocketChannel'
+08-11 00:45:31.937  2643  4259 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-11 00:45:31.937  2643  4259 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-11 00:45:31.937  2643  4259 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-11 00:45:31.937  2643  4259 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:333
+--------- beginning of system
+08-11 00:45:31.994  2317  2410 W CpuMonitorService: Current CPU frequency (3676174) is greater than maximum CPU frequency (2) for policy ID (2). Skipping CPU frequency policy
+08-11 00:45:32.705 12947 12978 I appium  : channel read: GET /status
+08-11 00:45:32.709 12947 12978 I appium  : Status command
+08-11 00:45:32.717 12947 12978 I appium  : AppiumResponse: {"sessionId":"None","value":{"build":{"version":"10.2.4","versionCode":263},"message":"UiAutomator2 Server is ready to accept commands","ready":true}}
+08-11 00:45:32.738 12947 12978 I appium  : channel read: POST /session
+08-11 00:45:32.740 12947 12978 I appium  : NewSession command
+08-11 00:45:32.766 12947 12978 W tomator2.server: Accessing hidden field Landroid/app/UiAutomation;->mOnAccessibilityEventListener:Landroid/app/UiAutomation$OnAccessibilityEventListener; (max-target-o, reflection, allowed)
+08-11 00:45:32.773 12947 12978 I appium  : Created the new session with id d2b96e93-e27a-41b4-b5d1-ed39183594a8 and capabilities {appPackage=com.example.ao3_wrapper, networkConnectionEnabled=true, disableWindowAnimation=true, noReset=true, ensureWebviewsHavePages=true, warnings={}, databaseEnabled=false, deviceName=emulator-5554, fullReset=false, platform=LINUX, deviceUDID=emulator-5554, appActivity=com.example.ao3_wrapper.MainActivity, desired={platformName=Android, automationName=UiAutomator2, deviceName=emulator-5554, appPackage=com.example.ao3_wrapper, appActivity=com.example.ao3_wrapper.MainActivity, noReset=true, fullReset=false, newCommandTimeout=300.0, autoGrantPermissions=true, chromedriverAutodownload=true, ensureWebviewsHavePages=true, nativeWebScreenshot=true, disableWindowAnimation=true, ignoreHiddenApiPolicyError=true}, nativeWebScreenshot=true, newCommandTimeout=300.0, automationName=UiAutomator2, chromedriverAutodownload=true, webStorageEnabled=false, locationContextEnabled=false, autoGrantPermissions=true, takesScreenshot=true, javascriptEnabled=true, platformName=Android, ignoreHiddenApiPolicyError=true}
+08-11 00:45:32.783 12947 12978 I appium  : AppiumResponse: {"sessionId":"d2b96e93-e27a-41b4-b5d1-ed39183594a8","value":{"capabilities":{"firstMatch":[{"platformName":"Android","automationName":"UiAutomator2","deviceName":"emulator-5554","appPackage":"com.example.ao3_wrapper","appActivity":"com.example.ao3_wrapper.MainActivity","noReset":true,"fullReset":falвЂ¦
+08-11 00:45:32.802 12947 12978 I appium  : channel read: GET /session/d2b96e93-e27a-41b4-b5d1-ed39183594a8/appium/device/pixel_ratio
+08-11 00:45:32.804 12947 12978 I appium  : GetDevicePixelRatio command
+08-11 00:45:32.810 12947 12978 I appium  : AppiumResponse: {"sessionId":"d2b96e93-e27a-41b4-b5d1-ed39183594a8","value":2.625}
+08-11 00:45:32.814 12947 12979 I appium  : channel read: GET /session/d2b96e93-e27a-41b4-b5d1-ed39183594a8/appium/device/system_bars
+08-11 00:45:32.817 12947 12979 I appium  : GetSystemBars command
+08-11 00:45:32.819 12947 12981 I appium  : channel read: GET /session/d2b96e93-e27a-41b4-b5d1-ed39183594a8/appium/device/info
+08-11 00:45:32.820 12947 12980 I appium  : channel read: GET /session/d2b96e93-e27a-41b4-b5d1-ed39183594a8/window/current/size
+08-11 00:45:32.822 12947 12979 I appium  : AppiumResponse: {"sessionId":"d2b96e93-e27a-41b4-b5d1-ed39183594a8","value":{"statusBar":128}}
+08-11 00:45:32.823 12947 12981 I appium  : GetDeviceInfo command
+08-11 00:45:32.825 12947 12980 I appium  : GetDeviceSize command
+08-11 00:45:32.828 12947 12980 I appium  : Get window size of the device
+08-11 00:45:32.832 12947 12980 I appium  : AppiumResponse: {"sessionId":"d2b96e93-e27a-41b4-b5d1-ed39183594a8","value":{"height":2400,"width":1080}}
+08-11 00:45:32.841 12947 12981 W tomator2.server: Accessing hidden field Landroid/net/NetworkCapabilities;->mSignalStrength:I (max-target-p, reflection, allowed)
+08-11 00:45:32.841 12947 12981 W tomator2.server: Accessing hidden field Landroid/net/NetworkCapabilities;->mSSID:Ljava/lang/String; (max-target-o, reflection, allowed)
+08-11 00:45:32.843 12947 12981 D CompatibilityChangeReporter: Compat change id reported: 263076149; UID 10144; state: ENABLED
+08-11 00:45:32.858 12947 12981 I appium  : AppiumResponse: {"sessionId":"d2b96e93-e27a-41b4-b5d1-ed39183594a8","value":{"androidId":"ea613438f674b0b8","apiVersion":"34","bluetooth":{"state":"ON"},"brand":"Android","carrierName":"T-Mobile","displayDensity":420,"locale":"en_US","manufacturer":"unknown","model":"Android SDK built for x86_64","networks":[{"capaвЂ¦
+08-11 00:45:32.937  2643  4259 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-11 00:45:32.937  2643  4259 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-11 00:45:32.937  2643  4259 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-11 00:45:32.938  2643  4259 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-11 00:45:33.072  2317  6344 I ActivityManager: Force stopping com.example.ao3_wrapper appid=10147 user=0: from pid 12994
+08-11 00:45:33.075  2317  6344 I AppsFilter: interaction: PackageSetting{b84c5a2 io.appium.uiautomator2.server.test/10143} -> PackageSetting{9240bc8 com.example.ao3_wrapper/10147} BLOCKED
+08-11 00:45:33.075  2317  6344 I AppsFilter: interaction: PackageSetting{cb9b896 io.appium.settings/10142} -> PackageSetting{9240bc8 com.example.ao3_wrapper/10147} BLOCKED
+08-11 00:45:33.087  2727  2727 D CarrierSvcBindHelper: onHandleForceStop: [com.example.ao3_wrapper]
+08-11 00:45:33.087  2727  2727 D CarrierSvcBindHelper: No carrier app for: 0
+08-11 00:45:33.330  2317  6344 D CompatibilityChangeReporter: Compat change id reported: 265464455; UID 10147; state: DISABLED
+08-11 00:45:33.330  2317  6344 D CompatibilityChangeReporter: Compat change id reported: 265452344; UID 10147; state: DISABLED
+08-11 00:45:33.331  2317  6344 D CompatibilityChangeReporter: Compat change id reported: 266124927; UID 10147; state: DISABLED
+08-11 00:45:33.331  2317  6344 D CompatibilityChangeReporter: Compat change id reported: 265451093; UID 10147; state: DISABLED
+08-11 00:45:33.331  2317  6344 D CompatibilityChangeReporter: Compat change id reported: 265456536; UID 10147; state: DISABLED
+08-11 00:45:33.332  2317  6344 D CompatibilityChangeReporter: Compat change id reported: 255940284; UID 10147; state: DISABLED
+08-11 00:45:33.333  2317  6344 D CompatibilityChangeReporter: Compat change id reported: 236283604; UID 10147; state: DISABLED
+08-11 00:45:33.334  2317  6344 D CompatibilityChangeReporter: Compat change id reported: 263959004; UID 10147; state: DISABLED
+08-11 00:45:33.334  2317  6344 D CompatibilityChangeReporter: Compat change id reported: 264304459; UID 10147; state: DISABLED
+08-11 00:45:33.335  2317  6344 D CompatibilityChangeReporter: Compat change id reported: 264301586; UID 10147; state: DISABLED
+08-11 00:45:33.335  2317  6344 D CompatibilityChangeReporter: Compat change id reported: 254631730; UID 10147; state: DISABLED
+08-11 00:45:33.336  2317  6344 D CompatibilityChangeReporter: Compat change id reported: 273509367; UID 10147; state: DISABLED
+08-11 00:45:33.336  2317  6344 D CompatibilityChangeReporter: Compat change id reported: 263259275; UID 10147; state: DISABLED
+08-11 00:45:33.337  2317  6344 D CompatibilityChangeReporter: Compat change id reported: 174042980; UID 10147; state: DISABLED
+08-11 00:45:33.337  2317  6344 D CompatibilityChangeReporter: Compat change id reported: 174042936; UID 10147; state: DISABLED
+08-11 00:45:33.338  2317  6344 D CompatibilityChangeReporter: Compat change id reported: 181136395; UID 10147; state: DISABLED
+08-11 00:45:33.338  2317  6344 D CompatibilityChangeReporter: Compat change id reported: 194480991; UID 10147; state: ENABLED
+08-11 00:45:33.344  2317  6344 D CompatibilityChangeReporter: Compat change id reported: 184838306; UID 10147; state: DISABLED
+08-11 00:45:33.344  2317  6344 D CompatibilityChangeReporter: Compat change id reported: 185004937; UID 10147; state: DISABLED
+08-11 00:45:33.348  2317  6344 D CompatibilityChangeReporter: Compat change id reported: 205907456; UID 10147; state: ENABLED
+08-11 00:45:33.352  2550  2598 D SplashScreenView: Build android.window.SplashScreenView{ccec434 V.E...... ......ID 0,0-0,0}
+08-11 00:45:33.352  2550  2598 D SplashScreenView: Icon: view: android.widget.ImageView{809925d V.ED..... ......I. 0,0-0,0 #10204f0 android:id/splashscreen_icon_view} drawable: com.android.wm.shell.startingsurface.SplashscreenIconDrawableFactory$ImmobileIconDrawable@799d7d2 size: 504
+08-11 00:45:33.352  2550  2598 D SplashScreenView: Branding: view: android.view.View{aaf10a3 G.ED..... ......I. 0,0-0,0 #10204ef android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+08-11 00:45:33.354  2550  2583 V WindowManagerShell: Transition requested: android.os.BinderProxy@4adefa0 TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=4875 displayId=0 isRunning=true baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10200000 cmp=com.example.ao3_wrapper/.MainActivity } baseActivity=ComponentInfo{com.example.ao3_wrapper/com.example.ao3_wrapper.MainActivity} topActivity=ComponentInfo{com.example.ao3_wrapper/com.example.ao3_wrapper.MainActivity} origActivity=null realActivity=ComponentInfo{com.example.ao3_wrapper/com.example.ao3_wrapper.MainActivity} numActivities=1 lastActiveTime=839353 supportsMultiWindow=true resizeMode=1 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{android.window.IWindowContainerToken$Stub$Proxy@2d1f759} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=Rect(0, 128 - 0, 0) topActivityInfo=ActivityInfo{4999f1e com.example.ao3_wrapper.MainActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=false isVisible=false isVisibleRequested=false isSleeping=false topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= false topActivityLetterboxed= false isFromDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 locusId=null displayAreaFeatureId=1 cameraCompatControlState=hidden}, remoteTransition = null, displayChange = null }
+08-11 00:45:33.355  2317  6344 D CompatibilityChangeReporter: Compat change id reported: 194833441; UID 10147; state: ENABLED
+08-11 00:45:33.355  2317  6344 I ActivityTaskManager: START u0 {act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10200000 cmp=com.example.ao3_wrapper/.MainActivity} with LAUNCH_SINGLE_TASK from uid 0 (BAL_ALLOW_ALLOWLISTED_UID) result code=0
+08-11 00:45:33.370  2317  2342 D CompatibilityChangeReporter: Compat change id reported: 135634846; UID 10147; state: DISABLED
+08-11 00:45:33.378  2317  2359 D CompatibilityChangeReporter: Compat change id reported: 143937733; UID 10147; state: ENABLED
+08-11 00:45:33.381  2317  2406 D CompatibilityChangeReporter: Compat change id reported: 265195908; UID 10147; state: ENABLED
+08-11 00:45:33.383  2317  3356 D CoreBackPreview: Window{49b75e3 u0 Splash Screen com.example.ao3_wrapper}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@1858d3f, mPriority=0, mIsAnimationCallback=false}
+08-11 00:45:33.389  2236  2236 D Zygote  : Forked child process 12997
+08-11 00:45:33.390  2317  2359 I ActivityManager: Start proc 12997:com.example.ao3_wrapper/u0a147 for next-top-activity {com.example.ao3_wrapper/com.example.ao3_wrapper.MainActivity}
+08-11 00:45:33.420  2229  2229 I BpBinder: onLastStrongRef automatically unlinking death recipients: 
+08-11 00:45:33.445 12997 12997 I ple.ao3_wrapper: Late-enabling -Xcheck:jni
+08-11 00:45:33.457  3085  3403 D EGL_emulation: app_time_stats: avg=3136.72ms min=102.68ms max=6170.75ms count=2
+08-11 00:45:33.465  2317  2339 V WindowManager: Sent Transition #84 createdAt=08-11 00:45:33.339 via request=TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=4875 displayId=0 isRunning=true baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10200000 cmp=com.example.ao3_wrapper/.MainActivity } baseActivity=ComponentInfo{com.example.ao3_wrapper/com.example.ao3_wrapper.MainActivity} topActivity=ComponentInfo{com.example.ao3_wrapper/com.example.ao3_wrapper.MainActivity} origActivity=null realActivity=ComponentInfo{com.example.ao3_wrapper/com.example.ao3_wrapper.MainActivity} numActivities=1 lastActiveTime=839353 supportsMultiWindow=true resizeMode=1 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{RemoteToken{2cfbe5b Task{a521c74 #4875 type=standard A=10147:com.example.ao3_wrapper}}} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=Rect(0, 128 - 0, 0) topActivityInfo=ActivityInfo{3d5f6f8 com.example.ao3_wrapper.MainActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=false isVisible=false isVisibleRequested=false isSleeping=false topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= false topActivityLetterboxed= false isFromDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 locusId=null displayAreaFeatureId=1 cameraCompatControlState=hidden}, remoteTransition = null, displayChange = null }
+08-11 00:45:33.466  2317  2339 V WindowManager:     startWCT=WindowContainerTransaction { changes = {} hops = [] errorCallbackToken=null taskFragmentOrganizer=null }
+08-11 00:45:33.467  2317  2339 V WindowManager:     info={id=84 t=OPEN f=0x0 trk=0 r=[0@Point(0, 0)] c=[{WCT{RemoteToken{2cfbe5b Task{a521c74 #4875 type=standard A=10147:com.example.ao3_wrapper}}} m=OPEN f=NONE leash=Surface(name=Task=4875)/@0xa78eb55 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{WCT{RemoteToken{34191ce Task{1fa58ab #1 type=home}}} m=TO_BACK f=SHOW_WALLPAPER leash=Surface(name=Task=1)/@0xe3b735b sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0}]}
+08-11 00:45:33.471  2550  2583 V WindowManagerShell: onTransitionReady android.os.BinderProxy@4adefa0: {id=84 t=OPEN f=0x0 trk=0 r=[0@Point(0, 0)] c=[{WCT{android.window.IWindowContainerToken$Stub$Proxy@c050440} m=OPEN f=NONE leash=Surface(name=Task=4875)/@0xfb7d87d sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{WCT{android.window.IWindowContainerToken$Stub$Proxy@eee7f79} m=TO_BACK f=SHOW_WALLPAPER leash=Surface(name=Task=1)/@0x2eb7372 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0}]}
+08-11 00:45:33.471  2550  2583 V WindowManagerShell: Playing animation for (#84)android.os.BinderProxy@4adefa0@0
+08-11 00:45:33.475  2550  2583 V WindowManagerShell:  try handler com.android.wm.shell.transition.DefaultMixedHandler@fe30c5c
+08-11 00:45:33.480  2550  2583 V WindowManagerShell:  try handler com.android.wm.shell.keyguard.KeyguardTransitionHandler@c987b65
+08-11 00:45:33.482  2550  2583 V WindowManagerShell:  try handler com.android.wm.shell.activityembedding.ActivityEmbeddingController@7a3803a
+08-11 00:45:33.485  2550  2583 V WindowManagerShell:  try handler com.android.wm.shell.recents.RecentsTransitionHandler@88b74eb
+08-11 00:45:33.486  2550  2583 V ShellRecents: RecentsTransitionHandler.startAnimation: no controller found
+08-11 00:45:33.488 12997 12997 I ple.ao3_wrapper: Using CollectorTypeCC GC.
+08-11 00:45:33.489 12997 12997 W ple.ao3_wrapper: Unexpected CPU variant for x86: x86_64.
+08-11 00:45:33.489 12997 12997 W ple.ao3_wrapper: Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, tremont, kabylake, default
+08-11 00:45:33.492  2550  2583 V WindowManagerShell:  try handler com.android.wm.shell.pip.PipTransition@9c29248
+08-11 00:45:33.495  2550  2583 V WindowManagerShell:  try handler com.android.wm.shell.splitscreen.StageCoordinator@c1a68e1
+08-11 00:45:33.495  2550  2583 V WindowManagerShell:  try handler com.android.wm.shell.transition.RemoteTransitionHandler@2396606
+08-11 00:45:33.496  2550  2583 V WindowManagerShell: Transition doesn't have explicit remote, search filters for match for {id=84 t=OPEN f=0x0 trk=0 r=[0@Point(0, 0)] c=[{WCT{android.window.IWindowContainerToken$Stub$Proxy@c050440} m=OPEN f=NONE leash=Surface(name=Task=4875)/@0xfb7d87d sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{WCT{android.window.IWindowContainerToken$Stub$Proxy@eee7f79} m=TO_BACK f=SHOW_WALLPAPER leash=Surface(name=Task=1)/@0x2eb7372 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0}]}
+08-11 00:45:33.496  2550  2583 V WindowManagerShell:  Checking filter Pair{{types=[] flags=0x0] notFlags=0x100 checks=[{atype=home independent=true modes=[OPEN,TO_FRONT] flags=NONE mustBeTask=false order=TOP topActivity=ComponentInfo{com.android.launcher3/com.android.launcher3.uioverrides.QuickstepLauncher}},{atype=standard independent=true modes=[CLOSE,TO_BACK] flags=NONE mustBeTask=false order=ANY topActivity=null}]} RemoteTransition { remoteTransition = android.window.IRemoteTransition$Stub$Proxy@a3f6012, appThread = android.app.IApplicationThread$Stub$Proxy@c2d93e3, debugName = QuickstepLaunchHome }}
+08-11 00:45:33.498  2550  2583 V WindowManagerShell:  Delegate animation for #84 to null
+08-11 00:45:33.499  2550  2583 V WindowManagerShell:  try handler com.android.wm.shell.transition.DefaultTransitionHandler@e2a74c7
+08-11 00:45:33.501  2550  2583 V WindowManagerShell: start default transition animation, info = {id=84 t=OPEN f=0x0 trk=0 r=[0@Point(0, 0)] c=[{WCT{android.window.IWindowContainerToken$Stub$Proxy@c050440} m=OPEN f=NONE leash=Surface(name=Task=4875)/@0xfb7d87d sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{WCT{android.window.IWindowContainerToken$Stub$Proxy@eee7f79} m=TO_BACK f=SHOW_WALLPAPER leash=Surface(name=Task=1)/@0x2eb7372 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0}]}
+08-11 00:45:33.503  2550  2583 V WindowManagerShell: loadAnimation: anim=android.view.animation.AnimationSet@e336ce animAttr=0x13 type=OPEN isEntrance=false
+08-11 00:45:33.506  2550  2583 V WindowManagerShell: loadAnimation: anim=android.view.animation.AnimationSet@a7ff1da animAttr=0x12 type=OPEN isEntrance=true
+08-11 00:45:33.511  2550  2583 V WindowManagerShell:  animated by com.android.wm.shell.transition.DefaultTransitionHandler@e2a74c7
+08-11 00:45:33.514  2550  2583 W Looper  : Slow dispatch took 43ms wmshell.main h=android.os.Handler c=com.android.wm.shell.transition.Transitions$TransitionPlayerImpl$$ExternalSyntheticLambda0@9c76ce8 m=0
+08-11 00:45:33.515  2550  2583 W Looper  : Slow delivery took 45ms wmshell.main h=android.os.Handler c=null m=1
+08-11 00:45:33.516  1538  1570 I adbd    : jdwp connection from 12997
+08-11 00:45:33.523  2550  2616 D EGL_emulation: app_time_stats: avg=3090.14ms min=34.79ms max=6145.48ms count=2
+08-11 00:45:33.528  2550  2583 W Looper  : Drained
+08-11 00:45:33.532  2550  2583 V WindowManagerShell: Transition animation finished (aborted=false), notifying core (#84)android.os.BinderProxy@4adefa0@0
+08-11 00:45:33.559  2550  2616 D EGL_emulation: app_time_stats: avg=6310.74ms min=6310.74ms max=6310.74ms count=1
+08-11 00:45:33.617  2317  3356 W ActivityManager: Slow operation: 94ms so far, now at attachApplicationLocked: immediately after bindApplication
+08-11 00:45:33.621  2317  2339 V WindowManager: Finish Transition #84: created at 08-11 00:45:33.339 collect-started=0.059ms request-sent=14.106ms started=23.077ms ready=122.086ms sent=124.371ms finished=276.484ms
+08-11 00:45:33.621  2317  3356 W ActivityManager: Slow operation: 98ms so far, now at attachApplicationLocked: after updateLruProcessLocked
+08-11 00:45:33.622  2550  2583 V WindowManagerShell: Track 0 became idle
+08-11 00:45:33.623  2550  2583 V WindowManagerShell: All active transition animations finished
+08-11 00:45:33.623  2550  2583 W Looper  : Slow dispatch took 92ms wmshell.main h=android.os.Handler c=com.android.wm.shell.transition.DefaultTransitionHandler$$ExternalSyntheticLambda7@8e2a81 m=0
+08-11 00:45:33.624  2550  2583 W Looper  : Slow delivery took 61ms wmshell.main h=android.os.Handler c=com.android.wm.shell.pip.phone.PipController$$ExternalSyntheticLambda1@278c96c m=0
+08-11 00:45:33.654  2550  2583 W Looper  : Drained
+08-11 00:45:33.682 12997 12997 D CompatibilityChangeReporter: Compat change id reported: 171979766; UID 10147; state: ENABLED
+08-11 00:45:33.683 12997 12997 D CompatibilityChangeReporter: Compat change id reported: 242716250; UID 10147; state: ENABLED
+08-11 00:45:33.688  2317  2330 D CompatibilityChangeReporter: Compat change id reported: 170503758; UID 10147; state: ENABLED
+08-11 00:45:33.694 12997 12997 D ApplicationLoaders: Returning zygote-cached class loader: /system_ext/framework/androidx.window.extensions.jar
+08-11 00:45:33.694 12997 12997 D ApplicationLoaders: Returning zygote-cached class loader: /system_ext/framework/androidx.window.sidecar.jar
+08-11 00:45:33.695 12997 12997 W ziparchive: Unable to open '/data/app/~~ofub2PDsTmbmyW8kkhJqVQ==/com.example.ao3_wrapper-gXplO95aHJ8gip9zg19k7w==/base.dm': No such file or directory
+08-11 00:45:33.695 12997 12997 W ziparchive: Unable to open '/data/app/~~ofub2PDsTmbmyW8kkhJqVQ==/com.example.ao3_wrapper-gXplO95aHJ8gip9zg19k7w==/base.dm': No such file or directory
+08-11 00:45:33.735  2317  2326 I system_server: NativeAlloc concurrent copying GC freed 339932(13MB) AllocSpace objects, 82(1768KB) LOS objects, 50% free, 20MB/41MB, paused 564us,111us total 141.976ms
+08-11 00:45:33.903  2317  2317 W AccessibilityManagerService:  wait for adding window timeout: 202
+08-11 00:45:33.938  2643  4259 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-11 00:45:33.938  2643  4259 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-11 00:45:33.938  2643  4259 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-11 00:45:33.938  2643  4259 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-11 00:45:34.093 12997 12997 D nativeloader: Configuring clns-6 for other apk /data/app/~~ofub2PDsTmbmyW8kkhJqVQ==/com.example.ao3_wrapper-gXplO95aHJ8gip9zg19k7w==/base.apk. target_sdk_version=36, uses_libraries=, library_path=/data/app/~~ofub2PDsTmbmyW8kkhJqVQ==/com.example.ao3_wrapper-gXplO95aHJ8gip9zg19k7w==/lib/x86_64:/data/app/~~ofub2PDsTmbmyW8kkhJqVQ==/com.example.ao3_wrapper-gXplO95aHJ8gip9zg19k7w==/base.apk!/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/com.example.ao3_wrapper
+08-11 00:45:34.103 12997 12997 V GraphicsEnvironment: Currently set values for:
+08-11 00:45:34.103 12997 12997 V GraphicsEnvironment:   angle_gl_driver_selection_pkgs=[]
+08-11 00:45:34.104 12997 12997 V GraphicsEnvironment:   angle_gl_driver_selection_values=[]
+08-11 00:45:34.105 12997 12997 V GraphicsEnvironment: ANGLE GameManagerService for com.example.ao3_wrapper: false
+08-11 00:45:34.105 12997 12997 V GraphicsEnvironment: com.example.ao3_wrapper is not listed in per-application setting
+08-11 00:45:34.106 12997 12997 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+08-11 00:45:34.174  2317  2330 I ActivityManager: Flag disabled. Ignoring finishAttachApplication from uid: 10147. pid: 12997
+08-11 00:45:34.182 12997 13019 D libEGL  : loaded /vendor/lib64/egl/libEGL_emulation.so
+08-11 00:45:34.186 12997 13019 D libEGL  : loaded /vendor/lib64/egl/libGLESv1_CM_emulation.so
+08-11 00:45:34.189 12997 13019 D libEGL  : loaded /vendor/lib64/egl/libGLESv2_emulation.so
+08-11 00:45:34.296 12997 12997 D AppCompatDelegate: Checking for metadata for AppLocalesMetadataHolderService : Service not found
+08-11 00:45:34.425 12997 12997 W ple.ao3_wrapper: Accessing hidden method Landroid/view/ViewGroup;->makeOptionalFitsSystemWindows()V (unsupported, reflection, allowed)
+08-11 00:45:34.448 12997 12997 D CompatibilityChangeReporter: Compat change id reported: 237531167; UID 10147; state: DISABLED
+08-11 00:45:34.451 12997 12997 W OpenGLRenderer: Unknown dataspace 0
+08-11 00:45:34.938  2643  4259 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-11 00:45:34.938  2643  4259 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-11 00:45:34.938  2643  4259 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-11 00:45:34.938  2643  4259 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-11 00:45:35.211 12997 12997 W ple.ao3_wrapper: Accessing hidden method Landroid/os/SystemProperties;->addChangeCallback(Ljava/lang/Runnable;)V (unsupported, reflection, allowed)
+08-11 00:45:35.295  2550  2550 D StatusBarIconController: ignoring old pipeline callback because the new wifi icon is enabled
+08-11 00:45:35.581 12532 12532 I AidlLazyServiceRegistrar: Process has 0 (of 1 available) client(s) in use after notification artd has clients: 0
+08-11 00:45:35.581 12532 12532 I AidlLazyServiceRegistrar: Trying to shut down the service. No clients in use for any service in process.
+08-11 00:45:35.584 12532 12532 I AidlLazyServiceRegistrar: Unregistered all clients and exiting
+--------- beginning of kernel
+08-11 00:45:35.562     0     0 I servicemanager: Notifying artd they don't (previously: do) have clients when we now have no record of a client
+08-11 00:45:35.563     0     0 I servicemanager: Unregistering artd
+08-11 00:45:35.564     0     0 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+08-11 00:45:35.568     0     0 I init    : Service 'artd' (pid 12532) exited with status 0 oneshot service took 44.840000 seconds in background
+08-11 00:45:35.569     0     0 I init    : Sending signal 9 to service 'artd' (pid 12532) process group...
+08-11 00:45:35.570     0     0 I libprocessgroup: Successfully killed process cgroup uid 1082 pid 12532 in 0ms
+08-11 00:45:35.938  2643  4259 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-11 00:45:35.939  2643  4259 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-11 00:45:35.939  2643  4259 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-11 00:45:35.939  2643  4259 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-11 00:45:36.198  2317  2330 D CoreBackPreview: Window{2cc53c5 u0 com.example.ao3_wrapper/com.example.ao3_wrapper.MainActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@a9ce4d4, mPriority=0, mIsAnimationCallback=false}
+08-11 00:45:36.311 12997 12997 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+08-11 00:45:36.311 12997 12997 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+08-11 00:45:36.359  2317  3327 E TaskPersister: File error accessing recents directory (directory doesn't exist?).
+08-11 00:45:36.478 12997 13017 W OpenGLRenderer: Failed to initialize 101010-2 format, error = EGL_SUCCESS
+08-11 00:45:36.502   174   174 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device VINTF manifest.
+08-11 00:45:36.503 12997 13017 I Gralloc4: mapper 4.x is not supported
+08-11 00:45:36.482     0     0 I servicemanager: Could not find android.hardware.graphics.allocator.IAllocator/default in the VINTF manifest.
+08-11 00:45:36.940  2643  4259 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-11 00:45:36.940  2643  4259 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-11 00:45:36.940  2643  4259 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-11 00:45:36.941  2643  4259 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-11 00:45:36.973  2542  2542 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 
+08-11 00:45:37.053  2317  2339 W ziparchive: Unable to open '/data/app/~~ofub2PDsTmbmyW8kkhJqVQ==/com.example.ao3_wrapper-gXplO95aHJ8gip9zg19k7w==/base.dm': No such file or directory
+08-11 00:45:37.054  2317  2339 I ActivityTaskManager: Displayed com.example.ao3_wrapper/.MainActivity for user 0: +3s723ms
+08-11 00:45:37.059  2317  2317 W AccessibilityManagerService:  wait for adding window timeout: 203
+08-11 00:45:37.076  2550  2597 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=falsecallback=android.view.ViewRootImpl$$ExternalSyntheticLambda17@f4aac73
+08-11 00:45:37.078  2317  3356 D CoreBackPreview: Window{49b75e3 u0 Splash Screen com.example.ao3_wrapper}: Setting back callback null
+08-11 00:45:37.080  2317  6344 W InputManager-JNI: Input channel object '49b75e3 Splash Screen com.example.ao3_wrapper (client)' was disposed without first being removed with the input manager!
+08-11 00:45:37.093 12997 13011 I OpenGLRenderer: Davey! duration=2918ms; Flags=1, FrameTimelineVsyncId=372371, IntendedVsync=840140561684, Vsync=840490561670, InputEventId=0, HandleInputStart=840502022600, AnimationStart=840502054700, PerformTraversalsStart=840502396600, DrawStart=842557866800, FrameDeadline=840157228350, FrameInterval=840501635300, FrameStartTime=16666666, SyncQueued=842589996400, SyncStart=842590291600, IssueDrawCommandsStart=842591273700, SwapBuffers=842905056100, FrameCompleted=843059192000, DequeueBufferDuration=36000, QueueBufferDuration=889700, GpuCompleted=843059192000, SwapBuffersCompleted=843048082200, DisplayPresentTime=0, CommandSubmissionCompleted=842905056100, 
+08-11 00:45:37.093  3085  3124 I ImeTracker: com.android.launcher3:4d92e87e: onRequestHide at ORIGIN_CLIENT_HIDE_SOFT_INPUT reason HIDE_SOFT_INPUT
+08-11 00:45:37.094  2317  7864 I ImeTracker: com.android.launcher3:4d92e87e: onCancelled at PHASE_SERVER_SHOULD_HIDE
+08-11 00:45:37.141   195 12850 I keystore2: system/security/keystore2/src/watchdog.rs:319 - Watchdog thread idle -> terminating. Have a great day.
+08-11 00:45:37.141 12997 12997 I WebViewFactory: Loading com.android.webview version 113.0.5672.136 (code 567263606)
+08-11 00:45:37.142  2550  2616 D EGL_emulation: app_time_stats: avg=1808.05ms min=67.71ms max=3548.38ms count=2
+08-11 00:45:37.151 12997 12997 D nativeloader: InitLlndkLibrariesProduct: libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libRS.so:libandroid_net.so:libbinder_ndk.so:libc.so:libcgrouprc.so:libclang_rt.asan-x86_64-android.so:libcom.android.tethering.connectivity_native.so:libdl.so:libft2.so:liblog.so:libm.so:libmediandk.so:libnativewindow.so:libneuralnetworks.so:libselinux.so:libsync.so:libvndksupport.so:libvulkan.so
+08-11 00:45:37.151  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{241fd36 com.android.cts.priv.ctsshim/10129} BLOCKED
+08-11 00:45:37.151  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{f037437 com.android.uwb.resources/10123} BLOCKED
+08-11 00:45:37.151 12997 12997 D nativeloader: Configuring product-clns-7 for unbundled product apk /product/app/webview/webview.apk. target_sdk_version=34, uses_libraries=, library_path=/product/app/webview/lib/x86_64:/product/app/webview/webview.apk!/lib/x86_64:/product/lib64:/system/product/lib64, permitted_path=/data:/mnt/expand:/product/lib64:/system/product/lib64
+08-11 00:45:37.151  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{b6b6da4 com.android.internal.display.cutout.emulation.corner/10037} BLOCKED
+08-11 00:45:37.152  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{8fdd70d com.android.internal.display.cutout.emulation.double/10007} BLOCKED
+08-11 00:45:37.152  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{cb9b896 io.appium.settings/10142} BLOCKED
+08-11 00:45:37.153 12997 12997 D nativeloader: InitVndkspLibrariesProduct: android.hardware.common-V2-ndk.so:android.hardware.common.fmq-V1-ndk.so:android.hardware.graphics.allocator-V2-ndk.so:android.hardware.graphics.common-V4-ndk.so:android.hardware.graphics.common@1.0.so:android.hardware.graphics.common@1.1.so:android.hardware.graphics.common@1.2.so:android.hardware.graphics.composer3-V1-ndk.so:android.hardware.graphics.mapper@2.0.so:android.hardware.graphics.mapper@2.1.so:android.hardware.graphics.mapper@3.0.so:android.hardware.graphics.mapper@4.0.so:android.hardware.renderscript@1.0.so:android.hidl.memory.token@1.0.so:android.hidl.memory@1.0-impl.so:android.hidl.memory@1.0.so:android.hidl.safe_union@1.0.so:libRSCpuRef.so:libRSDriver.so:libRS_internal.so:libbase.so:libbcinfo.so:libblas.so:libc++.so:libcompiler_rt.so:libcutils.so:libdmabufheap.so:libgralloctypes.so:libhardware.so:libhidlbase.so:libhidlmemory.so:libion.so:libjsoncpp.so:liblzma.so:libprocessgroup.so:libunwindstack.so:libutils.so:libutilscallstack.so:libz.so
+08-11 00:45:37.153  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{ca8b6c2 com.android.healthconnect.controller/10124} BLOCKED
+08-11 00:45:37.154  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{7911cd3 com.android.health.connect.backuprestore/10125} BLOCKED
+08-11 00:45:37.154  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{dc3c010 com.android.internal.systemui.navbar.gestural_wide_back/10045} BLOCKED
+08-11 00:45:37.154  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{d3dd709 com.android.virtualmachine.res/10131} BLOCKED
+08-11 00:45:37.155  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{4cf7d0e com.android.carrierconfig.auto_generated_rro_vendor__/10054} BLOCKED
+08-11 00:45:37.156  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{b46b32f com.android.systemui.emulation.pixel_3_xl/10030} BLOCKED
+08-11 00:45:37.159  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{d63dac5 com.android.systemui.emulation.pixel_4_xl/10039} BLOCKED
+08-11 00:45:37.160  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{98a5c1a com.android.systemui.emulation.pixel_fold/10024} BLOCKED
+08-11 00:45:37.161  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{e15534b com.android.htmlviewer/10090} BLOCKED
+08-11 00:45:37.161  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{5778128 com.android.quicksearchbox/10106} BLOCKED
+08-11 00:45:37.161  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{a2c5e41 com.android.federatedcompute.services/10139} BLOCKED
+08-11 00:45:37.162  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{e21fe6 com.android.networkstack.tethering.emulator/10028} BLOCKED
+08-11 00:45:37.162  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{7e3d927 com.android.internal.emulation.pixel_3a_xl/10003} BLOCKED
+08-11 00:45:37.162  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{35787d4 com.android.internal.emulation.pixel_6_pro/10010} BLOCKED
+08-11 00:45:37.162  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{99f9d7d com.android.internal.emulation.pixel_7_pro/10040} BLOCKED
+08-11 00:45:37.163  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{6a05472 com.android.internal.emulation.pixel_8_pro/10026} BLOCKED
+08-11 00:45:37.165  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{2ee742b io.appium.uiautomator2.server/10144} BLOCKED
+08-11 00:45:37.165  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{28f4d40 com.android.internal.emulation.pixel_3a/10047} BLOCKED
+08-11 00:45:37.165  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{d9479 com.android.internal.emulation.pixel_4a/10006} BLOCKED
+08-11 00:45:37.165  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{79b45be com.android.internal.emulation.pixel_6a/10044} BLOCKED
+08-11 00:45:37.165  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{b50c61f com.android.internal.emulation.pixel_7a/10022} BLOCKED
+08-11 00:45:37.166  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{8bbfd6c com.android.safetycenter.resources/10127} BLOCKED
+08-11 00:45:37.167  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{cc9ff35 com.android.simappdialog/10076} BLOCKED
+08-11 00:45:37.167  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{5c1ffca com.android.connectivity.resources/10137} BLOCKED
+08-11 00:45:37.167  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{fc5a53b com.android.internal.display.cutout.emulation.hole/10017} BLOCKED
+08-11 00:45:37.167  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{6218458 com.android.internal.display.cutout.emulation.tall/10038} BLOCKED
+08-11 00:45:37.168  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{6a859b1 com.android.modulemetadata/10097} BLOCKED
+08-11 00:45:37.168  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{e84e96 com.android.internal.systemui.navbar.threebutton/10034} BLOCKED
+08-11 00:45:37.172  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{8df5a17 com.android.wifi.dialog/10134} BLOCKED
+08-11 00:45:37.172  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{9568e04 com.android.contacts/10095} BLOCKED
+08-11 00:45:37.172  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{437dfed com.android.camera2/10103} BLOCKED
+08-11 00:45:37.172 12947 12981 I appium  : channel read: POST /session/d2b96e93-e27a-41b4-b5d1-ed39183594a8/element
+08-11 00:45:37.173  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{52be22 com.android.launcher3/10112} BLOCKED
+08-11 00:45:37.173  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{97580b3 com.android.systemui.auto_generated_rro_vendor__/10053} BLOCKED
+08-11 00:45:37.174  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{1b08670 com.android.internal.systemui.navbar.twobutton/10027} BLOCKED
+08-11 00:45:37.174 12947 12981 I appium  : FindElement command
+08-11 00:45:37.176  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{bbf8de9 com.android.settings.intelligence/10093} BLOCKED
+08-11 00:45:37.177  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{9029a6e com.android.calendar/10101} BLOCKED
+08-11 00:45:37.177  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{3d750f com.android.internal.systemui.navbar.gestural_extra_wide_back/10009} BLOCKED
+08-11 00:45:37.177  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{c6f999c com.android.systemui.emulation.pixel_3/10048} BLOCKED
+08-11 00:45:37.177 12997 12997 W ple.ao3_wrapper: Accessing hidden method Landroid/os/Trace;->isTagEnabled(J)Z (unsupported, reflection, allowed)
+08-11 00:45:37.177  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{6fa1fa5 com.android.systemui.emulation.pixel_4/10049} BLOCKED
+08-11 00:45:37.177 12997 12997 W ple.ao3_wrapper: Accessing hidden method Landroid/os/Trace;->traceBegin(JLjava/lang/String;)V (unsupported, reflection, allowed)
+08-11 00:45:37.177  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{cc1ef7a com.android.systemui.emulation.pixel_5/10046} BLOCKED
+08-11 00:45:37.177 12997 12997 W ple.ao3_wrapper: Accessing hidden method Landroid/os/Trace;->traceEnd(J)V (unsupported, reflection, allowed)
+08-11 00:45:37.177  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{7e6532b com.android.systemui.emulation.pixel_6/10005} BLOCKED
+08-11 00:45:37.177 12947 12981 I appium  : method: 'class name', selector: 'android.webkit.WebView'
+08-11 00:45:37.177 12997 12997 W ple.ao3_wrapper: Accessing hidden method Landroid/os/Trace;->asyncTraceBegin(JLjava/lang/String;I)V (unsupported, reflection, allowed)
+08-11 00:45:37.177  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{8aab388 com.android.systemui.emulation.pixel_7/10033} BLOCKED
+08-11 00:45:37.177 12997 12997 W ple.ao3_wrapper: Accessing hidden method Landroid/os/Trace;->asyncTraceEnd(JLjava/lang/String;I)V (unsupported, reflection, allowed)
+08-11 00:45:37.177  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{6921121 com.android.systemui.emulation.pixel_8/10043} BLOCKED
+08-11 00:45:37.177  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{def8946 com.android.printspooler/10081} BLOCKED
+08-11 00:45:37.177  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{cf4f707 com.android.dreams.basic/10086} BLOCKED
+08-11 00:45:37.178  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{dfb8034 com.android.rkpdapp/10135} BLOCKED
+08-11 00:45:37.178  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{15d9e5d com.android.internal.emulation.pixel_3/10008} BLOCKED
+08-11 00:45:37.178  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{40af3d2 com.android.internal.emulation.pixel_4/10019} BLOCKED
+08-11 00:45:37.178  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{55ffca3 com.android.internal.emulation.pixel_5/10016} BLOCKED
+08-11 00:45:37.178  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{1ea6ba0 com.android.internal.emulation.pixel_6/10014} BLOCKED
+08-11 00:45:37.178  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{b5ac359 com.android.internal.emulation.pixel_7/10001} BLOCKED
+08-11 00:45:37.178  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{d007b1e com.android.internal.emulation.pixel_8/10000} BLOCKED
+08-11 00:45:37.178  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{5ebbfff com.android.musicfx/10074} BLOCKED
+08-11 00:45:37.178  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{6b3c15 com.android.providers.settings.auto_generated_rro_vendor__/10051} BLOCKED
+08-11 00:45:37.179  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{7352b2a com.android.printservice.recommendation/10078} BLOCKED
+08-11 00:45:37.179  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{1465d1b com.android.dialer/10096} BLOCKED
+08-11 00:45:37.179  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{9360eb8 com.android.gallery3d/10107} BLOCKED
+08-11 00:45:37.180  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{ed08491 com.android.wifi.resources/10132} BLOCKED
+08-11 00:45:37.181  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{52cff6 com.android.theme.font.notoserifsource/10036} BLOCKED
+08-11 00:45:37.182  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{ce3aff7 com.android.internal.display.cutout.emulation.waterfall/10042} BLOCKED
+08-11 00:45:37.182  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{c995e64 com.android.nearby.halfsheet/10138} BLOCKED
+08-11 00:45:37.183  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{d67d8cd com.android.inputmethod.latin/10109} BLOCKED
+08-11 00:45:37.184  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{4d3f582 com.android.internal.systemui.navbar.transparent/10031} BLOCKED
+08-11 00:45:37.186  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{7995493 org.chromium.webview_shell/10100} BLOCKED
+08-11 00:45:37.186  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{bffcd0 com.android.systemui.emulation.pixel_3a_xl/10025} BLOCKED
+08-11 00:45:37.187  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{9a634c9 com.android.systemui.emulation.pixel_6_pro/10050} BLOCKED
+08-11 00:45:37.188  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{c4fe7ce com.android.systemui.emulation.pixel_7_pro/10035} BLOCKED
+08-11 00:45:37.189  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{dfaa6ef com.android.systemui.emulation.pixel_8_pro/10020} BLOCKED
+08-11 00:45:37.189 12947 12981 I appium  : Waiting up to 10000ms for the device to idle
+08-11 00:45:37.189  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{e7015fc com.android.dreams.phototable/10098} BLOCKED
+08-11 00:45:37.191  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{b84c5a2 io.appium.uiautomator2.server.test/10143} BLOCKED
+08-11 00:45:37.192 12997 12997 I cr_WVCFactoryProvider: Loaded version=113.0.5672.136 minSdkVersion=1 isBundle=false multiprocess=true packageId=2
+08-11 00:45:37.193  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{9545485 com.android.providers.partnerbookmarks/10083} BLOCKED
+08-11 00:45:37.194  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{e86b2da com.android.wallpaper.livepicker/10068} BLOCKED
+08-11 00:45:37.195  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{874c30b com.android.cellbroadcastreceiver.module/10119} BLOCKED
+08-11 00:45:37.195  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{2a695e8 com.android.phone.auto_generated_rro_vendor__/10056} BLOCKED
+08-11 00:45:37.196  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{c0ab401 com.android.apps.tag/10072} BLOCKED
+08-11 00:45:37.197  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{d2d22a6 com.android.imsserviceentitlement/10094} BLOCKED
+08-11 00:45:37.198  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{f2a84e7 com.android.internal.emulation.pixel_2_xl/10041} BLOCKED
+08-11 00:45:37.199  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{b432894 com.android.internal.emulation.pixel_3_xl/10004} BLOCKED
+08-11 00:45:37.199  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{86d8f3d com.android.internal.emulation.pixel_4_xl/10002} BLOCKED
+08-11 00:45:37.200  2317  2414 D ActivityManager: freezing 4408 com.android.webview:webview_service
+08-11 00:45:37.202  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{e78c332 com.android.internal.emulation.pixel_fold/10029} BLOCKED
+08-11 00:45:37.202  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{f908883 com.android.bookmarkprovider/10091} BLOCKED
+08-11 00:45:37.202  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{2743a00 com.android.systemui.emulation.pixel_3a/10021} BLOCKED
+08-11 00:45:37.202  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{128e239 com.android.systemui.emulation.pixel_4a/10018} BLOCKED
+08-11 00:45:37.203  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{46be07e com.android.systemui.emulation.pixel_6a/10032} BLOCKED
+08-11 00:45:37.203  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{fc929df com.android.systemui.emulation.pixel_7a/10012} BLOCKED
+08-11 00:45:37.204  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{cbb2296 com.android.cts.ctsshim/10130} BLOCKED
+08-11 00:45:37.204  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{4e2f62c com.android.connectivity.resources.goldfish.overlay/10055} BLOCKED
+08-11 00:45:37.205  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{dac68f5 com.android.music/10102} BLOCKED
+08-11 00:45:37.205  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{ce1868a com.android.hotspot2.osulogin/10133} BLOCKED
+08-11 00:45:37.206  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{bc084fb com.android.internal.systemui.navbar.gestural/10011} BLOCKED
+08-11 00:45:37.206  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{e9f4918 com.android.deskclock/10104} BLOCKED
+08-11 00:45:37.207  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{2a79f71 com.android.bluetoothmidiservice/10088} BLOCKED
+08-11 00:45:37.207  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{6598156 com.android.wallpaperpicker/10099} BLOCKED
+08-11 00:45:37.207  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{80875d7 com.android.captiveportallogin/10079} BLOCKED
+08-11 00:45:37.209  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{acbdec4 com.android.internal.systemui.navbar.gestural_narrow_back/10015} BLOCKED
+08-11 00:45:37.209  2317  7864 I AppsFilter: interaction: PackageSetting{641f47a com.example.ao3_wrapper/10147} -> PackageSetting{645c1ad android.auto_generated_rro_vendor__/10052} BLOCKED
+08-11 00:45:37.217 12997 13031 I cr_VariationsUtils: Failed reading seed file "/data/user/0/com.example.ao3_wrapper/app_webview/variations_seed_new"
+08-11 00:45:37.218 12997 13031 I cr_VariationsUtils: Failed reading seed file "/data/user/0/com.example.ao3_wrapper/app_webview/variations_seed"
+08-11 00:45:37.219 12997 13031 I cr_VariationsUtils: Requesting new seed from IVariationsSeedServer
+08-11 00:45:37.225 12997 12997 I cr_LibraryLoader: Successfully loaded native library
+08-11 00:45:37.228 12997 12997 I cr_CachingUmaRecorder: Flushed 8 samples from 8 histograms.
+08-11 00:45:37.265  2317  7864 D ActivityManager: sync unfroze 4408 com.android.webview:webview_service for 6
+08-11 00:45:37.267  2317  7864 D CompatibilityChangeReporter: Compat change id reported: 261072174; UID 10147; state: ENABLED
+08-11 00:45:37.270  2317  6344 D CompatibilityChangeReporter: Compat change id reported: 161145287; UID 10147; state: ENABLED
+08-11 00:45:37.273  2317  2330 D CompatibilityChangeReporter: Compat change id reported: 135634846; UID 99032; state: DISABLED
+08-11 00:45:37.274  2317  2359 D CompatibilityChangeReporter: Compat change id reported: 143937733; UID 10147; state: ENABLED
+08-11 00:45:37.281  2635  2635 D Zygote  : Forked child process 13033
+08-11 00:45:37.283  2317  2359 I ActivityManager: Start proc 13033:com.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0/u0i32 for  {com.example.ao3_wrapper/org.chromium.content.app.SandboxedProcessService0:0}
+08-11 00:45:37.284 12997 12997 D CompatibilityChangeReporter: Compat change id reported: 183155436; UID 10147; state: ENABLED
+08-11 00:45:37.284 13033 13033 I ocessService0:0: Using CollectorTypeCC GC.
+08-11 00:45:37.286 13033 13033 W ocessService0:0: Unexpected CPU variant for x86: x86_64.
+08-11 00:45:37.286 13033 13033 W ocessService0:0: Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, tremont, kabylake, default
+08-11 00:45:37.290 13033 13033 E ocessService0:0: Not starting debugger since process cannot load the jdwp agent.
+08-11 00:45:37.302  2317  2331 D CompatibilityChangeReporter: Compat change id reported: 168419799; UID 10147; state: DISABLED
+08-11 00:45:37.303  2317  2331 D CompatibilityChangeReporter: Compat change id reported: 273564678; UID 10147; state: DISABLED
+08-11 00:45:37.310 13033 13033 D CompatibilityChangeReporter: Compat change id reported: 171979766; UID 99032; state: ENABLED
+08-11 00:45:37.310 13033 13033 D CompatibilityChangeReporter: Compat change id reported: 242716250; UID 99032; state: ENABLED
+08-11 00:45:37.322 12997 12997 D AutofillManager: Fill dialog is enabled:false, hints=[]
+08-11 00:45:37.329 12997 13050 W chromium: [WARNING:dns_config_service_android.cc(115)] Failed to read DnsConfig.
+08-11 00:45:37.340 13033 13033 I cr_WebViewApkApp: Launched version=113.0.5672.136 minSdkVersion=1 isBundle=false processName=com.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0
+08-11 00:45:37.343  2317  2330 I ActivityManager: Flag disabled. Ignoring finishAttachApplication from uid: 99032. pid: 13033
+08-11 00:45:37.350 13033 13033 W SystemServiceRegistry: No service published for: virtualdevice
+08-11 00:45:37.353 13033 13033 I cr_ChildProcessService: Creating new ChildProcessService pid=13033
+08-11 00:45:37.357 12997 13049 E chromium: [ERROR:simple_backend_impl.cc(749)] Simple Cache Backend: cache directory inaccessible right after creation; path: /data/user/0/com.example.ao3_wrapper/cache/WebView/Default/HTTP Cache/Code Cache/webui_js
+08-11 00:45:37.370  2317  2414 D ActivityManager: freezing 4679 com.android.documentsui
+08-11 00:45:37.381 12997 13061 E chromium: [ERROR:disk_cache.cc(205)] Unable to create cache
+08-11 00:45:37.362     0     0 E SELinux : avc:  denied  { find } for pid=13033 uid=99032 name=content_capture scontext=u:r:isolated_app:s0:c512,c768 tcontext=u:object_r:content_capture_service:s0 tclass=service_manager permissive=0
+08-11 00:45:37.400 12997 12997 D CompatibilityChangeReporter: Compat change id reported: 214741472; UID 10147; state: ENABLED
+08-11 00:45:37.411 12997 12997 D CompatibilityChangeReporter: Compat change id reported: 171228096; UID 10147; state: ENABLED
+08-11 00:45:37.437  2317  2414 D ActivityManager: freezing 2945 com.android.permissioncontroller
+08-11 00:45:37.471 12997 12997 W cr_WebSettings: setForceDark() is a no-op in an app with targetSdkVersion>=T
+08-11 00:45:37.503 12997 13054 W cr_media: BLUETOOTH_CONNECT permission is missing.
+08-11 00:45:37.504 12997 13054 W cr_media: registerBluetoothIntentsIfNeeded: Requires BLUETOOTH permission
+08-11 00:45:37.516 13033 13062 I cr_LibraryLoader: Successfully loaded native library
+08-11 00:45:37.517 13033 13062 I cr_CachingUmaRecorder: Flushed 2 samples from 2 histograms.
+08-11 00:45:37.523 13033 13062 W SystemServiceRegistry: No service published for: uimode
+08-11 00:45:37.528 12997 12997 W cr_WebSettings: setForceDark() is a no-op in an app with targetSdkVersion>=T
+08-11 00:45:37.568 12947 12981 W tomator2.server: Accessing hidden method Landroid/view/MotionEvent;->setDisplayId(I)V (blocked,test-api, reflection, allowed)
+08-11 00:45:37.595 12997 12997 I Choreographer: Skipped 173 frames!  The application may be doing too much work on its main thread.
+08-11 00:45:37.614 12997 12997 D CompatibilityChangeReporter: Compat change id reported: 193247900; UID 10147; state: ENABLED
+08-11 00:45:37.648  2317  2375 I DisplayBrightnessStrategySelector: Changing the DisplayBrightnessStrategy from InvalidBrightnessStrategy toOverrideBrightnessStrategy for display 0
+08-11 00:45:37.650  2317  2375 V DisplayPowerController2[0]: Brightness [0.4] reason changing to: 'override', previous reason: 'manual'.
+08-11 00:45:37.650  2317  2375 I DisplayPowerController2[0]: BrightnessEvent: disp=0, physDisp=local:4619827259835644672, brt=0.4, initBrt=0.39763778, rcmdBrt=NaN, preBrt=NaN, lux=0.0, preLux=0.0, hbmMax=1.0, hbmMode=off, rbcStrength=0, thrmMax=1.0, powerFactor=1.0, wasShortTermModelActive=false, flags=, reason=override, autoBrightness=false, strategy=OverrideBrightnessStrategy
+08-11 00:45:37.669 12997 13067 W chromium: [WARNING:display_webview.cc(32)] WebView overlays are enabled!
+08-11 00:45:37.694  4408  4483 I cr_VariationsUtils: Seed download job already scheduled
+08-11 00:45:37.714 12997 13011 I OpenGLRenderer: Davey! duration=2968ms; Flags=0, FrameTimelineVsyncId=372654, IntendedVsync=840707228328, Vsync=843590561546, InputEventId=0, HandleInputStart=843607405200, AnimationStart=843607444800, PerformTraversalsStart=843637845200, DrawStart=843647542000, FrameDeadline=843090561566, FrameInterval=843595389900, FrameStartTime=16666666, SyncQueued=843654471300, SyncStart=843654771200, IssueDrawCommandsStart=843654924300, SwapBuffers=843671035800, FrameCompleted=843676151200, DequeueBufferDuration=43200, QueueBufferDuration=922900, GpuCompleted=843675870300, SwapBuffersCompleted=843676151200, DisplayPresentTime=58000715833933824, CommandSubmissionCompleted=843671035800, 
+08-11 00:45:37.726  2317  3356 D CompatibilityChangeReporter: Compat change id reported: 214016041; UID 10147; state: ENABLED
+08-11 00:45:37.726  2317  3356 I ImeTracker: com.example.ao3_wrapper:51854f24: onRequestHide at ORIGIN_SERVER_HIDE_INPUT reason HIDE_UNSPECIFIED_WINDOW
+08-11 00:45:37.727  2317  3356 I ImeTracker: com.example.ao3_wrapper:51854f24: onCancelled at PHASE_SERVER_SHOULD_HIDE
+08-11 00:45:37.873 12947 12981 W tomator2.server: Accessing hidden field Landroid/view/accessibility/AccessibilityNodeInfo;->mSourceNodeId:J (unsupported, reflection, allowed)
+08-11 00:45:37.880 12947 12981 I appium  : AppiumResponse: {"sessionId":"d2b96e93-e27a-41b4-b5d1-ed39183594a8","value":{"ELEMENT":"00000000-0000-00cb-ffff-ffff0000000e","element-6066-11e4-a52e-4f735466cecf":"00000000-0000-00cb-ffff-ffff0000000e"}}
+08-11 00:45:37.941  2643  4259 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-11 00:45:37.941  2643  4259 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-11 00:45:37.941  2643  4259 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-11 00:45:37.941  2643  4259 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-11 00:45:38.297  2550  2550 D StatusBarIconController: ignoring old pipeline callback because the new wifi icon is enabled
+08-11 00:45:38.344  2550  2550 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+08-11 00:45:38.941  2643  4259 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-11 00:45:38.941  2643  4259 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-11 00:45:38.942  2643  4259 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-11 00:45:38.942  2643  4259 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-11 00:45:39.204 12997 13017 D EGL_emulation: app_time_stats: avg=718.62ms min=137.12ms max=1390.82ms count=3
+08-11 00:45:39.814 12947 12981 I appium  : channel read: GET /session/d2b96e93-e27a-41b4-b5d1-ed39183594a8/screenshot
+08-11 00:45:39.816 12947 12981 I appium  : CaptureScreenshot command
+08-11 00:45:39.819 12947 12981 W tomator2.server: Accessing hidden method Landroid/view/Display;->getAddress()Landroid/view/DisplayAddress; (blocked, reflection, allowed)
+08-11 00:45:39.819 12947 12981 W tomator2.server: Accessing hidden method Landroid/view/DisplayAddress$Physical;->getPhysicalDisplayId()J (blocked, reflection, allowed)
+08-11 00:45:39.897 13108 13108 W BpBinder: Linking to death on android.gui.ISurfaceComposer but there are no threads (yet?) listening to incoming transactions. See ProcessState::startThreadPool and ProcessState::setThreadPoolMaxThreadCount. Generally you should setup the binder threadpool before other initialization steps.
+08-11 00:45:39.897 13108 13108 W ProcessState: Extra binder thread started, but 0 threads requested. Do not use *startThreadPool when zero threads are requested.
+08-11 00:45:39.915   174   174 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device VINTF manifest.
+08-11 00:45:39.893     0     0 I servicemanager: Could not find android.hardware.graphics.allocator.IAllocator/default in the VINTF manifest.
+08-11 00:45:39.917 13108 13113 I Gralloc4: mapper 4.x is not supported
+08-11 00:45:39.943  2643  4259 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-11 00:45:39.943  2643  4259 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-11 00:45:39.944  2643  4259 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-11 00:45:39.944  2643  4259 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-11 00:45:40.180 12947 12981 I appium  : AppiumResponse: {"sessionId":"d2b96e93-e27a-41b4-b5d1-ed39183594a8","value":"iVBORw0KGgoAAAANSUhEUgAABDgAAAlgCAYAAABtGofVAAAAAXNSR0IArs4c6QAAAARzQklUCAgICHwIZIgAACAASURBVHic7N15cJ3lnej5nxZLOpK8yZI3eQPbYINtwOyrbRIS9nSA7nQlgaSTTtLTlTQ3fW9XTU3N1MzU1PRkpv+4k+q+PdXpm7uRzr11O4EsrIGADQRjNuMFL9hgHEtetNnatyOd+UOgtvAm25Klx/5вЂ¦
+08-11 00:45:40.206 12947 12981 I appium  : channel read: GET /session/d2b96e93-e27a-41b4-b5d1-ed39183594a8/source
+08-11 00:45:40.209 12947 12981 I appium  : Source command
+08-11 00:45:40.211 12947 12981 I appium  : Waiting up to 10000ms for the device to idle
+08-11 00:45:40.943  2643  4259 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-11 00:45:40.943  2643  4259 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-11 00:45:40.943  2643  4259 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-11 00:45:40.943  2643  4259 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-11 00:45:41.329 12997 13017 D EGL_emulation: app_time_stats: avg=152.60ms min=6.35ms max=1662.96ms count=13
+08-11 00:45:41.349 12997 12997 I Choreographer: Skipped 81 frames!  The application may be doing too much work on its main thread.
+08-11 00:45:41.374 12997 13106 I OpenGLRenderer: Davey! duration=1467ms; Flags=0, FrameTimelineVsyncId=375791, IntendedVsync=845873894788, Vsync=845873894788, InputEventId=0, HandleInputStart=845874932900, AnimationStart=845874964100, PerformTraversalsStart=845896758400, DrawStart=845896910100, FrameDeadline=845890561454, FrameInterval=845874913000, FrameStartTime=16666666, SyncQueued=845898557000, SyncStart=845899517700, IssueDrawCommandsStart=845899776400, SwapBuffers=847326733500, FrameCompleted=847341995500, DequeueBufferDuration=38500, QueueBufferDuration=412000, GpuCompleted=847341995500, SwapBuffersCompleted=847330222000, DisplayPresentTime=-4201996913492361216, CommandSubmissionCompleted=847326733500, 
+08-11 00:45:41.424 12997 13114 D ProfileInstaller: Installing profile for com.example.ao3_wrapper
+08-11 00:45:41.680 12997 13013 I OpenGLRenderer: Davey! duration=1598ms; Flags=0, FrameTimelineVsyncId=375882, IntendedVsync=845990561450, Vsync=847340561396, InputEventId=0, HandleInputStart=847374807900, AnimationStart=847374847700, PerformTraversalsStart=847385881200, DrawStart=847386140400, FrameDeadline=847407228060, FrameInterval=847349250500, FrameStartTime=16666666, SyncQueued=847387767500, SyncStart=847391368400, IssueDrawCommandsStart=847427151500, SwapBuffers=847587758900, FrameCompleted=847592163700, DequeueBufferDuration=46700, QueueBufferDuration=597800, GpuCompleted=847591957100, SwapBuffersCompleted=847592163700, DisplayPresentTime=0, CommandSubmissionCompleted=847587758900, 
+08-11 00:45:41.944  2643  4259 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-11 00:45:41.944  2643  4259 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-11 00:45:41.944  2643  4259 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-11 00:45:41.944  2643  4259 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-11 00:45:41.955 12947 12981 D CompatibilityChangeReporter: Compat change id reported: 247079863; UID 10144; state: ENABLED
+08-11 00:45:42.186 12947 12981 I appium  : AppiumResponse: {"sessionId":"d2b96e93-e27a-41b4-b5d1-ed39183594a8","value":"<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>\r\n<hierarchy index=\"0\" class=\"hierarchy\" rotation=\"0\" width=\"1080\" height=\"2146\">\r\n  <android.widget.FrameLayout index=\"0\" package=\"com.example.ao3_wrapper\" class=\"вЂ¦

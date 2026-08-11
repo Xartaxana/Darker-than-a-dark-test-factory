@@ -1,0 +1,354 @@
+---
+key: "RUN-20260811-0406"
+project: "AO3"
+issueType: "run"
+status: "run-triaged"
+priority: "p2"
+summary: "RUN-20260811-0406"
+assignee: "qa-agents"
+reporter: "qa-agents"
+labels: ["run"]
+components: []
+fixVersions: []
+watchers: []
+parent: null
+epic: null
+created: "2026-07-02T00:00:00Z"
+updated: "2026-07-02T00:00:00Z"
+archived: false
+resolution: null
+---
+
+# RUN-20260811-0406
+
+_Спроецировано из `runs/RUN-20260811-0406.md` (источник правды).
+Статус в нашей машине: **Triaged**._
+
+# RUN-20260811-0406 — regression (replay) на dev-local (12)
+
+## Контекст запуска
+
+Продолжение того же дневного триггера, что `RUN-20260811-0405` (smoke) —
+новая сборка `source_commit cc201f789f0fb123722bbba7b29b8e0c6412dac1`
+(coalesced: 5d833ec3, b969b0e6, 7b29bf03, a968f6ba, f7553aca, d8da89f1 —
+включая d8da89f1 = фикс BUG-022 разработчиком). Окружение уже поднято
+предыдущим шагом (эмулятор `-WritableSystem`, Appium `:4723`, APK
+установлен) — переиспользовано без пересоздания.
+
+**Селекция**: `python scripts/impact_select.py` (диапазон `6f884d979..
+cc201f789` резолвился по умолчанию, без `--from/--to`) → **FULL REGRESSION**:
+`wide_impact` — `app/src/main/assets/ao3_bridge.js`; `unknown` вне карты —
+`.gitlab-ci.yml`. Прочие изменённые файлы (`DownloadRepository.kt`,
+`BottomBar.kt`, `BrowserViewModel.kt`) маппятся в конкретные области
+(downloads/library/browser/rating/settings/tabs/visibility/filter-profiles),
+но wide_impact и unknown-файл уже безусловно требуют полного набора —
+селекция не сузила его. Полный marker-фильтр `(p0 or p1) and not live`.
+
+**Команда**: `pytest tests -m "(p0 or p1) and not live"` (`AO3_MODE=replay`),
+193 selected / 371 collected (178 deselected по фильтру, дальше без
+дедупликации по файлам).
+
+## Проактивное сегментирование (превентивная мера против известного класса)
+
+Известный рецидивирующий класс (4 подряд: `RUN-20260803-2012`/
+`RUN-20260804-1624`/`RUN-20260805-0437`/`RUN-20260810-0146`) — фоновый job
+харнесса убивается на ~59-й минуте синхронного `Wait-Process`-ожидания,
+до `pytest_terminal_summary`. Оценка по прошлому прогону (165 тестов / 76
+мин ≈ 27.6 с/тест) для нового набора (193 теста) давала прогноз ~89 мин —
+заведомо выше порога. Вместо ожидания обрыва и последующей реконструкции
+по allure `as_id` (как в `RUN-20260810-0146`) прогон СРАЗУ разбит на 2
+сбалансированных сегмента по границам файлов (счёт тестов на файл — через
+`--collect-only`), каждый — с собственным `--alluredir`/`--clean-alluredir`,
+без пересечения тестов между сегментами. Оба сегмента дошли до
+`sessionfinish` штатно, обрывов не было.
+
+### Сегмент 1 (99 тестов, 16 файлов)
+
+`pytest tests/canary/test_ao3_selectors.py tests/canary/test_tap_zone_guard.py
+tests/test_adb_run_as_file_or_raise_unit.py tests/test_backup_restore.py
+tests/test_device_liveness_guard_unit.py tests/test_downloads.py
+tests/test_filter_profiles.py tests/test_infinite_scroll.py
+tests/test_library.py tests/test_library_background_open.py
+tests/test_library_filters.py tests/test_library_tab_scroll_state.py
+tests/test_mitm_port_race_unit.py tests/test_mitm_upstream_guard_unit.py
+tests/test_parse_persisted_tabs_unit.py tests/test_performance.py -m
+"(p0 or p1) and not live" --alluredir=allure-results-reg-seg1
+--clean-alluredir`
+
+Дословный хвост:
+```
+tests\canary\test_ao3_selectors.py .........                             [  9%]
+tests\canary\test_tap_zone_guard.py ....                                 [ 13%]
+tests\test_adb_run_as_file_or_raise_unit.py ..............               [ 27%]
+tests\test_backup_restore.py .                                           [ 28%]
+tests\test_device_liveness_guard_unit.py ..............                  [ 42%]
+tests\test_downloads.py .........                                        [ 51%]
+tests\test_filter_profiles.py F....                                      [ 56%]
+tests\test_infinite_scroll.py ..                                         [ 58%]
+tests\test_library.py .                                                  [ 59%]
+tests\test_library_background_open.py ....                               [ 63%]
+tests\test_library_filters.py ..........                                 [ 73%]
+tests\test_library_tab_scroll_state.py ....                              [ 77%]
+tests\test_mitm_port_race_unit.py ...........                            [ 88%]
+tests\test_mitm_upstream_guard_unit.py ....                              [ 92%]
+tests\test_parse_persisted_tabs_unit.py ....                             [ 96%]
+tests\test_performance.py ...                                            [100%]
+AT-BUG-026 device-liveness guard: recoveries this session = 0/2
+===== 1 failed, 98 passed, 21 deselected, 1 warning in 2137.24s (0:35:37) =====
+PYTEST_EXIT=1
+```
+
+### Сегмент 2 (94 теста, 16 файлов)
+
+`pytest tests/test_rating.py tests/test_rating_listing.py
+tests/test_reading_ux.py tests/test_replay_ca_check_unit.py
+tests/test_replay_infra_probe.py tests/test_saf_infra_probe.py
+tests/test_security_backup_privacy.py tests/test_security_file_access.py
+tests/test_security_manifest.py tests/test_seed_db_schema_race_unit.py
+tests/test_settings_ratings_fail_closed_unit.py tests/test_side_panel.py
+tests/test_smoke.py tests/test_swipe_to_text_settle_unit.py tests/test_tabs.py
+tests/test_visibility.py -m "(p0 or p1) and not live"
+--alluredir=allure-results-reg-seg2 --clean-alluredir`
+
+Дословный хвост:
+```
+tests\test_rating.py ..                                                  [  2%]
+tests\test_rating_listing.py ................                            [ 19%]
+tests\test_reading_ux.py ......                                          [ 25%]
+tests\test_replay_ca_check_unit.py .....                                 [ 30%]
+tests\test_replay_infra_probe.py .                                       [ 31%]
+tests\test_saf_infra_probe.py ...                                        [ 35%]
+tests\test_security_backup_privacy.py ..                                 [ 37%]
+tests\test_security_file_access.py .                                    [ 38%]
+tests\test_security_manifest.py ..                                       [ 40%]
+tests\test_seed_db_schema_race_unit.py .....                             [ 45%]
+tests\test_settings_ratings_fail_closed_unit.py .......................  [ 70%]
+tests\test_side_panel.py .                                               [ 71%]
+tests\test_smoke.py ........                                             [ 79%]
+tests\test_swipe_to_text_settle_unit.py .                                [ 80%]
+tests\test_tabs.py ...........F                                          [ 93%]
+tests\test_visibility.py ......                                          [100%]
+AT-BUG-026 device-liveness guard: recoveries this session = 0/2
+========== 1 failed, 93 passed, 26 deselected in 2090.05s (0:34:50) ===========
+PYTEST_EXIT=1
+```
+
+**Свод**: 99 + 94 = 193 тестов без пропусков и двойного счёта (файловые
+границы сегментов не пересекаются). Суммарно 191 passed / 2 failed / 0
+skipped, 2137.24 + 2090.05 = 4227.29с ≈ 70.5 мин. Allure-результаты обоих
+сегментов слиты в `runs/RUN-20260811-0406/allure/` (раздельные `--alluredir`,
+копирование без `--clean-alluredir` поверх уже слитого — 1062 файла, без
+потери сегментов). `AT-BUG-026` recoveries — `0/2` в ОБОИХ сегментах
+(frontmatter `recoveries: "0/2"` относится ко всему прогону без изъятия,
+в отличие от `RUN-20260810-0146`, где сегмент 1 не допечатал счётчик).
+
+## Падения (факт, без вердикта — не мандат test-runner)
+
+| Тест (TC) | Ошибка (кратко) | Allure статус |
+|---|---|---|
+| test_rename_filter_profile_keeps_query_string[listing_basic.mitm] (TC-085) | `AssertionError: фильтр-профиль «My renamed search» не найден в списке Settings`; teardown: `AT-BUG-043: порт 8080 недоступен после 2 попыток bind() за 0.10s` | failed |
+| test_background_open_snackbar_counts_background_opens_not_total (TC-176) | `AssertionError: текст snackbar не совпал с ожидаемым: 'Opened in background (3 tabs)' != 'Opened in background (2 tabs)'`; тест — регрессия-якорь по `BUG-059` (docstring прямо ссылается на `red_lock` в `bugs/BUG-059.md`, сиблинг TC-139/BUG-015) | failed |
+
+Триаж не выношу (не мандат test-runner) — два факта для failure-analyst.
+
+**Замечание для failure-analyst (не вердикт):** из 7 красных прошлого triaged
+baseline (`RUN-20260810-0146`: TC-085/086/114/115/129/130/139) в этом прогоне
+красным осталось только TC-085; TC-086/114/115/129/130/139 теперь зелёные.
+Интерпретация (совпадает ли это с фиксом BUG-022 из коммита `d8da89f1`,
+входящего в текущую сборку) — работа failure-analyst, не test-runner.
+
+## Дефекты-собратья (D-0043)
+
+`AT-BUG-043` (порт 8080 mitmdump bind-race) снова всплыл в teardown TC-085 —
+тот же паттерн, что уже отмечен в smoke-отчёте `RUN-20260811-0405` (TC-009).
+Не расширяю scope — доклад для failure-analyst/Lead: класс уже заведён
+(`bugs/AT-BUG-043.md`), но продолжает шуметь в teardown разных тестов.
+
+## Сверка с baseline (владелец — test-runner, правило 4а CLAUDE.md)
+
+Последний Triaged regression-прогон с полем `source_commit` в frontmatter —
+`RUN-20260810-0146` (`source_commit: 6f884d979a5c19465c6d8647737376864f424555`).
+Проверка предковости: `git -C app-under-test merge-base --is-ancestor
+6f884d979a5c19465c6d8647737376864f424555
+cc201f789f0fb123722bbba7b29b8e0c6412dac1` → **EXIT=0, ЯВЛЯЕТСЯ предком**.
+Объект `6f884d979` — прямой предок текущего HEAD `cc201f789` (`git log
+--oneline -9`: цепочка идёт `d8da89f`/`f7553ac`/`a968f6b`/`7b29bf0`/
+`b969b0e`/`5d833ec`/`6f884d9`, линейно, без переписывания); reflog не
+показывает force-push в этом окне (переключение на новый HEAD штатным
+чекаутом 2026-08-11 01:52:06). **Исправление критик-входа 2026-08-11:**
+прежний текст ошибочно скопировал вывод «предка нет» из вчерашних
+`RUN-20260810-0145/0146` (где утверждение было верным для СВОЕГО окна —
+`fdcbad9` действительно не предок `6f884d979`), вместо чтения кода
+возврата ЭТОГО прогона. Baseline `RUN-20260810-0146` ВАЛИДЕН для машинной
+сверки: табличное сравнение TC-085/086/114/115/129/130/139 выше —
+подтверждённая предковая сверка, не просто описательный факт. TC-176 на
+этом baseline НЕ существовал (кейс добавлен `bc0a9cc` 2026-08-10 16:47,
+после коммита baseline-прогона 16:24) — не «новое красное относительно
+baseline», а новый намеренно-красный regression-anchor по `BUG-059`
+(`red_lock` подтверждён в `test-cases/tabs/TC-176.md`, `BUG-059` status
+Open).
+
+## Падения и триаж (failure-analyst, 2026-08-11T02:40:00Z)
+
+| Тест (TC) | Ошибка (кратко) | Вердикт | Действие | Ссылка |
+|---|---|---|---|---|
+| `test_rename_filter_profile_keeps_query_string[listing_basic.mitm]` (TC-085) | `AssertionError: фильтр-профиль «My renamed search» не найден в списке Settings` (`steps/settings_steps.py:507`), шаг переименования при этом ЗЕЛЁНЫЙ | **FLAKY** | карантин оформлен мной (`automation_status: active → quarantined`), заведён долг | `bugs/AT-BUG-062.md` (`type: test_debt`, `debt_kind: flaky_test`, `status: Open`); `test-cases/filter-profiles/TC-085.md` |
+| `test_background_open_snackbar_counts_background_opens_not_total` (TC-176) | `AssertionError: текст snackbar не совпал с ожидаемым: 'Opened in background (3 tabs)' != 'Opened in background (2 tabs)'` | **APP_BUG** (ожидаемый red-lock, ЗАПЛАНИРОВАН) | нового бага НЕ завожу — кейс намеренно красный до фикса связанного бага | `bugs/BUG-059.md` (`status: Open`, `test_cases: ["TC-176"]`); `test-cases/tabs/TC-176.md` (`red_lock: "BUG-059"`); код: `BrowserViewModel.kt:283` |
+
+### TC-176 — ожидаемый red-lock, а не новый дефект (обоснование)
+
+Красный ЗАПЛАНИРОВАН, сверено тремя независимыми источниками:
+
+1. `test-cases/tabs/TC-176.md`: `red_lock: "BUG-059"`, заголовок «…(ожидаемо-красный
+   до фикса BUG-059)», раздел «ОЖИДАЕМОЕ ПАДЕНИЕ на текущей сборке» дословно
+   предсказывает наблюдаемый текст: ожидание «Opened in background (2 tabs)»,
+   факт «(3 tabs)»; таблица «Проверяемые данные» содержит ровно эту пару.
+2. `bugs/BUG-059.md` — `status: Open`, `test_cases: ["TC-176"]`, gitlab_issue 32;
+   фикс не заявлен (`fixed_in: ""`).
+3. Код текущей сборки НЕ изменён в этом месте: `BrowserViewModel.kt:283`
+   `backgroundTabOpen = if (background) BackgroundTabOpen(++backgroundOpenSeq,
+   newTabs.size)` — `tabCount = newTabs.size` (общее число вкладок). `git diff
+   6f884d979..cc201f789 -- …/BrowserViewModel.kt | grep backgroundTabOpen` —
+   пусто, строки счётчика диапазоном не тронуты.
+
+Прочие 10 шагов кейса зелёные (включая `wait_persisted_tab_count 1→2→3` и
+исчезновение первого снекбара) — сценарий отработал целиком, красный ровно на
+целевом ассерте. Новый баг не заводится; действие по кейсу — только фикс BUG-059
+разработчиком.
+
+### TC-085 — почему FLAKY, а не «тот же красный, что baseline»
+
+Заявка test-runner («тот же красный, что и в прошлом triaged-baseline»)
+**не подтвердилась** — сигнатуры разные:
+
+- baseline `RUN-20260810-0146`: `TimeoutException: не кликабелен ('xpath',
+  '(//*[@text="My saved search"]/following::*[@content-desc="Renam3"])[1]')` —
+  падение на ОТКРЫТИИ диалога, вердикт `TEST_BUG`/`AT-BUG-053`. Этот долг
+  починен `d96eef9` и `Verified` 2026-08-10T12:26 (TC-085+TC-086 — 3+1 зелёных
+  прогона на сборке `6f884d97`);
+- здесь: шаг `When … переименован в «My renamed search»` ЗЕЛЁНЫЙ (3.29с),
+  красный — следующий ассерт списка. Совпадает только номер кейса.
+
+Исключено: `APP_BUG`/`APP_CHANGED` — диапазон `6f884d979..cc201f789` (6 файлов:
+`.gitlab-ci.yml`, `PROJECT.md`, `ao3_bridge.js`, `DownloadRepository.kt`,
+`BottomBar.kt`, `BrowserViewModel.kt`) не трогает `SettingsScreen.kt`/
+`SettingsViewModel`/слой `FilterProfile`; в ЭТОМ ЖЕ прогоне зелёный TC-086 —
+тот же диалог «Rename filter», тот же `rename_filter_profile`, ассерт по
+UI-списку. `ENV_ISSUE` — не основная причина: устройство присутствовало
+(`Get-Device` → `DEVICE: emulator-5554`), Appium `:4723` ready, сегмент дошёл до
+`sessionfinish`, соседние 98 тестов сегмента 1 зелёные; `AT-BUG-043` в teardown
+сработал ПОСЛЕ падения и сам себя починил ретраем («порт освободился после 2
+попыток», stderr-аттачка). `TEST_BUG` — не ставлю: детерминированного корня в
+тесте по артефактам не установить (две живые гипотезы, см. AT-BUG-062), а
+изолированно тест 3/3 зелёный. Остаётся `FLAKY`.
+
+### Пакеты доказательств (`schemas/evidence.yaml`)
+
+**APP_BUG — TC-176** (7 обязательных id; `python scripts/evidence.py` →
+`APP_BUG:7`):
+- `build_hash`: `source_commit cc201f789f0fb123722bbba7b29b8e0c6412dac1`,
+  `dev-local (versionCode 12)`, apk sha256 `b6047647…` (`state/app-under-test.yaml`);
+- `test_case`: TC-176 (`test-cases/tabs/TC-176.md`), allure
+  `runs/RUN-20260811-0406/allure/f1f52ef7-080b-412b-9ce8-4f7be108e49a-result.json`
+  (`as_id: TC-176`);
+- `steps`: 11 шагов allure того же result.json (Library → long-press карточки №1
+  → «Open in background tab» → ожидание исчезновения снекбара → long-press
+  карточки №2 → «Open in background tab»), дублируются сценарием кейса;
+- `screenshot`: `runs/RUN-20260811-0406/allure/3e9e281c-87b1-4c35-9bf4-c1477cdc3089-attachment.png`;
+- `logcat`: `runs/RUN-20260811-0406/allure/26deaa03-4e8f-4ca3-a4e0-05d4055b37c0-attachment.txt`;
+- `page_source`: `runs/RUN-20260811-0406/allure/96e77650-bdae-4a6c-a32e-8552f2bc080b-attachment.xml`
+  — содержит узел `text="Opened in background (3 tabs)"` (сверено извлечением
+  всех `text=`-атрибутов);
+- `expected_actual`: ожидалось «Opened in background (2 tabs)» (число фоновых
+  открытий за сессию), фактически «Opened in background (3 tabs)» (общее число
+  вкладок: Home + 2 фоновых) — ровно предсказание `BUG-059`.
+
+**FLAKY — TC-085** (3 обязательных id; `python scripts/evidence.py` → `FLAKY:3`):
+- `rerun_history`: изолированно `Invoke-Pytest -k
+  test_rename_filter_profile_keeps_query_string -q` ×3 →
+  `1 passed, 370 deselected in 85.08s` / `84.02s` / `85.57s`, все `PYTEST_EXIT=0`
+  (та же сборка cc201f789, `Get-Device` → `DEVICE: emulator-5554`, Appium
+  `:4723` `{"ready":true}`). Две попытки файлового перепрогона
+  (`Invoke-Pytest tests/test_filter_profiles.py -q`) чистого замера не дали —
+  деградация окружения, не ассерт: попытка 1 `3 failed, 2 passed in 354.95s`
+  (TC-085 ПРОШЁЛ целевую строку 107 и упал на 108 с `WebDriverException …
+  ECONNREFUSED 127.0.0.1:8200`, в хвосте `ENV_ISSUE (AT-BUG-026):
+  device-liveness guard recoveries this session = 1/2`), попытка 2
+  `3 failed, 1 passed, 1 error in 178.46s` (TC-085 — `ERROR at setup`
+  device-liveness guard, прочие — `socket hang up`);
+- `failure_signature`: единственное наблюдение сигнатуры —
+  `AssertionError: фильтр-профиль «My renamed search» не найден в списке
+  Settings`, allure
+  `runs/RUN-20260811-0406/allure/544709d4-31fe-419d-ae74-857cf09948b4-result.json`
+  (шаг «When … переименован …» passed, следующий Then failed); две
+  diagnostic-аттачки `swipe_to_text` (`580cf235-…`, `a257e627-…`), обе
+  дословно «`«My renamed search»: КОНЕЦ СПИСКА (позиция не изменилась после
+  свайпа) — строка не поймана, список исчерпан`»; page source момента падения
+  (`d95ea445-…`) — ВЕРХ Settings без секции `SAVED AO3 FILTERS` (следствие
+  фолбэка `swipe_up_to_text`, см. долг); logcat (`e34e1362-…`) —
+  `Matched 0 elements using selector UiSelector[TEXT=My renamed search]` ×4.
+  При перезапусках сигнатура НЕ повторилась ни разу;
+- `quarantine_decision`: `test-cases/filter-profiles/TC-085.md`
+  `automation_status: active → quarantined` (переход машины `automation`,
+  `by: failure-analyst`), `quarantine_reason` заполнен сигнатурой,
+  `quarantine_since: 2026-08-11T02:40:00Z`, `quarantine_owner: test-maintainer`,
+  `quarantine_expiry` не задан (работает `sla.quarantine_max`); долг заведён —
+  `bugs/AT-BUG-062.md` (`type: test_debt`, `debt_kind: flaky_test`,
+  `test_cases: ["TC-085"]`, `runs: ["RUN-20260811-0406"]`).
+  `validate_frontmatter.py` после правок: `ошибок 0, предупреждений 0`.
+
+### APP_CHANGED-проверка (docs/06 D9)
+
+Диапазон сверен независимо: `git -C app-under-test merge-base --is-ancestor
+6f884d979… cc201f789…` → **EXIT=0** (предок; совпадает с исправленным разделом
+«Сверка с baseline» выше), `git log --oneline 6f884d979..cc201f789` →
+`5d833ec` (CI signing key), `b969b0e` (defer bridge init), `7b29bf0` (preserve
+local-only fields on listing rating), `a968f6b` (duplicate download files),
+`f7553ac` (backfill blank metadata), `d8da89f` (flush work panel on dispose),
+`cc201f7` (kudos/Favorite only on rating transitions). Ни один коммит не меняет
+поведение, проверяемое TC-085 (Settings/rename/`FilterProfile` — файлы вообще
+не в диффе) или TC-176 (счётчик снекбара `newTabs.size` строкой не тронут).
+Намеренного изменения поведения без тикета нет — `APP_CHANGED` не применим ни к
+одному из двух падений.
+
+Побочный (не входит в вердикты) факт по 6 позеленевшим кейсам baseline:
+TC-086/129/130 были `TEST_BUG`-долгами (`AT-BUG-053`, `AT-BUG-054`) и позеленели
+после их фиксов, TC-114/115/139 несли `red_lock` `BUG-014`/`BUG-015` и позеленели
+на этой сборке — верификация этих багов не мой мандат (D1, fix-verifier);
+вынесено в follow-up ниже.
+
+### Дефекты-собратья (D-0043, доклад без расширения scope)
+
+1. `AT-BUG-043` (bind-race порта 8080 mitmdump) — teardown TC-085 здесь и TC-009
+   в smoke `RUN-20260811-0405`: один класс, долг заведён, продолжает шуметь в
+   teardown разных тестов (подтверждаю доклад test-runner).
+2. `AT-BUG-026` (device-liveness guard) — сработал в МОИХ перепрогонах
+   (`recoveries 1/2`, затем `socket hang up`/`ERROR at setup`): после
+   70-минутного регресса + 5 моих прогонов окружение деградировало. Устройство
+   на adb-уровне живо (`Get-Device` → `DEVICE: emulator-5554`), рвутся сессии
+   UiAutomator2 (`:8200`). Класс тот же, что уже описан в AT-BUG-026; перед
+   следующим device-прогоном окружение стоит перезапустить (test-runner/qa-loop,
+   не мой мандат).
+3. Класс диагностики «фолбэк-свайп прячет место падения»:
+   `SettingsScreen._swipe_to_profile` = `swipe_to_text(...) or
+   swipe_up_to_text(...)` — при неуспехе всегда возвращает список НАВЕРХ, поэтому
+   скриншот/page source любого из ассертов `has_filter_profile`/
+   `delete_filter_profile`/`count_filter_profile_occurrences`/
+   `open_rename_dialog` не содержит проверяемую секцию. Это не экземпляр TC-085,
+   а общий приём — вынесено пунктом 2 раздела «Что сделать» в `AT-BUG-062`.
+
+### Follow-up (не мой мандат, для Lead/qa-loop)
+
+1. `bugs/BUG-059.md`: `last_seen_in`/`runs` не отражают этот прогон
+   (`runs: []`) — обновление за bug-reporter.
+2. `bugs/BUG-014.md`/`bugs/BUG-015.md`: связанные TC-114/115/139 позеленели на
+   сборке cc201f78 — вход fix-verifier (D1), не триаж.
+3. `state/app-under-test.yaml` (`regression_status`) несёт устаревшую фразу
+   «TC-085 — тот же красный, что и в прошлом triaged-baseline» — фактически
+   сигнатура другая (см. выше); правка поля за test-runner/Lead.
+
+## Условия закрытия прогона (Closed)
+- [x] Каждое падение имеет вердикт и связанное действие (FLAKY → карантин +
+      `AT-BUG-062`; APP_BUG → существующий `BUG-059`, red-lock)
+- [x] Для APP_BUG существует BUG-файл (`bugs/BUG-059.md`, `status: Open`)
+- [ ] Карта покрытия (`state/coverage-map.md`) перегенерирована — за qa-loop
