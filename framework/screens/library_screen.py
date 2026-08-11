@@ -132,7 +132,7 @@ class LibraryScreen(BaseScreen):
     def is_empty(self, timeout: int | None = None) -> bool:
         return self.is_present(self.by_text("Nothing here yet"), timeout=timeout or 8)
 
-    # --- Long-press overlay (DeleteWorkSheetContent в LibraryScreen.kt:
+    # --- Long-press overlay (WorkActionsSheetContent в LibraryScreen.kt:
     # "Delete work" / "Delete downloaded file") ---
     def long_press_work(self, title: str, timeout: int | None = None):
         el = self.find(self.by_text(title), timeout)

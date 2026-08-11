@@ -47,12 +47,15 @@ uniqueContextId not found
 from __future__ import annotations
 
 import contextlib
+import logging
 import time
 
 from selenium.common.exceptions import WebDriverException
 
 from framework.config import settings
 from framework.core.waits import wait_until
+
+logger = logging.getLogger(__name__)
 
 NATIVE = "NATIVE_APP"
 
@@ -74,11 +77,22 @@ _WEBVIEW_SWITCH_RACE_RETRIES = 3
 _WEBVIEW_SWITCH_RACE_BACKOFF = 1.0
 
 
+def _matched_webview_switch_race_signature(exc: WebDriverException) -> str | None:
+    """Сигнатура набора `_WEBVIEW_SWITCH_RACE_SIGNATURES`, сматчившая `exc`,
+    либо None — используется и предикатом `_is_webview_switch_race`, и
+    log-строкой ретрая (N4, критик-вход TC-009: молчаливый ретрай без следа
+    какая именно сигнатура сработала)."""
+    message = str(exc)
+    for signature in _WEBVIEW_SWITCH_RACE_SIGNATURES:
+        if signature in message:
+            return signature
+    return None
+
+
 def _is_webview_switch_race(exc: WebDriverException) -> bool:
     """True, если `exc` — один из известных экземпляров choke point 2
     (см. `_WEBVIEW_SWITCH_RACE_SIGNATURES`)."""
-    message = str(exc)
-    return any(signature in message for signature in _WEBVIEW_SWITCH_RACE_SIGNATURES)
+    return _matched_webview_switch_race_signature(exc) is not None
 
 
 def _switch_to_webview_with_race_retry(driver, name: str) -> None:
@@ -93,9 +107,18 @@ def _switch_to_webview_with_race_retry(driver, name: str) -> None:
             driver.switch_to.context(name)
             return
         except WebDriverException as exc:
-            if not _is_webview_switch_race(exc):
+            matched_signature = _matched_webview_switch_race_signature(exc)
+            if matched_signature is None:
                 raise
             last_race_exc = exc
+            # N4 (критик-вход TC-009): ретрай раньше срабатывал молча —
+            # log-строка несёт choke point и СМАТЧЕННУЮ сигнатуру набора
+            # (не меняет ни логику, ни сами сигнатуры).
+            logger.warning(
+                "AT-BUG-047 choke point 2 (in_webview/_switch_to_webview_with_race_retry): "
+                "попытка %d/%d провалена транзиентной сигнатурой %r, ретраю",
+                attempt, _WEBVIEW_SWITCH_RACE_RETRIES, matched_signature,
+            )
             if attempt < _WEBVIEW_SWITCH_RACE_RETRIES:
                 time.sleep(_WEBVIEW_SWITCH_RACE_BACKOFF)
     raise last_race_exc

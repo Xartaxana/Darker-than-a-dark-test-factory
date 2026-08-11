@@ -107,6 +107,18 @@ def _webview_switch_race_exc() -> WebDriverException:
     )
 
 
+def _webview_switch_race_exc_unique_context_id() -> WebDriverException:
+    """N2 (критик-вход TC-009): второй экземпляр набора choke point 2
+    (`contexts._WEBVIEW_SWITCH_RACE_SIGNATURES`, рецидив 2026-08-11,
+    `runs/RUN-20260811-0405.md`, TC-009) — кросс-гвард обязан не подхватывать
+    ОБЕ сигнатуры набора, не только историческую первую."""
+    return WebDriverException(
+        "A new session could not be created. Details: session not created "
+        "from no such execution context: uniqueContextId not found "
+        "(chrome=113.0.5672.136)"
+    )
+
+
 @pytest.mark.p2
 @allure.id("AT-BUG-047-navigate-retries-narrow-race-signature")
 @allure.title("Проба: navigate() ретраит ТОЛЬКО узкую сигнатуру AT-BUG-047 и возвращается без исключения (device-free)")
@@ -163,19 +175,29 @@ def test_navigate_does_not_retry_unrelated_webdriver_exception():
 
 @pytest.mark.p2
 @allure.id("AT-BUG-047-navigate-does-not-retry-webview-switch-race-signature")
-@allure.title("Проба: navigate() НЕ ретраит родственную сигнатуру choke point 2 (contexts.in_webview) — раздельные маркеры")
-def test_navigate_does_not_retry_webview_switch_race_signature():
+@allure.title("Проба: navigate() НЕ ретраит родственные сигнатуры choke point 2 (contexts.in_webview, обе набора) — раздельные маркеры")
+@pytest.mark.parametrize(
+    "exc_factory, expected_fragment",
+    [
+        (_webview_switch_race_exc, "loader has changed while resolving nodes"),
+        (_webview_switch_race_exc_unique_context_id, "uniqueContextId not found"),
+    ],
+    ids=["loader-has-changed", "unique-context-id-not-found"],
+)
+def test_navigate_does_not_retry_webview_switch_race_signature(exc_factory, expected_fragment):
     """Регресс-гвард класса: критик-диагноз AT-BUG-047 явно требует
     РАЗДЕЛЬНЫХ узких маркеров ретрая для двух choke points, не одной общей
-    ловушки «WebView race». `navigate()` не должен подхватывать сигнатуру
-    `contexts.in_webview` (свой маркер и своя проба — см.
+    ловушки «WebView race». `navigate()` не должен подхватывать НИ ОДНУ из
+    сигнатур `contexts.in_webview` (N2, критик-вход TC-009: кросс-гвард
+    расширен на новую сигнатуру `uniqueContextId not found`, рецидив
+    2026-08-11; свой маркер и своя проба — см.
     `test_in_webview_transient_race_unit.py`)."""
-    driver = _FakeRacingDriver(_webview_switch_race_exc, fail_times=1)
+    driver = _FakeRacingDriver(exc_factory, fail_times=1)
 
     with pytest.raises(WebDriverException) as exc_info:
         navigate(driver, "https://archiveofourown.org/works", timeout=5)
 
-    assert "loader has changed while resolving nodes" in str(exc_info.value)
+    assert expected_fragment in str(exc_info.value)
     assert driver.get_calls == 1
 
 

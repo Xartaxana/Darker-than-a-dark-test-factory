@@ -148,7 +148,7 @@ def _navigate_race_signature_exc() -> WebDriverException:
 
 @pytest.mark.p2
 @allure.id("AT-BUG-047-in-webview-retries-narrow-race-signature")
-@allure.title("Проба: in_webview() ретраит ТОЛЬКО узкую сигнатуру choke point 2 и входит в контекст без исключения (device-free)")
+@allure.title("Проба: in_webview() ретраит набор из двух узких сигнатур choke point 2 и входит в контекст без исключения (device-free)")
 @pytest.mark.parametrize(
     "exc_factory",
     [_webview_switch_race_exc, _webview_switch_race_exc_unique_context_id],
@@ -174,11 +174,14 @@ def test_in_webview_retries_and_recovers_from_race_signature(exc_factory):
 @allure.id("AT-BUG-047-in-webview-race-retry-is-bounded")
 @allure.title("Проба: ретрай choke point 2 bounded — исчерпание попыток поднимает исходное исключение наружу in_webview")
 @pytest.mark.parametrize(
-    "exc_factory",
-    [_webview_switch_race_exc, _webview_switch_race_exc_unique_context_id],
+    "exc_factory, expected_signature",
+    [
+        (_webview_switch_race_exc, "loader has changed while resolving nodes"),
+        (_webview_switch_race_exc_unique_context_id, "uniqueContextId not found"),
+    ],
     ids=["loader-has-changed", "unique-context-id-not-found"],
 )
-def test_in_webview_race_retry_bounded_reraises_after_exhaustion(exc_factory):
+def test_in_webview_race_retry_bounded_reraises_after_exhaustion(exc_factory, expected_signature):
     driver = _FakeContextRacingDriver(
         exc_factory, fail_times=_WEBVIEW_SWITCH_RACE_RETRIES + 5
     )
@@ -187,9 +190,12 @@ def test_in_webview_race_retry_bounded_reraises_after_exhaustion(exc_factory):
         with in_webview(driver, timeout=5):
             pytest.fail("контекст не должен быть достигнут — все попытки провалены")
 
-    assert any(sig in str(exc_info.value) for sig in _WEBVIEW_SWITCH_RACE_SIGNATURES), (
-        f"переброшенное исключение обязано нести один из известных маркеров "
-        f"набора {_WEBVIEW_SWITCH_RACE_SIGNATURES}, получили: {exc_info.value}"
+    # N1 (критик-вход TC-009): сверяем СИГНАТУРУ, СООТВЕТСТВУЮЩУЮ параметру
+    # exc_factory — не "любую из набора" (`any(...)` не поймал бы проброс
+    # "не той" сигнатуры набора при параметризации).
+    assert expected_signature in str(exc_info.value), (
+        f"переброшенное исключение обязано нести СВОЮ сигнатуру `{expected_signature}` "
+        f"(exc_factory={exc_factory.__name__}), получили: {exc_info.value}"
     )
     assert driver.switch_calls == _WEBVIEW_SWITCH_RACE_RETRIES, (
         f"ретрай обязан быть bounded ровно {_WEBVIEW_SWITCH_RACE_RETRIES} "

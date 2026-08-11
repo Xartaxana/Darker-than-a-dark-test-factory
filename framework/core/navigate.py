@@ -90,10 +90,13 @@ AT-BUG-026): окно гонки — единицы секунд (WebView-про
 структурная поломка навигации."""
 from __future__ import annotations
 
+import logging
 import time
 
 from selenium.common.exceptions import WebDriverException
 from urllib3.exceptions import MaxRetryError, ReadTimeoutError
+
+logger = logging.getLogger(__name__)
 
 # AT-BUG-047: узкая сигнатура транзиентной гонки "wait_ui_ready ещё не
 # гарантирует оседание стартовой загрузки Home" — см. докстринг модуля.
@@ -147,6 +150,15 @@ def navigate(driver, url: str, timeout: float) -> None:
                 if _TRANSIENT_RACE_SIGNATURE not in str(exc):
                     raise
                 last_race_exc = exc
+                # N4 (критик-вход TC-009), симметрично contexts.py: ретрай
+                # раньше срабатывал молча — log-строка несёт choke point и
+                # сматченную сигнатуру (сигнатура здесь одна, набор не
+                # меняется — только видимость).
+                logger.warning(
+                    "AT-BUG-047 choke point 1 (navigate): попытка %d/%d провалена "
+                    "транзиентной сигнатурой %r, ретраю",
+                    attempt, _TRANSIENT_RACE_RETRIES, _TRANSIENT_RACE_SIGNATURE,
+                )
                 if attempt < _TRANSIENT_RACE_RETRIES:
                     time.sleep(_TRANSIENT_RACE_BACKOFF)
         raise last_race_exc
