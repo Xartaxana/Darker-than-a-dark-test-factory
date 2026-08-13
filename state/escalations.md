@@ -1725,6 +1725,31 @@ uiautomator2-driver). Лок `test-maintainer:2026-08-11T02:50:00Z` на
    (attempt 3, verification-only — код-фикс готов и закоммичен 532883a).
 Закрытие эскалации — зелёная 3х-верификация TC-118.
 
+**Статус: resolved 2026-08-13T15:11:55Z** (test-maintainer, attempt 3,
+verification-only). Выполнен шаг 1 плана Lead буквально: `Get-Device` до
+старта → `NO DEVICE` (унаследованного процесса не было вовсе — не
+переиспользовать было нечего), `Start-Emulator -WritableSystem` (холодная
+бута, известный AT-BUG-012 snapshot-флейк сам упал на `-no-snapshot-load`
+фолбэк, CA переустановлена: `store=134 apex=134`) → `Install-App: Success`
+→ `Start-Appium: ready`. Шаг 2 (диагностическая проба WebView в дереве)
+оказался не нужен отдельно — прогон сразу зелёный. Шаг 3: **3 зелёных
+прогона подряд** `Invoke-Pytest tests/canary/test_ao3_selectors.py -k
+test_no_non_whitelisted_onclick_candidates_on_live_work_page -q` →
+`PYTEST_EXIT=0` каждый раз (31.08s / 14.30s / 14.49s), device-liveness
+guard `recoveries this session = 0/2` во всех трёх — ни одного повтора
+`app_steps.wait_ui_ready`-падения. Allure-трасса первого прогона
+подтверждает, что фикс исполнился по-настоящему (перебор кандидатов
+живой ленты, `open_live_work_page`), вложение `tc-118-non-whitelisted-
+onclick-candidates`: `pathname='/works/89686901' has_content_marker=True
+count=0 details=[]`. Причинное заявление (калибровка №3 CLAUDE.md, не
+сильнее данных): холодный рестарт коррелирует с исчезновением симптома
+в этом окне; глубинный root cause (WebView debug-bridge/chromedriver-
+маппинг/uiautomator2-driver — кандидаты, названные Lead в решении выше)
+остаётся НЕ локализованным — «холодный рестарт устраняет симптом» ≠
+«причина установлена», рецидив на будущей сессии не исключён. Полный
+дословный witness — `test-cases/canary/TC-118.md` (запись «Верификация
+подтверждена», 2026-08-13). Лок на `TC-118.md` снят этим же ходом.
+
 ## ESC-026 — BUG-021 D1-верификация принята с оговоркой: класс «пересборка WorkRating конструктором теряет downloadPath/метаданные» закрыт частично (5/7 сайтов), 2 сайта остаются
 **[RESOLVED 2026-08-12, полный Lead (Fable), разбор очереди]:** все три
 действия закрыты: (1) R1 (`onWorkFinished`) заведён отдельным app_bug

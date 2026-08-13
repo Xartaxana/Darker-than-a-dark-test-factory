@@ -71,12 +71,15 @@ NO DEVICE`):**
   - F1: TC-139 (red_lock снят, штатно);
   - Автоматизация: TC-153/154 (готовы), TC-181-185, TC-186-188 и
     прочие Approved (~15); red-probe retrofit по active-кейсам;
-  - needs-design ×3 (§9 P1: rating-metadata-backfill-blank-only,
-    bridge-init-retry-on-incomplete-dom, bridge-hidden-works-banner) —
-    test-designer;
+  - needs-design ×2 (§9 P1: bridge-init-retry-on-incomplete-dom,
+    bridge-hidden-works-banner) — test-designer; третья область
+    (rating-metadata-backfill-blank-only + rating-panel-dispose-flush-edits)
+    ЗАКРЫТА проходом 2026-08-13 (TC-191..194, критик PASS);
   - Исполнить CH-010 (device, 120 мин, Planned/plan_review PASS);
-  - ESC-025 диагностика (device: холодная бута первым шагом → проба
-    page source → 3х-верификация TC-118) — за критиком/Lead.
+  - ~~ESC-025 диагностика~~ — **resolved 2026-08-13** проходом
+    /qa-loop 10 на Sonnet: холодный рестарт эмулятора снял env-блокер,
+    3х-верификация TC-118 зелёная (PYTEST_EXIT=0 ×3), критик подтвердил
+    независимым перепрогоном (PASS). Run RUN-20260811-0405 → Closed.
 - Ярус на закрытии: **Fable (полный Lead)**, журнал закрыт
   accepted-событием; окно деградации прохода (15:02:59–17:55:37Z)
   закрыто и ратифицировано D-0044.
