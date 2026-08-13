@@ -1250,6 +1250,50 @@
     "archived": false
   },
   {
+    "key": "TC-195",
+    "path": "board/TC-195/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Ранний onPageFinished (readyState=loading, DOM ещё не готов) не «сжигает» инжекцию: Rate-кнопки листинга появляются без ручной перезагрузки, оба независимых повтора не задваивают их",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:canary",
+      "risk:R-02"
+    ],
+    "updated": "2026-08-13T01:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-196",
+    "path": "board/TC-196/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Ранний onPageFinished, когда DOMContentLoaded уже не случится (readyState != loading): Rate-кнопки листинга всё равно появляются без ручной перезагрузки — спасает безусловный setTimeout(250)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:canary",
+      "risk:R-02"
+    ],
+    "updated": "2026-08-13T01:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "TC-109",
     "path": "board/TC-109/main.md",
     "parent": null,
@@ -5692,7 +5736,7 @@
     "epicPath": null,
     "summary": "Нестабильный TC-085 (rename filter-profile): «профиль «My renamed search» не найден в списке Settings» в полном регрессе, 3/3 зелёный в изоляции; артефакт падения не содержит секцию Saved AO3 Filters (фолбэк swipe_up возвращает список наверх)",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5701,8 +5745,8 @@
       "run:RUN-20260811-0406",
       "sev:major"
     ],
-    "updated": "2026-08-11T17:13:00Z",
-    "resolution": null,
+    "updated": "2026-08-13T17:40:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -5772,6 +5816,29 @@
       "sev:minor"
     ],
     "updated": "2026-08-11T17:35:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-067",
+    "path": "board/AT-BUG-067/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Нет харнесса для управляемого JS-состояния document.head/body/readyState — блокирует TC-195/TC-196 (bridge-init-retry-on-incomplete-dom)",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-195",
+      "test_case:TC-196",
+      "sev:minor"
+    ],
+    "updated": "2026-08-13T01:00:00Z",
     "resolution": null,
     "children": [],
     "archived": false

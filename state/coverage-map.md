@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-13T15:56:29Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-08-13T17:49:22Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 ## Сводка по областям
@@ -10,7 +10,7 @@ generated_at: 2026-08-13T15:56:29Z · генератор: `scripts/coverage_map.
 | accessibility | 6 | 3 | partial |
 | backup | 7 | 1 | partial |
 | browser | 19 | 13 | partial |
-| canary | 23 | 23 | designed-full |
+| canary | 25 | 23 | partial |
 | compatibility | 3 | 3 | designed-full |
 | downloads | 18 | 14 | partial |
 | errors | 1 | 1 | designed-full |
@@ -29,7 +29,7 @@ generated_at: 2026-08-13T15:56:29Z · генератор: `scripts/coverage_map.
 | Риск | Категория | Покрывающие кейсы |
 |---|---|---|
 | R-01 | DATA | backup:TC-021, backup:TC-165, backup:TC-167, backup:TC-168, backup:TC-171, backup:TC-172, rating:TC-151, rating:TC-152, rating:TC-155, rating:TC-191, rating:TC-192, rating:TC-193, rating:TC-194, settings:TC-018, settings:TC-019, settings:TC-020, settings:TC-186, settings:TC-187, smoke:TC-004 |
-| R-02 | TECH | canary:TC-066, canary:TC-067, canary:TC-068, canary:TC-069, canary:TC-070, canary:TC-071, canary:TC-072, canary:TC-073, canary:TC-074, canary:TC-075, canary:TC-076, canary:TC-077, canary:TC-078, canary:TC-079, canary:TC-080, canary:TC-081, canary:TC-082, canary:TC-083, canary:TC-118, canary:TC-119, canary:TC-120, canary:TC-121, canary:TC-122 |
+| R-02 | TECH | canary:TC-066, canary:TC-067, canary:TC-068, canary:TC-069, canary:TC-070, canary:TC-071, canary:TC-072, canary:TC-073, canary:TC-074, canary:TC-075, canary:TC-076, canary:TC-077, canary:TC-078, canary:TC-079, canary:TC-080, canary:TC-081, canary:TC-082, canary:TC-083, canary:TC-118, canary:TC-119, canary:TC-120, canary:TC-121, canary:TC-122, canary:TC-195, canary:TC-196 |
 | R-03 | TECH | errors:TC-046, smoke:TC-001 |
 | R-04 | DATA | canary:TC-072, canary:TC-073, canary:TC-074, canary:TC-075, canary:TC-076, canary:TC-077, library:TC-016, library:TC-017, rating:TC-007, rating:TC-008, rating:TC-009, rating:TC-010, rating:TC-011, rating:TC-012, smoke:TC-003 |
 | R-05 | TECH | downloads:TC-032, downloads:TC-033, downloads:TC-034, downloads:TC-035, downloads:TC-036, downloads:TC-037, downloads:TC-038, downloads:TC-039, downloads:TC-112, downloads:TC-113, downloads:TC-114, downloads:TC-115, downloads:TC-116, downloads:TC-117, downloads:TC-153, downloads:TC-154, downloads:TC-164 |
@@ -66,7 +66,7 @@ generated_at: 2026-08-13T15:56:29Z · генератор: `scripts/coverage_map.
 | browse-pinch-font | browse | browser:TC-053[Automated] |
 | browse-two-finger-brightness | browse | browser:TC-055[Automated] |
 | browse-bridge-injection | browse | canary:TC-066[Automated], canary:TC-067[Automated], canary:TC-068[Automated], canary:TC-069[Automated] |
-| bridge-init-retry-on-incomplete-dom | ao3-bridge | нет кейсов |
+| bridge-init-retry-on-incomplete-dom | ao3-bridge | canary:TC-195[Review], canary:TC-196[Review] |
 | browse-tabstrip-indicators | browse | нет кейсов |
 | browse-bottombar-nav | browse | smoke:TC-002[Automated] |
 | sidepanel-home | side-panel | browser:TC-057[Automated] |
@@ -180,7 +180,6 @@ generated_at: 2026-08-13T15:56:29Z · генератор: `scripts/coverage_map.
 
 ## Фичи без единого кейса
 
-- bridge-init-retry-on-incomplete-dom (ao3-bridge): Ранний onPageFinished (document.head/body ещё null) не «сжигает» инжекцию: bridge переинициализируется по DOMContentLoaded и по таймеру 250 мс, страница получает Rate-кнопки без перезагрузки и без их задвоения
 - browse-tabstrip-indicators (browse): TabStrip: индикация активной вкладки, закрытие свайпом вверх, кнопка New tab
 - library-filters-clear-all-topbar (library): Топ-бар Library: бейдж с числом активных фильтров и кнопка «Clear filters» (видна только при активных фильтрах) сбрасывают все фильтры разом
 - browse-scroll-to-top-fab (browse): FAB «Scroll to top» на листинге: появляется после прокрутки (activeScrollY > 600) вне страницы работы и прокручивает активную вкладку в начало
@@ -262,10 +261,10 @@ generated_at: 2026-08-13T15:56:29Z · генератор: `scripts/coverage_map.
 
 ### canary
 
-- coverage_status: **designed-full** (23/23 Automated)
+- coverage_status: **partial** (23/25 Automated)
 - риски: R-02, R-02/R-04
 - кейсы без risk: нет
-- P0/P1 не в Automated: нет
+- P0/P1 не в Automated: TC-195 [P1, Review], TC-196 [P1, Review]
 - автотесты (automated_by): framework/tests/canary/test_ao3_selectors.py::test_bridge_marker_present_live, framework/tests/canary/test_ao3_selectors.py::test_bridge_marker_present_replay, framework/tests/canary/test_ao3_selectors.py::test_exclude_main_pairing_checkbox_availability_live, framework/tests/canary/test_ao3_selectors.py::test_exclude_main_pairing_checkbox_availability_replay, framework/tests/canary/test_ao3_selectors.py::test_main_pairing_checkbox_availability_live, framework/tests/canary/test_ao3_selectors.py::test_main_pairing_checkbox_availability_replay, framework/tests/canary/test_ao3_selectors.py::test_no_non_whitelisted_onclick_candidates_on_live_work_page, framework/tests/canary/test_ao3_selectors.py::test_note_button_present_iff_comment_live, framework/tests/canary/test_ao3_selectors.py::test_note_button_present_iff_comment_replay, framework/tests/canary/test_ao3_selectors.py::test_rate_button_badge_opaque_color_live, framework/tests/canary/test_ao3_selectors.py::test_rate_button_badge_opaque_color_replay, framework/tests/canary/test_ao3_selectors.py::test_rate_button_injected_on_live_listing, framework/tests/canary/test_ao3_selectors.py::test_rate_button_injected_on_replay_listing, framework/tests/canary/test_ao3_selectors.py::test_save_filter_button_idempotent_live, framework/tests/canary/test_ao3_selectors.py::test_save_filter_button_idempotent_replay, framework/tests/canary/test_ao3_selectors.py::test_tag_button_present_iff_custom_tag_live, framework/tests/canary/test_ao3_selectors.py::test_tag_button_present_iff_custom_tag_replay, framework/tests/canary/test_ao3_selectors.py::test_work_blurb_selector_matches_live_listing, framework/tests/canary/test_ao3_selectors.py::test_work_blurb_selector_matches_replay_listing, framework/tests/canary/test_tap_zone_guard.py::test_tap_zone_guard_blocks_whitelisted_button, framework/tests/canary/test_tap_zone_guard.py::test_tap_zone_guard_closest_semantics_on_descendant, framework/tests/canary/test_tap_zone_guard.py::test_tap_zone_guard_pierced_by_non_whitelisted_div, framework/tests/canary/test_tap_zone_guard.py::test_tap_zone_guard_whitelisted_link_without_own_handler
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
@@ -296,7 +295,7 @@ generated_at: 2026-08-13T15:56:29Z · генератор: `scripts/coverage_map.
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  | 21 |  |
-| P1 |  |  |  | 1 |  |
+| P1 |  | 2 |  | 1 |  |
 | P2 |  |  |  | 1 |  |
 | P3 |  |  |  |  |  |
 

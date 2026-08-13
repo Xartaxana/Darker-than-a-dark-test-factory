@@ -274,6 +274,16 @@
     "artifact_status": "Automated",
     "board_status": "Automated"
   },
+  "TC-195": {
+    "itype": "test-case",
+    "artifact_status": "Review",
+    "board_status": "Review"
+  },
+  "TC-196": {
+    "itype": "test-case",
+    "artifact_status": "Review",
+    "board_status": "Review"
+  },
   "TC-109": {
     "itype": "test-case",
     "artifact_status": "Automated",
@@ -1246,8 +1256,8 @@
   },
   "AT-BUG-062": {
     "itype": "bug",
-    "artifact_status": "Fixed",
-    "board_status": "Fixed"
+    "artifact_status": "Verified",
+    "board_status": "Verified"
   },
   "AT-BUG-063": {
     "itype": "bug",
@@ -1260,6 +1270,11 @@
     "board_status": "Fixed"
   },
   "AT-BUG-066": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "AT-BUG-067": {
     "itype": "bug",
     "artifact_status": "Open",
     "board_status": "Open"

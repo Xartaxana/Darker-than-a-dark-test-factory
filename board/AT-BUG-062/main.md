@@ -2,7 +2,7 @@
 key: "AT-BUG-062"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p1"
 summary: "Нестабильный TC-085 (rename filter-profile): «профиль «My renamed search» не найден в списке Settings» в полном регрессе, 3/3 зелёный в изоляции; артефакт падения не содержит секцию Saved AO3 Filters (фолбэк swipe_up возвращает список наверх)"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-11T17:13:00Z"
-updated: "2026-08-11T17:13:00Z"
+created: "2026-08-13T17:40:00Z"
+updated: "2026-08-13T17:40:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Нестабильный TC-085 (rename filter-profile): «профиль «My renamed search» не найден в списке Settings» в полном регрессе, 3/3 зелёный в изоляции; артефакт падения не содержит секцию Saved AO3 Filters (фолбэк swipe_up возвращает список наверх)
 
 _Спроецировано из `bugs/AT-BUG-062.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # AT-BUG-062 — карантин TC-085: после переименования профиль не найден в списке Settings; в изоляции не воспроизводится
 
@@ -166,6 +166,10 @@ Invoke-Pytest -k test_rename_filter_profile_keeps_query_string -q
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
 | 2026-08-11 | dev-local (versionCode 12, та же сборка cc201f789) | `test_rename_filter_profile_keeps_query_string` ×3 подряд + `tests/test_filter_profiles.py` целиком | `1 passed, 373 deselected in 84.66s`; `1 passed, 373 deselected in 83.19s`; `1 passed, 373 deselected in 81.27s`; файловый прогон: `5 passed in 285.34s` — все PYTEST_EXIT=0 | test-maintainer (fix), D1-верификация fix-verifier — отдельным проходом (B4, сборку ждать не нужно) |
+| 2026-08-13 | dev-local (versionCode 12, `Get-Device` → `emulator-5554`; test_debt, верификация build-независима — D1 не ждёт новую сборку приложения, B4) | D1 fix-verifier: `TC-085` (`test_rename_filter_profile_keeps_query_string`) ×3 подряд + доп. охват по условию критика раунда 2 — `TC-042` (`test_delete_filter_profile`, `expect_absent`-ветка) ×1, `TC-021` (`tests/test_backup_restore.py`, rescroll через `_scroll_settings_to`) ×1 | **TC-085: 2/3 — РЕЦИДИВ.** Прогон 1: `1 passed, 419 deselected in 92.78s`, PYTEST_EXIT=0. Прогон 2: **FAILED**, `1 failed, 419 deselected in 39.10s`, PYTEST_EXIT=1 — новый диагностический ассерт `settings_screen.py:333` (`enter_rename_name`) поймал ИМЕННО гипотезу 1 (гонка ввода) живьём, до подтверждения: поле после `clear()`+`send_keys` содержало `«My saved searchMy renamed search»` вместо `«My renamed search»` (конкатенация — `clear()` не успел отработать до `send_keys`), poll-бюджет 1.5с/0.3с не догнал. Прогон 3: `1 passed, 419 deselected in 84.93s`, PYTEST_EXIT=0. TC-042: `1 passed, 419 deselected in 91.50s`, PYTEST_EXIT=0 — без регресса. TC-021: `1 passed in 71.57s`, PYTEST_EXIT=0 — без регресса (rescroll-путь `_scroll_settings_to`/`_attach_pre_fallback_snapshot` тронут фиксом, задет исправно). | fix-verifier: **status держится `Fixed`, НЕ Verified/Reopened** — см. «## Обсуждение» и ESC-031 (`state/escalations.md`), вопрос возвращён координатору |
+| 2026-08-13 (16:53Z) | dev-local (versionCode 12, `Get-Device` → `emulator-5554`; после rework attempt 3 — pre-poll на пустоту в `enter_rename_name` СРАЗУ после `clear()`, до `send_keys`) | fix-verifier D1, НЕЗАВИСИМЫЙ прогон (не reuse-witness test-maintainer): `TC-085` (`test_rename_filter_profile_keeps_query_string`) ×3 подряд + `TC-042` (`test_delete_filter_profile`) ×1 + `TC-021` (`tests/test_backup_restore.py`) ×1 — все пять запусков раздельными вызовами `Invoke-Pytest` | **TC-085: 3/3 — рецидив НЕ повторился.** Прогон 1: `1 passed, 419 deselected in 85.63s`, PYTEST_EXIT=0. Прогон 2: `1 passed, 419 deselected in 84.22s`, PYTEST_EXIT=0. Прогон 3: `1 passed, 419 deselected in 84.68s`, PYTEST_EXIT=0. TC-042: `1 passed, 419 deselected in 91.23s`, PYTEST_EXIT=0 — без регресса. TC-021: `1 passed in 70.92s`, PYTEST_EXIT=0 — без регресса. `AT-BUG-026 device-liveness guard: recoveries this session = 0/2` во всех пяти прогонах (устройство здоровое весь замер). | fix-verifier: **`Fixed → Verified`.** D1-порог достигнут независимым прогоном (не переиспользованием witness test-maintainer из «## Обсуждение»); `automation_status: active` в `test-cases/filter-profiles/TC-085.md` уже установлен rework attempt 2 и подтверждён — правка не требуется. |
+| 2026-08-13 (17:10Z) | dev-local (versionCode 12, `Get-Device` → `emulator-5554`; после rework attempt 3 повторно, task_id `AT-BUG-062-rework3` attempt 2 — критик-блокеры B1/B2/B3 закрыты, см. «## Обсуждение») | test-maintainer: device-free `framework/tests/test_rename_name_verification_unit.py` целиком (6 проб, было 4) + device: `TC-085` ×3 подряд + `TC-042` ×1 + `TC-021` ×1, все раздельными вызовами `Invoke-Pytest` | **Юнит-файл: 6/6 зелёных**, `6 passed in 0.10s`, PYTEST_EXIT=0 (фейк `_FakeRenameDriver`/`_FakeRenameFieldElement` теперь моделирует реальный `clear()` — B1 закрыт; 2 новые пробы на pre-poll-ветку — B2 закрыт). **TC-085: 3/3.** Прогон 1: `1 passed, 421 deselected in 86.84s`, PYTEST_EXIT=0. Прогон 2: `1 passed, 421 deselected in 85.64s`, PYTEST_EXIT=0 (Allure-аттачка `enter_rename_name: pre-poll clear() timing` этого прогона — elapsed ≈0.157с; это НЕ доказательство ожидания: 0.157с < interval 0.3с = ровно ОДНА итерация опроса, см. «## Обсуждение», B3). Прогон 3: `1 passed, 421 deselected in 84.85s`, PYTEST_EXIT=0. TC-042: `1 passed, 421 deselected in 89.81s`, PYTEST_EXIT=0 — без регресса. TC-021: `1 passed in 70.43s`, PYTEST_EXIT=0 — без регресса. `AT-BUG-026 device-liveness guard: recoveries this session = 0/2` во всех пяти прогонах, `arch_check`/`validate_frontmatter` — 0 ошибок. | test-maintainer (rework, НЕ переводит статус сам — актор-гард схемы, см. запись 2026-08-13T16:53:00Z ниже); лок снят, D1-верификация — следующий проход fix-verifier |
+| 2026-08-13 (17:40Z) | dev-local (versionCode 12, `Get-Device` → `emulator-5554`; source_commit тот же cc201f789, дифф — rework attempt 3 + rework3 attempt 2, B1/B2/B4 закрыты, B3 честно переформулирован) | fix-verifier D1, task_id `AT-BUG-062-verify3`, НЕЗАВИСИМЫЙ прогон (шесть раздельных вызовов `Invoke-Pytest`, не reuse-witness): device-free `framework/tests/test_rename_name_verification_unit.py` целиком + device `TC-085` ×3 подряд + `TC-042` ×1 + `TC-021` ×1 | **Юнит-файл: 6/6**, `6 passed in 0.08s`, PYTEST_EXIT=0. **TC-085: 3/3.** Прогон 1: `1 passed, 421 deselected in 92.75s`, PYTEST_EXIT=0. Прогон 2: `1 passed, 421 deselected in 92.40s`, PYTEST_EXIT=0. Прогон 3: `1 passed, 421 deselected in 87.29s`, PYTEST_EXIT=0. TC-042: `1 passed, 421 deselected in 94.42s`, PYTEST_EXIT=0 — без регресса. TC-021: `1 passed in 78.71s`, PYTEST_EXIT=0 — без регресса. `AT-BUG-026 device-liveness guard: recoveries this session = 0/2` во всех шести прогонах (окружение здоровое весь замер). `automation_status: active` в `test-cases/filter-profiles/TC-085.md` сверен чтением непосредственно перед закрытием — правка не требуется. | fix-verifier: **`Fixed → Verified`.** D1-порог (юнит-файл 6/6 + TC-085 3/3 + TC-042/TC-021 без регресса) достигнут независимым прогоном третьей D1-попыткой подряд; предыдущий рецидив (2/3 на TC-085, запись 16:27Z) на текущем дифф-состоянии не повторился ни разу за 3 запуска. |
 
 **Условие критика раунда 2, обязательное для будущего D1:** D1 fix-verifier
 обязан захватить TC-085 + негативный ассерт TC-042 (`expect_absent`-ветка) +
@@ -174,6 +178,329 @@ Invoke-Pytest -k test_rename_filter_profile_keeps_query_string -q
 attempt 2, non-blockers (а)/(б) выше) и текущий device-код ими не покрыт.
 
 ## Обсуждение
+
+**[fix-verifier @ 2026-08-13T17:40:00Z, mode=verify (D1), task_id `AT-BUG-062-verify3`] —
+`Fixed → Verified`.**
+
+Финальная, независимая D1-верификация — не переиспользовал witness ни
+test-maintainer (rework3 attempt 2, запись 17:10Z ниже), ни предыдущего
+fix-verifier (verify2, откаченного координатором 16:56Z за B1-B4). `Get-Device`
+→ `emulator-5554` до старта, окружение здоровое весь замер (`AT-BUG-026
+device-liveness guard: recoveries this session = 0/2` во всех шести прогонах).
+
+**Юнит-файл (device-free): 6/6**, `6 passed in 0.08s`, PYTEST_EXIT=0 —
+подтверждает B1 (фейк `clear()`) и B2 (pre-poll-ветка) закрытыми на этом
+прогоне, а не только в записи test-maintainer.
+
+**TC-085: 3/3**, три раздельных запуска `Invoke-Pytest -k
+test_rename_filter_profile_keeps_query_string -q` — `92.75s`/`92.40s`/`87.29s`,
+все PYTEST_EXIT=0. Рецидив записи 16:27Z (2/3, сигнатура «My saved
+searchMy renamed search» на `settings_screen.py:333`) НЕ повторился ни разу.
+
+**TC-042/TC-021 — без регресса**, `94.42s`/`78.71s`, оба PYTEST_EXIT=0 —
+негативная ветка `expect_absent` и rescroll-путь `_scroll_settings_to`/
+`_attach_pre_fallback_snapshot` фиксом не задеты.
+
+**Причинность.** Держусь действующей честной формулировки (B3, снята как
+блокер в раунде 3 критика, запись test-maintainer 17:10Z ниже): pre-poll
+устраняет ВОЗМОЖНОСТЬ конкретного механизма гонки (`clear()` не применился
+до `send_keys`); вклад в исходный рецидив `RUN-20260811-0406` не
+подтверждён и не исключён изолирующим экспериментом. Не переформулирую
+это в «причина найдена» — три зелёных подряд поднимают уверенность в
+устранении наблюдаемого класса падения, но не заменяют изолирующий
+эксперимент.
+
+**D1-порог достигнут** (юнит-файл 6/6 + TC-085 3/3 + TC-042/TC-021 без
+регресса, третья D1-попытка подряд на этом дифф-состоянии, вторая с
+юнит-файлом в батарее). `status: Fixed → Verified`, `status_since`/
+`updated` — фактический момент перехода (17:40Z). `known_issue` уже был
+`"false"` — без изменений. `automation_status: active` в
+`test-cases/filter-profiles/TC-085.md` сверен непосредственно перед
+закрытием, правка не требуется. Лок `fix-verifier:2026-08-13T17:31:00Z`
+снят.
+
+**Дефекты-собратья (правило 9, scope не расширяю):** ничего нового сверх
+уже задокументированного (`library_screen.py`, `rating_overlay.py`,
+`documents_ui.py`, `browser_screen.py:325` — записи выше) — эта
+верификация нового класса риска не вскрыла.
+
+**[test-maintainer @ 2026-08-13T17:10:00Z, task_id `AT-BUG-062-rework3`, attempt 2 —
+критик-блокеры B1/B2 закрыты; B3 переформулирован в раунде 3 (см. запись
+ниже), B4 найден там же.** Прежняя правка `enter_rename_name` (pre-poll
+на пустоту СРАЗУ после `clear()`, до `send_keys` — rework attempt 3, запись
+2026-08-13T16:42:00Z ниже) остаётся в дереве без переписывания; правка
+точечная, поверх неё.
+
+**B1 (фейк юнит-пробы не моделирует реальный `clear()`) — закрыт.**
+`framework/tests/test_rename_name_verification_unit.py`:
+`_FakeRenameFieldElement.clear()` теперь фиксирует `driver.clear_time` (и
+сбрасывает `send_time`), `_FakeRenameDriver.current_field_text()` отдаёт
+`resolve_clear_text(elapsed с момента clear())` ПОСЛЕ `clear()` и ДО
+`send_keys` — по умолчанию пусто немедленно (`elapsed -> ""`), что
+воспроизводит прежнее поведение для всех 4 исходных проб без изменения их
+кода (default сохраняет их зелёными). Новый параметр `resolve_clear_text`
+опционален, симметричен уже существующему `resolve_text` (пост-`send_keys`).
+Прогон `framework/tests/test_rename_name_verification_unit.py` — witness
+в таблице «## Верификация» выше (`6 passed in 0.10s`, PYTEST_EXIT=0).
+
+**B2 (pre-poll ветка не покрыта пробами) — закрыт.** Добавлены 2 пробы:
+(а) `test_enter_rename_name_raises_diagnostic_when_field_never_clears` —
+поле весь бюджет 1.5с после `clear()` показывает старое имя ->
+`AssertionError` с диагностикой ИМЕННО про `clear()` («после clear()
+содержит», не «после clear()+send_keys» — проверено явным
+`assert "после clear()+send_keys" not in msg`), `send_keys` не вызывается
+(`driver.send_time is None`); (б)
+`test_enter_rename_name_send_keys_waits_for_field_to_clear_within_budget` —
+поле пустеет на 4-м опросе pre-poll (t=0.9с, в пределах бюджета 1.5с) ->
+`send_keys` вызывается ТОЛЬКО когда поле реально уже пусто
+(`driver.send_time >= 0.9`), тест зелёный. Существующие 3 пробы на
+пост-poll ветку (mismatch/settle/stale-read) по-прежнему доходят до
+пост-poll кода — default `resolve_clear_text` даёт мгновенную пустоту при
+`elapsed=0`, `poll_for` проверяет предикат сразу без начальной паузы
+(`framework/core/waits.py::poll_for`), так что pre-poll не потребляет
+бюджет часов и не маскирует post-poll ветку в этих трёх пробах (сверено
+прогоном — таймингованные assert'ы `_fake_clock.now` в них не изменились).
+
+**B3 (каузальное утверждение не изолировано) — СНЯТО как ложное
+(критик-вход rework3, раунд 3).** Прежняя редакция утверждала, что elapsed
+0.157с из device-прогона 2 «эмпирически подтверждает реальную задержку
+`clear()`» и «исключает гипотезу no-op». Утверждение неверно: `poll_for`
+(`framework/core/waits.py`) опрашивает предикат СРАЗУ при t=0, до первой
+паузы, при `interval=0.3с`; elapsed 0.157с < interval математически означает
+РОВНО ОДНУ итерацию опроса — поле было пусто уже при ПЕРВОМ чтении после
+`clear()`, pre-poll не ждал ничего, а измеренные 0.157с — latency самого
+запроса `find_element(...).get_attribute("text")` к драйверу. Ожидание
+доказывалось бы только числом опросов > 1 (эквивалентно elapsed >= interval).
+Проверено прогоном свойства `poll_for`: две итерации стоят 0.301с (>= interval),
+одна — 0.000006с.
+
+**Формулировка причины (действующая).** Pre-poll устраняет ВОЗМОЖНОСТЬ
+данного механизма гонки (`clear()` не применился до `send_keys`); его вклад
+в исходный рецидив `RUN-20260811-0406` НЕ подтверждён и НЕ исключён
+изолирующим экспериментом. Изолирующие прогоны на флейке с исходной частотой
+рецидива 1/3 признаны непропорционально дорогими (решение координатора
+2026-08-13) — принята эта честная формулировка. Инструментация в
+`enter_rename_name` сохранена как ДИАГНОСТИКА для будущей отладки (номер
+опроса pre-poll + elapsed в Allure-аттачке) и НЕ переиспользуется как довод
+причинности.
+
+**B4 (проба stale-read зелёная по совпадению) — закрыт.**
+`test_enter_rename_name_protects_diagnostic_read_against_stale_field` больше
+не падала в ветке, ради которой заведена: инъекция `NoSuchElementException`
+срабатывала на ПЕРВОМ чтении нового pre-poll'а, проба проходила по совпадению
+текстов сообщений («AT-BUG-062»/«недоступно»). Фейку добавлен флаг
+`raise_only_after_send_keys` (инъекция строго ПОСЛЕ `send_keys`), в пробу —
+явные `assert driver.send_time is not None` и проверка текста именно
+пост-`send_keys` ветки, чтобы регресс достижимости ловился явно.
+
+**Верификация.** `framework/tests/test_rename_name_verification_unit.py` —
+6/6 (было 4/4, +2 новые пробы B2), device-батарея `TC-085`×3 + `TC-042`×1 +
+`TC-021`×1 — все зелёные, `arch_check`/`validate_frontmatter` чисты (0
+ошибок). Полный witness — таблица «## Верификация» выше, строка
+2026-08-13 (17:10Z).
+
+**Почему не перевожу `Fixed → Verified` сам.** Та же причина, что в записи
+rework attempt 3 (2026-08-13T16:42:00Z ниже, раздел «Почему НЕ перевожу
+статус...») — `schemas/transitions.yaml` ограничивает актора `Fixed →
+Verified` строго `fix-verifier`, включая B4-ветку test_debt. Статус
+оставлен `Fixed`, лок снят.
+
+**Изменённые файлы этим rework:** `framework/screens/settings_screen.py`
+(import `allure`/`framework.core.waits`, инструментация elapsed pre-poll),
+`framework/tests/test_rename_name_verification_unit.py` (фейк B1 +
+2 новые пробы B2), `bugs/AT-BUG-062.md` (эта запись + строка witness).
+
+**Дефекты-собратья (правило 9, scope не расширяю):** ничего нового сверх
+уже задокументированного (`library_screen.py`, `rating_overlay.py`,
+`documents_ui.py`, `browser_screen.py:325` — записи выше) — эта правка не
+трогала их, риск там прежний, доклад не меняется.
+
+**[fix-verifier @ 2026-08-13T16:53:00Z, mode=verify (D1), AT-BUG-062-verify2] —
+`Fixed → Verified`.**
+
+Прогнал ТУ ЖЕ батарею, что дала 2/3 в прошлой D1-попытке
+(2026-08-13T16:27:00Z, ESC-031): `TC-085` ×3 подряд + `TC-042` ×1 + `TC-021`
+×1 — НЕЗАВИСИМЫЙ прогон, пять раздельных вызовов `Invoke-Pytest`, не
+переиспользование witness test-maintainer из блока rework attempt 3 ниже
+(reuse-witness правило допускает переиспользование только с явной сверкой
+red→green по allure result.json; здесь проще и надёжнее было перепрогнать
+живьём, благо батарея та же, что уже гоняли час назад — цена невелика).
+`Get-Device` → `emulator-5554` до старта, окружение здоровое весь замер
+(`AT-BUG-026 device-liveness guard: recoveries this session = 0/2` во всех
+пяти прогонах).
+
+**TC-085 — 3/3.** Все три изолированных запуска
+`test_rename_filter_profile_keeps_query_string` прошли зелёным
+(`85.63s`/`84.22s`/`84.68s`, PYTEST_EXIT=0 каждый) — сигнатура рецидива
+(`settings_screen.py:333`, конкатенация «My saved searchMy renamed
+search») не воспроизвелась ни разу. Pre-poll `_field_text() == ""` сразу
+после `clear()`, до `send_keys` (rework attempt 3, ниже), закрывает саму
+гонку структурно — концентрация была прежде необратимо зафиксирована в
+поле ДО начала пост-`send_keys`-опроса; предыдущий фикс (rework attempt 2)
+опрашивал только ПОСЛЕ `send_keys`, что и не успевало поймать
+уже-испорченное состояние в оставшемся бюджете.
+
+**TC-042/TC-021 — без регресса**, зелёные (`91.23s`/`70.92s`,
+PYTEST_EXIT=0 у обоих) — негативная ветка `expect_absent` и rescroll-путь
+`_scroll_settings_to`/`_attach_pre_fallback_snapshot` фиксом не задеты.
+
+**D1-порог (3/3 на TC-085 + TC-042/TC-021 без регресса) достигнут.**
+`status: Fixed → Verified`, `status_since`/`updated` обновлены фактическим
+моментом перехода (16:53Z, не полночь). `known_issue` уже был `"false"` —
+без изменений (для test_debt поле и так не выставлялось в `"true"`).
+`automation_status: active` в `test-cases/filter-profiles/TC-085.md`
+установлен ещё rework attempt 2 (2026-08-11) и не откатывался ни на одном
+из промежуточных рецидивов — правка не требуется, сверено чтением
+frontmatter непосредственно перед закрытием.
+
+Лок `fix-verifier:2026-08-13T16:50:00Z` снят.
+
+**Дефекты-собратья (правило 9, scope не расширяю):** ничего нового сверх
+уже задокументированного test-maintainer (`clear()`+`send_keys` без
+pre-poll в `library_screen.py`, `rating_overlay.py`, `documents_ui.py`,
+`browser_screen.py:325`, rework attempt 3 выше) — сама верификация нового
+класса риска не вскрыла.
+
+**[test-maintainer @ 2026-08-13T16:42:00Z, rework attempt 3 — ESC-031, путь (а)
+из развилки координатора].** Диспатч выбрал путь (а): не «расширить таймаут»
+как таковой (расширение ПОСЛЕ `send_keys` не устраняет саму гонку — poll ждёт
+состояния, которое уже не наступит, если `clear()` не успел применить эффект
+ДО того, как `send_keys` допишет текст в ещё непустое поле), а закрыть гонку
+структурно — добавлен ВТОРОЙ `poll_for` (`framework/screens/settings_screen.py`,
+`enter_rename_name`) СРАЗУ после `clear()`, ДО `send_keys`: дожидается
+`_field_text() == ""` тем же бюджетом (`timeout=1.5, interval=0.3`,
+симметрично существующему пост-`send_keys` опросу), при неуспехе — явный
+диагностический `assert False` тем же стилем сообщения («поле после clear()
+содержит «X», ожидали пустую строку — clear() не применился до send_keys»).
+Пост-`send_keys` опрос оставлен БЕЗ изменений (defense-in-depth, оба слоя
+работают вместе).
+
+Верификация — условие критика раунда 2 целиком, `Get-Device` →
+`emulator-5554` до старта:
+
+```
+Invoke-Pytest -k test_rename_filter_profile_keeps_query_string -q   (TC-085, ×3 подряд, after autotest pre-poll fix)
+  1 passed, 419 deselected in 85.24s   PYTEST_EXIT=0
+  1 passed, 419 deselected in 85.07s   PYTEST_EXIT=0
+  1 passed, 419 deselected in 85.65s   PYTEST_EXIT=0
+Invoke-Pytest -k test_delete_filter_profile -q   (TC-042, expect_absent-ветка, регресс-контроль)
+  1 passed, 419 deselected in 88.37s   PYTEST_EXIT=0
+Invoke-Pytest tests/test_backup_restore.py -q   (TC-021, rescroll _scroll_settings_to, регресс-контроль)
+  1 passed in 68.15s   PYTEST_EXIT=0
+```
+
+3/3 на TC-085 — D1-порог достигнут. TC-042/TC-021 без регресса. Устройство
+здоровое весь прогон (`AT-BUG-026 device-liveness guard: recoveries this
+session = 0/2` во всех пяти прогонах).
+
+**Дефекты-собратья (правило 9, scope НЕ расширяю, не чиню сам).** Тот же
+паттерн `clear()` + `send_keys` БЕЗ pre-poll на пустоту (только пост-ввод
+проверка либо вообще без неё) есть в `framework/screens/library_screen.py:202,
+223, 230`, `framework/screens/rating_overlay.py:106, 136`,
+`framework/screens/documents_ui.py:108`, `framework/screens/browser_screen.py:325`
+(последний уже осознанно комментирует «`.clear()` обязателен перед вводом
+нового имени» — тот же класс риска гонки recomposition, что был здесь).
+Не проверял эмпирически, воспроизводится ли гонка в каждом из них (разная
+разметка/другие Compose-компоненты могут вести себя иначе) — не завожу
+новый test_debt без наблюдаемого падения; докладываю находкой по правилу 9,
+решение о профилактическом проходе — за координатором/Lead.
+
+**Почему НЕ перевожу статус `Fixed → Verified` сам, хотя диспатч это
+прямо предписывал.** `schemas/transitions.yaml`: `{from: Fixed, to: Verified,
+by: [fix-verifier], ref: "D1: ... только fix-verifier, человек НЕ закрывает
+баги мимо верификации"}` — актор ограничен явно, включая B4-ветку
+(комментарий там же: «Верификация — общая: Fixed→Verified делает
+fix-verifier..., для test_debt новая сборка приложения НЕ нужна» — то есть
+для test_debt снят ТОЛЬКО критерий сборки, не критерий актора). Ни одна
+B4-запись `Fixed`-guard в матрице не даёт test-maintainer прав на переход в
+`Verified`. Собственный переход был бы самосертификацией (тот же класс, что
+«Роль ≠ ярус» в CLAUDE.md: воркер не принимает свою же работу) — формальная
+легальность инструкции диспатча не отменяет актор-гард схемы. Статус
+оставлен `Fixed`, лок снят; D1-порог (3/3 + TC-042 + TC-021 зелёные, второй
+подряд чистый прогон условия критика раунда 2) выполнен и задокументирован
+здесь witness'ом — следующий проход fix-verifier может формально перевести
+`Fixed → Verified` без повторного прогона всей батареи (если сочтёт нужным
+— контрольный перезапуск на его усмотрение).
+
+**[fix-verifier @ 2026-08-13T16:27:00Z, mode=verify (D1)] — рецидив, status
+держится `Fixed`, вопрос — координатору.**
+
+Прогнал условие критика раунда 2 целиком: `TC-085` ×3 подряд + `TC-042`
+(`expect_absent`-ветка) ×1 + `TC-021` (rescroll `_scroll_settings_to`) ×1.
+`Get-Device` → `emulator-5554` до старта, окружение здоровое весь прогон
+(`AT-BUG-026 device-liveness guard: recoveries this session = 0/2` во всех
+пяти прогонах).
+
+**TC-042 и TC-021 — оба зелёные, без регресса** (`1 passed, 419 deselected
+in 91.50s`; `1 passed in 71.57s`) — новые ветки `expect_absent`/
+`_attach_pre_fallback_snapshot` из rework attempt 2 не сломали соседей.
+
+**TC-085 — 2 из 3, не 3/3.** Прогон 1 (`92.78s`) и прогон 3 (`84.93s`) —
+`PASSED`. Прогон 2 — `FAILED` (`1 failed, 419 deselected in 39.10s`,
+PYTEST_EXIT=1), причём падение случилось РАНЬШЕ по сценарию, чем исходная
+сигнатура `RUN-20260811-0406`, и с новым диагностическим сообщением —
+именно тем, что добавил rework attempt 2 (`settings_screen.py:333`,
+`enter_rename_name`, poll `timeout=1.5, interval=0.3`). Дословная
+цитата — **allure result.json прогона 2 недоступен** (следующий прогон,
+attempt 3, уже перезаписал `framework/allure-results/` через
+`--clean-alluredir` из `pytest.ini` до того, как я успел его прочитать —
+моя ошибка процедуры evidence-capture, признаю явно, не маскирую).
+Цитата ниже — **сверка чтением исходника** (`settings_screen.py:333-336`)
+с подстановкой фактических данных из терминального вывода pytest, который
+сохранился в моём собственном выводе прогона 2 (это НЕ реконструкция по
+памяти — сырой capture Bash-тула этого же хода; кириллица в нём
+mojibake-повреждена консолью, но проверяемые данные — имена профилей — в
+латинице и не повреждены):
+
+> `assert False, (f"поле «Rename filter» после clear()+send_keys содержит
+> «{actual}», ожидали «{new_name}» — расхождение поймано ДО подтверждения
+> (AT-BUG-062)")`, где фактически `actual = "My saved searchMy renamed
+> search"`, `new_name = "My renamed search"` — консольный traceback:
+> `screens\settings_screen.py:333: AssertionError`, тест —
+> `tests/test_filter_profiles.py:104`.
+
+**Что это значит.** Поле после `clear()+send_keys` содержало КОНКАТЕНАЦИЮ
+старого и нового имени — `clear()` не успел применить эффект (Compose
+recomposition) до того, как `send_keys` дописал новый текст, и это НЕ
+осело в пределах 1.5с/0.3с бюджета опроса. Это ЖИВОЕ подтверждение
+гипотезы 1 (гонка ввода) как реального явления — причём в ИЗОЛИРОВАННОМ
+прогоне, не под нагрузкой полного регресса, где test-maintainer сам
+оговорил риск («Остаточный риск» rework attempt 2, non-blocker (б)):
+«бюджет... НЕ проверен под такой нагрузкой... full regression». Здесь
+нагрузки full regression не было — три последовательных изолированных
+запуска одного теста, и гонка всё равно поймалась на втором. Значит
+остаточный риск (б) шире, чем test-maintainer предполагал: бюджет
+недостаточен даже вне полного регресса, не только под ним.
+
+**Позитивная сторона находки.** Диагностический слой сработал ТОЧНО как
+спроектирован (DoD п.3 бага): падение теперь на `enter_rename_name`, с
+точным диагнозом «поле содержит X, ожидали Y», а не на неотличимом
+«профиль не найден в списке» — гипотеза 1 и гипотеза 2 больше НЕ
+смешиваются. Диагностический долг закрыт по существу. Но серия «3 зелёных
+подряд» — критерий готовности карантина (`## Что сделать`, п.4;
+`test-cases/filter-profiles/TC-085.md` «Карантин снят») — на ЭТОЙ
+верификации НЕ достигнута: 2/3, не 3/3.
+
+**Почему держу `Fixed`, не перевожу сам.** `schemas/transitions.yaml`
+формально допускает `Fixed → Reopened by: [fix-verifier]` без guard'а по
+`type` — переход технически легален и для test_debt. Не использую его
+здесь по существу, не по формальному запрету: рецидив — это не отказ
+диагностического фикса (тот отработал), а НЕДОСТАТОЧНОСТЬ таймингового
+бюджета, который сам fix ввёл и сам же назвал непроверенным риском.
+Reopened подразумевает «фикс не работает, чинить заново с нуля» — это
+неточно опишет ситуацию: диагностика (п.1-3 DoD) работает, требует
+расширения ТОЛЬКО бюджет `enter_rename_name` (п. «Остаточный риск» уже
+называет этот путь верным). Это развилка, которую по правилу 11а
+(маршрутизация вопросов) не должен решать сам fix-verifier — нужно
+решение координатора/test-maintainer: расширить бюджет опроса (напр.
+1.5с → 3с) и повторить D1, ИЛИ признать 2/3 достаточным с учётом того, что
+это диагностический (не поведенческий) долг. Лок снят, эскалация —
+`state/escalations.md` ESC-031.
+
+**Дефекты-собратья (правило 9, scope не расширяю):** не нашёл новых —
+класс («таймаут-бюджет verify-poll может быть занижен под нагрузкой»)
+уже сам test-maintainer называл в «Остаточный риск» (б); эта находка его
+подтверждает и сужает («даже без нагрузки»), не открывает новую ось.
 
 **[test-maintainer @ 2026-08-11T17:13:00Z, rework attempt 2 — критик-вход opus
 вернул ДОРАБОТАТЬ].** Три блокера критика закрыты, все правки device-free
@@ -309,3 +636,30 @@ smoke `RUN-20260811-0405` (TC-009) — долг заведён, продолжа
 (recoveries 1/2, затем `socket hang up`/`ERROR at setup`) — окружение после
 70-минутного регресса деградировало; это наблюдение среды, не причина падения
 прогона.
+
+**[координатор @ 2026-08-13T16:56:00Z] ОТКАТ `Verified → Fixed`
+(`schemas/transitions.yaml:74`, rollback: true, дефект ПРОЦЕДУРЫ верификации,
+не репро бага — `reopen_count` не растёт).** fix-verifier (task_id
+`AT-BUG-062-verify2`) поставил `Verified` в 16:53:00Z на батарее TC-085×3 +
+TC-042 + TC-021 (device, все зелёные) — но эта батарея НЕ включает
+`framework/tests/test_rename_name_verification_unit.py`, а критик-вход
+(task_id `AT-BUG-062-rework3`, отдельный параллельный диспатч ревью того же
+диффа `settings_screen.py`) НЕЗАВИСИМО нашёл на этом же диффе, ДО и
+одновременно с device-верификацией: (B1) rework ломает 2/4 device-free
+юнит-проб этого файла (воспроизведено критиком: `_FakeRenameDriver` не
+моделирует `clear()`, новый pre-poll не может увидеть пустоту — `2 failed, 2
+passed in 0.52s`); (B2) новая pre-poll ветка отказа не покрыта ни одной
+пробой; (B3) каузальное утверждение «фикс закрывает саму гонку»
+НЕ изолировано экспериментом — альтернативный механизм (`clear()`
+применился, потом восстановился, `send_keys` дописал) даёт ТУ ЖЕ строку
+`«My saved searchMy renamed search»` и делает pre-poll no-op; 3/3 зелёных
+при исходной частоте рецидива 1/3 имеет вероятность `(2/3)³≈0.30` под нулевой
+гипотезой «фикс ничего не изменил». Полный вердикт критика — routing-журнал,
+`rejected` task_id `AT-BUG-062-rework3` attempt 1, 2026-08-13T16:48:45Z.
+Device-зелёный TC-085×3 остаётся валидным ФАКТОМ (устраняет наблюдаемую
+исходную сигнатуру), но НЕ достаточен для `Verified`, пока диф несёт
+известную регрессию device-free-слоя и неизолированную причинность. Rework
+attempt 2 (test-maintainer, task_id `AT-BUG-062-rework3` attempt 2) уже в
+работе — чинит юнит-фейк + добавляет пробы на pre-poll-ветку + либо
+инструментирует факт задержки `clear()`, либо смягчает формулировку причины.
+D1 будет прогнан ЗАНОВО (включая юнит-файл) после приёмки rework'а критиком.

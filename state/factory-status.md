@@ -1,20 +1,20 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-13T15:56:27Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-13T17:49:20Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
 - Сборка: dev-local (versionCode 12), commit `cc201f78`, built_at 2026-08-10T23:52:58Z
-- smoke: Closed · smoke_freshness_hours: **0.7** (RUN-20260811-0405)
-- regression: Triaged · regression_freshness_hours: **84.1** (RUN-20260810-0146)
-- canary: Triaged · canary_freshness_hours: **220.2** (RUN-20260804-1317)
+- smoke: Closed · smoke_freshness_hours: **2.6** (RUN-20260811-0405)
+- regression: Triaged · regression_freshness_hours: **86.0** (RUN-20260810-0146)
+- canary: Triaged · canary_freshness_hours: **222.1** (RUN-20260804-1317)
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **1**
 - p0_automation_coverage: **100%** (37/37)
-- p1_automation_coverage: **75%** (85/113)
-- Test debt открыт: **1** — AT-BUG-066
+- p1_automation_coverage: **74%** (85/115)
+- Test debt открыт: **2** — AT-BUG-066, AT-BUG-067
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
 - Untriaged: **0** · untriaged_failure_age: **0**
@@ -24,9 +24,9 @@ story-карточки: стадии см. docs/05-board.md §Story
 - dev-local (versionCode 12), commit `cc201f78`, built_at 2026-08-10T23:52:58Z
 - smoke: failed · regression: failed
 
-## Тест-кейсы (194)
+## Тест-кейсы (196)
 
-- Draft: **1** · Review: **4** · Approved: **38** · Automated: **151**
+- Draft: **1** · Review: **6** · Approved: **38** · Automated: **151**
 - автотесты (B3): active: **151**
 
 | Область | Draft | Review | Approved | Automated | Blocked |
@@ -34,7 +34,7 @@ story-карточки: стадии см. docs/05-board.md §Story
 | accessibility |  |  | 3 | 3 |  |
 | backup |  |  | 6 | 1 |  |
 | browser |  |  | 6 | 13 |  |
-| canary |  |  |  | 23 |  |
+| canary |  | 2 |  | 23 |  |
 | compatibility |  |  |  | 3 |  |
 | downloads |  |  | 4 | 14 |  |
 | errors |  |  |  | 1 |  |
@@ -74,10 +74,10 @@ story-карточки: стадии см. docs/05-board.md §Story
 
 ## Test debt (4)
 
-- AT-BUG-062 [flaky_test] Fixed — Нестабильный TC-085 (rename filter-profile): «профиль «My renamed search» не найден в списке Settings» в полном регрессе, 3/3 зелёный в изоляции; артефакт падения не содержит секцию Saved AO3 Filters (фолбэк swipe_up возвращает список наверх)
 - AT-BUG-063 [broken_environment] Fixed — device-liveness recovery не пробрасывает GPU-параметр → env-предпосылка TC-078 (host-GPU) молча деградирует до swiftshader_indirect
 - AT-BUG-064 [broken_environment] Fixed — Остаточный device-прокси переживает перезапуск эмулятора
 - AT-BUG-066 [broken_environment] Open — Персистентные системные настройки font_scale/night mode защищены только in-process try/finally — тот же класс остатка, что AT-BUG-064 (http_proxy)
+- AT-BUG-067 [missing_fixture] Open — Нет харнесса для управляемого JS-состояния document.head/body/readyState — блокирует TC-195/TC-196 (bridge-init-retry-on-incomplete-dom)
 
 ## Прогоны (13)
 
