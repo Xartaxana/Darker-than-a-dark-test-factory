@@ -7,14 +7,14 @@ priority: "p1"
 summary: "Панель рейтинга work-страницы при dispose переписывает рейтинг, который пользователь не менял — возврат на Browse после Clear all ratings воскрешает удалённую запись"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["bug", "sev:major"]
+labels: ["bug", "test_case:TC-194", "sev:major"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-11T16:01:10Z"
-updated: "2026-08-11T16:01:10Z"
+created: "2026-08-13T15:15:00Z"
+updated: "2026-08-13T15:15:00Z"
 archived: false
 resolution: "done"
 ---
@@ -149,6 +149,18 @@ D1-верификация на сборке `cc201f78` (`versionCode=12`/`versio
 `status: Fixed → Verified`, `fixed_in` заполнен, `known_issue` уже был `"false"` (действие не потребовалось). `app-under-test/` не менял (только чтение `BottomBar.kt` для сверки механизма фикса). `framework/tests/` не изменял постоянно — временный пробник создан и удалён в рамках этого прохода.
 
 Полный текст правок, allure-uuid и вывод `validate_frontmatter.py` — см. итоговый agent_output этого хода (в чате координатора).
+
+**[qa @ 2026-08-13T15:15:00Z]**
+
+`test_cases: []` дозакрыт: `test-cases/rating/TC-194.md` (`status: Review`, P1)
+формализует ТОТ ЖЕ Given-When-Then, что и репро этого бага, постоянным
+дизайн-артефактом (device-driven пробник fix-verifier был временным,
+удалённым после использования). Кейс проверяет ТОЛЬКО Room-сторону
+(`work_ratings` остаётся пустой после Clear all → возврат на Browse) —
+UI-отражение того же факта (панель без reload ещё показывает старый
+рейтинг) — отдельный, уже принятый `Intended`-вопрос, замкнутый
+`test-cases/settings/TC-020.md` Then(а) и `bugs/BUG-012.md`; TC-194 его не
+дублирует и не переоткрывает.
 
 ## Чек-лист качества
 - [x] Проверены дубликаты среди открытых багов — совпадений не найдено; BUG-012 — related (разные механизмы: там виджет не узнаёт об очистке, тут откатывается сама БД); BUG-014/015 — другой класс (edge-vs-level рейтинга, не потеря удалённых данных)

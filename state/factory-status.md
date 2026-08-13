@@ -1,19 +1,19 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-13T15:06:40Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-13T15:56:27Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
 - Сборка: dev-local (versionCode 12), commit `cc201f78`, built_at 2026-08-10T23:52:58Z
-- smoke: Triaged · smoke_freshness_hours: **60.4** (RUN-20260811-0405)
-- regression: Triaged · regression_freshness_hours: **83.3** (RUN-20260810-0146)
-- canary: Triaged · canary_freshness_hours: **219.4** (RUN-20260804-1317)
+- smoke: Closed · smoke_freshness_hours: **0.7** (RUN-20260811-0405)
+- regression: Triaged · regression_freshness_hours: **84.1** (RUN-20260810-0146)
+- canary: Triaged · canary_freshness_hours: **220.2** (RUN-20260804-1317)
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **1**
 - p0_automation_coverage: **100%** (37/37)
-- p1_automation_coverage: **78%** (85/109)
+- p1_automation_coverage: **75%** (85/113)
 - Test debt открыт: **1** — AT-BUG-066
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
@@ -24,9 +24,9 @@ story-карточки: стадии см. docs/05-board.md §Story
 - dev-local (versionCode 12), commit `cc201f78`, built_at 2026-08-10T23:52:58Z
 - smoke: failed · regression: failed
 
-## Тест-кейсы (190)
+## Тест-кейсы (194)
 
-- Draft: **1** · Approved: **38** · Automated: **151**
+- Draft: **1** · Review: **4** · Approved: **38** · Automated: **151**
 - автотесты (B3): active: **151**
 
 | Область | Draft | Review | Approved | Automated | Blocked |
@@ -41,7 +41,7 @@ story-карточки: стадии см. docs/05-board.md §Story
 | filter-profiles |  |  | 5 | 5 |  |
 | library | 1 |  |  | 25 |  |
 | performance |  |  |  | 4 |  |
-| rating |  |  | 4 | 20 |  |
+| rating |  | 4 | 4 | 20 |  |
 | security |  |  |  | 6 |  |
 | settings |  |  | 9 | 11 |  |
 | smoke |  |  |  | 5 |  |
@@ -81,7 +81,7 @@ story-карточки: стадии см. docs/05-board.md §Story
 
 ## Прогоны (13)
 
-- Triaged: **9** · Closed: **3** · Blocked: **1**
+- Triaged: **8** · Closed: **4** · Blocked: **1**
 
 ## Exploratory
 
@@ -90,9 +90,9 @@ story-карточки: стадии см. docs/05-board.md §Story
 - bugs_per_charter: **1.33**
 - new_tc_from_charters: **20**
 
-## Активные локи (1)
+## Активные локи (0)
 
-- TC-118 — `test-maintainer:2026-08-13T14:57:33Z`
+- нет
 
 ## Эскалации (23)
 

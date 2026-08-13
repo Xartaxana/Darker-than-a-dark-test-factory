@@ -1145,15 +1145,14 @@
     "issueType": "test-case",
     "status": "tc-automated",
     "priority": "p0",
-    "assignee": "test-maintainer",
+    "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:canary",
       "risk:R-02",
-      "automation:active",
-      "wip:test-maintainer"
+      "automation:active"
     ],
-    "updated": "2026-08-11T03:22:16Z",
+    "updated": "2026-08-13T15:11:55Z",
     "resolution": "done",
     "children": [],
     "archived": false
@@ -3209,6 +3208,94 @@
       "risk:R-01"
     ],
     "updated": "2026-08-10T14:20:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-191",
+    "path": "board/TC-191/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Сохранение заметки с листинга по существующей строке НЕ перезаписывает непустые локальные title/фандом/word count скрейпом текущей страницы",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:rating",
+      "risk:R-01/R-10"
+    ],
+    "updated": "2026-08-13T16:05:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-192",
+    "path": "board/TC-192/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Первая оценка ранее скачанной orphan-строки с листинга заполняет пустые title/автора/фандом/word count скрейпом страницы и делает работу видимой в фильтре по фандому",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:rating",
+      "risk:R-01/R-10"
+    ],
+    "updated": "2026-08-13T16:05:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-193",
+    "path": "board/TC-193/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Набранная в панели work-страницы заметка сохраняется в Room при закрытии панели без явного тапа Save note",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:rating",
+      "risk:R-01/R-10"
+    ],
+    "updated": "2026-08-13T12:10:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-194",
+    "path": "board/TC-194/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Закрытие панели work-страницы без набранных правок НЕ пишет в Room и не воскрешает запись, удалённую через Clear all ratings",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:rating",
+      "risk:R-01/R-10"
+    ],
+    "updated": "2026-08-13T15:15:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5979,9 +6066,10 @@
     "assignee": "qa-agents",
     "labels": [
       "bug",
+      "test_case:TC-194",
       "sev:major"
     ],
-    "updated": "2026-08-11T16:01:10Z",
+    "updated": "2026-08-13T15:15:00Z",
     "resolution": "done",
     "children": [],
     "archived": false
@@ -6543,14 +6631,14 @@
     "epicPath": null,
     "summary": "RUN-20260811-0405",
     "issueType": "run",
-    "status": "run-triaged",
+    "status": "run-closed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "run"
     ],
-    "updated": "2026-08-11T02:45:00Z",
-    "resolution": null,
+    "updated": "2026-08-13T15:11:55Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -6588,7 +6676,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-writing-cases",
-      "регресс сборки: smoke RUN-20260811-0405 46/49 · разобрано · regression RUN-20260811-0406 191/193 · разобрано · новых багов в прогоне: 3",
+      "регресс сборки: smoke RUN-20260811-0405 46/49 · чисто · regression RUN-20260811-0406 191/193 · разобрано · новых багов в прогоне: 3",
       "фич без кейсов: 0/2",
       "черновиков: 1",
       "багов на кейсах стори: 2"
@@ -6612,7 +6700,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-covered",
-      "регресс сборки: smoke RUN-20260811-0405 46/49 · разобрано · regression RUN-20260811-0406 191/193 · разобрано · новых багов в прогоне: 3",
+      "регресс сборки: smoke RUN-20260811-0405 46/49 · чисто · regression RUN-20260811-0406 191/193 · разобрано · новых багов в прогоне: 3",
       "зелёные в RUN-20260811-0406: 5/5",
       "багов на кейсах стори: 0"
     ],

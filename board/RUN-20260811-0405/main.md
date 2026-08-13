@@ -2,7 +2,7 @@
 key: "RUN-20260811-0405"
 project: "AO3"
 issueType: "run"
-status: "run-triaged"
+status: "run-closed"
 priority: "p2"
 summary: "RUN-20260811-0405"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-11T02:45:00Z"
-updated: "2026-08-11T02:45:00Z"
+created: "2026-08-13T15:11:55Z"
+updated: "2026-08-13T15:11:55Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # RUN-20260811-0405
 
 _Спроецировано из `runs/RUN-20260811-0405.md` (источник правды).
-Статус в нашей машине: **Triaged**._
+Статус в нашей машине: **Closed**._
 
 # RUN-20260811-0405 — smoke (replay) на dev-local (12)
 
@@ -432,10 +432,19 @@ overlay», т.е. ровно поверхность кейса, поэтому �
 - [x] Пакеты доказательств C2 собраны по `schemas/evidence.yaml` (ENV_ISSUE: env_check/retry_result/logs; TEST_BUG ×2: failing_test/root_cause/fix_or_debt).
 - [x] `APP_CHANGED`-сверка выполнена по диапазону `6f884d9..cc201f7` — не подтверждён.
 - [x] Прогон переведён в `Triaged`, лок снят.
-- [ ] Действия по вердиктам: 2× `TEST_BUG` → test-maintainer (правило «Починить тест по TEST_BUG/SITE_CHANGED/APP_CHANGED»); `ENV_ISSUE` → перезапуск/фикс окружения (нового артефакта не требует, дедуп в `AT-BUG-026`/`AT-BUG-021`).
-  - [x] TC-009 (`test_rate_work_from_listing_overlay[…SAVE-work0]`) — см. «Резолюция test-maintainer — TC-009» ниже. Дифф готов (`framework/core/contexts.py`), НЕ закоммичен этим ходом — коммит за координатором после critic-входа (см. ниже).
-  - [ ] TC-118 (`test_no_non_whitelisted_onclick_candidates_on_live_work_page`) — параллельная задача test-maintainer, не мой owns; статус на момент этой записи см. `test-cases/canary/TC-118.md` (obсуждение фиксирует блокировку fail-fast средой на верификации — не закрыто).
-  - Прогон НЕ переводится в `Closed` этим ходом: TC-118 остаётся открытым пунктом.
+- [x] Действия по вердиктам: 2× `TEST_BUG` → test-maintainer (правило «Починить тест по TEST_BUG/SITE_CHANGED/APP_CHANGED»); `ENV_ISSUE` → перезапуск/фикс окружения (нового артефакта не требует, дедуп в `AT-BUG-026`/`AT-BUG-021`).
+  - [x] TC-009 (`test_rate_work_from_listing_overlay[…SAVE-work0]`) — см. «Резолюция test-maintainer — TC-009» ниже. Дифф закоммичен (`dcd64b4`, батч мелочей `762b2c0`) — строка исправлена 2026-08-13 (была стальной: заявляла «не закоммичен этим ходом», найдено критик-входом приёмки TC-118).
+  - [x] TC-118 (`test_no_non_whitelisted_onclick_candidates_on_live_work_page`) —
+    починен (`framework/steps/browser_steps.py::
+    assert_no_non_whitelisted_onclick_candidates`,
+    `framework/steps/rating_steps.py::open_live_work_page`, закоммичено
+    `532883a`), верификация «3 зелёных подряд» была заблокирована fail-fast
+    средой (`state/escalations.md` ESC-025), после холодного рестарта
+    эмулятора подтверждена (test-maintainer, 2026-08-13, `PYTEST_EXIT=0`
+    ×3, ESC-025 resolved) — см. `test-cases/canary/TC-118.md` запись
+    «Верификация подтверждена».
+  - Все пункты «Действий по вердиктам» закрыты этим списком — прогон
+    переводится в `Closed` (последний открытый пункт снят).
 
 ## Резолюция test-maintainer — TC-009 (2026-08-11)
 

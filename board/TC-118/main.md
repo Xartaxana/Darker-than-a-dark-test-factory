@@ -5,16 +5,16 @@ issueType: "test-case"
 status: "tc-automated"
 priority: "p0"
 summary: "Числовая проба предпосылки guard'а: узлы вне whitelist с собственным обработчиком в теле живой work-страницы (live)"
-assignee: "test-maintainer"
+assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:canary", "risk:R-02", "automation:active", "wip:test-maintainer"]
+labels: ["test-case", "area:canary", "risk:R-02", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-11T03:22:16Z"
-updated: "2026-08-11T03:22:16Z"
+created: "2026-08-13T15:11:55Z"
+updated: "2026-08-13T15:11:55Z"
 archived: false
 resolution: "done"
 ---
@@ -272,6 +272,29 @@ JS-зарегистрированного обработчика.
   локализован. Полный разбор — `ESC-025` (продолжение записи). Код фикса
   по-прежнему НЕ верифицирован живым прогоном; `app_steps.wait_ui_ready` не
   трогал (вне scope). Лок и статус кейса не менялись.
+
+- **Верификация подтверждена (test-maintainer, 2026-08-13, `ESC-025`
+  закрыт).** После холодного рестарта эмулятора (`Start-Emulator
+  -WritableSystem`, унаследованный процесс НЕ переиспользован — на момент
+  старта `Get-Device` уже отдавал `NO DEVICE`, лишнего
+  `qemu-system-x86_64.exe`-процесса не было) — **3 зелёных прогона подряд**
+  (`Invoke-Pytest tests/canary/test_ao3_selectors.py -k
+  test_no_non_whitelisted_onclick_candidates_on_live_work_page -q`,
+  `PYTEST_EXIT=0` каждый раз, 31.08s / 14.30s / 14.49s). Allure-трасса
+  первого прогона подтверждает, что фикс реально исполнился (не был обойдён
+  средой): шаг «открыта первая ЖИВАЯ (не 404/интерстишл) work-страница из
+  кандидатов [...]» с полным списком из 20 id ленты живой ленты — новый код
+  `rating_steps.open_live_work_page` реально в работе (не голый
+  `open_work_page`); вложение `tc-118-non-whitelisted-onclick-candidates`:
+  `pathname='/works/89686901' title='I Loved You First - jenniferskywalker
+  - Multifandom [Archive of Our Own]' has_content_marker=True count=0
+  details=[]` — содержательный якорь и N=0 подтверждены. Падение на
+  `app_steps.wait_ui_ready` (env-класс ESC-025) не повторилось ни разу за
+  3 попытки в этом окне — консистентно с диагнозом «остаточная деградация
+  эмулятора после qemu-краха», снятым холодным рестартом. `automated_by`/
+  `reviewed_at`/`red_probe`/статус кейса не менялись — верификация
+  подтверждала уже закоммиченный код-фикс живым прогоном, ничего в
+  `framework/` не правила.
 
 ## Ревью автотеста (F1, test-reviewer, 2026-07-30)
 
