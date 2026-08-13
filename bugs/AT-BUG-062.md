@@ -13,7 +13,7 @@ runs: ["RUN-20260811-0406"]
 duplicates: []
 regression_of: ""
 status_since: "2026-08-11T16:53:33Z"
-updated: "2026-08-11T17:13:00Z"
+updated: "2026-08-13T16:27:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -21,7 +21,7 @@ resolution: ""
 resolution_comment: ""
 known_issue: "false"
 blocked_reason: ""
-lock: "fix-verifier:2026-08-13T16:15:00Z"
+lock: "test-maintainer:2026-08-13T16:35:00Z"
 gitlab_issue: ""
 ---
 
@@ -167,6 +167,7 @@ Invoke-Pytest -k test_rename_filter_profile_keeps_query_string -q
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
 | 2026-08-11 | dev-local (versionCode 12, та же сборка cc201f789) | `test_rename_filter_profile_keeps_query_string` ×3 подряд + `tests/test_filter_profiles.py` целиком | `1 passed, 373 deselected in 84.66s`; `1 passed, 373 deselected in 83.19s`; `1 passed, 373 deselected in 81.27s`; файловый прогон: `5 passed in 285.34s` — все PYTEST_EXIT=0 | test-maintainer (fix), D1-верификация fix-verifier — отдельным проходом (B4, сборку ждать не нужно) |
+| 2026-08-13 | dev-local (versionCode 12, `Get-Device` → `emulator-5554`; test_debt, верификация build-независима — D1 не ждёт новую сборку приложения, B4) | D1 fix-verifier: `TC-085` (`test_rename_filter_profile_keeps_query_string`) ×3 подряд + доп. охват по условию критика раунда 2 — `TC-042` (`test_delete_filter_profile`, `expect_absent`-ветка) ×1, `TC-021` (`tests/test_backup_restore.py`, rescroll через `_scroll_settings_to`) ×1 | **TC-085: 2/3 — РЕЦИДИВ.** Прогон 1: `1 passed, 419 deselected in 92.78s`, PYTEST_EXIT=0. Прогон 2: **FAILED**, `1 failed, 419 deselected in 39.10s`, PYTEST_EXIT=1 — новый диагностический ассерт `settings_screen.py:333` (`enter_rename_name`) поймал ИМЕННО гипотезу 1 (гонка ввода) живьём, до подтверждения: поле после `clear()`+`send_keys` содержало `«My saved searchMy renamed search»` вместо `«My renamed search»` (конкатенация — `clear()` не успел отработать до `send_keys`), poll-бюджет 1.5с/0.3с не догнал. Прогон 3: `1 passed, 419 deselected in 84.93s`, PYTEST_EXIT=0. TC-042: `1 passed, 419 deselected in 91.50s`, PYTEST_EXIT=0 — без регресса. TC-021: `1 passed in 71.57s`, PYTEST_EXIT=0 — без регресса (rescroll-путь `_scroll_settings_to`/`_attach_pre_fallback_snapshot` тронут фиксом, задет исправно). | fix-verifier: **status держится `Fixed`, НЕ Verified/Reopened** — см. «## Обсуждение» и ESC-031 (`state/escalations.md`), вопрос возвращён координатору |
 
 **Условие критика раунда 2, обязательное для будущего D1:** D1 fix-verifier
 обязан захватить TC-085 + негативный ассерт TC-042 (`expect_absent`-ветка) +
@@ -175,6 +176,86 @@ Invoke-Pytest -k test_rename_filter_profile_keeps_query_string -q
 attempt 2, non-blockers (а)/(б) выше) и текущий device-код ими не покрыт.
 
 ## Обсуждение
+
+**[fix-verifier @ 2026-08-13T16:27:00Z, mode=verify (D1)] — рецидив, status
+держится `Fixed`, вопрос — координатору.**
+
+Прогнал условие критика раунда 2 целиком: `TC-085` ×3 подряд + `TC-042`
+(`expect_absent`-ветка) ×1 + `TC-021` (rescroll `_scroll_settings_to`) ×1.
+`Get-Device` → `emulator-5554` до старта, окружение здоровое весь прогон
+(`AT-BUG-026 device-liveness guard: recoveries this session = 0/2` во всех
+пяти прогонах).
+
+**TC-042 и TC-021 — оба зелёные, без регресса** (`1 passed, 419 deselected
+in 91.50s`; `1 passed in 71.57s`) — новые ветки `expect_absent`/
+`_attach_pre_fallback_snapshot` из rework attempt 2 не сломали соседей.
+
+**TC-085 — 2 из 3, не 3/3.** Прогон 1 (`92.78s`) и прогон 3 (`84.93s`) —
+`PASSED`. Прогон 2 — `FAILED` (`1 failed, 419 deselected in 39.10s`,
+PYTEST_EXIT=1), причём падение случилось РАНЬШЕ по сценарию, чем исходная
+сигнатура `RUN-20260811-0406`, и с новым диагностическим сообщением —
+именно тем, что добавил rework attempt 2 (`settings_screen.py:333`,
+`enter_rename_name`, poll `timeout=1.5, interval=0.3`). Дословная
+цитата — **allure result.json прогона 2 недоступен** (следующий прогон,
+attempt 3, уже перезаписал `framework/allure-results/` через
+`--clean-alluredir` из `pytest.ini` до того, как я успел его прочитать —
+моя ошибка процедуры evidence-capture, признаю явно, не маскирую).
+Цитата ниже — **сверка чтением исходника** (`settings_screen.py:333-336`)
+с подстановкой фактических данных из терминального вывода pytest, который
+сохранился в моём собственном выводе прогона 2 (это НЕ реконструкция по
+памяти — сырой capture Bash-тула этого же хода; кириллица в нём
+mojibake-повреждена консолью, но проверяемые данные — имена профилей — в
+латинице и не повреждены):
+
+> `assert False, (f"поле «Rename filter» после clear()+send_keys содержит
+> «{actual}», ожидали «{new_name}» — расхождение поймано ДО подтверждения
+> (AT-BUG-062)")`, где фактически `actual = "My saved searchMy renamed
+> search"`, `new_name = "My renamed search"` — консольный traceback:
+> `screens\settings_screen.py:333: AssertionError`, тест —
+> `tests/test_filter_profiles.py:104`.
+
+**Что это значит.** Поле после `clear()+send_keys` содержало КОНКАТЕНАЦИЮ
+старого и нового имени — `clear()` не успел применить эффект (Compose
+recomposition) до того, как `send_keys` дописал новый текст, и это НЕ
+осело в пределах 1.5с/0.3с бюджета опроса. Это ЖИВОЕ подтверждение
+гипотезы 1 (гонка ввода) как реального явления — причём в ИЗОЛИРОВАННОМ
+прогоне, не под нагрузкой полного регресса, где test-maintainer сам
+оговорил риск («Остаточный риск» rework attempt 2, non-blocker (б)):
+«бюджет... НЕ проверен под такой нагрузкой... full regression». Здесь
+нагрузки full regression не было — три последовательных изолированных
+запуска одного теста, и гонка всё равно поймалась на втором. Значит
+остаточный риск (б) шире, чем test-maintainer предполагал: бюджет
+недостаточен даже вне полного регресса, не только под ним.
+
+**Позитивная сторона находки.** Диагностический слой сработал ТОЧНО как
+спроектирован (DoD п.3 бага): падение теперь на `enter_rename_name`, с
+точным диагнозом «поле содержит X, ожидали Y», а не на неотличимом
+«профиль не найден в списке» — гипотеза 1 и гипотеза 2 больше НЕ
+смешиваются. Диагностический долг закрыт по существу. Но серия «3 зелёных
+подряд» — критерий готовности карантина (`## Что сделать`, п.4;
+`test-cases/filter-profiles/TC-085.md` «Карантин снят») — на ЭТОЙ
+верификации НЕ достигнута: 2/3, не 3/3.
+
+**Почему держу `Fixed`, не перевожу сам.** `schemas/transitions.yaml`
+формально допускает `Fixed → Reopened by: [fix-verifier]` без guard'а по
+`type` — переход технически легален и для test_debt. Не использую его
+здесь по существу, не по формальному запрету: рецидив — это не отказ
+диагностического фикса (тот отработал), а НЕДОСТАТОЧНОСТЬ таймингового
+бюджета, который сам fix ввёл и сам же назвал непроверенным риском.
+Reopened подразумевает «фикс не работает, чинить заново с нуля» — это
+неточно опишет ситуацию: диагностика (п.1-3 DoD) работает, требует
+расширения ТОЛЬКО бюджет `enter_rename_name` (п. «Остаточный риск» уже
+называет этот путь верным). Это развилка, которую по правилу 11а
+(маршрутизация вопросов) не должен решать сам fix-verifier — нужно
+решение координатора/test-maintainer: расширить бюджет опроса (напр.
+1.5с → 3с) и повторить D1, ИЛИ признать 2/3 достаточным с учётом того, что
+это диагностический (не поведенческий) долг. Лок снят, эскалация —
+`state/escalations.md` ESC-031.
+
+**Дефекты-собратья (правило 9, scope не расширяю):** не нашёл новых —
+класс («таймаут-бюджет verify-poll может быть занижен под нагрузкой»)
+уже сам test-maintainer называл в «Остаточный риск» (б); эта находка его
+подтверждает и сужает («даже без нагрузки»), не открывает новую ось.
 
 **[test-maintainer @ 2026-08-11T17:13:00Z, rework attempt 2 — критик-вход opus
 вернул ДОРАБОТАТЬ].** Три блокера критика закрыты, все правки device-free
