@@ -11,7 +11,10 @@ poll, `assert_filter_profile_listed` DB-truth на провале) были зе
    диагностическим сообщением (не таймаут/не сырое исключение Selenium).
 2. `enter_rename_name`: поле «догоняет» ожидаемое значение В ПРЕДЕЛАХ бюджета
    (settle) -> зелёный, исключение не поднимается.
-3. `enter_rename_name`: чтение поля для diagnostic-сообщения ЗАЩИЩЕНО —
+3. `enter_rename_name`: чтение поля ПОСЛЕ `send_keys` для diagnostic-сообщения
+   ЗАЩИЩЕНО (инъекция сужена флагом `raise_only_after_send_keys` — иначе
+   исключение срубает первое чтение pre-poll'а и проба зеленеет по совпадению
+   текстов сообщений, критик-вход B4) —
    `IMPLICIT_WAIT=0` (`framework/config/settings.py`) означает, что
    незащищённое чтение stale/исчезнувшего поля кинуло бы сырой
    `NoSuchElementException` вместо диагностического `AssertionError`
@@ -22,6 +25,16 @@ poll, `assert_filter_profile_listed` DB-truth на провале) были зе
    ФАКТИЧЕСКИЙ список имён из БД (`seed_db.read_filter_profiles`, мокнута),
    не только факт отсутствия — различает гипотезу 1 (имя другое) от
    гипотезы 2 (строка не поймана прокруткой, AT-BUG-048).
+5. (rework attempt 3, критик-вход B2) `enter_rename_name`: pre-poll ветка
+   (СРАЗУ после `clear()`, ДО `send_keys`) — поле НЕ пустеет весь бюджет
+   (`clear()` не сработал в фейке) -> `AssertionError` про содержимое
+   ПОСЛЕ `clear()` (сообщение «после clear() содержит», не «после
+   clear()+send_keys» — другая ветка, другое сообщение), `send_keys`
+   не вызывается вовсе.
+6. (rework attempt 3, критик-вход B2) `enter_rename_name`: поле пустеет НЕ
+   сразу, а на N-м опросе pre-poll (catch-up ДО `send_keys`, в пределах
+   бюджета) -> `send_keys` вызывается ТОЛЬКО когда поле реально уже пусто,
+   тест зелёный.
 
 Фейковые часы (`_FakeClock`) — тот же приём, что
 `test_swipe_to_text_settle_unit.py` (AT-BUG-048): подставлены вместо
@@ -78,8 +91,16 @@ class _FakeRenameFieldElement:
     def __init__(self, driver: "_FakeRenameDriver") -> None:
         self._driver = driver
 
-    def clear(self) -> None:  # содержимое отслеживает сам driver через resolve_text
-        pass
+    def clear(self) -> None:
+        """Rework attempt 3 (rework3 B1 fix): `clear()` теперь МОДЕЛИРУЕТ реальную
+        очистку — фиксирует момент вызова, а `current_field_text()` после него
+        отдаёт `resolve_clear_text(elapsed)` (по умолчанию пусто СРАЗУ, elapsed=0),
+        а не «предзаполненное имя» до самого `send_keys`. Раньше поле оставалось
+        непустым ДО `send_keys` даже после `clear()` — недостижимое состояние для
+        нового pre-poll (`_field_text() == ""` СРАЗУ после `clear()`), из-за чего
+        pre-poll всегда исчерпывал бюджет и падал (критик B1, 2 failed из 4)."""
+        self._driver.clear_time = self._driver.clock.time()
+        self._driver.send_time = None
 
     def send_keys(self, value: str) -> None:
         del value
@@ -94,34 +115,53 @@ class _FakeRenameDriver:
 
     `resolve_text(elapsed)` — что реально показывает поле через `elapsed`
     фейковых секунд ПОСЛЕ `send_keys` (симулирует расхождение ввода/задержку
-    recomposition). `raise_find_element`, если задан, заставляет ВТОРОЙ и
-    последующие вызовы `find_element` кидать это исключение (симулирует
-    поле, ставшее stale/исчезнувшее к моменту diagnostic-чтения) — ПЕРВЫЙ
-    вызов (начальный `self.find(...)` внутри `enter_rename_name`) всегда
-    успешен, иначе `wait_until` реально ждал бы `DEFAULT_TIMEOUT` секунд
-    настоящим `time.sleep` (WebDriverWait использует свой собственный
-    `time`, не патченные фейковые часы этого модуля)."""
+    recomposition при вводе). `resolve_clear_text(elapsed)` — симметрично, что
+    показывает поле через `elapsed` секунд ПОСЛЕ `clear()`, ДО `send_keys`
+    (симулирует задержку catch-up самого `clear()`/recomposition очистки);
+    по умолчанию — пусто немедленно (`elapsed -> ""`), совпадает с прежним
+    поведением фейка для всех проб, не передающих этот параметр явно.
+    `raise_find_element`, если задан, заставляет ВТОРОЙ и последующие вызовы
+    `find_element` кидать это исключение (симулирует поле, ставшее stale/
+    исчезнувшее к моменту diagnostic-чтения) — ПЕРВЫЙ вызов (начальный
+    `self.find(...)` внутри `enter_rename_name`) всегда успешен, иначе
+    `wait_until` реально ждал бы `DEFAULT_TIMEOUT` секунд настоящим
+    `time.sleep` (WebDriverWait использует свой собственный `time`, не
+    патченные фейковые часы этого модуля).
 
-    def __init__(self, clock: _FakeClock, resolve_text,
-                raise_find_element: Exception | None = None) -> None:
+    `raise_only_after_send_keys` (критик-вход B4, rework3 раунд 3) сужает окно
+    инъекции: исключение начинает срабатывать ТОЛЬКО ПОСЛЕ `send_keys`. Без
+    этого флага инъекция срубает уже ПЕРВОЕ чтение pre-poll'а (введён в
+    attempt 3) — проба про пост-`send_keys` diagnostic-чтение падала бы в
+    ДРУГОЙ (pre-poll) ветке и оставалась зелёной по СОВПАДЕНИЮ текстов
+    сообщений, не исполняя ветку, ради которой заведена."""
+
+    def __init__(self, clock: _FakeClock, resolve_text, resolve_clear_text=None,
+                raise_find_element: Exception | None = None,
+                raise_only_after_send_keys: bool = False) -> None:
         self.clock = clock
         self.current_context = "NATIVE_APP"
         self.resolve_text = resolve_text
+        self.resolve_clear_text = resolve_clear_text or (lambda elapsed: "")
+        self.clear_time: float | None = None
         self.send_time: float | None = None
         self.raise_find_element = raise_find_element
+        self.raise_only_after_send_keys = raise_only_after_send_keys
         self.find_element_calls = 0
 
     def find_element(self, by, value):
         del by, value
         self.find_element_calls += 1
         if self.find_element_calls > 1 and self.raise_find_element is not None:
-            raise self.raise_find_element
+            if not self.raise_only_after_send_keys or self.send_time is not None:
+                raise self.raise_find_element
         return _FakeRenameFieldElement(self)
 
     def current_field_text(self) -> str:
-        if self.send_time is None:
-            return "My saved search"  # предзаполнено текущим именем до send_keys
-        return self.resolve_text(self.clock.time() - self.send_time)
+        if self.send_time is not None:
+            return self.resolve_text(self.clock.time() - self.send_time)
+        if self.clear_time is not None:
+            return self.resolve_clear_text(self.clock.time() - self.clear_time)
+        return "My saved search"  # предзаполнено текущим именем ДО clear()
 
 
 @pytest.mark.p1
@@ -172,13 +212,21 @@ def test_enter_rename_name_succeeds_when_field_catches_up_within_budget(_fake_cl
 @allure.id("AT-BUG-062-enter-rename-name-protects-stale-read")
 @allure.title("Проба: enter_rename_name не протекает NoSuchElementException при stale-поле — только диагностический AssertionError (TC-085)")
 def test_enter_rename_name_protects_diagnostic_read_against_stale_field(_fake_clock):
-    # Given поле становится недоступным (NoSuchElementException) при КАЖДОМ
-    # чтении после начального `self.find(...)` — симулирует stale/исчезнувший
-    # узел (IMPLICIT_WAIT=0, framework/config/settings.py:50) в момент, когда
-    # verification-поллинг/diagnostic-сообщение пытаются прочитать текст
+    # Given поле становится недоступным (NoSuchElementException) при каждом
+    # чтении ПОСЛЕ `send_keys` — симулирует stale/исчезнувший узел
+    # (IMPLICIT_WAIT=0, framework/config/settings.py:50) ровно в тот момент,
+    # ради которого проба заведена: пост-`send_keys` verification-поллинг и
+    # diagnostic-сообщение пытаются прочитать текст.
+    # Критик-вход B4 (rework3, раунд 3): БЕЗ `raise_only_after_send_keys`
+    # инъекция срубала ПЕРВОЕ чтение pre-poll'а (введён в attempt 3), проба
+    # падала в pre-poll ветке и оставалась зелёной по СОВПАДЕНИЮ (оба
+    # сообщения несут «AT-BUG-062» и «недоступно»), не исполняя пост-
+    # `send_keys` чтение вовсе. Явные ассерты ниже (`send_time is not None` +
+    # текст именно пост-`send_keys` ветки) ловят такой регресс достижимости.
     driver = _FakeRenameDriver(
         _fake_clock, resolve_text=lambda elapsed: "irrelevant",
         raise_find_element=NoSuchElementException("stale element reference"),
+        raise_only_after_send_keys=True,
     )
     screen = SettingsScreen(driver)
 
@@ -190,8 +238,77 @@ def test_enter_rename_name_protects_diagnostic_read_against_stale_field(_fake_cl
         screen.enter_rename_name("My renamed search")
 
     msg = str(exc_info.value)
+    # `is not None`, а НЕ truthiness: send_time может быть ровно 0.0
+    assert driver.send_time is not None, (
+        "ветка пост-`send_keys` чтения не достигнута — инъекция сработала "
+        "раньше (pre-poll); проба не покрывает то, ради чего заведена"
+    )
+    assert "после clear()+send_keys" in msg, (
+        f"ожидали сообщение пост-send_keys ветки, получили: {msg!r}"
+    )
     assert "AT-BUG-062" in msg
     assert "недоступно" in msg, f"ожидали placeholder защищённого чтения в сообщении: {msg!r}"
+
+
+@pytest.mark.p1
+@allure.id("AT-BUG-062-enter-rename-name-pre-poll-never-clears-raises-diagnostic")
+@allure.title("Проба: enter_rename_name падает диагностическим AssertionError про clear(), если поле не опустело за бюджет 1.5с (TC-085, rework attempt 3)")
+def test_enter_rename_name_raises_diagnostic_when_field_never_clears(_fake_clock):
+    # Given поле весь бюджет (1.5с) ПОСЛЕ clear() продолжает показывать старое
+    # имя (симулирует clear(), который не применился — recomposition не
+    # догнал ни разу в пределах pre-poll budget)
+    driver = _FakeRenameDriver(
+        _fake_clock, resolve_text=lambda elapsed: "irrelevant",
+        resolve_clear_text=lambda elapsed: "My saved search",
+    )
+    screen = SettingsScreen(driver)
+
+    # When/Then enter_rename_name падает ДО send_keys, с диагностикой именно
+    # про clear() (не про clear()+send_keys — другая ветка/сообщение)
+    with pytest.raises(AssertionError) as exc_info:
+        screen.enter_rename_name("My renamed search")
+
+    msg = str(exc_info.value)
+    assert "AT-BUG-062" in msg, f"сообщение не несёт диагностическую ссылку: {msg!r}"
+    assert "после clear() содержит" in msg, (
+        f"ожидали сообщение pre-poll ветки («после clear() содержит»), "
+        f"получили другое (возможно, сработала пост-send_keys ветка): {msg!r}"
+    )
+    assert "после clear()+send_keys" not in msg, (
+        f"сработала пост-send_keys ветка вместо pre-poll: {msg!r}"
+    )
+    assert "My saved search" in msg, f"фактический (неочищенный) текст поля не в сообщении: {msg!r}"
+    assert driver.send_time is None, "send_keys не должен вызываться — поле так и не очистилось"
+    assert _fake_clock.now >= 1.5, f"pre-poll budget не исчерпан: fake clock={_fake_clock.now}"
+
+
+@pytest.mark.p1
+@allure.id("AT-BUG-062-enter-rename-name-pre-poll-catches-up-within-budget")
+@allure.title("Проба: enter_rename_name вызывает send_keys только после реального опустошения поля (TC-085, rework attempt 3)")
+def test_enter_rename_name_send_keys_waits_for_field_to_clear_within_budget(_fake_clock):
+    # Given поле опустошается НЕ сразу, а на 4-м опросе pre-poll (интервал
+    # 0.3с -> t=0.9с), в пределах бюджета 1.5с
+    def resolve_clear(elapsed: float) -> str:
+        return "" if elapsed >= 0.9 else "My saved search"
+
+    driver = _FakeRenameDriver(
+        _fake_clock, resolve_text=lambda elapsed: "My renamed search",
+        resolve_clear_text=resolve_clear,
+    )
+    screen = SettingsScreen(driver)
+
+    # When/Then send_keys вызывается ТОЛЬКО когда поле реально уже пусто
+    # (не раньше t=0.9с), тест зелёный
+    result = screen.enter_rename_name("My renamed search")
+
+    assert result is screen
+    assert driver.send_time is not None, "send_keys должен был быть вызван"
+    assert driver.send_time >= 0.9, (
+        f"send_keys вызван ДО того, как поле реально очистилось: send_time={driver.send_time}"
+    )
+    assert driver.clear_time is not None and driver.send_time - driver.clear_time >= 0.9, (
+        "pre-poll должен был реально прождать catch-up ДО send_keys"
+    )
 
 
 @pytest.mark.p1

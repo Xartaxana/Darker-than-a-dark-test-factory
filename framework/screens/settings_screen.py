@@ -1,8 +1,10 @@
 """Экран Settings (ui/settings/SettingsScreen.kt). Тексты сверены с исходником."""
 from __future__ import annotations
 
+import allure
 from appium.webdriver.common.appiumby import AppiumBy
 
+from framework.core import waits as _waits
 from framework.core.waits import poll_for
 from framework.screens.base_screen import BaseScreen
 
@@ -311,7 +313,6 @@ class SettingsScreen(BaseScreen):
         падает здесь, до подтверждения, с точным диагнозом."""
         field = self.find(self._RENAME_NAME_FIELD)
         field.clear()
-        field.send_keys(new_name)
 
         def _field_text() -> str:
             """Защищённое чтение (rework AT-BUG-062, критик-вход): `IMPLICIT_WAIT=0`
@@ -326,6 +327,63 @@ class SettingsScreen(BaseScreen):
                 return self.driver.find_element(*self._RENAME_NAME_FIELD).get_attribute("text") or ""
             except Exception as exc:  # noqa: BLE001
                 return f"<поле недоступно при чтении: {exc.__class__.__name__}>"
+
+        # AT-BUG-062 rework attempt 3 (D1-рецидив 2/3, ESC-031): пост-`send_keys`
+        # опрос ниже ждёт состояние, которое уже не наступит, если `clear()` не
+        # успел применить эффект (Compose recomposition) ДО того, как `send_keys`
+        # допишет новый текст, — конкатенация фиксируется в реальном значении
+        # поля НЕОБРАТИМО раньше, чем начинается опрос. Симметричный pre-poll
+        # СРАЗУ после `clear()`, ДО `send_keys`, устраняет ВОЗМОЖНОСТЬ этого
+        # механизма гонки.
+        # AT-BUG-062 B3 (критик-вход rework3, раунды 1-3) — ЧЕСТНАЯ РАМКА:
+        # вклад этого механизма в исходный рецидив (`RUN-20260811-0406`) НЕ
+        # подтверждён и НЕ исключён изолирующим экспериментом; зелёная серия
+        # после правки одинаково согласуется и с гипотезой «pre-poll поймал
+        # реальную задержку clear()», и с гипотезой «задержки не было, pre-poll
+        # — no-op». Замеры ниже (`_pre_poll_polls`, `_pre_poll_elapsed`) —
+        # ДИАГНОСТИКА для будущей отладки, НЕ довод причинности: `poll_for`
+        # опрашивает предикат СРАЗУ при t=0, до первой паузы
+        # (`framework/core/waits.py`), поэтому реальное ожидание доказывает
+        # только `polls > 1` (эквивалентно `elapsed >= interval`); один опрос
+        # означает «поле было пусто уже при ПЕРВОМ чтении после clear()», а сам
+        # elapsed при этом — latency запроса к драйверу (пример: 0.157с при
+        # interval 0.3с в device-прогоне 2026-08-13 = ровно одна итерация,
+        # то есть ожидания не было).
+        _pre_poll_polls = 0
+
+        def _field_is_empty() -> bool:
+            nonlocal _pre_poll_polls
+            _pre_poll_polls += 1
+            return _field_text() == ""
+
+        _pre_poll_start = _waits.time.time()
+        cleared = poll_for(_field_is_empty, timeout=1.5, interval=0.3)
+        _pre_poll_elapsed = _waits.time.time() - _pre_poll_start
+        if not cleared:
+            actual = _field_text()
+            assert False, (
+                f"поле «Rename filter» после clear() содержит «{actual}», ожидали "
+                f"пустую строку — clear() не применился до send_keys за "
+                f"{_pre_poll_elapsed:.2f}с (AT-BUG-062)"
+            )
+        allure.attach(
+            f"pre-poll (clear() -> пусто): пустая строка поля наблюдена на опросе "
+            f"№{_pre_poll_polls}, через {_pre_poll_elapsed:.3f}с после clear() "
+            f"(бюджет 1.5с, interval 0.3с).\n"
+            f"КАК ЧИТАТЬ (AT-BUG-062 B3): это ДИАГНОСТИКА, не доказательство "
+            f"причинности. poll_for опрашивает предикат сразу при t=0, до первой "
+            f"паузы (framework/core/waits.py), поэтому реальное ожидание доказывает "
+            f"только опрос №>1 (elapsed >= interval 0.3с); один опрос означает, что "
+            f"поле было пусто уже при ПЕРВОМ чтении после clear() — pre-poll не ждал "
+            f"ничего, а elapsed — это latency самого запроса к драйверу.\n"
+            f"Pre-poll устраняет ВОЗМОЖНОСТЬ гонки clear()-до-send_keys как класс; "
+            f"его вклад в исходный рецидив НЕ подтверждён и НЕ исключён изолирующим "
+            f"экспериментом.",
+            name="enter_rename_name: pre-poll clear() timing",
+            attachment_type=allure.attachment_type.TEXT,
+        )
+
+        field.send_keys(new_name)
 
         ok = poll_for(lambda: _field_text() == new_name, timeout=1.5, interval=0.3)
         if not ok:
