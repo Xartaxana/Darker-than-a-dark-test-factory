@@ -5,9 +5,9 @@ issueType: "test-case"
 status: "tc-automated"
 priority: "p0"
 summary: "Числовая проба предпосылки guard'а: узлы вне whitelist с собственным обработчиком в теле живой work-страницы (live)"
-assignee: "qa-agents"
+assignee: "test-maintainer"
 reporter: "qa-agents"
-labels: ["test-case", "area:canary", "risk:R-02", "automation:active"]
+labels: ["test-case", "area:canary", "risk:R-02", "automation:active", "wip:test-maintainer"]
 components: []
 fixVersions: []
 watchers: []

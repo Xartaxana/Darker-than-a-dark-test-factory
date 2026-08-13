@@ -1,15 +1,15 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-11T23:20:33Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-13T15:06:40Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
 - Сборка: dev-local (versionCode 12), commit `cc201f78`, built_at 2026-08-10T23:52:58Z
-- smoke: Triaged · smoke_freshness_hours: **20.6** (RUN-20260811-0405)
-- regression: Triaged · regression_freshness_hours: **43.5** (RUN-20260810-0146)
-- canary: Triaged · canary_freshness_hours: **179.6** (RUN-20260804-1317)
+- smoke: Triaged · smoke_freshness_hours: **60.4** (RUN-20260811-0405)
+- regression: Triaged · regression_freshness_hours: **83.3** (RUN-20260810-0146)
+- canary: Triaged · canary_freshness_hours: **219.4** (RUN-20260804-1317)
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **1**
 - p0_automation_coverage: **100%** (37/37)
@@ -90,11 +90,11 @@ story-карточки: стадии см. docs/05-board.md §Story
 - bugs_per_charter: **1.33**
 - new_tc_from_charters: **20**
 
-## Активные локи (0)
+## Активные локи (1)
 
-- нет
+- TC-118 — `test-maintainer:2026-08-13T14:57:33Z`
 
-## Эскалации (20)
+## Эскалации (23)
 
 - [2026-07-21T22:43:25Z] **BUG-013** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-19T17:30:00Z | нужно: ответить в ## Обсуждение
 - [2026-07-24T05:10:04Z] **BUG-011** [sla:bug_open_major] — major-баг open с 2026-07-15T14:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
@@ -116,3 +116,6 @@ story-карточки: стадии см. docs/05-board.md §Story
 - [2026-08-10T12:52:57Z] **CH-009:followup_tc#2** [sla:charter_followup_unprocessed] — followup_tc[2] без id-токена: «Кейс НЕ должен ассертить «замену» сообщений при серии фоновых открытий. Измеренн…» | нужно: test-designer заводит TC-NNN
 - [2026-08-10T12:52:57Z] **CH-009:followup_tc#3** [sla:charter_followup_unprocessed] — followup_tc[3] без id-токена: «library: состояние списка по вкладкам (#28) — кейс обязан ассертить СОХРАНЕНИЕ с…» | нужно: test-designer заводит TC-NNN
 - [2026-08-10T12:52:57Z] **CH-009:followup_tc#4** [sla:charter_followup_unprocessed] — followup_tc[4] без id-токена: «Вкладка на локальный файл: (а) фоновое открытие с вкладки FILES кладёт в open_ta…» | нужно: test-designer заводит TC-NNN
+- [2026-08-13T14:56:44Z] **BUG-058** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-10T14:30:00Z | нужно: ответить в ## Обсуждение
+- [2026-08-13T14:56:44Z] **BUG-060** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-10T14:00:00Z | нужно: ответить в ## Обсуждение
+- [2026-08-13T14:56:44Z] **BUG-065** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-11T13:02:00Z | нужно: ответить в ## Обсуждение

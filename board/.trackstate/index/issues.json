@@ -1145,12 +1145,13 @@
     "issueType": "test-case",
     "status": "tc-automated",
     "priority": "p0",
-    "assignee": "qa-agents",
+    "assignee": "test-maintainer",
     "labels": [
       "test-case",
       "area:canary",
       "risk:R-02",
-      "automation:active"
+      "automation:active",
+      "wip:test-maintainer"
     ],
     "updated": "2026-08-11T03:22:16Z",
     "resolution": "done",
