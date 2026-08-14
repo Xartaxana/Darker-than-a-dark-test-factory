@@ -20,7 +20,7 @@ awaiting: none
 resolution: ""
 resolution_comment: ""
 known_issue: "false"
-blocked_reason: product_decision
+blocked_reason: environment
 lock: ""
 gitlab_issue: ""
 ---
