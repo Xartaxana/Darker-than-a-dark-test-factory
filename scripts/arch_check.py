@@ -40,9 +40,18 @@ tests->локаторы мимо steps в ПРОДУКТОВЫХ тестах, �
 тикетом, чей предмет и есть это исключение (решение Lead 2026-08-11 при
 добавлении второй записи, AT-BUG-062).
 
+Правило 3 — CASE-RECORDING-CONSISTENCY (mech-case-recording-check,
+scratchpad/spec-case-recording-check.md v3): ВТОРАЯ ветвь обхода — test-cases/,
+не framework/tests/. Сверяет replay-записи (`.mitm`), названные в секциях
+Предусловий/Сценария кейса, с записями, которые реально берёт его
+`automated_by`-тест (объединение значений `@pytest.mark.parametrize`, чей
+argnames содержит `replay`). Отдельный WARNS-канал (см. `run_recording_rule`/
+`run`) — находки не влияют на exit-код, до отдельного решения Lead о промоции
+в ERROR по evidence.
+
 Запуск:      python scripts/arch_check.py
 Коды выхода: 0 — чисто (WARN/известные исключения допустимы), 1 — есть ERROR.
-Только чтение framework/ — файлы не изменяются, идемпотентен.
+Только чтение framework/ + test-cases/ — файлы не изменяются, идемпотентен.
 """
 from __future__ import annotations
 
@@ -62,6 +71,8 @@ REPO = Path(__file__).resolve().parents[1]
 FRAMEWORK = REPO / "framework"
 TESTS_DIR = FRAMEWORK / "tests"
 PYTEST_INI = FRAMEWORK / "pytest.ini"
+CASES_DIR = REPO / "test-cases"
+RECORDING_BUILDER = FRAMEWORK / "data/recording_builder.py"
 
 # --- Правило 1: запрещённые импорты слоя tests/ (см. докстринг модуля) ---
 FORBIDDEN_IMPORT_PREFIXES = (
@@ -82,7 +93,14 @@ FORBIDDEN_CALL_ATTRS = {"find_element", "find_elements", "by_text", "by_desc", "
 LOCATOR_LITERAL_NEEDLE = "UiSelector("
 
 # Известные исключения (test debt, см. докстринг). Ключ: (rel_posix_из_framework, rule_id).
-# rule_id: "locators" | "allure_id". Пусто — устраняй причину, не добавляй сюда.
+# rule_id — фактические значения Finding.rule по правилам 1-2-3: "locators" | "allure_id" |
+# "marker" | "parse" | "recording". Пусто — устраняй причину, не добавляй сюда.
+#
+# ОТЛИЧИЕ ключа для rule_id="recording" (правило 3, CASE-RECORDING-CONSISTENCY):
+# первый элемент кортежа — путь ОТ КОРНЯ РЕПО (например "test-cases/tabs/TC-176.md"),
+# НЕ от framework/, как у "locators"/"allure_id" выше (см. спека
+# scratchpad/spec-case-recording-check.md v3, раздел ALLOWLIST) — правило 3 обходит
+# test-cases/, а не framework/tests/.
 ALLOWLIST: set[tuple[str, str]] = {
     # AT-BUG-059 (Lead 2026-08-10): юнит-проба САМОГО BaseScreen (регресс-гвард
     # AT-BUG-048) — импорт screens по существу необходим для тестирования класса
@@ -240,21 +258,303 @@ def check_file(path: Path) -> list[Finding]:
     return findings
 
 
+# --- Правило 3: CASE-RECORDING-CONSISTENCY (см. докстринг модуля + спека
+# scratchpad/spec-case-recording-check.md v3). Обход test-cases/, отдельный
+# WARNS-канал (см. `run`). ---
+
+_AUTOMATED_BY_RE = re.compile(r'^automated_by:\s*"?(.*?)"?\s*$', re.M)
+_MITM_TOKEN_RE = re.compile(r"[\w.-]+\.mitm")
+_RB_CONST_TOKEN_RE = re.compile(r"\brb\.([A-Za-z_][A-Za-z0-9_]*)\b")
+_BARE_CONST_TOKEN_RE = re.compile(r"\b([A-Z][A-Z0-9_]*_FILENAME)\b")
+_SECTION_PREFIXES = ("## Предусловия", "## Сценарий")
+
+# Возвращается `_resolve_test_function`, когда файл automated_by существует, но
+# не разбирается (SyntaxError/UnicodeDecodeError) — правило 3 в этом случае молчит:
+# ошибку парсинга уже несёт существующий Finding класса "parse" правил 1-2 (тот же
+# framework/tests/**/test_*.py обходится обоими правилами) — не дублируем.
+#
+# ОСТАТОЧНАЯ ДЫРА (Ф1, критик-вход attempt 2, признана и НЕ закрыта в этом ходе):
+# если automated_by указывает НА ФАЙЛ ВНЕ глоба test_*.py, который обходят правила
+# 1-2 (`TESTS_DIR.rglob("test_*.py")` — например `framework/tests/conftest.py::x`,
+# схема test-case.schema.yaml такую форму automated_by не запрещает), то при
+# SyntaxError ЭТОГО файла ни правило 1-2 (файл не в их обходе), ни правило 3 (эта
+# ветка, молчит намеренно) находки не дадут — молчаливый провал без ERROR/WARN. В
+# корпусе такой automated_by не встречается (единственная живая форма — путь на
+# test_*.py, см. докстринг модуля/спеку); закрытие — по evidence, не заранее
+# (F-11 (в), CLAUDE.md).
+_PARSE_ERROR = object()
+
+
+def _module_string_consts(tree: ast.Module) -> dict[str, str]:
+    """Модульные присваивания вида `NAME = "литерал"` — тот же приём для
+    framework/data/recording_builder.py и для самого тест-файла (голый `<CONST>`
+    резолвится по константам файла, где записан тест — см. спеку)."""
+    out: dict[str, str] = {}
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    out[target.id] = node.value.value
+    return out
+
+
+def _load_recording_builder_consts() -> dict[str, str]:
+    if not RECORDING_BUILDER.exists():
+        return {}
+    try:
+        tree = ast.parse(RECORDING_BUILDER.read_text(encoding="utf-8"), filename=str(RECORDING_BUILDER))
+    except (SyntaxError, UnicodeDecodeError):
+        return {}
+    return _module_string_consts(tree)
+
+
+def _scoped_lines(text: str) -> list[tuple[int, str]]:
+    """Строки секций `## Предусловия`/`## Сценарий` (префиксное совпадение
+    заголовка — суффиксы вроде `## Предусловия — БЛОКЕР (…)` тоже считаются).
+    Секция обрывается СЛЕДУЮЩИМ заголовком `## ` (ровно 2 `#`); `### `-подсекции
+    (3+ `#`) заголовком верхнего уровня не являются и секцию не обрывают."""
+    out: list[tuple[int, str]] = []
+    keep = False
+    for lineno, line in enumerate(text.splitlines(), start=1):
+        if line.startswith("## "):
+            keep = line.startswith(_SECTION_PREFIXES)
+            continue
+        if keep:
+            out.append((lineno, line))
+    return out
+
+
+def _case_mentions(text: str, rb_consts: dict[str, str]) -> tuple[set[str], int | None]:
+    """`mentions` кейса + номер строки ПЕРВОГО упоминания (любого вида), только
+    из секций Предусловий/Сценария (нарратив прочих секций не сверяется)."""
+    mentions: set[str] = set()
+    first_line: int | None = None
+    for lineno, line in _scoped_lines(text):
+        hit = False
+        for tok in _MITM_TOKEN_RE.findall(line):
+            norm = tok.lstrip(".-")
+            if len(norm) > len(".mitm"):  # пустое/голое имя (напр. голый `.mitm`) отбрасывается
+                mentions.add(norm)
+                hit = True
+        for name in _RB_CONST_TOKEN_RE.findall(line):
+            if name in rb_consts:
+                mentions.add(rb_consts[name])
+                hit = True
+        for name in _BARE_CONST_TOKEN_RE.findall(line):
+            if name in rb_consts:
+                mentions.add(rb_consts[name])
+                hit = True
+        if hit and first_line is None:
+            first_line = lineno
+    return mentions, first_line
+
+
+def _split_automated_by(automated_by: str) -> tuple[str, list[str]] | None:
+    """`<путь>::<функция>` (единственная живая форма) и `<путь>::Class::method`/
+    `...[param]`-суффикс (на вырост, спекуляция — см. спеку)."""
+    without_param = automated_by.split("[", 1)[0]
+    parts = without_param.split("::")
+    if len(parts) < 2 or not parts[0] or not all(parts[1:]):
+        return None
+    return parts[0], parts[1:]
+
+
+def _resolve_test_function(rel_path: str, name_parts: list[str]):
+    """`(fn, tree)` тест-функции; `None` — automated_by не разрешается;
+    `_PARSE_ERROR` — файл есть, но не разбирается (см. докстринг `_PARSE_ERROR`)."""
+    fpath = REPO / rel_path
+    if not fpath.exists():
+        return None
+    try:
+        tree = ast.parse(fpath.read_text(encoding="utf-8"), filename=str(fpath))
+    except (SyntaxError, UnicodeDecodeError):
+        return _PARSE_ERROR
+
+    if len(name_parts) == 1:
+        (func_name,) = name_parts
+        for node in tree.body:
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == func_name:
+                return node, tree
+        return None
+    if len(name_parts) == 2:
+        class_name, func_name = name_parts
+        for node in tree.body:
+            if isinstance(node, ast.ClassDef) and node.name == class_name:
+                for sub in node.body:
+                    if isinstance(sub, (ast.FunctionDef, ast.AsyncFunctionDef)) and sub.name == func_name:
+                        return sub, tree
+        return None
+    return None  # форма с >2 сегментов после "::" не поддерживается
+
+
+def _resolve_param_value(node: ast.expr, module_consts: dict[str, str], rb_consts: dict[str, str]) -> tuple[str | None, str | None]:
+    """`(значение, None)` при успехе, `(None, причина)` при неразрешимом узле —
+    НИКОГДА не бросает исключение (Ф1: произвольный узел -> находка, не падение)."""
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value, None
+    if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id == "rb":
+        if node.attr in rb_consts:
+            return rb_consts[node.attr], None
+        return None, f"rb.{node.attr} не резолвится по recording_builder.py"
+    if isinstance(node, ast.Name):
+        if node.id in module_consts:
+            return module_consts[node.id], None
+        return None, f"{node.id} не резолвится по модульным константам тест-файла"
+    return None, "неразрешимый узел параметризации"
+
+
+def _collect_recordings(fn, module_consts: dict[str, str], rb_consts: dict[str, str]) -> tuple[set[str], list[str]]:
+    """Объединение значений replay из ВСЕХ `@pytest.mark.parametrize`, чей
+    argnames содержит `replay` (позиционный резолв мульти-argnames и
+    `pytest.param`, `indirect=` на резолв не влияет — см. спеку)."""
+    recordings: set[str] = set()
+    unresolved: list[str] = []
+    for dec in fn.decorator_list:
+        if not isinstance(dec, ast.Call) or _decorator_dotted(dec) != "pytest.mark.parametrize":
+            continue
+        if not dec.args:
+            # Ф5 (fail-closed, критик-вход attempt 2, Lead: kwargs не резолвим —
+            # формы `parametrize(argnames=..., argvalues=...)` в корпусе нет):
+            # позиционных args нет, argnames переданы именованно — не знаем, содержит
+            # ли он "replay", молчаливый пропуск был бы дырой, кладём находку.
+            unresolved.append("parametrize вызван с именованными аргументами (argnames=/argvalues=) — не резолвится")
+            continue
+        argnames_node = dec.args[0]
+        names: list[str] | None = None
+        if isinstance(argnames_node, ast.Constant) and isinstance(argnames_node.value, str):
+            names = [n.strip() for n in argnames_node.value.split(",")]
+        elif isinstance(argnames_node, (ast.List, ast.Tuple)):
+            collected: list[str] = []
+            for el in argnames_node.elts:
+                if isinstance(el, ast.Constant) and isinstance(el.value, str):
+                    collected.append(el.value.strip())
+                else:
+                    collected = []
+                    break
+            names = collected or None
+        if not names or "replay" not in names:
+            continue
+        idx = names.index("replay")
+        if len(dec.args) < 2 or not isinstance(dec.args[1], (ast.List, ast.Tuple)):
+            unresolved.append("значения parametrize не литерал списка/кортежа")
+            continue
+        for row in dec.args[1].elts:
+            if isinstance(row, ast.Call) and _decorator_dotted(row) == "pytest.param":
+                if idx >= len(row.args):
+                    unresolved.append("pytest.param без позиционного аргумента replay")
+                    continue
+                value_node = row.args[idx]
+            elif len(names) == 1:
+                value_node = row
+            elif isinstance(row, (ast.Tuple, ast.List)):
+                if idx >= len(row.elts):
+                    unresolved.append("индекс replay вне диапазона строки параметризации")
+                    continue
+                value_node = row.elts[idx]
+            else:
+                unresolved.append("строка параметризации не кортеж/список/pytest.param")
+                continue
+            value, err = _resolve_param_value(value_node, module_consts, rb_consts)
+            if err:
+                unresolved.append(err)
+            else:
+                recordings.add(value)
+    return recordings, unresolved
+
+
+def _process_case(path: Path, rb_consts: dict[str, str]) -> Finding | None:
+    """Один вердикт на кейс (ветви — см. спеку, порядок явный): mentions=∅ ->
+    молчание ВСЕГДА (веха 1, до любых прочих проверок); иначе automated_by
+    не разрешается / неразрешимая параметризация / recordings⊄mentions
+    (лишние записи) / mentions без recordings без live (кейс называет,
+    тест не берёт) / чисто."""
+    rel = path.relative_to(REPO).as_posix()
+    text = path.read_text(encoding="utf-8")
+    m = _AUTOMATED_BY_RE.search(text)
+    automated_by = m.group(1).strip() if m else ""
+    if not automated_by:
+        return None
+    ab_line = text[: m.start()].count("\n") + 1
+
+    mentions, mention_line = _case_mentions(text, rb_consts)
+    if not mentions:
+        return None  # ветвь 1: правило молчит всегда
+
+    split = _split_automated_by(automated_by)
+    resolved = _resolve_test_function(*split) if split else None
+    if split is None or resolved is None:
+        return Finding(rel, "recording",
+            f"{rel}:{ab_line}: automated_by `{automated_by}` не разрешается — "
+            f"сверка невозможна (кейс называет {sorted(mentions)})")
+    if resolved is _PARSE_ERROR:
+        return None  # существующий Finding класса parse правил 1-2 уже покрывает файл
+
+    fn, tree = resolved
+    module_consts = _module_string_consts(tree)
+    recordings, unresolved = _collect_recordings(fn, module_consts, rb_consts)
+    func_label = automated_by.split("[", 1)[0]
+
+    if unresolved:
+        return Finding(rel, "recording",
+            f"{rel}:{ab_line}: неразрешимая параметризация replay в `{func_label}` "
+            f"({'; '.join(unresolved)}) — кейс называет {sorted(mentions)}")
+
+    if recordings and not recordings <= mentions:
+        return Finding(rel, "recording",
+            f"{rel}:{ab_line}: тест `{func_label}` берёт записи {sorted(recordings)}, "
+            f"кейс их не называет (кейс называет {sorted(mentions)})")
+
+    is_live = any(_decorator_dotted(d) == "pytest.mark.live" for d in fn.decorator_list)
+    if not recordings and not is_live:
+        line = mention_line if mention_line is not None else ab_line
+        return Finding(rel, "recording",
+            f"{rel}:{line}: кейс называет replay-записи {sorted(mentions)}, "
+            f"тест `{func_label}` replay не берёт")
+
+    return None  # ветвь 4: чисто (в т.ч. надмножество mentions)
+
+
+def run_recording_rule() -> list[Finding]:
+    """Правило 3 по test-cases/ (см. докстринг блока выше). Всегда WARNS —
+    вызывающая сторона (`run`) не кладёт находки в errors."""
+    if not CASES_DIR.exists():
+        return []
+    rb_consts = _load_recording_builder_consts()
+    findings: list[Finding] = []
+    for path in sorted(CASES_DIR.rglob("*.md")):
+        finding = _process_case(path, rb_consts)
+        if finding is not None:
+            findings.append(finding)
+    return findings
+
+
 def run() -> tuple[list[str], list[str]]:
-    """Возвращает (errors, warns). WARN — известные исключения из ALLOWLIST."""
+    """Возвращает (errors, warns). WARN — известные исключения из ALLOWLIST (правила
+    1-2) либо ЛЮБАЯ находка правила 3 (см. `run_recording_rule` — отдельный
+    warns-канал, exit-код не меняется)."""
     errors: list[str] = []
     warns: list[str] = []
     if not TESTS_DIR.exists():
         errors.append(f"framework/tests не найден по пути {TESTS_DIR}")
-        return errors, warns
+    else:
+        for path in sorted(TESTS_DIR.rglob("test_*.py")):
+            for finding in check_file(path):
+                key = (finding.rel, finding.rule)
+                if key in ALLOWLIST:
+                    warns.append(f"{finding.message} [известное исключение — test-debt, см. ALLOWLIST]")
+                else:
+                    errors.append(finding.message)
 
-    for path in sorted(TESTS_DIR.rglob("test_*.py")):
-        for finding in check_file(path):
-            key = (finding.rel, finding.rule)
-            if key in ALLOWLIST:
-                warns.append(f"{finding.message} [известное исключение — test-debt, см. ALLOWLIST]")
-            else:
-                errors.append(finding.message)
+    # Правило 3 (ВТОРАЯ ветвь обхода, test-cases/) — независима от TESTS_DIR;
+    # ВСЕГДА warns, никогда errors (Б7).
+    for finding in run_recording_rule():
+        key = (finding.rel, finding.rule)
+        message = f"rule3: {finding.message}"
+        if key in ALLOWLIST:
+            warns.append(f"{message} [известное исключение — см. ALLOWLIST]")
+        else:
+            warns.append(message)
+
     return errors, warns
 
 

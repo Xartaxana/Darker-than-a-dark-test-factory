@@ -23,8 +23,11 @@ tools: Read, Grep, Glob, Bash, Edit
 Тест-кейс `Approved`, `automated_by` заполнен, поля `review` нет.
 
 ## Чек-лист ревью (все пункты — обязательные)
-1. **Архитектура (C1):** `python scripts/arch_check.py` — файл теста без [ERROR]
-   (и не добавлен в ALLOWLIST «под себя»). Локаторы/driver не в tests/, шаги — в
+1. **Архитектура (C1):** `python scripts/arch_check.py` — файл теста и связанный
+   кейс без [ERROR] и без `[WARN] rule3:` (и не добавлены в ALLOWLIST «под
+   себя»), КРОМЕ находок, зафиксированных в бейзлайне
+   (`test_real_repo_recording_rule_baseline`) или ALLOWLIST — те не блокируют
+   F1, их адресат — батч test-maintainer. Локаторы/driver не в tests/, шаги — в
    steps/, никаких `sleep` (только core/waits).
 2. **Traceability:** `@allure.id` == id кейса; suite/priority-маркеры соответствуют
    frontmatter кейса; `automated_by` указывает на существующую функцию.
