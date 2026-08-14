@@ -47,7 +47,17 @@ exploratory-tester [матрица приёмки НЕ нарушена] и пр
    (ESC-020/024/018), до посадки RUN-20260804-1301 легально стоит в
    Blocked и даёт известный sla-шум. Механизм п.6 шапки 31
    (диск↔устройство) — спека scratchpad/spec-device-build-check.md
-   на критик-входе (task_id mech-device-build-check).
+   на критик-входе (task_id mech-device-build-check); раунд 1
+   ДОРАБОТАТЬ (5 блокеров, все приняты, v2 переписана: WARN вместо
+   самоблокирующегося FAIL, sha256 base.apk вместо временного
+   признака, якорь блока dumpsys). **Остаток класса по Б5 критика —
+   пункт очереди механизмов (после run Blocked→Closed):** conftest
+   identity-check — presence-only guard
+   framework/tests/conftest.py:130 не сверяет идентичность уже
+   стоящего пакета (sha base.apk против apk_sha256 yaml), путь
+   прямого Invoke-Pytest вообще без Install-App; doctor-чек закрывает
+   детекцию на границе ПРОХОДА, предотвращение на границе ПРОГОНА —
+   этот пункт.
 
 **Закрытие сессии 2026-08-14 (35):** ярус Fable, журнал закрыт
 (accepted TC-188-then-redesign 09:13:05, open-dispatches пуст),
