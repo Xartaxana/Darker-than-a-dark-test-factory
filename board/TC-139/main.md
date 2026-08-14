@@ -2,29 +2,38 @@
 key: "TC-139"
 project: "AO3"
 issueType: "test-case"
-status: "tc-awaiting-review"
+status: "tc-automated"
 priority: "p1"
-summary: "Правка личного тега уже-Kudosed/Favorite работы через листинг НЕ отправляет kudos повторно (ожидаемо-красный до фикса BUG-015; edge vs level, :856)"
+summary: "Правка личного тега уже-Kudosed/Favorite работы через листинг НЕ отправляет kudos повторно (edge vs level, onRatingTransition:782)"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:rating", "risk:R-17"]
+labels: ["test-case", "area:rating", "risk:R-17", "automation:active"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-02T06:20:00Z"
-updated: "2026-08-02T06:20:00Z"
+created: "2026-08-13T23:30:08Z"
+updated: "2026-08-13T23:30:08Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
-# Правка личного тега уже-Kudosed/Favorite работы через листинг НЕ отправляет kudos повторно (ожидаемо-красный до фикса BUG-015; edge vs level, :856)
+# Правка личного тега уже-Kudosed/Favorite работы через листинг НЕ отправляет kudos повторно (edge vs level, onRatingTransition:782)
 
 _Спроецировано из `test-cases/rating/TC-139.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Automated**._
 
-# TC-139 — Правка тега уже-Kudosed работы через листинг НЕ кликает kudos повторно (ожидаемо-красный замок BUG-015)
+# TC-139 — Правка тега уже-Kudosed работы через листинг НЕ кликает kudos повторно (регресс-замок BUG-015, ex-red)
+
+> **Статус замка (2026-08-13, F1-ревью).** `BUG-015` — `Verified` (фикс
+> `cc201f7`, edge-семантика `onRatingTransition`), красный замок СНЯТ: тест с
+> 2026-08-11 штатно ЗЕЛЁНЫЙ и служит регресс-тестом на возврат level-предиката.
+> Формулировки «ОЖИДАЕМОЕ ПАДЕНИЕ на текущей сборке» ниже сохранены как
+> ИСТОРИЧЕСКИЕ (контекст написания кейса до фикса) — они больше не описывают
+> ожидаемый исход прогона. Спецификационный Then («повторного клика НЕТ»)
+> изменений не потребовал: кейс изначально написан по ожидаемому поведению, а
+> не по факту сборки.
 
 ## Предусловия
 - Приложение запущено, режим replay (`listing_basic.mitm`, после фикса
@@ -132,6 +141,203 @@ WebView, chromedriver переподключается к ней. Повторн
 фикстуре/механике чтения. Статус кейса намеренно ОСТАЁТСЯ `Approved` (F1-гейт
 перевода в `Automated`/`automation_status: active` — за test-reviewer, не за
 test-automator); `automated_by` заполнен.
+
+## Ревью автотеста (test-reviewer, 2026-08-13T23:05:15Z) — PASS
+
+Полный чек-лист F1 (пп.1-7) пройден на сборке `dev-local` (versionCode 12,
+`source_commit cc201f789…`, `state/app-under-test.yaml`); замена пп.6-7 «ветки
+регрессионного замка» НЕ применялась — `BUG-015` `Verified`, замок снят, тест
+ревьюился как обычный зелёный.
+
+1. **Архитектура (C1).** `python scripts/arch_check.py` → `ошибок 0,
+   предупреждений 3`; все три WARN — чужие известные исключения ALLOWLIST
+   (`test_rename_name_verification_unit.py`, `test_swipe_to_text_settle_unit.py`),
+   `test_rating_listing.py` в ALLOWLIST НЕ добавлен и ошибок не даёт. Тест не
+   импортирует локаторы/`framework.web`/screens, работает только через
+   именованные steps (`app_steps`/`browser_steps`/`rating_steps`/
+   `library_steps`); `sleep` нет — ожидания через `core.waits`
+   (`assert_holds_for`, `wait_until`).
+2. **Traceability.** `@allure.id("TC-139")` == id кейса; `@pytest.mark.p1` ==
+   `priority: P1`; `@pytest.mark.replay` соответствует replay-предусловию;
+   `automated_by` указывает на существующий узел
+   (`test_rating_listing.py:445`, собрался и прогнался).
+3. **Соответствие по смыслу.** Then кейса реализован обоими ассертами: суть
+   операции — `rating_steps.assert_chip_visible(driver,
+   "re-save-kudos-probe")` (тег реально сохранён среди выбранных, а не «элемент
+   существует»), негативный Then — `browser_steps.
+   assert_kudo_submit_click_count_holds(driver, 0)` (весь бюджет 3.0с, не одно
+   чтение — верная форма для негатива, у которого условие истинно с первого
+   кадра). Ослабления нет: оракул читает ИНКРЕМЕНТНЫЙ счётчик
+   `data-kudo-clicked`, то есть отличает «0 кликов» от «1» и «1» от «2».
+   Область не комбинаторная (строка `Инвариант:` не требуется, п.3 чек-листа).
+4. **Фикстуры и данные.** `kudosed_work_seeded` (conftest.py:356-365) —
+   `clean_state()` + `seed_library([(W.LOVED, "LIKE")])`; порядок аргументов
+   `(replay, kudosed_work_seeded, driver)` при одинаковом (function) скоупе
+   даёт сидинг ДО создания Appium-сессии — требование HANDOFF соблюдено. Тест
+   владеет своими данными (собственный `clean_state`), от порядка других
+   тестов не зависит; teardown прокси/mitm — в `replay`-фикстуре (раздельные
+   try/finally, AT-BUG-043).
+5. **Flake-риск.** Приемлемый, с оговоркой. Ожидания явные (`assert_tab_strip_visible(…,
+   timeout=10)`, `wait_until` внутри steps), чтение WebView — через
+   `contexts.in_webview` ПОСЛЕ `swipe_close_tab(position=0)` (идиома
+   reduce-to-one; sticky-context chromedriver обойдён штатным способом,
+   `browser_screen.py:319-329`). Живого AO3 нет — весь трафик на
+   `listing_basic.mitm`. Три сольных прогона подряд: 54.12s / 49.96s / 50.15s,
+   разброс ~8%, `device-liveness guard: recoveries this session = 0/2` во всех
+   трёх. **Оговорка (rework attempt 2, п.6б):** в ПАРНОМ прогоне (TC-138+TC-139
+   одной командой) `long_press_work_link`→`assert_tab_strip_visible(timeout=10)`
+   отказал 1 раз из 3 попыток (setup-шаг, ДО целевого ассерта, класс — общий
+   инфраструктурный флейк, не оракульный) — долг в очередь test-maintainer,
+   см. `docs/HANDOFF.md`.
+6. **Независимое воспроизведение (3 зелёных подряд).** Окружение поднято
+   канонично: `Start-Emulator -WritableSystem` (CA mitmproxy установлен, «CA
+   visible in apex store: OK»), `Get-Device` → `DEVICE: emulator-5554`,
+   `Install-App` → `Success` (`versionCode=12 versionName=dev-local`),
+   `Start-Appium` → «Appium started and ready on :4723». Команда каждого
+   прогона: `. D:\AO3_tests\scripts\tasks.ps1; Invoke-Pytest
+   tests/test_rating_listing.py::test_edit_tag_on_already_kudosed_work_via_
+   listing_does_not_reclick_kudos -v`.
+   - прогон 1: `PASSED [100%]` … `1 passed in 54.12s`, `PYTEST_EXIT=0`
+   - прогон 2: `PASSED [100%]` … `1 passed in 49.96s`, `PYTEST_EXIT=0`
+   - прогон 3: `PASSED [100%]` … `1 passed in 50.15s`, `PYTEST_EXIT=0`
+6б. **B2 discriminator — TC-138 + TC-139 в ОДНОМ прогоне (test-reviewer,
+   2026-08-13T23:30:08Z; добавлено по критик-входу attempt2, три сольных прогона
+   выше НЕ отменяются — они остаются независимым воспроизведением п.6, а
+   дискриминатор есть ДОПОЛНИТЕЛЬНОЕ нормативное требование самого кейса,
+   раздел «Триаж альтернативного объяснения зелёного результата» выше).**
+   Зачем: сольный зелёный TC-139 не отличает «клика действительно не было» от
+   «`evalJs` не добрался до DOM отсоединённой фоновой WebView»; красная проба
+   п.7 этот шов НЕ закрывает — она портит НАБЛЮДАЕМОЕ (счётчик узла
+   `#kudo_submit`), а не ПРИЧИНУ (реальный клик приложения), и дала бы красный
+   и в мире, где `evalJs` не доехал. Дискриминатор — зелёный TC-138 в ТОМ ЖЕ
+   прогоне: он на ИДЕНТИЧНОЙ схеме (Tab B фоновая в момент клика, чтение той же
+   reduce-to-one механикой) требует `data-kudo-clicked` = «1», то есть
+   доказывает, что клик на отсоединённой фоновой WebView исполняется штатно.
+   - Окружение поднято канонично тем же ходом: `Start-Emulator -WritableSystem`
+     («CA visible in apex store: OK»), `Get-Device` → `DEVICE: emulator-5554`,
+     `Install-App` → `Success`, `Start-Appium` → «Appium started and ready on
+     :4723».
+   - Команда (оба узла — один вызов pytest, одна сессия, один replay):
+     `. D:\AO3_tests\scripts\tasks.ps1; Invoke-Pytest
+     tests/test_rating_listing.py::test_first_kudosed_via_listing_with_open_
+     work_tab_clicks_kudos_once tests/test_rating_listing.py::test_edit_tag_on_
+     already_kudosed_work_via_listing_does_not_reclick_kudos -v`
+   - Прогон 1 (дословно): `test_first_kudosed_via_listing_with_open_work_tab_
+     clicks_kudos_once[listing_basic.mitm] PASSED [ 50%]`;
+     `test_edit_tag_on_already_kudosed_work_via_listing_does_not_reclick_kudos
+     [listing_basic.mitm] FAILED [100%]` … `1 failed, 1 passed in 92.95s`,
+     `PYTEST_EXIT=1`. Падение — НЕ на Then, а на шаге ПОДГОТОВКИ
+     (`tests/test_rating_listing.py:456` → `steps/browser_steps.py:236`:
+     `AssertionError: TabStrip должен быть видим (tabs>1, не в fullscreen)`),
+     то есть long-press не успел открыть фоновую Tab B за 10с; в teardown того
+     же прогона — известный env-класс `AT-BUG-043` («порт 8080 освободился
+     после 2 попыток bind()»). Инфраструктурный/флейк-класс, содержательного
+     сигнала о kudos не несёт; по DoD ретрай канонической формой.
+   - Прогон 2 (ретрай 1, дословно): `…clicks_kudos_once[listing_basic.mitm]
+     PASSED [ 50%]`; `…does_not_reclick_kudos[listing_basic.mitm] PASSED
+     [100%]` … `2 passed in 96.11s (0:01:36)`, `PYTEST_EXIT=0`.
+   - Прогон 3 (ретрай 2, контроль стабильности, дословно):
+     `…clicks_kudos_once[listing_basic.mitm] PASSED [ 50%]`;
+     `…does_not_reclick_kudos[listing_basic.mitm] PASSED [100%]` …
+     `2 passed in 95.72s (0:01:35)`, `PYTEST_EXIT=0`.
+   - **Вывод дискриминатора: требование кейса ВЫПОЛНЕНО.** В прогонах 2 и 3
+     TC-138 зелёный (клик на фоновой отсоединённой WebView реально исполняется
+     и виден как `data-kudo-clicked`=«1») И TC-139 зелёный В ТОМ ЖЕ ПРОГОНЕ —
+     альтернативное объяснение «`evalJs` не доехал до DOM фоновой WebView»
+     снято, зелёный TC-139 читается содержательно как «повторного клика не
+     было». В прогоне 1 дискриминатор не сложился по инфраструктурной причине
+     (TC-139 не дошёл до When), содержательного противоречия он не даёт.
+   - **Наблюдение о флейке (не меняет вердикт PASS, доложено как долг, тест не
+     правил — граница ревьюера):** setup-шаг `long_press_work_link` →
+     `assert_tab_strip_visible(timeout=10)` дал 1 отказ на 3 парных прогона
+     (~33% на этом шаге в парном порядке; в трёх сольных прогонах п.6 отказов
+     не было — подозрение на взаимодействие с предшествующим тестом в сессии
+     либо на тесный таймаут 10с у анимации открытия фоновой вкладки).
+     Адресат — test-maintainer (тот же класс мог задевать соседние тесты
+     области, использующие ту же идиому long-press + TabStrip).
+7. **Красная проба (мутационная), witness.**
+   - Что портил: УРОВЕНЬ ДАННЫХ (replay-запись, `app-under-test/` не тронут) —
+     узел фикстуры `#kudo_submit` в `framework/data/recording_builder.py::
+     _kudo_submit_html` временно отдавался с ПРЕДУСТАНОВЛЕННЫМ
+     `data-kudo-clicked="1"` (как будто kudos уже кликнут), записи
+     перегенерированы `framework/.venv/Scripts/python.exe
+     scripts/build_replay_recordings.py`.
+   - Протокол отката (CLAUDE.md «Дисциплина команд» п.8): ДО порчи снят
+     `git status --porcelain -- framework/data/recording_builder.py
+     framework/data/recordings` → пустой вывод (чисто) и сняты байтовые копии
+     файла и `listing_basic.mitm` в scratchpad
+     (`md5 a79b01bf4e748ffac03644c069d7d687` / `0aeb4ec032ab8838e3e23c29a0ea6b95`).
+     `git checkout` НЕ применялся — восстановление копией.
+   - Команда пробы: та же `Invoke-Pytest …::test_edit_tag_on_already_kudosed_
+     work_via_listing_does_not_reclick_kudos -v`.
+   - Результат: `FAILED [100%]` … `1 failed in 50.25s`, `PYTEST_EXIT=1`.
+     Падение — на ЦЕЛЕВОМ ассерте Then (`tests/test_rating_listing.py:480` →
+     `steps/browser_steps.py:485`), дословно:
+     `AssertionError: data-kudo-clicked неожиданно = 1, ожидали стабильно 0
+     весь бюджет 3.0с — подозрение на (повторный/отложенный) kudos-клик`.
+     Осмысленный оракульный assert, не таймаут-мусор — тест УМЕЕТ падать
+     ровно на сути проверяемого условия.
+   - Подтверждение отката (дословный вывод сверки ПОСЛЕ восстановления копии и
+     перегенерации записей):
+     `md5sum` → `a79b01bf4e748ffac03644c069d7d687 recording_builder.py` (==
+     копия), `0aeb4ec032ab8838e3e23c29a0ea6b95 listing_basic.mitm` (== копия);
+     `git status --porcelain -- framework/data/recording_builder.py
+     framework/data/recordings` → ПУСТО (совпадает с зафиксированным до порчи);
+     `git diff --stat` по тем же путям → ПУСТО. Чужие незакоммиченные пути
+     рабочего дерева (в т.ч. `framework/tests/conftest.py`) не затронуты.
+
+**Вердикт:** PASS. `Approved → Automated`, `automation_status: active`,
+`red_probe` проставлен. Поля `review` не было и не появилось.
+**Дополнение 2026-08-13T23:30:08Z (rework attempt2 по критик-входу, пункт B2):**
+вердикт PASS ПОДТВЕРЖДЁН и теперь опирается на выполненный дискриминатор
+кейса (п.6б выше: TC-138 + TC-139 зелёные в одном прогоне, дважды) — прежний
+witness нёс только сольный TC-139, чего нормативный раздел «Триаж
+альтернативного объяснения зелёного результата» не допускает. Статус,
+`automation_status` и `red_probe` не меняются (красная проба п.7 остаётся
+валидной, дискриминатор её дополняет, а не заменяет).
+
+**Правки артефакта на ревью (в рамках владения кейсом):** title и
+`requirements` разлипли с фактом сборки после фикса `cc201f7` — «ожидаемо-
+красный до фикса BUG-015; edge vs level, :856» указывал на исчезнувший
+level-предикат; приведены к посфиксному коду (`onRatingTransition:779-791`,
+предикат перехода `:780-782`) по образцу сиблингов TC-114/TC-115. Историческая
+формулировка level-предиката сохранена внутри `requirements` и в теле кейса.
+`red_lock: "BUG-015"` оставлен как у TC-114/TC-115 (историческая ссылка замка;
+guard rules.yaml его уже отпускает — баг не в `Open|Reopened`).
+
+**Сиблинг-находки (D-0043, докладываю, ревью на них НЕ расширяю):**
+1. `framework/tests/test_rating_listing.py:443` — `@allure.title(… «ожидаемо-
+   красный BUG-015»)` остался пост-фиксной стеленью: в отчётах Allure зелёный
+   тест подписан как ожидаемо-красный. Правка тестового кода — не моя граница
+   (test-automator/test-maintainer, батч мелочей).
+2. Тот же класс «стелень после снятия замка» шире: `test_tabs.py:900`
+   («ожидаемо-красный до фикса BUG-059») — пока КОРРЕКТЕН (BUG-059 `Open`),
+   отмечаю как будущий долг того же класса, когда BUG-059 будет зачинен.
+3. ~~`test-cases/downloads/TC-114.md` и `TC-115.md` — поля `red_probe` во
+   frontmatter НЕТ вовсе~~ — **ЛОЖНО, опровергнуто критиком (2026-08-13,
+   критик-вход F1): `TC-114.md:23` несёт `red_probe: "2026-07-29T19:19:08Z"`,
+   `TC-115.md:23` несёт `red_probe: "2026-07-29T10:07:53Z"`.** Ретрофит-правило
+   rules.yaml (триггер — пустой `red_probe`) на них НЕ сработает; предыдущая
+   формулировка была самопротиворечива (тем же абзацем эти файлы названы
+   «образцом» правки title, то есть читались — негатив по frontmatter не
+   сверялся). Строка вычеркнута, не удалена (D-0046, след находки).
+4. **Сиблинги того же класса «артефакт разлип с фактом сборки после `cc201f7`»
+   в ТОЙ ЖЕ области `rating/`** (найдено критиком, B3 критик-входа): title/
+   requirements `test-cases/rating/TC-140.md:3` («…граница отсутствия вкладки,
+   `:857-858`») и `test-cases/rating/TC-141.md:3` («…асимметрия путей,
+   `:743-758`») цитируют номера строк ДОФИКСНОГО кода — на HEAD ветка
+   `upsertWorkRating(rating=null)` живёт на `:855-862`, поиск вкладки на
+   `:783-784` (TC-140); панельный переход после фикса — `:752-767` (TC-141).
+   Тот же дефект, тот же коммит-причина, соседние файлы той же области.
+   **ИСПРАВЛЕНИЕ (координатор, критик-вход раунда 3): предыдущая формулировка
+   была ЛОЖНОЙ.** F1 на TC-140/TC-141 УЖЕ пройдено 2026-08-02
+   (`reviewed_by: test-reviewer`, `red_probe: "2026-08-02T05:51:51Z"`,
+   `status: Automated`, `automation_status: active`, `automated_by` заполнен) —
+   ни одно правило `state/rules.yaml` их не поднимет повторно (F1 требует
+   `Approved`, ретрофит red_probe требует пустое поле, карантин требует
+   `quarantined|needs_maintenance` — ничего из этого не выполняется). Остаток
+   НЕ дойдёт до конвейера сам по себе — носитель цели перенесён в
+   `docs/HANDOFF.md` (правило 4б CLAUDE.md), см. запись там.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»

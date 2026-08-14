@@ -1,0 +1,259 @@
+---
+id: AT-BUG-068
+title: "navigator.clipboard.writeText() отклоняется DOMException 'Write permission denied' в тестовом WebView — блокирует Then «Copied!» TC-188"
+type: test_debt
+debt_kind: broken_environment
+severity: minor
+status: Blocked
+found_in: "test-automator, автоматизация TC-188 (settings-debug-copy-url-toggle, P2), 2026-08-14"
+fixed_in: ""
+last_seen_in: ""
+test_cases: ["TC-188"]
+runs: []
+duplicates: []
+regression_of: ""
+status_since: "2026-08-14T04:20:00Z"
+updated: "2026-08-14T04:20:00Z"
+reopen_count: 0
+dispute_count: 0
+awaiting: none
+resolution: ""
+resolution_comment: ""
+known_issue: "false"
+blocked_reason: product_decision
+lock: ""
+gitlab_issue: ""
+---
+
+# AT-BUG-068 — Clipboard write отклоняется тестовым WebView, «Copied!» недостижим в этой среде
+
+## Окружение
+
+Не зависит от сборки приложения: долг тестовой системы (`type: test_debt`,
+`debt_kind: broken_environment`) — конкретно платформенное/WebView-окружение
+эмулятора `ao3_test_api34` (API 34), не код `app-under-test`. Bundled System
+WebView этого AVD отвечает как Chromium `113.0.5672.136` (сверено по
+стектрейсу chromedriver-прокси живого прогона).
+
+## Суть долга
+
+TC-188 (`ao3_bridge.js:1067-1087`, кнопка «Copy URL», DEBUG-секция) требует
+Then «тап по кнопке → подпись меняется на "Copied!"» — зависит от того, что
+`navigator.clipboard.writeText(location.href)` (`ao3_bridge.js:1077`)
+резолвится, после чего `.then()` меняет `btn.textContent`.
+
+Живым прогоном (2026-08-14, `test_debug_copy_url_toggle_both_directions_
+without_overlap`, `work_with_download.mitm`, `loved_work_seeded`) установлено
+ФАКТОМ (не предположением по коду) — все шаги ДО тапа проходят штатно
+(тумблер переключается реактивно в обе стороны без reload, кнопка появляется/
+скрывается немедленно), но подпись «Copied!» НИКОГДА не появляется, даже с
+таймаутом ожидания 20с (5x штатный бюджет):
+
+- Диагностика (собственный слушатель `click`, независимый от `ao3_bridge.js`,
+  установлен тестом на тот же узел ДО тапа): `clickCount: 1` — клик реально
+  дошёл до узла и до обработчика приложения.
+- `document.hasFocus()`: `true` — документ WebView в фокусе на момент тапа.
+- `window.isSecureContext`: `true` — страница отдана как secure context
+  (HTTPS через replay+mitm CA).
+- `typeof navigator.clipboard`: `'object'`, `typeof navigator.clipboard.
+  writeText`: `'function'` — Clipboard API присутствует и вызываемо.
+- **`driver.get_log('browser')` (browser console) содержит:**
+  ```
+  SEVERE https://archiveofourown.org/works/900000001 0:0
+  Uncaught DOMException: Write permission denied.
+  ```
+  — `navigator.clipboard.writeText` РЕАЛЬНО вызывается (все предпосылки
+  активации выполнены), но promise ОТКЛОНЯЕТСЯ этим исключением; `ao3_bridge.
+  js:1077-1080` не несёт `.catch()`, поэтому реджект уходит необработанным, и
+  `.then()` (единственное место, меняющее подпись на «Copied!») никогда не
+  вызывается — подпись кнопки навечно остаётся «Copy URL».
+
+Опробованы ДВА способа тапа — оба дают идентичный результат (исключает
+класс «клик не настоящий/synthetic»):
+1. Selenium `.click()` в WEBVIEW-контексте (через chromedriver-прокси).
+2. НАСТОЯЩИЙ Android-тач через `ActionBuilder`/`POINTER_TOUCH` в НАТИВНОМ
+   контексте (координата — центр РЕАЛЬНОГО `getBoundingClientRect()` узла,
+   переведённая в экранные px устройства через `BrowserScreen.webview_rect()`)
+   — тот же класс события, что палец реального пользователя.
+
+Оба подтверждают `clickCount: 1`/`hasFocus: true` — активация полная, но
+`DOMException: Write permission denied` возникает независимо от способа
+тапа. Похоже на платформенное ограничение Android System WebView этого AVD
+(Clipboard write API в embedded WebView зачастую требует дополнительной
+поддержки со стороны хост-приложения/системы, отличной от обычного Chrome —
+воспроизводимо детерминированно, не флейково: 2 независимых прогона с 2
+разными способами тапа дали идентичную ошибку).
+
+## Заблокировано
+
+- **TC-188** — ТОЛЬКО грань «тап → "Copied!"» (и, как следствие, парная
+  проверка «подпись возвращается к "Copy URL" через ~1.5с»); остальные грани
+  кейса (обе стороны тумблера, live-реактивность без reload, факт клика
+  доходит до узла, отсутствие зонального эффекта guard'а тап-зон) технически
+  автоматизируемы и подтверждены зелёными в изоляции — но Then «Copied!»
+  структурно часть ОДНОГО непрерывного сценария (не отдельный кейс), поэтому
+  весь TC-188 остаётся неавтоматизированным (`automated_by` пуст), тест
+  написан и помечен `@pytest.mark.skip` со ссылкой на этот баг, чтобы не
+  засорять регресс постоянно красным прогоном.
+
+## Критерий готовности (Fixed)
+
+- [x] Путь (а) — окружение (AVD/System WebView образ) даёт `navigator.
+  clipboard.writeText` резолвиться в embedded WebView этого приложения при
+  реальном user-activated тапе — **НЕДОСТИЖИМ по АРХИТЕКТУРНОЙ причине
+  (критик-вход раунда 2, 2026-08-14), не по результату appops-эксперимента
+  (тот отозван — см. «Обсуждение», методологически недействителен: грант
+  `WRITE_CLIPBOARD` выставлялся ДО прогона, а первое действие фикстуры
+  `loved_work_seeded` — `clean_state()` → `pm clear`, сбрасывающий
+  per-package appops раньше, чем тест успевает дойти до тапа; readback
+  гранта В МОМЕНТ измерения не снимался).** Реальная причина —
+  `DOMException: Write permission denied` бросается Chromium/Blink
+  (`ClipboardPromise`) на уровне PERMISSION-СЛОЯ ВНУТРИ ДВИЖКА, ДО того как
+  исполнение вообще достигает Android `ClipboardManager`; Android WebView
+  не экспонирует `clipboard-write` embedder'у как разрешаемый ресурс через
+  `WebChromeClient.onPermissionRequest` (тот же контракт, что уже
+  подтверждён чтением `AndroidManifest.xml`/`BrowserScreen.kt` — там просто
+  нет соответствующего permission-типа). Android-уровневый `appops
+  WRITE_CLIPBOARD` управляет `ClipboardManager.setPrimaryClip` — ДРУГИМ,
+  более низким слоем, до которого этот отказ никогда не доходит; рычаг был
+  архитектурно неприменим независимо от того, пережил бы он `pm clear` или
+  нет. Путь (а) закрыт как недостижимый этим обоснованием, не
+  экспериментом.
+- [ ] (б) альтернативный тестируемый способ подтвердить копирование URL без
+  полагания на `navigator.clipboard.writeText` — требует пересмотра Then
+  TC-188.md, решение за test-designer/координатором (ESC-032, awaiting
+  выбор (б.1)/(б.2)).
+- [ ] `@pytest.mark.skip` снят с `test_debug_copy_url_toggle_both_directions_
+  without_overlap`, 3 зелёных подряд, `automated_by` в TC-188.md заполнен —
+  заблокировано до решения по пункту выше.
+
+## Анализ
+
+Не дубликат ни одного существующего `AT-BUG-*` — единственный тикет,
+касающийся именно Clipboard API/`DOMException: Write permission denied`
+(проверено `grep -ri clipboard bugs/` — пусто до этого тикета). Класс
+СМЕЖНЫЙ с «фреймворк не может достичь нужного состояния окружения»
+(AT-BUG-067 — JS state, AT-BUG-004/029 — HTTP replay), но другая причина:
+не отсутствие фикстуры/харнесса, а платформенное ограничение самого WebView
+рантайма, которое НИКАКАЯ фикстура/харнесс на стороне теста не обходит —
+отсюда `debt_kind: broken_environment`, не `missing_fixture`.
+
+**Non-goal этого тикета:** НЕ продуктовый баг `app-under-test` — отсутствие
+`.catch()` в `ao3_bridge.js:1077-1080` МОЖЕТ быть отдельным поводом для
+триажа (реальные пользователи на устройствах с тем же ограничением видели бы
+тот же молчаливый отказ — кнопка "Copy URL" никогда не меняется на "Copied!"
+без видимой причины), но заведение продуктового бага — не мандат
+test-automator (роль заводит только `test_debt`); находка передаётся в отчёт
+координатору/bug-reporter для отдельного триажа.
+
+## Верификация (заполняет fix-verifier)
+| Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
+|---|---|---|---|---|
+| — | — | — | — | — |
+
+## Обсуждение
+
+**[qa @ 2026-08-14T02:15:00Z]** Триаж находки из раздела «Non-goal»:
+
+Отсутствие `.catch()` в `ao3_bridge.js:1077-1080` классифицировано как отдельный APP_BUG, не долг тестовой системы. На устройствах/WebView-версиях с аналогичным ограничением реальные пользователи видели бы молчаливый отказ без обратной связи — плохой UX даже для DEBUG-функции, видимой через Settings.
+
+**Создан связанный тикет:**
+- **BUG-069** — Copy URL кнопка молчит при ошибке `writeText`; severity minor; рекомендация фикса: добавить `.catch()` с UI-фидбеком и/или fallback на `document.execCommand('copy')`.
+
+Awaiting: none (AT-BUG-068 остаётся долгом окружения; триаж завершен, фикс приложения — в очереди BUG-069)
+
+**[test-maintainer @ 2026-08-14T04:20:00Z]** Попытка пути (а) — окружение
+даёт `writeText` резолвиться:
+
+- Проверен `AndroidManifest.xml` (`app-under-test`, только чтение) — никакого
+  `android.permission.*` для clipboard нет (`WRITE_CLIPBOARD` — системное
+  signature-разрешение AOSP, third-party-приложениям в манифесте вообще
+  недоступно; это не путь фикса).
+- `dumpsys webviewupdate` на `ao3_test_api34`: `Current WebView package:
+  (com.android.webview, 113.0.5672.136)` — bundled System WebView, довольно
+  старая сборка Chromium (2023). `pm list packages | grep -i
+  'vending|gms|finsky'` — пусто (позитивный контроль тем же вызовом на
+  `webview` вернул 2 пакета) — на этом AVD НЕТ Play Store, обновить System
+  WebView через Store нельзя; сайдлоад system-пакета WebView — за пределами
+  разумной попытки этого тикета (реконструкция образа AVD, решение уровня
+  Lead, не тестовая правка).
+- **Эмпирически опробован `adb shell cmd appops set
+  com.example.ao3_wrapper WRITE_CLIPBOARD allow`** (единственный найденный
+  клипборд-related appop, доступный shell'у для пакета — до гранта в
+  `appops get` его не было вовсе, `READ_CLIPBOARD` уже `allow` по
+  умолчанию). Проверено на СВЕЖЕМ `-writable-system` бут (appop-состояние
+  не переживает ребут эмулятора без явного гранта — подтверждено:
+  `appops get` до гранта не содержал `WRITE_CLIPBOARD` вовсе).
+- **Результат: НЕ помогло** — живой прогон
+  `test_debug_copy_url_toggle_both_directions_without_overlap` (skip снят
+  ТОЛЬКО на время пробы, тем же ходом возвращён) с грантом, выставленным ДО
+  прогона, дал ИДЕНТИЧНУЮ картину исходной диагностики бага. **ПОПРАВКА
+  (критик-вход раунда 2, 2026-08-14): этот прогон НЕ доказывает опровержение
+  гипотезы.** Первое действие фикстуры `loved_work_seeded`
+  (`framework/tests/conftest.py:345-353`) — `app_steps.clean_state()` →
+  `adb.clear_app_data()` → `pm clear com.example.ao3_wrapper`
+  (`framework/core/adb.py:76`), а `pm clear` сбрасывает per-package appops
+  ПЕРЕД тем, как тест доходит до тапа — грант, выставленный до старта
+  прогона, мог быть уже снят к моменту клика. `readback` (`appops get`) В
+  МОМЕНТ тапа не снимался, только ДО гранта. Каузальный негатив без
+  проверенно изолированного фактора (правило 14 CLAUDE.md) — этот прогон
+  сам по себе НИЧЕГО не доказывает и не опровергает про appops-гипотезу.
+  **Вывод «путь (а) недостижим» остаётся ВЕРНЫМ, но держится на
+  АРХИТЕКТУРНОМ аргументе ниже, не на этом прогоне** — appops-эксперимент
+  был архитектурно тупиковым независимо от `pm clear`: `appops`-уровень
+  управляет `ClipboardManager.setPrimaryClip`, а `DOMException` бросается
+  Blink'ом на уровне permission-слоя ВНУТРИ движка, до которого этот грант
+  в принципе не достаёт.
+- `WebChromeClient` в `BrowserScreen.kt` (только чтение) не переопределяет
+  `onPermissionRequest` — но это нерелевантно: `PermissionRequest` Android
+  WebView API покрывает только camera/mic/EME/MIDI-ресурсы, `clipboard-write`
+  в этот механизм не входит вообще (ни один embedder-callback не может его
+  разрешить/запросить через публичный WebView API) — то есть даже правка
+  `app-under-test` в этом направлении не была бы доступным рычагом извне
+  теста, будь она разрешена.
+- Дальнейшие направления (WebView command-line flags
+  `/data/local/tmp/webview-command-line`, сайдлоад новой System WebView APK)
+  не опробованы эмпирически — не проверено. Первое требует угадывания
+  конкретного Chromium feature-флага без документированного источника
+  (риск нескольких холостых рестартов эмулятора ради догадки, не найдено
+  основания считать её вероятной); второе — реконструкция образа AVD, вне
+  разумного объёма тикета test_debt-починки.
+
+**Вывод: путь (а) не достижим доступными тестовой инфраструктуре
+средствами в этой среде** (bundled WebView 113.x на non-Play AVD-образе).
+Рекомендация координатору — выбор из (б.1)/(б.2) не в мандате
+test-maintainer (изменение Then TC-188.md — компетенция test-designer,
+D-0037):
+- **(б.1)** явный дозапрос test-designer на пересмотр Then TC-188 —
+  переформулировать наблюдаемый факт на альтернативный (например: «клик
+  доходит до узла, `navigator.clipboard.writeText` вызывается» — то, что
+  тест уже фактически проверяет диагностическим пробником, без утверждения
+  про подпись «Copied!»/содержимое буфера) — единственный путь, восстанавливающий
+  автоматизацию оставшейся грани TC-188 в этой среде;
+- **(б.2)** ЛИБО признать AT-BUG-068 окончательным платформенным
+  ограничением тестовой среды без обходного пути — TC-188 остаётся частично
+  неавтоматизированным (`automated_by` пуст, `@pytest.mark.skip` на месте)
+  без дальнейших попыток починки, пока сама среда (WebView-версия/AVD-образ)
+  не изменится по независимой причине.
+
+Файлы не менялись `app-under-test/`; `framework/tests/test_settings.py` —
+skip снят и возвращён тем же ходом. **Поправка (критик-вход раунда 2):**
+формулировка «net diff = 0, сверено `git diff`» была непроверяемой — файл
+не закоммичен в этой сессии (`git diff --stat` даёт `+280` на весь
+некоммиченный блок TC-186/187/188, базлайна для net-zero сравнения в git
+нет). Проверяемый факт: `@pytest.mark.skip(reason="AT-BUG-068: ...")` на
+`test_debug_copy_url_toggle_both_directions_without_overlap` присутствует
+в файле, декоратор один, следов временной пробы (закомментированный skip,
+appops-вызовы, лишняя инструментация) не осталось — сверено чтением файла,
+не гипотетическим diff'ом против несуществующего базлайна.
+
+## Чек-лист качества
+- [x] Проверены дубликаты среди открытых test_debt-багов (`grep -ri
+      clipboard bugs/` — пусто) — не пересекается ни с одним существующим
+- [x] Суть долга ясна и воспроизводима: browser console log (`driver.
+      get_log('browser')`) — `DOMException: Write permission denied`,
+      подтверждено ДВУМЯ независимыми способами тапа
+- [x] Severity: minor — блокирует одну грань ОДНОГО P2-кейса, дизайн кейса
+      полон, не спорное требование
+- [x] Ни одно изменение не внесено в `app-under-test/`
+- [x] `test_cases: ["TC-188"]`

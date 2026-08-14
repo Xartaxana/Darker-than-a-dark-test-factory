@@ -81,6 +81,27 @@ def assert_tap_to_scroll_enabled(driver, expected: bool = True):
     )
 
 
+@allure.step("When в Settings тумблер «Auto-apply on navigation» установлен в {enabled}")
+def set_auto_apply_filter_toggle(driver, enabled: bool):
+    """TC-181/184/185: реактивная связка Settings→MainActivity→BrowserViewModel
+    (`MainActivity.kt:176-178 LaunchedEffect`) применяет новое значение немедленно,
+    без рестарта — тумблер можно переключать в любой момент сценария, ДО или ПОСЛЕ
+    навигации на Browse (в отличие от `enable_tap_to_scroll`, чей гейт вычисляется
+    один раз при инъекции)."""
+    SettingsScreen(driver).set_auto_apply_filter(enabled)
+
+
+@allure.step("Then в Settings тумблер «Auto-apply on navigation» показывает {expected}")
+def assert_auto_apply_filter_enabled(driver, expected: bool = True):
+    """TC-181: Given-предпосылка (дефолт ON) сверяется явным assert'ом, а не
+    предполагается — тот же класс, что `assert_auto_download_enabled`/
+    `assert_tap_to_scroll_enabled`."""
+    actual = SettingsScreen(driver).is_auto_apply_filter_checked()
+    assert actual == expected, (
+        f"тумблер «Auto-apply on navigation» показывает {actual}, ожидали {expected}"
+    )
+
+
 @allure.step("Given в Settings включена опция «Infinite scroll (listing pages)»")
 def enable_infinite_scroll(driver):
     """TC-129/TC-130: дефолт ON (`infiniteScroll: Boolean = true`,
@@ -470,6 +491,19 @@ def assert_theme_mode_pref(mode: str):
     assert f'name="theme_mode">{mode}<' in out, f"theme_mode != {mode} в SharedPreferences: {out}"
 
 
+@allure.step("Then сохранённое состояние Auto-apply on navigation (SharedPreferences auto_apply_filter) = {expected}")
+def assert_auto_apply_filter_pref(expected: bool):
+    """TC-181: `SettingsScreen.kt:539` (`prefs.edit().putBoolean("auto_apply_filter",
+    enabled).apply()`) — стандартная Android SharedPreferences boolean-запись
+    (`<boolean name="auto_apply_filter" value="false" />`), тот же файл
+    `ao3_settings.xml`, что читает `assert_theme_mode_pref`."""
+    out = adb.run_as("cat shared_prefs/ao3_settings.xml")
+    expected_str = "true" if expected else "false"
+    assert f'name="auto_apply_filter" value="{expected_str}"' in out, (
+        f"auto_apply_filter != {expected_str} в SharedPreferences: {out}"
+    )
+
+
 @allure.step("Then сохранённый размер шрифта (SharedPreferences font_size_step) = {step}")
 def assert_font_size_step_pref(step: int):
     out = adb.run_as("cat shared_prefs/ao3_settings.xml")
@@ -629,4 +663,87 @@ def assert_no_scan_complete_dialog(driver, timeout: int = 3) -> None:
     assert not b.is_present(b.by_text("Scan complete"), timeout=timeout), (
         "диалог «Scan complete» появился ПОСЛЕ диалога Restore — ожидали ровно один "
         "объединённый диалог результата (Restored ... Also relinked ...), не два подряд"
+    )
+
+
+# --- Fetch missing metadata (секция "Data", TC-186/TC-187, AT-BUG-061) ---
+
+@allure.step("Then подпись «Fetch missing metadata» показывает очередь из {count} работ")
+def assert_metadata_fetch_queue_count(driver, count: int, timeout: int | None = None):
+    screen = SettingsScreen(driver)
+    screen.swipe_to_metadata_fetch()
+    assert screen.metadata_queue_count_visible(count, timeout=timeout), (
+        f"подпись «{count} works have no title yet» не найдена под «Fetch missing metadata»"
+    )
+
+
+@allure.step("When пользователь нажимает «Fetch» (Fetch missing metadata)")
+def start_metadata_fetch(driver):
+    screen = SettingsScreen(driver)
+    screen.swipe_to_metadata_fetch()
+    screen.tap_fetch_metadata()
+
+
+@allure.step("Then подпись показывает прогресс «Fetching {done} / {total}…»")
+def assert_metadata_fetch_progress(driver, done: int, total: int, timeout: int | None = None):
+    assert SettingsScreen(driver).metadata_progress_visible(done, total, timeout=timeout), (
+        f"подпись «Fetching {done} / {total}…» не появилась"
+    )
+
+
+@allure.step("Then кнопка на месте «Fetch» временно показывает «Stop»")
+def assert_metadata_fetch_stop_button_visible(driver, timeout: int | None = None):
+    assert SettingsScreen(driver).metadata_stop_button_visible(timeout=timeout), (
+        "кнопка «Stop» не появилась — процесс fetch не выглядит запущенным"
+    )
+
+
+@allure.step("When пользователь нажимает «Stop» (Fetch missing metadata мид-процесса)")
+def stop_metadata_fetch(driver):
+    """Без `swipe_to_metadata_fetch` — вызывающий тест (TC-187) уже стоит на этой
+    секции (предыдущий шаг того же прогона), а окно для Stop — не меньше 1.5с
+    реального времени (`delay(1_500L)` между работами, SettingsScreen.kt:248):
+    лишний `swipe_to_text`-опрос (даже short-circuit'нутый уже видимым текстом)
+    не должен добавлять задержку внутрь этого узкого окна."""
+    SettingsScreen(driver).tap_stop_metadata_fetch()
+
+
+@allure.step("Then состояние Fetch missing metadata — Done, «Updated {updated} works»")
+def assert_metadata_fetch_done(driver, updated: int, timeout: int | None = None):
+    assert SettingsScreen(driver).metadata_done_visible(updated, timeout=timeout), (
+        f"итоговая подпись Done (updated={updated}) не появилась"
+    )
+
+
+@allure.step("Then состояние Fetch missing metadata — Stopped, «Stopped — {updated} works updated»")
+def assert_metadata_fetch_stopped(driver, updated: int, timeout: int | None = None):
+    assert SettingsScreen(driver).metadata_stopped_visible(updated, timeout=timeout), (
+        f"итоговая подпись Stopped (updated={updated}) не появилась"
+    )
+
+
+@allure.step("Then кнопка на месте «Stop» вернулась к виду «Fetch»")
+def assert_metadata_fetch_button_visible(driver, timeout: int | None = None):
+    assert SettingsScreen(driver).metadata_fetch_button_visible(timeout=timeout), (
+        "кнопка «Fetch» не вернулась после остановки/завершения процесса"
+    )
+
+
+# --- Show copy-URL button toggle (секция "Debug", TC-188) ---
+
+@allure.step("Given/When в Settings тумблер «Show copy-URL button» установлен в {enabled}")
+def set_debug_copy_url(driver, enabled: bool):
+    SettingsScreen(driver).set_debug_copy_url(enabled)
+
+
+@allure.step("Then в Settings тумблер «Show copy-URL button» показывает {expected}")
+def assert_debug_copy_url_enabled(driver, expected: bool = True):
+    """TC-188 (класс ложно-зелёных #2, CLAUDE.md): `set_debug_copy_url` тапает
+    тумблер УСЛОВНО (только если текущее состояние не совпадает с желаемым) и
+    сам ничего не утверждает — без явного assert'а непроизошедший переход был
+    бы неотличим от случая, где Given (дефолт OFF) случайно не выполнен. Тот
+    же приём, что `assert_auto_download_enabled`/`assert_tap_to_scroll_enabled`."""
+    actual = SettingsScreen(driver).is_debug_copy_url_checked()
+    assert actual == expected, (
+        f"тумблер «Show copy-URL button» показывает {actual}, ожидали {expected}"
     )

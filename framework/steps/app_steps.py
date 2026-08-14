@@ -32,9 +32,29 @@ def seed_library(works: list[tuple[Work, str]]):
     seed_db.seed(works)
 
 
+@allure.step("Given в библиотеку засеяны работы с рейтингами, timestamp по порядку в списке")
+def seed_library_ordered(works: list[tuple[Work, str]]):
+    """TC-187: `seed_db.seed_ordered` — та же ОДНА транзакция device round-trip,
+    что `seed_db.seed`, но каждая строка получает СТРОГО возрастающий
+    `timestamp` по своей позиции в `works` — нужно, когда порядок обработки
+    очереди `ORDER BY timestamp DESC` (`WorkRatingDao.getWorksWithEmptyTitle`)
+    обязан быть детерминированным. См. докстринг `seed_db.seed_ordered`."""
+    seed_db.seed_ordered(works)
+
+
 @allure.step("Given в библиотеку засеяны записи с опциональными rating/comment/tags")
 def seed_with_comment(rows: list[tuple[Work, str | None, str | None, str | None]]):
     seed_db.seed_with_comment(rows)
+
+
+@allure.step("Given в библиотеку засеяны записи с опциональными rating/comment/tags, timestamp по порядку в списке")
+def seed_with_comment_ordered(rows: list[tuple[Work, str | None, str | None, str | None]]):
+    """TC-062: `seed_db.seed_with_comment_ordered` — та же ОДНА транзакция
+    device round-trip, что `seed_db.seed_with_comment`, но каждая строка
+    получает СТРОГО возрастающий `timestamp` по своей позиции в `rows` —
+    заменяет несколько последовательных вызовов `seed_with_comment` (см.
+    докстринг `seed_db.seed_with_comment_ordered`)."""
+    seed_db.seed_with_comment_ordered(rows)
 
 
 @allure.step("Given засеян(ы) filter-профиль(и): {profiles}")

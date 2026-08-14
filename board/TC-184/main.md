@@ -2,7 +2,7 @@
 key: "TC-184"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "OFF: обычная навигация не дописывает фильтр И снимает активный профиль (регрессионный замок фактического поведения)"
 assignee: "qa-agents"

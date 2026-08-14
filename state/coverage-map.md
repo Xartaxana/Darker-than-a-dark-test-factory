@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-13T17:49:22Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-08-14T04:36:01Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 ## Сводка по областям
@@ -9,7 +9,7 @@ generated_at: 2026-08-13T17:49:22Z · генератор: `scripts/coverage_map.
 |---|---|---|---|
 | accessibility | 6 | 3 | partial |
 | backup | 7 | 1 | partial |
-| browser | 19 | 13 | partial |
+| browser | 27 | 13 | partial |
 | canary | 25 | 23 | partial |
 | compatibility | 3 | 3 | designed-full |
 | downloads | 18 | 14 | partial |
@@ -17,7 +17,7 @@ generated_at: 2026-08-13T17:49:22Z · генератор: `scripts/coverage_map.
 | filter-profiles | 10 | 5 | partial |
 | library | 26 | 25 | partial |
 | performance | 4 | 4 | designed-full |
-| rating | 28 | 20 | partial |
+| rating | 28 | 21 | partial |
 | security | 6 | 6 | designed-full |
 | settings | 20 | 11 | partial |
 | smoke | 5 | 5 | designed-full |
@@ -33,7 +33,7 @@ generated_at: 2026-08-13T17:49:22Z · генератор: `scripts/coverage_map.
 | R-03 | TECH | errors:TC-046, smoke:TC-001 |
 | R-04 | DATA | canary:TC-072, canary:TC-073, canary:TC-074, canary:TC-075, canary:TC-076, canary:TC-077, library:TC-016, library:TC-017, rating:TC-007, rating:TC-008, rating:TC-009, rating:TC-010, rating:TC-011, rating:TC-012, smoke:TC-003 |
 | R-05 | TECH | downloads:TC-032, downloads:TC-033, downloads:TC-034, downloads:TC-035, downloads:TC-036, downloads:TC-037, downloads:TC-038, downloads:TC-039, downloads:TC-112, downloads:TC-113, downloads:TC-114, downloads:TC-115, downloads:TC-116, downloads:TC-117, downloads:TC-153, downloads:TC-154, downloads:TC-164 |
-| R-06 | BUS | browser:TC-094, library:TC-027, library:TC-028, library:TC-029, library:TC-030, library:TC-031, library:TC-060, library:TC-061, library:TC-062, library:TC-063, library:TC-064, library:TC-065, library:TC-177, library:TC-178, library:TC-179, library:TC-180, visibility:TC-013, visibility:TC-014, visibility:TC-015, visibility:TC-092, visibility:TC-093, visibility:TC-095 |
+| R-06 | BUS | browser:TC-094, browser:TC-197, browser:TC-198, browser:TC-199, browser:TC-200, browser:TC-201, browser:TC-202, browser:TC-203, browser:TC-204, library:TC-027, library:TC-028, library:TC-029, library:TC-030, library:TC-031, library:TC-060, library:TC-061, library:TC-062, library:TC-063, library:TC-064, library:TC-065, library:TC-177, library:TC-178, library:TC-179, library:TC-180, visibility:TC-013, visibility:TC-014, visibility:TC-015, visibility:TC-092, visibility:TC-093, visibility:TC-095 |
 | R-07 | OPS | риск не покрыт дизайном |
 | R-08 | TECH | library:TC-136, library:TC-137, library:TC-173, library:TC-174, library:TC-175, library:TC-189, library:TC-190, tabs:TC-022, tabs:TC-023, tabs:TC-024, tabs:TC-025, tabs:TC-026, tabs:TC-084, tabs:TC-131, tabs:TC-132, tabs:TC-133, tabs:TC-134, tabs:TC-135, tabs:TC-176 |
 | R-11 | TECH | accessibility:TC-108, browser:TC-050, browser:TC-051, browser:TC-052, browser:TC-053, browser:TC-054, browser:TC-055, browser:TC-057, browser:TC-058, browser:TC-126, browser:TC-127, browser:TC-128, browser:TC-130, browser:TC-157, browser:TC-158, browser:TC-159, browser:TC-160, browser:TC-161, settings:TC-047, settings:TC-048, settings:TC-049, settings:TC-059, settings:TC-123, settings:TC-124, settings:TC-125, settings:TC-129, settings:TC-145, settings:TC-146, settings:TC-147, settings:TC-163, settings:TC-169, settings:TC-170 |
@@ -148,7 +148,7 @@ generated_at: 2026-08-13T17:49:22Z · генератор: `scripts/coverage_map.
 | bridge-dim-filter | ao3-bridge | visibility:TC-092[Automated] |
 | bridge-main-pairing-filter | ao3-bridge | canary:TC-078[Automated], canary:TC-079[Automated] |
 | bridge-exclude-main-pairing-filter | ao3-bridge | canary:TC-080[Automated], canary:TC-081[Automated] |
-| bridge-hidden-works-banner | ao3-bridge | нет кейсов |
+| bridge-hidden-works-banner | ao3-bridge | browser:TC-197[Review], browser:TC-198[Review], browser:TC-199[Review], browser:TC-200[Review], browser:TC-201[Review], browser:TC-202[Review], browser:TC-203[Review], browser:TC-204[Review] |
 | bridge-dark-css | ao3-bridge | нет кейсов |
 | bridge-scroll-reporting | ao3-bridge | нет кейсов |
 | bridge-tap-zone-guard | ao3-bridge | canary:TC-118[Automated], canary:TC-119[Automated], canary:TC-120[Automated], canary:TC-121[Automated], canary:TC-122[Automated] |
@@ -157,7 +157,7 @@ generated_at: 2026-08-13T17:49:22Z · генератор: `scripts/coverage_map.
 | data-clear-all-ratings | data | smoke:TC-004[Automated], settings:TC-018[Automated], settings:TC-019[Automated], settings:TC-020[Automated] |
 | background-download-repository | background | downloads:TC-032[Automated], downloads:TC-033[Automated] |
 | background-auto-download-trigger | background | downloads:TC-032[Automated], downloads:TC-112[Automated], downloads:TC-114[Automated], downloads:TC-115[Automated], downloads:TC-116[Automated], downloads:TC-117[Automated] |
-| background-auto-kudos-trigger | background | rating:TC-138[Automated], rating:TC-139[Approved], rating:TC-140[Automated], rating:TC-141[Automated], rating:TC-142[Automated], rating:TC-143[Automated], rating:TC-144[Automated] |
+| background-auto-kudos-trigger | background | rating:TC-138[Automated], rating:TC-139[Automated], rating:TC-140[Automated], rating:TC-141[Automated], rating:TC-142[Automated], rating:TC-143[Automated], rating:TC-144[Automated] |
 | nf-perf-cold-start-budget | non-functional | performance:TC-096[Automated] |
 | nf-perf-webview-first-load-budget | non-functional | performance:TC-097[Automated] |
 | nf-stability-no-crash-anr | non-functional | performance:TC-098[Automated] |
@@ -183,7 +183,6 @@ generated_at: 2026-08-13T17:49:22Z · генератор: `scripts/coverage_map.
 - browse-tabstrip-indicators (browse): TabStrip: индикация активной вкладки, закрытие свайпом вверх, кнопка New tab
 - library-filters-clear-all-topbar (library): Топ-бар Library: бейдж с числом активных фильтров и кнопка «Clear filters» (видна только при активных фильтрах) сбрасывают все фильтры разом
 - browse-scroll-to-top-fab (browse): FAB «Scroll to top» на листинге: появляется после прокрутки (activeScrollY > 600) вне страницы работы и прокручивает активную вкладку в начало
-- bridge-hidden-works-banner (ao3-bridge): Баннер над листингом «Some works may be hidden…» (три варианта текста: настройки видимости / активный AO3-фильтр / оба) появляется при скрывающем hide-режиме или активном авто-фильтре и исчезает, когда ни то ни другое не действует
 - bridge-dark-css (ao3-bridge): CSS-переопределения тёмной темы на AO3-страницах (window.__ao3AppDark)
 - bridge-scroll-reporting (ao3-bridge): Отчёт позиции скролла и прогресса чтения (глава/%) в Kotlin
 - data-workrating-model (data): Room-сущность WorkRating (rating/comment/tags/fandom/author/wordCount/downloadPath)
@@ -231,10 +230,10 @@ generated_at: 2026-08-13T17:49:22Z · генератор: `scripts/coverage_map.
 
 ### browser
 
-- coverage_status: **partial** (13/19 Automated)
+- coverage_status: **partial** (13/27 Automated)
 - риски: R-06, R-11, R-16
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-157 [P1, Approved], TC-158 [P1, Approved], TC-159 [P1, Approved], TC-161 [P1, Approved]
+- P0/P1 не в Automated: TC-157 [P1, Approved], TC-158 [P1, Approved], TC-159 [P1, Approved], TC-161 [P1, Approved], TC-197 [P1, Review], TC-198 [P1, Review], TC-199 [P1, Review], TC-200 [P1, Review], TC-201 [P1, Review], TC-202 [P1, Review], TC-203 [P1, Review], TC-204 [P1, Review]
 - автотесты (automated_by): framework/tests/test_infinite_scroll.py::test_infinite_scroll_on_loads_next_page_in_background, framework/tests/test_reading_ux.py::test_tap_zone_bottom_third_scrolls_down, framework/tests/test_reading_ux.py::test_tap_zone_middle_third_toggles_fullscreen, framework/tests/test_reading_ux.py::test_tap_zone_top_third_scrolls_up, framework/tests/test_side_panel.py::test_font_buttons_disabled_at_range_boundaries, framework/tests/test_side_panel.py::test_font_size_increase_instant_and_persists, framework/tests/test_side_panel.py::test_pinch_spread_changes_font_size, framework/tests/test_side_panel.py::test_side_panel_and_settings_share_theme_and_font_state, framework/tests/test_side_panel.py::test_side_panel_contrast_toggles_theme_instantly, framework/tests/test_side_panel.py::test_side_panel_fullscreen_hides_tabstrip_and_toggles_label, framework/tests/test_side_panel.py::test_side_panel_home_navigates_active_tab_to_ao3_root, framework/tests/test_side_panel.py::test_side_panel_toggle_kudosed_hides_and_syncs_settings, framework/tests/test_side_panel.py::test_two_finger_drag_changes_brightness
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
@@ -255,7 +254,7 @@ generated_at: 2026-08-13T17:49:22Z · генератор: `scripts/coverage_map.
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  |  |  |
-| P1 |  |  | 4 | 11 |  |
+| P1 |  | 8 | 4 | 11 |  |
 | P2 |  |  | 2 |  |  |
 | P3 |  |  |  | 2 |  |
 
@@ -325,7 +324,7 @@ generated_at: 2026-08-13T17:49:22Z · генератор: `scripts/coverage_map.
 - риски: R-05, R-16
 - кейсы без risk: нет
 - P0/P1 не в Automated: TC-153 [P1, Approved], TC-154 [P1, Approved]
-- автотесты (automated_by): framework/tests/test_downloads.py::test_auto_download_triggers_on_loved_rating, framework/tests/test_downloads.py::test_change_download_folder_triggers_silent_scan_and_relinks_orphan_file, framework/tests/test_downloads.py::test_delete_downloaded_file_keeps_rating_row, framework/tests/test_downloads.py::test_delete_work_removes_row_and_file, framework/tests/test_downloads.py::test_deselecting_favorite_rating_does_not_download, framework/tests/test_downloads.py::test_edit_note_on_already_saved_work_via_listing_overlay_does_not_redownload, framework/tests/test_downloads.py::test_edit_tag_on_already_saved_work_via_panel_does_not_redownload, framework/tests/test_downloads.py::test_enabling_auto_download_does_not_retroactively_download_favorites, framework/tests/test_downloads.py::test_favorite_rating_does_not_download_when_auto_download_off, framework/tests/test_downloads.py::test_manual_download_from_library_adds_local_file, framework/tests/test_downloads.py::test_manual_scan_for_downloads_shows_dialog_on_zero_files, framework/tests/test_downloads.py::test_open_downloaded_file_applies_viewport_and_reader_css, framework/tests/test_downloads.py::test_rating_change_from_favorite_to_kudosed_does_not_download, framework/tests/test_downloads.py::test_restore_folds_orphan_scan_into_single_dialog
+- автотесты (automated_by): framework/tests/test_downloads.py::test_auto_download_triggers_on_loved_rating, framework/tests/test_downloads.py::test_change_download_folder_triggers_silent_scan_and_relinks_orphan_file, framework/tests/test_downloads.py::test_delete_downloaded_file_keeps_rating_row, framework/tests/test_downloads.py::test_delete_downloaded_file_sweeps_both_download_locations, framework/tests/test_downloads.py::test_delete_work_removes_row_and_file, framework/tests/test_downloads.py::test_deselecting_favorite_rating_does_not_download, framework/tests/test_downloads.py::test_edit_note_on_already_saved_work_via_listing_overlay_does_not_redownload, framework/tests/test_downloads.py::test_edit_tag_on_already_saved_work_via_panel_does_not_redownload, framework/tests/test_downloads.py::test_enabling_auto_download_does_not_retroactively_download_favorites, framework/tests/test_downloads.py::test_favorite_rating_does_not_download_when_auto_download_off, framework/tests/test_downloads.py::test_manual_download_from_library_adds_local_file, framework/tests/test_downloads.py::test_manual_scan_for_downloads_shows_dialog_on_zero_files, framework/tests/test_downloads.py::test_open_downloaded_file_applies_viewport_and_reader_css, framework/tests/test_downloads.py::test_rating_change_from_favorite_to_kudosed_does_not_download, framework/tests/test_downloads.py::test_repeated_manual_scan_two_files_same_ao3id_converges_to_relinked_zero, framework/tests/test_downloads.py::test_restore_folds_orphan_scan_into_single_dialog
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
   - TC-032: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
@@ -374,7 +373,7 @@ generated_at: 2026-08-13T17:49:22Z · генератор: `scripts/coverage_map.
 - риски: R-09
 - кейсы без risk: нет
 - P0/P1 не в Automated: TC-181 [P1, Approved], TC-182 [P1, Approved], TC-183 [P1, Approved], TC-184 [P1, Approved], TC-185 [P1, Approved]
-- автотесты (automated_by): framework/tests/test_filter_profiles.py::test_apply_filter_profile, framework/tests/test_filter_profiles.py::test_delete_filter_profile, framework/tests/test_filter_profiles.py::test_rename_filter_profile_keeps_query_string, framework/tests/test_filter_profiles.py::test_rename_filter_profile_to_duplicate_name, framework/tests/test_filter_profiles.py::test_save_filter_profile
+- автотесты (automated_by): framework/tests/test_filter_profiles.py::test_apply_filter_profile, framework/tests/test_filter_profiles.py::test_auto_apply_filter_default_on_reactive_toggle, framework/tests/test_filter_profiles.py::test_auto_apply_filter_guard_skips_url_with_work_search, framework/tests/test_filter_profiles.py::test_auto_apply_filter_off_button_navigation_keeps_active_profile, framework/tests/test_filter_profiles.py::test_auto_apply_filter_off_drops_active_profile_on_plain_navigation, framework/tests/test_filter_profiles.py::test_auto_apply_filter_on_navigation_appends_active_profile, framework/tests/test_filter_profiles.py::test_delete_filter_profile, framework/tests/test_filter_profiles.py::test_rename_filter_profile_keeps_query_string, framework/tests/test_filter_profiles.py::test_rename_filter_profile_to_duplicate_name, framework/tests/test_filter_profiles.py::test_save_filter_profile
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
   - TC-040: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
@@ -455,10 +454,10 @@ generated_at: 2026-08-13T17:49:22Z · генератор: `scripts/coverage_map.
 
 ### rating
 
-- coverage_status: **partial** (20/28 Automated)
+- coverage_status: **partial** (21/28 Automated)
 - риски: R-01, R-01/R-10, R-04, R-10, R-17
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-139 [P1, Approved], TC-151 [P1, Approved], TC-152 [P1, Approved], TC-155 [P1, Approved], TC-191 [P1, Review], TC-192 [P1, Review], TC-193 [P1, Review], TC-194 [P1, Review]
+- P0/P1 не в Automated: TC-151 [P1, Approved], TC-152 [P1, Approved], TC-155 [P1, Approved], TC-191 [P1, Review], TC-192 [P1, Review], TC-193 [P1, Review], TC-194 [P1, Review]
 - автотесты (automated_by): framework/tests/test_rating.py::test_deselect_rating_on_work_page_panel, framework/tests/test_rating.py::test_edit_tag_on_already_saved_work_via_panel_does_not_click_kudos, framework/tests/test_rating.py::test_first_panel_save_clicks_kudos_once, framework/tests/test_rating.py::test_rate_work_from_work_page_panel, framework/tests/test_rating_listing.py::test_add_freeform_tag_persists, framework/tests/test_rating_listing.py::test_apply_ratings_syncs_duplicate_blurbs, framework/tests/test_rating_listing.py::test_change_rating_kudosed_to_read_via_listing_does_not_click_kudos, framework/tests/test_rating_listing.py::test_clear_note_removes_comment, framework/tests/test_rating_listing.py::test_comment_only_visible_on_listing_and_absent_from_rating_tabs, framework/tests/test_rating_listing.py::test_deselect_kudosed_via_listing_does_not_click_kudos, framework/tests/test_rating_listing.py::test_edit_tag_on_already_kudosed_work_via_listing_does_not_reclick_kudos, framework/tests/test_rating_listing.py::test_first_kudosed_via_listing_with_open_work_tab_clicks_kudos_once, framework/tests/test_rating_listing.py::test_listing_rate_button_updates_without_reload, framework/tests/test_rating_listing.py::test_matching_personal_tag_highlighted_on_listing, framework/tests/test_rating_listing.py::test_note_button_opens_overlay_with_expanded_comment, framework/tests/test_rating_listing.py::test_panel_rating_updates_without_reload, framework/tests/test_rating_listing.py::test_personal_tags_do_not_affect_visibility, framework/tests/test_rating_listing.py::test_rate_kudosed_via_listing_without_open_work_tab_does_not_click_kudos, framework/tests/test_rating_listing.py::test_rate_work_from_listing_overlay, framework/tests/test_rating_listing.py::test_save_note_persists_comment, framework/tests/test_rating_listing.py::test_tap_selected_chip_removes_tag
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
@@ -477,6 +476,7 @@ generated_at: 2026-08-13T17:49:22Z · генератор: `scripts/coverage_map.
   - TC-090: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
   - TC-091: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
   - TC-138: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
+  - TC-139: RUN-20260811-0406 (updated: None)
   - TC-140: нет зелёного per-TC
   - TC-141: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
   - TC-142: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
@@ -486,7 +486,7 @@ generated_at: 2026-08-13T17:49:22Z · генератор: `scripts/coverage_map.
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  | 3 |  |
-| P1 |  | 4 | 4 | 12 |  |
+| P1 |  | 4 | 3 | 13 |  |
 | P2 |  |  |  | 3 |  |
 | P3 |  |  |  | 2 |  |
 
@@ -519,7 +519,7 @@ generated_at: 2026-08-13T17:49:22Z · генератор: `scripts/coverage_map.
 - риски: R-01, R-11, R-13
 - кейсы без risk: нет
 - P0/P1 не в Automated: TC-145 [P1, Approved], TC-146 [P1, Approved], TC-147 [P1, Approved], TC-163 [P1, Approved], TC-169 [P1, Approved], TC-170 [P1, Approved], TC-186 [P1, Approved], TC-187 [P1, Approved]
-- автотесты (automated_by): framework/tests/test_infinite_scroll.py::test_infinite_scroll_off_keeps_native_pagination, framework/tests/test_reading_ux.py::test_tap_to_scroll_live_push_and_reload_persistence, framework/tests/test_reading_ux.py::test_tap_to_scroll_survives_kill_and_relaunch, framework/tests/test_reading_ux.py::test_tap_zone_disabled_no_effect_in_any_third, framework/tests/test_settings.py::test_cancel_clear_all_dialog_keeps_data, framework/tests/test_settings.py::test_clear_all_ratings_badge_persists_without_reload, framework/tests/test_settings.py::test_clear_all_ratings_shows_confirmation_dialog, framework/tests/test_settings.py::test_system_theme_follows_os_dark_mode, framework/tests/test_settings.py::test_theme_dark_applies_instantly_without_recreating_activity, framework/tests/test_settings.py::test_webview_dark_mode_applies_instantly, framework/tests/test_settings.py::test_webview_follows_system_theme_without_in_app_toggle
+- автотесты (automated_by): framework/tests/test_infinite_scroll.py::test_infinite_scroll_off_keeps_native_pagination, framework/tests/test_reading_ux.py::test_tap_to_scroll_live_push_and_reload_persistence, framework/tests/test_reading_ux.py::test_tap_to_scroll_survives_kill_and_relaunch, framework/tests/test_reading_ux.py::test_tap_zone_disabled_no_effect_in_any_third, framework/tests/test_settings.py::test_cancel_clear_all_dialog_keeps_data, framework/tests/test_settings.py::test_clear_all_ratings_badge_persists_without_reload, framework/tests/test_settings.py::test_clear_all_ratings_shows_confirmation_dialog, framework/tests/test_settings.py::test_fetch_missing_metadata_fills_only_empty_titles, framework/tests/test_settings.py::test_fetch_missing_metadata_stop_mid_process, framework/tests/test_settings.py::test_system_theme_follows_os_dark_mode, framework/tests/test_settings.py::test_theme_dark_applies_instantly_without_recreating_activity, framework/tests/test_settings.py::test_webview_dark_mode_applies_instantly, framework/tests/test_settings.py::test_webview_follows_system_theme_without_in_app_toggle
 - last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
   - TC-018: нет зелёного per-TC

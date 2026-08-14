@@ -1,0 +1,101 @@
+---
+key: "RUN-20260814-0605"
+project: "AO3"
+issueType: "run"
+status: "run-closed"
+priority: "p2"
+summary: "RUN-20260814-0605"
+assignee: "qa-agents"
+reporter: "qa-agents"
+labels: ["run"]
+components: []
+fixVersions: []
+watchers: []
+parent: null
+epic: null
+created: "2026-07-02T00:00:00Z"
+updated: "2026-07-02T00:00:00Z"
+archived: false
+resolution: "done"
+---
+
+# RUN-20260814-0605
+
+_Спроецировано из `runs/RUN-20260814-0605.md` (источник правды).
+Статус в нашей машине: **Closed**._
+
+# RUN-20260814-0605 — canary (live) на dev-local (versionCode 12)
+
+## Контекст запуска
+
+Триггер: `state/rules.yaml` — «Ежедневный canary на live AO3» (нет canary-RUN
+за текущие сутки UTC 2026-08-14; последний — RUN-20260810-1529). Манифест:
+`suite: [canary], mode: live`. Сборка — `state/app-under-test.yaml`:
+version_name dev-local, versionCode 12, `source_commit cc201f789`, APK на
+устройстве консистентен (переустановлен этим ходом тем же артефактом,
+`apk_sha256 b604764...`).
+
+**Env-предпосылка TC-078** (`test-cases/canary/TC-078.md`, `bugs/AT-BUG-021.md`):
+live-прогон этого кейса стабилен ТОЛЬКО под `hw.gpu.mode=host`.
+
+### Подготовка окружения
+
+1. `Start-Emulator -WritableSystem -Gpu host` — эмулятор поднят с нуля
+   (stale-lock снят автоматически), CA mitmproxy установлен внутри той же
+   функции; вывод завершился строкой `CA visible in apex store: OK`.
+2. Сверка GPU-режима ФАКТОМ: `Get-Content tools\avd\ao3_test_api34.avd\
+   hardware-qemu.ini | Select-String hw.gpu.mode` → `hw.gpu.mode = host`.
+   Подтверждено до прогона.
+3. `Get-Device` → `DEVICE: emulator-5554`. `Install-App` → `Success`.
+   `Start-Appium` → `Appium started and ready on :4723` (health-check внутри
+   функции).
+4. `Invoke-Pytest tests/canary -m live` — фон (`run_in_background`), PID
+   venv-python (17304) дождан `Wait-Process -Timeout 500`, процесс завершился
+   штатно (не убит таймаутом).
+
+## Дословный pytest-хвост (witness)
+
+```
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0
+rootdir: D:\AO3_tests\framework
+configfile: pytest.ini
+plugins: allure-pytest-2.16.0, rerunfailures-16.4
+collected 25 items / 15 deselected / 10 selected
+
+tests\canary\test_ao3_selectors.py ..........                            [100%]
+
+AT-BUG-026 device-liveness guard: recoveries this session = 0/2
+================ 10 passed, 15 deselected in 225.29s (0:03:45) ================
+PYTEST_EXIT=0
+```
+
+`recoveries this session = 0/2` — N=0, ENV_ISSUE-токен строкой не открыт;
+дублирование в теле не требуется (правило — обязательно только при N>0).
+
+Примечание: canary-каталог вырос с 23 до 25 items (collected) с прошлого
+прогона (RUN-20260810-1529: 23/13/10) — состав `-m live` (10 selected)
+не изменился, TC-набор идентичен прошлому прогону; новые 2 items ушли в
+deselected (не live).
+
+## Падения и триаж
+
+Падений нет — 10/10 passed, включая env-чувствительный TC-078
+(`test_main_pairing_checkbox_availability_live`) под `hw.gpu.mode=host`.
+
+| Тест (TC) | Ошибка (кратко) | Вердикт | Действие | Ссылка |
+|---|---|---|---|---|
+| — | — | — | — | — |
+
+## Дефекты-собратья (D-0043) — доклад
+
+Не замечено. Прогон ограничен каноническим `-m live` scope (10 тестов), без
+полного `tests/canary` (без replay-подтестов) — известный AT-BUG-043-класс
+(mitmdump race), ловившийся в прошлых прогонах диагностического полного
+каталога, не был в области этого хода.
+
+## Условия закрытия прогона (Closed)
+- [x] Падений нет — таблица триажа пуста, вердиктов не требуется
+- [x] APP_BUG не создавался (нет падений)
+- [ ] Карта покрытия (`state/coverage-map.md`) не перегенерирована в этом
+      ходе (canary-прогон не меняет состав TC регрессии/смока)

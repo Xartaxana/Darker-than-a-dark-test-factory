@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import re
 import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -184,6 +185,143 @@ def set_font_scale(scale: float) -> None:
     ОБЯЗАН восстановить дефолт (`1.0`) в teardown — иначе следующий тест
     наследует изменённый масштаб (тот же класс, что logcat в TC-098/105)."""
     shell(f"settings put system font_scale {scale}")
+
+
+# --- AT-BUG-066: fail-safe снятие ОСТАТОЧНЫХ персистентных Android-settings ---
+#
+# Тот же класс, что AT-BUG-064 закрыл для `global http_proxy`
+# (`mitm.ensure_no_residual_proxy()`): `set_font_scale()`/`set_night_mode()`
+# выше выставляют ПЕРСИСТЕНТНЫЕ Android-settings, снимаемые СЕЙЧАС только
+# in-process `try/finally` фикстуры/тела теста — не переживает hard-kill
+# worker'а/креш машины МЕЖДУ установкой и восстановлением. Следующий прогон
+# на таком устройстве стартует с увеличенным шрифтом/тёмной темой ОС, ничего
+# об этом не зная — тесты, чувствительные к системной теме/масштабу, могут
+# падать по НЕВЕРНОЙ причине («баг приложения», хотя фактически грязное
+# окружение). Твин `get_device_proxy()`/`ensure_no_residual_proxy()` из
+# `mitm.py`, подключается вызывающим кодом (`conftest.py`) в ту же
+# session-scope точку + перевзведение после device-liveness recovery.
+
+DEFAULT_FONT_SCALE = 1.0  # системный дефолт Android; независимая от
+# `framework/tests/test_accessibility.py::DEFAULT_FONT_SCALE` константа того
+# же значения — `adb.py` не импортирует тестовые модули.
+
+DEFAULT_NIGHT_MODE = "no"  # `cmd uimode night` без аргумента печатает
+# `Night mode: no/yes/auto` — живой замер (emulator-5554, 2026-08-14, см.
+# `bugs/AT-BUG-066.md`) подтвердил чистое устройство стартует с "no".
+
+_NIGHT_MODE_RE = re.compile(r"Night mode:\s*(\w+)")
+
+
+def get_font_scale() -> str | None:
+    """Читает системный масштаб шрифта (`settings get system font_scale`) —
+    fail-safe read-back для `ensure_default_font_scale()` (AT-BUG-066, твин
+    `mitm.get_device_proxy()`/AT-BUG-064 F2). Ненулевой `returncode` adb
+    (устройство offline/unauthorized) НЕ читается как «дефолт» — явно
+    отличимый `None` + предупреждение в stderr (CLAUDE.md permission-hygiene
+    п.6: пустой вывод env-тула — не факт отсутствия объекта, а промах
+    вызова/сбой среды). Зависший adb уже оборачивается `_run()` в явную
+    `TimeoutError` (AT-BUG-009) — сюда такое исключение не долетает,
+    поднимается напрямую вызывающему коду."""
+    cp = _run(["-s", settings.DEVICE_NAME, "shell", "settings get system font_scale"])
+    if cp.returncode != 0:
+        print(
+            f"AT-BUG-066 WARNING: adb shell settings get system font_scale "
+            f"вернул код {cp.returncode} (устройство offline/unauthorized?) -- "
+            f"stderr: {cp.stderr.strip()!r} -- get_font_scale() не может "
+            "определить текущее значение, возвращаю None (не путать с "
+            "\"дефолт\"); не бросаю, чтобы не ронять сессию.",
+            file=sys.stderr,
+        )
+        return None
+    return cp.stdout.strip()
+
+
+def ensure_default_font_scale() -> str | None:
+    """AT-BUG-066, твин `mitm.ensure_no_residual_proxy()`: fail-safe сброс
+    ОСТАТОЧНОГО системного масштаба шрифта на подъёме окружения/сессии.
+
+    Читает текущее значение (`get_font_scale()`) и, если оно НЕ «чисто» (не
+    пусто, не `"null"`, не уже `DEFAULT_FONT_SCALE`), сбрасывает его
+    (`set_font_scale(DEFAULT_FONT_SCALE)`) и возвращает СТАРОЕ значение —
+    вызывающий код (`conftest.py`) решает, как это залогировать. Возвращает
+    `None` на счастливом пути (уже дефолт, счастливый путь — ноль лишних
+    adb-записей) И когда `get_font_scale()` не смог определить значение (adb
+    сбойнул — уже залогировано предупреждение там, здесь чинить нечего).
+
+    Неразборчивое непустое значение (не парсится как `float`) НЕ трогается —
+    трактуется как «неизвестный формат, не наше дело» (тот же принцип
+    осторожности, что `mitm.ensure_no_residual_proxy()`: она тоже опознаёт
+    только конкретный набор «чистых» строк, не пытается интерпретировать
+    произвольные значения прокси)."""
+    current = get_font_scale()
+    if current is None:
+        return None
+    stripped = current.strip()
+    if stripped in ("", "null"):
+        return None
+    try:
+        value = float(stripped)
+    except ValueError:
+        return None
+    if value == DEFAULT_FONT_SCALE:
+        return None
+    set_font_scale(DEFAULT_FONT_SCALE)
+    return stripped
+
+
+def get_night_mode() -> str | None:
+    """Читает текущий режим тёмной темы (`cmd uimode night` БЕЗ аргумента —
+    режим ЗАПРОСА, симметричный `cmd uimode night yes/no` из `set_night_mode`).
+
+    AT-BUG-066, живой замер (emulator-5554, 2026-08-14, см. `bugs/AT-BUG-066.md`
+    «Обсуждение»): `cmd uimode night` печатает `Night mode: no`/`Night mode:
+    yes`/`Night mode: auto` — надёжный человекочитаемый read-back,
+    ПРЕДПОЧТЁННЫЙ над `settings get secure ui_night_mode` (тот отдаёт голое
+    число; замер подтвердил `no`->`"1"`, `yes`->`"2"` в ЭТОЙ сессии, но
+    `auto`->? не измерялось напрямую — раскладка 0/1/2 всё ещё не полностью
+    верифицирована документацией AOSP). `cmd uimode night` без параметра
+    снимает эту неоднозначность целиком: он же используется приложением
+    Android для того же запроса.
+
+    Возвращает сырое слово (`"yes"`/`"no"`/`"auto"`, не хардкодим allowlist —
+    иное слово Android тоже вернулось бы как есть) либо `None` на ненулевом
+    `returncode` или неразборчивом выводе (тот же fail-safe профиль, что
+    `get_font_scale()`)."""
+    cp = _run(["-s", settings.DEVICE_NAME, "shell", "cmd uimode night"])
+    if cp.returncode != 0:
+        print(
+            f"AT-BUG-066 WARNING: adb shell cmd uimode night (запрос) вернул "
+            f"код {cp.returncode} -- stderr: {cp.stderr.strip()!r} -- "
+            "get_night_mode() не может определить текущий режим, возвращаю "
+            "None; не бросаю, чтобы не ронять сессию.",
+            file=sys.stderr,
+        )
+        return None
+    m = _NIGHT_MODE_RE.search(cp.stdout)
+    return m.group(1) if m else None
+
+
+def ensure_default_night_mode() -> str | None:
+    """AT-BUG-066, твин `ensure_default_font_scale()`/`mitm.
+    ensure_no_residual_proxy()`: fail-safe сброс ОСТАТОЧНОГО режима тёмной
+    темы ОС на подъёме окружения/сессии — снимаемого сейчас ТОЛЬКО in-process
+    `try/finally` в телах тестов (`test_settings.py` TC-049/TC-059,
+    `test_compatibility.py` TC-110 — `app_steps.set_system_dark_mode(False)`
+    в `finally`), не переживающим hard-kill между установкой и
+    восстановлением.
+
+    Читает текущий режим (`get_night_mode()`); если он уже `DEFAULT_NIGHT_
+    MODE` («no») либо неразборчив/adb сбойнул (`get_night_mode()` вернул
+    `None`) — ничего не делает. Иначе (`"yes"`, `"auto"` — ЛЮБОЙ отличный от
+    дефолта режим, тесты этого репозитория сознательно `"auto"` никогда не
+    выставляют) сбрасывает в `"no"` (`set_night_mode(False)`) и возвращает
+    СТАРОЕ значение — вызывающий код (`conftest.py`) решает, как это
+    залогировать."""
+    current = get_night_mode()
+    if current is None or current == DEFAULT_NIGHT_MODE:
+        return None
+    set_night_mode(False)
+    return current
 
 
 def pidof_app() -> str | None:

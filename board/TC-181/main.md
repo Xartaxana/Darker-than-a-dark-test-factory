@@ -2,7 +2,7 @@
 key: "TC-181"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "«Auto-apply on navigation» включён по умолчанию и переключение в Settings доезжает до Browser без рестарта"
 assignee: "qa-agents"

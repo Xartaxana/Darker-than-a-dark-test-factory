@@ -258,6 +258,16 @@ to DevTools`, сразу за которым `adb: device not found` (mid-test);
 # либо переменной окружения на всю сессию: $env:AO3_EMU_GPU = "host"
 ```
 
+**Приоритет источников GPU при device-liveness recovery (AT-BUG-063, Verified
+2026-08-13):** `Start-Emulator` записывает разрешённое значение `-Gpu` в
+`state/emulator-session.json`; recovery (`driver_factory.py`) читает ЕГО, а не
+`$env:AO3_EMU_GPU`, — state ИМЕЕТ ПРИОРИТЕТ. Если между явным подъёмом `-Gpu
+host` и recovery кто-то (та же или другая сессия на этом хосте) поднял
+эмулятор БЕЗ `-Gpu host`, state перезапишется и recovery восстановит
+`swiftshader_indirect`, даже если `$env:AO3_EMU_GPU=host` всё ещё выставлена.
+Держи предпосылку явно: подними эмулятор канонической формой заново
+непосредственно перед прогоном, требующим host.
+
 `swiftshader_indirect` (дефолт `tasks.ps1`) остаётся верным выбором для
 replay-сиблингов (TC-079/081/083) и всех остальных прогонов — там
 живого тяжёлого рендера нет, менять дефолт незачем (см. `bugs/AT-BUG-021.md`,

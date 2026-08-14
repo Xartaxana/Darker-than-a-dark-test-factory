@@ -4,7 +4,7 @@ title: "device-liveness recovery не пробрасывает GPU-параме�
 type: test_debt
 debt_kind: broken_environment
 severity: major
-status: Fixed
+status: Verified
 found_in: "RUN-20260811-0405 (source_commit cc201f789f0fb123722bbba7b29b8e0c6412dac1, dev-local versionCode 12)"
 fixed_in: "test-maintainer (Sonnet attempt 1-2 -> Opus, эскалация правила 6 CLAUDE.md), 2026-08-11, rework attempt 3 (attempt 1 и 2 отклонены critic-вердиктом — см. `## Обсуждение`; attempt 3 — узкий фикс трёх блокеров критика поверх ядра attempt 2: B1 невалидный YAML-эскейп `$` в этом поле, B2 real-PowerShell проба писала в РАБОЧИЙ state-файл, B3 python-сторона деградировала молча). Реализована Опция 3 (`state/emulator-session.json`, гитигнорится): `scripts/tasks.ps1::Start-Emulator` пишет РАЗРЕШЁННЫЕ (пост-фолбэк: параметр > env > дефолт) `-Gpu`/`-AvdName` в state-файл через новую `Set-EmulatorSessionState`; `framework/core/driver_factory.py::_restart_emulator_writable_system` читает его (`_read_emulator_session_state`) и передаёт значения recovery-подпроцессу ЧЕРЕЗ `env=` дочернего процесса (`AO3_RECOVERY_GPU`/`AO3_RECOVERY_AVD_NAME`), НЕ строковой интерполяцией в `-Command` (F3: инъекция закрыта механизмом передачи, не только валидацией) — сама `-Command`-строка ФИКСИРОВАННЫЙ литерал, не меняющийся ни при каком значении. Закрывает РЕАЛЬНЫЙ сценарий RUN-20260811-0405 (CLI-параметр `-Gpu host` мимо `AO3_EMU_GPU`), т.к. state-файл видит явный CLI-флаг, env-переменную и дефолт ОДИНАКОВО (все три уже схлопнуты в `$Gpu`/`$AvdName` к моменту записи). F4 (потеря `-AvdName`, TC-109/AT-BUG-028) закрыта тем же механизмом. Красная проба поймала РЕАЛЬНЫЙ баг записи (не тестовую придумку): `Set-Content -Encoding UTF8` в Windows PowerShell 5.1 пишет UTF-8 С BOM, `json.loads` на python-стороне падал `Unexpected UTF-8 BOM`; исправлено `[System.IO.File]::WriteAllText` с `UTF8Encoding($false)` на записи + `encoding=\"utf-8-sig\"` на чтении (защита в обе стороны). Известный остаточный риск (Опция 3, названный failure-analyst как минус кандидата ИЗНАЧАЛЬНО — не новый, ГРАНИЦА этого фикса, не маскировка): state-файл ГЛОБАЛЬНЫЙ (не per-session) — если на этой машине ДРУГОЙ процесс вызовет `Start-Emulator` МЕЖДУ изначальным подъёмом этой pytest-сессии и её recovery, файл отразит ЧУЖИЕ параметры; проект и так предписывает не гонять параллельные эмуляторы на одном хосте (docs/environment-setup.md, правило про GPU-инференс), риск считается операционным, не кодовым."
 last_seen_in: ""
@@ -12,8 +12,8 @@ test_cases: [TC-078]
 runs: [RUN-20260811-0405]
 duplicates: []
 regression_of: ""
-status_since: "2026-08-11T17:01:00Z"
-updated: "2026-08-11T17:51:00Z"
+status_since: "2026-08-13T22:15:00Z"
+updated: "2026-08-13T22:15:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -570,6 +570,83 @@ env-заявку оператора.
 однопоточное использование эмулятора на хосте
 (`docs/environment-setup.md`) — риск операционный, вероятность низкая, но не
 ноль.
+
+## Верификация
+
+fix-verifier, 2026-08-13, независимый прогон на текущей сборке (source_commit
+`55c7e355a12fa9ecb44f4e00543a862dbad52409` — commit rework attempt 3,
+подтверждено `git merge-base --is-ancestor 55c7e355... HEAD` = `IS_ANCESTOR_OK`;
+HEAD сессии `f065d845a8`; app-under-test версия НЕ менялась этим фиксом —
+versionName `dev-local` / versionCode 12, тот же `app-debug/output-metadata.json`,
+т.к. дефект и фикс — исключительно тестовая инфраструктура,
+`app-under-test/` не тронут).
+
+Окружение: `Start-Emulator -WritableSystem -Gpu host` → `Get-Device`:
+`DEVICE: emulator-5554` → `hardware-qemu.ini`: `hw.gpu.mode = host` (позитивная
+сверка факта, не декларация) → `Install-App` → `Start-Appium` на `:4723`.
+
+| # | Проверка | Результат |
+|---|----------|-----------|
+| 1 | `state/emulator-session.json` после `Start-Emulator -Gpu host` | `{'gpu': 'host', 'avd_name': 'ao3_test_api34', 'updated_utc': '2026-08-13T22:08:32.6004582Z'}` — читается `json.load(..., encoding='utf-8-sig')` **и** плоским `encoding='utf-8'` без исключения (BOM-фикс подтверждён эмпирически: если бы `Set-Content -Encoding UTF8` всё ещё писал BOM, плоский `utf-8` упал бы `UnicodeDecodeError`/`JSONDecodeError`, как было до фикса B2/rework attempt 2) |
+| 2 | Собственно механизм: `_read_emulator_session_state()` + `_restart_emulator_writable_system()` вызваны напрямую (venv-python, `subprocess.run` монки-патчен ТОЛЬКО для перехвата собранных `cmd`/`env`, не исполняется) против РЕАЛЬНОГО production `state/emulator-session.json`, который только что записал живой `Start-Emulator -Gpu host` этой сессии (не тестовая фикстура) | `STATE_READ: {'gpu': 'host', 'avd_name': 'ao3_test_api34', ...}`; `PS_COMMAND_LITERAL` — фиксированный литерал без интерполяции значений (`if ($env:AO3_RECOVERY_GPU) {...}`); `AO3_RECOVERY_GPU in child_env: host`; `AO3_RECOVERY_AVD_NAME in child_env: ao3_test_api34`; `MECHANISM_OK` |
+| 3 | `tests/canary/test_ao3_selectors.py::test_main_pairing_checkbox_availability_live` (TC-078), live, run 1/3 | `1 passed in 43.40s`, `PYTEST_EXIT=0`, `AT-BUG-026 device-liveness guard: recoveries this session = 0/2` |
+| 4 | TC-078 live, run 2/3 | `1 passed in 22.87s`, `PYTEST_EXIT=0` |
+| 5 | TC-078 live, run 3/3 | `1 passed in 25.08s`, `PYTEST_EXIT=0` |
+| 6 | `tests/test_device_liveness_guard_unit.py` (полный юнит-набор механизма, non-device, для регресс-сверки) | `42 passed, 1 warning in 6.08s`, `PYTEST_EXIT=0` |
+
+**Судьба `test_cases: [TC-078]`** — единственный связанный кейс, прогнан
+живым device-прогоном ТРИЖДЫ подряд (пункты 3-5 таблицы), все три зелёные;
+ни один не заменён и не пропущен.
+
+**Почему проверка 2 достаточна как проверка МЕХАНИЗМА, а не только симптома.**
+Оригинальный дефект — recovery молча теряет `-Gpu host` при перезапуске
+эмулятора. Проверки 3-5 доказывают, что TC-078 живёт под `hw.gpu.mode=host`
+СЕЙЧАС (симптом снят), но НЕ доказывают сам путь recovery — в рамках этой
+верификационной сессии реальный qemu-краш не спровоцирован (тот же класс
+ограничения, что назвал test-maintainer: детерминированно триггернуть краш
+дорого/рискованно). Проверка 2 закрывает этот пробел: она вызывает РЕАЛЬНЫЕ
+функции `_read_emulator_session_state`/`_restart_emulator_writable_system` из
+`framework/core/driver_factory.py` (не копию/пересказ), читающие РЕАЛЬНЫЙ
+`state/emulator-session.json`, записанный РЕАЛЬНЫМ `Start-Emulator -Gpu host`
+этой же сессии (не синтетическую JSON-фикстуру юнит-тестов) — единственное,
+что подменено, это последний шаг (фактический запуск `powershell.exe`/qemu),
+чтобы не рисковать живым устройством этой верификации без нужды. Собранный
+`child_env["AO3_RECOVERY_GPU"] == "host"` и фиксированный литерал `-Command`
+(без f-string подстановки значения) подтверждают: если бы recovery
+сработал по-настоящему прямо сейчас, он передал бы `-Gpu host` дочернему
+`Start-Emulator`, ровно так, как описывает F3/F1 в `## Обсуждение`.
+
+**Вердикт: `status: Fixed → Verified`.** Все три прогона TC-078 зелёные,
+BOM-фикс подтверждён эмпирически (не чтением кода), сам механизм проброса
+`AO3_RECOVERY_GPU` подтверждён живым вызовом против реального state-файла
+этой сессии, регресс-юнит-набор зелёный (42/42). Остаточные риски Р1/Р2/Р3
+(state-протухание, инверсия приоритета, машинный уровень файла) — известные
+названные границы фикса, не блокируют Verified (сами по себе не
+воспроизведённый на этом прогоне дефект, а документированный компромисс
+итерации 3, снятой с переработки критиком по F1/F3/F4-ядру).
+
+**Дефекты-собратья (правило 9 CLAUDE.md).** Кодовый сиблинг-обход
+уже сделан test-maintainer в attempt 1/2 (`grep -rn "Start-Emulator"
+framework/`, `grep -rn "emulator-session.json"`, `grep -n "-Command"
+framework/core/*.py`) и не требует повтора: код с момента attempt 3 не менялся
+(проверено этой сессией только чтением/вызовом, без правок). НО критик-вход
+приёмки (2026-08-13) нашёл ДОКОВУЮ ось того же класса runbook-дрейфа, что
+этот баг считает собственным 3-м воспроизведением: `docs/HANDOFF.md:434-436`
+и `docs/environment-setup.md` описывали старый (дефектный) контракт recovery
+как всё ещё действующий. Починено координатором тем же ходом — обе доки
+теперь несут актуальный контракт (state приоритетнее `$env:AO3_EMU_GPU`,
+инструкция «подними эмулятор заново перед прогоном на host»).
+
+**Р3 — наблюдение, не гипотеза.** Критик зафиксировал живую иллюстрацию риска
+в ЭТОТ ЖЕ вечер: `state/emulator-session.json`, записанный этой верификацией
+как `{"gpu": "host", ...}` в `2026-08-13T22:08:32Z`, был перезаписан на
+`{"gpu": "swiftshader_indirect", ...}` к `2026-08-13T22:18:31Z` — параллельный
+`Start-Emulator` без `-Gpu host` (другой диспатч того же прохода) переписал
+state в течение ~10 минут. Механизм отработал корректно (state честно отражает
+реально поднятый эмулятор) — это evidence о ЧАСТОТЕ риска, не о дефекте
+кода: «вероятность низкая» из attempt 2 эмпирически не подтверждается на
+однохостовой фабрике с несколькими параллельными device-диспатчами за проход.
+Р1(TTL)/Р2(приоритет state vs env) — в очередь Lead, связкой.
 
 ## Чек-лист качества
 - [x] Дубликаты проверены — нет совпадений среди `bugs/AT-BUG-*.md` 

@@ -4,7 +4,7 @@ title: Остаточный device-прокси переживает перез�
 type: test_debt
 debt_kind: broken_environment
 severity: minor
-status: Fixed
+status: Verified
 found_in: "source_commit cc201f789f0fb123722bbba7b29b8e0c6412dac1 (versionCode 12, dev-local)"
 fixed_in: "test-maintainer (Sonnet), 2026-08-11: (а) `framework/core/mitm.py::get_device_proxy()`/`ensure_no_residual_proxy()` -- новые функции читают текущий `global http_proxy` устройства и снимают его, если он НЕ \"чист\" (не пусто/`\"null\"`/`\":0\"`); подключены через новый чистый хелпер `framework/tests/conftest.py::_ensure_no_residual_device_proxy()`, вызываемый из УЖЕ существующей session-scoped autouse-фикстуры `_ensure_app_installed` -- запускается РАЗ на весь pytest-прогон, ДО ЛЮБОГО теста (live или replay), не только внутри `replay`-фикстуры (та покрывала бы лишь replay-тесты -- недостаточно, наблюдение бага: остаток пойман БЕЗ единого replay-теста в сессии). (б) `try/finally` вокруг `set_device_proxy()`/`start_replay()`/`yield` в фикстуре `conftest.py::replay` УЖЕ существовал (введён AT-BUG-043 attempt 2, `conftest.py:833-860`) -- прочитан и верифицирован целиком, повторной реализации не требовалось; задокументировано как necessary-but-insufficient слой (не покрывает hard-kill/креш машины/снапшот, снятый в неудачный момент -- ровно тот класс, что закрывает (а)). B4 rework attempt 2 (критик-вход, блокеры B1/B2): B2 -- `_ensure_no_residual_device_proxy()` теперь ТАКЖЕ вызывается из `pytest_runtest_setup()` (`conftest.py:108-181`, вызов на л. 180) СРАЗУ после `_reset_ca_check()`, если в текущем тесте произошёл device-liveness recovery (AT-BUG-026), -- твин уже существующего паттерна `_reset_ca_check`; без этого проверка (а) была недостижима ровно для сценария заголовка бага (прокси переживает ПЕРЕЗАПУСК эмулятора recovery-путём, не только session-старт). B1 -- ложная строка «сиблингов не найдено» исправлена на честную (см. «Сиблинги»); реальные сиблинги (`adb.py::set_font_scale`/`set_night_mode`) НЕ покрыты тем же fail-safe в этом ходе (обоснование непропорциональности + план -- новый test_debt `AT-BUG-066`)."
 last_seen_in: ""
@@ -12,8 +12,8 @@ test_cases: []
 runs: [RUN-20260811-0405]
 duplicates: []
 regression_of: ""
-status_since: "2026-08-11T17:03:00Z"
-updated: "2026-08-11T17:33:00Z"
+status_since: "2026-08-13T22:09:12Z"
+updated: "2026-08-13T22:09:12Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -364,3 +364,68 @@ PYTEST_EXIT=0
 
 `python scripts/validate_frontmatter.py` — чист (см. ниже). `app-under-test/`
 не тронут. Лок снят этим ходом.
+
+## Верификация (заполняет fix-verifier)
+
+Carve-out применён (`test_cases: []` штатно для `type: test_debt` в
+обвязке — conftest.py/mitm.py, fix-verifier.md «Границы»): вместо
+device-прогона кейсов — документная сверка первоисточника (код в
+репозитории на текущем `HEAD`) + независимый device-free механический
+перепрогон.
+
+**Сверка кода (не пересказ бага).** Прочитаны целиком: `framework/core/
+mitm.py::get_device_proxy()` (л. 543-586) и `::ensure_no_residual_proxy()`
+(л. 589-616) — обе функции существуют и реализуют описанное (чтение
+`adb shell settings get global http_proxy`, снятие через
+`clear_device_proxy()` при непустом/не-`"null"`/не-`":0"` значении).
+`framework/tests/conftest.py::_ensure_no_residual_device_proxy()` (л.
+37-63) существует, вызывается из ДВУХ точек, подтверждено greр'ом и
+чтением: (1) `_ensure_app_installed` (л. 78, session-scoped autouse) и
+(2) `pytest_runtest_setup()` (л. 197, сразу после `_reset_ca_check()`,
+внутри `if _pending_recovery_warning is not None:` — B2-фикс на
+device-liveness recovery). Обе точки — ровно то, что называет
+`fixed_in`. Замечен ПОЗДНЕЙШИЙ (не документированный в этом баге, но не
+противоречащий) хардненинг `get_device_proxy()` — F2, коммит `a474f32`
+«батч мелочей 0812»: обработка ненулевого `returncode` adb
+(offline/unauthorized устройство) явным `None` вместо fail-open — это
+аддитивное усиление того же фикса, не расхождение с `fixed_in`,
+упомянуто здесь для полноты следа.
+
+**Механический перепрогон (независимый, этот ход, дата 2026-08-14):**
+
+```
+$ powershell ...; Invoke-Pytest tests/test_residual_proxy_guard_unit.py -q
+..............                                                           [100%]
+=== warnings summary ===
+tests/test_residual_proxy_guard_unit.py::test_hook_rechecks_residual_proxy_after_recovery
+  conftest.py:196: UserWarning: AT-BUG-026 device-liveness guard: восстановление 1/2
+AT-BUG-026 device-liveness guard: recoveries this session = 0/2
+14 passed, 1 warning in 0.14s
+PYTEST_EXIT=0
+```
+(14, не 12 — файл вырос после F2/`a474f32`: 3 новых теста на
+`get_device_proxy` returncode-ветку/параметризацию; регрессии нет,
+исходные 11+1 сценариев по-прежнему зелёные.)
+
+```
+$ python -m pytest scripts/tests -q
+1124 passed, 1 skipped in 40.44s
+```
+(1124, не 1120 — тот же класс роста набора между 2026-08-11 и
+2026-08-14, не регрессия.)
+
+```
+$ python scripts/validate_frontmatter.py
+validate_frontmatter: ошибок 0, предупреждений 0
+```
+
+`schemas/transitions.yaml` сверен: `{from: Fixed, to: Verified, by:
+[fix-verifier]}` легален; для `type: test_debt` новая сборка приложения
+не требуется (та же строка схемы, л. 92-93). `output-metadata.json`
+(`app-under-test/app/build/outputs/apk/debug/`) сверен: `versionCode: 12`,
+`versionName: "dev-local"` — совпадает с заявленным в `fixed_in`/
+`found_in` (source_commit `cc201f789f...`, dev-local).
+
+| Дата | Версия сборки | Прогнанные проверки | Результат | Вердикт |
+|---|---|---|---|---|
+| 2026-08-14 | dev-local (versionCode 12, `cc201f789f0fb123722bbba7b29b8e0c6412dac1`; test_debt — верификация build-независима, D1 не ждёт новую сборку приложения) | `test_cases: []` — carve-out (обвязка/conftest, ФАКТИЧЕСКИ исполнимых device-кейсов нет). Замена: (1) документная сверка первоисточника — `framework/core/mitm.py::get_device_proxy`/`ensure_no_residual_proxy` и ДВЕ точки вызова `_ensure_no_residual_device_proxy()` в `conftest.py` (`_ensure_app_installed`, `pytest_runtest_setup`) прочитаны целиком, реализация соответствует `fixed_in`; (2) независимый механический перепрогон `tests/test_residual_proxy_guard_unit.py` + `scripts/tests` + `validate_frontmatter.py` | `test_residual_proxy_guard_unit.py`: `14 passed, 1 warning in 0.14s`, PYTEST_EXIT=0. `scripts/tests`: `1124 passed, 1 skipped in 40.44s`. `validate_frontmatter.py`: `ошибок 0, предупреждений 0`. Код-сверка: обе функции (а) и обе точки вызова (б)/B2 присутствуют и подключены как описано в `fixed_in` — расхождений не найдено. | fix-verifier: **`Fixed → Verified`.** Обоснование замены device-прогона — явно выше (carve-out fix-verifier.md, test_debt/обвязка); первоисточник — код репозитория на текущем `HEAD`, не пересказ разработчика.

@@ -2,7 +2,7 @@
 key: "TC-187"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Fetch missing metadata: Stop останавливает процесс мид-fetch — Stopped(N) с частичным счётчиком, оставшиеся работы не тронуты"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-10T14:20:00Z"
-updated: "2026-08-10T14:20:00Z"
+created: "2026-08-14T02:05:00Z"
+updated: "2026-08-14T02:05:00Z"
 archived: false
 resolution: null
 ---
@@ -65,16 +65,31 @@ updated» (обновилась только D — та, что уже была 
 | Итоговое состояние | `Stopped — 1 works updated` |
 
 ## Заметки для автоматизации
-- **БЛОКЕР — тот же, что TC-186:** `bugs/AT-BUG-061.md`
-  (`test_cases: ["TC-186", "TC-187"]`), не заводится повторно (правило 4
-  воркфлоу test-designer — проверено перед заведением, покрывающий баг уже
-  есть).
+- **АВТОМАТИЗИРОВАНО (2026-08-14).** Прежний блокер `bugs/AT-BUG-061.md`
+  (общий с TC-186) устранён и `Verified` ещё ДО этого хода; этот проход
+  дописал недостающий слой и заполнил `automated_by`. Given (работы D, E)
+  засевается ОДНИМ вызовом `seed_db.seed_ordered([E, D])` — НЕ двумя
+  раздельными вызовами `seed()` (тот паттерн, каждый со своим
+  `force_stop()`/`ensure_db_initialized()` round-trip, живой прогон
+  2026-08-14 поймал гонку с сигнатурой `sqlite3.OperationalError: no such
+  table: work_ratings` на втором вызове — заведён `bugs/AT-BUG-069.md`,
+  `regression_of: AT-BUG-044`, изолирующий эксперимент 0/20 не подтвердил
+  доминирующую причину, но и не исключил её). `seed_ordered` даёт КАЖДОЙ
+  строке списка СТРОГО возрастающий `timestamp` по её ПОЗИЦИИ за ОДИН
+  device round-trip: E (индекс 0, меньший timestamp) первым в списке, D
+  (индекс 1, БОЛЬШИЙ timestamp, значит первый в очереди `ORDER BY
+  timestamp DESC`) вторым — `WorkRatingDao.getWorksWithEmptyTitle` не
+  гарантирует порядок среди РАВНЫХ timestamp, поэтому позиционный порядок
+  в списке важен.
 - **Тайминг Stop** — процесс делает `delay(1_500L)` между работами
   (`:248`), значит окно для нажатия Stop МЕЖДУ работой D и работой E — не
   меньше 1.5с реального времени; ловить момент по появлению подписи
   «Fetching 1 / 2…» (или по завершении первой итерации), не по
   произвольному `sleep` — тот же принцип, что общий запрет `sleep()` в
-  архитектуре тестов (`docs/08 C1`).
+  архитектуре тестов (`docs/08 C1`). Автоматизация ловит момент опросом
+  подписи (`settings_steps.assert_metadata_fetch_progress`), затем СРАЗУ
+  тапает «Stop» (`settings_steps.stop_metadata_fetch`, без лишнего
+  `swipe_to_text`-опроса внутри узкого окна).
 - Ограничение прогонов — то же (replay/mitm only), что TC-186.
 - Не дублирует TC-186 (там — Then это ЗАВЕРШЁННЫЙ процесс `Done`,
   избирательная запись по результату скрейпа; здесь — ПРЕРВАННЫЙ процесс

@@ -2,7 +2,7 @@
 key: "TC-153"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Повторный ручной Scan for downloads при двух файлах одного ao3Id сходится к relinked=0 (идемпотентность, регресс-замок BUG-046)"
 assignee: "qa-agents"

@@ -63,6 +63,50 @@ def _ensure_no_residual_device_proxy() -> None:
         )
 
 
+def _ensure_default_font_scale() -> None:
+    """AT-BUG-066, твин `_ensure_no_residual_device_proxy()`: снимает
+    ОСТАТОЧНЫЙ системный масштаб шрифта (`adb.set_font_scale()`), переживший
+    рестарт эмулятора/аварийное завершение предыдущей сессии-worker'а
+    (`adb.ensure_default_font_scale()` — подробный докстринг там), ДО ЛЮБОЙ
+    работы сессии. Вынесена в отдельную ЧИСТУЮ функцию по тому же приёму, что
+    `_ensure_no_residual_device_proxy` (pytest 9 запрещает прямой вызов
+    декорированной fixture-функции; device-free юнит-проба обязана звать эту
+    логику напрямую с монки-патченным `adb.ensure_default_font_scale`, без
+    реального adb).
+
+    ВТОРАЯ точка вызова — из `pytest_runtest_setup()` ниже, СРАЗУ после
+    `_ensure_no_residual_device_proxy()`, если в ЭТОМ тесте случился
+    device-liveness recovery: без неё проверка была бы недостижима ровно для
+    сценария заголовка `AT-BUG-066` (остаток переживает ПЕРЕЗАПУСК
+    эмулятора) — тот же аргумент, что B2 `AT-BUG-064`."""
+    stale = adb.ensure_default_font_scale()
+    if stale is not None:
+        warnings.warn(
+            f"AT-BUG-066: остаточный font_scale='{stale}' обнаружен на старте "
+            "прогона (пережил рестарт эмулятора или аварийное завершение "
+            f"предыдущей сессии/worker'а) -- сброшен автоматически в "
+            f"{adb.DEFAULT_FONT_SCALE}."
+        )
+
+
+def _ensure_default_night_mode() -> None:
+    """AT-BUG-066, твин `_ensure_default_font_scale()`/`_ensure_no_residual_
+    device_proxy()`: снимает ОСТАТОЧНЫЙ режим тёмной темы ОС (`adb.
+    set_night_mode()`), переживший рестарт эмулятора/аварийное завершение
+    предыдущей сессии-worker'а (`adb.ensure_default_night_mode()` —
+    докстринг там), ДО ЛЮБОЙ работы сессии. Та же вторая точка вызова из
+    `pytest_runtest_setup()` после device-liveness recovery, по тем же
+    причинам."""
+    stale = adb.ensure_default_night_mode()
+    if stale is not None:
+        warnings.warn(
+            f"AT-BUG-066: остаточный night mode='{stale}' обнаружен на старте "
+            "прогона (пережил рестарт эмулятора или аварийное завершение "
+            f"предыдущей сессии/worker'а) -- сброшен автоматически в "
+            f"{adb.DEFAULT_NIGHT_MODE!r}."
+        )
+
+
 @pytest.fixture(scope="session", autouse=True)
 def _ensure_app_installed():
     """AT-BUG-064, кандидат фикса (а): подключает `_ensure_no_residual_device_
@@ -74,8 +118,15 @@ def _ensure_app_installed():
     сиблинги); отдельная новая session-autouse фикстура заставила бы КАЖДУЮ
     из них ловить реальный adb-вызов, если её тоже не переопределить —
     присоединение к уже переопределяемой точке даёт классовую полноту без
-    правки полутора десятков файлов."""
+    правки полутора десятков файлов.
+
+    AT-BUG-066 (сиблинг класса, найденный критиком по правилу 9 CLAUDE.md на
+    приёмке AT-BUG-064): та же логика подключена здесь для font_scale/night
+    mode — тот же класс персистентной Android-настройки, тот же аргумент
+    единой переопределяемой точки."""
     _ensure_no_residual_device_proxy()
+    _ensure_default_font_scale()
+    _ensure_default_night_mode()
     if not adb.is_installed():
         adb.install()
     yield
@@ -185,7 +236,14 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
     глушило recovery-WARN целиком (R2 выше существует именно чтобы этот WARN
     гарантированно был виден per-тестово) — recovery-факт остался бы
     незалогированным. Порядок ПОСЛЕ `warnings.warn` не теряет диагностику
-    recovery, даже если сама проверка остаточного прокси упадёт следом."""
+    recovery, даже если сама проверка остаточного прокси упадёт следом.
+
+    AT-BUG-066 (сиблинг класса, критик-вход AT-BUG-064): `_ensure_default_
+    font_scale()`/`_ensure_default_night_mode()` вызываются ЗДЕСЬ же, СРАЗУ
+    после `_ensure_no_residual_device_proxy()` — тот же твин-паттерн, тот же
+    аргумент (recovery ребутит эмулятор через snapshot-boot, session-scoped
+    `_ensure_app_installed` инстанцируется РОВНО РАЗ и не видит recovery,
+    случившийся посреди прогона)."""
     global _pending_recovery_warning
     _pending_recovery_warning = None
     if "driver" not in item.fixturenames:
@@ -195,6 +253,8 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
         _reset_ca_check()
         warnings.warn(_pending_recovery_warning)
         _ensure_no_residual_device_proxy()
+        _ensure_default_font_scale()
+        _ensure_default_night_mode()
 
 
 def _reset_ca_check() -> None:
@@ -479,19 +539,30 @@ def library_freetext_search_seeded():
 
 @pytest.fixture()
 def library_last_read_order_seeded():
-    """TC-062: 3 работы с ОДНИМ рейтингом (SAVE), засеянные ТРЕМЯ ПОСЛЕДОВАТЕЛЬНЫМИ
-    вызовами `seed_with_comment` (по одной работе на вызов — разные `timestamp`, см.
-    заметки TC-062 про `now`, вычисляемый один раз на батч) в хронологическом
-    порядке Mango -> Apple -> Zebra. Заголовки подобраны так, чтобы ни порядок
-    вставки, ни алфавит не совпадали с ожидаемым порядком по `timestamp`
-    (Zebra, Apple, Mango)."""
+    """TC-062: 3 работы с ОДНИМ рейтингом (SAVE), засеянные ОДНИМ вызовом
+    `seed_with_comment_ordered` — каждая получает СТРОГО возрастающий
+    `timestamp` по своей позиции в списке (см. `seed_db._insert_rows_full_
+    ordered`), в хронологическом порядке Mango -> Apple -> Zebra (Mango —
+    наименьший `timestamp`, Zebra — наибольший, первая в `ORDER BY timestamp
+    DESC`). Заголовки подобраны так, чтобы ни порядок вставки, ни алфавит не
+    совпадали с ожидаемым порядком по `timestamp` (Zebra, Apple, Mango).
+
+    Rework attempt 2 (критик-вход TC-186-188 B3, 2026-08-14): раньше — ТРИ
+    ПОСЛЕДОВАТЕЛЬНЫХ вызова `seed_with_comment` (по одной работе на вызов,
+    каждый свой `force_stop()`/`ensure_db_initialized()` round-trip) — тот же
+    класс экспозиции гонке `bugs/AT-BUG-069.md` (`regression_of:
+    AT-BUG-044`), что закрыл `seed_ordered` для TC-187, только ТРИ round-trip
+    вместо двух. Мигрирована на `seed_with_comment_ordered` — ОДИН round-trip,
+    порядок `timestamp` гарантирован локально по позиции в списке."""
     app_steps.clean_state()
     mango = Work("900000621", "Mango Work", "seed_author_tc062_mango", "Fandom TC062", 1000)
     apple = Work("900000622", "Apple Work", "seed_author_tc062_apple", "Fandom TC062", 1000)
     zebra = Work("900000623", "Zebra Work", "seed_author_tc062_zebra", "Fandom TC062", 1000)
-    app_steps.seed_with_comment([(mango, "SAVE", None, None)])
-    app_steps.seed_with_comment([(apple, "SAVE", None, None)])
-    app_steps.seed_with_comment([(zebra, "SAVE", None, None)])
+    app_steps.seed_with_comment_ordered([
+        (mango, "SAVE", None, None),
+        (apple, "SAVE", None, None),
+        (zebra, "SAVE", None, None),
+    ])
     yield (mango, apple, zebra)
 
 

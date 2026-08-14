@@ -2,7 +2,7 @@
 key: "TC-154"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Удаление скачанного файла подметает ОБА места загрузок и НЕ воскрешает работу последующим сканом (регресс-замок BUG-047)"
 assignee: "qa-agents"

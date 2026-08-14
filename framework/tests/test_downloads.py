@@ -56,7 +56,15 @@ TC-039 (Restore from backup сворачивает scanForOrphanedDownloads в �
 AT-BUG-005, но требует ДРУГОГО порядка: сама папка загрузок выбирается ДО того,
 как в неё кладётся orphan-файл (`app_steps.place_file_in_download_folder`) — иначе
 silent-скан самого выбора папки поглотит orphan-файл ДО Restore (см. докстринг
-той функции)."""
+той функции).
+
+TC-153/TC-154 (регресс-замки BUG-046/BUG-047, `DownloadRepository.kt:94-141`/
+`:146-169`) — сиблинг-кейсы того же класса «файлы на диске ↔ одна строка Room»,
+но с ДВУМЯ файлами одного ao3Id (`W.LOVED`, "900000001") в общей SAF-подпапке,
+та же техника, что TC-038/TC-039. TC-153: повторный РУЧНОЙ скан (три подряд, диск
+не меняется) сходится к `relinked 0` — идемпотентность. TC-154: «Delete downloaded
+file» подметает ОБА файла этого ao3Id (не только явно указанный в
+`downloadPath`), последующий скан не воскрешает работу."""
 from __future__ import annotations
 
 import json
@@ -860,3 +868,277 @@ def test_restore_folds_orphan_scan_into_single_dialog(restore_scan_workspace, dr
     app_steps.open_tab(driver, "Library")
     library_steps.assert_work_in_tab(driver, "SAVE", work.title)
     library_steps.assert_open_icon_shown(driver, work.title)
+
+
+# --- TC-153/TC-154: ДВА файла одного ao3Id (`W.LOVED`, "900000001") в общей
+# уникальной SAF-подпапке — сиблинг-кейсы класса «файлы на диске ↔ одна строка
+# Room» (тот же приём, что TC-038/TC-039), но с группой из двух файлов вместо
+# одного (условие ветвления `scanForOrphanedDownloads`, `DownloadRepository.kt:
+# 94-141`/`:146-169`, см. requirements TC-153.md/TC-154.md). `W.LOVED` уже
+# определена в `works.py` с ao3_id "900000001", ровно тем, что называют оба
+# кейса — переиспользуем вместо новой фикстуры Work.
+
+_TWO_FILE_GROUP_DIR = _ORPHAN_DOWNLOAD_DIR
+# Имена упрощены до ASCII-без-пробелов относительно таблицы «Проверяемые
+# данные» TC-153.md/TC-154.md (там второй файл — `ao3_ЛОКАЛЬНЫЙ_900000001.html`,
+# с кириллицей): семантически безразлично для `WORK_ID_PATTERN`
+# (`DownloadRepository.kt`), который матчит только хвост `_<ao3Id>.html`, а не
+# префикс имени — ASCII убирает риск транслитерации/кодировки при `adb push`/
+# `ls` через shell без усложнения ассертов.
+_TWO_FILE_A_NAME = "ao3_A_900000001.html"
+_TWO_FILE_B_NAME = "ao3_LOCAL_900000001.html"
+
+
+def _two_file_group_subfolder(prefix: str) -> str:
+    """Уникальное имя подпапки на каждый вызов (тот же обход DocumentsUI-flake
+    AT-BUG-005, что `_orphan_subfolder` — см. докстринг блока TC-038 выше);
+    отдельная функция (не переиспользуем `_orphan_subfolder`), чтобы префикс
+    каталога на устройстве отражал конкретный TC при диагностике на живом
+    устройстве."""
+    return f"{prefix}_{uuid.uuid4().hex[:10]}"
+
+
+def _ls_download_dir_with_rc(remote_dir: str) -> list[str]:
+    """`ls -1 <remote_dir>` с явной проверкой кода возврата через sentinel-эхо в
+    ТОЙ ЖЕ remote-shell-строке — тот же приём rc-sentinel, что уже закрывает
+    этот класс в `conftest.py::_snapshot_download_dir`/`_ORACLE_RC_SENTINEL`
+    (критик-вход download-oracle-0728). `adb.shell()` по контракту (докстринг
+    `adb.py::clear_app_data`, `conftest.py:971-975`) ОТБРАСЫВАЕТ returncode
+    самой команды — без явной проверки сбой самого зонда (каталог исчез, не тот
+    `ls`, устройство моргнуло) дал бы пустой/усечённый stdout, неотличимый от
+    «файлов на диске действительно нет», и ложно-зелёный ассерт (rework attempt
+    2, критик-вход, блокер 1: TC-154). `rc` ОБЯЗАН быть 0 (перечисление успешно
+    выполнилось, каталог существует); любой другой код — падение самого зонда,
+    не бизнес-факт об отсутствии файлов."""
+    out = adb.shell(f'( ls -1 "{remote_dir}" ; echo RC=$? )')
+    lines = out.splitlines()
+    assert lines and lines[-1].startswith("RC="), (
+        f"зонд `ls -1 {remote_dir}` не вернул sentinel кода возврата — "
+        f"листинг ненадёжен, сырой вывод: {out!r}"
+    )
+    rc_raw = lines.pop()[len("RC="):].strip()
+    rc = int(rc_raw)
+    assert rc == 0, (
+        f"зонд `ls -1 {remote_dir}` завершился с rc={rc} (ожидался 0 — каталог "
+        f"должен существовать на всём протяжении теста) — листинг ненадёжен, "
+        f"сырой вывод: {out!r}"
+    )
+    return [line for line in lines if line.strip()]
+
+
+@pytest.fixture()
+def two_file_group_bound_seeded():
+    """TC-153: Room-строка работы W (`W.LOVED`, ao3Id "900000001") засеяна с
+    рейтингом SAVE, `downloadPath=null`; на устройстве ЗАРАНЕЕ (adb-шеллом, ДО
+    сессии Appium) лежит ОДИН файл этого ao3Id (`_TWO_FILE_A_NAME`) в уникальной
+    SAF-подпапке. Тест сам выбирает эту подпапку как папку загрузок — silent-скан
+    детерминированно линкует Room-строку на этот единственный файл (`relinked 1`)
+    — это и есть детерминированный старт «строка уже привязана» (TC-153.md
+    «Заметки для автоматизации», рекомендованный вариант Given: короче
+    альтернативы и не зависит от алгоритма выбора победителя по `lastModified`).
+    ВТОРОЙ файл группы (`_TWO_FILE_B_NAME`) кладётся тестом ПОСЛЕ этой привязки
+    (`app_steps.place_file_in_download_folder`) — тот же порядок и по той же
+    причине, что `restore_scan_workspace` (TC-039): скан, запущенный самим
+    выбором папки, асинхронный, и вызывающий код обязан сам дождаться его
+    завершения (наблюдаемый диалог «Scan complete»), прежде чем класть файл,
+    который эта корутина не должна увидеть на этом проходе.
+
+    Возвращает (work, subfolder, remote_dir)."""
+    work = W.LOVED
+    subfolder = _two_file_group_subfolder("tc153_two_file")
+    remote_dir = f"{_TWO_FILE_GROUP_DIR}/{subfolder}"
+    app_steps.clean_state()
+    app_steps.seed_library([(work, "SAVE")])
+    tmp_dir = Path(tempfile.mkdtemp(prefix="tc153_two_file_"))
+    try:
+        local_a = tmp_dir / _TWO_FILE_A_NAME
+        local_a.write_text("<html><body>TC-153 file A (bound first)</body></html>", encoding="utf-8")
+        adb.shell(f"mkdir -p {remote_dir}")
+        adb.push_external(local_a, f"{remote_dir}/{_TWO_FILE_A_NAME}")
+        yield work, subfolder, remote_dir
+    finally:
+        adb.shell(f'rm -rf "{remote_dir}"')
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+
+
+@pytest.mark.p1
+@allure.id("TC-153")
+@allure.title(
+    "Повторный ручной Scan for downloads при двух файлах одного ao3Id сходится к "
+    "relinked=0 (идемпотентность, регресс-замок BUG-046)"
+)
+def test_repeated_manual_scan_two_files_same_ao3id_converges_to_relinked_zero(
+    two_file_group_bound_seeded, driver
+):
+    # Given папка загрузок выбрана на подпапку, где лежит ОДИН файл группы
+    # (file A) — silent-скан детерминированно привязывает Room-строку к нему
+    # (`relinked 1`) — это baseline «строка уже указывает на файл из группы»
+    # (детерминированный старт, см. TC-153.md)
+    work, subfolder, remote_dir = two_file_group_bound_seeded
+    saf_steps.open_settings_scrolled_to(driver, "Pick")
+    saf_steps.tap_settings_action(driver, "Pick")
+    saf_steps.saf_pick_folder(driver, f"Download/{subfolder}")
+    settings_steps.assert_scan_complete_dialog(
+        driver, expected_text="Found 1 files — relinked 1, added 0 new."
+    )
+    settings_steps.dismiss_scan_dialog(driver)
+
+    # And ВТОРОЙ файл того же ao3Id добавлен в ту же папку ПОСЛЕ привязки — Given
+    # кейса полностью выполнено: два файла одного ao3Id на диске, Room-строка уже
+    # указывает на один из них
+    app_steps.place_file_in_download_folder(
+        remote_dir, _TWO_FILE_B_NAME, "<html><body>TC-153 file B (second of group)</body></html>"
+    )
+
+    # When пользователь трижды подряд нажимает «Scan for downloads» (без изменений
+    # на диске между нажатиями)
+    saf_steps.rescroll_settings_to(driver, "Scan")
+    for _attempt in range(3):
+        saf_steps.tap_settings_action(driver, "Scan")
+        # Then КАЖДЫЙ из трёх сканов (включая первый) даёт ИДЕНТИЧНЫЙ результат —
+        # группа уже «привязана» (Room-строка указывает на файл из этой же
+        # группы), relink не засчитывается ни разу — инвариант идемпотентности
+        # (BUG-046): второй и последующие сканы неизменного диска всегда дают
+        # relinked 0, а не количество файлов группы на каждый проход
+        settings_steps.assert_scan_complete_dialog(
+            driver, expected_text="Found 2 files — relinked 0, added 0 new."
+        )
+        settings_steps.dismiss_scan_dialog(driver)
+        # И явно подтверждено ИСЧЕЗНОВЕНИЕ диалога ДО следующего тапа «Scan»
+        # (критик-вход, rework attempt 2, блокер 2): текст диалога идентичен на
+        # всех трёх итерациях, поэтому одного присутствия ("Found 2 files —
+        # relinked 0, added 0 new.") недостаточно — нерасклеенный диалог ПРЕДЫДУЩЕЙ
+        # итерации удовлетворил бы тот же assert на СЛЕДУЮЩЕЙ, маскируя реально не
+        # запустившийся повторный скан. `assert_no_scan_complete_dialog` доказывает,
+        # что каждая итерация видит ДЕЙСТВИТЕЛЬНО новый диалог, а не старый.
+        settings_steps.assert_no_scan_complete_dialog(driver)
+
+    # And работа W остаётся связана с файлом на всём протяжении — карточка на
+    # вкладке FAVORITE (SAVE) по-прежнему показывает open-иконку
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_work_in_tab(driver, "SAVE", work.title)
+    library_steps.assert_open_icon_shown(driver, work.title)
+
+
+@pytest.fixture()
+def two_file_group_delete_sweep_seeded():
+    """TC-154: Room-строка работы W (`W.LOVED`, ao3Id "900000001") засеяна с
+    рейтингом SAVE, `downloadPath=null`; на устройстве ЗАРАНЕЕ (adb-шеллом, ДО
+    сессии Appium) лежат ОБА файла этого ao3Id (`_TWO_FILE_A_NAME`/
+    `_TWO_FILE_B_NAME`) СРАЗУ в уникальной SAF-подпапке — в отличие от
+    `two_file_group_bound_seeded` (TC-153), здесь порядок «оба файла заранее»
+    (TC-154.md «Заметки для автоматизации»): тест выбирает эту подпапку как
+    папку загрузок, silent-скан детерминированно линкует Room-строку на ОДИН
+    файл-победитель по `lastModified`, второй остаётся сиротой на диске — это и
+    есть Given кейса («работа скачана, на диске ещё один файл того же ao3Id, не
+    связан»).
+
+    Возвращает (work, subfolder, remote_dir)."""
+    work = W.LOVED
+    subfolder = _two_file_group_subfolder("tc154_delete_sweep")
+    remote_dir = f"{_TWO_FILE_GROUP_DIR}/{subfolder}"
+    app_steps.clean_state()
+    app_steps.seed_library([(work, "SAVE")])
+    tmp_dir = Path(tempfile.mkdtemp(prefix="tc154_delete_sweep_"))
+    try:
+        adb.shell(f"mkdir -p {remote_dir}")
+        for name, body in (
+            (_TWO_FILE_A_NAME, "TC-154 file A"),
+            (_TWO_FILE_B_NAME, "TC-154 file B (orphan)"),
+        ):
+            local_html = tmp_dir / name
+            local_html.write_text(f"<html><body>{body}</body></html>", encoding="utf-8")
+            adb.push_external(local_html, f"{remote_dir}/{name}")
+        yield work, subfolder, remote_dir
+    finally:
+        adb.shell(f'rm -rf "{remote_dir}"')
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+
+
+@pytest.mark.p1
+@allure.id("TC-154")
+@allure.title(
+    "Удаление скачанного файла подметает оба места загрузок и не воскрешает "
+    "работу последующим сканом (регресс-замок BUG-047)"
+)
+def test_delete_downloaded_file_sweeps_both_download_locations(
+    two_file_group_delete_sweep_seeded, driver
+):
+    # Given папка загрузок выбрана на подпапку, где УЖЕ лежат ДВА файла одного
+    # ao3Id — silent-скан детерминированно линкует работу на ОДИН
+    # файл-победитель по `lastModified` (Room-строка уже существует без
+    # `downloadPath` — relink, не added), второй остаётся сиротой на диске;
+    # карточка W на вкладке FAVORITE (SAVE) показывает open-иконку
+    work, subfolder, remote_dir = two_file_group_delete_sweep_seeded
+    saf_steps.open_settings_scrolled_to(driver, "Pick")
+    saf_steps.tap_settings_action(driver, "Pick")
+    saf_steps.saf_pick_folder(driver, f"Download/{subfolder}")
+    settings_steps.assert_scan_complete_dialog(
+        driver, expected_text="Found 2 files — relinked 1, added 0 new."
+    )
+    settings_steps.dismiss_scan_dialog(driver)
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_work_in_tab(driver, "SAVE", work.title)
+    library_steps.assert_open_icon_shown(driver, work.title)
+
+    # And позитивный контроль device-side зонда ДО удаления (критик-вход, rework
+    # attempt 2, блокер 1): ТА ЖЕ форма вызова (`ls -1` того же `remote_dir`,
+    # rc-sentinel — см. `_ls_download_dir_with_rc`), что будет использована ПОСЛЕ
+    # удаления, ОБЯЗАНА увидеть РОВНО оба файла группы прямо сейчас — доказывает,
+    # что зонд рабочий (не молча отдаёт пустой листинг из-за сбоя каталога/adb),
+    # прежде чем пустой листинг ПОСЛЕ удаления станет содержательным
+    before_listing = _ls_download_dir_with_rc(remote_dir)
+    before_group_files = sorted(
+        line for line in before_listing if line.strip().endswith(f"_{work.ao3_id}.html")
+    )
+    assert before_group_files == sorted([_TWO_FILE_A_NAME, _TWO_FILE_B_NAME]), (
+        f"позитивный контроль ДО удаления: ожидались оба файла группы "
+        f"ao3Id={work.ao3_id} ({_TWO_FILE_A_NAME}, {_TWO_FILE_B_NAME}), "
+        f"получено: {before_group_files} (полный листинг {remote_dir}: {before_listing!r})"
+    )
+
+    # When пользователь long-press по карточке W -> «Delete downloaded file»
+    library_steps.delete_via_overlay(driver, work.title, "Delete downloaded file")
+
+    # Then файл-победитель удалён, downloadPath обнулён — карточка W снова
+    # показывает Download-иконку, рейтинг (строка SAVE) сохранён — это
+    # незатронутая фиксом часть, путь TC-035
+    library_steps.assert_work_in_tab(driver, "SAVE", work.title)
+    library_steps.assert_download_icon_shown(driver, work.title)
+    library_steps.assert_work_not_in_files_tab(driver, work.title)
+
+    # And ВТОРОЙ файл (сирота того же ao3Id) ТОЖЕ удалён с диска — deleteDownload
+    # подметает ОБА места загрузок, не только явно указанный в downloadPath
+    # (DownloadRepository.kt:146-169); device-side проверка сильнее и надёжнее
+    # проверки только текста диалога (TC-154.md «Заметки для автоматизации»
+    # рекомендует именно её как основной assert для этого And-пункта). rc-sentinel
+    # зонд (критик-вход, rework attempt 2, блокер 1) — пустой листинг здесь
+    # содержателен только потому, что ТА ЖЕ форма вызова только что доказала
+    # рабочесть зонда позитивным контролем на непустом каталоге выше
+    after_listing = _ls_download_dir_with_rc(remote_dir)
+    leftover = [
+        line for line in after_listing if line.strip().endswith(f"_{work.ao3_id}.html")
+    ]
+    assert not leftover, (
+        f"на диске остались файлы ao3Id={work.ao3_id} после «Delete downloaded file»: "
+        f"{leftover} (полный листинг {remote_dir}: {after_listing!r})"
+    )
+
+    # When пользователь запускает ручной «Scan for downloads»
+    saf_steps.rescroll_settings_to(driver, "Scan")
+    saf_steps.tap_settings_action(driver, "Scan")
+
+    # Then диалог гласит «No .html files found in the download folder.» — файлов
+    # этого ao3Id для релинка не осталось (totalFound == 0), downloadPath работы
+    # W остаётся пустым
+    settings_steps.assert_scan_complete_dialog(
+        driver, expected_text="No .html files found in the download folder."
+    )
+    settings_steps.dismiss_scan_dialog(driver)
+
+    # And карточка W ОСТАЁТСЯ на Download-иконке после скана, не переключается
+    # обратно на «Open downloaded» — явно удалённая пользователем связь
+    # «строка↔файл» не восстанавливается сканом
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_work_in_tab(driver, "SAVE", work.title)
+    library_steps.assert_download_icon_shown(driver, work.title)

@@ -2,7 +2,7 @@
 key: "TC-185"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "OFF: навигация, вызванная самой кнопкой применения фильтра, не снимает только что применённый профиль"
 assignee: "qa-agents"

@@ -75,6 +75,74 @@ WebView (напр. `/people/search`) вместо нативной ручки-п
 `<style>` в обоих flow (без единого сетевого запроса) — точное соответствие
 исходному поведению живого AO3. 3 зелёных подряд подтверждены, `automated_by`
 в TC-040.md заполнен, `@pytest.mark.skip` снят.
+
+TC-181/182/183/184/185 (test-automator, 2026-08-14, батарея тумблера Auto-apply
+on navigation, `docs/01-test-strategy.md §9`): пять кейсов вокруг одного и того
+же механизма (`autoApplyFilter`/`pendingFilterApplication`/`activeFilterId`,
+`BrowserViewModel.kt`) — дефолт+реактивность тумблера (TC-181), level-путь ON
+(TC-182), edge/идемпотентность guard'а `!url.contains("work_search")` (TC-183),
+off-инвариант (TC-184, регрессионный замок фактического поведения — задуманность
+НЕ подтверждена, см. TC-184.md), edge-исключение внутри OFF-ветки через
+`pendingFilterApplication` (TC-185). Общая инфраструктура — та же, что TC-041/
+TC-042 (`filter_profile_applied_seeded`, `rb.LISTING_BASIC_URL`/
+`LISTING_FILTERED_URL`, `browser_steps.open_filter_dropdown`/
+`select_filter_option`/`assert_active_tab_url`/`assert_active_filter_shown`).
+
+Достижение Given «профиль активен» во всех пяти кейсах — тем же путём, что уже
+использует TC-041/TC-182 (выбор профиля из FilterPanel один раз ДО основного
+When, см. заметки TC-182.md) — прямая seed-запись `active_filter_profile_id` в
+SharedPreferences мимо UI не используется.
+
+Разбор Given+When TC-184 (важно для чтения теста; переписано в rework attempt 2,
+критик-вход B1 — прежняя редакция этого абзаца ошибочно утверждала, что
+буквальное раздельное состояние недостижимо; критик проследил код и показал, что
+это ФАКТИЧЕСКИ НЕВЕРНО): буквальное раздельное состояние «профиль активен, вкладка
+уже на `LISTING_BASIC_URL` без параметров, тумблер OFF» ДОСТИЖИМО как отдельно
+наблюдаемое устойчивое состояние — применить профиль кнопкой при ON (вкладка
+временно на `LISTING_FILTERED_URL`), затем host-initiated `open_listing`
+(`driver.get()`) обратно на `LISTING_BASIC_URL` (при ON `onPageLoaded` НЕ трогает
+`activeFilterId` — снятие профиля обусловлено `!autoApplyFilter`,
+`BrowserViewModel.kt:501-504`, а `autoApplyFilter` в этот момент ещё `true`),
+затем переключить тумблер в OFF (Settings-действие без навигации WebView) — Given
+достигнут, вкладка НИКУДА не навигировала после переключения OFF.
+
+Тест тем не менее воспроизводит Given/When как ЕДИНУЮ последовательность (одна
+прямая навигация `LISTING_FILTERED_URL` -> `LISTING_BASIC_URL`, которая
+одновременно завершает Given и есть сам When), а не раздельно — настоящая причина
+не в недостижимости раздельной формы, а в том, что раздельная форма потребовала
+бы ВТОРОЙ, уже SAME-URL навигации на `LISTING_BASIC_URL` (вкладка на нём уже
+стоит после промежуточного host-перехода) для срабатывания самого When — а
+`driver.get()`/host-initiated `loadUrl` на уже открытый URL в этом репозитории
+ЭМПИРИЧЕСКИ no-op (`onPageFinished`/`onPageLoaded` не вызывается, прецедент
+TC-020, см. докстринг `settings_steps.reload_active_webview_page`). Схлопнутая
+форма — единственная прямая `LISTING_FILTERED_URL` -> `LISTING_BASIC_URL`
+навигация (разные строки URL, не same-URL ни для какого механизма навигации) —
+свободна от этого класса риска независимо от выбора host/renderer-механизма для
+самого перехода.
+
+Дискриминатор от TC-185 (та же по форме навигация при OFF) — именно отсутствие
+`select_filter_option` внутри самого When: TC-184 использует
+`navigate_listing_via_page_js` (обычная renderer-initiated навигация, НЕ через
+кнопку применения фильтра — rework attempt 2, критик-вход B1: заменено с
+host-initiated `open_listing`, которая не доходит до `shouldOverrideUrlLoading`,
+см. докстринг функции), TC-185 — `select_filter_option` (кнопка, host-initiated
+`applyFilter`/`loadUrl`).
+
+Предпосылка ОХВАТА TC-182/TC-183 закреплена ОТДЕЛЬНЫМ ПОСТОЯННЫМ узлом
+`test_same_url_renderer_navigation_reaches_interceptor` (critic-раунд 4, блокер
+B1). Не-вакуумность TC-183 держится на эмпирическом факте «same-URL
+renderer-initiated навигация ДОХОДИТ до `shouldOverrideUrlLoading`», который до
+раунда 4 существовал ТОЛЬКО как ПРОЗА в докстринге
+`browser_steps.navigate_listing_via_page_js` (одноразовый живой прогон). Проза не
+падает: умри предпосылка (смена WebView/chromedriver, регрессия в
+`BrowserScreen.kt:616-631`) — TC-183 остался бы ЗЕЛЁНЫМ по посторонней причине
+(«queryString не дописан, потому что навигация не дошла до кода, который guard
+охраняет»), молча потеряв весь свой предмет. Узел-замок делает ту же предпосылку
+наблюдаемой ПОЗИТИВНЫМ Then, поэтому её смерть = красный узел, а не тихо-зелёный
+TC-183. Узел НЕ тест-кейс: TC-артефакта и ссылки `automated_by` на него нет,
+`@allure.id` — описательный слаг (конвенция инфраструктурных узлов репозитория:
+`assert-holds-for-*`, `AT-BUG-047-*`; `scripts/arch_check.py` требует `@allure.id`
+И suite-маркер на КАЖДОМ тесте, поэтому вариант «без id» неисполним).
 """
 from __future__ import annotations
 
@@ -225,3 +293,275 @@ def test_save_filter_profile(replay, clean_app, driver):
     # Then новый профиль появляется в списке сохранённых фильтров в Settings
     app_steps.open_tab(driver, "Settings")
     settings_steps.assert_filter_profile_listed(driver, profile_name)
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-181")
+@allure.title("«Auto-apply on navigation» включён по умолчанию и переключение в Settings доезжает до Browser без рестарта")
+@pytest.mark.parametrize("replay", [rb.LISTING_BASIC_FILENAME], indirect=True)
+def test_auto_apply_filter_default_on_reactive_toggle(replay, clean_app, driver):
+    # Given приложение только что запущено на чистых данных
+    app_steps.wait_ui_ready(driver)
+    app_steps.open_tab(driver, "Settings")
+
+    # Then тумблер «Auto-apply on navigation» в состоянии ON (дефолт)
+    settings_steps.assert_auto_apply_filter_enabled(driver, True)
+
+    # When пользователь переключает тумблер в OFF
+    settings_steps.set_auto_apply_filter_toggle(driver, False)
+
+    # Then SharedPreferences ao3_settings немедленно содержит auto_apply_filter=false
+    settings_steps.assert_auto_apply_filter_pref(False)
+
+    # When пользователь (без рестарта приложения, без ухода из Settings) сразу
+    # переходит на Browse и открывает филируемую листинговую страницу
+    app_steps.open_tab(driver, "Browse")
+    browser_steps.open_listing(driver, rb.LISTING_BASIC_URL)
+
+    # Then связка Settings->MainActivity->BrowserViewModel учла новое значение
+    # СРАЗУ (реактивно, без рестарта): страница загружается штатно, БЕЗ дописанного
+    # фильтра — полное поведение ON/OFF-путей закрывают TC-182..185, здесь предмет
+    # кейса ограничен фактом немедленной реактивности переключения
+    browser_steps.assert_active_tab_url(driver, rb.LISTING_BASIC_URL)
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-182")
+@allure.title("ON: переход на филируемую страницу листинга автоматически дописывает queryString активного профиля")
+@pytest.mark.parametrize("replay", [rb.LISTING_BASIC_FILENAME], indirect=True)
+def test_auto_apply_filter_on_navigation_appends_active_profile(replay, filter_profile_applied_seeded, driver):
+    name = filter_profile_applied_seeded
+
+    # Given тумблер Auto-apply — ON (дефолт, сверяется явным assert'ом — хардening
+    # rework attempt 2, критик-вход: без него условие ON непроверяемо самим Then),
+    # вкладка Browse на LISTING_BASIC_URL без параметров фильтра; профиль
+    # устанавливается активным одноразовым ручным применением из FilterPanel ДО
+    # основного When (тот же приём, что TC-041)
+    app_steps.wait_ui_ready(driver)
+    app_steps.open_tab(driver, "Settings")
+    settings_steps.assert_auto_apply_filter_enabled(driver, True)
+    app_steps.open_tab(driver, "Browse")
+    browser_steps.open_listing(driver, rb.LISTING_BASIC_URL)
+    browser_steps.open_filter_dropdown(driver)
+    browser_steps.select_filter_option(driver, name)
+    browser_steps.assert_active_tab_url(driver, rb.LISTING_FILTERED_URL)
+    browser_steps.assert_active_filter_shown(driver, name)
+
+    # When пользователь переходит (навигирует WebView) на филируемую страницу
+    # листинга ЗАНОВО — второй переход на базовый URL, уже после того, как профиль
+    # стал активным (не повторяет TC-041/ручное применение). Renderer-initiated
+    # навигация (`window.location.href`, не `driver.get()`) — `shouldOverrideUrlLoading`
+    # перехватывает только навигации, инициированные САМОЙ страницей (клик по
+    # ссылке/JS-редирект), см. докстринг `browser_steps.navigate_listing_via_page_js`
+    # за красной пробой, доказавшей это эмпирически на этом самом кейсе.
+    browser_steps.navigate_listing_via_page_js(driver, rb.LISTING_BASIC_URL)
+
+    # Then shouldOverrideUrlLoading перехватывает загрузку и перезагружает вкладку
+    # по URL с дописанным queryString активного профиля — итоговый URL побайтово
+    # равен LISTING_FILTERED_URL
+    browser_steps.assert_active_tab_url(driver, rb.LISTING_FILTERED_URL)
+    # And FilterPanel листинга показывает «My saved search» как активно применённый
+    browser_steps.assert_active_filter_shown(driver, name)
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-183")
+@allure.title("ON: страница, уже несущая work_search, НЕ получает повторного авто-применения фильтра (guard, идемпотентность)")
+@pytest.mark.parametrize("replay", [rb.LISTING_BASIC_FILENAME], indirect=True)
+def test_auto_apply_filter_guard_skips_url_with_work_search(replay, filter_profile_applied_seeded, driver):
+    name = filter_profile_applied_seeded
+
+    # Given профиль «My saved search» активен, тумблер Auto-apply ON (сверяется
+    # явным assert'ом — хардening rework attempt 2, критик-вход: без него условие
+    # ON непроверяемо самим Then), активная вкладка уже открыта на
+    # LISTING_FILTERED_URL (URL уже содержит work_search)
+    app_steps.wait_ui_ready(driver)
+    app_steps.open_tab(driver, "Settings")
+    settings_steps.assert_auto_apply_filter_enabled(driver, True)
+    app_steps.open_tab(driver, "Browse")
+    browser_steps.open_listing(driver, rb.LISTING_BASIC_URL)
+    browser_steps.open_filter_dropdown(driver)
+    browser_steps.select_filter_option(driver, name)
+    browser_steps.assert_active_tab_url(driver, rb.LISTING_FILTERED_URL)
+
+    # When страница на этой же вкладке перезагружается (повторная загрузка того же
+    # URL, симулируя pull-to-refresh). Renderer-initiated навигация
+    # (`window.location.href`, ДОСТИГАЕТ shouldOverrideUrlLoading — делает эффект
+    # гипотетического бага ДОСТИЖИМЫМ, не только «не дописан, потому что навигация
+    # не дошла до перехватчика вовсе», см. докстринг
+    # `browser_steps.navigate_listing_via_page_js`); НЕ `driver.navigate().refresh()`/
+    # `window.location.reload()` — тот же официальный докстринг Android отдельно
+    # исключает reload-навигацию из вызова колбэка, что сделало бы Then этого кейса
+    # вакуумно истинным по ДРУГОЙ причине. Предпосылка «same-URL renderer-initiated
+    # навигация доходит до shouldOverrideUrlLoading» НЕСЁТ всю не-вакуумность этого
+    # кейса, поэтому закреплена ОТДЕЛЬНЫМ ПОСТОЯННЫМ УЗЛОМ
+    # `test_same_url_renderer_navigation_reaches_interceptor` (ниже в этом файле,
+    # critic-раунд 4, блокер B1): тот же ON + активный профиль, та же
+    # `navigate_listing_via_page_js` на ТОТ ЖЕ URL, но Then ПОЗИТИВНЫЙ. Узел падает
+    # ровно тогда, когда предпосылка перестаёт держаться (красная проба критика
+    # 2026-08-14: подмена When на host-initiated `open_listing` роняет узел с
+    # «URL активной вкладки не стал ...work_search%5Bquery%5D=applied-filter-test»).
+    # До раунда 4 факт жил только прозой в докстринге и не имел ни одного падающего
+    # носителя — текущий When валиден, но теперь ещё и охраняем.
+    # `_proving_reload` дополнительно доказывает, что сама навигация РЕАЛЬНО
+    # переисполнилась (staleness старого DOM-узла), а не что WORK_BLURB>0
+    # удовлетворился прежним, не заменённым документом.
+    browser_steps.navigate_listing_via_page_js_proving_reload(driver, rb.LISTING_FILTERED_URL)
+
+    # Then URL активной вкладки ПОСЛЕ перезагрузки остаётся ПОБАЙТОВО тем же
+    # LISTING_FILTERED_URL ВЕСЬ бюджет — параметр queryString профиля НЕ дописан
+    # второй раз (guard !url.contains("work_search") не даёт перехвату сработать
+    # дважды); держим негатив весь бюджет через assert_holds_for, не одним снимком
+    # — `view.post {}` (`BrowserScreen.kt:626`) откладывает повторный `loadUrl` на
+    # следующий цикл message loop, одноразовое чтение сразу после навигации могло
+    # бы не застать отложенный повторный вызов, если бы guard был снят регрессией.
+    browser_steps.assert_active_tab_url_holds(driver, rb.LISTING_FILTERED_URL)
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-183-premise-same-url-renderer-nav-reaches-interceptor")
+@allure.title(
+    "Предпосылка TC-182/TC-183: same-URL renderer-initiated навигация ДОХОДИТ до "
+    "shouldOverrideUrlLoading (позитивный контроль охвата, регрессионный замок)"
+)
+@pytest.mark.parametrize("replay", [rb.LISTING_BASIC_FILENAME], indirect=True)
+def test_same_url_renderer_navigation_reaches_interceptor(replay, filter_profile_applied_seeded, driver):
+    """Инфраструктурный замок ОХВАТА (critic-раунд 4, блокер B1), не тест-кейс.
+
+    ЧТО СТЕРЕЖЁТ: факт «same-URL renderer-initiated навигация
+    (`window.location.href = <тот же URL>`) доходит до `shouldOverrideUrlLoading`».
+    Факт нетривиален: host-initiated навигация до перехватчика НЕ доходит
+    (официальный докстринг Android + красная проба TC-182), а `driver.get()` на уже
+    открытый URL в этом репозитории вообще no-op (прецедент TC-020) — то есть
+    «same-URL» здесь исторически особый случай. На этом факте стоит вся
+    не-вакуумность TC-183; без падающего носителя его смерть превратила бы TC-183 в
+    вечно-зелёный без детектора.
+
+    ПАРНЫЙ НЕГАТИВ В ТОМ ЖЕ УЗЛЕ: промежуточный host-initiated `open_listing` на
+    `LISTING_BASIC_URL` при ON и активном профиле обязан оставить URL БАЗОВЫМ —
+    вторая половина дискриминатора host/renderer, на котором стоят TC-182/183/184.
+    Профиль при этом НЕ снимается: снятие обусловлено `!autoApplyFilter`
+    (`BrowserViewModel.kt:501-504`), а тумблер ON — `assert_active_filter_shown`
+    фиксирует и это, делая Given самопроверяемым, а не предполагаемым."""
+    name = filter_profile_applied_seeded
+
+    # Given тумблер ON (дефолт), профиль активен, вкладка ВОЗВРАЩЕНА на
+    # LISTING_BASIC_URL host-initiated навигацией
+    app_steps.wait_ui_ready(driver)
+    app_steps.open_tab(driver, "Settings")
+    settings_steps.assert_auto_apply_filter_enabled(driver, True)
+    app_steps.open_tab(driver, "Browse")
+    browser_steps.open_listing(driver, rb.LISTING_BASIC_URL)
+    browser_steps.open_filter_dropdown(driver)
+    browser_steps.select_filter_option(driver, name)
+    browser_steps.assert_active_tab_url(driver, rb.LISTING_FILTERED_URL)
+
+    # парный НЕГАТИВ: host-initiated навигация до перехватчика НЕ доходит —
+    # URL обязан остаться БАЗОВЫМ, активный профиль обязан сохраниться (ON)
+    browser_steps.open_listing(driver, rb.LISTING_BASIC_URL)
+    browser_steps.assert_active_tab_url(driver, rb.LISTING_BASIC_URL)
+    browser_steps.assert_active_filter_shown(driver, name)
+
+    # When same-URL renderer-initiated навигация на ТОТ ЖЕ URL
+    browser_steps.navigate_listing_via_page_js(driver, rb.LISTING_BASIC_URL)
+
+    # Then перехватчик сработал: guard `!url.contains("work_search")` пропустил,
+    # `getActiveFilterQueryString()` вернул qs, `view.post { loadUrl }` дописал его
+    browser_steps.assert_active_tab_url(driver, rb.LISTING_FILTERED_URL)
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-184")
+@allure.title("OFF: обычная навигация не дописывает фильтр И снимает активный профиль (регрессионный замок фактического поведения)")
+@pytest.mark.parametrize("replay", [rb.LISTING_BASIC_FILENAME], indirect=True)
+def test_auto_apply_filter_off_drops_active_profile_on_plain_navigation(replay, filter_profile_applied_seeded, driver):
+    """ЭТО ФАКТИЧЕСКОЕ поведение текущей сборки, зафиксированное как регрессионный
+    замок — НЕ вердикт «так и задумано»: задуманность ветки «OFF снимает активный
+    профиль при первой же обычной навигации» НЕ подтверждена (вопрос вынесен
+    владельцу/разработчику, §10 (ч) docs/01-test-strategy.md, см. TC-184.md). Given
+    «профиль активен ДО переключения OFF» достигается через одноразовое ручное
+    применение из FilterPanel ПРИ ON (тот же приём, что TC-182/TC-041) — см. докстринг
+    модуля за разбором Given+When (rework attempt 2, критик-вход B1)."""
+    name = filter_profile_applied_seeded
+
+    # Given профиль «My saved search» активен (устанавливается ДО переключения
+    # тумблера — приём TC-182), тумблер Auto-apply переключается в OFF
+    app_steps.wait_ui_ready(driver)
+    app_steps.open_tab(driver, "Browse")
+    browser_steps.open_listing(driver, rb.LISTING_BASIC_URL)
+    browser_steps.open_filter_dropdown(driver)
+    browser_steps.select_filter_option(driver, name)
+    browser_steps.assert_active_tab_url(driver, rb.LISTING_FILTERED_URL)
+    browser_steps.assert_active_filter_shown(driver, name)
+
+    app_steps.open_tab(driver, "Settings")
+    settings_steps.set_auto_apply_filter_toggle(driver, False)
+    settings_steps.assert_auto_apply_filter_enabled(driver, False)
+
+    # When пользователь переходит (обычная навигация, НЕ через кнопку применения
+    # фильтра) на филируемую страницу листинга — повторный переход на базовый URL.
+    # Renderer-initiated навигация (`window.location.href`, не `driver.get()`/
+    # `open_listing`) — rework attempt 2 (критик-вход B1): предыдущая редакция
+    # использовала `open_listing` (host-initiated `driver.get()`), который по
+    # красной пробе TC-182 attempt 1 НЕ доходит до `shouldOverrideUrlLoading`
+    # вовсе — негативный Then «queryString не дописан» был бы истинен ДАЖЕ если
+    # удалить сам OFF-guard целиком (навигация физически не проходит через код,
+    # который guard охраняет), падая только на удалении самого перехватчика, а не
+    # на поломке его логики. `navigate_listing_via_page_js` реально достигает
+    # перехватчика: при OFF `getActiveFilterQueryString()` вернёт `null`
+    # (`!autoApplyFilter`), перехват вернёт `false`, штатная загрузка BASIC
+    # пройдёт, `onPageLoaded` снимет активный профиль — оба Then теперь
+    # ДОСТИЖИМО ложны при поломке OFF-guard.
+    app_steps.open_tab(driver, "Browse")
+    browser_steps.navigate_listing_via_page_js(driver, rb.LISTING_BASIC_URL)
+
+    # Then URL активной вкладки — LISTING_BASIC_URL, параметр queryString профиля
+    # НЕ дописан (явный негативный Then)
+    browser_steps.assert_active_tab_url(driver, rb.LISTING_BASIC_URL)
+    # And активный профиль СНИМАЕТСЯ — панель фильтра листинга после этой навигации
+    # показывает «None»
+    browser_steps.assert_active_filter_shown(driver, "None")
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-185")
+@allure.title("OFF: навигация, вызванная самой кнопкой применения фильтра, не снимает только что применённый профиль")
+@pytest.mark.parametrize("replay", [rb.LISTING_BASIC_FILENAME], indirect=True)
+def test_auto_apply_filter_off_button_navigation_keeps_active_profile(replay, filter_profile_applied_seeded, driver):
+    name = filter_profile_applied_seeded
+
+    # Given тумблер Auto-apply — OFF, активного профиля нет, вкладка на
+    # LISTING_BASIC_URL, FilterPanel раскрыта
+    app_steps.wait_ui_ready(driver)
+    app_steps.open_tab(driver, "Settings")
+    settings_steps.set_auto_apply_filter_toggle(driver, False)
+    settings_steps.assert_auto_apply_filter_enabled(driver, False)
+
+    app_steps.open_tab(driver, "Browse")
+    browser_steps.open_listing(driver, rb.LISTING_BASIC_URL)
+    browser_steps.open_filter_dropdown(driver)
+
+    # When пользователь ВЫБИРАЕТ профиль «My saved search» из FilterPanel (это и
+    # есть кнопка применения — applyFilter взводит pendingFilterApplication при
+    # OFF ПЕРЕД навигацией)
+    browser_steps.select_filter_option(driver, name)
+
+    # Then URL активной вкладки становится LISTING_FILTERED_URL (фильтр
+    # ПРИМЕНИЛСЯ — прямое ручное действие пользователя, тумблер OFF ему не мешает)
+    browser_steps.assert_active_tab_url(driver, rb.LISTING_FILTERED_URL)
+    # And ПОСЛЕ этой навигации активный профиль ОСТАЁТСЯ «My saved search» ВЕСЬ
+    # бюджет — pendingFilterApplication потребляется onPageLoaded БЕЗ
+    # setActiveFilter(null), в отличие от TC-184, где та же по форме навигация
+    # СНИМАЕТ активный профиль. rework attempt 2 (критик-вход B3): `setActiveFilter`
+    # ставится ДО навигации (см. `applyFilter`), а возможное снятие произошло бы
+    # ПОЗЖЕ, внутри `onPageLoaded` (после коммита URL) — одноразовый снимок
+    # (`assert_active_filter_shown`) читает состояние ДО момента, когда мог бы
+    # проявиться гипотетический дефект; держим негатив «профиль не снят отложенно»
+    # весь бюджет через assert_holds_for.
+    browser_steps.assert_active_filter_shown_holds(driver, name)

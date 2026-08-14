@@ -204,6 +204,34 @@ class SettingsScreen(BaseScreen):
         self.tap(self._display_mode_button_locator(label))
         return self
 
+    # --- Auto-apply on navigation toggle (секция "SAVED AO3 FILTERS",
+    # SettingsScreen.kt:811-816, TC-181/182/183/184/185) — тот же приём XPath
+    # `following::`, что `_TAP_TO_SCROLL_SWITCH`/`_AUTO_DOWNLOAD_SWITCH`: Compose
+    # `Switch` без text/content-desc, ближайший checkable-узел ПОСЛЕ подписи строки
+    # в document order (сверено с исходником: строка `SettingsSwitchRow(title =
+    # "Auto-apply on navigation", ...)` — единственный checkable-узел сразу перед
+    # секцией самого списка профилей). `swipe_to_text` перед поиском — тот же
+    # паттерн, что `is_tap_to_scroll_checked`/`_swipe_to_profile`: секция "SAVED AO3
+    # FILTERS" ниже "fold" сразу после открытия Settings.
+    _AUTO_APPLY_FILTER_SWITCH = (
+        AppiumBy.XPATH,
+        '(//*[@text="Auto-apply on navigation"]/following::*[@checkable="true"])[1]',
+    )
+
+    def is_auto_apply_filter_checked(self, timeout: int | None = None) -> bool:
+        assert self.swipe_to_text("Auto-apply on navigation"), (
+            "строка «Auto-apply on navigation» не найдена прокруткой (Saved AO3 Filters)"
+        )
+        el = self.find(self._AUTO_APPLY_FILTER_SWITCH, timeout)
+        return el.get_attribute("checked") == "true"
+
+    def set_auto_apply_filter(self, enabled: bool):
+        """Тумблер — таплю только если текущее состояние не совпадает с желаемым
+        (идемпотентно, тот же приём, что `set_tap_to_scroll`)."""
+        if self.is_auto_apply_filter_checked() != enabled:
+            self.tap(self._AUTO_APPLY_FILTER_SWITCH)
+        return self
+
     # --- Saved AO3 Filters (секция "SAVED AO3 FILTERS", SettingsScreen.kt) — TC-042 ---
     # `Rename`/`Delete` IconButton каждой строки делят ОДИН и тот же content-desc
     # на весь экран (Compose IconButton не мержит семантику Icon-child со своим
@@ -402,4 +430,83 @@ class SettingsScreen(BaseScreen):
         self.open_rename_dialog(old_name)
         self.enter_rename_name(new_name)
         self.confirm_rename()
+        return self
+
+    # --- Fetch missing metadata (секция "Data", SettingsScreen.kt:999-1053,
+    # TC-186/TC-187, AT-BUG-061) — `Fetch`/`Stop` — `TextButton`, клик висит на
+    # кликабельном РОДИТЕЛЕ текстового узла (тот же приём, что
+    # `panel_side_button_locator`/`_display_mode_button_locator`). Подпись под
+    # заголовком «Fetch missing metadata» — ОДИН И ТОТ ЖЕ `Text` bodySmall,
+    # меняющий контент по состоянию (`needsMetadata`/`MetadataFetchState`,
+    # SettingsScreen.kt:1006-1014) — точный текст на каждое состояние сверен с
+    # исходником (ellipsis U+2026, em-dash U+2014 — не «...»/«-»). "Data" —
+    # секция ниже "fold" сразу после открытия Settings, `swipe_to_text`
+    # обязателен, тот же паттерн, что `open_clear_all_dialog`.
+    _METADATA_FETCH_BUTTON = (AppiumBy.XPATH, '//*[@text="Fetch"]/..')
+    _METADATA_STOP_BUTTON = (AppiumBy.XPATH, '//*[@text="Stop"]/..')
+
+    def swipe_to_metadata_fetch(self):
+        assert self.swipe_to_text("Fetch missing metadata"), (
+            "секция «Fetch missing metadata» не найдена прокруткой (Data)"
+        )
+        return self
+
+    def metadata_queue_count_visible(self, count: int, timeout: int | None = None) -> bool:
+        return self.is_present(
+            self.by_text(f"{count} works have no title yet"),
+            timeout=timeout if timeout is not None else 5,
+        )
+
+    def metadata_progress_visible(self, done: int, total: int, timeout: int | None = None) -> bool:
+        return self.is_present(
+            self.by_text(f"Fetching {done} / {total}…"),
+            timeout=timeout if timeout is not None else 8,
+        )
+
+    def metadata_done_visible(self, updated: int, timeout: int | None = None) -> bool:
+        text = "All metadata already populated" if updated == 0 else f"Updated {updated} works"
+        return self.is_present(self.by_text(text), timeout=timeout if timeout is not None else 8)
+
+    def metadata_stopped_visible(self, updated: int, timeout: int | None = None) -> bool:
+        return self.is_present(
+            self.by_text(f"Stopped — {updated} works updated"),
+            timeout=timeout if timeout is not None else 5,
+        )
+
+    def metadata_fetch_button_visible(self, timeout: int | None = None) -> bool:
+        return self.is_present(self._METADATA_FETCH_BUTTON, timeout=timeout if timeout is not None else 5)
+
+    def metadata_stop_button_visible(self, timeout: int | None = None) -> bool:
+        return self.is_present(self._METADATA_STOP_BUTTON, timeout=timeout if timeout is not None else 5)
+
+    def tap_fetch_metadata(self):
+        self.tap(self._METADATA_FETCH_BUTTON)
+        return self
+
+    def tap_stop_metadata_fetch(self):
+        self.tap(self._METADATA_STOP_BUTTON)
+        return self
+
+    # --- Show copy-URL button toggle (секция "Debug", SettingsScreen.kt:1064-1069,
+    # TC-188) — тот же приём XPath `following::`, что `_TAP_TO_SCROLL_SWITCH`/
+    # `_AUTO_DOWNLOAD_SWITCH`: Compose `Switch` без text/content-desc, ближайший
+    # checkable-узел ПОСЛЕ подписи строки в document order. "Debug" — последняя
+    # секция экрана, `swipe_to_text` обязателен.
+    _DEBUG_COPY_URL_SWITCH = (
+        AppiumBy.XPATH,
+        '(//*[@text="Show copy-URL button"]/following::*[@checkable="true"])[1]',
+    )
+
+    def is_debug_copy_url_checked(self, timeout: int | None = None) -> bool:
+        assert self.swipe_to_text("Show copy-URL button"), (
+            "строка «Show copy-URL button» не найдена прокруткой (Debug)"
+        )
+        el = self.find(self._DEBUG_COPY_URL_SWITCH, timeout)
+        return el.get_attribute("checked") == "true"
+
+    def set_debug_copy_url(self, enabled: bool):
+        """Тумблер — таплю только если текущее состояние не совпадает с желаемым
+        (идемпотентно, тот же приём, что `set_tap_to_scroll`)."""
+        if self.is_debug_copy_url_checked() != enabled:
+            self.tap(self._DEBUG_COPY_URL_SWITCH)
         return self

@@ -2,7 +2,7 @@
 key: "TC-183"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "ON: страница, уже несущая work_search, НЕ получает повторного авто-применения фильтра (guard, идемпотентность)"
 assignee: "qa-agents"

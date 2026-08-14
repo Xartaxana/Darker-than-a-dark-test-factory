@@ -2,7 +2,7 @@
 key: "TC-186"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Fetch missing metadata дозаполняет ТОЛЬКО работы с пустым title, показывает прогресс N/total и пишет в Room лишь непустые результаты скрейпа"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-10T14:20:00Z"
-updated: "2026-08-10T14:20:00Z"
+created: "2026-08-14T02:05:00Z"
+updated: "2026-08-14T02:05:00Z"
 archived: false
 resolution: null
 ---
@@ -74,26 +74,33 @@ author/fandom/wordCount, если скрейп их дал); title работы 
 | Итоговый счётчик | «Updated 1 works» |
 
 ## Заметки для автоматизации
-- **БЛОКЕР (test_debt) — заведён `bugs/AT-BUG-061.md`
-  (`test_cases: ["TC-186", "TC-187"]`) в этом же ходе.** Нет replay-записи
-  под URL-шаблон `works/<id>?view_adult=true`, читаемый `HttpURLConnection`
-  (не WebView, не `OkHttpClient`) — без неё нельзя детерминированно получить
-  «скрейп успешен для A, неуспешен для B». `automated_by` пуст до фикса.
+- **АВТОМАТИЗИРОВАНО (2026-08-14).** Прежний блокер `bugs/AT-BUG-061.md`
+  устранён и `Verified` (replay-запись `work_metadata_fetch.mitm` существует
+  и эмпирически подтверждена — см. сам баг) ещё ДО этого хода; этот проход
+  дописал недостающий слой (локаторы `settings_screen.py`, шаги
+  `settings_steps.py`, Then обоих кейсов) и заполнил `automated_by`. Given
+  сеет строки с ТЕМИ ЖЕ ao3_id, что несёт запись (`rb.METADATA_FETCH_WORK_A`/
+  `rb.METADATA_FETCH_WORK_B_AO3_ID`), но с `title=""` — текущее (до fetch)
+  состояние; запись несёт целевой (скрейпнутый) результат.
 - **Ограничение прогонов (docs/01 §9, явное требование, не блокер):** только
   replay/mitm — живые позитивные пробы ЭТОГО пути запрещены (запросы к
   archiveofourown.org от имени пользователя, тот же довод, что для
   авто-kudos).
 - Cookie для `fetchAo3WorkPage` берётся из `CookieManager.getInstance()
-  .getCookie(...)` (`SettingsScreen.kt:1023-1024`) — в replay-режиме без
-  предварительного логина cookie, скорее всего, пуст; сверить при
-  реализации, влияет ли отсутствие cookie на результат скрейпа записанной
-  страницы (страница статична, содержимое не должно зависеть от cookie,
-  но заголовок запроса стоит воспроизвести один в один с кодом).
+  .getCookie(...)` (`SettingsScreen.kt:1023-1024`) — сверено живым прогоном
+  (2026-08-14): server-replay матчит flow ТОЛЬКО по
+  scheme+method+path+query+host+port (`recording_builder.py` модульный
+  докстринг «Матчинг server-replay») — заголовки запроса (включая Cookie) на
+  матчинг не влияют; работа A получает ПОЛНЫЙ скрейпнутый результат без
+  предварительного логина/cookie, отсутствие cookie результат скрейпа не
+  меняет.
 - Оракул очереди/счётчика — текстовые подписи (`SettingsScreen.kt:1006-1044`,
-  обычный `Text`, без скриншотов).
+  обычный `Text`, без скриншотов; `SettingsScreen.metadata_queue_count_
+  visible`/`metadata_progress_visible`/`metadata_done_visible` — точный текст
+  сверен с исходником, включая ellipsis U+2026).
 - Чтение Room после завершения — `seed_db.read_work_ratings_full()`
-  (готов, `seed_db.py:319`) — сверить состав возвращаемых полей
-  (title/author/fandom/wordCount) перед написанием своего SELECT (урок
+  (готов, `seed_db.py:319`) — состав возвращаемых полей
+  (title/author/fandom/word_count) сверен перед написанием SELECT (урок
   CH-007/CH-008 про урезанный `read_work_ratings`).
 
 ## Чек-лист качества (test-designer проходит перед `Review`)

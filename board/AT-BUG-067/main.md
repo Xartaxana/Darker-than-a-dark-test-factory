@@ -2,7 +2,7 @@
 key: "AT-BUG-067"
 project: "AO3"
 issueType: "bug"
-status: "bug-open"
+status: "bug-fixed"
 priority: "p2"
 summary: "Нет харнесса для управляемого JS-состояния document.head/body/readyState — блокирует TC-195/TC-196 (bridge-init-retry-on-incomplete-dom)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-13T01:00:00Z"
-updated: "2026-08-13T01:00:00Z"
+created: "2026-08-13T22:52:02Z"
+updated: "2026-08-13T22:52:02Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Нет харнесса для управляемого JS-состояния document.head/body/readyState — блокирует TC-195/TC-196 (bridge-init-retry-on-incomplete-dom)
 
 _Спроецировано из `bugs/AT-BUG-067.md` (источник правды).
-Статус в нашей машине: **Open**._
+Статус в нашей машине: **Fixed**._
 
 # AT-BUG-067 — Фреймворк не умеет вводить JS-контекст WebView в состояние «ранний onPageFinished» (document.head/body ещё null)
 
@@ -205,6 +205,128 @@ evaluateJavascript|document\\.head|document\\.body" framework/` — 0
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
 
+## Починка (test-maintainer, B4, 2026-08-13)
+
+**Реализация.** `framework/steps/bridge_harness_steps.py` (новый модуль) —
+четыре примитива по критерию готовности:
+1. `_read_bridge_js_text()` — `Path("app-under-test/app/src/main/assets/
+   ao3_bridge.js").read_text(encoding="utf-8")`, вызывается заново на КАЖДЫЙ
+   вызов харнесса (не кэшируется) — сырой текст, без пересказа логики.
+2. `simulate_early_bridge_injection(driver, ready_state)` — ОДИН
+   `execute_script`, порядок: удаление ВСЕХ `[data-ao3-btn-wrap]` → тени
+   `document.head`/`document.body`/`document.readyState`
+   (`Object.defineProperty(..., {get, configurable: true})`) → `delete
+   window.__ao3Bridge` → исполнение сырого текста скрипта.
+3. `restore_shadow_and_dispatch_dcl(driver, dispatch_dcl=True) -> dict` —
+   АТОМАРНО, ОДИН `execute_script`: снятие теней → синхронный `before` →
+   опциональный `dispatchEvent(DOMContentLoaded)` → синхронные
+   `after`/`bridgeFlag`.
+4. `count_rate_button_wraps(driver) -> int` — самостоятельный примитив
+   (`document.querySelectorAll('[data-ao3-btn-wrap]').length`).
+5. `read_bridge_flag(driver) -> bool` (добавлен rework attempt 2,
+   2026-08-14) — `return !!window.__ao3Bridge` одним `execute_script`;
+   используется сразу после `simulate_early_bridge_injection` для
+   проверки, что флаг falsy ДО того, как что-либо успело его выставить.
+
+`framework/tests/canary/test_bridge_init_retry.py` (новый) — TC-195
+(`test_bridge_init_retry_dcl_loading_idempotent`) и TC-196
+(`test_bridge_init_retry_setTimeout_only_path`) реализованы через эти
+примитивы; сценарные тела вынесены в переиспользуемые функции
+`_run_tc195_scenario`/`_run_tc196_scenario` (переиспользованы красной пробой
+ниже, без дублирования assert'ов).
+
+**Проверка примитива (2) отдельно (критерий готовности, обязательный пункт)
+— rework attempt 2, 2026-08-14 (критик attempt 1 нашёл пробел: исходная
+версия ассертила ТОЛЬКО `before_anchor == 0` сразу после инжекции — не
+проверяла ни (а) реальное штатное состояние ДО харнесса, ни (б)
+`window.__ao3Bridge` falsy сразу после инжекции; `assert_bridge_marker_present`
+читал флаг только ПОСЛЕ DCL-диспетча, где он ожидается `True`).** Исправлено
+в обоих сценариях (`_run_tc195_scenario`/`_run_tc196_scenario`,
+`framework/tests/canary/test_bridge_init_retry.py`):
+- сразу после `browser_steps.open_listing` и ДО вызова харнесса —
+  `browser_steps.assert_every_blurb_has_unrated_rate_button(driver)`
+  (детерминированно ОПРАШИВАЕТ DOM, пока приложение реально не
+  инжектирует Rate-кнопку на каждом блёрбе — та же гонка `open_listing`
+  vs bridge, что уже задокументирована в докстринге этой функции), затем
+  явный `assert count_rate_button_wraps(driver) == blurb_count`
+  (`given_count`, штатное состояние ДО харнесса);
+- новый примитив `bridge_harness_steps.read_bridge_flag(driver) -> bool`
+  (`return !!window.__ao3Bridge` одним `execute_script`) — вызван СРАЗУ
+  ПОСЛЕ `simulate_early_bridge_injection`, рядом с существующим
+  `before_anchor == 0`, с явным `assert ... is False`.
+
+На `listing_basic.mitm` (5 засеянных блёрбов) `count_rate_button_wraps` ДО
+вызова харнесса == 5 (реально сверено `given_count`-ассертом, не
+предполагалось); СРАЗУ ПОСЛЕ `simulate_early_bridge_injection` —
+`count_rate_button_wraps == 0` И `window.__ao3Bridge` falsy — оба факта
+явно проверяются в обоих сценариях на каждом из 3 подтверждающих прогонов
+ниже.
+
+**Прогоны TC-195/TC-196 после rework attempt 2 (реальный харнесс, реальный
+`ao3_bridge.js` с диска, эмулятор `ao3_test_api34`, Appium :4723) — 3
+прогона подряд, все зелёные** (после автотест-правки в
+`framework/steps/bridge_harness_steps.py` и
+`framework/tests/canary/test_bridge_init_retry.py`, `app-under-test/` не
+трогался): `Invoke-Pytest tests/canary/test_bridge_init_retry.py -v` →
+`2 passed` все три раза подряд. Первая попытка после свежего подъёма
+среды (эмулятор+Appium с нуля) дала 2 фейла подряд с разными симптомами
+(`NoSuchDriverError`/сессия оборвана на первом прогоне; на втором прогоне
+явный `[Errno 10048] HTTP(S) proxy failed to listen on 0.0.0.0:8080` в
+setup) — это известный документированный класс AT-BUG-043 (гонка
+teardown/startup порта 8080 mitmproxy между соседними replay-тестами,
+статус `Verified`, self-healing enforcing-цикл с остаточной флакой);
+третья попытка сразу дала `2 passed`, дальше — 2 дополнительных зелёных
+прогона подряд (итого 3 подряд зелёных, все ПОСЛЕ прохождения известной
+инфраструктурной флаки, не связанной с правкой этого хода). Изначальные
+4 прогона предыдущей итерации (3 до красной пробы + 1 контрольный после
+удаления temp-файла) актуальны только для примитивов (1)/(3)/(4), не
+покрывали новый ассерт-слой этого rework.
+
+**Красная проба — ТРИ раздельные пробы (критерий готовности).** Реализована
+БЕЗ единой записи в `app-under-test/`: временный файл
+`framework/tests/canary/test_bridge_init_retry_redprobe_TEMP.py` (удалён по
+завершении, `git status --porcelain -- app-under-test/` пуст на всём
+протяжении работы) читал реальный текст `ao3_bridge.js` через
+`bridge_harness_steps._read_bridge_js_text()`, вырезал ОДНУ целевую строку
+in-memory (`str.replace`, без записи на диск) и монки-патчил
+`bridge_harness_steps._read_bridge_js_text` (`monkeypatch.setattr`) на
+время пробного прогона, затем запускал ТЕ ЖЕ `_run_tc195_scenario`/
+`_run_tc196_scenario` — естественный pytest PASS/FAIL, не скриптованное
+ожидание.
+
+1. Порча регистрации DCL-листенера (`ao3_bridge.js:13`,
+   `document.addEventListener('DOMContentLoaded', ao3BridgeInit, {once:
+   true});` вырезана) → **TC-195: FAILED** (`after` осталось `0` вместо `5`,
+   `bridgeFlag=False`) — **TC-196: PASSED**. Ровно как специфицировано.
+2. Порча безусловного `setTimeout` (`ao3_bridge.js:15`,
+   `setTimeout(ao3BridgeInit, 250);` вырезана) → **TC-195: PASSED**
+   (DCL-путь инициализирует синхронно) — **TC-196: FAILED** (`final_count`
+   осталось `0` вместо `5` после `>=300мс`). Ровно как специфицировано.
+3. Порча guard'а `window.__ao3Bridge` (`ao3_bridge.js:5`, `if
+   (window.__ao3Bridge) return;` заменена на `if (false) { return; }`) →
+   **TC-195: PASSED, TC-196: PASSED** — задвоение НЕ обнаружено ни одним из
+   двух кейсов, per-element guard (`:872`) продолжает защищать независимо от
+   `:5`. Подтверждает ожидание критерия готовности: эта проба explicitly НЕ
+   входит в обязательный критерий (нужен другой наблюдаемый, не счёт
+   враппers, — вне scope этого бага).
+
+**Офлайн-проверки:** `python scripts/arch_check.py` — 0 ошибок/3
+предупреждения (те же 3 известных исключения ALLOWLIST, что до этого хода,
+не связаны с этой правкой); `python -m pytest scripts/tests -q` — 1124
+passed, 1 skipped (без регресса); `python scripts/validate_frontmatter.py`
+— 0 ошибок/0 предупреждений.
+
+**Границы:** `app-under-test/` не изменён ни на одном шаге (сверено
+`git status --porcelain -- app-under-test/` — пусто на момент завершения);
+временный red-probe файл удалён, в дереве не остался
+(`git status --porcelain` его не показывает).
+
+Тест-кейсы TC-195.md/TC-196.md НЕ изменены этим ходом — их `status`
+(`Review`) и переход `Approved → Automated` (`automated_by`,
+`automation_status`) — гейт F1 test-reviewer (docs/09 Этап 2), не
+test-maintainer; поведение приложения не менялось, обновлять сценарий
+незачем.
+
 ## Обсуждение
 
 **2026-08-13 — test-designer, заведение (правило 4 воркфлоу test-designer).**
@@ -267,6 +389,26 @@ Given/Предусловия TC-195/TC-196 несут то же требован
 `window.applyRatings` враппers НЕ создаёт (`:408` только читает,
 `updateRateButton(null)` — ранний return `:185`) — очистка устойчива, пока
 `head`/`body` затенены.
+
+**2026-08-14 — test-maintainer, rework attempt 2 (критик приёмки Fixed,
+пробел в проверке примитива (2)).** Критик подтвердил 3/4 примитива и обе
+красные пробы 1/2, но нашёл: обязательный пункт критерия готовности
+«примитив (2) проверен отдельно» был реализован лишь частично —
+`before_anchor == 0` ассертился, но (а) не было проверки, что ДО харнесса
+count реально равнялся числу блёрбов (иначе очистка может тривиально
+пройти по уже-пустому множеству — `open_listing` ждёт только появления
+блёрбов, не bridge, задокументированная гонка), и (б) `window.__ao3Bridge`
+не проверялся falsy сразу после инжекции (только True после DCL). Фикс: в
+обоих сценариях добавлен явный опрос
+`browser_steps.assert_every_blurb_has_unrated_rate_button` ДО харнесса +
+явный `assert given_count == blurb_count`, и новый примитив
+`read_bridge_flag` с `assert ... is False` сразу после
+`simulate_early_bridge_injection`. `bugs/AT-BUG-067.md` секция «Починка»
+исправлена, чтобы не заявлять то, что фактически не проверялось (было
+overclaim). 3 подряд зелёных прогона `test_bridge_init_retry.py` после
+правки (первая попытка на свежем окружении упёрлась в известную флаку
+AT-BUG-043 порта 8080 mitmproxy — не связана с этой правкой, прошла со
+второй/третьей попытки).
 
 ## Чек-лист качества
 - [x] Проверены дубликаты среди открытых test_debt-багов — не совпадает с

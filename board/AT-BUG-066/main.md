@@ -2,7 +2,7 @@
 key: "AT-BUG-066"
 project: "AO3"
 issueType: "bug"
-status: "bug-open"
+status: "bug-fixed"
 priority: "p2"
 summary: "Персистентные системные настройки font_scale/night mode защищены только in-process try/finally — тот же класс остатка, что AT-BUG-064 (http_proxy)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-11T17:35:00Z"
-updated: "2026-08-11T17:35:00Z"
+created: "2026-08-13T22:43:53Z"
+updated: "2026-08-13T22:43:53Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Персистентные системные настройки font_scale/night mode защищены только in-process try/finally — тот же класс остатка, что AT-BUG-064 (http_proxy)
 
 _Спроецировано из `bugs/AT-BUG-066.md` (источник правды).
-Статус в нашей машине: **Open**._
+Статус в нашей машине: **Fixed**._
 
 # AT-BUG-066 — font_scale/night mode: остаточная персистентная Android-настройка не покрыта fail-safe (класс AT-BUG-064)
 
@@ -107,6 +107,40 @@ Android-`settings`, снимаемые ТОЛЬКО in-process `try/finally` —
    находку — компромисс для Lead/test-maintainer следующего захода).
 3. Юнит-пробы по образцу `test_residual_proxy_guard_unit.py`.
 
+## Остаток класса (D-0043, находка критика на приёмке этого фикса, 2026-08-13)
+
+Тот же класс («персистентный Android-`settings`-стейт, выставляемый тестовой
+инфраструктурой, защищённый только in-process `try/finally`, не переживающий
+hard-kill/краш между установкой и восстановлением») имеет ещё ДВА
+неохваченных сайта, не покрытых ни AT-BUG-064, ни этим фиксом:
+
+1. **Ориентация экрана (TC-111).** `framework/steps/browser_steps.py:184-190`
+   — `driver.orientation = orientation`; UiAutomator2 делает это через
+   freezeRotation, что пишет `Settings.System.USER_ROTATION`/
+   `ACCELEROMETER_ROTATION` (тот же namespace `system`, что `font_scale`).
+   Хуже: `framework/tests/test_compatibility.py:156-228` — между
+   `rotate(driver, "LANDSCAPE")` (:183) и `rotate(driver, "PORTRAIT")` (:215)
+   стоят четыре ассерта, а `try/finally` НЕТ ВООБЩЕ — падение любого из них
+   оставляет устройство в landscape даже без hard-kill (поток управления,
+   не эмпирика). Требуемый живой замер персистентности (при поднятом
+   эмуляторе, не сделан этим ходом): `settings get system user_rotation`/
+   `accelerometer_rotation` до/после `rotate`.
+2. **Яркость экрана (TC-169/TC-170).** `test-cases/settings/TC-169.md:31,71-74`
+   и `TC-170.md:29,75` планируют `settings put system screen_brightness
+   <0-255>` ДОСЛОВНО «по образцу `framework/core/adb.py::set_font_scale`/
+   `set_night_mode`» — в `framework/` этого кода ещё нет; класс отрастёт на
+   следующей автоматизации этих кейсов, если не подхвачен заранее.
+
+**Архитектурная развилка (решение — за координатором должного яруса, не
+test-maintainer в рамках этого узкого диспатча):** третья ad-hoc twin-пара
+(`get_X`/`ensure_default_X`) не масштабируется — кандидат: обобщённый
+`ensure_default_system_setting(key, default)` для namespace `system`,
+переиспользуемый font_scale/orientation/brightness сразу. Альтернатива —
+плодить twin-пары по образцу и дальше, дороже в сумме.
+
+Носитель цели (правило 4б CLAUDE.md) — `docs/HANDOFF.md`, строка добавлена
+тем же ходом.
+
 ## Чек-лист качества
 - [x] Проверены дубликаты среди открытых test_debt-багов (`grep -l
       "font_scale\|night_mode\|uimode" bugs/AT-BUG-*.md` до создания этого
@@ -130,3 +164,69 @@ AT-BUG-064 ложно утверждала «других мест того же
 (не спекуляция). Решение — задокументировать честно и завести долг, а не
 расширять скоуп диффа AT-BUG-064 непропорционально (обоснование — секция
 выше). Ссылка проставлена в `bugs/AT-BUG-064.md` (секция «Сиблинги»).
+
+**test-maintainer, 2026-08-13/14 (B4, живой замер ДО реализации фикса night
+mode).** Эмулятор поднят канонично (`Start-Emulator -WritableSystem` →
+`Get-Device` → `DEVICE: emulator-5554`). Дословный вывод:
+
+```
+--- initial ui_night_mode ---
+1
+--- cmd uimode night (no arg, query) ---
+Night mode: no
+--- set night yes ---
+Night mode: yes
+--- ui_night_mode after yes ---
+2
+--- cmd uimode night query after yes ---
+Night mode: yes
+--- set night no ---
+Night mode: no
+--- ui_night_mode after no ---
+1
+--- cmd uimode night query after no ---
+Night mode: no
+--- try auto ---
+Night mode: auto
+Night mode: auto
+```
+
+Находка: `cmd uimode night` БЕЗ аргумента — режим ЗАПРОСА, не только
+установки (симметричный `cmd uimode night yes/no`), и печатает
+человекочитаемый `Night mode: no/yes/auto`. Это НАДЁЖНЕЕ и ПРОЩЕ, чем
+`settings get secure ui_night_mode` (раскладка подтверждена частично:
+`no`->`"1"`, `yes`->`"2"`, `auto` напрямую не измерялся — не входит в
+критик-вход AT-BUG-064, который видел только `"1"`). Решение: **read-back
+через `cmd uimode night` (запрос), НЕ через `settings get secure
+ui_night_mode`** — снимает саму необходимость знать раскладку 0/1/2 целиком
+(симметричный источник истины команде установки). Компромисс «безусловный
+сброс `night no` на старте сессии» из плана НЕ понадобился — идемпотентный
+read-back с логированием находки оказался доступен без доп. расследования.
+`adb.get_night_mode()`/`adb.ensure_default_night_mode()` реализованы на
+основе этого замера; устройство возвращено в чистое состояние (`night no`,
+`font_scale 1.0`) после замера, ДО начала правки кода.
+
+**test-maintainer, 2026-08-13/14 (B4, приёмка).** Оба фикса реализованы
+(`adb.py`, `conftest.py`), новый device-free юнит-набор
+`test_default_env_state_guard_unit.py` (28 проб) зелёный 3 раза подряд;
+красная проба (откат `set_font_scale(DEFAULT_FONT_SCALE)` в
+`ensure_default_font_scale()`) поймала регресс (`1 failed` вместо `28
+passed`) — байтовый откат подтверждён `cmp` (правило 8 CLAUDE.md). Полный
+`_unit`-набор (276 тестов) зелёный без регрессий; `scripts/tests` (1124
+passed) и `validate_frontmatter.py` (0 ошибок/предупреждений) тоже.
+
+Замеченный аналог (НЕ новый блокер, доклад без расширения скоупа — правило
+9 CLAUDE.md): `test_device_liveness_guard_unit.py::
+test_hook_calls_guard_when_driver_in_fixturenames` (владение —
+AT-BUG-026/063, не в скоупе этого хода) уже ДО этого фикса симулировал
+device-liveness recovery и вызывал РЕАЛЬНЫЙ `_ensure_no_residual_device_
+proxy()` без монки-патча (сквозной вызов настоящего adb, если эмулятор
+поднят) — B2-твин этого хода добавил туда ЕЩЁ два таких же сквозных вызова
+(`_ensure_default_font_scale`/`_ensure_default_night_mode`). Не регрессия:
+обе новые функции fail-safe по тому же контракту, что уже принятый
+`get_device_proxy()` (ненулевой/отсутствующий adb -> `None` +
+предупреждение в stderr, не исключение) — тест остаётся зелёным что с
+устройством, что без него; полный `_unit`-прогон это подтвердил (276
+passed). Названо на приёмке для видимости класса, чинить в этом файле не
+берусь (владение путями этого хода не включает `test_device_liveness_guard_
+unit.py`).

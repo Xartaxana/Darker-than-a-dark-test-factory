@@ -721,6 +721,182 @@
     "archived": false
   },
   {
+    "key": "TC-197",
+    "path": "board/TC-197/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Баннер над листингом сообщает о visibility-скрытии текстом «Some works may be hidden by your visibility settings» (ratedHidden=true, filterActive=false)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-06"
+    ],
+    "updated": "2026-08-13T22:41:29Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-198",
+    "path": "board/TC-198/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Баннер НЕ показывается вовсе в режиме Dim без активного AO3-фильтра, хотя визуально-скрытая работа остаётся на странице затемнённой (грань hide/dim)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-06"
+    ],
+    "updated": "2026-08-13T22:41:29Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-199",
+    "path": "board/TC-199/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Баннер над листингом сообщает только об активном AO3-фильтре текстом «Some works may be hidden by the active AO3 filter» (ratedHidden=false, filterActive=true)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-06"
+    ],
+    "updated": "2026-08-13T22:41:29Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-200",
+    "path": "board/TC-200/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Баннер над листингом сообщает ОБЕ причины разом текстом «Some works may be hidden by visibility settings and active AO3 filter», когда активны и visibility-скрытие, и AO3-фильтр",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-06"
+    ],
+    "updated": "2026-08-13T22:41:29Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-201",
+    "path": "board/TC-201/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Баннер над листингом НЕ появляется, когда ни visibility-скрытие, ни AO3-фильтр не активны",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-06"
+    ],
+    "updated": "2026-08-13T22:41:29Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-202",
+    "path": "board/TC-202/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Баннер не показывается на странице отдельной работы, даже если visibility-скрытие активно (баннер существует только над листингом)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-06"
+    ],
+    "updated": "2026-08-13T22:41:29Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-203",
+    "path": "board/TC-203/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Выключение «Hide Disliked works» на уже открытом листинге убирает баннер БЕЗ перезагрузки страницы (живое обновление)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-06"
+    ],
+    "updated": "2026-08-13T22:41:29Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-204",
+    "path": "board/TC-204/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Изменение «Hide Disliked works» пушит обновление баннера ВО ВСЕ открытые вкладки с листингом, включая фоновые, не только в активную",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-06"
+    ],
+    "updated": "2026-08-13T23:27:32Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "TC-066",
     "path": "board/TC-066/main.md",
     "parent": null,
@@ -1693,7 +1869,7 @@
     "epicPath": null,
     "summary": "Повторный ручной Scan for downloads при двух файлах одного ao3Id сходится к relinked=0 (идемпотентность, регресс-замок BUG-046)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1715,7 +1891,7 @@
     "epicPath": null,
     "summary": "Удаление скачанного файла подметает ОБА места загрузок и НЕ воскрешает работу последующим сканом (регресс-замок BUG-047)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1919,7 +2095,7 @@
     "epicPath": null,
     "summary": "«Auto-apply on navigation» включён по умолчанию и переключение в Settings доезжает до Browser без рестарта",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1941,7 +2117,7 @@
     "epicPath": null,
     "summary": "ON: переход на филируемую страницу листинга автоматически дописывает queryString активного профиля",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1963,7 +2139,7 @@
     "epicPath": null,
     "summary": "ON: страница, уже несущая work_search, НЕ получает повторного авто-применения фильтра (guard, идемпотентность)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1985,7 +2161,7 @@
     "epicPath": null,
     "summary": "OFF: обычная навигация не дописывает фильтр И снимает активный профиль (регрессионный замок фактического поведения)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2007,7 +2183,7 @@
     "epicPath": null,
     "summary": "OFF: навигация, вызванная самой кнопкой применения фильтра, не снимает только что применённый профиль",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -3060,18 +3236,19 @@
     "epic": null,
     "parentPath": null,
     "epicPath": null,
-    "summary": "Правка личного тега уже-Kudosed/Favorite работы через листинг НЕ отправляет kudos повторно (ожидаемо-красный до фикса BUG-015; edge vs level, :856)",
+    "summary": "Правка личного тега уже-Kudosed/Favorite работы через листинг НЕ отправляет kudos повторно (edge vs level, onRatingTransition:782)",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:rating",
-      "risk:R-17"
+      "risk:R-17",
+      "automation:active"
     ],
-    "updated": "2026-08-02T06:20:00Z",
-    "resolution": null,
+    "updated": "2026-08-13T23:30:08Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -3876,7 +4053,7 @@
     "epicPath": null,
     "summary": "Fetch missing metadata дозаполняет ТОЛЬКО работы с пустым title, показывает прогресс N/total и пишет в Room лишь непустые результаты скрейпа",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -3884,7 +4061,7 @@
       "area:settings",
       "risk:R-01"
     ],
-    "updated": "2026-08-10T14:20:00Z",
+    "updated": "2026-08-14T02:05:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3898,7 +4075,7 @@
     "epicPath": null,
     "summary": "Fetch missing metadata: Stop останавливает процесс мид-fetch — Stopped(N) с частичным счётчиком, оставшиеся работы не тронуты",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -3906,7 +4083,7 @@
       "area:settings",
       "risk:R-01"
     ],
-    "updated": "2026-08-10T14:20:00Z",
+    "updated": "2026-08-14T02:05:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3928,7 +4105,7 @@
       "area:settings",
       "risk:R-13"
     ],
-    "updated": "2026-08-10T14:20:00Z",
+    "updated": "2026-08-14T02:05:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5759,7 +5936,7 @@
     "epicPath": null,
     "summary": "device-liveness recovery не пробрасывает GPU-параметр → env-предпосылка TC-078 (host-GPU) молча деградирует до swiftshader_indirect",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5768,8 +5945,8 @@
       "run:RUN-20260811-0405",
       "sev:major"
     ],
-    "updated": "2026-08-11T17:51:00Z",
-    "resolution": null,
+    "updated": "2026-08-13T22:15:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -5782,7 +5959,7 @@
     "epicPath": null,
     "summary": "Остаточный device-прокси переживает перезапуск эмулятора",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -5790,8 +5967,8 @@
       "run:RUN-20260811-0405",
       "sev:minor"
     ],
-    "updated": "2026-08-11T17:33:00Z",
-    "resolution": null,
+    "updated": "2026-08-13T22:09:12Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -5804,7 +5981,7 @@
     "epicPath": null,
     "summary": "Персистентные системные настройки font_scale/night mode защищены только in-process try/finally — тот же класс остатка, что AT-BUG-064 (http_proxy)",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -5815,7 +5992,7 @@
       "test_case:TC-110",
       "sev:minor"
     ],
-    "updated": "2026-08-11T17:35:00Z",
+    "updated": "2026-08-13T22:43:53Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5829,7 +6006,7 @@
     "epicPath": null,
     "summary": "Нет харнесса для управляемого JS-состояния document.head/body/readyState — блокирует TC-195/TC-196 (bridge-init-retry-on-incomplete-dom)",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -5838,7 +6015,51 @@
       "test_case:TC-196",
       "sev:minor"
     ],
-    "updated": "2026-08-13T01:00:00Z",
+    "updated": "2026-08-13T22:52:02Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-068",
+    "path": "board/AT-BUG-068/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "navigator.clipboard.writeText() отклоняется DOMException 'Write permission denied' в тестовом WebView — блокирует Then «Copied!» TC-188",
+    "issueType": "bug",
+    "status": "bug-blocked",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-188",
+      "sev:minor"
+    ],
+    "updated": "2026-08-14T04:20:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-069",
+    "path": "board/AT-BUG-069/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Двойной раздельный seed()-round-trip после AT-BUG-044-фикса эмпирически дал 'no such table: work_ratings' один раз (не воспроизведено изолирующим экспериментом 20/20) — кандидат: _pull_baseline игнорирует возврат pull_app_file для -wal/-shm",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-187",
+      "sev:minor"
+    ],
+    "updated": "2026-08-14T02:58:53Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -6470,6 +6691,70 @@
     "archived": false
   },
   {
+    "key": "BUG-068",
+    "path": "board/BUG-068/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Фильтр-профиль (OFF) снимается загрузкой ЧУЖОЙ/фоновой вкладки, пока пользователь стоит на другом экране — ни одного сообщения об этом",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:major"
+    ],
+    "updated": "2026-08-14T03:49:31Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-069",
+    "path": "board/BUG-069/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Copy URL button в DEBUG-разделе молчит при ошибке writeText, нет обратной связи пользователю",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-188",
+      "sev:minor"
+    ],
+    "updated": "2026-08-14T02:15:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-070",
+    "path": "board/BUG-070/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "ON + deep-link в новую вкладку: FilterPanel продолжает показывать профиль активным, хотя URL/содержимое вкладки НЕфильтрованы",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:major"
+    ],
+    "updated": "2026-08-14T03:49:31Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "RUN-20260702-0300",
     "path": "board/RUN-20260702-0300/main.md",
     "parent": null,
@@ -6730,6 +7015,26 @@
     "archived": false
   },
   {
+    "key": "RUN-20260814-0605",
+    "path": "board/RUN-20260814-0605/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "RUN-20260814-0605",
+    "issueType": "run",
+    "status": "run-closed",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "run"
+    ],
+    "updated": "2026-07-02T00:00:00Z",
+    "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "story-26",
     "path": "board/story-26/main.md",
     "parent": null,
@@ -6768,7 +7073,6 @@
     "labels": [
       "stage:story-covered",
       "регресс сборки: smoke RUN-20260811-0405 46/49 · чисто · regression RUN-20260811-0406 191/193 · разобрано · новых багов в прогоне: 3",
-      "зелёные в RUN-20260811-0406: 5/5",
       "багов на кейсах стори: 0"
     ],
     "updated": "2026-08-09T23:04:10Z",

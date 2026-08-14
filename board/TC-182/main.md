@@ -2,7 +2,7 @@
 key: "TC-182"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "ON: переход на филируемую страницу листинга автоматически дописывает queryString активного профиля"
 assignee: "qa-agents"

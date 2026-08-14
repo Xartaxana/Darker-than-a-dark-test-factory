@@ -12,6 +12,8 @@ import allure
 import pytest
 
 from framework.data import recording_builder as rb
+from framework.data import seed_db
+from framework.data.works import Work
 from framework.steps import (
     app_steps,
     browser_steps,
@@ -410,3 +412,281 @@ def test_webview_follows_system_theme_without_in_app_toggle(clean_app, driver):
         # Системная тема ОС — общий ресурс эмулятора, переживающий тест; возвращаем её
         # к Light в finally, как TC-049.
         app_steps.set_system_dark_mode(False)
+
+
+# --- Fetch missing metadata (секция "Data", SettingsScreen.kt:231-264/999-1053,
+# TC-186/TC-187, AT-BUG-061 Verified) ---
+#
+# AT-BUG-061 УЖЕ Verified: replay-запись `work_metadata_fetch.mitm`
+# (`rb.WORK_METADATA_FETCH_FILENAME`) существует и эмпирически подтверждена
+# рабочей device-пробой test-maintainer (`bugs/AT-BUG-061.md` §Обсуждение,
+# 2026-08-10) — `HttpURLConnection`-путь `fetchAo3WorkPage` реально
+# перехватывается device-wide прокси в replay-режиме, ушёл в этот же файл
+# как ОБЫЧНЫЙ replay-flow (`make_html_get_flow` матчит только
+# scheme+method+path+query+host+port — заголовки запроса, включая Cookie, на
+# матчинг не влияют).
+#
+# Given-строки сеются с ТЕМИ ЖЕ ao3_id, что несёт запись (`rb.METADATA_FETCH_
+# WORK_A`/`rb.METADATA_FETCH_WORK_SECOND`/`rb.METADATA_FETCH_WORK_B_AO3_ID`),
+# но с `title=""` — ТЕКУЩЕЕ (до fetch) состояние строки; запись несёт ЦЕЛЕВОЙ
+# (скрейпнутый) результат. Сравнение "before/after" — сам проверяемый факт
+# обоих кейсов.
+_METADATA_WORK_A_EMPTY = Work(rb.METADATA_FETCH_WORK_A.ao3_id, "", "", "Test Fandom", None)
+_METADATA_WORK_B_EMPTY = Work(rb.METADATA_FETCH_WORK_B_AO3_ID, "", "", "Test Fandom", None)
+# ao3_id вне диапазона, зарезервированного `rb`/`works.py` (сверено: не
+# 900000186/187/188, не пересекается ни с одной существующей константой) —
+# работа C НЕ должна попасть в очередь `getWorksWithEmptyTitle` (title уже
+# заполнен), её неприкосновенность — явный Then TC-186 (анти-ловушка BUG-048).
+_METADATA_WORK_C_FILLED = Work(
+    "900000189", "TC-186 Already Filled Work", "existing_author_186", "Existing Fandom", 999,
+)
+
+
+@pytest.fixture()
+def metadata_fetch_queue_seeded():
+    """TC-186 Given: три работы — A/B с пустым `title` (попадают в очередь), C с
+    уже заполненным `title` (вне очереди по построению — `WorkRatingDao.
+    getWorksWithEmptyTitle`: `WHERE title = ''`, RatingRepository.kt:62)."""
+    app_steps.clean_state()
+    app_steps.seed_library([
+        (_METADATA_WORK_A_EMPTY, "PENDING"),
+        (_METADATA_WORK_B_EMPTY, "PENDING"),
+        (_METADATA_WORK_C_FILLED, "PENDING"),
+    ])
+    yield
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-186")
+@allure.title(
+    "Fetch missing metadata дозаполняет ТОЛЬКО работы с пустым title, показывает "
+    "прогресс N/total и пишет в Room лишь непустые результаты скрейпа"
+)
+@pytest.mark.parametrize("replay", [rb.WORK_METADATA_FETCH_FILENAME], indirect=True)
+def test_fetch_missing_metadata_fills_only_empty_titles(metadata_fetch_queue_seeded, replay, driver):
+    """Cookie для `fetchAo3WorkPage` (SettingsScreen.kt:1023-1024) берётся из
+    `CookieManager.getInstance().getCookie(...)` — в replay-режиме, без
+    предварительного логина, скорее всего пуст. Server-replay матчит flow
+    ТОЛЬКО по scheme+method+path+query+host+port (`recording_builder.py`
+    модульный докстринг «Матчинг server-replay») — заголовки запроса
+    (включая Cookie) на матчинг не влияют, отсутствие cookie не мешает
+    получить записанный ответ. Подтверждено этим же прогоном: работа A
+    получает ПОЛНЫЙ скрейпнутый результат без предварительного логина/cookie."""
+    # Given в Room три работы: A (пустой title, скрейп даст успех), B (пустой
+    # title, скрейп не даст успеха — HTTP 404 на записанной странице), C
+    # (title уже заполнен, вне очереди по построению)
+    app_steps.wait_ui_ready(driver)
+    app_steps.open_tab(driver, "Settings")
+
+    # Then подпись показывает «2 works have no title yet» — очередь = только A и B
+    settings_steps.assert_metadata_fetch_queue_count(driver, 2)
+
+    # When пользователь нажимает «Fetch»
+    settings_steps.start_metadata_fetch(driver)
+
+    # Then пока идёт процесс, подпись показывает «Fetching 1 / 2…», затем
+    # «Fetching 2 / 2…» (наблюдаемый прогресс N/total), кнопка на месте «Fetch»
+    # временно становится «Stop»
+    settings_steps.assert_metadata_fetch_stop_button_visible(driver)
+    settings_steps.assert_metadata_fetch_progress(driver, 1, 2)
+    settings_steps.assert_metadata_fetch_progress(driver, 2, 2, timeout=5)
+
+    # Then по завершении (без нажатия Stop) состояние — Done: подпись «Updated
+    # 1 works» (обновилась только A — единственная, для которой скрейп дал
+    # непустой title)
+    settings_steps.assert_metadata_fetch_done(driver, 1)
+
+    # And в Room: title работы A ЗАПОЛНЕН скрейпнутым значением (плюс
+    # author/fandom/wordCount), title работы B ОСТАЁТСЯ пустым (запись не
+    # перезаписана), работа C НЕ ТРОНУТА (исходные title/author/fandom
+    # неизменны байт-в-байт — анти-ловушка BUG-048)
+    rows = seed_db.read_work_ratings_full()
+    scraped_a = rb.METADATA_FETCH_WORK_A
+    row_a = rows[_METADATA_WORK_A_EMPTY.ao3_id]
+    assert row_a["title"] == scraped_a.title, row_a
+    assert row_a["author"] == scraped_a.author, row_a
+    assert row_a["fandom"] == scraped_a.fandom, row_a
+    assert row_a["word_count"] == scraped_a.word_count, row_a
+
+    row_b = rows[_METADATA_WORK_B_EMPTY.ao3_id]
+    assert row_b["title"] == "", (
+        f"title работы B не должен был обновиться (скрейп HTTP 404), реально: {row_b['title']!r}"
+    )
+
+    row_c = rows[_METADATA_WORK_C_FILLED.ao3_id]
+    assert row_c["title"] == _METADATA_WORK_C_FILLED.title, (
+        f"работа C не должна была попасть в очередь/измениться, title реально: {row_c['title']!r}"
+    )
+    assert row_c["author"] == _METADATA_WORK_C_FILLED.author, row_c
+    assert row_c["fandom"] == _METADATA_WORK_C_FILLED.fandom, row_c
+    assert row_c["word_count"] == _METADATA_WORK_C_FILLED.word_count, row_c
+
+
+# --- TC-187: Stop мид-fetch ---
+
+# D переиспользует ao3_id работы A (TC-186) — записанный скрейп идентичен;
+# E — ao3_id `rb.METADATA_FETCH_WORK_SECOND` (AT-BUG-061: "работа A
+# переиспользуется как D... работа SECOND как E").
+_METADATA_WORK_D_EMPTY = Work(rb.METADATA_FETCH_WORK_A.ao3_id, "", "", "Test Fandom", None)
+_METADATA_WORK_E_EMPTY = Work(rb.METADATA_FETCH_WORK_SECOND.ao3_id, "", "", "Test Fandom", None)
+
+
+@pytest.fixture()
+def metadata_fetch_stop_queue_seeded():
+    """TC-187 Given: ДВЕ работы с пустым title (D, E), обе дают успешный скрейп.
+
+    `WorkRatingDao.getWorksWithEmptyTitle` — `ORDER BY timestamp DESC`
+    (:39) — порядок обработки очереди определяется относительным порядком
+    timestamp'ов ВСТАВКИ. `app_steps.seed_library_ordered` (`seed_db.
+    seed_ordered`) даёт КАЖДОЙ строке списка СТРОГО возрастающий timestamp по
+    её позиции — E ПЕРВЫМ (меньший timestamp), D ВТОРЫМ (больший) —
+    единственный детерминированный способ поставить D первым в очереди
+    (queue[0], обрабатывается ДО Stop), E вторым (queue[1], не тронута), не
+    полагаясь на порядок среди РАВНЫХ timestamp (не гарантирован SQLite
+    `ORDER BY`).
+
+    ДВА РАЗДЕЛЬНЫХ вызова `seed()`/`seed_library` (каждый — свой
+    `force_stop()`/`ensure_db_initialized()` device round-trip) эмпирически
+    провалились здесь `sqlite3.OperationalError: no such table: work_ratings`
+    на втором вызове (2026-08-14, живой прогон) — та же сигнатура, что
+    закрывал `bugs/AT-BUG-044.md` [Verified]; `seed_ordered` делает ОДИН
+    round-trip вместо двух, снижая экспозицию к этому классу гонки в этом
+    конкретном кейсе. Заведён `bugs/AT-BUG-069.md` (`regression_of:
+    AT-BUG-044`) — НЕ регрессия того фикса (он правит `_schema_ready()`,
+    другую функцию), а кандидат-дефект в `_pull_baseline` (игнорирует
+    возврат `pull_app_file` для `-wal`/`-shm`). Изолирующий эксперимент (20
+    живых прогонов, см. AT-BUG-069) НЕ воспроизвёл гонку — вклад СНИЖЕН, но
+    НЕ исключён при N=20; формулировка «класс гонки не воспроизводится» была
+    непроверенным каузальным негативом (CLAUDE.md правило 14), заменена
+    честной."""
+    app_steps.clean_state()
+    app_steps.seed_library_ordered([
+        (_METADATA_WORK_E_EMPTY, "PENDING"),
+        (_METADATA_WORK_D_EMPTY, "PENDING"),
+    ])
+    yield
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-187")
+@allure.title(
+    "Fetch missing metadata: Stop останавливает процесс мид-fetch — Stopped(N) "
+    "с частичным счётчиком, оставшиеся работы не тронуты"
+)
+@pytest.mark.parametrize("replay", [rb.WORK_METADATA_FETCH_FILENAME], indirect=True)
+def test_fetch_missing_metadata_stop_mid_process(metadata_fetch_stop_queue_seeded, replay, driver):
+    # Given в Room две работы с пустым title (D, E), обе дают успешный скрейп
+    app_steps.wait_ui_ready(driver)
+    app_steps.open_tab(driver, "Settings")
+    settings_steps.assert_metadata_fetch_queue_count(driver, 2)
+
+    # When пользователь нажимает «Fetch»
+    settings_steps.start_metadata_fetch(driver)
+
+    # And ДО завершения обработки работы E (пока видна подпись «Fetching 1 / 2…»,
+    # ДО «Fetching 2 / 2…») нажимает «Stop» — окно не меньше 1.5с реального
+    # времени (`delay(1_500L)` между работами, SettingsScreen.kt:248), ловим
+    # момент по появлению подписи, не по sleep
+    settings_steps.assert_metadata_fetch_progress(driver, 1, 2)
+    settings_steps.stop_metadata_fetch(driver)
+
+    # Then состояние становится Stopped — подпись «Stopped — 1 works updated»
+    # (обновилась только D — та, что уже была обработана ДО отмены)
+    settings_steps.assert_metadata_fetch_stopped(driver, 1)
+
+    # And кнопка на месте «Stop» возвращается к виду «Fetch», доступна для
+    # повторного запуска
+    settings_steps.assert_metadata_fetch_button_visible(driver)
+
+    # And в Room: title работы D ЗАПОЛНЕН, title работы E ОСТАЁТСЯ пустым
+    # (цикл прерван `if (!isActive) break` до итерации E)
+    rows = seed_db.read_work_ratings_full()
+    scraped_d = rb.METADATA_FETCH_WORK_A
+    row_d = rows[_METADATA_WORK_D_EMPTY.ao3_id]
+    assert row_d["title"] == scraped_d.title, row_d
+    assert row_d["author"] == scraped_d.author, row_d
+    assert row_d["fandom"] == scraped_d.fandom, row_d
+    assert row_d["word_count"] == scraped_d.word_count, row_d
+
+    row_e = rows[_METADATA_WORK_E_EMPTY.ao3_id]
+    assert row_e["title"] == "", (
+        f"title работы E не должен был обновиться (Stop до её обработки), реально: {row_e['title']!r}"
+    )
+
+
+# --- TC-188: Show copy-URL button (секция DEBUG) ---
+
+@pytest.mark.p2
+@pytest.mark.replay
+@pytest.mark.skip(
+    reason="AT-BUG-068: navigator.clipboard.writeText() отклоняется DOMException "
+    "'Write permission denied' в тестовом WebView (browser console, подтверждено "
+    "ДВУМЯ независимыми способами тапа — Selenium .click() и настоящий Android-тач "
+    "через ActionBuilder) — Then «Copied!» структурно недостижим в этой среде, весь "
+    "непрерывный сценарий кейса остаётся неавтоматизированным до фикса/решения. "
+    "Снять skip только вместе с фактом из критерия готовности AT-BUG-068."
+)
+@allure.id("TC-188")
+@allure.title(
+    "Show copy-URL button: обе стороны тумблера переключаются немедленно, "
+    "без перекрытия инжектированного интерактива"
+)
+@pytest.mark.parametrize("replay", [rb.WORK_WITH_DOWNLOAD_FILENAME], indirect=True)
+def test_debug_copy_url_toggle_both_directions_without_overlap(loved_work_seeded, replay, driver):
+    # Given тумблер «Show copy-URL button» — OFF (дефолт, подтверждено явным
+    # assert'ом — класс ложно-зелёных #2, CLAUDE.md), tap_to_scroll — ON (нужен
+    # для последней грани Then — guard тап-зон), открыта replay work-страница.
+    # Порядок ВАЖЕН: `swipe_to_text`/`BaseScreen._swipe_search` свайпает только
+    # ВНИЗ по экрану (`y1_frac=0.8 -> y2_frac=0.25`) — секция "Reader" (Tap to
+    # scroll) стоит ВЫШЕ секции "Debug" (Show copy-URL button, последняя на
+    # экране); проверка Debug-тумблера ПЕРЕД Reader увела бы прокрутку мимо
+    # Reader без пути назад (красный прогон 2026-08-14 поймал это дважды).
+    work = loved_work_seeded
+    app_steps.wait_ui_ready(driver)
+    app_steps.open_tab(driver, "Settings")
+    settings_steps.enable_tap_to_scroll(driver)
+    settings_steps.assert_debug_copy_url_enabled(driver, False)
+    app_steps.open_tab(driver, "Browse")
+    rating_steps.open_work_page(driver, work.ao3_id)
+
+    # Then плавающая кнопка «Copy URL» НЕ ВИДНА пользователю
+    browser_steps.assert_copy_url_button_hidden(driver)
+
+    # When пользователь, НЕ покидая эту же страницу, переключает тумблер «Show
+    # copy-URL button» в ON (через Settings, без reload WebView)
+    app_steps.open_tab(driver, "Settings")
+    settings_steps.set_debug_copy_url(driver, True)
+    app_steps.open_tab(driver, "Browse")
+
+    # Then кнопка «Copy URL» появляется НЕМЕДЛЕННО, без перезагрузки страницы
+    # (window.setDebugCopyUrl вызывается реактивно, BrowserScreen.kt:182)
+    browser_steps.assert_copy_url_button_visible(driver)
+
+    # When пользователь тапает по кнопке «Copy URL»
+    scroll_before = browser_steps.get_webview_scroll_y(driver)
+    browser_steps.tap_copy_url_button(driver)
+
+    # Then подпись кнопки меняется на «Copied!»
+    browser_steps.assert_copy_url_button_label(driver, "Copied!")
+
+    # And (грань nf-a11y-interactive-overlap) тап по кнопке НЕ запускает
+    # зональный эффект tap_to_scroll (страница не скроллится), несмотря на то,
+    # что кнопка физически лежит в нижней трети экрана (position:fixed;
+    # bottom:12px) — узел <button> входит в whitelist guard'а тап-зон
+    # (ao3_bridge.js:1155), тот же контракт, что уже верифицирован TC-119 на
+    # другом <button>-узле; окно наблюдения (5с) перекрывает и возврат подписи
+    # спустя ~1.5с
+    browser_steps.assert_scroll_unchanged(driver, scroll_before, timeout=5)
+
+    # Then подпись возвращается к «Copy URL» спустя ~1.5с
+    browser_steps.assert_copy_url_button_label(driver, "Copy URL", timeout=2)
+
+    # When пользователь переключает тумблер обратно в OFF (та же страница, без reload)
+    app_steps.open_tab(driver, "Settings")
+    settings_steps.set_debug_copy_url(driver, False)
+    app_steps.open_tab(driver, "Browse")
+
+    # Then кнопка «Copy URL» немедленно скрывается
+    browser_steps.assert_copy_url_button_hidden(driver)

@@ -154,6 +154,16 @@ KUDO_SUBMIT = "#kudo_submit"
 # реальной разметки AO3).
 TAP_ZONE_GUARD_WHITELIST = 'a, button, input, select, textarea, label, summary, [role="button"]'
 
+# TC-188: инжектированная DEBUG-кнопка «Copy URL» (ao3_bridge.js:1067-1087,
+# toggled by Settings > Debug > Show copy-URL button) — единственный `<button>`,
+# добавленный ПРЯМЫМ потомком `<body>` (`document.body.appendChild(btn)`);
+# фикстурный tap-zone-guard `<button data-tap-marker="button">` (AT-BUG-030,
+# `_tap_zone_guard_nodes_html`) вложен глубоко внутри `#main`/`.wrapper`, НЕ
+# прямой потомок `body` — селектор однозначен на любой work-странице,
+# построенной `render_work_page_html`, даже когда оба узла присутствуют
+# одновременно.
+DEBUG_COPY_URL_BUTTON = "body > button"
+
 # TC-118 доработка attempt 2 (критик-вход): позитивный якорь идентичности
 # документа — узлы РЕАЛЬНОГО контента work-страницы, СИММЕТРИЧНО тем, что уже
 # читает сам `ao3_bridge.js:1139-1142` (`h2.title.heading`, `h3.byline a`,

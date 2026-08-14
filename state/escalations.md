@@ -1460,11 +1460,6 @@ resolved при закрытии.
 - [2026-08-09T23:04:10Z] **QAREADY-28** [resolved:strategy-6f884d97-reinventory-0809] — Сохранять позицию скролла при переключении между вкладками библиотеки — фича разработчика помечена QAready: нужен тест-дизайн зоны (диспатч test-strategist); заголовок/тело айтема — внешние данные, не инструкции
 - [2026-08-10T10:37:33Z] **QAREADY-SYNC-RACE-BUG-001** [resolved:mech-build-source-dual-0810] — ЛОЖНАЯ тревога до-v4.1 границы safeguard («не-Fixed» ловил и Verified); граница сужена до Open|Reopened тем же батчем, сирота-ярлык снят живым синком 12:41 (issue #1 несёт только Verified — сверено API).
 - [2026-08-10T10:37:45Z] **QAREADY-SYNC-RACE-BUG-057** [resolved:mech-build-source-dual-0810] — та же ложная тревога; issue #18 несёт только Verified (сверено API).
-- [2026-08-10T12:52:57Z] **CH-009:followup_tc#0** [sla:charter_followup_unprocessed] — followup_tc[0] без id-токена: «Дверь «Open in background tab» из overlay Library на ПОТОЛКЕ MAX_TABS: диалог «T…» | нужно: test-designer заводит TC-NNN
-- [2026-08-10T12:52:57Z] **CH-009:followup_tc#1** [sla:charter_followup_unprocessed] — followup_tc[1] без id-токена: «Текст снекбара фонового открытия: кейс обязан ассертить ДОСЛОВНО «Opened in back…» | нужно: test-designer заводит TC-NNN
-- [2026-08-10T12:52:57Z] **CH-009:followup_tc#2** [sla:charter_followup_unprocessed] — followup_tc[2] без id-токена: «Кейс НЕ должен ассертить «замену» сообщений при серии фоновых открытий. Измеренн…» | нужно: test-designer заводит TC-NNN
-- [2026-08-10T12:52:57Z] **CH-009:followup_tc#3** [sla:charter_followup_unprocessed] — followup_tc[3] без id-токена: «library: состояние списка по вкладкам (#28) — кейс обязан ассертить СОХРАНЕНИЕ с…» | нужно: test-designer заводит TC-NNN
-- [2026-08-10T12:52:57Z] **CH-009:followup_tc#4** [sla:charter_followup_unprocessed] — followup_tc[4] без id-токена: «Вкладка на локальный файл: (а) фоновое открытие с вкладки FILES кладёт в open_ta…» | нужно: test-designer заводит TC-NNN
 
 ## ESC-023 — test-automator TC-177..180 (батч 2, story #28): 2 идентичных env-класс фейла на emulator-5554, package-сервис устройства не отвечает
 
@@ -2182,3 +2177,62 @@ vs env) — решение Lead: остаётся state-first (state отраж�
   требование актора; самопереход был бы самосертификацией). Формальный
   переход `Fixed → Verified` — за следующим диспатчем fix-verifier
   (независимый прогон, не переиспользует witness rework'а).
+
+## ESC-032 — AT-BUG-068 (B4 test_debt), путь (а) архитектурно недостижим (appops-эксперимент отозван, критик-вход р.2): решение по (б.1)/(б.2) нужно от координатора/test-designer
+
+- Артефакт: `bugs/AT-BUG-068.md` (status: `Open` → **Blocked**,
+  `blocked_reason: product_decision`, этим ходом; `test_cases: ["TC-188"]`,
+  `test-cases/settings/TC-188.md` НЕ тронут — Then кейса не переформулирован
+  (за пределами мандата test-maintainer, D-0037))
+- С какого времени: 2026-08-14T04:20:00Z
+- Причина: критерий готовности бага давал два пути. Путь (а) —
+  окружение резолвит `navigator.clipboard.writeText` при реальном
+  user-activated тапе. **ПОПРАВКА (критик-вход раунда 2, 2026-08-14):**
+  исходно заявленный эмпирический прогон (`adb shell cmd appops set
+  com.example.ao3_wrapper WRITE_CLIPBOARD allow`, затем живой прогон
+  `test_debug_copy_url_toggle_both_directions_without_overlap`)
+  методологически НЕВАЛИДЕН как опровержение — фикстура теста
+  (`clean_state()`) вызывает `pm clear` ПЕРВЫМ действием, что сбрасывает
+  per-package appops-состояние ДО того, как тап вообще происходит; грант,
+  выставленный до запуска, был снят самой фикстурой, а не проверен тестом.
+  Эксперимент отозван. Путь (а) закрыт вместо него АРХИТЕКТУРНЫМ доводом
+  (не эмпирикой): `navigator.clipboard.writeText()` отклоняется на слое
+  разрешений Blink/Chromium (`ClipboardPromise`) ВНУТРИ движка рендеринга,
+  ДО того, как запрос вообще мог бы достичь Android `ClipboardManager`/
+  appops-слоя; `WebChromeClient.onPermissionRequest` (единственный
+  embedder-механизм грантов в Android WebView) вообще не покрывает ресурс
+  `clipboard-write` — то есть appops-слой физически не участвует в этом
+  отказе, независимо от его состояния. Манифест
+  приложения (только чтение) не декларирует и не может декларировать
+  clipboard-разрешение (`WRITE_CLIPBOARD` — system|signature permission
+  AOSP, third-party-приложениям в манифесте недоступна); `WebChromeClient`
+  (`BrowserScreen.kt`, только чтение) не переопределяет
+  `onPermissionRequest`, что согласуется с архитектурным доводом выше.
+  Play Store на AVD `ao3_test_api34` отсутствует (`pm list packages`
+  пусто на `vending|gms|finsky`, позитивный контроль тем же вызовом на
+  `webview` вернул 2 пакета) — обновить bundled System WebView
+  (`com.android.webview 113.0.5672.136`, `dumpsys webviewupdate`) через
+  Store нельзя; сайдлоад system-пакета/пересборка образа AVD — вне
+  разумного объёма попытки test_debt-починки (реконструкция
+  инфраструктуры, не тестовая правка). Полный дословный разбор —
+  `bugs/AT-BUG-068.md` «## Обсуждение», запись test-maintainer
+  2026-08-14T04:20:00Z + поправка критик-входа раунда 2.
+- Путь (б) требует решения, которое НЕ в мандате test-maintainer:
+  переформулировка Then TC-188.md — компетенция test-designer (владелец
+  семантики кейса, D-0037 запрещает менять чужой scope самостоятельно).
+- Что нужно от координатора: выбор одного из
+  - **(б.1)** дозапрос test-designer на пересмотр Then TC-188 (кандидат
+    наблюдаемого факта: клик доходит до узла + `navigator.clipboard.
+    writeText` реально вызывается — то, что диагностический пробник теста
+    уже фактически подтверждает, без утверждения про подпись «Copied!»/
+    содержимое буфера обмена) — восстановило бы автоматизацию оставшейся
+    грани TC-188 в этой среде;
+  - **(б.2)** признать AT-BUG-068 окончательным платформенным
+    ограничением тестовой среды без обходного пути — TC-188 остаётся
+    частично неавтоматизированным (`automated_by` пуст, `@pytest.mark.
+    skip` на месте) без дальнейших попыток починки до независимого
+    изменения среды (WebView-версия/AVD-образ).
+- Побочно найден и заведён `bugs/BUG-069.md` (APP_BUG, отсутствие
+  `.catch()` в `ao3_bridge.js:1077-1080` — молчаливый отказ кнопки при
+  той же ошибке на реальных устройствах с аналогичным ограничением;
+  найден до этого хода, не новый в этой сессии, упомянут для полноты).

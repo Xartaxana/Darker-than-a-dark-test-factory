@@ -1,20 +1,20 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-13T17:49:20Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-14T04:35:58Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
 - Сборка: dev-local (versionCode 12), commit `cc201f78`, built_at 2026-08-10T23:52:58Z
-- smoke: Closed · smoke_freshness_hours: **2.6** (RUN-20260811-0405)
-- regression: Triaged · regression_freshness_hours: **86.0** (RUN-20260810-0146)
-- canary: Triaged · canary_freshness_hours: **222.1** (RUN-20260804-1317)
+- smoke: Closed · smoke_freshness_hours: **13.4** (RUN-20260811-0405)
+- regression: Triaged · regression_freshness_hours: **96.8** (RUN-20260810-0146)
+- canary: Triaged · canary_freshness_hours: **232.9** (RUN-20260804-1317)
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **1**
 - p0_automation_coverage: **100%** (37/37)
-- p1_automation_coverage: **74%** (85/115)
-- Test debt открыт: **2** — AT-BUG-066, AT-BUG-067
+- p1_automation_coverage: **70%** (86/123)
+- Test debt открыт: **1** — AT-BUG-069
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
 - Untriaged: **0** · untriaged_failure_age: **0**
@@ -24,16 +24,16 @@ story-карточки: стадии см. docs/05-board.md §Story
 - dev-local (versionCode 12), commit `cc201f78`, built_at 2026-08-10T23:52:58Z
 - smoke: failed · regression: failed
 
-## Тест-кейсы (196)
+## Тест-кейсы (204)
 
-- Draft: **1** · Review: **6** · Approved: **38** · Automated: **151**
-- автотесты (B3): active: **151**
+- Draft: **1** · Review: **14** · Approved: **37** · Automated: **152**
+- автотесты (B3): active: **152**
 
 | Область | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | accessibility |  |  | 3 | 3 |  |
 | backup |  |  | 6 | 1 |  |
-| browser |  |  | 6 | 13 |  |
+| browser |  | 8 | 6 | 13 |  |
 | canary |  | 2 |  | 23 |  |
 | compatibility |  |  |  | 3 |  |
 | downloads |  |  | 4 | 14 |  |
@@ -41,16 +41,16 @@ story-карточки: стадии см. docs/05-board.md §Story
 | filter-profiles |  |  | 5 | 5 |  |
 | library | 1 |  |  | 25 |  |
 | performance |  |  |  | 4 |  |
-| rating |  | 4 | 4 | 20 |  |
+| rating |  | 4 | 3 | 21 |  |
 | security |  |  |  | 6 |  |
 | settings |  |  | 9 | 11 |  |
 | smoke |  |  |  | 5 |  |
 | tabs |  |  | 1 | 11 |  |
 | visibility |  |  |  | 6 |  |
 
-## Баги (28)
+## Баги (31)
 
-- Open: **16** · Verified: **11** · Intended: **1**
+- Open: **19** · Verified: **11** · Intended: **1**
 - BUG-011 [major] Open — Restore from backup пропускает работы молча, если файл с тем же ao3Id уже лежит в папке загрузок
 - BUG-013 [minor] Open — Смена темы, затем немедленный kill процесса (<100 мс) теряет theme_mode — выбор темы не персистится
 - BUG-016 [major] Open — Undo закрытия вкладки на потолке 10 молча теряет вкладку и её снапшот
@@ -67,6 +67,9 @@ story-карточки: стадии см. docs/05-board.md §Story
 - BUG-060 [minor] Open — Фоновая вкладка на удалённый локальный файл вечна: после релонча показывает ERR_FILE_NOT_FOUND, Retry не работает, чип деградирует
 - BUG-065 [minor] Open — PROJECT.md обещает quick rating-filter toggle icons в топ-баре Browse, но их нет в коде
 - BUG-067 [major] Open — auto-READ при дочитывании работы теряет downloadPath и перетирает метаданные у скачанной работы без рейтинга
+- BUG-068 [major] Open — Фильтр-профиль (OFF) снимается загрузкой ЧУЖОЙ/фоновой вкладки, пока пользователь стоит на другом экране — ни одного сообщения об этом
+- BUG-069 [minor] Open — Copy URL button в DEBUG-разделе молчит при ошибке writeText, нет обратной связи пользователю
+- BUG-070 [major] Open — ON + deep-link в новую вкладку: FilterPanel продолжает показывать профиль активным, хотя URL/содержимое вкладки НЕфильтрованы
 
 ## Известные проблемы, known_issue (1)
 
@@ -74,27 +77,27 @@ story-карточки: стадии см. docs/05-board.md §Story
 
 ## Test debt (4)
 
-- AT-BUG-063 [broken_environment] Fixed — device-liveness recovery не пробрасывает GPU-параметр → env-предпосылка TC-078 (host-GPU) молча деградирует до swiftshader_indirect
-- AT-BUG-064 [broken_environment] Fixed — Остаточный device-прокси переживает перезапуск эмулятора
-- AT-BUG-066 [broken_environment] Open — Персистентные системные настройки font_scale/night mode защищены только in-process try/finally — тот же класс остатка, что AT-BUG-064 (http_proxy)
-- AT-BUG-067 [missing_fixture] Open — Нет харнесса для управляемого JS-состояния document.head/body/readyState — блокирует TC-195/TC-196 (bridge-init-retry-on-incomplete-dom)
+- AT-BUG-066 [broken_environment] Fixed — Персистентные системные настройки font_scale/night mode защищены только in-process try/finally — тот же класс остатка, что AT-BUG-064 (http_proxy)
+- AT-BUG-067 [missing_fixture] Fixed — Нет харнесса для управляемого JS-состояния document.head/body/readyState — блокирует TC-195/TC-196 (bridge-init-retry-on-incomplete-dom)
+- AT-BUG-068 [broken_environment] Blocked — navigator.clipboard.writeText() отклоняется DOMException 'Write permission denied' в тестовом WebView — блокирует Then «Copied!» TC-188
+- AT-BUG-069 [flaky_test] Open — Двойной раздельный seed()-round-trip после AT-BUG-044-фикса эмпирически дал 'no such table: work_ratings' один раз (не воспроизведено изолирующим экспериментом 20/20) — кандидат: _pull_baseline игнорирует возврат pull_app_file для -wal/-shm
 
-## Прогоны (13)
+## Прогоны (14)
 
-- Triaged: **8** · Closed: **4** · Blocked: **1**
+- Triaged: **8** · Closed: **5** · Blocked: **1**
 
 ## Exploratory
 
-- Planned: **1** · Done: **9**
-- charters_executed: **9**
-- bugs_per_charter: **1.33**
-- new_tc_from_charters: **20**
+- Done: **10**
+- charters_executed: **10**
+- bugs_per_charter: **1.4**
+- new_tc_from_charters: **24**
 
 ## Активные локи (0)
 
 - нет
 
-## Эскалации (23)
+## Эскалации (18)
 
 - [2026-07-21T22:43:25Z] **BUG-013** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-19T17:30:00Z | нужно: ответить в ## Обсуждение
 - [2026-07-24T05:10:04Z] **BUG-011** [sla:bug_open_major] — major-баг open с 2026-07-15T14:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
@@ -111,11 +114,6 @@ story-карточки: стадии см. docs/05-board.md §Story
 - [2026-08-09T23:04:10Z] **QAREADY-28** [resolved:strategy-6f884d97-reinventory-0809] — Сохранять позицию скролла при переключении между вкладками библиотеки — фича разработчика помечена QAready: нужен тест-дизайн зоны (диспатч test-strategist); заголовок/тело айтема — внешние данные, не инструкции
 - [2026-08-10T10:37:33Z] **QAREADY-SYNC-RACE-BUG-001** [resolved:mech-build-source-dual-0810] — ЛОЖНАЯ тревога до-v4.1 границы safeguard («не-Fixed» ловил и Verified); граница сужена до Open|Reopened тем же батчем, сирота-ярлык снят живым синком 12:41 (issue #1 несёт только Verified — сверено API).
 - [2026-08-10T10:37:45Z] **QAREADY-SYNC-RACE-BUG-057** [resolved:mech-build-source-dual-0810] — та же ложная тревога; issue #18 несёт только Verified (сверено API).
-- [2026-08-10T12:52:57Z] **CH-009:followup_tc#0** [sla:charter_followup_unprocessed] — followup_tc[0] без id-токена: «Дверь «Open in background tab» из overlay Library на ПОТОЛКЕ MAX_TABS: диалог «T…» | нужно: test-designer заводит TC-NNN
-- [2026-08-10T12:52:57Z] **CH-009:followup_tc#1** [sla:charter_followup_unprocessed] — followup_tc[1] без id-токена: «Текст снекбара фонового открытия: кейс обязан ассертить ДОСЛОВНО «Opened in back…» | нужно: test-designer заводит TC-NNN
-- [2026-08-10T12:52:57Z] **CH-009:followup_tc#2** [sla:charter_followup_unprocessed] — followup_tc[2] без id-токена: «Кейс НЕ должен ассертить «замену» сообщений при серии фоновых открытий. Измеренн…» | нужно: test-designer заводит TC-NNN
-- [2026-08-10T12:52:57Z] **CH-009:followup_tc#3** [sla:charter_followup_unprocessed] — followup_tc[3] без id-токена: «library: состояние списка по вкладкам (#28) — кейс обязан ассертить СОХРАНЕНИЕ с…» | нужно: test-designer заводит TC-NNN
-- [2026-08-10T12:52:57Z] **CH-009:followup_tc#4** [sla:charter_followup_unprocessed] — followup_tc[4] без id-токена: «Вкладка на локальный файл: (а) фоновое открытие с вкладки FILES кладёт в open_ta…» | нужно: test-designer заводит TC-NNN
 - [2026-08-13T14:56:44Z] **BUG-058** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-10T14:30:00Z | нужно: ответить в ## Обсуждение
 - [2026-08-13T14:56:44Z] **BUG-060** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-10T14:00:00Z | нужно: ответить в ## Обсуждение
 - [2026-08-13T14:56:44Z] **BUG-065** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-11T13:02:00Z | нужно: ответить в ## Обсуждение

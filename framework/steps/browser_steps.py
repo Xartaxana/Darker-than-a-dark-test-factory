@@ -12,6 +12,8 @@ from selenium.common.exceptions import (
     TimeoutException,
     WebDriverException,
 )
+from selenium.webdriver.common.actions.action_builder import ActionBuilder
+from selenium.webdriver.common.actions.interaction import POINTER_TOUCH
 
 from framework.config import settings
 from framework.core import contexts
@@ -1174,6 +1176,34 @@ def assert_active_tab_url(driver, url: str = HOME_URL, timeout: int | None = Non
         )
 
 
+@allure.step("Then URL активной вкладки держит {url} стабильно {budget_s}с (не удваивается/не меняется отложенно)")
+def assert_active_tab_url_holds(driver, url: str, budget_s: float = 5.0, poll_interval: float = 0.4) -> None:
+    """TC-183 (rework attempt 2, критик-вход B2, доработка (б)): негативный
+    Then «queryString НЕ дописан второй раз» читался ОДНИМ снимком через
+    `assert_active_tab_url` — условие «URL == LISTING_FILTERED_URL» уже истинно
+    С ПЕРВОГО КАДРА (вкладка была на этом URL ещё ДО When), `wait_until`
+    вернулся бы мгновенно, ничего не гарантируя про отложенный второй
+    `loadUrl()` внутри `view.post {}` (`BrowserScreen.kt:626` — колбэк САМ
+    откладывает повторную загрузку на следующий цикл message loop). Опрашивает
+    ВЕСЬ бюджет через `assert_holds_for` — тот же приём, что
+    `assert_top_chrome_not_darkened`/`assert_kudo_submit_click_count_holds`."""
+    with contexts.in_webview(driver):
+        target = url.rstrip("/")
+
+        def check() -> bool:
+            actual = (driver.current_url or "").rstrip("/")
+            assert actual == target, (
+                f"URL активной вкладки изменился на {actual!r}, ожидали стабильно {url!r} "
+                f"весь бюджет {budget_s}с — похоже на повторное срабатывание перехвата"
+            )
+            return True
+
+        assert_holds_for(
+            check, budget_s=budget_s, interval_s=poll_interval,
+            msg=f"URL активной вкладки не удержал {url} весь бюджет {budget_s}с",
+        )
+
+
 @allure.step("Then вкладка {target_position} стала физически активной (scrollY-асимметрия нативного скролла, AT-BUG-022)")
 def assert_tab_became_active_via_scroll(
     driver,
@@ -1248,6 +1278,87 @@ def open_listing(driver, url: str):
             lambda d: len(d.find_elements(AppiumBy.CSS_SELECTOR, selectors.WORK_BLURB)) > 0,
             timeout=settings.WEBVIEW_LOAD_TIMEOUT,
             message="листинговая replay-страница не загрузилась (нет блёрбов работ)",
+        )
+
+
+@allure.step("When страница в WebView сама переходит на {url} (window.location.href — renderer-initiated навигация)")
+def navigate_listing_via_page_js(driver, url: str) -> None:
+    """TC-182/TC-183: `shouldOverrideUrlLoading` (`BrowserScreen.kt:616-631`)
+    перехватывает только НАВИГАЦИЮ, ИНИЦИИРОВАННУЮ САМОЙ СТРАНИЦЕЙ (клик по
+    ссылке, JS-редирект) — официальная документация Android явно исключает
+    навигации, вызванные ХОСТ-приложением напрямую через `loadUrl(String)`
+    («This method is not called for internal page navigations, such as calling
+    loadUrl(String)»). Красная проба TC-182 (2026-08-14, живой прогон) эмпирически
+    подтвердила: `open_listing`/`navigate()` (Selenium `driver.get()`, под капотом —
+    chromedriver `Page.navigate`, host-initiated по тому же классу, что и прямой
+    `loadUrl()`) НЕ триггерит guard — URL остаётся тем, что был запрошен, дописывания
+    queryString не происходит НЕЗАВИСИМО от активного профиля (реальный дефект
+    охвата теста, не приложения — `assert_active_tab_url` таймаутил, ожидая
+    `LISTING_FILTERED_URL`, реально получая `LISTING_BASIC_URL` без изменений).
+    `window.location.href = url`, выполненный ВНУТРИ страницы через
+    `execute_script`, — renderer-initiated навигация того же класса, что реальный
+    клик по ссылке/JS-редирект, поэтому проходит через `shouldOverrideUrlLoading`
+    штатно (в отличие от `settings_steps.reload_active_webview_page`, которая
+    нарочно использует `window.location.reload()` — специальный "reload"-тип
+    навигации, для которого тот же официальный докстринг Android отдельно
+    исключает вызов колбэка: «This method is not called for reload()» — здесь
+    нужна ИМЕННО обычная навигация, не reload, поэтому `href`-присваивание, не
+    `.reload()`). Годится и для повтора ТОГО ЖЕ URL (TC-183: присваивание
+    `location.href` идентичной строке — это НЕ no-op, браузер выполняет полноценную
+    повторную навигацию, в отличие от `driver.get()` на тот же URL, см. докстринг
+    `reload_active_webview_page` за прецедентом TC-020) — ЭМПИРИЧЕСКИ ПОДТВЕРЖДЕНО
+    и, начиная с critic-раунда 4 (блокер B1), ОХРАНЯЕТСЯ ПОСТОЯННЫМ ТЕСТОВЫМ УЗЛОМ
+    `test_filter_profiles.py::test_same_url_renderer_navigation_reaches_interceptor`:
+    состояние ON, активный профиль, вкладка на `LISTING_BASIC_URL` (без
+    `work_search`) -> `navigate_listing_via_page_js(driver, LISTING_BASIC_URL)` (ТОТ
+    ЖЕ URL, что уже открыт) -> итоговый URL обязан стать `LISTING_FILTERED_URL`.
+    НЕ ссылайся на этот абзац как на источник факта: источник — тот узел, он падает
+    при смерти предпосылки (красная проба критика 2026-08-14: подмена When на
+    host-initiated `open_listing` роняет узел). Прежде эта строка несла факт ТОЛЬКО
+    прозой — одноразовый живой прогон без падающего носителя, что и было блокером
+    B1 раунда 3 (см. routing-log, task_id TC-181-185): доставка на ДРУГОЙ URL
+    (доказана зелёным TC-182) не доказывает доставку на ТОТ ЖЕ URL, класс «same-URL
+    — особый случай» уже ловил этот репозиторий на `driver.get()` (TC-020)."""
+    with contexts.in_webview(driver):
+        driver.execute_script("window.location.href = arguments[0];", url)
+        wait_until(
+            driver,
+            lambda d: len(d.find_elements(AppiumBy.CSS_SELECTOR, selectors.WORK_BLURB)) > 0,
+            timeout=settings.WEBVIEW_LOAD_TIMEOUT,
+            message=f"страница {url} не загрузилась после JS-навигации window.location.href (нет блёрбов работ)",
+        )
+
+
+@allure.step(
+    "When страница в WebView сама повторно переходит на {url} (window.location.href, "
+    "с доказательством реальной навигации через staleness старого DOM-узла)"
+)
+def navigate_listing_via_page_js_proving_reload(driver, url: str) -> None:
+    """TC-183 (rework attempt 2, критик-вход B2, доработка (а)): базовая
+    `navigate_listing_via_page_js` ждёт `WORK_BLURB>0` ПОСЛЕ JS-навигации — при
+    SAME-URL навигации это условие удовлетворяется СТАРЫМ, ещё не заменённым
+    DOM (если бы документ по какой-то причине НЕ перезагрузился, старые блёрбы
+    остались бы в DOM и `find_elements` нашёл бы именно их) — само по себе не
+    доказывает, что документ РЕАЛЬНО перезагрузился, только что блёрбы
+    присутствуют (могли быть старыми). Держит ссылку на существующий
+    `WORK_BLURB`-узел ДО вызова `window.location.href = url`, затем ждёт, пока
+    обращение к НЕЙ не станет `StaleElementReferenceException` — тот же приём,
+    что `click_retry` (доказательство ЗАМЕНЫ DOM, не визуального сходства
+    нового с прежним) — прежде чем считать блёрбы новой страницы."""
+    with contexts.in_webview(driver):
+        old_blurb = driver.find_element(AppiumBy.CSS_SELECTOR, selectors.WORK_BLURB)
+        driver.execute_script("window.location.href = arguments[0];", url)
+        wait_until(
+            driver, lambda d: _is_stale(old_blurb), timeout=10,
+            message=f"страница {url} не перезагрузилась после JS-навигации window.location.href "
+                    f"(старый DOM-узел work-блёрба остаётся валидным — same-URL навигация могла "
+                    f"оказаться no-op)",
+        )
+        wait_until(
+            driver,
+            lambda d: len(d.find_elements(AppiumBy.CSS_SELECTOR, selectors.WORK_BLURB)) > 0,
+            timeout=settings.WEBVIEW_LOAD_TIMEOUT,
+            message=f"страница {url} не загрузилась после JS-навигации window.location.href (нет блёрбов работ)",
         )
 
 
@@ -1733,6 +1844,36 @@ def assert_active_filter_shown(driver, name: str, timeout: int | None = None):
     BottomNav(driver).ensure_visible()
     assert BrowserScreen(driver).filter_dropdown_has_option(name, timeout=timeout), (
         f"панель фильтра не показывает «{name}» как активно применённый профиль"
+    )
+
+
+@allure.step("Then панель фильтра держит «{name}» как активно применённый весь бюджет {budget_s}с (не снимается отложенно)")
+def assert_active_filter_shown_holds(driver, name: str, budget_s: float = 5.0, poll_interval: float = 0.4) -> None:
+    """TC-185 (rework attempt 2, критик-вход B3): `setActiveFilter(id)`
+    (`BrowserViewModel.kt:applyFilter`) ставится ДО навигации, а возможное
+    снятие профиля произошло бы ПОЗЖЕ, внутри `onPageLoaded` (после коммита
+    URL, см. `BrowserViewModel.kt:501-504`) — одноразовое чтение
+    `assert_active_filter_shown` СРАЗУ после действия ловит только состояние
+    ДО этого более позднего момента, где мог бы проявиться гипотетический
+    дефект (`pendingFilterApplication` не потребился/потребился неверно).
+    Опрашивает `filter_dropdown_has_option` ВЕСЬ бюджет через
+    `assert_holds_for` (снимок `timeout=0` — мгновенная проверка на каждом
+    опросе, тот же приём, что `assert_tab_strip_hidden`/
+    `assert_top_chrome_not_darkened`), а не полагается на факт, что условие
+    уже истинно в момент вызова."""
+    BottomNav(driver).ensure_visible()
+    screen = BrowserScreen(driver)
+
+    def check() -> bool:
+        assert screen.filter_dropdown_has_option(name, timeout=0), (
+            f"панель фильтра перестала показывать «{name}» как активно применённый профиль "
+            f"(проверено в пределах бюджета {budget_s}с)"
+        )
+        return True
+
+    assert_holds_for(
+        check, budget_s=budget_s, interval_s=poll_interval,
+        msg=f"панель фильтра не удержала «{name}» как активно применённый профиль весь бюджет {budget_s}с",
     )
 
 
@@ -2480,3 +2621,162 @@ def assert_webview_location_changed(driver, before: tuple[str, str]) -> None:
         f"после клика «Next →» query не несёт page=2 (стало {after}) — навигация "
         f"произошла не на страницу 2 конкретно"
     )
+
+
+# --- TC-188: DEBUG-кнопка «Copy URL» (ao3_bridge.js:1067-1087) — видимость
+# переключается РЕАКТИВНО (`window.setDebugCopyUrl`, BrowserScreen.kt:182,
+# `evaluateJavascript` БЕЗ reload), клик копирует `location.href` и меняет
+# подпись на "Copied!" на 1500мс. `selectors.DEBUG_COPY_URL_BUTTON` ("body >
+# button") однозначен даже когда на странице одновременно присутствует
+# фикстурный tap-zone-guard `<button data-tap-marker="button">` (не прямой
+# потомок body, см. докстринг константы).
+
+def _copy_url_button_display(driver) -> str:
+    """`'absent'`, если узла нет вовсе (bridge не инжектировался/иная
+    страница) — отличимо от `'none'` (узел есть, скрыт тумблером OFF)."""
+    with contexts.in_webview(driver):
+        return driver.execute_script(
+            f"var b = document.querySelector({selectors.DEBUG_COPY_URL_BUTTON!r}); "
+            "return b ? getComputedStyle(b).display : 'absent';"
+        )
+
+
+@allure.step("Then плавающая кнопка «Copy URL» не видна пользователю")
+def assert_copy_url_button_hidden(driver, timeout: int = 5) -> None:
+    wait_until(
+        driver,
+        lambda d: _copy_url_button_display(d) == "none",
+        timeout=timeout,
+        message="кнопка «Copy URL» видима (display != none), хотя тумблер «Show "
+                "copy-URL button» выключен",
+    )
+
+
+@allure.step("Then плавающая кнопка «Copy URL» видна пользователю")
+def assert_copy_url_button_visible(driver, timeout: int = 5) -> None:
+    wait_until(
+        driver,
+        lambda d: _copy_url_button_display(d) not in ("none", "absent"),
+        timeout=timeout,
+        message="кнопка «Copy URL» не появилась (display == none/узел отсутствует), "
+                "хотя тумблер «Show copy-URL button» включён",
+    )
+
+
+@allure.step("When пользователь тапает по кнопке «Copy URL»")
+def tap_copy_url_button(driver) -> None:
+    """НАСТОЯЩИЙ Android-тач через `ActionBuilder`/`POINTER_TOUCH` в НАТИВНОМ
+    контексте (координата — центр РЕАЛЬНОГО `getBoundingClientRect()` узла,
+    переведённая из CSS px WebView в экранные px устройства) — ни синтетический
+    `dispatchEvent` (`dispatch_synthetic_tap`), ни Selenium `.click()` в
+    WEBVIEW-контексте (через chromedriver-прокси) здесь НЕ годятся: живой
+    прогон 2026-08-14 (3 попытки подряд, все три — идентичный симптом) показал,
+    что `navigator.clipboard.writeText` НЕ резолвится (подпись кнопки НИКОГДА
+    не переходит в «Copied!») ни под одним из этих двух способов —
+    Chromedriver-инициированный клик остаётся ВНУТРИ рендер-процесса WebView и,
+    судя по всему, не устанавливает нужный Android-уровня "user activation"/
+    фокус документа, которого требует Clipboard API (WebView Chromium требует
+    транзиентную активацию ОТ РЕАЛЬНОГО touch-события, поступающего через
+    Android input-стек, не через CDP/чистый JS `dispatchEvent`). Реальный
+    физический тап через UiAutomator2 — тот же класс события, что обычный
+    пользовательский палец, гарантированно даёт документу и фокус, и
+    активацию. Guard тап-зон (`ao3_bridge.js:1155`) от способа тапа не зависит
+    — whitelist проверяется по тегу `e.target`, один и тот же для любого клика."""
+    with contexts.in_webview(driver):
+        el = driver.find_element(AppiumBy.CSS_SELECTOR, selectors.DEBUG_COPY_URL_BUTTON)
+        rect = driver.execute_script(
+            "var r = arguments[0].getBoundingClientRect();"
+            "return {left: r.left, top: r.top, width: r.width, height: r.height, "
+            "innerWidth: window.innerWidth};",
+            el,
+        )
+        # Диагностический пробник (2026-08-14, независимая от clipboard проверка
+        # «клик вообще дошёл до узла») — СВОЙ слушатель, НЕЗАВИСИМЫЙ от
+        # `ao3_bridge.js`, идемпотентная установка (флаг на самом узле): считает
+        # клики в `window.__ao3TestClickCount`, читается `assert_copy_url_button_
+        # label` при таймауте, чтобы отличить «клик не дошёл до кнопки» от «клик
+        # дошёл, но `navigator.clipboard.writeText` не зарезолвился».
+        driver.execute_script(
+            "var b = arguments[0]; if (!b.__ao3TestClickProbeInstalled) { "
+            "b.__ao3TestClickProbeInstalled = true; window.__ao3TestClickCount = 0; "
+            "b.addEventListener('click', function () { "
+            "window.__ao3TestClickCount = (window.__ao3TestClickCount || 0) + 1; }); }",
+            el,
+        )
+    css_x = rect["left"] + rect["width"] / 2
+    css_y = rect["top"] + rect["height"] / 2
+
+    webview_screen_rect = BrowserScreen(driver).webview_rect()
+    scale = webview_screen_rect["width"] / rect["innerWidth"] if rect["innerWidth"] else 1.0
+    screen_x = int(webview_screen_rect["x"] + css_x * scale)
+    screen_y = int(webview_screen_rect["y"] + css_y * scale)
+    allure.attach(
+        f"css rect={rect!r} webview_screen_rect={webview_screen_rect!r} scale={scale:.3f} "
+        f"-> screen tap=({screen_x}, {screen_y})",
+        name="tap_copy_url_button: coordinate translation",
+        attachment_type=allure.attachment_type.TEXT,
+    )
+
+    contexts.to_native(driver)
+    builder = ActionBuilder(driver)
+    finger = builder.add_pointer_input(POINTER_TOUCH, "finger1")
+    finger.create_pointer_move(duration=0, x=screen_x, y=screen_y)
+    finger.create_pointer_down()
+    finger.create_pointer_move(duration=50, x=screen_x, y=screen_y)
+    finger.create_pointer_up(0)
+    builder.perform()
+
+
+@allure.step("Then подпись кнопки «Copy URL» показывает «{expected}»")
+def assert_copy_url_button_label(driver, expected: str, timeout: int = 5) -> None:
+    """AT-BUG-039-класс диагностики (тот же приём, что `assert_tap_to_scroll_delta`):
+    `holder` заполняется ВНУТРИ предиката на каждом опросе; при таймауте
+    `TimeoutException` перехватывается и переброшен заново с сообщением,
+    дополненным `holder["value"]` — РЕАЛЬНО ПОСЛЕДНИМ наблюдённым значением, а
+    не свежим вызовом ДО/ПОСЛЕ ожидания (`message=` строкой вычислился бы до
+    входа в `wait_until`, замораживая устаревшее/начальное значение под
+    подписью «последнее»)."""
+    holder: dict[str, str | None] = {"value": None}
+
+    def _label(d) -> str | None:
+        with contexts.in_webview(d):
+            value = d.execute_script(
+                f"var b = document.querySelector({selectors.DEBUG_COPY_URL_BUTTON!r}); "
+                "return b ? b.textContent : null;"
+            )
+        holder["value"] = value
+        return value
+
+    try:
+        wait_until(
+            driver, lambda d: _label(d) == expected, timeout=timeout,
+            message=f"подпись кнопки «Copy URL» не стала «{expected}» за {timeout}с",
+        )
+    except TimeoutException as exc:
+        # Диагностика (2026-08-14): различает «клик не дошёл до узла» (см.
+        # __ao3TestClickCount, tap_copy_url_button) от «клик дошёл, но
+        # navigator.clipboard.writeText не зарезолвился» (hasFocus/isSecureContext/
+        # тип API) — без этого таймаут неотличим по причине.
+        try:
+            with contexts.in_webview(driver):
+                diag = driver.execute_script(
+                    f"var b = document.querySelector({selectors.DEBUG_COPY_URL_BUTTON!r}); "
+                    "return {hasFocus: document.hasFocus(), "
+                    "isSecureContext: window.isSecureContext, "
+                    "clipboardType: typeof navigator.clipboard, "
+                    "writeTextType: (navigator.clipboard && typeof navigator.clipboard.writeText) || 'n/a', "
+                    "clickCount: window.__ao3TestClickCount || 0, "
+                    "buttonText: b ? b.textContent : null};"
+                )
+                try:
+                    browser_log = driver.get_log("browser")
+                except Exception as log_exc:  # noqa: BLE001
+                    browser_log = f"<browser log недоступен: {log_exc.__class__.__name__}: {log_exc}>"
+        except Exception as diag_exc:  # noqa: BLE001
+            diag = f"<диагностика недоступна: {diag_exc.__class__.__name__}>"
+            browser_log = "<n/a>"
+        raise TimeoutException(
+            f"подпись кнопки «Copy URL» не стала «{expected}» за {timeout}с "
+            f"(последнее наблюдение: {holder['value']!r}; диагностика: {diag!r}; "
+            f"browser log: {browser_log!r})"
+        ) from exc

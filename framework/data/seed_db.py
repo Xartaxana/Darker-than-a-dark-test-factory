@@ -209,6 +209,76 @@ def seed(works: list[tuple[Work, str]]) -> None:
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def _insert_rows_ordered(db: Path, works: list[tuple[Work, str]]) -> None:
+    """Как `_insert_rows`, но каждая строка получает СТРОГО возрастающий
+    `timestamp` (`base_now + индекс_в_списке` мс) — нужно кейсам, где порядок
+    обработки очереди определяется `ORDER BY timestamp DESC`
+    (`WorkRatingDao.getWorksWithEmptyTitle`, app-under-test :39,
+    `SettingsViewModel.fetchMissingMetadata`, TC-187). `_insert_rows` даёт
+    ВСЕМ строкам списка ОДИНАКОВЫЙ `timestamp` (`now` вычисляется один раз на
+    весь список, не по строке) — порядок среди РАВНЫХ `timestamp` в SQLite
+    `ORDER BY` НЕ гарантирован стандартом (эмпирически поймано TC-187,
+    2026-08-14: два ПОСЛЕДОВАТЕЛЬНЫХ вызова `seed()` — каждый со своим
+    `force_stop()`/`ensure_db_initialized()` — вместо детерминированного
+    порядка дали `sqlite3.OperationalError: no such table: work_ratings` на
+    втором вызове, та же сигнатура, что закрывал `bugs/AT-BUG-044.md`
+    [Verified]) — обходной путь ЗДЕСЬ: ОДИН round-trip вместо двух, порядок
+    timestamp'ов гарантирован локально, без второго `force_stop`/relaunch.
+
+    Заведён отдельный test_debt `bugs/AT-BUG-069.md` (`regression_of:
+    AT-BUG-044`) — НЕ регрессия самого фикса AT-BUG-044 (тот правил только
+    `_schema_ready()`, эта функция им не затронута), а соседний незакрытый
+    механизм: `_pull_baseline` игнорирует возврат `pull_app_file` для
+    `-wal`/`-shm`. Изолирующий эксперимент того же хода (20 живых прогонов
+    на emulator-5554: 12x одиночный `ensure_db_initialized()` + немедленный
+    ручной пулл, 8x буквальная реконструкция двух последовательных
+    `seed()`-round-trip) НЕ воспроизвёл гонку (0/20, `pull_app_file` для
+    WAL/SHM ни разу не вернул `False`, таблица 12/12 уже в main-файле сразу
+    по `_schema_ready()==True`) — вклад этой гонки СНИЖЕН экспериментом, но
+    НЕ исключён полностью (N=20 не исчерпывающе, см. AT-BUG-069
+    §«Изолирующий эксперимент»). Более ранняя редакция этого докстринга
+    утверждала «класс гонки не воспроизводится» — непроверенный каузальный
+    негатив, заменён честной формулировкой.
+
+    Порядок `works` в списке = порядок ВОЗРАСТАНИЯ `timestamp` — ПОСЛЕДНЯЯ
+    строка списка получает САМЫЙ БОЛЬШОЙ `timestamp` (первой в `ORDER BY ...
+    DESC`)."""
+    con = sqlite3.connect(db)
+    cur = con.cursor()
+    base_now = int(time.time() * 1000)
+    for i, (work, rating) in enumerate(works):
+        assert rating in _RATING_ENUM, f"неизвестный rating: {rating}"
+        cur.execute(
+            """INSERT OR REPLACE INTO work_ratings
+               (ao3Id, title, author, url, rating, timestamp, fandom, wordCount, comment, downloadPath, tags)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+            (work.ao3_id, work.title, work.author, work.url, rating, base_now + i,
+             work.fandom, work.word_count, None, None, None),
+        )
+    con.commit()
+    con.close()
+
+
+def seed_ordered(works: list[tuple[Work, str]]) -> None:
+    """Как `seed()`, но КАЖДАЯ строка получает СТРОГО возрастающий `timestamp`
+    по своей позиции в списке (см. `_insert_rows_ordered`) — используется,
+    когда порядок обработки очереди, читаемой `ORDER BY timestamp DESC`
+    (`WorkRatingDao.getWorksWithEmptyTitle`), обязан быть детерминированным
+    (TC-187: Stop должен застать процесс МЕЖДУ первой и второй засеянной
+    работой, а не на случайной из них). ОДИН device round-trip (как и
+    `seed()`) — НЕ эквивалент двух последовательных вызовов `seed()`."""
+    adb.force_stop()
+    ensure_db_initialized()
+    tmp = Path(tempfile.mkdtemp(prefix="ao3seed_"))
+    try:
+        db = _pull_baseline(tmp)
+        _insert_rows_ordered(db, works)
+        adb.run_as(f"rm -f {_WAL} {_SHM}")
+        adb.push_app_file(db, _DB_REL)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def seed_with_comment(
     rows: list[tuple[Work, str | None, str | None, str | None]],
 ) -> None:
@@ -225,6 +295,58 @@ def seed_with_comment(
     try:
         db = _pull_baseline(tmp)
         _insert_rows_full(db, rows)
+        adb.run_as(f"rm -f {_WAL} {_SHM}")
+        adb.push_app_file(db, _DB_REL)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def _insert_rows_full_ordered(
+    db: Path,
+    rows: list[tuple[Work, str | None, str | None, str | None]],
+) -> None:
+    """Twin `_insert_rows_ordered` для `_insert_rows_full`-семейства (rework
+    attempt 2, критик-вход TC-186-188 B3): каждая строка получает СТРОГО
+    возрастающий `timestamp` (`base_now + индекс_в_списке` мс) по своей
+    позиции в `rows` — тот же приём, что `_insert_rows_ordered`, но для
+    строк с опциональными `rating`/`comment`/`tags` (см. `_insert_rows_full`).
+    Нужна кейсам вида TC-062 (`library_last_read_order_seeded`), которым
+    раньше приходилось звать `seed_with_comment` НЕСКОЛЬКО раз подряд ради
+    детерминированного порядка `timestamp` — каждый вызов открывал свой
+    `force_stop()`/`ensure_db_initialized()` round-trip, тот же класс
+    экспозиции, что закрывал `seed_ordered`/`_insert_rows_ordered` для
+    TC-187 (см. их докстринги, `bugs/AT-BUG-069.md`)."""
+    con = sqlite3.connect(db)
+    cur = con.cursor()
+    base_now = int(time.time() * 1000)
+    for i, (work, rating, comment, tags) in enumerate(rows):
+        assert rating is None or rating in _RATING_ENUM, f"неизвестный rating: {rating}"
+        cur.execute(
+            """INSERT OR REPLACE INTO work_ratings
+               (ao3Id, title, author, url, rating, timestamp, fandom, wordCount, comment, downloadPath, tags)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+            (work.ao3_id, work.title, work.author, work.url, rating, base_now + i,
+             work.fandom, work.word_count, comment, None, tags),
+        )
+    con.commit()
+    con.close()
+
+
+def seed_with_comment_ordered(
+    rows: list[tuple[Work, str | None, str | None, str | None]],
+) -> None:
+    """Как `seed_with_comment()`, но КАЖДАЯ строка получает СТРОГО
+    возрастающий `timestamp` по своей позиции в списке (см.
+    `_insert_rows_full_ordered`) — ОДИН device round-trip вместо N
+    последовательных вызовов `seed_with_comment` (TC-062:
+    `library_last_read_order_seeded` мигрирована на эту функцию rework
+    attempt 2, тот же мотив, что `seed_ordered`/TC-187)."""
+    adb.force_stop()
+    ensure_db_initialized()
+    tmp = Path(tempfile.mkdtemp(prefix="ao3seed_"))
+    try:
+        db = _pull_baseline(tmp)
+        _insert_rows_full_ordered(db, rows)
         adb.run_as(f"rm -f {_WAL} {_SHM}")
         adb.push_app_file(db, _DB_REL)
     finally:
