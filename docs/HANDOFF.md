@@ -89,6 +89,20 @@ exploratory-tester [матрица приёмки НЕ нарушена] и пр
    непроверенным на живой раскладке (в частности, отступ блоков
    dumpsys).
 
+**Закрытие сессии 2026-08-14 (36 — /next-task ×2 на Fable):** ярус
+Fable весь день (деградаций не было), журнал закрыт (последнее событие
+— accepted mech-case-recording-check 15:14:07, open-dispatches пуст),
+эмулятор/Appium NO DEVICE (канонически), GitLab-каналы чисты
+(inbound/sync --check exit 0). Посажено: скилл /next-task (1ce808b),
+механизмы п.6 (937d3f7, doctor диск↔устройство) и п.7 (1cd5197,
+правило 3 arch_check) — оба полным циклом критик-план/критик-дифф;
+6 stale-эскалаций закрыты; кросс-ответ OS basis=judge (их 24f9c32).
+Очередь следующего вызова /next-task: разбор ВХОДЯЩЕГО ИЗ OS
+2026-08-14 (блок ниже, cceee29) → механизм п.8 (автозакрытие стори,
+recon готов: scratchpad/recon-story-autoclose.md) → canary_stale →
+run Blocked→Closed → conftest identity-check. Причина отсрочки всех:
+слово владельца «закрывай сессию»; фабричные строки — только /qa-loop.
+
 **Закрытие сессии 2026-08-14 (35):** ярус Fable, журнал закрыт
 (accepted TC-188-then-redesign 09:13:05, open-dispatches пуст),
 эмулятор/Appium погашены (`Get-Device: NO DEVICE`), эскалации все

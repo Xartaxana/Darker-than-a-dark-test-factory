@@ -1,15 +1,15 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-14T09:48:58Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-14T15:19:38Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
 - Сборка: dev-local (versionCode 12), commit `cc201f78`, built_at 2026-08-10T23:52:58Z
-- smoke: Closed · smoke_freshness_hours: **18.6** (RUN-20260811-0405)
-- regression: Triaged · regression_freshness_hours: **102.0** (RUN-20260810-0146)
-- canary: Triaged · canary_freshness_hours: **238.1** (RUN-20260804-1317)
+- smoke: Closed · smoke_freshness_hours: **24.1** (RUN-20260811-0405)
+- regression: Triaged · regression_freshness_hours: **107.5** (RUN-20260810-0146)
+- canary: Triaged · canary_freshness_hours: **243.6** (RUN-20260804-1317)
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **1**
 - p0_automation_coverage: **100%** (37/37)
