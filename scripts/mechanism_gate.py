@@ -146,6 +146,13 @@ MECHANISM_PREFIXES = (
     # acquire/release локa, kill-tree по таймауту) — гейт-класс на пути
     # исполнения scheduled-запуска, не генератор/свипер.
     "scripts/heartbeat_wrap.py",
+    # 2026-08-14 (spec-device-build-check.md v3, вердикт Q5): doctor —
+    # preflight-гейт (SKILL qa-loop шаг 1), его код возврата меняет состав
+    # правил прохода и пишет эскалации — тот же класс, что heartbeat_wrap.py
+    # выше и log_append.py; сессия ниже Lead-привязки больше не добавит чек
+    # в doctor без очереди Lead. Его тесты (scripts/tests/test_doctor.py) —
+    # ВНЕ невода, тот же образец, что у heartbeat_wrap/log_append.
+    "scripts/doctor.py",
     # 2026-07-23: срез карты осей — вход этого же гейта; тихая правка
     # среза = обход полноты осевого блока, поэтому сам срез механизмен.
     MAP_SNAPSHOT_REL,

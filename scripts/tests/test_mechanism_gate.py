@@ -37,6 +37,10 @@ def test_mechanism_paths_filters_ao3_prefixes_with_boundary():
     # что log_append.py выше).
     assert mg.mechanism_paths(["scripts/heartbeat_wrap.py"]) == ["scripts/heartbeat_wrap.py"]
     assert mg.mechanism_paths(["scripts/tests/test_heartbeat_wrap.py"]) == []
+    # 2026-08-14 (spec-device-build-check.md v3, вердикт Q5): doctor —
+    # preflight-гейт, тот же образец, что heartbeat_wrap выше.
+    assert mg.mechanism_paths(["scripts/doctor.py"]) == ["scripts/doctor.py"]
+    assert mg.mechanism_paths(["scripts/tests/test_doctor.py"]) == []
     # 2026-07-23: срез карты — вход гейта, тихая правка = обход осей.
     assert mg.mechanism_paths(["state/sibling-map.snapshot.md"]) == [
         "state/sibling-map.snapshot.md"]

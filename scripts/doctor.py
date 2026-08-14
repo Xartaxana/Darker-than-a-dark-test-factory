@@ -11,7 +11,10 @@ scheduled-проходом /qa-loop убеждаемся, что стенд це
   run:  java/adb исполняются (пути из scripts/env.ps1); AVD ao3_test_api34
         существует; node/npx.cmd в PATH; appium установлен (tools/appium);
         gradlew.bat в app-under-test; APK по apk_path существует; guest IPv4
-        pin (disable_ipv6=1 на устройстве, если оно поднято — ESC-015)
+        pin (disable_ipv6=1 на устройстве, если оно поднято — ESC-015);
+        живой loop.lock с мёртвым pid (heartbeat-сирота, M1/R4); пакет на
+        устройстве соответствует yaml (vc + sha base.apk,
+        mech-device-build-check)
 
 Коды выхода: 0 — всё OK/WARN; 1 — есть FAIL (эскалация уже записана).
 FAIL дедуплицируется: одна строка **DOCTOR** на проверку, пока не устранена.
@@ -47,6 +50,10 @@ ESCALATIONS_PATH = REPO / "state" / "escalations.md"
 LOCK_FILE = REPO / "state" / "loop.lock"
 SLA_PATH = REPO / "state" / "sla.yaml"
 AVD_NAME = "ao3_test_api34"
+# mech-device-build-check (spec-device-build-check.md v3): истина —
+# framework/config/settings.py:24 (`APP_PACKAGE = "com.example.ao3_wrapper"`),
+# сверено builder'ом при реализации.
+PACKAGE_ID = "com.example.ao3_wrapper"
 
 _which = shutil.which
 
@@ -234,6 +241,126 @@ def _apk_sha256_check(apk_path: Path | None, apk_exists: bool, aut_text: str) ->
                 "вручную")
 
 
+def _parse_pm_path_base_apk(pm_path_out: str) -> str | None:
+    """Парс `adb shell pm path <pkg>`: строки `package:<abs-path>` (сплит-APK
+    — несколько строк, напр. `split_config.*` — игнорируются). Возвращает
+    путь, оканчивающийся на `/base.apk`; None — такой строки нет / вывод
+    пуст."""
+    for line in (pm_path_out or "").splitlines():
+        line = line.strip()
+        if not line.startswith("package:"):
+            continue
+        path = line[len("package:"):].strip()
+        if path.endswith("/base.apk"):
+            return path
+    return None
+
+
+def _parse_sha256sum_hex(sha_out: str) -> str | None:
+    """Парс `adb shell sha256sum <path>`: формат `<hex>  <путь>` — берётся
+    ПЕРВЫЙ токен, lower(). None — вывод пуст/не парсится."""
+    text = (sha_out or "").strip()
+    if not text:
+        return None
+    first_line = text.splitlines()[0].strip()
+    tokens = first_line.split()
+    if not tokens:
+        return None
+    # Валидация формы токена (Б2б критик-входа приёмки): `_run` склеивает
+    # stdout+stderr, поэтому диагностический текст при rc=0 стал бы «хэшем»
+    # и дал ложный WARN — ошибка инструмента не должна становиться сигналом
+    # (инвариант ветки 4 спеки).
+    tok = tokens[0].lower()
+    return tok if re.fullmatch(r"[0-9a-f]{64}", tok) else None
+
+
+def _device_package_check(adb_available: bool, serial: str | None,
+                          dumpsys_out: str | None, installed_sha: str | None,
+                          aut_text: str) -> Check:
+    """Третье звено цепочки идентичности сборки (spec-device-build-check.md
+    v3): сборка→yaml закрыт build_watch (M-B), yaml→файл закрыт
+    `_apk_sha256_check` (A2/C1) — здесь устройство↔yaml. Чистая функция:
+    вся работа с процессами (adb devices/dumpsys/pm path/sha256sum) — в
+    `run_checks`; `installed_sha` — уже посчитанный вызывающим кодом sha256
+    установленного base.apk (`_parse_pm_path_base_apk` + `_parse_sha256sum_hex`
+    поверх реальных adb-вызовов), либо None, если путь/хэш не удалось
+    получить. Ветки — ДОСЛОВНО спека (7 состояний границы)."""
+    name = "пакет на устройстве соответствует yaml"
+
+    if not adb_available:
+        return Check(name, "run", True, "н/п — adb недоступен")
+    if serial is None:
+        return Check(name, "run", True, "н/п — устройства нет (эмулятор не поднят)")
+
+    m_vcode = re.search(r'(?m)^version_code:\s*([^\r\n#]*)\s*(#.*)?$', aut_text)
+    yaml_vcode = (m_vcode.group(1).strip() if m_vcode else "")
+    if not yaml_vcode or yaml_vcode.lower() == "unknown":
+        return Check(name, "run", False,
+                    f"сверка невозможна: yaml не фиксирует сборку "
+                    f"(version_code={yaml_vcode!r})", warn=True)
+
+    m_sha = re.search(r'(?m)^apk_sha256:\s*"?([^"\r\n#]*)"?\s*(#.*)?$', aut_text)
+    yaml_sha = (m_sha.group(1).strip() if m_sha else "")
+    sha_available = bool(yaml_sha) and yaml_sha.lower() != "unknown"
+
+    if not dumpsys_out or not dumpsys_out.strip():
+        return Check(name, "run", True,
+                    "н/п — вызов adb не удался (rc!=0/timeout/пустой вывод)")
+
+    # Якорь БЛОКОМ пакета (Б7/ветка 5): фильтр `dumpsys package <arg>`
+    # подстрочный — вывод может нести несколько блоков (androidTest-пакет
+    # <PACKAGE_ID>.test, hidden system packages). "] (" сразу после ID не
+    # даёт "<PACKAGE_ID>.test" случайно матчить якорь.
+    anchor = f"Package [{PACKAGE_ID}] ("
+    start = dumpsys_out.find(anchor)
+    if start == -1:
+        return Check(name, "run", True,
+                    "н/п — пакет не установлен; conftest/Install-App поставит "
+                    "из apk_path")
+    # Граница блока — ОТСТУП-ТОЛЕРАНТНАЯ (Б2а критик-входа приёмки):
+    # реальный `dumpsys package` печатает блоки внутри секции `Packages:` с
+    # отступом, поэтому голый find("\nPackage [") границу не находит и блок
+    # тёк бы до EOF (versionCode мог бы быть прочитан из чужого блока).
+    # Живой вывод на этом стенде не снят (NO DEVICE) — форма ниже корректна
+    # в обеих раскладках.
+    m_next = re.compile(r"(?m)^[ \t]*Package \[").search(dumpsys_out, start + len(anchor))
+    next_start = m_next.start() if m_next else -1
+    block_text = dumpsys_out[start:] if next_start == -1 else dumpsys_out[start:next_start]
+    m_vc_device = re.search(r'versionCode=(\S+)', block_text)
+    if m_vc_device is None:
+        return Check(name, "run", True,
+                    "н/п — versionCode не найден в блоке пакета dumpsys")
+    device_vcode = m_vc_device.group(1)
+
+    # Б1 критик-входа приёмки: у каждой WARN-ветки своя диагностика (sha-ветка
+    # не печатает заведомо РАВНЫЕ vc как улику), общий — только путь
+    # восстановления.
+    recovery = ("прогон пойдёт не на том билде; ПЕРЕД любым device-правилом "
+                "выполни Install-App (scripts/tasks.ps1)")
+    if device_vcode != yaml_vcode:
+        return Check(name, "run", False,
+                    f"на устройстве vc={device_vcode}, yaml vc={yaml_vcode} — " + recovery,
+                    warn=True)
+
+    if not sha_available:
+        return Check(name, "run", True,
+                    f"vc={device_vcode} совпадает; идентичность sha не подтверждена: "
+                    "apk_sha256 в yaml пуст/unknown")
+
+    if not installed_sha:
+        return Check(name, "run", True, "н/п — путь base.apk не получен")
+
+    if installed_sha.lower() != yaml_sha.lower():
+        return Check(name, "run", False,
+                    f"vc совпал ({device_vcode}), но sha установленного base.apk НЕ "
+                    f"совпадает: устройство={installed_sha[:12]}… yaml={yaml_sha[:12]}… — "
+                    + recovery, warn=True)
+
+    return Check(name, "run", True,
+                f"vc={device_vcode}, sha установленного base.apk совпадает с yaml "
+                f"({installed_sha[:12]}…)")
+
+
 def run_checks() -> list[Check]:
     checks: list[Check] = []
     env = _env_paths()
@@ -287,6 +414,11 @@ def run_checks() -> list[Check]:
     # переживает ребут/новый буд без прохода через Start-Emulator (напр. ручной
     # `adb emu kill` + сторонний запуск emulator.exe). Устройства нет — чек не
     # применим (skip, НЕ FAIL): doctor не поднимает эмулятор сам.
+    # device_serial инициализирован здесь (не только в ветке adb.exists()),
+    # чтобы mech-device-build-check ниже мог переиспользовать его без
+    # NameError, когда adb вовсе недоступен (второй `adb devices` не зовётся,
+    # spec-device-build-check.md v3).
+    device_serial: str | None = None
     if adb.exists():
         device_serial = _adb_device_serial(adb)
         if device_serial is None:
@@ -363,6 +495,29 @@ def run_checks() -> list[Check]:
     # и различаются -> FAIL с путём восстановления (иначе фабрика стоит
     # молча-надолго — FAIL снимает env-правила прохода, SKILL.md:84-87).
     checks.append(_apk_sha256_check(apk_path_for_sha, apk_ok, aut_text_for_sha))
+
+    # mech-device-build-check (spec-device-build-check.md v3): третье звено
+    # цепочки идентичности сборки — устройство↔yaml (сборка→yaml уже закрыт
+    # build_watch/M-B, yaml→файл — чеком выше). serial переиспользован из
+    # блока guest IPv4 pin, второй `adb devices` не зовётся. Все 3 adb-вызова
+    # (dumpsys/pm path/sha256sum) безусловны при живом serial — какая ветка
+    # применится, решает чистая функция ниже по своим правилам (напр. пакет
+    # не установлен -> installed_sha всё равно останется None, не проблема).
+    dumpsys_out: str | None = None
+    installed_sha: str | None = None
+    if adb.exists() and device_serial is not None:
+        rc_d, out_d = _run([str(adb), "-s", device_serial, "shell", "dumpsys",
+                            "package", PACKAGE_ID])
+        dumpsys_out = out_d if rc_d == 0 and out_d.strip() else None
+        rc_p, out_p = _run([str(adb), "-s", device_serial, "shell", "pm", "path",
+                            PACKAGE_ID])
+        base_apk_path = _parse_pm_path_base_apk(out_p) if rc_p == 0 else None
+        if base_apk_path:
+            rc_s, out_s = _run([str(adb), "-s", device_serial, "shell",
+                                "sha256sum", base_apk_path])
+            installed_sha = _parse_sha256sum_hex(out_s) if rc_s == 0 else None
+    checks.append(_device_package_check(adb.exists(), device_serial, dumpsys_out,
+                                        installed_sha, aut_text_for_sha))
 
     # M1/R4 (plan-m1-m4.md v3, 2026-08-09): сирота-детектор для heartbeat-обёртки.
     checks.append(_heartbeat_lock_dead_pid_check())
