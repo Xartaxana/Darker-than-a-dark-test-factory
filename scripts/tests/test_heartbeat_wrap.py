@@ -42,12 +42,16 @@ def _paths(tmp_path, **sla_kw):
     # schtasks /disable живой задачи AO3-QA-Heartbeat). tmp_path-путь без
     # созданного файла = безлимит, тот же класс изоляции, что остальные
     # пути ниже.
+    # BL-3 расширен spec-heartbeat-fastdeath.md v2 (пин 21): fastdeath_path
+    # тем же классом — без него run_pass(**p) читал/писал бы боевой
+    # state/heartbeat-fastdeath.json.
     return {
         "lock_file": tmp_path / "state" / "loop.lock",
         "reaps_path": tmp_path / "state" / "loop-lock-reaps.json",
         "escalations_path": tmp_path / "state" / "escalations.md",
         "sla_path": _sla(tmp_path, **sla_kw),
         "budget_path": tmp_path / "state" / "heartbeat-budget.txt",
+        "fastdeath_path": tmp_path / "state" / "heartbeat-fastdeath.json",
     }
 
 

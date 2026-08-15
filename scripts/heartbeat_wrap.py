@@ -100,17 +100,42 @@ AO3-QA-Heartbeat /disable`, строка в orchestrator-log + эскалаци�
 `HEARTBEAT-BUDGET` в state/escalations.md (файл НЕ удаляется; отказ
 disable логируется, no-op-тик); мусор в файле — не запускать + та же
 эскалация, задачу НЕ отключать (оператор чинит файл). См.
-_read_budget/_write_budget/_schtasks_disable/_write_budget_escalation.
+_read_budget/_write_budget/_schtasks_disable/_write_singleton_escalation.
+
+Детектор серийной быстрой смерти + возврат бюджета
+(spec-heartbeat-fastdeath.md v2, 2026-08-15, инцидент 8+ подряд мёртвых
+тиков на протухшем OAuth-токене): `rc != 0 AND runtime < FAST_DEATH_SEC`
+(120с, без env-ручки) — быстрая смерть. state/heartbeat-fastdeath.json
+(gitignored, .gitignore:33-44) копит счётчик подряд; ЛЮБАЯ ошибка
+чтения/парса трактуется как count=0 (самовосстановление, в отличие от
+budget-файла — намерение оператора здесь не пишется руками). При
+count>=3 подряд — singleton-эскалация `HEARTBEAT-CHILD-DEATH`
+[heartbeat:child-death] (та же машинерия, что HEARTBEAT-BUDGET —
+обобщено в `_write_singleton_escalation`); здоровый проход (rc=0) или
+медленная смерть (runtime >= FAST_DEATH_SEC) сбрасывает счётчик в 0.
+Задача планировщика НЕ отключается (смерть-серия самоизлечивается,
+когда причину чинит оператор). Если бюджет прогонов был сожжён в ЭТОМ
+проходе (декремент прошёл без OSError) и смерть быстрая — бюджет
+возвращается перечиткой+инкрементом (не восстановлением старого
+значения — конкурентная правка оператора не должна быть затёрта). Обе
+записи (счётчик, эскалация) никогда не бросают исключение наружу
+run_pass (класс BL-4 — писатель эскалаций на занятом escalations.md
+раньше сиротил лок; починено для ВСЕХ трёх площадок singleton-эскалаций
+через общий catch внутри `_write_singleton_escalation`). См.
+_read_fastdeath/_write_fastdeath/_fastdeath_increment/_fastdeath_reset/
+_refund_budget.
 """
 from __future__ import annotations
 
 import argparse
 import datetime
+import json
 import os
 import re
 import secrets
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 try:
@@ -128,6 +153,7 @@ DEFAULT_REAPS_PATH = REPO / "state" / "loop-lock-reaps.json"
 DEFAULT_ESCALATIONS_PATH = REPO / "state" / "escalations.md"
 DEFAULT_SLA_PATH = REPO / "state" / "sla.yaml"
 DEFAULT_BUDGET_PATH = REPO / "state" / "heartbeat-budget.txt"
+DEFAULT_FASTDEATH_PATH = REPO / "state" / "heartbeat-fastdeath.json"
 
 # Тот же абсолютный путь, что был в прежнем heartbeat.cmd (npm global
 # claude.cmd не гарантированно в PATH scheduled-контекста Task Scheduler).
@@ -160,11 +186,18 @@ _BUDGET_CORRUPT_MSG = ("state/heartbeat-budget.txt не парсится в це
 # AT-BUG-041-класс (EOL-перегон): '[^\r\n]*' вместо '.*$' под (?m) — см.
 # докстринг loop_lock.LOOP_LINE_RE, тот же образец, ключ здесь ФИКСИРОВАН
 # (не нумеруется LOOP-N) — состояние singleton, не растущий счётчик.
-# Патч E (критик, rework attempt 2): ключ собран через re.escape(...), не
-# продублирован литералом — единственный источник правды HEARTBEAT_BUDGET_KEY.
-_BUDGET_LINE_RE = re.compile(
-    r"(?m)^- \[(?P<ts>[^\]]+)\] \*\*" + re.escape(HEARTBEAT_BUDGET_KEY) +
-    r"\*\* \[heartbeat:budget\] — [^\r\n]*")
+# Регекс строки собирается внутри _write_singleton_escalation() из key/tag
+# через re.escape(...) (Патч E, критик rework attempt 2) — здесь больше не
+# захардкожен, единственный источник правды HEARTBEAT_BUDGET_KEY + тег
+# "heartbeat:budget", передаваемые вызывающим кодом.
+HEARTBEAT_BUDGET_TAG = "heartbeat:budget"
+
+# --- детектор серийной быстрой смерти + возврат бюджета
+# (spec-heartbeat-fastdeath.md v2, 2026-08-15) ------------------------------
+FAST_DEATH_SEC = 120.0
+FAST_DEATH_ESCALATE_AT = 3
+HEARTBEAT_CHILD_DEATH_KEY = "HEARTBEAT-CHILD-DEATH"
+HEARTBEAT_CHILD_DEATH_TAG = "heartbeat:child-death"
 
 
 def _utcnow() -> datetime.datetime:
@@ -309,36 +342,187 @@ def _schtasks_disable(task_name: str = TASK_NAME) -> tuple[int, str]:
         return 127, str(e)
 
 
-def _write_budget_escalation(escalations_path: Path, message: str,
-                             now: datetime.datetime) -> None:
-    """Дописывает/обновляет ОДНУ открытую HEARTBEAT-BUDGET-эскалацию —
-    тот же приём, что loop_lock._write_loop_escalation, но ключ
-    ФИКСИРОВАН (не нумеруется LOOP-N): состояние singleton — второй
-    одновременной причины исчерпания быть не может, дедуп по задаче.
-    Тег `[heartbeat:budget]` (не `[sla:...]`) — sla_sweep.rewrite_registry
-    трогает только свои [sla:*]-строки (см. докстринг sla_sweep.py);
-    эскалация переживает его проходы, пока оператор не удалит строку
-    сам (штатный способ закрыть — см. ll.ESCALATIONS_HEADER)."""
-    stamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
-    text = escalations_path.read_bytes().decode("utf-8") if escalations_path.exists() else ""
-    eol = "\r\n" if "\r\n" in text else "\n"
+def _write_singleton_escalation(escalations_path: Path, key: str, tag: str, message: str,
+                                now: datetime.datetime) -> None:
+    """Дописывает/обновляет ОДНУ открытую singleton-эскалацию с фиксированным
+    `key`/`tag` — обобщение прежнего `_write_budget_escalation` (D-0043,
+    класс singleton-эскалаций спеки spec-heartbeat-fastdeath.md v2 §«Рефакторинг»),
+    тот же приём, что loop_lock._write_loop_escalation, но ключ НЕ
+    нумеруется (LOOP-N) — состояние singleton, второй одновременной
+    причины того же класса быть не может, дедуп по (key, tag). Тег
+    `[heartbeat:*]` (не `[sla:...]`) — sla_sweep.rewrite_registry трогает
+    только свои [sla:*]-строки (см. докстринг sla_sweep.py); эскалация
+    переживает его проходы, пока оператор не удалит строку сам (штатный
+    способ закрыть — см. ll.ESCALATIONS_HEADER). Регекс строки собирается
+    из key/tag через re.escape(...) (Патч E).
 
-    m = _BUDGET_LINE_RE.search(text)
-    if m:
-        new_line = f"- [{m.group('ts')}] **{HEARTBEAT_BUDGET_KEY}** [heartbeat:budget] — {message}"
-        new_text = text[:m.start()] + new_line + text[m.end():]
-    else:
-        if not text:
-            text = ll.ESCALATIONS_HEADER
-        elif not text.endswith("\n"):
-            text += eol
-        new_text = (text +
-                    f"- [{stamp}] **{HEARTBEAT_BUDGET_KEY}** [heartbeat:budget] — {message}{eol}")
+    Класс BL-4 (спека п.2а, воспроизведено критиком 2026-08-15 на
+    ДЕЙСТВУЮЩЕМ коде): раньше OSError записи (напр. PermissionError из
+    os.replace по занятому редактором escalations.md) пробрасывался
+    НАРУЖУ run_pass ПОСЛЕ acquire — loop.lock оставался сиротой до TTL, а
+    M4-строка не писалась вовсе. Здесь — тот же приём «никогда не
+    бросает наружу», что _taskkill_tree/_schtasks_disable: OSError
+    ловится ВНУТРИ, печатается `ESCALATION write failed: <e>`, вызывающий
+    run_pass продолжает штатный finally/release.
 
-    escalations_path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = escalations_path.with_name(escalations_path.name + ".tmp")
-    tmp.write_bytes(new_text.encode("utf-8"))
-    os.replace(tmp, escalations_path)
+    Rework attempt 2 (критик B1, 2026-08-15): `except OSError` ловил не
+    весь класс BL-4 — `read_bytes().decode("utf-8")` на не-utf8
+    escalations.md бросает UnicodeDecodeError (подкласс ValueError, НЕ
+    OSError) — критик воспроизвёл ровно ту же сироту-лок пробу раунда 1,
+    другим входом. `except (OSError, ValueError)` закрывает оба класса
+    отказа записи (I/O и декодирование)."""
+    try:
+        line_re = re.compile(
+            r"(?m)^- \[(?P<ts>[^\]]+)\] \*\*" + re.escape(key) +
+            r"\*\* \[" + re.escape(tag) + r"\] — [^\r\n]*")
+        stamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+        text = escalations_path.read_bytes().decode("utf-8") if escalations_path.exists() else ""
+        eol = "\r\n" if "\r\n" in text else "\n"
+
+        m = line_re.search(text)
+        if m:
+            new_line = f"- [{m.group('ts')}] **{key}** [{tag}] — {message}"
+            new_text = text[:m.start()] + new_line + text[m.end():]
+        else:
+            if not text:
+                text = ll.ESCALATIONS_HEADER
+            elif not text.endswith("\n"):
+                text += eol
+            new_text = text + f"- [{stamp}] **{key}** [{tag}] — {message}{eol}"
+
+        escalations_path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = escalations_path.with_name(escalations_path.name + ".tmp")
+        tmp.write_bytes(new_text.encode("utf-8"))
+        os.replace(tmp, escalations_path)
+    except (OSError, ValueError) as e:   # ValueError ⊃ UnicodeDecodeError: не-utf8 escalations.md
+        print(f"ESCALATION write failed: {e}")
+
+
+def _read_fastdeath(fastdeath_path: Path) -> dict:
+    """Читает state/heartbeat-fastdeath.json. ЛЮБАЯ ошибка чтения/парса
+    (файла нет, битый json, не dict) трактуется как count=0 —
+    самовосстановление (спека п.2, В ОТЛИЧИЕ от budget, где corrupt =
+    непонятное намерение оператора и fail loud: этот файл пишется/
+    читается ТОЛЬКО механизмом, оператор его не редактирует)."""
+    default = {"count": 0, "first_ts": None, "last_ts": None, "last_rc": None}
+    if not fastdeath_path.exists():
+        return dict(default)
+    try:
+        data = json.loads(fastdeath_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return dict(default)
+    if not isinstance(data, dict):
+        return dict(default)
+    out = dict(default)
+    out.update(data)
+    # Rework attempt 2 (критик B2, 2026-08-15): приведение "count" к int
+    # ЖИЛО у вызывающих (_fastdeath_increment/_fastdeath_reset) — не
+    # число (списки/строки-не-число) там либо TypeError'ил НАРУЖУ
+    # run_pass (сирота-лок), либо (при рассинхроне веток) проглатывался
+    # общим except Exception вокруг p.wait и портил M4-строку ложным
+    # exit=error. Приведение — ЗДЕСЬ, внутри охраняемого читателя: не
+    # число => весь файл трактуем как count=0 (спека п.2, тот же принцип,
+    # что битый json).
+    try:
+        out["count"] = int(out.get("count") or 0)
+    except (TypeError, ValueError):
+        return dict(default)
+    return out
+
+
+def _write_fastdeath(fastdeath_path: Path, data: dict) -> None:
+    """Пишет state/heartbeat-fastdeath.json. НИКОГДА не бросает исключение
+    наружу (класс BL-4, спека п.2а) — тот же приём, что
+    _taskkill_tree/_schtasks_disable: OSError ловится и печатается
+    `FASTDEATH write failed: <e>`.
+
+    Rework attempt 2 (критик B1, симметрично _write_singleton_escalation):
+    `except (OSError, ValueError)` — json.dumps сам не декодирует, но тот
+    же класс отказа («I/O и не-текстовые проблемы записи») закрывается
+    единообразно с писателем эскалаций."""
+    try:
+        fastdeath_path.parent.mkdir(parents=True, exist_ok=True)
+        fastdeath_path.write_text(json.dumps(data, ensure_ascii=False, indent=2),
+                                  encoding="utf-8")
+    except (OSError, ValueError) as e:
+        print(f"FASTDEATH write failed: {e}")
+
+
+def _fastdeath_increment(fastdeath_path: Path, escalations_path: Path,
+                         now: datetime.datetime, rc: int | None,
+                         runtime: float | None) -> str:
+    """Инкрементирует счётчик серии быстрых смертей (spawn-failed или
+    rc!=0 и runtime < FAST_DEATH_SEC), пишет файл, при достижении порога
+    FAST_DEATH_ESCALATE_AT пишет/обновляет singleton-эскалацию
+    HEARTBEAT-CHILD-DEATH. Возвращает M4-суффикс
+    ` fastdeath=<N>[ escalated]` (спека п.6). Порядок (спека п.2а/п.4,
+    пин 14): счётчик пишется ДО попытки записи эскалации — падение
+    писателя эскалаций не теряет инкремент.
+
+    Rework attempt 2 (критик B3, решение Lead — чинить код, не спеку):
+    `last_ts`/`first_ts` — момент СМЕРТИ ребёнка (спека п.2), НЕ `now`
+    начала прохода: `stamp` берётся из `_utcnow()` здесь, на месте.
+    Аргумент `now` остаётся ТОЛЬКО меткой строки реестра эскалаций
+    (`_write_singleton_escalation`, семантика ll._write_loop_escalation —
+    момент записи строки, не момент события)."""
+    data = _read_fastdeath(fastdeath_path)
+    prev_count = data["count"]                       # уже int (B2: приведено в _read_fastdeath)
+    count = prev_count + 1
+    stamp = _utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")  # B3: момент смерти, не начала прохода
+    first_ts = data.get("first_ts") if prev_count > 0 and data.get("first_ts") else stamp
+    _write_fastdeath(fastdeath_path, {"count": count, "first_ts": first_ts,
+                                      "last_ts": stamp, "last_rc": rc})
+    suffix = f" fastdeath={count}"
+    if count >= FAST_DEATH_ESCALATE_AT:
+        runtime_txt = f"{runtime:.1f}с" if runtime is not None else "мгновенно (spawn-failed)"
+        message = (
+            f"{count} быстрых смертей подряд, окно {first_ts}..{stamp}, "
+            f"последний rc={rc}, runtime={runtime_txt}; первые строки причины — "
+            "logs/heartbeat.log; причину чинит оператор/Lead, счётчик сбросится "
+            "сам первым здоровым проходом")
+        _write_singleton_escalation(escalations_path, HEARTBEAT_CHILD_DEATH_KEY,
+                                    HEARTBEAT_CHILD_DEATH_TAG, message, now)
+        suffix += " escalated"
+    return suffix
+
+
+def _fastdeath_reset(fastdeath_path: Path) -> str:
+    """Сбрасывает счётчик серии в 0 (rc==0 либо медленная смерть, спека
+    п.3). Здоровый проход при УЖЕ нулевом/отсутствующем счётчике файл НЕ
+    переписывает и НЕ создаёт — запись только при сбросе с ненулевого
+    значения. Возвращает суффикс `` или ` fastdeath-reset`."""
+    data = _read_fastdeath(fastdeath_path)
+    if data["count"] == 0:                            # уже int (B2: приведено в _read_fastdeath)
+        return ""
+    _write_fastdeath(fastdeath_path, {"count": 0, "first_ts": None,
+                                      "last_ts": None, "last_rc": None})
+    return " fastdeath-reset"
+
+
+def _refund_budget(budget_path: Path) -> str:
+    """M-B: возврат бюджета после быстрой смерти (спека §«M-B»).
+    ПЕРЕЧИТЫВАЕТ текущее значение (оператор мог переписать файл за время
+    прохода — восстанавливать старое значение нельзя, класс clobber) и,
+    если оно int, пишет current+1. unlimited/corrupt — возврат
+    пропускается со строкой `BUDGET refund skipped (<причина>)`; НЕ имеет
+    права СОЗДАТЬ файл, если его нет (удаление оператором = «снять
+    лимит»). OSError записи — та же защита, что у декремента (печать, не
+    падение). Возвращает суффикс `` или ` budget-refunded`."""
+    current = _read_budget(budget_path)
+    if current == _BUDGET_UNLIMITED:
+        print("BUDGET refund skipped (unlimited, файла нет)")
+        return ""
+    if current == _BUDGET_CORRUPT:
+        print("BUDGET refund skipped (budget corrupt)")
+        return ""
+    new_value = current + 1
+    try:
+        _write_budget(budget_path, new_value)
+    except OSError as e:
+        print(f"BUDGET refund write failed: {e}")
+        return ""
+    print(f"BUDGET refund: +1 ({new_value})")
+    return " budget-refunded"
 
 
 def _release_and_finish(outcome: str, *, lock_file: Path, holder: str,
@@ -368,6 +552,7 @@ def run_pass(*, lock_file: Path = DEFAULT_LOCK_FILE,
             escalations_path: Path = DEFAULT_ESCALATIONS_PATH,
             sla_path: Path = DEFAULT_SLA_PATH,
             budget_path: Path = DEFAULT_BUDGET_PATH,
+            fastdeath_path: Path = DEFAULT_FASTDEATH_PATH,
             claude_cmd: str = CLAUDE_CMD,
             child_args: list[str] | None = None,
             now: datetime.datetime | None = None,
@@ -383,12 +568,21 @@ def run_pass(*, lock_file: Path = DEFAULT_LOCK_FILE,
     N<=0 — самоотключение задачи + эскалация; файл есть, но не
     парсится — та же эскалация, задачу НЕ отключаем (оператор чинит
     файл). Оба ранних выхода обязаны освободить лок сами (в отличие от
-    BUSY-ветки — там лок чужой)."""
+    BUSY-ветки — там лок чужой).
+
+    Детектор серийной быстрой смерти + возврат бюджета
+    (spec-heartbeat-fastdeath.md v2) — таблица исходов ЕДИНСТВЕННЫЙ
+    источник правды (спека §«M-A» п.3): BUSY и ранние budget-выходы
+    fastdeath-счётчик НЕ трогают; spawn-failed и (rc!=0, runtime <
+    FAST_DEATH_SEC) — инкремент (+ refund бюджета, если он был сожжён
+    В ЭТОМ проходе); rc==0 или (rc!=0, runtime >= FAST_DEATH_SEC) —
+    сброс в 0; exit=error/timeout-kill — no-op."""
     lock_file = Path(lock_file)
     reaps_path = Path(reaps_path)
     escalations_path = Path(escalations_path)
     sla_path = Path(sla_path)
     budget_path = Path(budget_path)
+    fastdeath_path = Path(fastdeath_path)
 
     # Критик-фикс BL-4 (rework attempt 2, 2026-08-15): compute_max_pass_sec
     # вычислен ЗДЕСЬ — ДО acquire(), а не между acquire и внутренним
@@ -422,7 +616,8 @@ def run_pass(*, lock_file: Path = DEFAULT_LOCK_FILE,
     if budget == _BUDGET_CORRUPT:
         print(f"BUDGET corrupt: {budget_path} не парсится в целое число — "
               "проход не запускался")
-        _write_budget_escalation(escalations_path, _BUDGET_CORRUPT_MSG, now)
+        _write_singleton_escalation(escalations_path, HEARTBEAT_BUDGET_KEY,
+                                    HEARTBEAT_BUDGET_TAG, _BUDGET_CORRUPT_MSG, now)
         _release_and_finish("budget=corrupt, проход не запускался",
                             lock_file=lock_file, holder=holder, reaps_path=reaps_path)
         return 0
@@ -435,7 +630,8 @@ def run_pass(*, lock_file: Path = DEFAULT_LOCK_FILE,
         else:
             print(f"disable failed: rc={disable_rc} out={disable_out.strip()}")
             disable_note = "disable=failed"
-        _write_budget_escalation(escalations_path, _BUDGET_EXHAUSTED_MSG, now)
+        _write_singleton_escalation(escalations_path, HEARTBEAT_BUDGET_KEY,
+                                    HEARTBEAT_BUDGET_TAG, _BUDGET_EXHAUSTED_MSG, now)
         _release_and_finish(f"budget<=0, проход не запускался, {disable_note}",
                             lock_file=lock_file, holder=holder, reaps_path=reaps_path)
         return 0
@@ -447,12 +643,22 @@ def run_pass(*, lock_file: Path = DEFAULT_LOCK_FILE,
         p = _popen(args, env=child_env)
     except Exception as e:
         # Неудачный spawn не жжёт бюджет: _write_budget ниже просто не
-        # достигается на этой ветке.
+        # достигается на этой ветке. Таблица исходов M-A п.3: spawn-failed
+        # — тот же операторский симптом класса, что серия быстрых смертей
+        # («тика не было, фабрика молча стоит»), мгновенный по определению
+        # — считается серией (инкремент fastdeath, refund не применим —
+        # бюджет тут не жёгся).
         outcome = f"spawn-failed:{e}"
+        outcome += _fastdeath_increment(fastdeath_path, escalations_path, now, None, None)
         print(outcome)
         _release_and_finish(outcome, lock_file=lock_file, holder=holder, reaps_path=reaps_path)
         return 0
 
+    # t_spawn — сразу после успешного _popen (спека §«M-A» п.1): точка
+    # отсчёта runtime для детектора быстрой смерти.
+    t_spawn = time.monotonic()
+
+    budget_burned = False
     if budget != _BUDGET_UNLIMITED:
         # декремент ПОСЛЕ успешного Popen (бюджет = фактически стартовавшие
         # проходы) — N>0 гарантирован веткой выше (<=0 уже вернула).
@@ -463,6 +669,7 @@ def run_pass(*, lock_file: Path = DEFAULT_LOCK_FILE,
         # печатаем и идём дальше в штатный try/finally (wait/release).
         try:
             _write_budget(budget_path, budget - 1)
+            budget_burned = True  # M-B: refund допустим ТОЛЬКО если декремент прошёл (спека)
         except OSError as e:
             print(f"BUDGET decrement failed (бюджет не сожжён): {e}")
 
@@ -472,6 +679,16 @@ def run_pass(*, lock_file: Path = DEFAULT_LOCK_FILE,
         try:
             rc = p.wait(timeout=max_pass_sec)
             outcome = f"exit={rc}"
+            # Таблица исходов M-A п.3: rc!=0 и runtime < FAST_DEATH_SEC —
+            # быстрая смерть (инкремент + refund, если бюджет был сожжён);
+            # rc==0 ЛИБО (rc!=0 и runtime >= FAST_DEATH_SEC) — сброс.
+            runtime = time.monotonic() - t_spawn
+            if rc != 0 and runtime < FAST_DEATH_SEC:
+                outcome += _fastdeath_increment(fastdeath_path, escalations_path, now, rc, runtime)
+                if budget_burned:
+                    outcome += _refund_budget(budget_path)
+            else:
+                outcome += _fastdeath_reset(fastdeath_path)
         except subprocess.TimeoutExpired:
             _taskkill_tree(p.pid)
             try:

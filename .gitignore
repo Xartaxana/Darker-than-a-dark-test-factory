@@ -37,6 +37,11 @@ state/loop-lock-reaps.json
 # состояние (число прогонов до автоотключения heartbeat) — тот же
 # класс, что loop.lock/emulator-session.json ниже, не версионируем.
 state/heartbeat-budget.txt
+# spec-heartbeat-fastdeath.md v2 (2026-08-15): счётчик серии быстрых
+# смертей ребёнка heartbeat (per-host операционное состояние, пишется/
+# читается ТОЛЬКО heartbeat_wrap.py) — тот же класс, что
+# heartbeat-budget.txt выше, не версионируем.
+state/heartbeat-fastdeath.json
 # AT-BUG-063: локальное session-состояние Start-Emulator (GPU-бэкенд/AVD,
 # фактически разрешённые post-фолбэк) — машинно-специфично, пишется при
 # КАЖДОМ подъёме эмулятора, версионирование давало бы бессмысленные диффы

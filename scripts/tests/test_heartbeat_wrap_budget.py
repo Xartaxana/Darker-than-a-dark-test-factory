@@ -27,7 +27,11 @@ def _sla(tmp_path, lock_stale=2):
 
 def _paths(tmp_path, budget=None, **sla_kw):
     """budget=None -> файла нет (безлимит). Иначе пишет str(budget) как
-    есть в budget_path — даёт задавать и мусорные значения ("abc"/""/" ")."""
+    есть в budget_path — даёт задавать и мусорные значения ("abc"/""/" ").
+
+    fastdeath_path добавлен тем же классом изоляции BL-3, расширенным
+    spec-heartbeat-fastdeath.md v2 (пин 21) — без него run_pass(**p) читал/
+    писал бы боевой state/heartbeat-fastdeath.json."""
     budget_path = tmp_path / "state" / "heartbeat-budget.txt"
     if budget is not None:
         budget_path.parent.mkdir(parents=True, exist_ok=True)
@@ -38,6 +42,7 @@ def _paths(tmp_path, budget=None, **sla_kw):
         "escalations_path": tmp_path / "state" / "escalations.md",
         "sla_path": _sla(tmp_path, **sla_kw),
         "budget_path": budget_path,
+        "fastdeath_path": tmp_path / "state" / "heartbeat-fastdeath.json",
     }
 
 
