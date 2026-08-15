@@ -18,7 +18,7 @@ from selenium.webdriver.common.actions.interaction import POINTER_TOUCH
 from framework.config import settings
 from framework.core import contexts
 from framework.core.navigate import navigate
-from framework.core.waits import assert_holds_for, wait_until
+from framework.core.waits import assert_holds_for, poll_for, wait_until
 from framework.screens.browser_screen import BrowserScreen
 from framework.screens.navigation import BottomNav
 from framework.web import selectors
@@ -2780,3 +2780,58 @@ def assert_copy_url_button_label(driver, expected: str, timeout: int = 5) -> Non
             f"(последнее наблюдение: {holder['value']!r}; диагностика: {diag!r}; "
             f"browser log: {browser_log!r})"
         ) from exc
+
+
+@allure.step("Then клик по «Copy URL» реально вызывает navigator.clipboard.writeText "
+              "(browser log/подпись — ESC-032 путь б.1)")
+def assert_copy_url_write_text_invoked(driver, timeout: int = 5, poll_interval: float = 0.3) -> None:
+    """TC-188 (переформулировка Then, ESC-032 путь б.1, `bugs/AT-BUG-068.md`):
+    продуктовый контракт «Copied!»/1500мс-таймер/содержимое буфера НЕ
+    ассертится здесь — заблокирован окружением (`DOMException` бросается
+    permission-слоем Blink ДО Android `ClipboardManager`, путь (а)
+    АРХИТЕКТУРНО недостижим на этом AVD, не «пока не нашли обход» — критик-вход
+    раунда 2 AT-BUG-068). Ядро кейса, автоматизируемое сейчас: клик доходит до
+    DOM-узла кнопки, и `navigator.clipboard.writeText(location.href)` РЕАЛЬНО
+    ВЫЗЫВАЕТСЯ.
+
+    Позитивный артефакт-якорь, не вакуумный негатив (класс ложно-зелёных #1,
+    CLAUDE.md): в ТЕКУЩЕЙ тестовой среде (`ao3_test_api34`, System WebView
+    Chromium 113.0.5672.136) вызов `writeText` детерминированно ДОКАЗУЕМ через
+    `driver.get_log('browser')` — запись `DOMException: Write permission
+    denied` СУЩЕСТВУЕТ там, только если исполнение реально дошло до Clipboard
+    API (см. живую диагностику `AT-BUG-068.md`: `clickCount=1`,
+    `hasFocus=true`, `isSecureContext=true`, промис РЕАЛЬНО реджектится этим
+    исключением). Отсутствие сигнала НЕ засчитывается автоматически —
+    альтернативный позитивный путь (среда, где запись в буфер РАЗРЕШЕНА:
+    промис резолвится, `.then()` меняет подпись на «Copied!») тоже
+    принимается тем же ассертом, поэтому формулировка не ломается при смене
+    WebView/AVD-образа. Один ИЗ ДВУХ сигналов ОБЯЗАН появиться — иначе клик,
+    похоже, вообще не дошёл до обработчика (или тестовая среда деградировала
+    иначе), и это честный провал, а не «продукт не готов»."""
+    accumulated: list[str] = []
+
+    def _observed() -> bool:
+        with contexts.in_webview(driver):
+            try:
+                entries = driver.get_log("browser")
+            except Exception:  # noqa: BLE001
+                entries = []
+            label = driver.execute_script(
+                f"var b = document.querySelector({selectors.DEBUG_COPY_URL_BUTTON!r}); "
+                "return b ? b.textContent : null;"
+            )
+        for entry in entries:
+            msg = entry.get("message", "") if isinstance(entry, dict) else str(entry)
+            accumulated.append(msg)
+        if any("DOMException" in m and "Write permission denied" in m for m in accumulated):
+            return True
+        return label == "Copied!"
+
+    ok = poll_for(_observed, timeout=timeout, interval=poll_interval)
+    assert ok, (
+        "ни DOMException «Write permission denied» в browser log (AT-BUG-068, "
+        "признак этой среды), ни подпись «Copied!» (признак среды без этого "
+        f"ограничения) не наблюдались за {timeout}с после тапа по «Copy URL» — "
+        f"navigator.clipboard.writeText, похоже, не был вызван вовсе (клик не "
+        f"дошёл до обработчика узла); накопленный browser log: {accumulated!r}"
+    )

@@ -119,13 +119,30 @@ without_overlap`, `work_with_download.mitm`, `loved_work_seeded`) установ
   архитектурно неприменим независимо от того, пережил бы он `pm clear` или
   нет. Путь (а) закрыт как недостижимый этим обоснованием, не
   экспериментом.
-- [ ] (б) альтернативный тестируемый способ подтвердить копирование URL без
-  полагания на `navigator.clipboard.writeText` — требует пересмотра Then
-  TC-188.md, решение за test-designer/координатором (ESC-032, awaiting
-  выбор (б.1)/(б.2)).
+- [x] (б) альтернативный тестируемый способ подтвердить копирование URL без
+  полагания на успешный `navigator.clipboard.writeText` — **РЕШЕНО** (ESC-032,
+  путь б.1, полный Lead 2026-08-14): переформулированный Then проверяет ФАКТ
+  ВЫЗОВА `writeText` (позитивный артефакт-якорь `DOMException: Write
+  permission denied` в `driver.get_log('browser')` в текущей среде), не
+  успешную запись в буфер — Then TC-188.md переписан test-designer'ом тем же
+  решением.
 - [ ] `@pytest.mark.skip` снят с `test_debug_copy_url_toggle_both_directions_
-  without_overlap`, 3 зелёных подряд, `automated_by` в TC-188.md заполнен —
-  заблокировано до решения по пункту выше.
+  without_overlap`, 3 зелёных подряд БЕЗ флака, `automated_by` в TC-188.md
+  заполнен — **отложено** (координатор, 2026-08-16): attempt1 дал зелёный
+  витнесс, критик-вход нашёл 2 блокера различающей силы (закрыты rework
+  attempt2 — document-identity/tap_to_scroll-readback ассерты валидны,
+  подтверждены критиком в обоих прогонах). Но независимый перепрогон критика
+  вскрыл НОВЫЙ блокер — флак ~20% (`browser_steps.py:2831`,
+  `assert_copy_url_write_text_invoked` читает `driver.get_log('browser')`,
+  теряющий буфер при пере-аттаче chromedriver-сессии; `except Exception:
+  entries = []` маскирует эту tooling-потерю под ложный вердикт «клик не
+  дошёл до узла»). Правило 6 CLAUDE.md: 2 rejected того же яруса (sonnet) на
+  task_id `TC-188-automate` — 3-я попытка на том же ярусе запрещена,
+  эскалация нужна. `@pytest.mark.skip` возвращён координатором (причина в
+  докстринге теста), `automated_by` снят обратно. Направление фикса
+  (предложение критика, не исполнено): якорь вызова `writeText` перенести на
+  `window`-пробу (в стиле `mark_document_identity`), переживающую
+  переключение контекста, вместо эфемерного browser log.
 
 ## Анализ
 

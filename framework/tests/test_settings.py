@@ -617,23 +617,45 @@ def test_fetch_missing_metadata_stop_mid_process(metadata_fetch_stop_queue_seede
 
 
 # --- TC-188: Show copy-URL button (секция DEBUG) ---
+#
+# Продуктовый контракт «Copied!»/1500мс-таймер/содержимое буфера — DEFERRED,
+# НЕ реализован здесь: заблокирован `bugs/AT-BUG-068.md` (`DOMException:
+# Write permission denied` бросается permission-слоем Blink ДО Android
+# `ClipboardManager` на этом AVD/WebView, путь (а) АРХИТЕКТУРНО недостижим,
+# критерий готовности «Fixed» не закрыт). Ядро кейса, переформулированное по
+# решению ESC-032 путь (б.1) и автоматизируемое сейчас: обе стороны тумблера
+# переключаются немедленно без reload, кнопка «Copy URL» не перекрыта
+# тап-зонами (guard, образец TC-119), клик доходит до DOM-узла и
+# `navigator.clipboard.writeText` РЕАЛЬНО вызывается (позитивный
+# артефакт-якорь `DOMException` в browser log — см.
+# `browser_steps.assert_copy_url_write_text_invoked`). Связанный продуктовый
+# баг `bugs/BUG-069.md` (`ao3_bridge.js:1077-1080` без `.catch()`) — вне
+# мандата этого теста.
 
 @pytest.mark.p2
 @pytest.mark.replay
-@pytest.mark.skip(
-    reason="AT-BUG-068: navigator.clipboard.writeText() отклоняется DOMException "
-    "'Write permission denied' в тестовом WebView (browser console, подтверждено "
-    "ДВУМЯ независимыми способами тапа — Selenium .click() и настоящий Android-тач "
-    "через ActionBuilder) — Then «Copied!» структурно недостижим в этой среде, весь "
-    "непрерывный сценарий кейса остаётся неавтоматизированным до фикса/решения. "
-    "Снять skip только вместе с фактом из критерия готовности AT-BUG-068."
-)
 @allure.id("TC-188")
 @allure.title(
     "Show copy-URL button: обе стороны тумблера переключаются немедленно, "
     "без перекрытия инжектированного интерактива"
 )
 @pytest.mark.parametrize("replay", [rb.WORK_WITH_DOWNLOAD_FILENAME], indirect=True)
+@pytest.mark.skip(
+    reason="TC-188-automate rework attempt2: критик (opus) обнаружил флак "
+    "~20% (1 failed / 2 в независимом перепрогоне, PYTEST_EXIT=1 на "
+    "browser_steps.py:2831 'накопленный browser log: []', следом чистый "
+    "PASSED без изменений среды/кода) — assert_copy_url_write_text_invoked "
+    "читает driver.get_log('browser'), теряющий буфер при пере-аттаче "
+    "chromedriver-сессии (contexts.in_webview входит/выходит из WEBVIEW на "
+    "каждом опросе), плюс 'except Exception: entries = []' маскирует эту "
+    "tooling-потерю под ложный продуктовый вердикт «клик не дошёл». "
+    "Document-identity/tap_to_scroll-readback ассерты ниже ВАЛИДНЫ (критик "
+    "подтвердил: проходят в обоих прогонах, красном и зелёном) — оставлены "
+    "для следующей попытки. Нужен якорь вызова writeText НЕ через "
+    "эфемерный browser log, а через window-пробу (в стиле "
+    "mark_document_identity), переживающую переключение контекста. "
+    "automated_by в TC-188.md снят до устранения флака."
+)
 def test_debug_copy_url_toggle_both_directions_without_overlap(loved_work_seeded, replay, driver):
     # Given тумблер «Show copy-URL button» — OFF (дефолт, подтверждено явным
     # assert'ом — класс ложно-зелёных #2, CLAUDE.md), tap_to_scroll — ON (нужен
@@ -647,12 +669,33 @@ def test_debug_copy_url_toggle_both_directions_without_overlap(loved_work_seeded
     app_steps.wait_ui_ready(driver)
     app_steps.open_tab(driver, "Settings")
     settings_steps.enable_tap_to_scroll(driver)
+    # Readback после идемпотентного условного сеттера (класс 2 ложно-зелёных
+    # негативов, CLAUDE.md): `enable_tap_to_scroll` тапает, только если
+    # прочитанное состояние не совпало с желаемым — без сверки несработавший
+    # тап оставил бы Given несоответствующим кейсу, а финальный
+    # `assert_scroll_unchanged` ниже проходил бы тривиально (зональный эффект
+    # не заряжен). Тот же приём уже применён рядом к debug_copy_url и
+    # собратом TC-124 (`test_reading_ux.py:312`).
+    settings_steps.assert_tap_to_scroll_enabled(driver, expected=True)
     settings_steps.assert_debug_copy_url_enabled(driver, False)
     app_steps.open_tab(driver, "Browse")
     rating_steps.open_work_page(driver, work.ao3_id)
 
     # Then плавающая кнопка «Copy URL» НЕ ВИДНА пользователю
     browser_steps.assert_copy_url_button_hidden(driver)
+
+    # Given документ work-страницы помечен уникальным маркером идентичности
+    # (позитивный якорь класса 1 ложно-зелёных негативов, CLAUDE.md/TC-124):
+    # BrowserScreen.kt несёт ДВА структурно разных механизма с одинаковым
+    # наблюдаемым результатом «кнопка появилась» — реактивный
+    # `LaunchedEffect(debugCopyUrl)` (evaluateJavascript, БЕЗ reload, :200-205)
+    # и переинъекция `window.__ao3DebugCopyUrl` в `onPageFinished` при ЛЮБОМ
+    # reload (:668-673). Кейс требует ИМЕННО первого пути («без перезагрузки
+    # страницы») — без маркера регрессия «debugCopyUrl тоже стал
+    # перезагружать» (по образцу соседних `LaunchedEffect(darkTheme)`/
+    # `LaunchedEffect(einkMode)`, реально вызывающих `wv.reload()`) была бы не
+    # поймана.
+    doc_marker = browser_steps.mark_document_identity(driver)
 
     # When пользователь, НЕ покидая эту же страницу, переключает тумблер «Show
     # copy-URL button» в ON (через Settings, без reload WebView)
@@ -661,32 +704,38 @@ def test_debug_copy_url_toggle_both_directions_without_overlap(loved_work_seeded
     app_steps.open_tab(driver, "Browse")
 
     # Then кнопка «Copy URL» появляется НЕМЕДЛЕННО, без перезагрузки страницы
-    # (window.setDebugCopyUrl вызывается реактивно, BrowserScreen.kt:182)
+    # (window.setDebugCopyUrl вызывается реактивно, BrowserScreen.kt:182) —
+    # маркер идентичности документа доказывает это позитивно, не полагаясь
+    # только на совпадающий наблюдаемый эффект
+    browser_steps.assert_document_identity_preserved(driver, doc_marker)
     browser_steps.assert_copy_url_button_visible(driver)
 
     # When пользователь тапает по кнопке «Copy URL»
     scroll_before = browser_steps.get_webview_scroll_y(driver)
     browser_steps.tap_copy_url_button(driver)
 
-    # Then подпись кнопки меняется на «Copied!»
-    browser_steps.assert_copy_url_button_label(driver, "Copied!")
+    # Then (ядро, автоматизируемое; ESC-032 путь б.1) клик доходит до DOM-узла
+    # кнопки, и navigator.clipboard.writeText РЕАЛЬНО вызывается — позитивный
+    # артефакт-якорь (DOMException в browser log в текущей среде / подпись
+    # «Copied!» в среде без ограничения), не ассертит продуктовый Then
+    # «Copied!»/1.5с-таймер (deferred, AT-BUG-068)
+    browser_steps.assert_copy_url_write_text_invoked(driver)
 
     # And (грань nf-a11y-interactive-overlap) тап по кнопке НЕ запускает
     # зональный эффект tap_to_scroll (страница не скроллится), несмотря на то,
     # что кнопка физически лежит в нижней трети экрана (position:fixed;
     # bottom:12px) — узел <button> входит в whitelist guard'а тап-зон
     # (ao3_bridge.js:1155), тот же контракт, что уже верифицирован TC-119 на
-    # другом <button>-узле; окно наблюдения (5с) перекрывает и возврат подписи
-    # спустя ~1.5с
+    # другом <button>-узле
     browser_steps.assert_scroll_unchanged(driver, scroll_before, timeout=5)
-
-    # Then подпись возвращается к «Copy URL» спустя ~1.5с
-    browser_steps.assert_copy_url_button_label(driver, "Copy URL", timeout=2)
 
     # When пользователь переключает тумблер обратно в OFF (та же страница, без reload)
     app_steps.open_tab(driver, "Settings")
     settings_steps.set_debug_copy_url(driver, False)
     app_steps.open_tab(driver, "Browse")
 
-    # Then кнопка «Copy URL» немедленно скрывается
+    # Then кнопка «Copy URL» немедленно скрывается — маркер идентичности
+    # проверяется и для обратного направления (Инвариант TC-188 требует ОБЕИХ
+    # сторон тумблера, не только ON)
+    browser_steps.assert_document_identity_preserved(driver, doc_marker)
     browser_steps.assert_copy_url_button_hidden(driver)
