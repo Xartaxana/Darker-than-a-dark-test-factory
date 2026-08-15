@@ -1,34 +1,44 @@
 # HANDOFF — точка возобновления
 
-**ЗАКРЫТИЕ СЕССИИ 2026-08-15 (37 — Sonnet /qa-loop 20 → Opus разбор →
-Fable: heartbeat+бюджет, перепривязка Opus 5, диета CLAUDE.md).**
-Журнал закрыт (accepted mech-claude-md-diet 12:26:30, open-dispatches
-пуст), эмулятор/Appium NO DEVICE (канонически), каналы GitLab чисты
-(inbound/sync exit 0), оба репо запушены.
-**⚠ ПЕРВОЕ ДЕЙСТВИЕ ОПЕРАТОРА: HEARTBEAT-AUTH (state/escalations.md)**
-— автономные проходы мертвы на «OAuth session expired» (3 тика подряд,
-child exit=1 за ~2с; обёртка честна, локи сняты). Нужен перелогин
-claude CLI под пользователем задачи планировщика — до этого фабрика
-автономно НЕ едет (тикает вхолостую каждые 30 мин). Два
-механизм-кандидата в очередь Lead — в тексте эскалации.
-**Посажено за сессию:** heartbeat включён + бюджет прогонов
-(state/heartbeat-budget.txt, п.4г ниже); Lead-перепривязка Fable→Opus 5
-(47bcc45, D-0099: Opus-сессии — полный Lead, Fable — резерв; известный
-остаток R-4 — bugs/AT-BUG-034.md); диета CLAUDE.md 68.9→31.9 КБ
-(8591655, правило диеты кодифицировано в шапке конституции; архив
-VERBATIM в 09-history); sla_sweep BUG-токены (f834e92); CH-011
-Planned (757d57c); TC-256/AT-BUG-070..074; smoke 49/49 + regression
-271/273 на сборке 59be96c6. **Очередь следующего прохода /qa-loop
-(причина всех строк: очередь фабрики — только проходом; heartbeat
-подхватит сам после починки auth):** исполнить CH-011 (device, 120
-мин, Planned/PASS); test-maintainer TC-176 под burst (APP_CHANGED без
-resolution, решение Lead в escalations); ~27 Approved автоматизация;
-B4 AT-BUG-069/071/072/073/074; D1 BUG-059 (после F1 TC-176), BUG-067
-(после автоматизации TC-256), BUG-069 (после TC-188); ежедневный
-canary. **Владельцу, помимо auth:** BUG-052 (Intended vs Rejected,
-Blocked с 08-04); 6 вопросов awaiting:dev. Boot-бюджет: 201.7 (старт
-сессии) → 132.7 КБ (диета CLAUDE.md −37; HANDOFF-остаток уйдёт
-свипом следующего закрытия, когда сегодняшние блоки отработают).
+**ЗАКРЫТИЕ СЕССИИ 2026-08-15 (38 — Sonnet /qa-loop 10 → Fable: разбор
+остановки фабрики + механизм fastdeath).** Журнал закрыт (accepted
+mech-heartbeat-fastdeath 18:41:26, open-dispatches пуст), эмулятор/
+Appium погашены (adb devices пуст), каналы GitLab чисты (inbound
+--check «чисто», sync --check «все синхронизированы»), оба репо
+запушены. **HEARTBEAT-AUTH ЗАКРЫТ:** корень — refresh-токен CLI истёк
+08-10, креды перезаписаны пустыми 08-15 11:00Z; оператор перелогинился
+(resolved-маркер с witness ping в escalations.md, 8799271). Класс
+закрыт механизмом fastdeath (a613233, п.4д ниже). **Живой хвост для
+следующей сессии:** счётчик state/heartbeat-fastdeath.json = 1
+(последняя auth-смерть 18:30Z, ДО перелогина) — первый же здоровый
+heartbeat-тик сбросит его в 0 со строкой ` fastdeath-reset` в
+orchestrator-log; если вместо этого увидите count>=3 и
+HEARTBEAT-CHILD-DEATH — auth-починка не подействовала на headless-путь,
+эскалация к оператору. **Сделано за сессию (38):** /qa-loop 10 — D9
+TC-176 под burst-семантику (2 критик-раунда, классовая правка
+open_in_background_via_overlay, margin-зонд; TC-176 теперь Automated,
+red_lock снят, F1 пройден; 2a736de) + побочный test_debt AT-BUG-075;
+механизм fastdeath-детектора + возврат бюджета + классовое закрытие
+BL-4 сирота-локов (спека v2: критик-план 6 блокеров, критик-дифф 3
+блокера, rework; 1297 passed; a613233); кросс-пункт OS 86d6322
+(named-чек калибровки + ось-кандидат SIBLING_MAP); чистка мёртвых
+Write-правил allowlist (8799271). **Очередь следующего прохода
+/qa-loop (причина всех строк: очередь фабрики — только проходом,
+слово оператора «запущу фабрику в следующей»):** исполнить CH-011
+(device, 120 мин, Planned/PASS); D1 BUG-059 (ТЕПЕРЬ разблокирован —
+red_lock снят, TC-176 Automated/active); D3 still-repro BUG-012
+(known_issue, last_seen_in отстал от сборки); B4
+AT-BUG-069/070/071/072/073/074/075; F1 остаток x9 (TC-153/154/181-185/
+186/187); ~26 Approved автоматизация (TC-188 отдельно — Blocked
+AT-BUG-068); needs-design e-ink-оракулы (P2); CH-010 followup x2
+(методическая правка Data setup — test-designer; R-09 severity —
+test-strategist); ежедневный canary. **Очередь Lead (не фабрики):**
+loop_lock._write_loop_escalation:218 — тот же decode-под-локом класс,
+что чинился в heartbeat_wrap (критик-вход mech-heartbeat-fastdeath);
+EOL-остаток doctor/build_watch (AT-BUG-041); N-5 бюджета (смок
+disable/enable живой задачи, по слову оператора). **Владельцу:**
+BUG-052 (Intended vs Rejected, Blocked с 08-04); 6 вопросов
+awaiting:dev. Boot-бюджет: см. сообщение handoff-коммита.
 
 **РАЗБОР ОЧЕРЕДИ ЭСКАЛАЦИЙ 2026-08-15 — ЗАВЕРШЁН ПОЛНЫМ LEAD (Fable) тем
 же днём.** Opus-фаза (10:16..10:29) сделала инвентаризацию; подъём на
@@ -110,13 +120,11 @@ RUN-20260815-0337-triage). **Решения полного Lead:**
    новая ось для SIBLING_MAP («защита объявлена тотальной, реализована
    частичной — узкий except / приведение типа вне охраняемого
    читателя»; порог >=2 файлов выполнен: heartbeat_wrap + loop_lock).
-5. **Остаются владельцу:** ПЕРЕЛОГИН claude CLI (эскалация
-   HEARTBEAT-AUTH: refresh-токен истёк 08-10, креды перезаписаны
-   пустыми 08-15 11:00Z — автономные тики мертвы, пока не выполнен
-   `claude` → `/login`; агенту ввод учётных данных запрещён политикой);
-   BUG-052 (конфликт борда↔артефакт, Intended vs Rejected, Blocked с
-   08-04); 6 вопросов awaiting:dev (старейший BUG-013 — 27 дней) — наш
-   канал жив, ответов нет.
+5. **Остаются владельцу:** BUG-052 (конфликт борда↔артефакт,
+   Intended vs Rejected, Blocked с 08-04); 6 вопросов awaiting:dev
+   (старейший BUG-013 — 27 дней) — наш канал жив, ответов нет.
+   (Перелогин claude CLI по HEARTBEAT-AUTH — ВЫПОЛНЕН 08-15,
+   resolved-маркер с witness в escalations.md.)
 6. **Внешняя критика фабрики принята (слово владельца 2026-08-15,
    «не повторяем»: конституция 67КБ + процесс тяжелее продукта) —
    план лечения, общий корень «enforcement живёт в прозе»:**
