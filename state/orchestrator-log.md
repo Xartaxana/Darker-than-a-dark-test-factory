@@ -463,3 +463,5 @@ qa-orchestrator. Скрипты pre_steps (stale_locks и др.) тоже пиш
 | 2026-08-15T11:00:07Z | heartbeat-обёртка | heartbeat_wrap | logs/heartbeat.log | exit=1 |
 | 2026-08-15T11:30:04Z | heartbeat-обёртка | heartbeat_wrap | logs/heartbeat.log | exit=1 |
 | 2026-08-15T12:00:04Z | heartbeat-обёртка | heartbeat_wrap | logs/heartbeat.log | exit=1 |
+| 2026-08-15T12:29:01Z | handoff/heartbeat-диагноз | координатор (Fable) | logs/heartbeat.log, state/escalations.md | Находка закрытия: 3 тика heartbeat подряд мертвы на OAuth (child exit=1 за ~2с) — эскалация HEARTBEAT-AUTH оператору (перелогин CLI в окружении задачи), 2 механизм-кандидата в очередь (детектор серийной смерти ребёнка; auth-смерть жжёт бюджет). M4-слой отработал честно: локи сняты, exit-строки написаны. |
+| 2026-08-15T12:30:04Z | heartbeat-обёртка | heartbeat_wrap | logs/heartbeat.log | exit=1 |

@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-15T02:12:01Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-08-15T12:29:04Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 ## Сводка по областям
@@ -17,7 +17,7 @@ generated_at: 2026-08-15T02:12:01Z · генератор: `scripts/coverage_map.
 | filter-profiles | 12 | 5 | partial |
 | library | 32 | 25 | partial |
 | performance | 4 | 4 | designed-full |
-| rating | 28 | 21 | partial |
+| rating | 29 | 21 | partial |
 | security | 9 | 6 | partial |
 | settings | 23 | 11 | partial |
 | smoke | 5 | 5 | designed-full |
@@ -29,7 +29,7 @@ generated_at: 2026-08-15T02:12:01Z · генератор: `scripts/coverage_map.
 
 | Риск | Категория | Покрывающие кейсы |
 |---|---|---|
-| R-01 | DATA | backup:TC-021, backup:TC-165, backup:TC-167, backup:TC-168, backup:TC-171, backup:TC-172, rating:TC-151, rating:TC-152, rating:TC-155, rating:TC-191, rating:TC-192, rating:TC-193, rating:TC-194, settings:TC-018, settings:TC-019, settings:TC-020, settings:TC-186, settings:TC-187, smoke:TC-004, sync:TC-207, sync:TC-208, sync:TC-209, sync:TC-210, sync:TC-211, sync:TC-214, sync:TC-215, sync:TC-216, sync:TC-217, sync:TC-226, sync:TC-227, sync:TC-228, sync:TC-229, sync:TC-231 |
+| R-01 | DATA | backup:TC-021, backup:TC-165, backup:TC-167, backup:TC-168, backup:TC-171, backup:TC-172, rating:TC-151, rating:TC-152, rating:TC-155, rating:TC-191, rating:TC-192, rating:TC-193, rating:TC-194, rating:TC-256, settings:TC-018, settings:TC-019, settings:TC-020, settings:TC-186, settings:TC-187, smoke:TC-004, sync:TC-207, sync:TC-208, sync:TC-209, sync:TC-210, sync:TC-211, sync:TC-214, sync:TC-215, sync:TC-216, sync:TC-217, sync:TC-226, sync:TC-227, sync:TC-228, sync:TC-229, sync:TC-231 |
 | R-02 | TECH | canary:TC-066, canary:TC-067, canary:TC-068, canary:TC-069, canary:TC-070, canary:TC-071, canary:TC-072, canary:TC-073, canary:TC-074, canary:TC-075, canary:TC-076, canary:TC-077, canary:TC-078, canary:TC-079, canary:TC-080, canary:TC-081, canary:TC-082, canary:TC-083, canary:TC-118, canary:TC-119, canary:TC-120, canary:TC-121, canary:TC-122, canary:TC-195, canary:TC-196 |
 | R-03 | TECH | errors:TC-046, smoke:TC-001 |
 | R-04 | DATA | canary:TC-072, canary:TC-073, canary:TC-074, canary:TC-075, canary:TC-076, canary:TC-077, library:TC-016, library:TC-017, library:TC-241, library:TC-245, rating:TC-007, rating:TC-008, rating:TC-009, rating:TC-010, rating:TC-011, rating:TC-012, smoke:TC-003 |
@@ -150,7 +150,7 @@ generated_at: 2026-08-15T02:12:01Z · генератор: `scripts/coverage_map.
 | rating-entry-work-panel | rating-notes | rating:TC-007[Automated], rating:TC-008[Automated], rating:TC-010[Automated], rating:TC-151[Approved], rating:TC-155[Approved] |
 | rating-entry-listing-overlay | rating-notes | rating:TC-009[Automated], rating:TC-011[Automated], rating:TC-152[Approved] |
 | rating-note-button-listing | rating-notes | rating:TC-044[Automated] |
-| rating-metadata-backfill-blank-only | rating-notes | rating:TC-191[Review], rating:TC-192[Review] |
+| rating-metadata-backfill-blank-only | rating-notes | rating:TC-191[Review], rating:TC-192[Review], rating:TC-256[Review] |
 | rating-panel-dispose-flush-edits | rating-notes | rating:TC-193[Review], rating:TC-194[Review] |
 | bridge-rate-note-tag-buttons | ao3-bridge | canary:TC-068[Automated], canary:TC-069[Automated], canary:TC-070[Automated], canary:TC-071[Automated], canary:TC-072[Automated], canary:TC-073[Automated], canary:TC-074[Automated], canary:TC-075[Automated], canary:TC-076[Automated], canary:TC-077[Automated] |
 | bridge-badge-sync-multi | ao3-bridge | rating:TC-012[Automated] |
@@ -488,10 +488,10 @@ generated_at: 2026-08-15T02:12:01Z · генератор: `scripts/coverage_map.
 
 ### rating
 
-- coverage_status: **partial** (21/28 Automated)
+- coverage_status: **partial** (21/29 Automated)
 - риски: R-01, R-01/R-10, R-04, R-10, R-17
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-151 [P1, Approved], TC-152 [P1, Approved], TC-155 [P1, Approved], TC-191 [P1, Review], TC-192 [P1, Review], TC-193 [P1, Review], TC-194 [P1, Review]
+- P0/P1 не в Automated: TC-151 [P1, Approved], TC-152 [P1, Approved], TC-155 [P1, Approved], TC-191 [P1, Review], TC-192 [P1, Review], TC-193 [P1, Review], TC-194 [P1, Review], TC-256 [P1, Review]
 - автотесты (automated_by): framework/tests/test_rating.py::test_deselect_rating_on_work_page_panel, framework/tests/test_rating.py::test_edit_tag_on_already_saved_work_via_panel_does_not_click_kudos, framework/tests/test_rating.py::test_first_panel_save_clicks_kudos_once, framework/tests/test_rating.py::test_rate_work_from_work_page_panel, framework/tests/test_rating_listing.py::test_add_freeform_tag_persists, framework/tests/test_rating_listing.py::test_apply_ratings_syncs_duplicate_blurbs, framework/tests/test_rating_listing.py::test_change_rating_kudosed_to_read_via_listing_does_not_click_kudos, framework/tests/test_rating_listing.py::test_clear_note_removes_comment, framework/tests/test_rating_listing.py::test_comment_only_visible_on_listing_and_absent_from_rating_tabs, framework/tests/test_rating_listing.py::test_deselect_kudosed_via_listing_does_not_click_kudos, framework/tests/test_rating_listing.py::test_edit_tag_on_already_kudosed_work_via_listing_does_not_reclick_kudos, framework/tests/test_rating_listing.py::test_first_kudosed_via_listing_with_open_work_tab_clicks_kudos_once, framework/tests/test_rating_listing.py::test_listing_rate_button_updates_without_reload, framework/tests/test_rating_listing.py::test_matching_personal_tag_highlighted_on_listing, framework/tests/test_rating_listing.py::test_note_button_opens_overlay_with_expanded_comment, framework/tests/test_rating_listing.py::test_panel_rating_updates_without_reload, framework/tests/test_rating_listing.py::test_personal_tags_do_not_affect_visibility, framework/tests/test_rating_listing.py::test_rate_kudosed_via_listing_without_open_work_tab_does_not_click_kudos, framework/tests/test_rating_listing.py::test_rate_work_from_listing_overlay, framework/tests/test_rating_listing.py::test_save_note_persists_comment, framework/tests/test_rating_listing.py::test_tap_selected_chip_removes_tag
 - last_green_run: RUN-20260815-0149 (suite: smoke, status: Closed, updated: 2026-08-14T23:57:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
@@ -520,7 +520,7 @@ generated_at: 2026-08-15T02:12:01Z · генератор: `scripts/coverage_map.
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  | 3 |  |
-| P1 |  | 4 | 3 | 13 |  |
+| P1 |  | 5 | 3 | 13 |  |
 | P2 |  |  |  | 3 |  |
 | P3 |  |  |  | 2 |  |
 

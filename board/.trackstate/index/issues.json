@@ -3962,6 +3962,28 @@
     "archived": false
   },
   {
+    "key": "TC-256",
+    "path": "board/TC-256/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Автоматическая отметка READ при дочитывании скачанной работы без рейтинга сохраняет downloadPath и не перезаписывает непустые локальные метаданные",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:rating",
+      "risk:R-01"
+    ],
+    "updated": "2026-08-15T10:20:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "TC-100",
     "path": "board/TC-100/main.md",
     "parent": null,
@@ -7304,6 +7326,28 @@
     "archived": false
   },
   {
+    "key": "AT-BUG-074",
+    "path": "board/AT-BUG-074/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "render_work_page_html не несёт #chapters/.userstuff.module ни узлов dd.fandom/dd.words — блокирует TC-256 (auto-READ при дочитывании, onWorkFinished)",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-256",
+      "sev:minor"
+    ],
+    "updated": "2026-08-15T10:20:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "BUG-001",
     "path": "board/BUG-001/main.md",
     "parent": null,
@@ -7922,6 +7966,7 @@
     "assignee": "qa-agents",
     "labels": [
       "bug",
+      "test_case:TC-256",
       "sev:major"
     ],
     "updated": "2026-08-14T23:12:36Z",

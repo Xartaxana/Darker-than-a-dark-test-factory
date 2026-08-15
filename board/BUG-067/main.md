@@ -7,7 +7,7 @@ priority: "p1"
 summary: "auto-READ при дочитывании работы теряет downloadPath и перетирает метаданные у скачанной работы без рейтинга"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["bug", "sev:major"]
+labels: ["bug", "test_case:TC-256", "sev:major"]
 components: []
 fixVersions: []
 watchers: []
