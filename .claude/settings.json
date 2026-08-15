@@ -134,11 +134,7 @@
       "Edit(.claude/agents/**)",
       "Edit(.claude/skills/*)",
       "Edit(.claude/skills/**)",
-      "Edit(.claude/settings.json)",
-      "Write(.claude/agents/*)",
-      "Write(.claude/agents/**)",
-      "Write(.claude/skills/*)",
-      "Write(.claude/skills/**)"
+      "Edit(.claude/settings.json)"
     ]
   }
 }
