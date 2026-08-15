@@ -1,6 +1,8 @@
 """Тесты scripts/mechanism_gate.py — осевой гейт D-0055 (твин OS-репо)."""
 from __future__ import annotations
 
+import pytest
+
 import mechanism_gate as mg
 
 MAP_SAMPLE = "## Ось 1 — Деплои\n## Ось 3 — Роли\n## Ось 6 — Внутренние оси\n"
@@ -45,6 +47,12 @@ def test_mechanism_paths_filters_ao3_prefixes_with_boundary():
     assert mg.mechanism_paths(["state/sibling-map.snapshot.md"]) == [
         "state/sibling-map.snapshot.md"]
     assert mg.mechanism_paths(["state/sibling-map.snapshot.md.bak"]) == []
+    # 2026-08-15 (D-0099-порт): сама Lead-привязка — вход гейта (tier-
+    # требование читает из неё ожидаемый ярус), тот же образец, что срез
+    # карты выше.
+    assert mg.mechanism_paths(["delegation.config.yaml"]) == [
+        "delegation.config.yaml"]
+    assert mg.mechanism_paths(["delegation.config.yaml.bak"]) == []
 
 
 def test_decide_skip_and_block_only_from_commit_message():
@@ -286,3 +294,186 @@ def test_shrink_guard_growth_and_creation_do_not_trigger():
     assert mg.snapshot_shrink_guard("map: X", [], [1, 2]) == (0, "")
     # Без изменений.
     assert mg.snapshot_shrink_guard("map: X", [1, 2], [1, 2]) == (0, "")
+
+
+# ---------------------------------------------------------------------------
+# resolve_lead_binding — D-0099-порт (2026-08-15): семейство Lead-привязки
+# из delegation.config.yaml, fail-safe -> "fable" + WARN.
+# ---------------------------------------------------------------------------
+
+def _cfg(model: str, *, key: str = "subscription") -> str:
+    return f"roles:\n  lead:\n    {key}:\n      model: {model}\n"
+
+
+def test_resolve_lead_binding_none_and_empty_default_to_fable():
+    assert mg.resolve_lead_binding(None) == "fable"
+    assert mg.resolve_lead_binding("") == "fable"
+
+
+def test_resolve_lead_binding_valid_opus_config_returns_family_not_model_id():
+    # Р9: резолвер возвращает СЕМЕЙСТВО ("opus"), не литеральный model-id
+    # ("claude-opus-5").
+    assert mg.resolve_lead_binding(_cfg("claude-opus-5")) == "opus"
+
+
+def test_resolve_lead_binding_api_key_fallback_when_no_subscription():
+    assert mg.resolve_lead_binding(_cfg("claude-opus-5", key="api")) == "opus"
+
+
+def test_resolve_lead_binding_broken_forms_fall_back_to_fable_with_warn(capsys):
+    broken = [
+        "not: relevant\n",                                  # roles отсутствует
+        "roles: null\n",                                    # roles не словарь
+        "roles:\n  lead: null\n",                            # roles.lead не словарь
+        "- just\n- a\n- list\n",                             # верхний уровень не словарь
+        "roles:\n  lead:\n    subscription:\n      model: \"\"\n",  # model пуст
+        "roles:\n  lead:\n    subscription:\n      model: gpt-5\n",  # семейство не распознано
+        "roles:\n  lead:\n    subscription:\n      model: claude-opus-sonnet-5\n",  # >=2 семейства
+        "not valid yaml: [unclosed\n",                       # YAML не парсится
+        # BOM-мусор: PyYAML сам съедает ОДИН ведущий U+FEFF как маркер
+        # документа (эмпирически проверено — одиночный BOM ПАРСИТСЯ чисто
+        # и НЕ входит в этот батарею фейлов), но ДВОЙНОЙ BOM (двойное
+        # кодирование/повторный BOM при конкатенации файлов) оставляет
+        # второй U+FEFF ЧАСТЬЮ ключа — "﻿roles" != "roles",
+        # data.get("roles") промахивается -> ветка "roles отсутствует".
+        "﻿﻿" + _cfg("claude-opus-5"),
+    ]
+    for text in broken:
+        capsys.readouterr()  # сброс перед каждым кейсом
+        assert mg.resolve_lead_binding(text) == "fable", text
+        assert "WARN" in capsys.readouterr().err, text
+
+
+def test_resolve_lead_binding_sanitary_floor_below_opus_falls_back(capsys):
+    # Б1/2а: санитарный пол — привязка НИЖЕ opus (sonnet/haiku) не
+    # поддерживается этим деплоем, дефолт fable + явный WARN.
+    for model in ("claude-sonnet-5", "claude-haiku-4-5"):
+        capsys.readouterr()
+        assert mg.resolve_lead_binding(_cfg(model)) == "fable", model
+        err = capsys.readouterr().err
+        assert "WARN" in err and "opus" in err, model
+
+
+def test_resolve_lead_binding_pyyaml_unavailable_falls_back(monkeypatch, capsys):
+    # Р3: защищённый импорт yaml ВНУТРИ резолвера -- отсутствие PyYAML не
+    # роняет вызывающий гейт (commit-msg хук).
+    monkeypatch.setitem(__import__("sys").modules, "yaml", None)
+    assert mg.resolve_lead_binding(_cfg("claude-opus-5")) == "fable"
+    assert "WARN" in capsys.readouterr().err
+
+
+# ---------------------------------------------------------------------------
+# decide_full(config_text=...) — tier-декларация против привязки opus
+# (D-0099-порт), Р4 (неоднозначность), Р9 (вхождение семейства model-id),
+# Р12 (skip не действует для staged-конфига).
+# ---------------------------------------------------------------------------
+
+OPUS_CFG = _cfg("claude-opus-5")
+
+
+@pytest.mark.parametrize("tier_value,expect_pass", [
+    ("opus", True),          # литеральное совпадение с привязкой
+    ("fable", True),         # резерв — семейство строго выше opus
+    ("sonnet", False),       # ниже привязки
+    ("claude-opus-5", True),  # Р9: вхождение семейства «opus» по подстроке
+])
+def test_decide_full_tier_against_opus_binding(tier_value, expect_pass):
+    msg = f"feat: X\n\n{AXES_OK}\ntier: {tier_value}"
+    code, reason = mg.decide_full(msg, ["CLAUDE.md"], MAP_SAMPLE,
+                                  config_text=OPUS_CFG)
+    assert (code == 0) == expect_pass, reason
+
+
+def test_decide_full_two_tier_lines_opus_plus_fable_both_legal_passes():
+    msg = f"feat: X\n\n{AXES_OK}\ntier: opus\ntier: fable"
+    code, _ = mg.decide_full(msg, ["CLAUDE.md"], MAP_SAMPLE, config_text=OPUS_CFG)
+    assert code == 0
+
+
+def test_decide_full_two_tier_lines_opus_plus_sonnet_any_below_fails():
+    msg = f"feat: X\n\n{AXES_OK}\ntier: opus\ntier: sonnet"
+    code, reason = mg.decide_full(msg, ["CLAUDE.md"], MAP_SAMPLE, config_text=OPUS_CFG)
+    assert code == 1 and "sonnet" in reason
+
+
+def test_decide_full_single_line_ambiguous_declaration_rejected():
+    # Р4 (буквальный пример спеки): ≥2 РАЗНЫХ семейства в ОДНОЙ строке
+    # tier: -> отказ «декларация неоднозначна», НЕ первое совпадение
+    # (которое молча приняло бы «sonnet» как «fable»/«opus» и прошло бы).
+    msg = f"feat: X\n\n{AXES_OK}\ntier: sonnet (fallback от opus)"
+    code, reason = mg.decide_full(msg, ["CLAUDE.md"], MAP_SAMPLE, config_text=OPUS_CFG)
+    assert code == 1 and "неоднозначна" in reason
+
+
+def test_decide_full_ambiguous_declaration_rejected_even_when_both_families_legal():
+    # Границf: даже если ОБА семейства в строке были бы легальны по
+    # отдельности (opus/fable оба >= привязки opus), неоднозначность
+    # всё равно отказ -- проверка "≥2 семейства" безусловна, не судит
+    # по итоговому вердикту отдельных семейств (Р4: "не первое-совпадение").
+    msg = f"feat: X\n\n{AXES_OK}\ntier: opus (aka fable reserve)"
+    code, reason = mg.decide_full(msg, ["CLAUDE.md"], MAP_SAMPLE, config_text=OPUS_CFG)
+    assert code == 1 and "неоднозначна" in reason
+
+
+def test_decide_full_config_staged_blocks_skip_line():
+    # Р12/М2.7: staged-пути несут delegation.config.yaml -- skip-строка
+    # «оси: не-механизм» НЕ действует, осевой блок обязателен безусловно.
+    msg = "feat: перепривязка\n\nоси: не-механизм (только конфиг)"
+    code, reason = mg.decide_full(msg, ["delegation.config.yaml"], MAP_SAMPLE,
+                                  config_text=OPUS_CFG)
+    assert code == 1
+    # Без конфига в staged -- то же сообщение проходит как раньше.
+    code, _ = mg.decide_full(msg, ["CLAUDE.md"], MAP_SAMPLE, config_text=OPUS_CFG)
+    assert code == 0
+
+
+def test_decide_full_config_staged_requires_tier_line_unconditionally():
+    # Осевой блок присутствует (не полагается на skip), но skip-строка
+    # ТОЖЕ есть — Р12 требует tier-строку всё равно, staged-конфиг
+    # снимает льготу skip целиком, не только для осевого блока.
+    msg = f"feat: X\n\n{AXES_OK}\nоси: не-механизм (мимо кассы)"
+    code, reason = mg.decide_full(msg, ["delegation.config.yaml"], MAP_SAMPLE,
+                                  config_text=OPUS_CFG)
+    assert code == 1 and "Нет строки" in reason
+
+
+# ---------------------------------------------------------------------------
+# _head_config_text — Б5 (HEAD-источник для commit-msg-гейта), Р11 (выбор
+# builder'а: монкипатчимая функция вместо git-фикстуры).
+# ---------------------------------------------------------------------------
+
+def test_head_config_text_calls_git_show_head(monkeypatch):
+    calls = []
+
+    def fake_git(*args):
+        calls.append(args)
+        return OPUS_CFG
+
+    monkeypatch.setattr(mg, "_git", fake_git)
+    assert mg._head_config_text() == OPUS_CFG
+    assert calls == [("show", f"HEAD:{mg.CONFIG_FILENAME}")]
+
+
+def test_head_config_text_missing_file_or_head_returns_none(monkeypatch):
+    # _git() глотает ошибки (capture_output) и возвращает "" и при
+    # отсутствии файла в HEAD, и при отсутствии HEAD вовсе (первый коммит).
+    monkeypatch.setattr(mg, "_git", lambda *a: "")
+    assert mg._head_config_text() is None
+
+
+def test_decide_full_same_commit_config_downgrade_does_not_affect_gate():
+    # Б5 (класс snapshot_shrink_guard, второй экземпляр): decide_full
+    # принимает ГОТОВЫЙ HEAD-текст параметром — не читает staged/рабочее
+    # дерево сам, поэтому same-commit правка roles.lead физически не может
+    # повлиять на ТЕКУЩИЙ вызов (main() — единственное место, решающее,
+    # какой текст передать, и оно берёт _head_config_text(), см. тесты
+    # выше). Здесь проверяется семантика самого decide_full: сообщение,
+    # которое было бы легально ПРИ НОВОЙ (opus) привязке, отклоняется,
+    # если фактически передана СТАРАЯ (fable) HEAD-привязка.
+    old_config = _cfg("claude-fable-5")
+    msg_fable = f"feat: X\n\n{AXES_OK}\ntier: fable"
+    code, _ = mg.decide_full(msg_fable, ["CLAUDE.md"], MAP_SAMPLE, config_text=old_config)
+    assert code == 0
+    msg_opus = f"feat: X\n\n{AXES_OK}\ntier: opus"
+    code, reason = mg.decide_full(msg_opus, ["CLAUDE.md"], MAP_SAMPLE, config_text=old_config)
+    assert code == 1 and "opus" in reason

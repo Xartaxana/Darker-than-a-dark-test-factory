@@ -231,11 +231,51 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+import mechanism_gate as mg
 import tier_measure
 
 REPO = Path(__file__).resolve().parents[1]
 ROUTING_LOG = REPO / "logs" / "routing-log.jsonl"
 ORCH_LOG = REPO / "state" / "orchestrator-log.md"
+# D-0099-порт (2026-08-15, M3.1): Lead-привязка — рабочее дерево (этот
+# гейт не коммитный, в отличие от mechanism_gate.py — Б5/4а). Резолвер
+# переиспользуется из mechanism_gate (mg.resolve_lead_binding/
+# mg.lead_family), не дублируется: yaml-импорт там уже защищён ВНУТРИ
+# функции (Р3), так что top-level импорт mechanism_gate здесь безопасен
+# независимо от наличия PyYAML в интерпретаторе.
+CONFIG_PATH = REPO / "delegation.config.yaml"
+
+# Сентинел "config_text не передан явно" (Б8, порт _CONFIG_TEXT_UNSET
+# tools/journal_validator.py:317 OS-репо): отличает боевой вызов
+# append_routing:819 (параметр НЕ передаёт -> ленивое кэшированное
+# чтение с диска) от теста, передающего config_text=None ЯВНО ("конфига
+# нет" -> дефолт fable). Дефолт None вместо сентинела ЗАПРЕЩЁН спекой —
+# делает ветку (5) _matrix_violation мёртвой в бою при полностью
+# зелёной батарее тестов.
+_CONFIG_TEXT_UNSET = object()
+_cached_config_text = _CONFIG_TEXT_UNSET
+
+
+def _read_config_text() -> str | None:
+    """Ленивое кэшированное (на процесс) чтение CONFIG_PATH с рабочего
+    дерева. Тестовый сброс кэша — монкипатч `_cached_config_text` в
+    фикстуре (см. test_log_append.py) либо вызов `_reset_config_cache()`
+    ниже."""
+    global _cached_config_text
+    if _cached_config_text is _CONFIG_TEXT_UNSET:
+        try:
+            _cached_config_text = (
+                CONFIG_PATH.read_text(encoding="utf-8", errors="replace")
+                if CONFIG_PATH.exists() else None)
+        except OSError:
+            _cached_config_text = None
+    return _cached_config_text
+
+
+def _reset_config_cache() -> None:
+    """Тестовый хелпер: сбрасывает кэш _read_config_text() между тестами."""
+    global _cached_config_text
+    _cached_config_text = _CONFIG_TEXT_UNSET
 
 ROUTING_EVENTS = {"delegated", "accepted", "rejected", "escalated",
                   "decomposable", "dispatch_skipped", "defect_found",
@@ -454,9 +494,44 @@ def _new_version_signal_since_agent_last_delegated(
             return True
         if r.get("event") == "rejected" and r.get("agent") == "lead":
             return True
-        if r.get("event") == "escalated" and r.get("model") == "fable":
+        if r.get("event") == "escalated" and _escalated_to_lead_or_above(r.get("model")):
             return True
     return False
+
+
+def _escalated_to_lead_or_above(model) -> bool:
+    """D-0099-порт (Б6а/Б9б, 2026-08-15): сигнал (3) — эскалация на ярус
+    НЕ НИЖЕ Lead-привязки. Раньше это была буквальная проверка
+    `model == "fable"` (единственная привязка, когда-либо существовавшая).
+    Теперь привязка живёт в delegation.config.yaml — сигнал активен, если
+    `model` резолвится в ярусное семейство (mg.lead_family), НЕ СЛАБЕЕ
+    семейства текущей Lead-привязки (mg.resolve_lead_binding), по
+    TIER_ORDER этого модуля (не по индексам LEAD_FAMILIES mechanism_gate
+    — числовая база разная, но относительный порядок идентичен). Форма
+    ЗАФИКСИРОВАНА спекой: отдельный резолвер roles.reserve НЕ заводится —
+    резерв покрыт самим неравенством (fable строго выше opus при
+    opus-привязке проходит `>=` тем же путём, что и "model=opus
+    (=привязка)"). `model`, не резолвящийся ни в одно известное семейство
+    (не-Claude, напр. "gpt-5", либо отсутствующий/пустой), -- сигнал НЕ
+    активен.
+
+    ВНИМАНИЕ, ослабление дискриминации (D-0099, критик-раунд 3, блокер
+    Б12): до перепривязки литерал "fable" отличал хэндоф полному Lead от
+    эскалации воркера ОДНОЗНАЧНО (на fable воркеры не работали никогда).
+    При opus-привязке model=opus несут И штатные эскалации правила 6 на
+    opus-ЯРУСНОГО ВОРКЕРА (critic и другие opus-агенты; 16 из 23
+    escalated живого журнала на 2026-08-15) — сигнал (3) стал ШИРЕ
+    задуманного: он больше не отличает "эскалация к полному Lead" от
+    "эскалация к opus-воркеру того же семейства, что и привязка".
+    Живых переворотов боевого гейта нет (реплей 2026-08-15: 0 в пределах
+    зафиксированного префикса живого журнала, см. test_log_append.py) —
+    остаток ведётся как R-4 в bugs/AT-BUG-034.md, по evidence рецидива,
+    не заранее."""
+    fam = mg.lead_family(model or "")
+    if fam is None:
+        return False
+    binding = mg.resolve_lead_binding(_read_config_text())
+    return TIER_ORDER[fam] >= TIER_ORDER[binding]
 
 
 REOPEN_NOTE_RE = re.compile(r"(?:^|;\s*)reopen:\s*\S")
@@ -615,23 +690,75 @@ def _allowed_basis(agent_tier: str, by_tier: int) -> set[str]:
     return {"queued-to-lead"}
 
 
-def _matrix_violation(agent: str, by: str, basis: str) -> str | None:
-    """Правило D-0058 для accepted. Возвращает текст нарушения или None."""
+def _matrix_violation(agent: str, by: str, basis: str,
+                       config_text: str | None = _CONFIG_TEXT_UNSET
+                       ) -> tuple[str | None, str | None]:
+    """Правило D-0058 для accepted. Возвращает (текст нарушения|None,
+    семейство lead-привязки|None). Второй элемент заполняется ТОЛЬКО
+    когда легальность дала ИМЕННО ветка (5) lead-binding ниже — вызывающий
+    (append_routing) кладёт его в поле `lead_binding` строки журнала
+    (Р2-iii/Б5-4а: поток финальных приёмок счётен). Строгий/basis-путь
+    (ветки 2 и 6) возвращают None вторым элементом — поле lead_binding на
+    этих строках ОТСУТСТВУЕТ (Б10б, негативный пин).
+
+    config_text: сентинел _CONFIG_TEXT_UNSET (дефолт — боевой вызов
+    append_routing:819, параметр НЕ передаёт) -> ленивое кэшированное
+    чтение с диска (_read_config_text()); config_text=None, переданный
+    ЯВНО (тесты) -> "конфига нет" -> дефолт "fable" (регресс-пин M4/Б8:
+    существующие тесты матрицы не меняют поведение).
+
+    Порядок веток ЖЁСТКИЙ (Б1, дословный патч критика) — каждая
+    проверяется в этом порядке, короткое замыкание на первом матче:
+    (1) agent_tier is None -> матрица не применяется (см. return выше).
+    (2) tier(by) > tier(agent) -> легально при ЛЮБОМ basis (или без).
+    (3) by ∉ TIER_ORDER -> отказ "не является известным ярусом" —
+        привязка НЕ легализует неизвестного принимающего (Б2).
+    (4) ПОЛ: tier(by) < tier(sonnet) -> отказ БЕЗУСЛОВНО, при ЛЮБОЙ
+        привязке и ЛЮБОМ basis (порт блокера B2 пересдачи OS) — floor
+        проверяется ДО ветки (5), гипотетическая привязка на haiku не
+        спасала бы haiku-by, но она и невозможна: resolve_lead_binding
+        несёт свой санитарный пол "не ниже opus".
+    (5) НОВОЕ — lead-binding: легально БЕЗ basis, если `by` ЛИТЕРАЛЬНО
+        равен lead_family(привязки) И tier(by) >= tier(agent) И **basis
+        ПУСТ** (Б3) — непустой basis судится веткой (6) как сегодня, пин
+        test_accepted_matrix_critic_basis_illegal_for_opus_class (:496)
+        остаётся зелёным БЕЗ правок.
+    (6) существующие basis-пары (_allowed_basis) без изменений."""
     agent_tier = _resolve_agent_tier(agent)
     if agent_tier is None:
-        return None
+        return None, None
     by_tier = TIER_ORDER.get(by)
+    # (2) ok_tier
     if by_tier is not None and by_tier > TIER_ORDER[agent_tier]:
-        return None
+        return None, None
+    # (3) неизвестный by
     if by_tier is None:
         return (
             f"by={by!r} не является известным ярусом "
             f"({sorted(TIER_ORDER)}) — basis не может легализовать приёмку "
             "от неизвестного принимающего (калибровка №4)"
-        )
+        ), None
+    # (4) ПОЛ — безусловно, до lead-binding (Б1/B2)
+    if by_tier < TIER_ORDER["sonnet"]:
+        return (
+            f"by={by!r} — ярус ниже sonnet, координация не предусмотрена "
+            f"ни при каком basis (правило 11: безусловный пол); "
+            f"agent={agent!r} (tier={agent_tier}) не может быть принят "
+            "этим by"
+        ), None
+    # (5) lead-binding — БЕЗ basis, ПОСЛЕ пола, ДО пары-basis (Б3)
+    if not basis:
+        resolved_config_text = (_read_config_text()
+                                 if config_text is _CONFIG_TEXT_UNSET
+                                 else config_text)
+        binding = mg.resolve_lead_binding(resolved_config_text)
+        fam = mg.lead_family(binding)
+        if fam is not None and by == fam and by_tier >= TIER_ORDER[agent_tier]:
+            return None, fam
+    # (6) существующие basis-пары
     allowed = _allowed_basis(agent_tier, by_tier)
     if basis in allowed:
-        return None
+        return None, None
     allowed_txt = (", ".join(sorted(allowed)) if allowed
                    else "НИЧЕГО (координация ниже sonnet не предусмотрена "
                         "— эскалация, не приёмка)")
@@ -641,12 +768,12 @@ def _matrix_violation(agent: str, by: str, basis: str) -> str | None:
             f"by={by!r}): матрица D-0058 для этой пары допускает "
             f"{allowed_txt} (калибровка №4: прецеденты basis=queued-to-lead "
             "на Sonnet-классе, шапки (5)/(9) HANDOFF)"
-        )
+        ), None
     return (
         f"agent={agent!r} (tier={agent_tier}) принят by={by!r} — не строго "
         f"выше яруса исполнителя, и --basis не задан значением, допустимым "
         f"для этой пары (допустимо: {allowed_txt})"
-    )
+    ), None
 
 
 def _check_tier_measurement(event: str, model: str, worker_ref: str) -> None:
@@ -810,13 +937,18 @@ def append_routing(event: str, agent: str, *, model: str = "",
                     "фиктивное закрытие запрещены (зеркало --replaces-worker)")
     by = by.strip()
     basis = basis.strip()
+    lead_binding_family: str | None = None
     if event in BY_REQUIRED_EVENTS:
         if not by:
             raise SystemExit(
                 f"--by обязателен для события '{event}' (D-0058 OS-репо, "
                 "самодекларация принимающего)")
         if event == "accepted":
-            violation = _matrix_violation(agent, by, basis)
+            # Сентинел НЕ передаётся здесь намеренно (боевой путь) --
+            # _matrix_violation сама лениво читает config_text с диска
+            # через _read_config_text() (M3.1а/Б8: дефолт None вместо
+            # сентинела делал бы ветку lead-binding мёртвой в бою).
+            violation, lead_binding_family = _matrix_violation(agent, by, basis)
             if violation:
                 raise SystemExit(f"accepted отклонён матрицей D-0058: {violation}")
     if event == "delegated" and task_id:
@@ -959,6 +1091,11 @@ def append_routing(event: str, agent: str, *, model: str = "",
         record["by"] = by
     if basis:
         record["basis"] = basis
+    if lead_binding_family:
+        # D-0099-порт (Р2-iii/Б5-4а): поле ставится ТОЛЬКО на строках,
+        # легализованных ИМЕННО веткой (5) lead-binding _matrix_violation
+        # -- строгий/basis-путь его не несёт (Б10б, негативный пин).
+        record["lead_binding"] = lead_binding_family
     if worker_ref:
         record["worker_ref"] = worker_ref
     if category:

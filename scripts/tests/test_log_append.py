@@ -1829,3 +1829,399 @@ def test_closes_phantom_second_separate_record_with_same_token_is_idempotent(
     exit_code = la.main(["open-dispatches"])
     assert exit_code == 0
     assert capsys.readouterr().out == ""
+
+
+# =============================================================================
+# D-0099-порт (2026-08-15): Lead-перепривязка Fable -> Opus 5.
+# Матрица D-0058 несёт новую ветку lead-binding; escalated-сигнал (3)
+# _new_version_signal_since_agent_last_delegated обобщён на семейство
+# привязки вместо литерала "fable".
+# =============================================================================
+
+def _cfg_text(model: str) -> str:
+    return f"roles:\n  lead:\n    subscription:\n      model: {model}\n"
+
+
+@pytest.fixture()
+def opus_config(monkeypatch, tmp_path):
+    """Монкипатчит la.CONFIG_PATH на tmp-файл с roles.lead=claude-opus-5 и
+    сбрасывает кэш _read_config_text() до и после теста (Б8: анти-мёртвая-
+    фича пин — запись идёт через append_routing БЕЗ config_text, лениво
+    читая ЭТОТ файл с диска)."""
+    cfg = tmp_path / "delegation.config.yaml"
+    cfg.write_text(_cfg_text("claude-opus-5"), encoding="utf-8")
+    monkeypatch.setattr(la, "CONFIG_PATH", cfg, raising=True)
+    la._reset_config_cache()
+    yield cfg
+    la._reset_config_cache()
+
+
+def test_lead_binding_opus_by_opus_agent_critic_no_basis_passes_with_field(
+        logs, opus_config):
+    routing, _ = logs
+    la.append_routing("accepted", "critic", model="opus", by="opus",
+                      task_id="t-001")
+    rec = json.loads(routing.read_text(encoding="utf-8"))
+    assert rec["by"] == "opus"
+    assert rec["lead_binding"] == "opus"
+    assert "basis" not in rec
+
+
+def test_lead_binding_opus_by_opus_basis_critic_still_rejected(logs, opus_config):
+    # Пин :496 остаётся зелёным без правок -- непустой basis идёт по
+    # ветке (6), не (5): критик не рецензирует равного себе.
+    routing, _ = logs
+    with pytest.raises(SystemExit, match="нелегален для пары"):
+        la.append_routing("accepted", "critic", model="opus", by="opus",
+                          basis="critic", task_id="t-001")
+    assert not routing.exists()
+
+
+def test_lead_binding_opus_by_sonnet_agent_critic_needs_queued_to_lead(
+        logs, opus_config):
+    routing, _ = logs
+    # by=sonnet != семейство привязки "opus" -- ветка (5) не активна ни
+    # при пустом, ни при заполненном basis; легализует только пара (6).
+    with pytest.raises(SystemExit, match="D-0058"):
+        la.append_routing("accepted", "critic", model="opus", by="sonnet",
+                          task_id="t-001")
+    la.append_routing("accepted", "critic", model="opus", by="sonnet",
+                      basis="queued-to-lead", task_id="t-001")
+    rec = json.loads(routing.read_text(encoding="utf-8"))
+    assert rec["basis"] == "queued-to-lead"
+    assert "lead_binding" not in rec
+
+
+def test_lead_binding_opus_by_opus_agent_builder_still_strict_tier(
+        logs, opus_config):
+    # by=opus/agent=builder: строгий ярус (branch 2) уже легализует ДО
+    # ветки (5) -- поведение то же, что было (штатная приёмка builder'а).
+    routing, _ = logs
+    la.append_routing("accepted", "builder", model="sonnet", by="opus",
+                      task_id="t-001", witness="pytest -q -> passed")
+    rec = json.loads(routing.read_text(encoding="utf-8"))
+    assert "lead_binding" not in rec
+
+
+def test_lead_binding_by_model_id_not_a_known_tier_rejected(logs, opus_config):
+    # by несёт литеральный model-id, а не имя яруса -- матрица его не
+    # знает вообще (ветка 3), привязка НЕ легализует.
+    with pytest.raises(SystemExit, match="известным ярусом"):
+        la.append_routing("accepted", "critic", model="opus",
+                          by="claude-opus-5", task_id="t-001")
+
+
+def test_lead_binding_by_case_sensitive_uppercase_not_normalized(logs, opus_config):
+    # Р10: словарь by регистрозависим, нормализация НЕ вводится -- "OPUS"
+    # не совпадает ни с одним known tier.
+    with pytest.raises(SystemExit, match="известным ярусом"):
+        la.append_routing("accepted", "critic", model="opus",
+                          by="OPUS", task_id="t-001")
+
+
+@pytest.fixture()
+def config_with_model(monkeypatch, tmp_path):
+    """Фабрика конфига с заданной model (Р15, критик-раунд 3): сброс кэша
+    ГАРАНТИРОВАН через yield/finally-эквивалент фикстуры, не хвостовым
+    оператором внутри теста -- падение ассерта ДО хвостового
+    `_reset_config_cache()` иначе утекало бы tmp-конфиг (или его
+    отсутствие) в последующие тесты того же прогона. Тот же образец, что
+    `opus_config` выше."""
+    def _make(model: str):
+        cfg = tmp_path / "delegation.config.yaml"
+        cfg.write_text(_cfg_text(model), encoding="utf-8")
+        monkeypatch.setattr(la, "CONFIG_PATH", cfg, raising=True)
+        la._reset_config_cache()
+        return cfg
+    yield _make
+    la._reset_config_cache()
+
+
+def test_lead_binding_floor_haiku_by_rejected_regardless_of_binding(
+        logs, config_with_model):
+    # ПОЛ: даже НИЗКОпривязанный (санитарно недопустимый) конфиг не
+    # рескьюит by=haiku -- floor безусловен и проверяется ДО lead-binding
+    # (ветка 4 раньше ветки 5), а resolve_lead_binding САМА санитарно
+    # флорит такой конфиг в "fable".
+    config_with_model("claude-haiku-4-5")
+    routing, _ = logs
+    with pytest.raises(SystemExit, match="D-0058"):
+        la.append_routing("accepted", "scout", model="haiku", by="haiku",
+                          task_id="t-001")
+
+
+def test_lead_binding_sonnet_binding_config_sanitized_to_fable_no_rescue(
+        logs, config_with_model):
+    # ПОЛ: binding=sonnet в конфиге -> resolve_lead_binding санитарно
+    # флорит в "fable" -- by=sonnet/agent=builder БЕЗ proper basis всё
+    # равно отклонён (и с queued-to-lead тоже, т.к. by=sonnet никогда не
+    # равен семейству "fable").
+    config_with_model("claude-sonnet-5")
+    routing, _ = logs
+    with pytest.raises(SystemExit, match="D-0058"):
+        la.append_routing("accepted", "builder", model="sonnet", by="sonnet",
+                          task_id="t-001", witness="pytest -q -> passed")
+    with pytest.raises(SystemExit, match="нелегален для пары"):
+        la.append_routing("accepted", "builder", model="sonnet", by="sonnet",
+                          basis="queued-to-lead", task_id="t-001",
+                          witness="pytest -q -> passed")
+
+
+# --- Б8: анти-мёртвая-фича пин ---------------------------------------------
+
+def test_lead_binding_dead_feature_pin_real_lazy_read_without_config_text(
+        logs, config_with_model):
+    """Б8 (обязательный): вызов БЕЗ config_text (боевой путь), с
+    монкипатченным CONFIG_PATH + сброшенным кэшем -- строка пишется и
+    несёт lead_binding: opus. Тест, инжектирующий config_text напрямую,
+    этот класс дефекта (мёртвая ветка (5) в бою) НЕ покрывает."""
+    config_with_model("claude-opus-5")
+    routing, _ = logs
+    la.append_routing("accepted", "critic", by="opus", model="opus",
+                      task_id="t-001")
+    rec = json.loads(routing.read_text(encoding="utf-8"))
+    assert rec["lead_binding"] == "opus"
+
+
+# --- Б10б: негативный пин lead_binding --------------------------------------
+
+def test_lead_binding_absent_on_strict_tier_legalized_line(logs, opus_config):
+    routing, _ = logs
+    la.append_routing("accepted", "builder", model="sonnet", by="opus",
+                      task_id="t-001", witness="pytest -q -> passed")
+    rec = json.loads(routing.read_text(encoding="utf-8"))
+    assert "lead_binding" not in rec
+
+
+def test_lead_binding_absent_on_basis_pair_legalized_line(logs, opus_config):
+    routing, _ = logs
+    la.append_routing("accepted", "critic", model="opus", by="sonnet",
+                      basis="queued-to-lead", task_id="t-001")
+    rec = json.loads(routing.read_text(encoding="utf-8"))
+    assert "lead_binding" not in rec
+
+
+# --- регресс-пин config_text=None: существующие матричные пин-кейсы ---------
+
+_REGRESSION_MATRIX_CASES = [
+    # (agent, by, basis, legal?) -- буквальные сценарии существующих 20+
+    # тестов D-0058 выше, вызванные НАПРЯМУЮ через _matrix_violation с
+    # config_text=None ("конфига нет" -> дефолт fable, поведение ДО
+    # D-0099-порта). Дефолт None (не сентинел) здесь передаётся ЯВНО --
+    # это и есть регресс-пин: если бы дефолт _matrix_violation тихо
+    # деградировал в "боевой" сентинел-путь, эти сценарии перестали бы
+    # быть детерминированными относительно реального файла на диске.
+    ("builder", "opus", "", True),
+    ("builder", "sonnet", "", False),
+    ("builder", "haiku", "", False),
+    ("builder", "sonnet", "critic", True),
+    ("builder", "sonnet", "queued-to-lead", False),
+    ("builder", "haiku", "critic", False),
+    ("builder", "haiku", "queued-to-lead", False),
+    ("scout", "haiku", "critic", False),
+    ("scout", "haiku", "queued-to-lead", False),
+    ("scout", "sonnet", "", True),
+    ("critic", "sonnet", "queued-to-lead", True),
+    ("critic", "opus", "queued-to-lead", True),
+    ("critic", "sonnet", "critic", False),
+    ("critic", "opus", "critic", False),
+    ("critic", "fable", "", True),
+    ("builder", "sonnet", "vibes", False),
+    ("builder", "gpt-5", "critic", False),
+    ("lead", "haiku", "", True),  # agent=lead -- матрица не применяется
+    ("test-automator", "opus", "", True),
+    ("test-automator", "sonnet", "", False),
+    ("test-automator", "sonnet", "queued-to-lead", False),
+    ("test-automator", "sonnet", "critic", True),
+]
+
+
+@pytest.mark.parametrize("agent,by,basis,legal", _REGRESSION_MATRIX_CASES)
+def test_matrix_violation_regression_pin_config_text_none(agent, by, basis, legal):
+    violation, lead_binding = la._matrix_violation(agent, by, basis, config_text=None)
+    assert (violation is None) == legal, (agent, by, basis, violation)
+    # config_text=None -> binding="fable"; ЕДИНСТВЕННЫЙ случай в списке с
+    # by="fable" (critic/fable) легализуется branch(2) (strict tier,
+    # tier(fable)=3 > tier(critic-opus)=2) РАНЬШЕ branch(5) -- lead_binding
+    # поэтому None ВЕЗДЕ в этом регресс-наборе (ни один сценарий не
+    # доходит до branch(5) в живой матрице).
+    assert lead_binding is None, (agent, by, basis, lead_binding)
+
+
+# --- escalated-сигнал (3), Б9б: обобщение на семейство привязки -------------
+
+def test_escalated_signal_family_generalization(opus_config):
+    assert la._escalated_to_lead_or_above("opus") is True   # = привязка
+    assert la._escalated_to_lead_or_above("fable") is True  # выше привязки
+    assert la._escalated_to_lead_or_above("sonnet") is False  # ниже
+    assert la._escalated_to_lead_or_above("gpt-5") is False  # не-Claude
+    assert la._escalated_to_lead_or_above(None) is False
+    assert la._escalated_to_lead_or_above("") is False
+
+
+def test_new_version_signal_escalated_opus_activates_with_opus_binding(opus_config):
+    records = [
+        {"task_id": "t-001", "event": "delegated", "agent": "critic"},
+        {"task_id": "t-001", "event": "escalated", "agent": "critic", "model": "opus"},
+    ]
+    assert la._new_version_signal_since_agent_last_delegated(
+        records, "t-001", "critic") is True
+
+
+def test_new_version_signal_escalated_sonnet_does_not_activate(opus_config):
+    records = [
+        {"task_id": "t-001", "event": "delegated", "agent": "critic"},
+        {"task_id": "t-001", "event": "escalated", "agent": "critic", "model": "sonnet"},
+    ]
+    assert la._new_version_signal_since_agent_last_delegated(
+        records, "t-001", "critic") is False
+
+
+# --- Б9а: replay-гарантия живого logs/routing-log.jsonl ---------------------
+
+def _old_new_version_signal_pre_d0099(records, task_id, agent):
+    """Точная копия ПРЕЖНЕЙ (до D-0099-порта) версии функции — эталон для
+    replay-сравнения "до/после" (literal model == 'fable', единственная
+    привязка, когда-либо существовавшая до этого порта)."""
+    last_idx = None
+    for i, r in enumerate(records):
+        if (r.get("task_id") == task_id and r.get("event") == "delegated"
+                and r.get("agent") == agent):
+            last_idx = i
+    if last_idx is None:
+        return False
+    for r in records[last_idx + 1:]:
+        if r.get("task_id") != task_id:
+            continue
+        if r.get("event") == "delegated" and r.get("agent") != agent:
+            return True
+        if r.get("event") == "rejected" and r.get("agent") == "lead":
+            return True
+        if r.get("event") == "escalated" and r.get("model") == "fable":
+            return True
+    return False
+
+
+# Б11 (критик-раунд 3): журнал append-only -- ПРЕФИКС длиной
+# _REPLAY_FROZEN_N иммутабелен НАВСЕГДА, точное множество сырых флипов
+# пинуется ТОЛЬКО на нём; хвост (индексы >= N) НЕ пинуется -- после
+# перепривязки штатная эскалация правила 6 на opus даёт новые ЗАКОННЫЕ
+# сырые флипы (16 из 23 исторических escalated несут model=opus), пин
+# точного множества обучал бы дописывать в список вместо разбора.
+_REPLAY_FROZEN_N = 1849  # len(logs/routing-log.jsonl) на момент D-0099-порта
+
+
+def test_replay_live_routing_log_new_version_signal_no_regressions(opus_config):
+    """Б9а (обязательная DoD): прогон ЖИВОГО logs/routing-log.jsonl через
+    модифицированный _new_version_signal_since_agent_last_delegated
+    до/после. Критерий: НИ ОДНОЙ записи OK -> BLOCKED; все BLOCKED -> OK
+    перечисляются поимённо (task_id + индекс строки) и объяснены.
+
+    opus_config (Б11): реплей судится по ФИКСИРОВАННОЙ (opus) привязке из
+    тестовой фикстуры, а не по состоянию delegation.config.yaml на диске
+    -- иначе в свежем клоне (или если Lead забудет закоммитить конфиг)
+    _read_config_text() читает отсутствующий файл, resolve_lead_binding
+    даёт "fable", и весь класс новых BLOCKED->OK флипов пропадает
+    недетерминированно (критик-раунд 3, блокер Б11).
+
+    "OK/BLOCKED" здесь -- ИТОГОВЫЙ вердикт `review_round_ok` из
+    append_routing (`_agent_has_own_rejected(...) or
+    _new_version_signal_since_agent_last_delegated(...)`), а НЕ сырое
+    значение одной лишь сигнальной функции: own_rejected (self-retry,
+    НЕ меняется этим портом вовсе) уже легализует запись независимо от
+    сигнала (короткое замыкание `or` в РЕАЛЬНОМ коде append_routing) --
+    сравнивать нужно то, что реально решает исход записи, а не сырой
+    вывод одной из двух альтернатив. Разбор сырого флипа (AT-BUG-063,
+    idx=1641) -- см. test_replay_live_routing_log_raw_signal_flip_is_
+    named_and_explained ниже; own_rejected для этой строки уже True (2
+    собственных rejected test-maintainer на этой задаче), поэтому на
+    ИТОГОВЫЙ вердикт этот сырой флип не всплывает."""
+    real_log = la.REPO / "logs" / "routing-log.jsonl"
+    lines = [ln for ln in real_log.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    records = [json.loads(ln) for ln in lines]
+
+    ok_to_blocked = []
+    blocked_to_ok = []
+    for idx, rec in enumerate(records):
+        if rec.get("event") != "delegated":
+            continue
+        task_id = rec.get("task_id")
+        agent = rec.get("agent")
+        if not task_id or not agent:
+            continue
+        prefix = records[:idx]
+        prior_agents = {r.get("agent") for r in prefix
+                        if r.get("task_id") == task_id and r.get("event") == "delegated"}
+        if agent not in prior_agents:
+            continue  # не повторный delegated -- review_round_ok не участвует
+        own_rejected = la._agent_has_own_rejected(prefix, task_id, agent)
+        old_verdict = own_rejected or _old_new_version_signal_pre_d0099(prefix, task_id, agent)
+        new_verdict = own_rejected or la._new_version_signal_since_agent_last_delegated(
+            prefix, task_id, agent)
+        if old_verdict and not new_verdict:
+            ok_to_blocked.append((task_id, idx))
+        if new_verdict and not old_verdict:
+            blocked_to_ok.append((task_id, idx))
+
+    assert ok_to_blocked == [], f"OK->BLOCKED переворотов быть не должно: {ok_to_blocked}"
+    # Итоговый review_round_ok не меняется НИ ОДНОЙ реальной строкой этого
+    # порта -- сырой флип сигнальной функции (см. тест ниже) поглощён
+    # own_rejected и не всплывает на уровне реального решения append_routing.
+    assert blocked_to_ok == [], f"BLOCKED->OK перевороты требуют разбора: {blocked_to_ok}"
+
+
+def test_replay_live_routing_log_raw_signal_flip_is_named_and_explained(opus_config):
+    """Дополнение к прогону выше: СЫРОЙ уровень (только сигнальная функция,
+    без own_rejected). Критерий (Б9а): НИ ОДНОЙ OK->BLOCKED БЕЗ ГРАНИЦЫ
+    (сужение легальности недопустимо на любой длине журнала -- если оно
+    появится, ошибка обязана прерывать прогон немедленно, не после N).
+    BLOCKED->OK допустимы, но пинуются ТОЛЬКО в пределах ЗАМОРОЖЕННОГО
+    префикса _REPLAY_FROZEN_N (см. константу выше) -- хвост journal'а
+    исключён из точного пина: после перепривязки штатные эскалации
+    правила 6 на opus-воркеров легально дают НОВЫЕ сырые флипы, и пин
+    точного множества на растущем журнале обучал бы дописывать элементы
+    в список вместо разбора при каждом новом штатном срабатывании.
+
+    opus_config (Б11): фиксирует привязку -- см. докстринг теста выше.
+
+    Единственный именованный+объяснённый флип в пределах префикса:
+    AT-BUG-063 idx=1641 -- штатная эскалация правила 6 (test-maintainer
+    sonnet, 2 rejected -> attempt 3 на opus, строки 1634/1639/1640/1641),
+    НЕ хэндоф полному Lead (критик-раунд 3, блокер Б12: прежняя версия
+    докстринга ошибочно называла это "периодом Lead-деградации" --
+    опровергнуто трейлом 1630-1644, это ЛЮБАЯ эскалация правилу 6 на
+    opus-ярусного исполнителя). После перепривязки такие эскалации
+    резолвятся сигналом (3) законно-по-форме (см. R-4, bugs/AT-BUG-034.md
+    -- сигнал больше не отличает хэндоф Lead от эскалации воркера того же
+    семейства). Итоговый вердикт СТРОКИ не меняется: own_rejected=True
+    (см. тест выше) -- эффекта на реальное решение append_routing нет."""
+    real_log = la.REPO / "logs" / "routing-log.jsonl"
+    lines = [ln for ln in real_log.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    records = [json.loads(ln) for ln in lines]
+
+    ok_to_blocked = []
+    blocked_to_ok = []
+    for idx, rec in enumerate(records):
+        if rec.get("event") != "delegated":
+            continue
+        task_id = rec.get("task_id")
+        agent = rec.get("agent")
+        if not task_id or not agent:
+            continue
+        prefix = records[:idx]
+        prior_agents = {r.get("agent") for r in prefix
+                        if r.get("task_id") == task_id and r.get("event") == "delegated"}
+        if agent not in prior_agents:
+            continue
+        old = _old_new_version_signal_pre_d0099(prefix, task_id, agent)
+        new = la._new_version_signal_since_agent_last_delegated(prefix, task_id, agent)
+        if old and not new:
+            ok_to_blocked.append((task_id, idx))
+        if new and not old:
+            blocked_to_ok.append((task_id, idx))
+
+    assert ok_to_blocked == [], f"OK->BLOCKED переворотов сырого сигнала быть не должно: {ok_to_blocked}"
+    frozen = [f for f in blocked_to_ok if f[1] < _REPLAY_FROZEN_N]
+    assert frozen == [("AT-BUG-063", 1641)], (
+        f"ожидался РОВНО этот именованный+объяснённый флип сырого сигнала "
+        f"в пределах замороженного префикса, получено: {frozen}")

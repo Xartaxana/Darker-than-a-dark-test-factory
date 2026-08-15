@@ -49,24 +49,57 @@ state/sibling-map.snapshot.md. Узкий fail-closed сохранён и уси
 OS-репо): на ветке «механизм» (осевой блок уже пройден, не skip, не
 merge) сообщение коммита обязано нести ОТДЕЛЬНУЮ строку
 «tier: <значение>» — самодекларация фактического яруса коммиттера,
-аналог dispatch_skipped. В OS-репо ожидаемое значение читается из
-roles.lead в delegation.config.yaml; в этом (AO3) репо такого конфига
-нет и заводить сюда yaml-зависимость ради одного дефолта незачем —
-resolve_lead_binding() ниже упрощена до константы: ожидаемая привязка
-— дефолт семейства "fable" (субскрипционный дефолт Lead, тот же смысл,
-что и дефолт OS-версии при отсутствующем/непарсящемся конфиге).
-Функция оставлена (не заменена россыпью литералов), чтобы будущий
-конфиг пилота подключился без правки вызывающего кода.
+аналог dispatch_skipped. Ожидаемое значение читается из roles.lead в
+delegation.config.yaml (корень репо); файла/ключа нет, конфиг битый —
+дефолт семейства "fable" (субскрипционный дефолт Lead, D-0072).
 
-Декларация принимается точным совпадением с привязкой ИЛИ вхождением
-её ярусного семейства (fable/opus/sonnet/haiku, по подстроке) — та же
-семантика, что в OS-версии. Отсутствие строки tier и декларация ниже
-lead — РАЗНЫЕ тексты отказа, оба несут инструкцию: Lead-класс работы
-в этом репо — в очередь Lead явной строкой в docs/HANDOFF.md или
-журнале сессии (носитель очереди пилота — HANDOFF, НЕ CURRENT_CONTEXT
-— это принадлежность OS-репо). Skip-ветка («оси: не-механизм») и
-merge-коммиты строку tier не требуют — тот же невод исключений, что и
-у осевого блока.
+Lead-перепривязка (порт D-0099 OS-репо, 2026-08-15, слово оператора):
+delegation.config.yaml — ЖИВОЙ конфиг этого репо (не гипотетический
+"будущий пилот", как было записано раньше — history снята). Источник
+текста для commit-msg-гейта — HEAD-версия файла (`git show
+HEAD:delegation.config.yaml`, `_head_config_text()`), НЕ рабочее
+дерево: коммит, ВВОДЯЩИЙ или МЕНЯЮЩИЙ конфиг same-commit, судится по
+СТАРОЙ привязке (класс snapshot_shrink_guard, второй экземпляр —
+незакоммиченная/same-commit правка roles.lead планку не двигает).
+`resolve_lead_binding(config_text)` — чистая функция (диска не
+касается), извлекает ЯРУСНОЕ СЕМЕЙСТВО (fable/opus/sonnet/haiku) из
+`roles.lead.subscription.model`, НЕ литеральный model-id (Р9 спеки
+порта — резолвер возвращает семейство, отдельной ветки для точного
+model-id сравнения нет и не заводится); fail-safe → "fable" + [WARN] в
+stderr на КАЖДОЙ причине отката (нет текста, не парсится, roles.lead
+отсутствует, model пуст, семейство не распознано, ≥2 разных семейства
+в model, BOM-мусор, PyYAML недоступен). Санитарный пол: семейство
+привязки НИЖЕ "opus" (по LEAD_FAMILIES: fable(0)<opus(1)<sonnet(2)<
+haiku(3)) → тоже откат к "fable" + WARN — опечатка конфига
+(`model: sonnet`) не снимает молча код-гейт калибровки №4. `import
+yaml` — ЗАЩИЩЁННЫЙ, ВНУТРИ резолвера (Р3, порт B6 OS): гейт стоит в
+commit-msg хуке, непойманный ImportError/трейсбек парсера уронил бы
+ЛЮБОЙ коммит, не только механизменный.
+
+Путь восстановления при БИТОМ конфиге (Р5): дефолт "fable" блокирует
+Opus-Lead от механизменных коммитов (fable строго выше opus, tier-
+декларация "opus" ниже привязки-по-умолчанию) — штатный выход: подъём
+РЕЗЕРВА (Fable-сессия словом оператора, `tier: fable` СТРОГО ВЫШЕ
+любой привязки по построению LEAD_FAMILIES), починка конфига тем же
+Fable-коммитом.
+
+Декларация принимается (1) точным совпадением с привязкой, (2)
+вхождением её ярусного семейства (по подстроке) ИЛИ (3) семейством
+СТРОГО ВЫШЕ привязки (fable при opus-привязке — резерв, D-0099).
+Неоднозначная декларация — ≥2 РАЗНЫХ семейства в ОДНОЙ строке «tier:»
+(напр. «sonnet (fallback от fable)») — отдельный отказ «декларация
+неоднозначна» (Р4): молчаливое взятие первого совпадения запрещено.
+Отсутствие строки tier и декларация ниже lead — РАЗНЫЕ тексты отказа,
+оба несут инструкцию: Lead-класс работы в этом репо — в очередь Lead
+явной строкой в docs/HANDOFF.md или журнале сессии (носитель очереди
+пилота — HANDOFF, НЕ CURRENT_CONTEXT — это принадлежность OS-репо).
+Skip-ветка («оси: не-механизм») и merge-коммиты строку tier не
+требуют — тот же невод исключений, что и у осевого блока, С ОДНИМ
+ИСКЛЮЧЕНИЕМ (Р12): если staged-пути коммита несут
+delegation.config.yaml, skip-ветка НЕ применяется вовсе (ни к осевому
+блоку, ни к tier-строке) — коммит, трогающий саму Lead-привязку,
+теряет право на skip безусловно (`decide()` вызывается с
+`honor_skip=not config_staged`).
 
 Самодекларативность (D-0063, двухслойный enforcement): этот гейт
 гарантирует только ФОРМУ — присутствие и совпадение строки tier с
@@ -107,6 +140,11 @@ MAP_ENV_VAR = "AO3_SIBLING_MAP"
 REPO_ROOT = Path(__file__).resolve().parent.parent
 MAP_SNAPSHOT_REL = "state/sibling-map.snapshot.md"
 MAP_SNAPSHOT_PATH = REPO_ROOT / "state" / "sibling-map.snapshot.md"
+# D-0099-порт (2026-08-15): Lead-привязка. CONFIG_PATH читает РАБОЧЕЕ
+# ДЕРЕВО (пригодится, если когда-то понадобится вне commit-msg-контекста);
+# commit-msg-гейт сам берёт HEAD-версию через _head_config_text() (Б5).
+CONFIG_FILENAME = "delegation.config.yaml"
+CONFIG_PATH = REPO_ROOT / CONFIG_FILENAME
 
 MECHANISM_PREFIXES = (
     "CLAUDE.md",
@@ -156,13 +194,18 @@ MECHANISM_PREFIXES = (
     # 2026-07-23: срез карты осей — вход этого же гейта; тихая правка
     # среза = обход полноты осевого блока, поэтому сам срез механизмен.
     MAP_SNAPSHOT_REL,
+    # D-0099-порт (2026-08-15): сама Lead-привязка — вход гейта (tier-
+    # требование читает из неё ожидаемый ярус); тихая правка = обход
+    # tier-требования, поэтому конфиг механизмен на общих основаниях.
+    CONFIG_FILENAME,
 )
 
 LEAD_FAMILIES = ("fable", "opus", "sonnet", "haiku")
 
-# AO3 пилот: нет delegation.config.yaml → дефолт семейства "fable"
-# (субскрипционный дефолт Lead, D-0072). Константа вместо парсинга
-# yaml — заводить сюда зависимость не от чего резолвить.
+# Дефолт семейства "fable" (субскрипционный дефолт Lead, D-0072) —
+# используется resolve_lead_binding() на КАЖДОЙ fail-safe ветке (нет
+# конфига/файла/ключа, битый YAML, ≥2 семейства, семейство ниже opus,
+# PyYAML недоступен и т.д.).
 DEFAULT_LEAD_BINDING = "fable"
 
 TIER_LINE_RE = re.compile(r"^\s*tier\s*:\s*(\S.*?)\s*$", re.IGNORECASE | re.MULTILINE)
@@ -265,24 +308,143 @@ def find_missing(text: str, axes: list[int]) -> list[int]:
             if not re.search(rf"ось\s+{n}\s*:", text, re.IGNORECASE)]
 
 
-def resolve_lead_binding() -> str:
-    """Ожидаемая tier-привязка для этого репо. AO3 не имеет
-    delegation.config.yaml (в отличие от OS-репо) — возвращает дефолт
-    семейства "fable" безусловно. Выделена в функцию, а не разбросана
-    константой по вызывающему коду, чтобы будущий конфиг пилота
-    подключился без правки decide_full()."""
-    return DEFAULT_LEAD_BINDING
+def _warn(msg: str) -> None:
+    """Предупреждение в stderr — тихий откат привязки к дефолту не должен
+    маскироваться под «матрица требует basis» или проходить незамеченным
+    (Р6/Б1). Модуль уже реконфигурирует stdout/stderr в utf-8/replace на
+    импорте (см. выше) — здесь достаточно голого print."""
+    print(f"[WARN] mechanism_gate: {msg}", file=sys.stderr)
+
+
+def _families_in(text: str) -> list[str]:
+    """Все РАЗЛИЧНЫЕ ярусные семейства LEAD_FAMILIES, встреченные в
+    `text` по подстроке (регистронезависимо), в порядке LEAD_FAMILIES
+    (fable/opus/sonnet/haiku). Общий примитив для двух независимых
+    проверок неоднозначности: model-строки конфига (resolve_lead_binding)
+    и декларации «tier: <значение>» коммита (Р4, decide_full)."""
+    low = text.lower()
+    return [fam for fam in LEAD_FAMILIES if fam in low]
+
+
+def resolve_lead_binding(config_text: str | None) -> str:
+    """D-0099-порт (2026-08-15): ЧИСТАЯ функция (диска не касается, Б4) —
+    ярусное СЕМЕЙСТВО (fable/opus/sonnet/haiku) Lead-привязки из
+    `roles.lead.subscription.model` (или `.api.model`) в `config_text`
+    (содержимое delegation.config.yaml; вызывающий сам решает, читать
+    рабочее дерево или HEAD — см. _head_config_text()). Возвращает
+    СЕМЕЙСТВО, не литеральный model-id (Р9: точного сравнения с model-id
+    не существует и отдельная ветка для него не заводится — вся
+    остальная логика модуля (lead_family/tier_declared_ok) уже работает
+    с семействами).
+
+    Fail-safe → "fable" + [WARN] в stderr на КАЖДОЙ из причин: конфига
+    нет/пуст, YAML не парсится (в т.ч. любой иной сбой парсера — не
+    только yaml.YAMLError, Р3), верхний уровень/roles/roles.lead — не
+    словарь или отсутствует, model пуст/не строка, семейство модели не
+    распознано, найдено ≥2 РАЗНЫХ семейства в model (неоднозначность —
+    та же природа, что Р4 у деклараций коммита, но отдельная проверка:
+    эта — над КОНФИГОМ, та — над СООБЩЕНИЕМ), PyYAML недоступен в этом
+    интерпретаторе. `import yaml` — защищённый, ВНУТРИ этой функции
+    (Р3, порт B6 OS-репо): гейт стоит в commit-msg хуке, непойманный
+    ImportError/трейсбек парсера уронил бы ЛЮБОЙ коммит, не только
+    механизменный — а сваленный интерпретатор без PyYAML не должен
+    блокировать вообще все коммиты репозитория.
+
+    Санитарный пол (Б1/2а): распознанное семейство НИЖЕ "opus" по
+    LEAD_FAMILIES (т.е. sonnet/haiku) — тоже откат к "fable" + WARN
+    «привязка ниже opus не поддерживается этим деплоем; правьте код
+    осознанно» — опечатка конфига (`model: sonnet` вместо `claude-
+    opus-5`) не должна молча снимать код-гейт калибровки №4 (haiku/
+    sonnet-класс работы не координирует сам себя).
+
+    Путь восстановления при БИТОМ конфиге (Р5, решение Lead): дефолт
+    "fable" блокирует Opus-Lead от механизменных коммитов (fable строго
+    выше opus в LEAD_FAMILIES, а не "boundary" привязки opus) — штатный
+    выход: подъём РЕЗЕРВА (Fable-сессия словом оператора — резерв ВСЕГДА
+    строго выше любой валидной привязки по построению индексов
+    LEAD_FAMILIES), починка конфига тем же Fable-коммитом (`tier:
+    fable`)."""
+    if not config_text:
+        return DEFAULT_LEAD_BINDING
+    try:
+        import yaml
+    except ImportError:
+        _warn("PyYAML недоступен в этом интерпретаторе — Lead-привязка "
+              "не резолвится, дефолт \"fable\" (Р3)")
+        return DEFAULT_LEAD_BINDING
+    try:
+        data = yaml.safe_load(config_text)
+    except Exception as exc:  # любой сбой парсера, не только YAMLError (Р3)
+        _warn(f"delegation.config.yaml не парсится как YAML ({exc}) — "
+              "дефолт \"fable\"")
+        return DEFAULT_LEAD_BINDING
+    if not isinstance(data, dict):
+        _warn("delegation.config.yaml: верхний уровень — не словарь — "
+              "дефолт \"fable\"")
+        return DEFAULT_LEAD_BINDING
+    roles = data.get("roles")
+    if not isinstance(roles, dict):
+        _warn("delegation.config.yaml: roles отсутствует/не словарь — "
+              "дефолт \"fable\"")
+        return DEFAULT_LEAD_BINDING
+    lead = roles.get("lead")
+    if not isinstance(lead, dict):
+        _warn("delegation.config.yaml: roles.lead отсутствует/не словарь "
+              "— дефолт \"fable\"")
+        return DEFAULT_LEAD_BINDING
+    model = None
+    sub = lead.get("subscription")
+    if isinstance(sub, dict):
+        model = sub.get("model")
+    if not model:
+        api = lead.get("api")
+        if isinstance(api, dict):
+            model = api.get("model")
+    if not model or not isinstance(model, str) or not model.strip():
+        _warn("delegation.config.yaml: roles.lead.subscription.model (или "
+              ".api.model) пуст/отсутствует — дефолт \"fable\"")
+        return DEFAULT_LEAD_BINDING
+    fams = _families_in(model)
+    if not fams:
+        _warn(f"delegation.config.yaml: model={model!r} — семейство не "
+              "распознано (не fable/opus/sonnet/haiku) — дефолт \"fable\"")
+        return DEFAULT_LEAD_BINDING
+    if len(fams) >= 2:
+        _warn(f"delegation.config.yaml: model={model!r} — неоднозначность "
+              f"(найдено {len(fams)} семейства: {fams}) — дефолт \"fable\"")
+        return DEFAULT_LEAD_BINDING
+    fam = fams[0]
+    if LEAD_FAMILIES.index(fam) > LEAD_FAMILIES.index("opus"):
+        _warn(f"delegation.config.yaml: привязка {fam!r} ниже opus не "
+              "поддерживается этим деплоем; правьте код осознанно — "
+              "дефолт \"fable\" (санитарный пол, калибровка №4)")
+        return DEFAULT_LEAD_BINDING
+    return fam
+
+
+def _head_config_text() -> str | None:
+    """HEAD-версия delegation.config.yaml (Б5): commit-msg-гейт судит
+    коммит по привязке, ДЕЙСТВОВАВШЕЙ ДО этого коммита — незакоммиченная
+    или SAME-COMMIT правка roles.lead планку не двигает (класс
+    snapshot_shrink_guard, второй экземпляр). `_git()` глотает ошибки
+    (capture_output) и возвращает "" и при отсутствии файла в HEAD, и
+    при отсутствии HEAD вовсе (первый коммит репо) — оба случая
+    неотличимы от пустого файла, что здесь не проблема: пустой текст
+    тоже резолвится в "fable" через resolve_lead_binding(None) —
+    корректный бутстрап (коммит, ВВОДЯЩИЙ конфиг, несёт `tier: fable`)."""
+    out = _git("show", f"HEAD:{CONFIG_FILENAME}")
+    return out if out else None
 
 
 def lead_family(binding: str) -> str | None:
     """Ярусное семейство привязанной модели по подстроке (fable/opus/
     sonnet/haiku); None — семейство не распознано (не-Claude привязка),
-    тогда годится только точное совпадение model id."""
-    low = binding.lower()
-    for fam in LEAD_FAMILIES:
-        if fam in low:
-            return fam
-    return None
+    тогда годится только точное совпадение model id. Реализована через
+    _families_in() — первое совпадение в порядке LEAD_FAMILIES, тот же
+    порядок, что и раньше (безопасный рефакторинг, не меняет поведение
+    для однозначных строк)."""
+    fams = _families_in(binding)
+    return fams[0] if fams else None
 
 
 def find_tier_declarations(msg: str) -> list[str]:
@@ -301,12 +463,29 @@ def find_tier_declarations(msg: str) -> list[str]:
 
 
 def tier_declared_ok(declared: str, binding: str) -> bool:
-    if declared == binding:
+    """binding — уже РЕЗОЛВЛЕННОЕ семейство (resolve_lead_binding
+    возвращает семейство, не литеральный model-id, Р9). Вызывающий
+    (decide_full) обязан СНАЧАЛА исключить неоднозначность declared
+    (см. _families_in/Р4) — здесь предполагается, что в declared
+    распознаётся СТРОГО ОДНО семейство (или ни одного).
+
+    Принимается: (1) точное совпадение с binding; (2) вхождение
+    семейства binding подстрокой в declared (та же семантика, что
+    раньше); (3) семейство declared СТРОГО ВЫШЕ binding по LEAD_FAMILIES
+    (D-0099: полный Lead — это ЛЮБОЙ ярус не ниже привязки, не только
+    буквальное имя "fable"; индекс меньше = сильнее, порядок
+    fable(0)<opus(1)<sonnet(2)<haiku(3))."""
+    if declared.strip() == binding:
         return True
     fam = lead_family(binding)
     if fam is None:
         return False
-    return fam in declared.lower()
+    if fam in declared.lower():
+        return True
+    declared_fam = lead_family(declared)
+    if declared_fam is None:
+        return False
+    return LEAD_FAMILIES.index(declared_fam) < LEAD_FAMILIES.index(fam)
 
 
 def _tier_queue_note() -> str:
@@ -319,16 +498,22 @@ def _tier_queue_note() -> str:
 
 
 def decide(msg: str, staged: list[str], map_text: str | None,
-           merging: bool = False, map_label: str = str(MAP_PATH)) -> tuple[int, str]:
+           merging: bool = False, map_label: str = str(MAP_PATH),
+           honor_skip: bool = True) -> tuple[int, str]:
     """Чистое решение гейта: блок и отказ — только из сообщения коммита.
     map_label — метка источника карты для текста отказа (main() передаёт
-    итог resolve_map_source; дефолт сохраняет прежние вызовы/тесты)."""
+    итог resolve_map_source; дефолт сохраняет прежние вызовы/тесты).
+    honor_skip (Р12, порт D-0099): decide_full() передаёт False, когда
+    staged-пути коммита несут delegation.config.yaml — skip-строка
+    «оси: не-механизм» не действует для коммита, трогающего саму
+    Lead-привязку, осевой блок обязателен безусловно. Дефолт True
+    сохраняет прежнее поведение для всех остальных вызовов/тестов."""
     hits = mechanism_paths(staged)
     if not hits:
         return 0, ""
     if merging:
         return 0, ""
-    if SKIP_RE.search(msg):
+    if honor_skip and SKIP_RE.search(msg):
         return 0, ""
     if map_text is None:
         return 1, (f"карта осей не найдена ({map_label}) — fail-closed, "
@@ -349,23 +534,47 @@ def decide(msg: str, staged: list[str], map_text: str | None,
 
 
 def decide_full(msg: str, staged: list[str], map_text: str | None,
-                 merging: bool = False, map_label: str = str(MAP_PATH)) -> tuple[int, str]:
+                 merging: bool = False, map_label: str = str(MAP_PATH),
+                 config_text: str | None = None) -> tuple[int, str]:
     """decide() плюс tier-требование (D-0072, t-071 порт): строка tier
     на ветке «механизм» (осевой блок уже пройден, не skip, не merge).
     Гейт проверяет только форму декларации — истинность судит калибровка
-    (см. docstring модуля, D-0063)."""
-    code, reason = decide(msg, staged, map_text, merging, map_label)
+    (см. docstring модуля, D-0063).
+
+    config_text (D-0099-порт, Б4 — инъекция для тестов): текст
+    delegation.config.yaml, дефолт None ("конфига нет" — резолвится в
+    "fable", регресс-пин с прежним поведением). main() передаёт
+    HEAD-версию (_head_config_text()), не рабочее дерево (Б5).
+
+    config_staged (Р12/М2.7): staged-пути несут delegation.config.yaml —
+    skip-ветка не действует НИ для осевого блока (honor_skip=False
+    передаётся в decide()), НИ для требования tier-строки ниже —
+    коммит, трогающий саму Lead-привязку, теряет право на skip
+    безусловно."""
+    config_staged = CONFIG_FILENAME in staged
+    code, reason = decide(msg, staged, map_text, merging, map_label,
+                          honor_skip=not config_staged)
     if code:
         return code, reason
     hits = mechanism_paths(staged)
-    if not hits or merging or SKIP_RE.search(msg):
+    skip_effective = SKIP_RE.search(msg) and not config_staged
+    if not hits or merging or skip_effective:
         return 0, ""
-    binding = resolve_lead_binding()
+    binding = resolve_lead_binding(config_text)
     declared_all = find_tier_declarations(msg)
     if not declared_all:
         return 1, ("коммит трогает механизмные файлы:\n  " + "\n  ".join(hits)
                     + "\nНет строки «tier: <значение>» (привязка lead: "
                     + binding + ") — " + _tier_queue_note())
+    # Р4: неоднозначность (≥2 РАЗНЫХ семейства в ОДНОЙ tier-строке) —
+    # отдельный отказ, проверяется ДО "below" (не первое-совпадение).
+    ambiguous = [d for d in declared_all if len(_families_in(d)) >= 2]
+    if ambiguous:
+        return 1, ("коммит трогает механизмные файлы:\n  " + "\n  ".join(hits)
+                    + "\nДекларация неоднозначна: «tier: " + ambiguous[0]
+                    + "» несёт несколько ярусных семейств ("
+                    + ", ".join(_families_in(ambiguous[0]))
+                    + ") — укажи ровно одно (Р4) — " + _tier_queue_note())
     below = [d for d in declared_all if not tier_declared_ok(d, binding)]
     if below:
         return 1, ("коммит трогает механизмные файлы:\n  " + "\n  ".join(hits)
@@ -407,7 +616,8 @@ def main(argv: list[str] | None = None) -> int:
         print("mechanism_gate: живая карта осей недоступна — использован "
               f"закоммиченный срез {MAP_SNAPSHOT_REL}; сверка среза с "
               "живой картой — чек еженедельной калибровки", file=sys.stderr)
-    code, reason = decide_full(msg, staged, map_text, merging, map_label)
+    code, reason = decide_full(msg, staged, map_text, merging, map_label,
+                               config_text=_head_config_text())
     if code:
         print("mechanism_gate: " + reason, file=sys.stderr)
     return code

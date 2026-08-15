@@ -32,7 +32,9 @@ actors:
               test-automator, test-designer, test-maintainer, test-strategist,
               test-reviewer, sla_sweep, board_inbound, stale_locks, build_watch,
               exploratory-tester, charter-designer, gitlab_inbound]
-    # lead — Lead-сессия (координатор Fable-яруса) как актор переходов
+    # lead — Lead-сессия (координатор яруса Lead-привязки —
+    # delegation.config.yaml roles.lead, после D-0099 Opus; либо выше,
+    # Fable-резерв) как актор переходов
     # вне групп human/factory: добавлен 2026-07-29 вместе с переходом
     # отката Verified->Fixed (актор был использован в переходе, но не
     # зарегистрирован — поймано юнитом test_matrix_is_valid при прогоне
@@ -189,6 +191,7 @@ machines:
          ref: "человек/Lead разобрал причину блока; актор lead добавлен 2026-07-31
            (разбор ESC-010/012): ref с самого начала называл Lead, но списка by
            он не достигал — Lead-разбор Blocked-чартера упирался в переход,
-           который сам же ref ему предписывает. Полный Lead (Fable) только;
+           который сам же ref ему предписывает. Полный Lead (ярус
+           Lead-привязки delegation.config.yaml или выше) только;
            деградированный координатор Blocked не снимает (CLAUDE.md,
            'Деградация Lead' п.2)"}
