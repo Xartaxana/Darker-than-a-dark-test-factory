@@ -391,14 +391,17 @@ device-liveness recovery). Обе точки — ровно то, что наз�
 аддитивное усиление того же фикса, не расхождение с `fixed_in`,
 упомянуто здесь для полноты следа.
 
-**Механический перепрогон (независимый, этот ход, дата 2026-08-14):**
+**Механический перепрогон (независимый, дата 2026-08-14; текст предупреждения
+исправлен на дословный координатором 2026-08-15 — прежняя версия несла
+реконструированную по памяти строку, не байт-в-байт вывод; класс поймал
+критик при приёмке AT-BUG-066, см. её «## Верификация»):**
 
 ```
-$ powershell ...; Invoke-Pytest tests/test_residual_proxy_guard_unit.py -q
+$ powershell -NoProfile -ExecutionPolicy Bypass -Command '$env:PYTHONIOENCODING="utf-8"; . D:\AO3_tests\scripts\tasks.ps1; Invoke-Pytest tests/test_residual_proxy_guard_unit.py -q'
 ..............                                                           [100%]
 === warnings summary ===
 tests/test_residual_proxy_guard_unit.py::test_hook_rechecks_residual_proxy_after_recovery
-  conftest.py:196: UserWarning: AT-BUG-026 device-liveness guard: восстановление 1/2
+  conftest.py:196: UserWarning: AT-BUG-026 device-liveness guard: устройство восстановлено 1/2
 AT-BUG-026 device-liveness guard: recoveries this session = 0/2
 14 passed, 1 warning in 0.14s
 PYTEST_EXIT=0

@@ -1571,8 +1571,8 @@
   },
   "AT-BUG-066": {
     "itype": "bug",
-    "artifact_status": "Fixed",
-    "board_status": "Fixed"
+    "artifact_status": "Verified",
+    "board_status": "Verified"
   },
   "AT-BUG-067": {
     "itype": "bug",
@@ -1615,6 +1615,11 @@
     "board_status": "Open"
   },
   "AT-BUG-075": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "AT-BUG-076": {
     "itype": "bug",
     "artifact_status": "Open",
     "board_status": "Open"

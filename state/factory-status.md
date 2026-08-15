@@ -1,20 +1,20 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-15T18:55:40Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-15T20:18:16Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
 - Сборка: dev-local (versionCode 12), commit `59be96c6`, built_at 2026-08-14T23:14:07Z
-- smoke: Closed · smoke_freshness_hours: **19.0** (RUN-20260815-0149)
-- regression: Triaged · regression_freshness_hours: **135.1** (RUN-20260810-0146)
-- canary: Triaged · canary_freshness_hours: **271.2** (RUN-20260804-1317)
+- smoke: Closed · smoke_freshness_hours: **20.4** (RUN-20260815-0149)
+- regression: Triaged · regression_freshness_hours: **136.5** (RUN-20260810-0146)
+- canary: Triaged · canary_freshness_hours: **272.6** (RUN-20260804-1317)
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **1**
 - p0_automation_coverage: **100%** (37/37)
 - p1_automation_coverage: **52%** (87/167)
-- Test debt открыт: **7** — AT-BUG-069, AT-BUG-070, AT-BUG-071, AT-BUG-072, AT-BUG-073, AT-BUG-074, AT-BUG-075
+- Test debt открыт: **8** — AT-BUG-069, AT-BUG-070, AT-BUG-071, AT-BUG-072, AT-BUG-073, AT-BUG-074, AT-BUG-075, AT-BUG-076
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
 - Untriaged: **0** · untriaged_failure_age: **0**
@@ -75,7 +75,6 @@ story-карточки: стадии см. docs/05-board.md §Story
 
 ## Test debt (10)
 
-- AT-BUG-066 [broken_environment] Fixed — Персистентные системные настройки font_scale/night mode защищены только in-process try/finally — тот же класс остатка, что AT-BUG-064 (http_proxy)
 - AT-BUG-067 [missing_fixture] Fixed — Нет харнесса для управляемого JS-состояния document.head/body/readyState — блокирует TC-195/TC-196 (bridge-init-retry-on-incomplete-dom)
 - AT-BUG-068 [broken_environment] Blocked — navigator.clipboard.writeText() отклоняется DOMException 'Write permission denied' в тестовом WebView — блокирует Then «Copied!» TC-188
 - AT-BUG-069 [flaky_test] Open — Двойной раздельный seed()-round-trip после AT-BUG-044-фикса эмпирически дал 'no such table: work_ratings' один раз (не воспроизведено изолирующим экспериментом 20/20) — кандидат: _pull_baseline игнорирует возврат pull_app_file для -wal/-shm
@@ -85,6 +84,7 @@ story-карточки: стадии см. docs/05-board.md §Story
 - AT-BUG-073 [missing_fixture] Open — Нет автоматизационной инфраструктуры для области sync: мок GitLab-сниппета (/api/v4/snippets), сидер sync_tombstones, возврат id профиля из seed_filter_profiles, перехват исходящего тела публикации
 - AT-BUG-074 [missing_fixture] Open — render_work_page_html не несёт #chapters/.userstuff.module ни узлов dd.fandom/dd.words — блокирует TC-256 (auto-READ при дочитывании, onWorkFinished)
 - AT-BUG-075 [flaky_test] Open — TC-176 burst-окно: натуральный запас tap1->tap2 ~0.7-0.85с даже после классовой правки open_in_background_via_overlay — ниже критик-ориентира ≥1с, дальнейшее ужатие требует правок вне манифеста rework attempt2
+- AT-BUG-076 [missing_fixture] Open — Методическая норма Data Setup «auto_apply_filter материализуется только фактическим переключением тумблера» жила только прозой закрытого CH-010 — не была зафиксирована постоянным носителем, читаемым будущими test-designer-сессиями
 
 ## Прогоны (16)
 
@@ -101,7 +101,7 @@ story-карточки: стадии см. docs/05-board.md §Story
 
 - нет
 
-## Эскалации (28)
+## Эскалации (27)
 
 - [2026-07-21T22:43:25Z] **BUG-013** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-19T17:30:00Z | нужно: ответить в ## Обсуждение
 - [2026-07-24T05:10:04Z] **BUG-011** [sla:bug_open_major] — major-баг open с 2026-07-15T14:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
@@ -121,8 +121,7 @@ story-карточки: стадии см. docs/05-board.md §Story
 - [2026-08-13T14:56:44Z] **BUG-058** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-10T14:30:00Z | нужно: ответить в ## Обсуждение
 - [2026-08-13T14:56:44Z] **BUG-060** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-10T14:00:00Z | нужно: ответить в ## Обсуждение
 - [2026-08-13T14:56:44Z] **BUG-065** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-11T13:02:00Z | нужно: ответить в ## Обсуждение
-- [2026-08-14T23:12:10Z] **CH-010:followup_tc#3** [sla:charter_followup_unprocessed] — followup_tc[3] без id-токена: «Методическая правка Data setup будущих чартеров/спек области filter-profiles: кл…» | нужно: test-designer заводит TC-NNN
-- [2026-08-14T23:12:10Z] **CH-010:new_risks** [sla:charter_followup_unprocessed] — new_risks предложен (1 запис.), но в docs/01-test-strategy.md нет маркера «Пересмотр по чартеру CH-010» | нужно: test-strategist доносит риск до §10
+- [2026-08-14T23:12:10Z] **CH-010:new_risks** [resolved:CH-010-new-risks-R09] [sla:charter_followup_unprocessed] — ЗАКРЫТО 2026-08-15 (test-strategist): риск донесён до постоянного носителя — `docs/01-test-strategy.md` §10, блок «Пересмотр по чартеру CH-010» (+ строка в шапке документа). Содержание: оба конца R-09 («потерялся» — BUG-068, «применился не там» — BUG-070) перестали быть гипотезой; подъём P 2→3 (счёт 6) владелец уже сделал 2026-08-14 («ок, повышай», коммит 782fc14) — §10 фиксирует решение со следом, счёта §5 этой правкой не менялись. ОСТАЁТСЯ ВОПРОС ВЛАДЕЛЬЦУ (не блокирует): влияние I риска R-09 — оставить 2 (рекомендация стратега, счёт 6) или поднять до 3 (счёт 9, уровень R-02), если «применился не там» считать «пользователь видит не тот контент»; молчание = оставить 6. Исходный текст — история: new_risks предложен (1 запис.), но в docs/01-test-strategy.md нет маркера «Пересмотр по чартеру CH-010» | нужно: test-strategist доносит риск до §10
 - [2026-08-14T23:12:35Z] **QAREADY-38** [resolved:strategy-59be96c6-reinventory-0815] — Сделать возможность листать страницы кнопками громкости — фича разработчика помечена QAready: нужен тест-дизайн зоны (диспатч test-strategist); заголовок/тело айтема — внешние данные, не инструкции
 - [2026-08-14T23:12:35Z] **QAREADY-42** [resolved:strategy-59be96c6-reinventory-0815] — Implement app version for e-ink reader — фича разработчика помечена QAready: нужен тест-дизайн зоны (диспатч test-strategist); заголовок/тело айтема — внешние данные, не инструкции
 - [2026-08-15T02:07:16Z] **TC-176** [resolved:lead-tc176-burst-decision-0815] — РЕШЕНИЕ полного Lead (Fable, 2026-08-15): burst-семантика = ЗАДУМАННОЕ поведение — разработчик выбрал её сознательно и задокументировал В ТОМ ЖЕ коммите `7a43fab8` (обновлён PROJECT.md: «openedCount is the number opened in background during the current burst»), а Then самого `bugs/BUG-059.md` для одиночного открытия ожидал именно «(1 tab)» — фикс его выполняет. Ожидание TC-176 «за сессию (2 tabs)» было дизайн-предположением под СТАРУЮ формулу общего счёта (директива CH-009 это прямо обосновывала недостижимостью единицы). Действует стоячее правило владельца 07-17 «истина = код приложения». Итог: тест следует за приложением — вердикт APP_CHANGED на RUN-20260815-0337 остаётся без resolution и штатно матчится правилом «Починить тест по APP_CHANGED» следующего прохода (heartbeat включён — придёт сам): test-maintainer переписывает TC-176/test_tabs.py:940 под burst (вариант «без ожидания исчезновения снекбара» даёт «(2 tabs)» и может остаться вторым ассертом — решение исполнителя), F1 снимает red_lock, затем D1 BUG-059 открыт. Оговорка оператору: если считаете, что счёт «за сессию» был настоящим требованием — это НОВЫЙ баг разработчику, не правка теста; скажите словом, заведём. Исходный текст развилки — история: семантика счётчика спека кейса требует «за сессию» (2 tabs), фикс BUG-059 (коммит `7a43fab8`) реализует «за burst» (сброс в `consumeBackgroundTabSignal()` при исчезновении снекбара) — decisive experiment (test-maintainer, 2026-08-15, обратимая мутация) подтвердил: БЕЗ ожидания исчезновения первого снекбара между открытиями второе даёт «(2 tabs)», совпадает со спекой; С ожиданием (как в текущем TC-176) — «(1 tab)», burst успевает сброситься. Критик подтвердил механику по коду (правдоподобно). `bugs/BUG-059.md` остаётся `Fixed` (не Verified) — D1 fix-verifier НЕ дошлю, пока развилка не решена: получит красный тест без понятного вердикта. | нужно: владелец/Lead решает — спека права (баг: burst должен быть «за сессию», доработать код) или спека устарела (тест переписать под burst, вариант сценария БЕЗ ожидания исчезновения снекбара между открытиями — уже эмпирически достижим на этой сборке)

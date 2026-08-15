@@ -7126,7 +7126,7 @@
     "epicPath": null,
     "summary": "Персистентные системные настройки font_scale/night mode защищены только in-process try/finally — тот же класс остатка, что AT-BUG-064 (http_proxy)",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -7137,8 +7137,8 @@
       "test_case:TC-110",
       "sev:minor"
     ],
-    "updated": "2026-08-13T22:43:53Z",
-    "resolution": null,
+    "updated": "2026-08-15T20:04:01Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -7366,6 +7366,27 @@
       "sev:minor"
     ],
     "updated": "2026-08-15T14:52:22Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-076",
+    "path": "board/AT-BUG-076/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Методическая норма Data Setup «auto_apply_filter материализуется только фактическим переключением тумблера» жила только прозой закрытого CH-010 — не была зафиксирована постоянным носителем, читаемым будущими test-designer-сессиями",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:minor"
+    ],
+    "updated": "2026-08-15T19:25:47Z",
     "resolution": null,
     "children": [],
     "archived": false
