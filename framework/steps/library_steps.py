@@ -122,15 +122,54 @@ def delete_via_overlay(driver, title: str, action: str):
         raise ValueError(f"неизвестное действие overlay: {action}")
 
 
+# TC-176 rework attempt2 (классовая правка, критик-вход rework attempt1):
+# длительность СВОЕГО long-press-жеста ниже, чем `LibraryScreen.long_press_work`
+# (1000мс) — эмпирически проверено на живом устройстве (10+ успешных срабатываний
+# overlay на этой длительности, 0 промахов «overlay не появился»), запас над
+# системным long-press-порогом Android (`ViewConfiguration.getLongPressTimeout()`,
+# по умолчанию 500мс, приложение его не переопределяет — `combinedClickable`
+# без кастомного `viewConfiguration` в `LibraryScreen.kt` WorkCard) — 100мс.
+# Не уменьшать дальше без новой серии живых прогонов (риск ложного НЕ-срабатывания
+# long-press перевешивает выигрыш в тайминге за пределами уже проверенного значения).
+_OPEN_IN_BACKGROUND_LONG_PRESS_DURATION_MS = 600
+
+
 @allure.step("When long-press по карточке «{title}», в overlay выбрано «Open in background tab»")
 def open_in_background_via_overlay(driver, title: str):
     """TC-173/174/175/176/189: overlay действий — тот же, что открывает
     `delete_via_overlay` (long-press карточки), первый пункт — «Open in
-    background tab» (`WorkActionsSheetContent`, LibraryScreen.kt)."""
+    background tab» (`WorkActionsSheetContent`, LibraryScreen.kt).
+
+    TC-176 rework attempt2 (критик-вход rework attempt1, недостаточный запас
+    тайминга burst-окна — `bugs/AT-BUG-075.md`): классовая правка примитива,
+    затрагивает ВСЕХ потребителей (TC-173/174/175/176/189) — таргетно
+    перепрогнаны все пятеро после правки, регрессии не найдено. Раньше тело
+    дублировало ОДИН find (через `has_work`) ДВАЖДЫ подряд (`has_work` →
+    `long_press_work`, который сам делает `find`) и держало ОТДЕЛЬНЫЙ
+    `assert delete_overlay_visible()` ПЕРЕД `tap_open_in_background()`, хотя
+    сам `tap()` уже ждёт `element_to_be_clickable` на целевом пункте overlay —
+    оба были буквально избыточным повторным round-trip'ом Appium-команды на
+    УЖЕ известное состояние (карточка видна — доказано предусловиями
+    сценария/предыдущими шагами; overlay откроется тем же кодовым путём, что
+    и у карточки №1, которая уже отработала в этом самом тесте). Здесь —
+    ОДИН `find()` (переиспользуется и как precondition-проверка: поднимает
+    `TimeoutException` с текстом локатора, если карточка не найдена, тот же
+    смысл, что раньше давал `has_work`+assert, просто без второго round-trip),
+    свой (более короткий, см. константу выше) `longClickGesture`, и сразу
+    `tap_open_in_background()` (сам ждёт появления/кликабельности пункта —
+    отдельный `delete_overlay_visible()` перед ним был чистым дублированием
+    его собственного ожидания). Измеримый эффект на TC-176 (единственный
+    потребитель с плотным тайминговым окном) — см. TC-176.md, раздел
+    «Тайминг burst-окна»: натуральный (без искусственной задержки) зазор
+    tap1→tap2 упал с 3.68-3.94с (rework attempt1) до ~3.1-3.5с; для
+    TC-173/174/175/189 (без тайминговых ограничений) эффект — только
+    ускорение прогона, семантика не меняется."""
     lib = LibraryScreen(driver)
-    assert lib.has_work(title), f"работа «{title}» не найдена"
-    lib.long_press_work(title)
-    assert lib.delete_overlay_visible(), "overlay действий не появился после long-press"
+    el = lib.find(lib.by_text(title))
+    driver.execute_script(
+        "mobile: longClickGesture",
+        {"elementId": el.id, "duration": _OPEN_IN_BACKGROUND_LONG_PRESS_DURATION_MS},
+    )
     lib.tap_open_in_background()
 
 

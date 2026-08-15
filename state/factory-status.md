@@ -1,20 +1,20 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-15T12:29:02Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-15T15:32:42Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
 - Сборка: dev-local (versionCode 12), commit `59be96c6`, built_at 2026-08-14T23:14:07Z
-- smoke: Closed · smoke_freshness_hours: **12.5** (RUN-20260815-0149)
-- regression: Triaged · regression_freshness_hours: **128.7** (RUN-20260810-0146)
-- canary: Triaged · canary_freshness_hours: **264.7** (RUN-20260804-1317)
+- smoke: Closed · smoke_freshness_hours: **15.6** (RUN-20260815-0149)
+- regression: Triaged · regression_freshness_hours: **131.7** (RUN-20260810-0146)
+- canary: Triaged · canary_freshness_hours: **267.8** (RUN-20260804-1317)
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **1**
 - p0_automation_coverage: **100%** (37/37)
-- p1_automation_coverage: **51%** (86/167)
-- Test debt открыт: **6** — AT-BUG-069, AT-BUG-070, AT-BUG-071, AT-BUG-072, AT-BUG-073, AT-BUG-074
+- p1_automation_coverage: **52%** (87/167)
+- Test debt открыт: **7** — AT-BUG-069, AT-BUG-070, AT-BUG-071, AT-BUG-072, AT-BUG-073, AT-BUG-074, AT-BUG-075
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
 - Untriaged: **0** · untriaged_failure_age: **0**
@@ -26,8 +26,8 @@ story-карточки: стадии см. docs/05-board.md §Story
 
 ## Тест-кейсы (256)
 
-- Draft: **1** · Review: **66** · Approved: **37** · Automated: **152**
-- автотесты (B3): active: **152**
+- Draft: **1** · Review: **66** · Approved: **36** · Automated: **153**
+- автотесты (B3): active: **153**
 
 | Область | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
@@ -46,7 +46,7 @@ story-карточки: стадии см. docs/05-board.md §Story
 | settings |  | 3 | 9 | 11 |  |
 | smoke |  |  |  | 5 |  |
 | sync |  | 25 |  |  |  |
-| tabs |  |  | 1 | 11 |  |
+| tabs |  |  |  | 12 |  |
 | visibility |  |  |  | 6 |  |
 
 ## Баги (31)
@@ -73,7 +73,7 @@ story-карточки: стадии см. docs/05-board.md §Story
 
 - BUG-012 [minor] Intended — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
 
-## Test debt (9)
+## Test debt (10)
 
 - AT-BUG-066 [broken_environment] Fixed — Персистентные системные настройки font_scale/night mode защищены только in-process try/finally — тот же класс остатка, что AT-BUG-064 (http_proxy)
 - AT-BUG-067 [missing_fixture] Fixed — Нет харнесса для управляемого JS-состояния document.head/body/readyState — блокирует TC-195/TC-196 (bridge-init-retry-on-incomplete-dom)
@@ -84,6 +84,7 @@ story-карточки: стадии см. docs/05-board.md §Story
 - AT-BUG-072 [missing_fixture] Open — Нет автоматизационного примитива нажатия клавиш громкости (KEYCODE_VOLUME_UP/DOWN) — блокирует листание страниц кнопками громкости
 - AT-BUG-073 [missing_fixture] Open — Нет автоматизационной инфраструктуры для области sync: мок GitLab-сниппета (/api/v4/snippets), сидер sync_tombstones, возврат id профиля из seed_filter_profiles, перехват исходящего тела публикации
 - AT-BUG-074 [missing_fixture] Open — render_work_page_html не несёт #chapters/.userstuff.module ни узлов dd.fandom/dd.words — блокирует TC-256 (auto-READ при дочитывании, onWorkFinished)
+- AT-BUG-075 [flaky_test] Open — TC-176 burst-окно: натуральный запас tap1->tap2 ~0.7-0.85с даже после классовой правки open_in_background_via_overlay — ниже критик-ориентира ≥1с, дальнейшее ужатие требует правок вне манифеста rework attempt2
 
 ## Прогоны (16)
 

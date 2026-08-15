@@ -896,19 +896,43 @@ def two_works_same_tab_seeded():
 @pytest.mark.p1
 @allure.id("TC-176")
 @allure.title(
-    "Снекбар подтверждения фонового открытия называет число вкладок, ОТКРЫТЫХ В "
-    "ФОНЕ, не общее число вкладок (ожидаемо-красный до фикса BUG-059)"
+    "Снекбар подтверждения фонового открытия называет число вкладок, открытых "
+    "в фоне за ТЕКУЩИЙ burst, а не общее число вкладок приложения"
 )
 def test_background_open_snackbar_counts_background_opens_not_total(
     two_works_same_tab_seeded, driver,
 ):
-    """TC-176: намеренно-красный до фикса BUG-059 (прецедент TC-139/BUG-015) —
-    ассерт от ОЖИДАЕМОГО поведения спецификации (счётчик = числу вкладок,
-    открытых В ФОНЕ за сессию), а не от факта текущей сборки (см. `red_lock` во
-    frontmatter кейса и `bugs/BUG-059.md`). `MainActivity.kt:283
-    tabCount = newTabs.size` реально считает ОБЩЕЕ число вкладок — на момент
-    второго открытия фактический текст «Opened in background (3 tabs)»
-    (Home + 2 фоновых), тест падает на сравнении с ожидаемым «(2 tabs)»."""
+    """TC-176: burst-семантика (фикс BUG-059, коммит `7a43fab8`,
+    `state/escalations.md` resolved:lead-tc176-burst-decision-0815) — снекбар
+    считает фоновые открытия С ТЕКУЩЕГО burst'а: `BrowserViewModel.kt:281
+    BackgroundTabOpen(++backgroundOpenSeq, ++backgroundOpenBurst)`, burst
+    сбрасывается ТОЛЬКО в `consumeBackgroundTabSignal()` (:297-300), которая
+    выполняется сразу вслед за возвратом `showSnackbar(...)`
+    (`MainActivity.kt:342-347`) — а `showSnackbar` с одноаргументной формой
+    (`SnackbarDuration.Short` = 4000мс) возвращает управление, когда
+    ИСТЕКАЕТ ТАЙМЕР (внутренний `delay(...)` Compose Material3), НЕ когда
+    снекбар визуально пропадает с экрана: `dismiss()` запускается ПО
+    истечении таймера и САМ является началом exit-анимации — «снекбар ещё
+    виден» (идёт fade/slide-out) не равнозначно «burst ещё жив»; к моменту,
+    когда снекбар визуально исчезает полностью, `consumeBackgroundTabSignal()`
+    уже мог отработать. Чтобы получить множественное число «(2 tabs)», второе
+    открытие обязано случиться, ПОКА не истёк 4000мс-таймер первого — поэтому
+    здесь, в отличие от прежней редакции кейса, ВТОРОЕ открытие идёт сразу
+    вслед за первым, БЕЗ ожидания дисмисса снекбара: `LaunchedEffect` в
+    MainActivity ключуется на весь сигнал, второе открытие отменяет ещё не
+    завершённый `showSnackbar` первого (не успевший дойти до
+    `consumeBackgroundTabSignal()`) и показывает уже накопленный
+    burst-счётчик.
+
+    Тайминг burst-окна (критик-вход rework attempt1, `bugs/AT-BUG-075.md`):
+    зазор tap1->tap2 (жёсткий потолок ~4.2-4.3с по гранично́му зонду rework
+    attempt2, TC-176.md «Тайминг burst-окна») — натуральный (без
+    искусственной задержки) зазор здесь после классовой правки
+    `library_steps.open_in_background_via_overlay` (см. её докстринг) — это
+    ~3.1-3.5с (было 3.68-3.94с), запас ~0.7-0.85с. Ниже критик-ориентира
+    (≥1с) — доведение до полного ориентира требует правок за пределами
+    манифеста этого раунда (см. `bugs/AT-BUG-075.md`, заведён этим же
+    проходом)."""
     work1, work2 = two_works_same_tab_seeded
 
     # Given приложение на экране Library, открыта ровно 1 вкладка (Home)
@@ -919,22 +943,25 @@ def test_background_open_snackbar_counts_background_opens_not_total(
     app_steps.wait_persisted_tab_count(1, timeout=10)
 
     # When пользователь long-press по карточке №1 открывает overlay и тапает
-    # «Open in background tab» (первое фоновое открытие сессии)
+    # «Open in background tab» (первое фоновое открытие текущего burst'а)
     library_steps.open_in_background_via_overlay(driver, work1.title)
-    app_steps.wait_persisted_tab_count(2, timeout=15)
 
-    # And дожидается, пока снекбар полностью исчезнет с экрана (поллинг
-    # отсутствия текста, не таймер)
-    browser_steps.wait_opened_in_background_snackbar_shown_then_gone(driver)
-
-    # And долгим нажатием по карточке №2 (ДРУГАЯ работа) открывает overlay и
-    # тапает «Open in background tab» (второе фоновое открытие сессии)
+    # And СРАЗУ ЖЕ, не дожидаясь дисмисса снекбара от первого открытия (иначе
+    # burst успеет сброситься в consumeBackgroundTabSignal — см. докстринг),
+    # долгим нажатием по карточке №2 (ДРУГАЯ работа) открывает overlay и
+    # тапает «Open in background tab» (второе открытие ТОГО ЖЕ burst'а — тот
+    # же экран, без навигации прочь и обратно, минимальный естественный темп
+    # UI-примитивов). Промежуточный `wait_persisted_tab_count(2)` убран
+    # (rework attempt2 — доп. вклад в запас тайминга; финальный
+    # `wait_persisted_tab_count(3)` ниже по-прежнему подтверждает
+    # кумулятивный эффект обоих открытий, промежуточная проверка тут не
+    # теряет покрытие, только снимает лишний round-trip с критичного окна).
     library_steps.open_in_background_via_overlay(driver, work2.title)
     app_steps.wait_persisted_tab_count(3, timeout=15)
 
     # Then снекбар после ВТОРОГО открытия показывает дословно «Opened in
-    # background (2 tabs)» — «2» означает число вкладок, открытых В ФОНЕ за эту
-    # сессию (спецификация); фактическая сборка (BUG-059) покажет «(3 tabs)» —
-    # ОЖИДАЕМОЕ падение, см. docstring выше.
+    # background (2 tabs)» — «2» здесь burst-счётчик (число фоновых открытий
+    # с последнего сброса), а НЕ общее число вкладок приложения (на этот
+    # момент их фактически 3: Home + 2 фоновых)
     browser_steps.assert_opened_in_background_snackbar_text(
         driver, "Opened in background (2 tabs)")

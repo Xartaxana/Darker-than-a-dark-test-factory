@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-15T12:29:04Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-08-15T15:32:44Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 ## Сводка по областям
@@ -22,7 +22,7 @@ generated_at: 2026-08-15T12:29:04Z · генератор: `scripts/coverage_map.
 | settings | 23 | 11 | partial |
 | smoke | 5 | 5 | designed-full |
 | sync | 25 | 0 | none |
-| tabs | 12 | 11 | partial |
+| tabs | 12 | 12 | designed-full |
 | visibility | 6 | 6 | designed-full |
 
 ## Риски (docs/01-test-strategy.md §5) → покрытие
@@ -56,7 +56,7 @@ generated_at: 2026-08-15T12:29:04Z · генератор: `scripts/coverage_map.
 | browse-tab-undo-history-limit | browse | tabs:TC-024[Automated] |
 | browse-tab-list-persistence | browse | tabs:TC-025[Automated] |
 | browse-tab-open-background-link | browse | tabs:TC-026[Automated] |
-| browse-background-open-snackbar | browse | tabs:TC-176[Approved] |
+| browse-background-open-snackbar | browse | tabs:TC-176[Automated] |
 | browse-tab-switch-active | browse | tabs:TC-084[Automated] |
 | browse-deep-link-new-tab | browse | tabs:TC-131[Automated], tabs:TC-133[Automated], tabs:TC-134[Automated] |
 | browse-deep-link-reuse-home-tab | browse | tabs:TC-132[Automated], tabs:TC-135[Automated] |
@@ -617,10 +617,10 @@ generated_at: 2026-08-15T12:29:04Z · генератор: `scripts/coverage_map.
 
 ### tabs
 
-- coverage_status: **partial** (11/12 Automated)
+- coverage_status: **designed-full** (12/12 Automated)
 - риски: R-08
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-176 [P1, Approved]
+- P0/P1 не в Automated: нет
 - автотесты (automated_by): framework/tests/test_tabs.py::test_background_open_snackbar_counts_background_opens_not_total, framework/tests/test_tabs.py::test_background_resume_without_deep_link_keeps_tabs_unchanged, framework/tests/test_tabs.py::test_cold_start_deep_link_reuses_single_home_tab, framework/tests/test_tabs.py::test_deep_link_after_home_loaded_creates_second_tab_not_reuse, framework/tests/test_tabs.py::test_deep_link_at_tab_limit_shows_dialog_and_drops_url, framework/tests/test_tabs.py::test_kill_relaunch_without_deep_link_keeps_tabs_unchanged, framework/tests/test_tabs.py::test_long_press_link_opens_background_tab_without_switching, framework/tests/test_tabs.py::test_max_tabs_limit_blocks_11th_tab, framework/tests/test_tabs.py::test_swipe_close_undo_restores_position, framework/tests/test_tabs.py::test_tabs_persist_url_and_scroll_after_restart, framework/tests/test_tabs.py::test_tap_inactive_tab_chip_activates_it, framework/tests/test_tabs.py::test_undo_history_evicts_oldest_after_six_closes
 - last_green_run: RUN-20260815-0149 (suite: smoke, status: Closed, updated: 2026-08-14T23:57:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
@@ -635,11 +635,12 @@ generated_at: 2026-08-15T12:29:04Z · генератор: `scripts/coverage_map.
   - TC-133: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
   - TC-134: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
   - TC-135: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
+  - TC-176: нет зелёного per-TC
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  |  |  |
-| P1 |  |  | 1 | 10 |  |
+| P1 |  |  |  | 11 |  |
 | P2 |  |  |  |  |  |
 | P3 |  |  |  | 1 |  |
 

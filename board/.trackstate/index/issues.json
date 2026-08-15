@@ -5627,18 +5627,19 @@
     "epic": null,
     "parentPath": null,
     "epicPath": null,
-    "summary": "Снекбар подтверждения фонового открытия называет число вкладок, ОТКРЫТЫХ В ФОНЕ, не общее число вкладок (ожидаемо-красный до фикса BUG-059)",
+    "summary": "Снекбар подтверждения фонового открытия называет число вкладок, открытых в фоне за ТЕКУЩИЙ burst, не общее число вкладок",
     "issueType": "test-case",
-    "status": "tc-awaiting-review",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:tabs",
-      "risk:R-08"
+      "risk:R-08",
+      "automation:active"
     ],
-    "updated": "2026-08-10T14:20:00Z",
-    "resolution": null,
+    "updated": "2026-08-15T15:31:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -7348,6 +7349,28 @@
     "archived": false
   },
   {
+    "key": "AT-BUG-075",
+    "path": "board/AT-BUG-075/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "TC-176 burst-окно: натуральный запас tap1->tap2 ~0.7-0.85с даже после классовой правки open_in_background_via_overlay — ниже критик-ориентира ≥1с, дальнейшее ужатие требует правок вне манифеста rework attempt2",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-176",
+      "sev:minor"
+    ],
+    "updated": "2026-08-15T14:52:22Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "BUG-001",
     "path": "board/BUG-001/main.md",
     "parent": null,
@@ -8377,7 +8400,7 @@
       "регресс сборки: smoke RUN-20260815-0149 49/49 · чисто · regression RUN-20260815-0337 271/273 · разобрано · новых багов в прогоне: 0",
       "фич без кейсов: 0/2",
       "черновиков: 1",
-      "багов на кейсах стори: 2"
+      "багов на кейсах стори: 3"
     ],
     "updated": "2026-08-09T23:04:10Z",
     "resolution": null,

@@ -874,6 +874,11 @@
     "artifact_status": "Review",
     "board_status": "Review"
   },
+  "TC-256": {
+    "itype": "test-case",
+    "artifact_status": "Review",
+    "board_status": "Review"
+  },
   "TC-100": {
     "itype": "test-case",
     "artifact_status": "Automated",
@@ -1241,8 +1246,8 @@
   },
   "TC-176": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "TC-013": {
     "itype": "test-case",
@@ -1600,6 +1605,16 @@
     "board_status": "Open"
   },
   "AT-BUG-073": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "AT-BUG-074": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "AT-BUG-075": {
     "itype": "bug",
     "artifact_status": "Open",
     "board_status": "Open"
