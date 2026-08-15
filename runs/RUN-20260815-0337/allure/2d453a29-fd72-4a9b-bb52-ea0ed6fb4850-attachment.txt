@@ -1,0 +1,2 @@
+AT-BUG-063 recovery: WARNING: avd_name='ao3_test_api29" ; whoami #' из state-файла ОТБРОШЕН (не соответствует ^[A-Za-z0-9_.-]+$) — recovery поднимет AVD по дефолту tasks.ps1.
+AT-BUG-063 recovery: перезапуск эмулятора: gpu=<tasks.ps1 default> (source: default), avd=<tasks.ps1 default> (source: default); возраст state неизвестен (updated_utc отсутствует); state-файл: C:\Users\user\AppData\Local\Temp\pytest-of-user\pytest-2887\test_f4_avdname_adversarial_ba2\emulator-session.json

@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-08-15T02:12:01Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 ## Сводка по областям
@@ -9,18 +9,19 @@ generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.
 |---|---|---|---|
 | accessibility | 6 | 3 | partial |
 | backup | 7 | 1 | partial |
-| browser | 27 | 13 | partial |
+| browser | 34 | 13 | partial |
 | canary | 25 | 23 | partial |
 | compatibility | 3 | 3 | designed-full |
-| downloads | 18 | 14 | partial |
+| downloads | 23 | 14 | partial |
 | errors | 1 | 1 | designed-full |
-| filter-profiles | 10 | 5 | partial |
-| library | 26 | 25 | partial |
+| filter-profiles | 12 | 5 | partial |
+| library | 32 | 25 | partial |
 | performance | 4 | 4 | designed-full |
 | rating | 28 | 21 | partial |
-| security | 6 | 6 | designed-full |
-| settings | 20 | 11 | partial |
+| security | 9 | 6 | partial |
+| settings | 23 | 11 | partial |
 | smoke | 5 | 5 | designed-full |
+| sync | 25 | 0 | none |
 | tabs | 12 | 11 | partial |
 | visibility | 6 | 6 | designed-full |
 
@@ -28,23 +29,23 @@ generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.
 
 | Риск | Категория | Покрывающие кейсы |
 |---|---|---|
-| R-01 | DATA | backup:TC-021, backup:TC-165, backup:TC-167, backup:TC-168, backup:TC-171, backup:TC-172, rating:TC-151, rating:TC-152, rating:TC-155, rating:TC-191, rating:TC-192, rating:TC-193, rating:TC-194, settings:TC-018, settings:TC-019, settings:TC-020, settings:TC-186, settings:TC-187, smoke:TC-004 |
+| R-01 | DATA | backup:TC-021, backup:TC-165, backup:TC-167, backup:TC-168, backup:TC-171, backup:TC-172, rating:TC-151, rating:TC-152, rating:TC-155, rating:TC-191, rating:TC-192, rating:TC-193, rating:TC-194, settings:TC-018, settings:TC-019, settings:TC-020, settings:TC-186, settings:TC-187, smoke:TC-004, sync:TC-207, sync:TC-208, sync:TC-209, sync:TC-210, sync:TC-211, sync:TC-214, sync:TC-215, sync:TC-216, sync:TC-217, sync:TC-226, sync:TC-227, sync:TC-228, sync:TC-229, sync:TC-231 |
 | R-02 | TECH | canary:TC-066, canary:TC-067, canary:TC-068, canary:TC-069, canary:TC-070, canary:TC-071, canary:TC-072, canary:TC-073, canary:TC-074, canary:TC-075, canary:TC-076, canary:TC-077, canary:TC-078, canary:TC-079, canary:TC-080, canary:TC-081, canary:TC-082, canary:TC-083, canary:TC-118, canary:TC-119, canary:TC-120, canary:TC-121, canary:TC-122, canary:TC-195, canary:TC-196 |
 | R-03 | TECH | errors:TC-046, smoke:TC-001 |
-| R-04 | DATA | canary:TC-072, canary:TC-073, canary:TC-074, canary:TC-075, canary:TC-076, canary:TC-077, library:TC-016, library:TC-017, rating:TC-007, rating:TC-008, rating:TC-009, rating:TC-010, rating:TC-011, rating:TC-012, smoke:TC-003 |
-| R-05 | TECH | downloads:TC-032, downloads:TC-033, downloads:TC-034, downloads:TC-035, downloads:TC-036, downloads:TC-037, downloads:TC-038, downloads:TC-039, downloads:TC-112, downloads:TC-113, downloads:TC-114, downloads:TC-115, downloads:TC-116, downloads:TC-117, downloads:TC-153, downloads:TC-154, downloads:TC-164 |
+| R-04 | DATA | canary:TC-072, canary:TC-073, canary:TC-074, canary:TC-075, canary:TC-076, canary:TC-077, library:TC-016, library:TC-017, library:TC-241, library:TC-245, rating:TC-007, rating:TC-008, rating:TC-009, rating:TC-010, rating:TC-011, rating:TC-012, smoke:TC-003 |
+| R-05 | TECH | downloads:TC-032, downloads:TC-033, downloads:TC-034, downloads:TC-035, downloads:TC-036, downloads:TC-037, downloads:TC-038, downloads:TC-039, downloads:TC-112, downloads:TC-113, downloads:TC-114, downloads:TC-115, downloads:TC-116, downloads:TC-117, downloads:TC-153, downloads:TC-154, downloads:TC-164, downloads:TC-236, downloads:TC-237, downloads:TC-238, library:TC-244, settings:TC-235 |
 | R-06 | BUS | browser:TC-094, browser:TC-197, browser:TC-198, browser:TC-199, browser:TC-200, browser:TC-201, browser:TC-202, browser:TC-203, browser:TC-204, library:TC-027, library:TC-028, library:TC-029, library:TC-030, library:TC-031, library:TC-060, library:TC-061, library:TC-062, library:TC-063, library:TC-064, library:TC-065, library:TC-177, library:TC-178, library:TC-179, library:TC-180, visibility:TC-013, visibility:TC-014, visibility:TC-015, visibility:TC-092, visibility:TC-093, visibility:TC-095 |
 | R-07 | OPS | риск не покрыт дизайном |
 | R-08 | TECH | library:TC-136, library:TC-137, library:TC-173, library:TC-174, library:TC-175, library:TC-189, library:TC-190, tabs:TC-022, tabs:TC-023, tabs:TC-024, tabs:TC-025, tabs:TC-026, tabs:TC-084, tabs:TC-131, tabs:TC-132, tabs:TC-133, tabs:TC-134, tabs:TC-135, tabs:TC-176 |
-| R-11 | TECH | accessibility:TC-108, browser:TC-050, browser:TC-051, browser:TC-052, browser:TC-053, browser:TC-054, browser:TC-055, browser:TC-057, browser:TC-058, browser:TC-126, browser:TC-127, browser:TC-128, browser:TC-130, browser:TC-157, browser:TC-158, browser:TC-159, browser:TC-160, browser:TC-161, settings:TC-047, settings:TC-048, settings:TC-049, settings:TC-059, settings:TC-123, settings:TC-124, settings:TC-125, settings:TC-129, settings:TC-145, settings:TC-146, settings:TC-147, settings:TC-163, settings:TC-169, settings:TC-170 |
-| R-09 | BUS | backup:TC-166, filter-profiles:TC-040, filter-profiles:TC-041, filter-profiles:TC-042, filter-profiles:TC-085, filter-profiles:TC-086, filter-profiles:TC-181, filter-profiles:TC-182, filter-profiles:TC-183, filter-profiles:TC-184, filter-profiles:TC-185 |
+| R-11 | TECH | accessibility:TC-108, browser:TC-050, browser:TC-051, browser:TC-052, browser:TC-053, browser:TC-054, browser:TC-055, browser:TC-057, browser:TC-058, browser:TC-126, browser:TC-127, browser:TC-128, browser:TC-130, browser:TC-157, browser:TC-158, browser:TC-159, browser:TC-160, browser:TC-161, browser:TC-247, browser:TC-248, browser:TC-250, settings:TC-047, settings:TC-048, settings:TC-049, settings:TC-059, settings:TC-123, settings:TC-124, settings:TC-125, settings:TC-129, settings:TC-145, settings:TC-146, settings:TC-147, settings:TC-163, settings:TC-169, settings:TC-170, settings:TC-246 |
+| R-09 | BUS | backup:TC-166, filter-profiles:TC-040, filter-profiles:TC-041, filter-profiles:TC-042, filter-profiles:TC-085, filter-profiles:TC-086, filter-profiles:TC-181, filter-profiles:TC-182, filter-profiles:TC-183, filter-profiles:TC-184, filter-profiles:TC-185, filter-profiles:TC-205, filter-profiles:TC-206, sync:TC-212, sync:TC-213 |
 | R-10 | DATA | library:TC-089, rating:TC-043, rating:TC-044, rating:TC-045, rating:TC-056, rating:TC-087, rating:TC-088, rating:TC-090, rating:TC-091, rating:TC-191, rating:TC-192, rating:TC-193, rating:TC-194 |
 | R-12 | PERF | performance:TC-096, performance:TC-097, performance:TC-098, performance:TC-099 |
-| R-13 | A11Y | accessibility:TC-106, accessibility:TC-107, accessibility:TC-148, accessibility:TC-149, accessibility:TC-150, settings:TC-188 |
+| R-13 | A11Y | accessibility:TC-106, accessibility:TC-107, accessibility:TC-148, accessibility:TC-149, accessibility:TC-150, browser:TC-249, settings:TC-188 |
 | R-14 | COMPAT | compatibility:TC-109, compatibility:TC-110, compatibility:TC-111 |
-| R-15 | SEC | security:TC-100, security:TC-101, security:TC-102, security:TC-103, security:TC-104, security:TC-105 |
-| R-16 | BUS | browser:TC-162, downloads:TC-156 |
-| R-17 | BUS | rating:TC-138, rating:TC-139, rating:TC-140, rating:TC-141, rating:TC-142, rating:TC-143, rating:TC-144 |
+| R-15 | SEC | security:TC-100, security:TC-101, security:TC-102, security:TC-103, security:TC-104, security:TC-105, security:TC-232, security:TC-233, security:TC-234 |
+| R-16 | BUS | browser:TC-162, browser:TC-252, browser:TC-253, browser:TC-254, downloads:TC-156, downloads:TC-239, downloads:TC-240, library:TC-255, settings:TC-251, sync:TC-218, sync:TC-219, sync:TC-220, sync:TC-221, sync:TC-222, sync:TC-223, sync:TC-224, sync:TC-225, sync:TC-230 |
+| R-17 | BUS | library:TC-242, library:TC-243, rating:TC-138, rating:TC-139, rating:TC-140, rating:TC-141, rating:TC-142, rating:TC-143, rating:TC-144 |
 
 ## Фичи → покрытие
 
@@ -96,7 +97,10 @@ generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.
 | library-card-open-file | library | downloads:TC-034[Automated], downloads:TC-156[Approved] |
 | library-card-delete-file | library | downloads:TC-035[Automated], downloads:TC-154[Approved] |
 | library-card-delete-work | library | downloads:TC-036[Automated] |
-| library-card-open-background-tab | library | library:TC-173[Automated], library:TC-174[Automated], library:TC-175[Automated], library:TC-189[Automated], library:TC-190[Draft] |
+| library-card-open-background-tab | library | library:TC-173[Automated], library:TC-174[Automated], library:TC-175[Automated], library:TC-189[Automated], library:TC-190[Draft], filter-profiles:TC-205[Review] |
+| library-open-epub-hands-off-external | library | downloads:TC-239[Review] |
+| library-card-open-external-action | library | downloads:TC-240[Review] |
+| library-card-rate-overlay | library | library:TC-241[Review], library:TC-242[Review], library:TC-243[Review], library:TC-244[Review], library:TC-245[Review] |
 | library-card-comment-tags | library | library:TC-089[Automated] |
 | settings-theme-mode | settings | smoke:TC-005[Automated], settings:TC-047[Automated], settings:TC-049[Automated], settings:TC-059[Automated] |
 | settings-webview-dark-mode | settings | settings:TC-048[Automated], browser:TC-050[Automated], settings:TC-059[Automated] |
@@ -108,7 +112,11 @@ generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.
 | settings-panel-side | settings | settings:TC-147[Approved] |
 | settings-tap-to-scroll-toggle | settings | settings:TC-123[Automated], settings:TC-124[Automated], settings:TC-125[Automated], settings:TC-163[Approved] |
 | settings-infinite-scroll-toggle | settings | settings:TC-129[Automated], browser:TC-130[Automated], browser:TC-157[Approved], browser:TC-158[Approved], browser:TC-161[Approved] |
+| settings-eink-mode-toggle | settings | settings:TC-246[Review], browser:TC-250[Review] |
+| settings-page-turn-buttons-toggle | settings | settings:TC-246[Review] |
+| settings-volume-button-scroll-toggle | settings | settings:TC-251[Review] |
 | settings-auto-download-favorite | settings | downloads:TC-112[Automated], downloads:TC-113[Automated] |
+| settings-download-format-choice | settings | settings:TC-235[Review] |
 | settings-download-folder-saf | settings | downloads:TC-038[Automated] |
 | settings-backup-export | settings | backup:TC-021[Automated], backup:TC-165[Approved] |
 | settings-restore-merge | settings | backup:TC-021[Automated], downloads:TC-164[Approved], backup:TC-166[Approved], backup:TC-167[Approved], backup:TC-168[Approved] |
@@ -124,10 +132,12 @@ generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.
 | settings-filter-profiles-delete | settings | filter-profiles:TC-042[Automated] |
 | settings-filter-profiles-rename | settings | filter-profiles:TC-085[Automated], filter-profiles:TC-086[Automated] |
 | browser-filter-profile-save | ao3-bridge | filter-profiles:TC-040[Automated], canary:TC-082[Automated], canary:TC-083[Automated] |
-| browser-filter-profile-apply | browse | filter-profiles:TC-041[Automated] |
-| browse-filter-autoapply-on-navigation | browse | filter-profiles:TC-182[Approved], filter-profiles:TC-183[Approved] |
-| browse-filter-autoapply-off-drops-active | browse | filter-profiles:TC-184[Approved], filter-profiles:TC-185[Approved] |
+| browser-filter-profile-apply | browse | filter-profiles:TC-041[Automated], filter-profiles:TC-206[Review] |
+| browse-filter-autoapply-on-navigation | browse | filter-profiles:TC-182[Approved], filter-profiles:TC-183[Approved], filter-profiles:TC-206[Review] |
+| browse-filter-autoapply-off-drops-active | browse | filter-profiles:TC-184[Approved], filter-profiles:TC-185[Approved], filter-profiles:TC-205[Review] |
 | browse-scroll-to-top-fab | browse | нет кейсов |
+| browse-page-turn-buttons | browse | browser:TC-247[Review], browser:TC-248[Review], browser:TC-249[Review] |
+| browse-volume-button-paging | browse | browser:TC-252[Review], browser:TC-253[Review], browser:TC-254[Review], library:TC-255[Review] |
 | browser-error-page | browse | errors:TC-046[Automated] |
 | bridge-tag-highlight | ao3-bridge | rating:TC-056[Automated] |
 | browse-initial-load | browse | smoke:TC-001[Automated] |
@@ -152,10 +162,28 @@ generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.
 | bridge-dark-css | ao3-bridge | нет кейсов |
 | bridge-scroll-reporting | ao3-bridge | нет кейсов |
 | bridge-tap-zone-guard | ao3-bridge | canary:TC-118[Automated], canary:TC-119[Automated], canary:TC-120[Automated], canary:TC-121[Automated], canary:TC-122[Automated] |
+| eink-palette-native | eink | нет кейсов |
+| eink-no-ripple-indication | eink | нет кейсов |
+| eink-snap-animations | eink | нет кейсов |
+| eink-bridge-badge-palette | eink | нет кейсов |
+| eink-webview-no-overscroll | eink | нет кейсов |
+| sync-settings-config-fields | sync | sync:TC-218[Review], sync:TC-219[Review], sync:TC-220[Review] |
+| sync-manual-run-result-dialog | sync | sync:TC-216[Review], sync:TC-221[Review], sync:TC-222[Review] |
+| sync-failure-messages | sync | sync:TC-224[Review], sync:TC-225[Review] |
+| sync-snippet-create-first-device | sync | sync:TC-223[Review] |
+| sync-merge-lww-works | sync | sync:TC-207[Review], sync:TC-208[Review] |
+| sync-merge-tombstone-delete-works | sync | sync:TC-209[Review], sync:TC-231[Review] |
+| sync-tombstone-on-local-delete | sync | sync:TC-210[Review], sync:TC-211[Review] |
+| sync-merge-profiles-lww | sync | sync:TC-212[Review], sync:TC-213[Review] |
+| sync-download-path-device-local | sync | sync:TC-207[Review], sync:TC-214[Review] |
+| sync-publish-merged-state | sync | sync:TC-215[Review], sync:TC-216[Review] |
+| sync-auto-trigger-foreground-and-changes | sync | sync:TC-226[Review], sync:TC-227[Review], sync:TC-228[Review], sync:TC-229[Review], sync:TC-230[Review], sync:TC-231[Review] |
 | data-workrating-model | data | нет кейсов |
 | data-filterprofile-model | data | нет кейсов |
 | data-clear-all-ratings | data | smoke:TC-004[Automated], settings:TC-018[Automated], settings:TC-019[Automated], settings:TC-020[Automated] |
+| data-sync-tombstone-model | data | sync:TC-217[Review] |
 | background-download-repository | background | downloads:TC-032[Automated], downloads:TC-033[Automated] |
+| download-work-epub-format | background | downloads:TC-236[Review], downloads:TC-237[Review], downloads:TC-238[Review] |
 | background-auto-download-trigger | background | downloads:TC-032[Automated], downloads:TC-112[Automated], downloads:TC-114[Automated], downloads:TC-115[Automated], downloads:TC-116[Automated], downloads:TC-117[Automated] |
 | background-auto-kudos-trigger | background | rating:TC-138[Automated], rating:TC-139[Automated], rating:TC-140[Automated], rating:TC-141[Automated], rating:TC-142[Automated], rating:TC-143[Automated], rating:TC-144[Automated] |
 | nf-perf-cold-start-budget | non-functional | performance:TC-096[Automated] |
@@ -167,13 +195,14 @@ generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.
 | nf-sec-js-bridge-exposure | non-functional | security:TC-102[Automated] |
 | nf-sec-file-access | non-functional | security:TC-103[Automated] |
 | nf-sec-backup-privacy | non-functional | security:TC-104[Automated] |
+| nf-sec-sync-token-and-payload | non-functional | security:TC-232[Review], security:TC-233[Review], security:TC-234[Review] |
 | nf-sec-logcat-leak | non-functional | security:TC-105[Automated] |
 | nf-a11y-content-labels | non-functional | accessibility:TC-106[Automated] |
 | nf-a11y-font-scaling | non-functional | accessibility:TC-107[Automated] |
 | nf-a11y-contrast-sanity | non-functional | accessibility:TC-108[Automated] |
 | nf-a11y-touch-target-size | non-functional | accessibility:TC-148[Approved] |
 | nf-a11y-contrast-computed | non-functional | accessibility:TC-149[Approved] |
-| nf-a11y-interactive-overlap | non-functional | accessibility:TC-150[Approved] |
+| nf-a11y-interactive-overlap | non-functional | accessibility:TC-150[Approved], browser:TC-249[Review] |
 | nf-compat-api-level | non-functional | compatibility:TC-109[Automated] |
 | nf-compat-dark-light-matrix | non-functional | compatibility:TC-110[Automated] |
 | nf-compat-orientation | non-functional | compatibility:TC-111[Automated] |
@@ -185,6 +214,11 @@ generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.
 - browse-scroll-to-top-fab (browse): FAB «Scroll to top» на листинге: появляется после прокрутки (activeScrollY > 600) вне страницы работы и прокручивает активную вкладку в начало
 - bridge-dark-css (ao3-bridge): CSS-переопределения тёмной темы на AO3-страницах (window.__ao3AppDark)
 - bridge-scroll-reporting (ao3-bridge): Отчёт позиции скролла и прогресса чтения (глава/%) в Kotlin
+- eink-palette-native (eink): E-ink палитра нативных экранов: чисто белые/чёрные поверхности, сплошные непрозрачные границы и насыщенные цвета рейтингов вместо обычных light/dark схем (4 схемы: eink-light, eink-dark, обычные light/dark)
+- eink-no-ripple-indication (eink): E-ink: нажатие на контролы не рисует ripple-волну (индикация подменена no-op для foundation-clickable и Material3 одновременно)
+- eink-snap-animations (eink): E-ink: анимации панели и появления/исчезновения элементов заменены мгновенным переключением (snap вместо tween) — промежуточных кадров нет
+- eink-bridge-badge-palette (eink): E-ink палитра инжектированных элементов AO3-страницы (бейджи/Rate-кнопки — насыщенные цвета, сплошная рамка 2px, чисто белый фон в светлой теме); применяется к уже открытым вкладкам только перезагрузкой страницы
+- eink-webview-no-overscroll (eink): E-ink: WebView не показывает overscroll-эффект на границе страницы (ни свечения, ни растягивания); выключение режима возвращает штатный overscroll
 - data-workrating-model (data): Room-сущность WorkRating (rating/comment/tags/fandom/author/wordCount/downloadPath)
 - data-filterprofile-model (data): Room-сущность FilterProfile (name/queryString)
 
@@ -197,7 +231,7 @@ generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.
 - кейсы без risk: нет
 - P0/P1 не в Automated: нет
 - автотесты (automated_by): framework/tests/test_accessibility.py::test_contrast_sanity_dark_and_light, framework/tests/test_accessibility.py::test_font_scale_1_3_no_crash_key_controls_present, framework/tests/test_accessibility.py::test_key_controls_have_accessible_label_or_text
-- last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
+- last_green_run: RUN-20260815-0149 (suite: smoke, status: Closed, updated: 2026-08-14T23:57:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
   - TC-106: нет зелёного per-TC
   - TC-107: нет зелёного per-TC
@@ -217,9 +251,9 @@ generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.
 - кейсы без risk: нет
 - P0/P1 не в Automated: нет
 - автотесты (automated_by): framework/tests/test_backup_restore.py::test_backup_clear_restore_returns_original_data
-- last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
+- last_green_run: RUN-20260815-0149 (suite: smoke, status: Closed, updated: 2026-08-14T23:57:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
-  - TC-021: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
+  - TC-021: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
@@ -230,12 +264,12 @@ generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.
 
 ### browser
 
-- coverage_status: **partial** (13/27 Automated)
-- риски: R-06, R-11, R-16
+- coverage_status: **partial** (13/34 Automated)
+- риски: R-06, R-11, R-13, R-16
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-157 [P1, Approved], TC-158 [P1, Approved], TC-159 [P1, Approved], TC-161 [P1, Approved], TC-197 [P1, Review], TC-198 [P1, Review], TC-199 [P1, Review], TC-200 [P1, Review], TC-201 [P1, Review], TC-202 [P1, Review], TC-203 [P1, Review], TC-204 [P1, Review]
+- P0/P1 не в Automated: TC-157 [P1, Approved], TC-158 [P1, Approved], TC-159 [P1, Approved], TC-161 [P1, Approved], TC-197 [P1, Review], TC-198 [P1, Review], TC-199 [P1, Review], TC-200 [P1, Review], TC-201 [P1, Review], TC-202 [P1, Review], TC-203 [P1, Review], TC-204 [P1, Review], TC-247 [P1, Review], TC-248 [P1, Review], TC-250 [P1, Review], TC-252 [P1, Review], TC-253 [P1, Review], TC-254 [P1, Review]
 - автотесты (automated_by): framework/tests/test_infinite_scroll.py::test_infinite_scroll_on_loads_next_page_in_background, framework/tests/test_reading_ux.py::test_tap_zone_bottom_third_scrolls_down, framework/tests/test_reading_ux.py::test_tap_zone_middle_third_toggles_fullscreen, framework/tests/test_reading_ux.py::test_tap_zone_top_third_scrolls_up, framework/tests/test_side_panel.py::test_font_buttons_disabled_at_range_boundaries, framework/tests/test_side_panel.py::test_font_size_increase_instant_and_persists, framework/tests/test_side_panel.py::test_pinch_spread_changes_font_size, framework/tests/test_side_panel.py::test_side_panel_and_settings_share_theme_and_font_state, framework/tests/test_side_panel.py::test_side_panel_contrast_toggles_theme_instantly, framework/tests/test_side_panel.py::test_side_panel_fullscreen_hides_tabstrip_and_toggles_label, framework/tests/test_side_panel.py::test_side_panel_home_navigates_active_tab_to_ao3_root, framework/tests/test_side_panel.py::test_side_panel_toggle_kudosed_hides_and_syncs_settings, framework/tests/test_side_panel.py::test_two_finger_drag_changes_brightness
-- last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
+- last_green_run: RUN-20260815-0149 (suite: smoke, status: Closed, updated: 2026-08-14T23:57:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
   - TC-050: нет зелёного per-TC
   - TC-051: нет зелёного per-TC
@@ -254,8 +288,8 @@ generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  |  |  |
-| P1 |  | 8 | 4 | 11 |  |
-| P2 |  |  | 2 |  |  |
+| P1 |  | 14 | 4 | 11 |  |
+| P2 |  | 1 | 2 |  |  |
 | P3 |  |  |  | 2 |  |
 
 ### canary
@@ -265,31 +299,31 @@ generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.
 - кейсы без risk: нет
 - P0/P1 не в Automated: TC-195 [P1, Review], TC-196 [P1, Review]
 - автотесты (automated_by): framework/tests/canary/test_ao3_selectors.py::test_bridge_marker_present_live, framework/tests/canary/test_ao3_selectors.py::test_bridge_marker_present_replay, framework/tests/canary/test_ao3_selectors.py::test_exclude_main_pairing_checkbox_availability_live, framework/tests/canary/test_ao3_selectors.py::test_exclude_main_pairing_checkbox_availability_replay, framework/tests/canary/test_ao3_selectors.py::test_main_pairing_checkbox_availability_live, framework/tests/canary/test_ao3_selectors.py::test_main_pairing_checkbox_availability_replay, framework/tests/canary/test_ao3_selectors.py::test_no_non_whitelisted_onclick_candidates_on_live_work_page, framework/tests/canary/test_ao3_selectors.py::test_note_button_present_iff_comment_live, framework/tests/canary/test_ao3_selectors.py::test_note_button_present_iff_comment_replay, framework/tests/canary/test_ao3_selectors.py::test_rate_button_badge_opaque_color_live, framework/tests/canary/test_ao3_selectors.py::test_rate_button_badge_opaque_color_replay, framework/tests/canary/test_ao3_selectors.py::test_rate_button_injected_on_live_listing, framework/tests/canary/test_ao3_selectors.py::test_rate_button_injected_on_replay_listing, framework/tests/canary/test_ao3_selectors.py::test_save_filter_button_idempotent_live, framework/tests/canary/test_ao3_selectors.py::test_save_filter_button_idempotent_replay, framework/tests/canary/test_ao3_selectors.py::test_tag_button_present_iff_custom_tag_live, framework/tests/canary/test_ao3_selectors.py::test_tag_button_present_iff_custom_tag_replay, framework/tests/canary/test_ao3_selectors.py::test_work_blurb_selector_matches_live_listing, framework/tests/canary/test_ao3_selectors.py::test_work_blurb_selector_matches_replay_listing, framework/tests/canary/test_tap_zone_guard.py::test_tap_zone_guard_blocks_whitelisted_button, framework/tests/canary/test_tap_zone_guard.py::test_tap_zone_guard_closest_semantics_on_descendant, framework/tests/canary/test_tap_zone_guard.py::test_tap_zone_guard_pierced_by_non_whitelisted_div, framework/tests/canary/test_tap_zone_guard.py::test_tap_zone_guard_whitelisted_link_without_own_handler
-- last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
+- last_green_run: RUN-20260815-0149 (suite: smoke, status: Closed, updated: 2026-08-14T23:57:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
-  - TC-066: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
-  - TC-067: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
-  - TC-068: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
-  - TC-069: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
-  - TC-070: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
-  - TC-071: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
-  - TC-072: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
-  - TC-073: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
-  - TC-074: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
-  - TC-075: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
-  - TC-076: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
-  - TC-077: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
-  - TC-078: RUN-20260804-1355 (updated: None)
-  - TC-079: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
+  - TC-066: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
+  - TC-067: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
+  - TC-068: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
+  - TC-069: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
+  - TC-070: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
+  - TC-071: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
+  - TC-072: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
+  - TC-073: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
+  - TC-074: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
+  - TC-075: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
+  - TC-076: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
+  - TC-077: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
+  - TC-078: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
+  - TC-079: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
   - TC-080: RUN-20260804-1317 (updated: 2026-08-04T11:44:09Z)
-  - TC-081: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
+  - TC-081: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
   - TC-082: RUN-20260804-1317 (updated: 2026-08-04T11:44:09Z)
-  - TC-083: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
-  - TC-118: RUN-20260810-0145 (updated: 2026-08-10T03:45:00Z)
-  - TC-119: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
-  - TC-120: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
-  - TC-121: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
-  - TC-122: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
+  - TC-083: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
+  - TC-118: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
+  - TC-119: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
+  - TC-120: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
+  - TC-121: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
+  - TC-122: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
@@ -305,7 +339,7 @@ generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.
 - кейсы без risk: нет
 - P0/P1 не в Automated: нет
 - автотесты (automated_by): framework/tests/test_compatibility.py::test_orientation_rotation_preserves_tab_state, framework/tests/test_compatibility.py::test_smoke_path_in_system_dark_and_light_modes, framework/tests/test_compatibility.py::test_smoke_path_on_api26_no_regression
-- last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
+- last_green_run: RUN-20260815-0149 (suite: smoke, status: Closed, updated: 2026-08-14T23:57:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
   - TC-109: нет зелёного per-TC
   - TC-110: нет зелёного per-TC
@@ -320,12 +354,12 @@ generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.
 
 ### downloads
 
-- coverage_status: **partial** (14/18 Automated)
+- coverage_status: **partial** (14/23 Automated)
 - риски: R-05, R-16
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-153 [P1, Approved], TC-154 [P1, Approved]
+- P0/P1 не в Automated: TC-153 [P1, Approved], TC-154 [P1, Approved], TC-236 [P1, Review], TC-237 [P1, Review], TC-239 [P1, Review], TC-240 [P1, Review]
 - автотесты (automated_by): framework/tests/test_downloads.py::test_auto_download_triggers_on_loved_rating, framework/tests/test_downloads.py::test_change_download_folder_triggers_silent_scan_and_relinks_orphan_file, framework/tests/test_downloads.py::test_delete_downloaded_file_keeps_rating_row, framework/tests/test_downloads.py::test_delete_downloaded_file_sweeps_both_download_locations, framework/tests/test_downloads.py::test_delete_work_removes_row_and_file, framework/tests/test_downloads.py::test_deselecting_favorite_rating_does_not_download, framework/tests/test_downloads.py::test_edit_note_on_already_saved_work_via_listing_overlay_does_not_redownload, framework/tests/test_downloads.py::test_edit_tag_on_already_saved_work_via_panel_does_not_redownload, framework/tests/test_downloads.py::test_enabling_auto_download_does_not_retroactively_download_favorites, framework/tests/test_downloads.py::test_favorite_rating_does_not_download_when_auto_download_off, framework/tests/test_downloads.py::test_manual_download_from_library_adds_local_file, framework/tests/test_downloads.py::test_manual_scan_for_downloads_shows_dialog_on_zero_files, framework/tests/test_downloads.py::test_open_downloaded_file_applies_viewport_and_reader_css, framework/tests/test_downloads.py::test_rating_change_from_favorite_to_kudosed_does_not_download, framework/tests/test_downloads.py::test_repeated_manual_scan_two_files_same_ao3id_converges_to_relinked_zero, framework/tests/test_downloads.py::test_restore_folds_orphan_scan_into_single_dialog
-- last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
+- last_green_run: RUN-20260815-0149 (suite: smoke, status: Closed, updated: 2026-08-14T23:57:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
   - TC-032: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
   - TC-033: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
@@ -345,8 +379,8 @@ generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  |  |  |
-| P1 |  |  | 2 | 9 |  |
-| P2 |  |  | 1 | 3 |  |
+| P1 |  | 4 | 2 | 9 |  |
+| P2 |  | 1 | 1 | 3 |  |
 | P3 |  |  | 1 | 2 |  |
 
 ### errors
@@ -356,7 +390,7 @@ generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.
 - кейсы без risk: нет
 - P0/P1 не в Automated: нет
 - автотесты (automated_by): framework/tests/test_errors.py::test_main_frame_load_error_shows_custom_error_page_with_retry
-- last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
+- last_green_run: RUN-20260815-0149 (suite: smoke, status: Closed, updated: 2026-08-14T23:57:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
   - TC-046: нет зелёного per-TC
 
@@ -369,12 +403,12 @@ generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.
 
 ### filter-profiles
 
-- coverage_status: **partial** (5/10 Automated)
+- coverage_status: **partial** (5/12 Automated)
 - риски: R-09
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-181 [P1, Approved], TC-182 [P1, Approved], TC-183 [P1, Approved], TC-184 [P1, Approved], TC-185 [P1, Approved]
+- P0/P1 не в Automated: TC-181 [P1, Approved], TC-182 [P1, Approved], TC-183 [P1, Approved], TC-184 [P1, Approved], TC-185 [P1, Approved], TC-205 [P1, Review], TC-206 [P1, Review]
 - автотесты (automated_by): framework/tests/test_filter_profiles.py::test_apply_filter_profile, framework/tests/test_filter_profiles.py::test_auto_apply_filter_default_on_reactive_toggle, framework/tests/test_filter_profiles.py::test_auto_apply_filter_guard_skips_url_with_work_search, framework/tests/test_filter_profiles.py::test_auto_apply_filter_off_button_navigation_keeps_active_profile, framework/tests/test_filter_profiles.py::test_auto_apply_filter_off_drops_active_profile_on_plain_navigation, framework/tests/test_filter_profiles.py::test_auto_apply_filter_on_navigation_appends_active_profile, framework/tests/test_filter_profiles.py::test_delete_filter_profile, framework/tests/test_filter_profiles.py::test_rename_filter_profile_keeps_query_string, framework/tests/test_filter_profiles.py::test_rename_filter_profile_to_duplicate_name, framework/tests/test_filter_profiles.py::test_save_filter_profile
-- last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
+- last_green_run: RUN-20260815-0149 (suite: smoke, status: Closed, updated: 2026-08-14T23:57:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
   - TC-040: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
   - TC-041: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
@@ -385,22 +419,22 @@ generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  |  |  |
-| P1 |  |  | 5 | 5 |  |
+| P1 |  | 2 | 5 | 5 |  |
 | P2 |  |  |  |  |  |
 | P3 |  |  |  |  |  |
 
 ### library
 
-- coverage_status: **partial** (25/26 Automated)
-- риски: R-04, R-06, R-08, R-10
+- coverage_status: **partial** (25/32 Automated)
+- риски: R-04, R-05, R-06, R-08, R-10, R-16, R-17
 - кейсы без risk: TC-006
-- P0/P1 не в Automated: нет
+- P0/P1 не в Automated: TC-241 [P1, Review], TC-242 [P1, Review], TC-243 [P1, Review], TC-244 [P1, Review], TC-255 [P1, Review]
 - автотесты (automated_by): framework/tests/test_library.py::test_change_rating_moves_work_between_tabs, framework/tests/test_library.py::test_comment_only_not_in_any_rating_tab, framework/tests/test_library.py::test_library_card_shows_note_icon_and_tags, framework/tests/test_library.py::test_library_tab_labels, framework/tests/test_library_background_open.py::test_background_local_file_tab_persists_after_kill_relaunch, framework/tests/test_library_background_open.py::test_library_files_tab_overlay_open_in_background_targets_local_file, framework/tests/test_library_background_open.py::test_library_overlay_open_in_background_at_tab_limit_shows_dialog, framework/tests/test_library_background_open.py::test_library_overlay_open_in_background_stays_on_library, framework/tests/test_library_filters.py::test_library_filter_by_fandom, framework/tests/test_library_filters.py::test_library_filter_downloaded_only, framework/tests/test_library_filters.py::test_library_filter_freetext_search, framework/tests/test_library_filters.py::test_library_filter_tags_and_semantics, framework/tests/test_library_filters.py::test_library_filter_word_count_range, framework/tests/test_library_filters.py::test_library_sort_author_asc_blank_last, framework/tests/test_library_filters.py::test_library_sort_last_read_default, framework/tests/test_library_filters.py::test_library_sort_rating_files_tab_only, framework/tests/test_library_filters.py::test_library_sort_wordcount_asc_resets_scroll, framework/tests/test_library_filters.py::test_library_sort_wordcount_desc_resets_scroll, framework/tests/test_library_filters.py::test_library_sort_wordcount_null_last, framework/tests/test_library_tab_scroll_state.py::test_library_favorite_scroll_retained_across_tab_switch, framework/tests/test_library_tab_scroll_state.py::test_library_files_rating_and_neighbor_scroll_retained, framework/tests/test_library_tab_scroll_state.py::test_library_files_rating_pick_survives_visit_to_other_tab, framework/tests/test_library_tab_scroll_state.py::test_library_offscreen_sort_change_resets_scroll_on_return, framework/tests/test_tabs.py::test_library_card_open_at_tab_limit_shows_dialog_and_switches_screen, framework/tests/test_tabs.py::test_library_card_open_work_opens_new_active_browse_tab
-- last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
+- last_green_run: RUN-20260815-0149 (suite: smoke, status: Closed, updated: 2026-08-14T23:57:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
   - TC-006: нет зелёного per-TC
-  - TC-016: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
-  - TC-017: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
+  - TC-016: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
+  - TC-017: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
   - TC-027: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
   - TC-028: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
   - TC-029: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
@@ -427,8 +461,8 @@ generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  | 2 |  |
-| P1 |  |  |  | 19 |  |
-| P2 | 1 |  |  | 3 |  |
+| P1 |  | 5 |  | 19 |  |
+| P2 | 1 | 1 |  | 3 |  |
 | P3 |  |  |  | 1 |  |
 
 ### performance
@@ -438,12 +472,12 @@ generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.
 - кейсы без risk: нет
 - P0/P1 не в Automated: нет
 - автотесты (automated_by): framework/tests/test_performance.py::test_cold_start_within_relative_budget, framework/tests/test_performance.py::test_memory_trend_recovers_after_closing_tabs, framework/tests/test_performance.py::test_no_crash_or_anr_during_smoke_path, framework/tests/test_performance.py::test_webview_first_load_within_relative_budget
-- last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
+- last_green_run: RUN-20260815-0149 (suite: smoke, status: Closed, updated: 2026-08-14T23:57:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
   - TC-096: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
   - TC-097: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
-  - TC-098: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
-  - TC-099: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
+  - TC-098: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
+  - TC-099: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
@@ -459,11 +493,11 @@ generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.
 - кейсы без risk: нет
 - P0/P1 не в Automated: TC-151 [P1, Approved], TC-152 [P1, Approved], TC-155 [P1, Approved], TC-191 [P1, Review], TC-192 [P1, Review], TC-193 [P1, Review], TC-194 [P1, Review]
 - автотесты (automated_by): framework/tests/test_rating.py::test_deselect_rating_on_work_page_panel, framework/tests/test_rating.py::test_edit_tag_on_already_saved_work_via_panel_does_not_click_kudos, framework/tests/test_rating.py::test_first_panel_save_clicks_kudos_once, framework/tests/test_rating.py::test_rate_work_from_work_page_panel, framework/tests/test_rating_listing.py::test_add_freeform_tag_persists, framework/tests/test_rating_listing.py::test_apply_ratings_syncs_duplicate_blurbs, framework/tests/test_rating_listing.py::test_change_rating_kudosed_to_read_via_listing_does_not_click_kudos, framework/tests/test_rating_listing.py::test_clear_note_removes_comment, framework/tests/test_rating_listing.py::test_comment_only_visible_on_listing_and_absent_from_rating_tabs, framework/tests/test_rating_listing.py::test_deselect_kudosed_via_listing_does_not_click_kudos, framework/tests/test_rating_listing.py::test_edit_tag_on_already_kudosed_work_via_listing_does_not_reclick_kudos, framework/tests/test_rating_listing.py::test_first_kudosed_via_listing_with_open_work_tab_clicks_kudos_once, framework/tests/test_rating_listing.py::test_listing_rate_button_updates_without_reload, framework/tests/test_rating_listing.py::test_matching_personal_tag_highlighted_on_listing, framework/tests/test_rating_listing.py::test_note_button_opens_overlay_with_expanded_comment, framework/tests/test_rating_listing.py::test_panel_rating_updates_without_reload, framework/tests/test_rating_listing.py::test_personal_tags_do_not_affect_visibility, framework/tests/test_rating_listing.py::test_rate_kudosed_via_listing_without_open_work_tab_does_not_click_kudos, framework/tests/test_rating_listing.py::test_rate_work_from_listing_overlay, framework/tests/test_rating_listing.py::test_save_note_persists_comment, framework/tests/test_rating_listing.py::test_tap_selected_chip_removes_tag
-- last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
+- last_green_run: RUN-20260815-0149 (suite: smoke, status: Closed, updated: 2026-08-14T23:57:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
-  - TC-007: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
-  - TC-008: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
-  - TC-009: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
+  - TC-007: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
+  - TC-008: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
+  - TC-009: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
   - TC-010: нет зелёного per-TC
   - TC-011: нет зелёного per-TC
   - TC-012: нет зелёного per-TC
@@ -492,12 +526,12 @@ generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.
 
 ### security
 
-- coverage_status: **designed-full** (6/6 Automated)
+- coverage_status: **partial** (6/9 Automated)
 - риски: R-15
 - кейсы без risk: нет
-- P0/P1 не в Automated: нет
+- P0/P1 не в Automated: TC-232 [P1, Review], TC-233 [P1, Review], TC-234 [P1, Review]
 - автотесты (automated_by): framework/tests/test_security_backup_privacy.py::test_backup_privacy_manifest_scope_declared, framework/tests/test_security_file_access.py::test_file_link_inside_downloaded_work_does_not_escape_download_content, framework/tests/test_security_js_bridge.py::test_js_bridge_exposure_baseline_vs_non_ao3_error_page, framework/tests/test_security_logcat.py::test_logcat_has_no_sensitive_data_during_smoke_path, framework/tests/test_security_manifest.py::test_cleartext_traffic_policy_documented_and_cross_checked, framework/tests/test_security_manifest.py::test_main_activity_exported_with_ao3_intent_filter
-- last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
+- last_green_run: RUN-20260815-0149 (suite: smoke, status: Closed, updated: 2026-08-14T23:57:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
   - TC-100: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
   - TC-101: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
@@ -509,18 +543,18 @@ generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  |  |  |
-| P1 |  |  |  | 6 |  |
+| P1 |  | 3 |  | 6 |  |
 | P2 |  |  |  |  |  |
 | P3 |  |  |  |  |  |
 
 ### settings
 
-- coverage_status: **partial** (11/20 Automated)
-- риски: R-01, R-11, R-13
+- coverage_status: **partial** (11/23 Automated)
+- риски: R-01, R-05, R-11, R-13, R-16
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-145 [P1, Approved], TC-146 [P1, Approved], TC-147 [P1, Approved], TC-163 [P1, Approved], TC-169 [P1, Approved], TC-170 [P1, Approved], TC-186 [P1, Approved], TC-187 [P1, Approved]
+- P0/P1 не в Automated: TC-145 [P1, Approved], TC-146 [P1, Approved], TC-147 [P1, Approved], TC-163 [P1, Approved], TC-169 [P1, Approved], TC-170 [P1, Approved], TC-186 [P1, Approved], TC-187 [P1, Approved], TC-235 [P1, Review], TC-246 [P1, Review], TC-251 [P1, Review]
 - автотесты (automated_by): framework/tests/test_infinite_scroll.py::test_infinite_scroll_off_keeps_native_pagination, framework/tests/test_reading_ux.py::test_tap_to_scroll_live_push_and_reload_persistence, framework/tests/test_reading_ux.py::test_tap_to_scroll_survives_kill_and_relaunch, framework/tests/test_reading_ux.py::test_tap_zone_disabled_no_effect_in_any_third, framework/tests/test_settings.py::test_cancel_clear_all_dialog_keeps_data, framework/tests/test_settings.py::test_clear_all_ratings_badge_persists_without_reload, framework/tests/test_settings.py::test_clear_all_ratings_shows_confirmation_dialog, framework/tests/test_settings.py::test_fetch_missing_metadata_fills_only_empty_titles, framework/tests/test_settings.py::test_fetch_missing_metadata_stop_mid_process, framework/tests/test_settings.py::test_system_theme_follows_os_dark_mode, framework/tests/test_settings.py::test_theme_dark_applies_instantly_without_recreating_activity, framework/tests/test_settings.py::test_webview_dark_mode_applies_instantly, framework/tests/test_settings.py::test_webview_follows_system_theme_without_in_app_toggle
-- last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
+- last_green_run: RUN-20260815-0149 (suite: smoke, status: Closed, updated: 2026-08-14T23:57:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
   - TC-018: нет зелёного per-TC
   - TC-019: нет зелёного per-TC
@@ -537,7 +571,7 @@ generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  |  |  |
-| P1 |  |  | 8 | 7 |  |
+| P1 |  | 3 | 8 | 7 |  |
 | P2 |  |  | 1 | 3 |  |
 | P3 |  |  |  | 1 |  |
 
@@ -548,19 +582,37 @@ generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.
 - кейсы без risk: TC-002, TC-005
 - P0/P1 не в Automated: нет
 - автотесты (automated_by): framework/tests/test_smoke.py::test_app_launches_and_loads_ao3, framework/tests/test_smoke.py::test_bottom_nav_switches_screens, framework/tests/test_smoke.py::test_clear_all_ratings, framework/tests/test_smoke.py::test_seeded_work_appears_in_correct_tab, framework/tests/test_smoke.py::test_theme_toggle_stable
-- last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
+- last_green_run: RUN-20260815-0149 (suite: smoke, status: Closed, updated: 2026-08-14T23:57:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
-  - TC-001: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
-  - TC-002: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
-  - TC-003: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
-  - TC-004: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
-  - TC-005: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
+  - TC-001: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
+  - TC-002: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
+  - TC-003: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
+  - TC-004: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
+  - TC-005: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
 
 | Priority | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | P0 |  |  |  | 5 |  |
 | P1 |  |  |  |  |  |
 | P2 |  |  |  |  |  |
+| P3 |  |  |  |  |  |
+
+### sync
+
+- coverage_status: **none** (0/25 Automated)
+- риски: R-01, R-09, R-16
+- кейсы без risk: нет
+- P0/P1 не в Automated: TC-207 [P1, Review], TC-209 [P1, Review], TC-210 [P1, Review], TC-211 [P1, Review], TC-214 [P1, Review], TC-215 [P1, Review], TC-216 [P1, Review], TC-217 [P1, Review], TC-218 [P1, Review], TC-220 [P1, Review], TC-221 [P1, Review], TC-223 [P1, Review], TC-224 [P1, Review], TC-225 [P1, Review], TC-226 [P1, Review], TC-227 [P1, Review], TC-228 [P1, Review], TC-229 [P1, Review], TC-230 [P1, Review], TC-231 [P1, Review]
+- автотесты (automated_by): —
+- last_green_run: RUN-20260815-0149 (suite: smoke, status: Closed, updated: 2026-08-14T23:57:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
+- per-TC last green:
+  - нет Automated-кейсов
+
+| Priority | Draft | Review | Approved | Automated | Blocked |
+|---|---|---|---|---|---|
+| P0 |  |  |  |  |  |
+| P1 |  | 20 |  |  |  |
+| P2 |  | 5 |  |  |  |
 | P3 |  |  |  |  |  |
 
 ### tabs
@@ -570,7 +622,7 @@ generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.
 - кейсы без risk: нет
 - P0/P1 не в Automated: TC-176 [P1, Approved]
 - автотесты (automated_by): framework/tests/test_tabs.py::test_background_open_snackbar_counts_background_opens_not_total, framework/tests/test_tabs.py::test_background_resume_without_deep_link_keeps_tabs_unchanged, framework/tests/test_tabs.py::test_cold_start_deep_link_reuses_single_home_tab, framework/tests/test_tabs.py::test_deep_link_after_home_loaded_creates_second_tab_not_reuse, framework/tests/test_tabs.py::test_deep_link_at_tab_limit_shows_dialog_and_drops_url, framework/tests/test_tabs.py::test_kill_relaunch_without_deep_link_keeps_tabs_unchanged, framework/tests/test_tabs.py::test_long_press_link_opens_background_tab_without_switching, framework/tests/test_tabs.py::test_max_tabs_limit_blocks_11th_tab, framework/tests/test_tabs.py::test_swipe_close_undo_restores_position, framework/tests/test_tabs.py::test_tabs_persist_url_and_scroll_after_restart, framework/tests/test_tabs.py::test_tap_inactive_tab_chip_activates_it, framework/tests/test_tabs.py::test_undo_history_evicts_oldest_after_six_closes
-- last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
+- last_green_run: RUN-20260815-0149 (suite: smoke, status: Closed, updated: 2026-08-14T23:57:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
   - TC-022: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
   - TC-023: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
@@ -598,11 +650,11 @@ generated_at: 2026-08-14T09:20:40Z · генератор: `scripts/coverage_map.
 - кейсы без risk: нет
 - P0/P1 не в Automated: нет
 - автотесты (automated_by): framework/tests/test_visibility.py::test_dim_mode_dims_hidden_rating_blurb, framework/tests/test_visibility.py::test_disliked_hidden_on_listing, framework/tests/test_visibility.py::test_disliked_visible_after_hide_toggle_off, framework/tests/test_visibility.py::test_display_mode_hide_to_dim_live_push, framework/tests/test_visibility.py::test_hide_kudosed_only_excludes_kudosed, framework/tests/test_visibility.py::test_no_rating_or_comment_only_never_hidden
-- last_green_run: RUN-20260702-0300 (suite: smoke, status: Closed, updated: 2026-07-02T03:35:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
+- last_green_run: RUN-20260815-0149 (suite: smoke, status: Closed, updated: 2026-08-14T23:57:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
-  - TC-013: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
-  - TC-014: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
-  - TC-015: RUN-20260811-0405 (updated: 2026-08-13T15:11:55Z)
+  - TC-013: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
+  - TC-014: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
+  - TC-015: RUN-20260815-0149 (updated: 2026-08-14T23:57:00Z)
   - TC-092: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
   - TC-093: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
   - TC-095: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)

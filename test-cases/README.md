@@ -5,7 +5,14 @@
 
 Раскладка по областям: `test-cases/<area>/TC-xxx.md`
 (`rating`, `visibility`, `tabs`, `library`, `downloads`, `filter-profiles`,
-`backup`, `settings`, `browser`, `errors`, `canary`, `performance`).
+`backup`, `settings`, `browser`, `errors`, `canary`, `performance`, `sync`,
+`security`, `accessibility`, `compatibility`).
+
+Область `sync` — синхронизация библиотеки через приватный GitLab-сниппет
+(движок слияния LWW/надгробий, конфигурация, ручной прогон, авто-триггеры;
+docs/01 §9, заведена test-strategist 2026-08-15 по сборке 59be96c6). Область
+`security` покрывает и НФ-факты приложения в целом (exported/cleartext/
+backup-privacy), и приватность синхронизации (`nf-sec-sync-token-and-payload`).
 
 Область `performance` — нефункциональный smoke E2 (docs/01 §9, R-12): cold
 start, WebView first load, отсутствие crash/ANR/fatal, memory sanity длинной

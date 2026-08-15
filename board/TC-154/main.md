@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-11T23:02:00Z"
-updated: "2026-08-11T23:02:00Z"
+created: "2026-08-15T02:04:00Z"
+updated: "2026-08-15T02:04:00Z"
 archived: false
 resolution: null
 ---
@@ -52,7 +52,7 @@ _Спроецировано из `test-cases/downloads/TC-154.md` (источн�
 `ao3_downloads`), не только явно указанный в `downloadPath`
 (`DownloadRepository.kt:146-169`); на диске не остаётся ни одного файла
 этого `ao3Id`
-**And** ПОСЛЕ ручного скана диалог гласит `«No .html files found in the
+**And** ПОСЛЕ ручного скана диалог гласит `«No downloaded files found in the
 download folder.»` (файлов этого `ao3Id` для релинка не осталось —
 `totalFound == 0`), `downloadPath` работы W остаётся пустым
 **And** карточка W ОСТАЁТСЯ на Download-иконке после скана, не переключается

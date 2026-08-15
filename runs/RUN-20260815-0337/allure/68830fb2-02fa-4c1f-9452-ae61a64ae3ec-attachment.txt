@@ -1,0 +1,2 @@
+AT-BUG-063 recovery: WARNING: state-файл C:\Users\user\AppData\Local\Temp\pytest-of-user\pytest-2887\test_state_file_not_a_json_obj0\emulator-session.json содержит list, а не JSON-объект — игнорируется целиком, применяется фолбэк (env/дефолт tasks.ps1).
+AT-BUG-063 recovery: перезапуск эмулятора: gpu=<tasks.ps1 default> (source: default), avd=<tasks.ps1 default> (source: default); возраст state неизвестен (updated_utc отсутствует); state-файл: C:\Users\user\AppData\Local\Temp\pytest-of-user\pytest-2887\test_state_file_not_a_json_obj0\emulator-session.json

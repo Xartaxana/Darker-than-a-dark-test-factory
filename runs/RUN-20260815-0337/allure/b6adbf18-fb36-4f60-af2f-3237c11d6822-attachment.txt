@@ -1,0 +1,1 @@
+AT-BUG-063 recovery: перезапуск эмулятора: gpu=host (source: state), avd=ao3_test_api29 (source: state); возраст state неизвестен (updated_utc отсутствует); state-файл: C:\Users\user\AppData\Local\Temp\pytest-of-user\pytest-2887\test_recovery_reads_gpu_and_av0\emulator-session.json

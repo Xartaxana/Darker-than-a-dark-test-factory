@@ -72,7 +72,7 @@ test-reviewer, 2026-07-18T05:30:00Z (свежий проход всего чек
    `test_downloads.py::test_manual_scan_for_downloads_shows_dialog_on_zero_files`.
 3. **Соответствие GWT + инвариант:** ключевая суть кейса (ручной триггер
    `scanForDownloads(silent=false)` ВСЕГДА показывает диалог, в т.ч. при 0 файлов)
-   проверяется точным текстом диалога `«No .html files found in the download folder.»`,
+   проверяется точным текстом диалога `«No downloaded files found in the download folder.»`,
    а не «диалог появился» вообще; And — Library пуста после закрытия. Комбинаторный
    кластер видимости диалога скана оформлен инвариантом в кейсе-сиблинге TC-038
    (строка «Инвариант:»), явно делегирующем ветку 0-совпадений — TC-037 держит

@@ -1,0 +1,1 @@
+AT-BUG-063 recovery: перезапуск эмулятора: gpu=swiftshader_indirect (source: state), avd=<tasks.ps1 default> (source: default); возраст state неизвестен (updated_utc отсутствует); state-файл: C:\Users\user\AppData\Local\Temp\pytest-of-user\pytest-2887\test_f3_gpu_adversarial_batter7\emulator-session.json

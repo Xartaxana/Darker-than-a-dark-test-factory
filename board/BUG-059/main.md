@@ -2,7 +2,7 @@
 key: "BUG-059"
 project: "AO3"
 issueType: "bug"
-status: "bug-open"
+status: "bug-fixed"
 priority: "p2"
 summary: "Счётчик снекбара «Opened in background (N tabs)» показывает общее число вкладок вместо числа открытых в фоне"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-10T13:05:00Z"
-updated: "2026-08-10T13:05:00Z"
+created: "2026-08-14T23:12:36Z"
+updated: "2026-08-14T23:12:36Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Счётчик снекбара «Opened in background (N tabs)» показывает общее число вкладок вместо числа открытых в фоне
 
 _Спроецировано из `bugs/BUG-059.md` (источник правды).
-Статус в нашей машине: **Open**._
+Статус в нашей машине: **Fixed**._
 
 # BUG-059 — Счётчик снекбара показывает общее число вкладок, а не число открытых в фоне
 
@@ -63,6 +63,8 @@ _Спроецировано из `bugs/BUG-059.md` (источник правд�
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 
 ## Обсуждение
+
+**[gitlab:dyakagreen @ 2026-08-14T20:16:22.023Z]** Метка `qa-status::QAready` выставлена на GitLab issue — переход Open→Fixed зафиксирован автоматически (второй канал, docs/06 §3а, gitlab-label).
 
 ## Чек-лист качества
 - [x] Проверены дубликаты (поиск по открытым багам)

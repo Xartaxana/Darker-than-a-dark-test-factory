@@ -7,7 +7,7 @@ priority: "p1"
 summary: "ON + deep-link в новую вкладку: FilterPanel продолжает показывать профиль активным, хотя URL/содержимое вкладки НЕфильтрованы"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["bug", "sev:major"]
+labels: ["bug", "test_case:TC-206", "sev:major"]
 components: []
 fixVersions: []
 watchers: []

@@ -156,7 +156,73 @@
 #  F. `story:`-полей этот проход не добавляет: QAready-стори (QAREADY-26/28)
 #     закрыты прошлой переинвентаризацией, новых story-айтемов в
 #     `state/escalations.md` на эту сборку нет — вся пачка это багфиксы.
-inventoried_at_commit: "cc201f789f0fb123722bbba7b29b8e0c6412dac1"
+#
+# ПЕРЕИНВЕНТАРИЗАЦИЯ 2026-08-15 (test-strategist; вход: триггер rules.yaml
+# «приложение изменилось» — реестр стоял на cc201f78, сборка 59be96c6,
+# built_at 2026-08-14T23:14:07Z, coalesced_commits 85fbed44, 7a43fab8,
+# 07805a9f, f8e66c33, bc32c275, 2a1ceca6, 24b7b13a, 6e64b1fb + сам 59be96c6).
+# Плюс два QAready-айтема разработчика (E7 `state/escalations.md`): QAREADY-38
+# (кнопки громкости) и QAREADY-42 (версия для e-ink ридера) — резолвятся этим
+# же ходом, `story:`-поля проставлены. Инвентаризация сделана ПО КОДУ
+# (`app/src/main/**` + `assets/ao3_bridge.js`); PROJECT.md как оглавление.
+# `inventoried_at_commit` поднят до 59be96c6 — НОВЫЙ build.
+#
+# ВАЖНО ПРО ПОРЯДОК КОММИТОВ (иначе инвентарь получился бы неверным): 24b7b13a
+# принёс синхронизацию через ОБЩУЮ ПАПКУ, а 59be96c6 её ЗАМЕНИЛ на приватный
+# GitLab-сниппет. В коде HEAD общей папки НЕТ вовсе (`SyncRepository` ходит
+# только в `$instance/api/v4/snippets/...`), поэтому записи заведены на
+# фактический транспорт — сниппет; «shared folder» осталось лишь в устаревших
+# комментариях кода (`SyncTombstone.kt:5`, `LibraryJson.kt:14`,
+# `MainActivity.kt:168`, `RatingRepository.kt:18`) — расхождение кода с
+# собственными комментариями названо, записей не порождает.
+#
+# ОГРАНИЧЕНИЕ СЛЕДА (называю явно): git-диффа cc201f78..59be96c6 в этой сессии
+# не было (Bash у роли нет). Классификация «дельта сборки» vs «пробел реестра»
+# опирается на (1) чтение текущего кода, (2) прежние код-якоря самого реестра,
+# (3) список коммитов сборки из `state/app-under-test.yaml`. Для ВСЕХ записей
+# ниже опоры (1)+(3) совпали (новые файлы/символы, которых прежний инвентарь
+# не мог видеть), поэтому пробелов реестра этот проход не заявляет.
+#
+# ДЕЛЬТА:
+#  A. Новая подсистема — синхронизация библиотеки между устройствами
+#     (24b7b13a + 59be96c6; новые файлы `data/sync/SyncRepository.kt`,
+#     `data/sync/LibraryJson.kt`, `data/model/SyncTombstone.kt`,
+#     `data/db/SyncTombstoneDao.kt`, Room v8 + MIGRATION_7_8): 11 новых
+#     записей `sync-*` + `data-sync-tombstone-model`. Все с 0 кейсов.
+#  B. EPUB-формат загрузки и передача файла внешнему ридеру (6e64b1fb):
+#     + settings-download-format-choice, + download-work-epub-format,
+#     + library-open-epub-hands-off-external, + library-card-open-external-action;
+#     ~ library-card-open-file (Then сузился до НЕ-epub), ~ background-download-
+#     repository, ~ settings-scan-downloads-manual (скан видит .html И .epub).
+#  C. Рейтинг из Library без открытия AO3-страницы (6e64b1fb):
+#     + library-card-rate-overlay.
+#  D. E-ink режим (bc32c275) и плавающие кнопки листания (2a1ceca6):
+#     + settings-eink-mode-toggle, + settings-page-turn-buttons-toggle,
+#     + eink-palette-native, + eink-no-ripple-indication, + eink-snap-animations,
+#     + eink-bridge-badge-palette, + eink-webview-no-overscroll,
+#     + browse-page-turn-buttons. Все несут `story: 42` (QAREADY-42).
+#  E. Листание страницами кнопками громкости (f8e66c33):
+#     + settings-volume-button-scroll-toggle, + browse-volume-button-paging.
+#     Обе несут `story: 38` (QAREADY-38).
+#  F. Изменённые формулировки существующих записей (id стабильны, ре-теггинг
+#     не требуется — Then ссылающихся кейсов не изменился, изменились границы):
+#     ~ data-clear-all-ratings (ставит tombstone на КАЖДУЮ строку ⇒ при
+#       настроенной синхронизации удаление уезжает на другие устройства),
+#     ~ library-card-open-file, ~ background-download-repository,
+#     ~ settings-scan-downloads-manual. Комментарии-примечания (без правки
+#       title) добавлены к library-card-open-background-tab,
+#       library-card-delete-file, settings-restore-merge.
+#  G. Удалённых/переименованных фич не найдено: код-якоря всех затронутых
+#     записей на месте. Три коммита сборки (85fbed44, 7a43fab8, 07805a9f) —
+#     фиксы BUG-069/BUG-059/BUG-067, записей не порождают (проверка — мандат
+#     fix-verifier, не стратега).
+#  H. `story:`-мэппинг: QAREADY-38 → две записи громкости, QAREADY-42 → восемь
+#     записей e-ink/page-turn (по коммитам bc32c275/2a1ceca6, названным
+#     координатором). Коммит 6e64b1fb (EPUB + внешний ридер + дефолт «epub на
+#     ONYX») по СМЫСЛУ тоже относится к e-ink-ридеру, но привязка к QAREADY-42
+#     кодом/айтемом НЕ подтверждена — `story:` этим записям НЕ проставлен,
+#     развилка вынесена владельцу в docs/01 §10 (щ) п.4.
+inventoried_at_commit: "59be96c6398786d33c878dbce33cb1ecde269374"
 
 features:
   # ── Browse/WebView ──────────────────────────────────────────────────────
@@ -608,8 +674,19 @@ features:
     title: "Download-иконка карточки запускает ручное скачивание (Favorite/Liked/Pending, файла ещё нет)"
     screen: library
     source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+  # Title уточнён test-strategist 2026-08-15 (сборка 59be96c6, коммит 6e64b1fb):
+  # у действия появилась ВТОРАЯ ветка, и прежняя формулировка описывала бы то,
+  # чего код в ней не делает. `MainActivity.kt:593-602` (`onOpenFile`): если путь
+  # оканчивается на `.epub` (регистронезависимо) — файл НЕ открывается в WebView,
+  # а уходит внешнему приложению (`openFileExternally`, см. запись
+  # `library-open-epub-hands-off-external`), экран остаётся на Library; иначе —
+  # прежнее поведение (`openTab(url, background=false)` + переключение на
+  # Browse). id стабилен: TC-034 ссылается сюда и проверяет именно HTML-ветку,
+  # ре-теггинг не требуется. Ветка epub вынесена отдельной записью — её Then
+  # (открылось ЧУЖОЕ приложение, вкладка не создана, экран не сменился)
+  # наблюдаемо противоположен.
   - id: library-card-open-file
-    title: "Book-иконка «Open downloaded» открывает скачанный локальный файл"
+    title: "Book-иконка «Open downloaded» открывает скачанный локальный HTML-файл во вкладке Browse (экран переключается на Browse); .epub этой веткой не идёт"
     screen: library
     source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
   # Title уточнён test-strategist 2026-08-11 (сборка cc201f78, коммит a968f6ba,
@@ -628,6 +705,14 @@ features:
   # непустые`); у stub-строки orphan-скана «удалить файл» удаляет и строку.
   # id стабилен: TC-035 (контрольный) и TC-154 (замок BUG-047) ссылаются сюда
   # и проверяют именно эти Then, ре-теггинг не требуется.
+  # Примечание 2026-08-15 (сборка 59be96c6): подметание стало формато-
+  # НЕзависимым — `extractWorkId` матчит `_(\d+)\.(html|epub)$`
+  # (`DownloadRepository.kt:189`), то есть «Delete downloaded file» сносит и
+  # .epub-дубли той же работы. Вторая новость той же записи: ветка удаления
+  # строки (`hasOtherState == false`, `:173` → `RatingRepository.deleteWorkRating`)
+  # теперь ставит `SyncTombstone` ⇒ при настроенной синхронизации удаление
+  # уезжает на другие устройства (см. `sync-tombstone-on-local-delete`). title не
+  # правлю: оба факта — границы того же Then, а не другое поведение.
   - id: library-card-delete-file
     title: "Overlay «Delete downloaded file» удаляет ВСЕ файлы этой работы в обеих папках загрузок (custom SAF + дефолтная), сохраняя строку рейтинга/заметки/тегов; строка без другого состояния (stub скана) удаляется вместе с файлом"
     screen: library
@@ -665,12 +750,89 @@ features:
   # Связь с дефектом: `bugs/BUG-016.md` (Undo на потолке молча теряет вкладку)
   # получает третий естественный путь занять освободившийся слот — комментарий
   # разработчика в самом баге, «Вариант В».
+  # Примечание 2026-08-15 (сборка 59be96c6, коммит 6e64b1fb) — БЕЗ правки title и
+  # без дробления: у пункта появилась ветка, в которой он делает НЕ то, что
+  # обещает подпись в UI. `MainActivity.kt:605-608`: если разрешённый URL
+  # оканчивается на `.epub` (достижимо на вкладке Files, `localFileUrl()`),
+  # «Open in background tab» фоновую вкладку НЕ создаёт, а отдаёт файл внешнему
+  # ридеру — то есть уводит пользователя ИЗ приложения, при том что подпись
+  # пункта дословно обещает «Opens without leaving the library». Наблюдаемый
+  # Then этой ветки совпадает с записью `library-open-epub-hands-off-external`
+  # (там она и учтена вторым местом вызова), поэтому отдельной записи здесь нет;
+  # само расхождение подписи с поведением доложено как кандидат в вопрос
+  # разработчику (docs/01 §10 (щ) п.3), баг не заводится — не мандат стратега.
   - id: library-card-open-background-tab
     title: "Действие «Open in background tab» в overlay длинного нажатия по карточке Library открывает работу (на Files — её локальный файл) в фоновой вкладке, НЕ уходя с экрана Library"
     screen: library
     source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
     # spec-story-board v3 (Б8): рождена зоной QAREADY-26 (коммит 6e43b14 / #26).
     story: 26
+  # НОВАЯ запись (test-strategist 2026-08-15; коммит 6e64b1fb). Отдельное
+  # наблюдаемо различимое поведение: приложение ОТДАЁТ скачанный файл наружу
+  # вместо того, чтобы показать его самому.
+  #  - предикат — ТОЛЬКО расширение пути: `url.endsWith(".epub", ignoreCase =
+  #    true)`; формат настройки, MIME записи и тип содержимого не проверяются;
+  #  - ФАКТИЧЕСКИЕ места вызова (поиском по символу, ВСЕ ТРИ):
+  #    `MainActivity.kt:594-596` (`onOpenFile` — Book-иконка карточки),
+  #    `:606` (`onOpenInBackground` — пункт overlay, см. примечание выше),
+  #    `:609` (`onOpenExternal` — явный пункт «Open in e-reader app», у него
+  #    своя запись `library-card-open-external-action`, потому что там ветка
+  #    ЕДИНСТВЕННАЯ и работает для html тоже);
+  #  - ЭФФЕКТ: `openFileExternally` (`:763-788`) — `Intent.ACTION_VIEW` с
+  #    `application/epub+zip` (для не-epub — `text/html`), `FLAG_GRANT_READ_URI_
+  #    PERMISSION`; путь `content://` уходит как есть, обычный путь заворачивается
+  #    в `FileProvider.getUriForFile(<pkg>.fileprovider, …)` (манифест `:41-49`,
+  #    `res/xml/file_paths.xml` — только `ao3_downloads/`);
+  #  - наблюдаемая ПОВЕРХНОСТЬ: открылось ЧУЖОЕ приложение (или тост «No app
+  #    found to open this file» при `ActivityNotFoundException`, `:786`);
+  #    вкладка не создана, экран Library не сменился;
+  #  - краевые ветки для дизайна: пустой/битый путь — молчаливый `return`
+  #    (`:764`, `:776`), то есть тап без единой реакции UI; SAF-путь из ЧУЖОГО
+  #    дерева отдаётся принимающему приложению без собственного persistable-
+  #    гранта (доложено как кандидат в вопрос разработчику, §10 (щ) п.3).
+  - id: library-open-epub-hands-off-external
+    title: "Открытие скачанного .epub из Library (иконка «Open downloaded» и пункт «Open in background tab») не создаёт вкладку, а отдаёт файл внешнему ридеру через ACTION_VIEW; нет обработчика — тост «No app found to open this file»"
+    screen: library
+    source: "app/src/main/java/com/example/ao3_wrapper/MainActivity.kt"
+  # НОВАЯ запись (test-strategist 2026-08-15; коммит 6e64b1fb). Третий пункт
+  # overlay длинного нажатия, ЯВНО адресующий внешний ридер (в отличие от двух
+  # неявных веток выше — там передача наружу побочна, здесь она и есть действие).
+  # Код: `LibraryScreen.kt:430-438` (подпись дословно «Open in e-reader app»,
+  # описание «Opens the downloaded file in an external reader app.» / при
+  # отсутствии файла — «No downloaded file for this work.», `enabled = hasFile`,
+  # `work.downloadPath != null`), `:335-338` → `MainActivity.kt:609`
+  # (`openFileExternally(context, work.downloadPath)`). Then отличается от
+  # `library-open-epub-hands-off-external`: (1) действие работает и для HTML
+  # (MIME `text/html`) — то есть скачанный HTML можно открыть ВНЕ приложения;
+  # (2) есть наблюдаемое состояние disabled с собственным текстом; (3) путь
+  # берётся из `downloadPath` НАПРЯМУЮ, без нормализации `localFileUrl()`.
+  - id: library-card-open-external-action
+    title: "Пункт «Open in e-reader app» в overlay длинного нажатия отдаёт скачанный файл (любого формата) внешнему приложению; без скачанного файла пункт неактивен с подписью «No downloaded file for this work.»"
+    screen: library
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+  # НОВАЯ запись (test-strategist 2026-08-15; коммит 6e64b1fb). Четвёртый вход в
+  # рейтинг — впервые БЕЗ участия WebView и без AO3-страницы:
+  #  - `LibraryScreen.kt:423-429` пункт overlay «Rate / edit note» (описание
+  #    «Set the rating, note, and tags without opening the work's AO3 page.»),
+  #    `:331-334` ставит `ratingTarget`, `:354-371` хостит тот же
+  #    `RatingOverlay`, что и листинг, из данных строки Room;
+  #  - сохранение идёт в `MainActivity.kt:610-612` →
+  #    `BrowserViewModel.rateFromLibrary:945+`, который стажирует работу как
+  #    `pendingWork` и переиспользует `applyRating` ⇒ побочные эффекты общие с
+  #    листинговым путём: backfill метаданных, ПЕРЕХОДЫ авто-скачивания и
+  #    авто-kudos (`onRatingTransition`), broadcast бейджей в открытые вкладки;
+  #  - Then, ради которого запись своя: рейтинг/заметка/теги сохраняются, карточка
+  #    переезжает в соответствующую вкладку Library, и всё это — не покидая
+  #    Library и не открывая работу; соседние записи (`rating-entry-work-panel`,
+  #    `rating-entry-listing-overlay`) требуют открытой страницы AO3;
+  #  - граница для дизайна (прямое пересечение с R-17): оценка «Kudosed/Favorite»
+  #    из Library отправит kudos на AO3, ЕСЛИ среди вкладок открыта страница этой
+  #    работы (`onRatingTransition:783`) — то есть незапрошенная запись на
+  #    сторонний сайт теперь достижима с экрана, где браузера вообще не видно.
+  - id: library-card-rate-overlay
+    title: "Пункт «Rate / edit note» в overlay длинного нажатия открывает нативный RatingOverlay прямо в Library: рейтинг/заметка/теги сохраняются без открытия AO3-страницы, с теми же побочными эффектами, что и оценка с листинга (backfill, авто-скачивание, авто-kudos, обновление бейджей)"
+    screen: library
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
   - id: library-card-comment-tags
     title: "Индикатор комментария (note-иконка) и личных тегов на карточке"
     screen: library
@@ -745,11 +907,72 @@ features:
     title: "Тумблер Infinite scroll (listing pages)"
     screen: settings
     source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  # ТРИ записи ниже — новые тумблеры сборки 59be96c6 (коммиты bc32c275 / 2a1ceca6
+  # / f8e66c33), секция Reader экрана Settings. Каждая — только САМ контрол
+  # (персистентность, дефолт, видимость); наблюдаемые эффекты вынесены
+  # отдельными записями (`eink-*`, `browse-page-turn-buttons`,
+  # `browse-volume-button-paging`) по прецеденту пары
+  # `settings-auto-download-favorite` ↔ `background-auto-download-trigger`.
+  # НОВАЯ запись (коммит bc32c275). `SettingsScreen.kt:705-710`
+  # (SettingsSwitchRow «E-ink mode» / «High-contrast colors, no animations — for
+  # e-ink screens»), `:515-518` (prefs `eink_mode`), `:197` — ДЕФОЛТ вычисляемый:
+  # ON на `Build.MANUFACTURER == "ONYX"`, иначе OFF (та же граница чёрного ящика,
+  # что у формата загрузки). Второй наблюдаемый Then самого тумблера: пока он
+  # ВЫКЛЮЧЕН, строки «Show page-turn buttons» на экране НЕТ вовсе (`:711-719`) —
+  # вложенный контрол появляется только вместе с режимом.
+  - id: settings-eink-mode-toggle
+    title: "Тумблер «E-ink mode» в Settings: переживает рестарт, дефолт зависит от производителя (ONYX → ON); при выключенном режиме вложенная строка «Show page-turn buttons» на экране отсутствует"
+    screen: settings
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+    # spec-story-board v3 (Б8): зона QAREADY-42 (Implement app version for e-ink reader).
+    story: 42
+  # НОВАЯ запись (коммит 2a1ceca6). `SettingsScreen.kt:713-718` (SettingsSwitchRow
+  # «Show page-turn buttons» / «Floating page up/down buttons in the browser
+  # corners»), `:520-523` (prefs `page_turn_buttons`), `:198` — дефолт ON.
+  # Граница: строка видна ТОЛЬКО при включённом e-ink (`:711`), то есть
+  # выключение e-ink прячет контрол, НЕ сбрасывая его значение в prefs.
+  - id: settings-page-turn-buttons-toggle
+    title: "Тумблер «Show page-turn buttons» (виден только при включённом e-ink, по умолчанию ON): переживает рестарт; выключение e-ink прячет строку, но сохранённое значение не сбрасывает"
+    screen: settings
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+    # spec-story-board v3 (Б8): зона QAREADY-42 (плавающие кнопки листания — часть e-ink-версии).
+    story: 42
+  # НОВАЯ запись (коммит f8e66c33). `SettingsScreen.kt:777-782` (SettingsSwitchRow
+  # «Page with volume buttons» / «Volume down/up scrolls a page while browsing»),
+  # `:557-560` (prefs `volume_button_scroll`), `:204` — дефолт ON (то есть
+  # приложение ПЕРЕХВАТЫВАЕТ системные кнопки громкости из коробки, без
+  # действия пользователя — это и делает off-путь обязательным для дизайна).
+  - id: settings-volume-button-scroll-toggle
+    title: "Тумблер «Page with volume buttons» в Settings (по умолчанию ВКЛЮЧЁН): переживает рестарт; выключение возвращает кнопкам громкости системное поведение на всех экранах"
+    screen: settings
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+    # spec-story-board v3 (Б8): зона QAREADY-38 (листание страниц кнопками громкости).
+    story: 38
   # Coverage-гэп 0 кейсов закрыт test-designer 2026-07-28 (needs-design по
   # bugs/BUG-014.md): TC-112 (off-путь), TC-113 (ретроактивность включения) —
   # семантика тумблера как настройки, см. docs/01-test-strategy.md §9.
   - id: settings-auto-download-favorite
     title: "Тумблер авто-скачивания HTML при рейтинге Favorite (SAVE)"
+    screen: settings
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  # НОВАЯ запись (test-strategist 2026-08-15; коммит 6e64b1fb). Контрол «Download
+  # format» — сегментированная пара кнопок HTML/EPUB (`SettingsScreen.kt:969-1003`,
+  # подпись «HTML opens in the app; EPUB opens in an e-reader app»). Then этой
+  # записи — сам контрол и его персистентность/дефолт; ЭФФЕКТ на скачанный файл
+  # вынесен в `download-work-epub-format` (прецедент пары
+  # `settings-auto-download-favorite` ↔ `background-auto-download-trigger`).
+  #  - выбор пишется в prefs `download_format` и ПРЯМО в репозиторий
+  #    (`:572-576` `downloadRepo.downloadFormat = format`, плюс дублирующая
+  #    проводка `MainActivity.kt:242-243`) ⇒ действует со СЛЕДУЮЩЕЙ загрузки,
+  #    без перезапуска;
+  #  - ДЕФОЛТ вычисляемый, а не константный (`:209-210`): при отсутствии ключа —
+  #    "epub" на устройствах `Build.MANUFACTURER == "ONYX"`, иначе "html". Это
+  #    первый в приложении дефолт, зависящий от МОДЕЛИ устройства: на эталонном
+  #    AVD наблюдается только html-ветка, и дизайн обязан назвать это границей
+  #    (проверка epub-дефолта требует подмены MANUFACTURER — вне чёрного ящика);
+  #  - уже скачанные файлы смена формата не трогает.
+  - id: settings-download-format-choice
+    title: "Выбор формата загрузки HTML/EPUB в Settings: применяется со следующего скачивания без перезапуска, переживает рестарт; дефолт зависит от производителя устройства (ONYX → EPUB, иначе HTML)"
     screen: settings
     source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
   - id: settings-download-folder-saf
@@ -776,6 +999,15 @@ features:
   # merge сохранён за TC-021, его title приведён к фактически исполняемой ветке;
   # ветка коллизии вынесена в новую запись с нулём кейсов. Метка дизайна —
   # docs/01 §9, P1-область «backup: merge-семантика Restore в непустую базу».
+  # Примечание 2026-08-15 (сборка 59be96c6, коммит 24b7b13a) — без правки title:
+  # разбор/сборка JSON вынесены в общий `data/sync/LibraryJson.kt`, который
+  # обслуживает и бэкап (v2, с `downloadFile`), и синхронизацию (v3, с
+  # `tombstones`, без путей). Следствия, которые дизайн обязан держать в уме:
+  # (1) файл СИНХРОНИЗАЦИИ формально пригоден для Restore (те же ключи `works`/
+  # `filterProfiles`, лишние поля игнорируются, `tombstones` не читаются) —
+  # непроверенная ветка; (2) политики коллизии у двух путей ПРОТИВОПОЛОЖНЫ:
+  # Restore пропускает существующий `ao3Id`, синхронизация его перезаписывает по
+  # timestamp (`sync-merge-lww-works`).
   - id: settings-restore-merge
     title: "Restore из бэкапа: строки, которых нет в базе, импортируются (works + filterProfiles); поддержан и старый bare-array формат"
     screen: settings
@@ -803,8 +1035,18 @@ features:
   # Files») не изменился — изменились числа в диалоге результата; грань
   # ДУБЛЕЙ (детерминированный победитель + строгая идемпотентность) вынесена
   # отдельной записью ниже, потому что её Then отличается наблюдаемо.
+  # Уточнение 2026-08-15 (сборка 59be96c6, коммит 6e64b1fb): скан перестал быть
+  # HTML-only — `isDownloadFile` принимает `.html` И `.epub`
+  # (`DownloadRepository.kt:192-193`), `extractWorkId` матчит обе крышки
+  # (`:189`). Прежняя формулировка «relink .html-файлов» описывала бы уже не тот
+  # код. id стабилен (TC-037/TC-038 проверяют тот же Then), ре-теггинг не нужен.
+  # Смежная грань для дизайна: при СМЕНЕ формата загрузки старый файл другой
+  # крышки на диске остаётся (перезапись при скачивании бьёт только по
+  # `"$filename.$ext"`, `:61`/`:72-73`) ⇒ у работы штатно появляются два файла
+  # разных форматов, и их судьбу решает уже `settings-scan-duplicate-file-group`
+  # (победитель — самый свежий по lastModified, независимо от формата).
   - id: settings-scan-downloads-manual
-    title: "Ручная кнопка Scan for downloads — relink .html-файлов, потерянных базой (счётчики relinked/added — по работам, Found N — по файлам)"
+    title: "Ручная кнопка Scan for downloads — relink потерянных базой файлов загрузок (.html и .epub; счётчики relinked/added — по работам, Found N — по файлам)"
     screen: settings
     source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
   # НОВАЯ запись (test-strategist 2026-08-11; коммит a968f6ba, фикс BUG-046).
@@ -932,6 +1174,60 @@ features:
     title: "FAB «Scroll to top» на листинге: появляется после прокрутки (activeScrollY > 600) вне страницы работы и прокручивает активную вкладку в начало"
     screen: browse
     source: "app/src/main/java/com/example/ao3_wrapper/MainActivity.kt"
+  # НОВАЯ запись (test-strategist 2026-08-15; коммит 2a1ceca6). Плавающие кнопки
+  # листания в нижних углах браузера:
+  #  - условие показа — ОБА флага: `einkMode && showPageTurnButtons`
+  #    (`BrowserScreen.kt:369`), то есть вне e-ink их нет независимо от тумблера;
+  #  - `:370-379` — левый нижний (`BottomStart`, `pageForward = false`) листает
+  #    НАЗАД (`scrollActivePageBy(-1)`), правый нижний (`BottomEnd`) — ВПЕРЁД
+  #    (`scrollActivePageBy(1)`); отступы 20.dp/28.dp, вид — 44dp полупрозрачный
+  #    шеврон со сплошной рамкой (`:420+`, стилизован под scroll-to-top FAB);
+  #  - шаг листания — общий с кнопками громкости примитив
+  #    `BrowserViewModel.scrollActivePageBy:320-323`
+  #    (`window.scrollBy(0, Math.round(window.innerHeight*0.9)*direction)` в
+  #    активной вкладке; без активной вкладки — молчаливый `return`);
+  #  - Then, различающий эту запись и `browse-volume-button-paging`: кнопки
+  #    видимы/тапабельны и живут ТОЛЬКО в Browse-области e-ink режима, тогда как
+  #    кнопки громкости — невидимый глобальный перехват; смежность с
+  #    `browse-scroll-to-top-fab` и нижней панелью (перекрытие интерактива) —
+  #    прямая грань `nf-a11y-interactive-overlap`.
+  - id: browse-page-turn-buttons
+    title: "Плавающие кнопки листания в нижних углах браузера (только при e-ink + включённом тумблере): правая листает вперёд, левая назад — на ~0.9 высоты экрана активной вкладки"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserScreen.kt"
+    # spec-story-board v3 (Б8): зона QAREADY-42 (плавающие кнопки листания e-ink-версии).
+    story: 42
+  # НОВАЯ запись (test-strategist 2026-08-15; коммит f8e66c33). ПРАВИЛО-РЕАКЦИЯ
+  # (п.2а роли: настройка читается вне экрана настроек, на ОБЩЕМ пути системных
+  # клавиш), поэтому запись несёт полный паспорт правила:
+  #  - семантический ТРИГГЕР: пользователь нажимает кнопку громкости, находясь в
+  #    Browse, при включённой настройке;
+  #  - ФАКТИЧЕСКИЕ места (поиском по символу, ВСЕ): `MainActivity.kt:105`
+  #    (поле `volumePageHandler`), `:107-116` (`onKeyDown` — VOLUME_DOWN →
+  #    handler(true) → вперёд, VOLUME_UP → handler(false) → назад, оба
+  #    `return true`), `:118-124` (`onKeyUp` — ГЛОТАЕТ парный key-up, иначе
+  #    система рисует слайдер громкости), `:304-310` (предикат
+  #    `settingsUiState.volumeButtonScroll && selectedTab == AppTab.BROWSE`,
+  #    установка/снятие хэндлера), `:311-313` (`onDispose` снимает хэндлер);
+  #  - ЭФФЕКТ: `BrowserViewModel.scrollActivePageBy(±1)` — тот же примитив, что у
+  #    кнопок листания (`:320-323`);
+  #  - наблюдаемая ПОВЕРХНОСТЬ: страница активной вкладки прокрутилась примерно
+  #    на экран И системный индикатор громкости НЕ появился; на Library/Settings
+  #    и при выключенном тумблере — обратное (громкость меняется штатно);
+  #  - КРАСНЫЕ ФЛАГИ п.2а: (а) edge-vs-level не применим (реакция на событие
+  #    клавиши, состояние не читается) — не горит; (б) асимметрия ЕСТЬ и она
+  #    существенна для дизайна: предикат смотрит только на выбранную нижнюю
+  #    вкладку, поэтому перехват действует и когда поверх Browse открыты
+  #    rating-overlay, side panel, диалоги и нижняя панель — то есть громкостью
+  #    нельзя воспользоваться, пока пользователь стоит на Browse, чем бы он там
+  #    ни занимался. Классово это R-16 («режим молча отбирает функцию»): о
+  #    перехвате нет никакого сообщения, а дефолт — ВКЛЮЧЕНО.
+  - id: browse-volume-button-paging
+    title: "Кнопки громкости листают страницу в Browse при включённой настройке: Volume Down — вперёд, Volume Up — назад, системный индикатор громкости подавлен; вне Browse и при выключенной настройке кнопки работают штатно"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/MainActivity.kt"
+    # spec-story-board v3 (Б8): зона QAREADY-38 (листание страниц кнопками громкости).
+    story: 38
   # Три записи ниже добавлены Lead при приёмке trace-matrix-impl-2 (2026-07-17):
   # пропуски инвентаризации scout, вскрытые бэкфилом (кейсы TC-046/056/001 не
   # маппились); каждая заземлена в коде сверкой Lead.
@@ -1126,6 +1422,249 @@ features:
     screen: ao3-bridge
     source: "app/src/main/assets/ao3_bridge.js"
 
+  # ── E-ink режим ───────────────────────────────────────────────────────────
+  # ПЯТЬ записей ниже — эффекты режима e-ink (коммит bc32c275, сборка 59be96c6),
+  # заведены test-strategist 2026-08-15. Сам тумблер — `settings-eink-mode-toggle`.
+  # Дробление по правилу шапки: у режима ЧЕТЫРЕ независимых наблюдаемых эффекта в
+  # нативном слое и ОДИН в WebView, у каждого свой Then и свой способ проверки;
+  # одна зонтичная запись «e-ink mode» зачла бы покрытой всю пятёрку по первому
+  # же кейсу (прямой урок hide/dim). Все пять — 0 кейсов; все несут `story: 42`.
+  - id: eink-palette-native
+    title: "E-ink палитра нативных экранов: чисто белые/чёрные поверхности, сплошные непрозрачные границы и насыщенные цвета рейтингов вместо обычных light/dark схем (4 схемы: eink-light, eink-dark, обычные light/dark)"
+    screen: eink
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/theme/Theme.kt"
+    # spec-story-board v3 (Б8): зона QAREADY-42.
+    story: 42
+  # `Theme.kt:166-172` (`NoIndication` — no-op IndicationNodeFactory), `:199-208`
+  # (при eink подставляются `LocalIndication = NoIndication` И
+  # `LocalRippleConfiguration = null` — два разных потребителя: foundation-
+  # clickable и Material3-компоненты соответственно). Then наблюдаемо отличается
+  # от палитры: цвет тот же, исчезает ВОЛНА при нажатии — и проверять его надо
+  # покадрово/скриншотом в момент удержания, а не статичным снимком экрана.
+  - id: eink-no-ripple-indication
+    title: "E-ink: нажатие на контролы не рисует ripple-волну (индикация подменена no-op для foundation-clickable и Material3 одновременно)"
+    screen: eink
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/theme/Theme.kt"
+    # spec-story-board v3 (Б8): зона QAREADY-42.
+    story: 42
+  # `Theme.kt:174-177` (`einkTween` = `snap()` при `LocalEinkMode.current`, иначе
+  # `tween(durationMillis)`); фактические потребители (поиском по символу, ВСЕ):
+  # `BrowseSidePanel.kt:60`/`:65` (выезд панели), `MainActivity.kt:634-635`
+  # (fade FAB 150мс), `:654-655` (fade 200мс). Then: переход состояния происходит
+  # МГНОВЕННО (нет промежуточных кадров), а не «быстрее».
+  - id: eink-snap-animations
+    title: "E-ink: анимации панели и появления/исчезновения элементов заменены мгновенным переключением (snap вместо tween) — промежуточных кадров нет"
+    screen: eink
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/theme/Theme.kt"
+    # spec-story-board v3 (Б8): зона QAREADY-42.
+    story: 42
+  # `ao3_bridge.js:51` (`isEink = window.__ao3AppEink === true`), `:53-57`
+  # (`pal(light, dark, einkLight, einkDark)` — палитра 2×2), `:106-111`
+  # (сплошная рамка 2px вместо 1px — альфа-границы дизерят на e-ink), `:1072`
+  # (в светлой теме фон страницы AO3 становится чисто белым `#ffffff` вместо
+  # тёплого `#faf7f2`). ВАЖНАЯ для дизайна механика: `isEink` читается ОДИН раз
+  # при инициализации bridge, поэтому смена тумблера применяется к уже открытым
+  # вкладкам только через ПЕРЕЗАГРУЗКУ страницы (`BrowserScreen.kt:173-180`:
+  # выставить флаг → `wv.reload()`), в отличие от dark-режима, у которого есть
+  # живой пуш `ao3SetDark`. Следствие-риск: незавершённое состояние страницы
+  # (позиция скролла листинга, окно пагинации) переживает такой reload не лучше,
+  # чем при смене темы, — грань R-11/R-16 для кейса.
+  - id: eink-bridge-badge-palette
+    title: "E-ink палитра инжектированных элементов AO3-страницы (бейджи/Rate-кнопки — насыщенные цвета, сплошная рамка 2px, чисто белый фон в светлой теме); применяется к уже открытым вкладкам только перезагрузкой страницы"
+    screen: eink
+    source: "app/src/main/assets/ao3_bridge.js"
+    # spec-story-board v3 (Б8): зона QAREADY-42.
+    story: 42
+  # `BrowserScreen.kt:176` (живое переключение) и `:600` (новый WebView):
+  # `overScrollMode = OVER_SCROLL_NEVER` при e-ink, иначе
+  # `OVER_SCROLL_IF_CONTENT_SCROLLS`. Then: на границе страницы нет ни glow, ни
+  # растягивания контента. Отдельная запись, а не строка в палитре: свойство
+  # НАТИВНОГО WebView (не DOM и не Compose-тема), применяется без перезагрузки и
+  # наблюдается жестом, а не снимком.
+  - id: eink-webview-no-overscroll
+    title: "E-ink: WebView не показывает overscroll-эффект на границе страницы (ни свечения, ни растягивания); выключение режима возвращает штатный overscroll"
+    screen: eink
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserScreen.kt"
+    # spec-story-board v3 (Б8): зона QAREADY-42.
+    story: 42
+
+  # ── Синхронизация библиотеки (GitLab snippet) ─────────────────────────────
+  # ОДИННАДЦАТЬ записей ниже — новая подсистема сборки 59be96c6 (коммит 24b7b13a
+  # завёл синхронизацию через общую папку, 59be96c6 заменил транспорт на приватный
+  # GitLab-сниппет; в HEAD общей папки НЕТ — см. шапку файла). Заведены
+  # test-strategist 2026-08-15, у всех 0 кейсов. Дробление по правилу шапки: у
+  # подсистемы принципиально разные Then (конфиг ↔ ручной прогон ↔ ошибки ↔
+  # создание сниппета ↔ слияние строк ↔ распространение удалений ↔ судьба
+  # локального файла ↔ публикация ↔ авто-триггеры), и одна зонтичная запись
+  # «синхронизация» зачла бы всю подсистему покрытой первым же кейсом.
+  # ОБЩЕЕ ДЛЯ ВСЕЙ ГРУППЫ (не повторяется в каждой записи): движок —
+  # `data/sync/SyncRepository.kt`, сериализация — `data/sync/LibraryJson.kt`
+  # (тот же диалект, что у backup/restore), хранилище удалений — Room-таблица
+  # `sync_tombstones` (`data-sync-tombstone-model`). Сеть трогают ровно два
+  # метода: `fetchRemote` (`:243-259`) и `createSnippet`/`updateSnippet`
+  # (`:262-305`); всё между ними — чистое слияние данных.
+  # ГРАНИЦА §8 (называю явно): GitLab здесь — сторонний сервис, как и AO3. В
+  # скоупе — контракт НАШЕГО приложения с ним (какие запросы шлём, как читаем
+  # ответы и коды ошибок, что делаем с локальными данными); тестирование самого
+  # GitLab и нагрузка на него — вне скоупа.
+  - id: sync-settings-config-fields
+    title: "Секция Sync в Settings: три поля конфигурации (GitLab instance, access token, snippet ID) переживают рестарт; токен по умолчанию замаскирован и раскрывается кнопкой Show/Hide, в snippet ID проходят только цифры, кнопка «Sync» неактивна при пустом токене"
+    screen: sync
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  # `SettingsScreen.kt:1265-1273` (кнопка, подпись «Syncing…» на время прогона,
+  # `enabled = токен непуст && не Running`), `:288-305` (`syncNow`, повторный тап
+  # во время прогона игнорируется), `:1436-1466` — диалог «Sync complete» с ОДНИМ
+  # из четырёх дословных сообщений: «Created snippet <ID>. Paste that ID into the
+  # app on your other devices to sync them with this library.» / перечисление
+  # изменений («N works updated», «N works removed», «N filters updated»,
+  # «N filters removed» через запятую) + «. Snippet updated.» либо «.» /
+  # «No incoming changes. Snippet updated.» / «Everything already in sync.».
+  # Плюс подпись «Last synced <MMM d, HH:mm>» вместо «Not synced yet» (`:1256-1263`).
+  - id: sync-manual-run-result-dialog
+    title: "Кнопка «Sync now»: во время прогона подпись «Syncing…» и повторный тап игнорируется, по завершении — диалог «Sync complete» с одним из четырёх дословных сообщений и обновлённая подпись «Last synced …»"
+    screen: sync
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  # Отдельная запись, а не ветка предыдущей: Then противоположен (данные НЕ
+  # синхронизированы, показан текст ошибки), и именно эта ветка отличает
+  # «не настроено» от «настроено неверно». Дословные сообщения —
+  # `SyncRepository.kt:250-256` (404: «Snippet <id> not found. Check the snippet
+  # ID, or clear it to create a new one.»; 401/403: «GitLab rejected the token
+  # (HTTP <code>). It needs the 'api' scope.»; прочее: «GitLab returned HTTP
+  # <code> reading the snippet» / «… creating the snippet» / «… updating the
+  # snippet»), `:110` («No GitLab token configured»), `:282` («GitLab did not
+  # return a snippet ID»); диалог — `SettingsScreen.kt:1467-1477` («Sync failed»).
+  # КЛЮЧЕВАЯ асимметрия для дизайна (грань R-16): текст ошибки виден ТОЛЬКО у
+  # ручного прогона — автоматический путь падает молча в Log
+  # (`SyncRepository.kt:104`), см. `sync-auto-trigger-foreground-and-changes`.
+  - id: sync-failure-messages
+    title: "Ошибки синхронизации: ручной прогон показывает диалог «Sync failed» с дословным текстом (404 — сниппет не найден, 401/403 — токен без scope 'api', прочие HTTP-коды, пустой токен), локальные данные при этом не меняются"
+    screen: sync
+    source: "app/src/main/java/com/example/ao3_wrapper/data/sync/SyncRepository.kt"
+  # `SyncRepository.kt:218-228`: при пустом `snippet_id` первый же прогон СОЗДАЁТ
+  # приватный сниппет (`:262-284`: title «AO3 Reader library sync», file_name
+  # `ao3_library_sync.json`, `visibility: "private"`) и записывает его id в prefs
+  # (`:222`), после чего Settings перечитывает поле (`SettingsScreen.kt:295-301`)
+  # ⇒ пустое поле заполняется само. Then наблюдаемо отличается от штатного
+  # прогона: `createdSnippet = true` даёт ДРУГОЙ текст диалога с номером сниппета,
+  # и это единственный путь, которым устройство №1 получает id для устройств №2+.
+  - id: sync-snippet-create-first-device
+    title: "Первый прогон с пустым Snippet ID создаёт приватный GitLab-сниппет («AO3 Reader library sync», файл ao3_library_sync.json), сам подставляет его номер в поле Settings и называет этот номер в диалоге"
+    screen: sync
+    source: "app/src/main/java/com/example/ao3_wrapper/data/sync/SyncRepository.kt"
+  # `SyncRepository.kt:146-160`: победитель на каждый `ao3Id` — сторона с большим
+  # `timestamp`; при РАВЕНСТВЕ побеждает локальная (`remoteTs <= localTs` →
+  # `continue`, комментарий кода `:154`). Удалённая строка-победитель
+  # ПЕРЕЗАПИСЫВАЕТ локальную целиком (`repo.upsertWorkRating(rRow.copy(
+  # downloadPath = lRow?.downloadPath))`, `:159`) — то есть локальные заметка,
+  # теги и рейтинг НЕ сливаются пофайлово, а замещаются версией другого
+  # устройства; уцелевает только `downloadPath`. Наблюдаемая поверхность: состав
+  # и содержимое карточек Library, счётчик «N works updated» в диалоге.
+  # Смежность-контраст (важна для дизайна и для R-01): Restore из бэкапа при
+  # коллизии `ao3Id` СТРОКУ ПРОПУСКАЕТ (`settings-restore-merge-skip-existing`),
+  # а синхронизация её ПЕРЕЗАПИСЫВАЕТ — две противоположные политики слияния в
+  # одном приложении.
+  - id: sync-merge-lww-works
+    title: "Слияние работ по правилу last-write-wins на timestamp: более свежая удалённая версия строки целиком замещает локальную (рейтинг/заметка/теги — версии победителя), при равенстве timestamp побеждает локальная"
+    screen: sync
+    source: "app/src/main/java/com/example/ao3_wrapper/data/sync/SyncRepository.kt"
+  # `SyncRepository.kt:161-172`: если самый свежий удалённый факт — НАДГРОБИЕ
+  # (`rTombTs > rRowTs`), локальная строка удаляется, причём вместе с ФАЙЛАМИ:
+  # `downloadRepo.deleteDownload(id, path, hasOtherState = false)` (`:165`) — то
+  # есть по семантике «Delete work», а не «убрать строку»; локальные заметка/теги
+  # при этом не спасают строку (флаг захардкожен `false`). Затем локальное
+  # надгробие ПЕРЕЗАПИСЫВАЕТСЯ удалённым `deletedAt` (`:171`), чтобы более
+  # поздняя переоценка на третьем устройстве всё ещё побеждала. Наблюдаемая
+  # поверхность: работа исчезла из Library и из папки загрузок, счётчик «N works
+  # removed». Грань R-01+R-16 для дизайна: на АВТОМАТИЧЕСКОМ пути это
+  # разрушительное действие происходит без единого сообщения пользователю.
+  - id: sync-merge-tombstone-delete-works
+    title: "Удаление, пришедшее с другого устройства (надгробие свежее локальной строки), удаляет работу вместе со скачанными файлами, независимо от локальных заметок и тегов; локальное надгробие получает удалённый deletedAt"
+    screen: sync
+    source: "app/src/main/java/com/example/ao3_wrapper/data/sync/SyncRepository.kt"
+  # `RatingRepository.kt:20-46`: КАЖДОЕ удаление ставит надгробие
+  # (`deleteWorkRating:27`, `clearAllRatings:34` — по надгробию на каждую строку,
+  # `deleteFilterProfile:45`), а КАЖДЫЙ upsert соответствующее надгробие снимает
+  # (`:22`, `:40`) — иначе переоценённая работа была бы снова удалена собственным
+  # устаревшим надгробием. Then этой записи отличается от предыдущей
+  # направлением: здесь наблюдается, что локальное удаление ДОЕХАЛО до другого
+  # устройства и не воскресло на обратном слиянии. Достижимые входы (все):
+  # overlay Library «Delete work»/«Delete downloaded file» (у stub-строки),
+  # Settings «Clear all ratings», удаление фильтр-профиля.
+  - id: sync-tombstone-on-local-delete
+    title: "Локальное удаление (Delete work, Clear all ratings, удаление фильтр-профиля) оставляет надгробие и распространяется на другие устройства, а не воскресает обратным слиянием; повторная оценка той же работы надгробие снимает"
+    screen: sync
+    source: "app/src/main/java/com/example/ao3_wrapper/data/repository/RatingRepository.kt"
+  # `SyncRepository.kt:176-200` — та же форма LWW, но для фильтр-профилей и БЕЗ
+  # файлов: победитель по `timestamp` (`FilterProfile.timestamp`), надгробие
+  # `kind = "profile"`. Отдельная запись, а не строка в `sync-merge-lww-works`:
+  # другая наблюдаемая поверхность (список профилей в Settings и панель фильтров
+  # листинга), другой счётчик в диалоге («N filters updated/removed») и другой
+  # риск §5 (R-09 против R-01).
+  - id: sync-merge-profiles-lww
+    title: "Слияние фильтр-профилей: свежая удалённая версия заменяет локальную, надгробие профиля удаляет его на всех устройствах; изменения видны в списке Settings и в панели фильтров"
+    screen: sync
+    source: "app/src/main/java/com/example/ao3_wrapper/data/sync/SyncRepository.kt"
+  # Отдельное наблюдаемо различимое поведение — судьба ЛОКАЛЬНОГО ФАЙЛА при
+  # синхронизации: `LibraryJson.workToJson(..., includeDownloadFile = false)`
+  # (`SyncRepository.kt:206`) не кладёт путь в публикуемый JSON, а
+  # `workFromJson` всегда возвращает `downloadPath = null`
+  # (`LibraryJson.kt:34`/`:51`); при победе удалённой строки локальный путь
+  # переносится вручную (`SyncRepository.kt:159`). Then: после слияния работа на
+  # устройстве-приёмнике видна в рейтинговых вкладках, но НЕ появляется на
+  # вкладке Files (файла у него нет), а на устройстве-источнике скачанный файл
+  # продолжает открываться. Контраст с бэкапом: там `downloadFile` в JSON
+  # ЕСТЬ (`includeDownloadFile = true`, `SettingsScreen.kt:465`).
+  - id: sync-download-path-device-local
+    title: "Привязка к скачанному файлу не путешествует между устройствами: публикуемый JSON её не содержит, входящая строка приходит без неё, а локальная связь с файлом переживает победу удалённой версии"
+    screen: sync
+    source: "app/src/main/java/com/example/ao3_wrapper/data/sync/LibraryJson.kt"
+  # `SyncRepository.kt:203-228`: после слияния устройство публикует СВОЁ полное
+  # состояние (`version: 3`, массивы `works`, `filterProfiles`, `tombstones`,
+  # отступ 2) — созданием сниппета либо PUT'ом; запись ПРОПУСКАЕТСЯ, если
+  # сериализованный текст побайтово равен прочитанному (`outText != remoteRaw`,
+  # `:218`) ⇒ повторный прогон без изменений сетевой записи не делает
+  # (`published = false` → «Everything already in sync.»). `sync_last_at` при
+  # этом обновляется в любом случае (`:230`). Then отличается от слияния: здесь
+  # наблюдается СОДЕРЖИМОЕ сниппета и факт/отсутствие записи, а не состояние
+  # локальной базы; это же свойство — оракул сходимости для N устройств.
+  - id: sync-publish-merged-state
+    title: "После слияния устройство публикует в сниппет полное состояние (works + filterProfiles + tombstones, version 3); если состояние совпадает с уже лежащим в сниппете, запись не выполняется вовсе"
+    screen: sync
+    source: "app/src/main/java/com/example/ao3_wrapper/data/sync/SyncRepository.kt"
+  # ПРАВИЛО-РЕАКЦИЯ (п.2а роли) — полный паспорт:
+  #  - семантический ТРИГГЕР: приложение вышло на передний план ИЛИ локальная
+  #    база изменилась, при настроенной синхронизации;
+  #  - ФАКТИЧЕСКИЕ места (поиском по символу, ВСЕ): `MainActivity.kt:171-175`
+  #    (`repeatOnLifecycle(RESUMED)` → `syncIfNeeded()` на каждом выходе на
+  #    передний план), `:176-184` (`merge(allWorkRatings, allFilterProfiles)`
+  #    `.drop(1)` → `markDirty()` → `debounce(5_000)` → `syncIfNeeded()`),
+  #    `SettingsScreen.kt:272`/`:278`/`:285` (`onConfigChanged()` при правке
+  #    любого поля конфигурации — сбрасывает интервал), `:288` (ручной `syncNow`,
+  #    минующий гейт);
+  #  - ПРЕДИКАТ гейта (`SyncRepository.kt:99-105`): выходит молча, если токен
+  #    пуст; и если НЕ `dirty` и с прошлой авто-проверки прошло < 60 000 мс
+  #    (`MIN_AUTO_INTERVAL_MS`); `dirty` стартует `true` ⇒ первый передний план
+  #    после старта процесса всегда сливает;
+  #  - ЭФФЕКТ: полный `syncNow` — сетевые запросы к GitLab плюс ЗАПИСИ в Room и
+  #    УДАЛЕНИЕ ФАЙЛОВ по надгробиям (см. `sync-merge-tombstone-delete-works`);
+  #  - наблюдаемая ПОВЕРХНОСТЬ: изменившийся состав Library и папки загрузок,
+  #    обновившаяся подпись «Last synced …»; собственного сообщения у авто-пути
+  #    НЕТ;
+  #  - КРАСНЫЕ ФЛАГИ п.2а: (а) edge-vs-level — гейт уровневый (`dirty` + окно
+  #    60 с), но это и есть заявленная семантика, класс BUG-014 не горит;
+  #    (б) АСИММЕТРИЯ ЭФФЕКТОВ горит: ручной путь показывает и успех, и ошибку
+  #    диалогом, а автоматический — ничего, включая ошибку (`:104`, только
+  #    `Log.e`) и включая удаление работ вместе с файлами. Доложено Lead как
+  #    кандидат в вопрос разработчику (docs/01 §10 (щ) п.3), баг не заводится.
+  #  - смежность: собственные записи слияния снова взводят `dirty`
+  #    (`markDirty` на потоке изменений) — сходимость заявлена комментарием
+  #    `MainActivity.kt:168-170` и подлежит проверке дизайном (лишний проход
+  #    находит «нечего применять» и не публикует).
+  - id: sync-auto-trigger-foreground-and-changes
+    title: "Автоматическая синхронизация: на каждом выходе приложения на передний план и через 5 с после локального изменения базы, но не чаще раза в минуту, если ничего не менялось; успех и ОШИБКА этого пути пользователю не показываются"
+    screen: sync
+    source: "app/src/main/java/com/example/ao3_wrapper/data/sync/SyncRepository.kt"
+
   # ── Данные ───────────────────────────────────────────────────────────────
   - id: data-workrating-model
     title: "Room-сущность WorkRating (rating/comment/tags/fandom/author/wordCount/downloadPath)"
@@ -1135,14 +1674,58 @@ features:
     title: "Room-сущность FilterProfile (name/queryString)"
     screen: data
     source: "app/src/main/java/com/example/ao3_wrapper/data/model/FilterProfile.kt"
+  # Title расширен test-strategist 2026-08-15 (сборка 59be96c6, коммит 24b7b13a):
+  # операция перестала быть чисто локальной. `RatingRepository.clearAllRatings:32-36`
+  # ставит НАДГРОБИЕ на каждую строку ПЕРЕД `deleteAll()` ⇒ при настроенной
+  # синхронизации ближайший прогон разносит удаление на остальные устройства (и
+  # там оно снесёт ещё и скачанные файлы — `sync-merge-tombstone-delete-works`).
+  # id стабилен (TC-020/TC-021 проверяют тот же локальный Then), ре-теггинг не
+  # требуется; сама трансляция удаления покрыта записью
+  # `sync-tombstone-on-local-delete`.
   - id: data-clear-all-ratings
-    title: "Clear all ratings — полное необратимое удаление всех рейтингов"
+    title: "Clear all ratings — полное необратимое удаление всех рейтингов локально; каждая удалённая строка оставляет надгробие, поэтому при настроенной синхронизации удаление распространяется и на другие устройства"
     screen: data
     source: "app/src/main/java/com/example/ao3_wrapper/ui/settings/SettingsScreen.kt"
+  # НОВАЯ запись (test-strategist 2026-08-15; коммит 24b7b13a). Room-сущность
+  # `SyncTombstone` (`sync_tombstones`, составной ключ `kind`+`id`, поле
+  # `deletedAt`; `kind` ∈ {"work","profile"}) и МИГРАЦИЯ 7→8
+  # (`AppDatabase.kt:14` version = 8, `:100-111` CREATE TABLE, `:120` регистрация)
+  # — единственная запись группы, у которой наблюдаемый Then про ОБНОВЛЕНИЕ
+  # приложения: установка новой версии поверх старой БД (v7) не теряет рейтинги,
+  # заметки, теги, пути загрузок и фильтр-профили и не падает; `fallbackTo
+  # DestructiveMigration` в билдере НЕ включён, поэтому пропущенная миграция —
+  # это краш на старте, а не тихая потеря (наблюдаемо и проверяемо).
+  - id: data-sync-tombstone-model
+    title: "Room-сущность SyncTombstone (kind+id, deletedAt) и миграция схемы 7→8: обновление поверх старой базы сохраняет все пользовательские данные и не падает"
+    screen: data
+    source: "app/src/main/java/com/example/ao3_wrapper/data/db/AppDatabase.kt"
 
   # ── Фоновые ──────────────────────────────────────────────────────────────
+  # Title уточнён test-strategist 2026-08-15 (сборка 59be96c6, коммит 6e64b1fb):
+  # скачивание перестало быть HTML-only — расширение и MIME выбираются по
+  # настройке формата (`DownloadRepository.kt:52-53`), а ссылка ищется на
+  # странице работы уже под нужную крышку (`fetchDownloadUrl(..., ext)`, `:220`).
+  # id стабилен (TC-032/TC-033 проверяют тот же Then на html-ветке).
   - id: background-download-repository
-    title: "DownloadRepository: скачивание HTML работы через OkHttp в SAF-папку или app storage"
+    title: "DownloadRepository: скачивание работы через OkHttp в SAF-папку или app storage; расширение и MIME файла определяются выбранным форматом загрузки"
+    screen: background
+    source: "app/src/main/java/com/example/ao3_wrapper/data/repository/DownloadRepository.kt"
+  # НОВАЯ запись (test-strategist 2026-08-15; коммит 6e64b1fb). Наблюдаемый
+  # эффект выбора «EPUB» — отдельно от самого контрола
+  # (`settings-download-format-choice`):
+  #  - `DownloadRepository.kt:52-55`: `ext`/`mime` = epub/`application/epub+zip`,
+  #    ссылка ищется регуляркой `href="(/downloads/[^"]*\.epub[^"]*)"` на
+  #    странице работы (`:220`), и при её отсутствии скачивание падает с
+  #    «EPUB download link not found on page» (`:55`) — то есть у epub-ветки СВОЙ
+  #    отказ, зависящий от разметки AO3 (прямая грань R-02/R-05);
+  #  - файл сохраняется как `<имя>.epub` в ту же папку (SAF или дефолтную),
+  #    `downloadPath` строки указывает на него ⇒ работа попадает на вкладку Files
+  #    и открывается уже ТОЛЬКО внешним ридером
+  #    (`library-open-epub-hands-off-external`);
+  #  - перезапись при повторном скачивании бьёт лишь по файлу ТОЙ ЖЕ крышки
+  #    (`:61`, `:72-73`) ⇒ смена формата оставляет старый файл на диске.
+  - id: download-work-epub-format
+    title: "Скачивание в формате EPUB: файл сохраняется с расширением .epub и MIME application/epub+zip, работа появляется на вкладке Files; при отсутствии EPUB-ссылки на странице работы скачивание завершается ошибкой «EPUB download link not found on page»"
     screen: background
     source: "app/src/main/java/com/example/ao3_wrapper/data/repository/DownloadRepository.kt"
   # Расширена test-designer 2026-07-28 (needs-design по bugs/BUG-014.md) с
@@ -1309,6 +1892,22 @@ features:
     title: "НФ-sec: приватность бэкапа — allowBackup=true + fullBackupContent/dataExtractionRules; SAF-экспорт JSON не пишется в мир-читаемое место"
     screen: non-functional
     source: "app/src/main/AndroidManifest.xml"
+  # НОВАЯ запись (test-strategist 2026-08-15; сборка 59be96c6, коммиты 24b7b13a +
+  # 59be96c6). Синхронизация принесла НОВУЮ поверхность приватности, которой у
+  # приложения не было: (1) персональный токен GitLab хранится в открытом виде в
+  # SharedPreferences (`sync_gitlab_token`, `SettingsScreen.kt:277`), а
+  # `allowBackup="true"` (манифест `:9`) при пустом `backup_rules.xml`
+  # (все правила закомментированы) означает, что sharedprefs попадают в
+  # авто-бэкап; (2) адрес инстанса задаёт ПОЛЬЗОВАТЕЛЬ (`sync_gitlab_url`,
+  # дефолт `https://gitlab.com`), и токен уходит в заголовке `PRIVATE-TOKEN`
+  # на любой введённый хост (`SyncRepository.kt:240-245`) — включая опечатку;
+  # (3) полезная нагрузка — ВСЯ библиотека (названия, авторы, фандомы, ЛИЧНЫЕ
+  # ЗАМЕТКИ и теги, рейтинги) уезжает во внешний сервис. Скоуп прежний
+  # (docs/01 §8): статическая инспекция + наблюдаемые пробы, не аудит.
+  - id: nf-sec-sync-token-and-payload
+    title: "НФ-sec: приватность синхронизации — токен GitLab в открытых SharedPreferences под allowBackup, адрес инстанса задаётся пользователем (токен уходит на любой введённый хост), полезная нагрузка содержит личные заметки и теги"
+    screen: non-functional
+    source: "app/src/main/java/com/example/ao3_wrapper/data/sync/SyncRepository.kt"
   - id: nf-sec-logcat-leak
     title: "НФ-sec: отсутствие чувствительных данных (cookie/session/токены/локальные пути) в logcat при smoke (cross-cutting, adb-скан)"
     screen: non-functional

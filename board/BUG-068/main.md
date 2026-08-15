@@ -7,7 +7,7 @@ priority: "p1"
 summary: "Фильтр-профиль (OFF) снимается загрузкой ЧУЖОЙ/фоновой вкладки, пока пользователь стоит на другом экране — ни одного сообщения об этом"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["bug", "sev:major"]
+labels: ["bug", "test_case:TC-205", "sev:major"]
 components: []
 fixVersions: []
 watchers: []

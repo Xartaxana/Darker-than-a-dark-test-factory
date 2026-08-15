@@ -1,0 +1,1 @@
+css_selector='[data-tap-marker="button"]' rect={'height': 60, 'innerHeight': 1603, 'left': 24, 'top': 641.0654907226562, 'width': 200, 'fraction_of_innerHeight': 0.4186309985793239} dispatched_clientY=671.1 fraction_of_innerHeight=0.419

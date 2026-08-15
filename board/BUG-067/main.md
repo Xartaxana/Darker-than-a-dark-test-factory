@@ -2,7 +2,7 @@
 key: "BUG-067"
 project: "AO3"
 issueType: "bug"
-status: "bug-open"
+status: "bug-fixed"
 priority: "p1"
 summary: "auto-READ при дочитывании работы теряет downloadPath и перетирает метаданные у скачанной работы без рейтинга"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-11T22:58:00Z"
-updated: "2026-08-11T22:58:00Z"
+created: "2026-08-14T23:12:36Z"
+updated: "2026-08-14T23:12:36Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # auto-READ при дочитывании работы теряет downloadPath и перетирает метаданные у скачанной работы без рейтинга
 
 _Спроецировано из `bugs/BUG-067.md` (источник правды).
-Статус в нашей машине: **Open**._
+Статус в нашей машине: **Fixed**._
 
 # BUG-067 — auto-READ (`onWorkFinished`) теряет downloadPath и метаданные скачанной работы без рейтинга
 
@@ -160,6 +160,8 @@ fun onWorkFinished(workId: String, title: String, author: String, fandom: String
 - Резолюция разработчика BUG-048 («молчаливого канала обновления не осталось») неточна: этот канал жив, просто не протестируем текущими фикстурами
 
 Awaiting: none (информационная запись; фикс — в очереди after BUG-021 и BUG-048, если владелец обновит scope)
+
+**[gitlab:dyakagreen @ 2026-08-14T20:16:23.495Z]** Метка `qa-status::QAready` выставлена на GitLab issue — переход Open→Fixed зафиксирован автоматически (второй канал, docs/06 §3а, gitlab-label).
 
 ## Чек-лист качества
 

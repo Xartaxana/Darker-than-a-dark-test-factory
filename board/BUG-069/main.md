@@ -2,7 +2,7 @@
 key: "BUG-069"
 project: "AO3"
 issueType: "bug"
-status: "bug-open"
+status: "bug-fixed"
 priority: "p2"
 summary: "Copy URL button в DEBUG-разделе молчит при ошибке writeText, нет обратной связи пользователю"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-14T02:15:00Z"
-updated: "2026-08-14T02:15:00Z"
+created: "2026-08-14T23:12:36Z"
+updated: "2026-08-14T23:12:36Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Copy URL button в DEBUG-разделе молчит при ошибке writeText, нет обратной связи пользователю
 
 _Спроецировано из `bugs/BUG-069.md` (источник правды).
-Статус в нашей машине: **Open**._
+Статус в нашей машине: **Fixed**._
 
 # BUG-069 — Copy URL кнопка (DEBUG) молчит при ошибке writeText без обратной связи
 
@@ -185,6 +185,8 @@ btn.addEventListener('click', function () {
 Severity: **minor** — DEBUG-функция (не часть основного потока), но всё же видима пользователю и влияет на UX даже при редких ошибках.
 
 Awaiting: none
+
+**[gitlab:dyakagreen @ 2026-08-14T20:16:18.829Z]** Метка `qa-status::QAready` выставлена на GitLab issue — переход Open→Fixed зафиксирован автоматически (второй канал, docs/06 §3а, gitlab-label).
 
 ## Чек-лист качества
 

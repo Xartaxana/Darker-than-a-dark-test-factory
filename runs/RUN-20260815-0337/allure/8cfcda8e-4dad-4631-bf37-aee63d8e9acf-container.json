@@ -1,0 +1,1 @@
+{"uuid": "ea91c66e-8b14-4860-b45e-dba9b6e3142b", "befores": [{"name": "raw_gpu", "status": "passed", "start": 1786752059691, "stop": 1786752059691}], "afters": [{"name": "raw_gpu::<lambda>", "start": 1786752059696}], "start": 1786752059691, "stop": 1786752059696}

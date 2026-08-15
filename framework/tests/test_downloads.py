@@ -599,7 +599,7 @@ def test_manual_scan_for_downloads_shows_dialog_on_zero_files(clean_app, driver)
     # Done-диалог — отличие от auto-триггера (silent=true, см. TC-038), который при
     # totalFound=0 остаётся в Idle и диалог не показывает.
     settings_steps.assert_scan_complete_dialog(
-        driver, expected_text="No .html files found in the download folder."
+        driver, expected_text="No downloaded files found in the download folder."
     )
     settings_steps.dismiss_scan_dialog(driver)
 
@@ -1128,11 +1128,11 @@ def test_delete_downloaded_file_sweeps_both_download_locations(
     saf_steps.rescroll_settings_to(driver, "Scan")
     saf_steps.tap_settings_action(driver, "Scan")
 
-    # Then диалог гласит «No .html files found in the download folder.» — файлов
+    # Then диалог гласит «No downloaded files found in the download folder.» — файлов
     # этого ao3Id для релинка не осталось (totalFound == 0), downloadPath работы
     # W остаётся пустым
     settings_steps.assert_scan_complete_dialog(
-        driver, expected_text="No .html files found in the download folder."
+        driver, expected_text="No downloaded files found in the download folder."
     )
     settings_steps.dismiss_scan_dialog(driver)
 

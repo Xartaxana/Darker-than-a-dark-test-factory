@@ -1,56 +1,57 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-14T15:19:38Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-15T02:11:59Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
-- Сборка: dev-local (versionCode 12), commit `cc201f78`, built_at 2026-08-10T23:52:58Z
-- smoke: Closed · smoke_freshness_hours: **24.1** (RUN-20260811-0405)
-- regression: Triaged · regression_freshness_hours: **107.5** (RUN-20260810-0146)
-- canary: Triaged · canary_freshness_hours: **243.6** (RUN-20260804-1317)
+- Сборка: dev-local (versionCode 12), commit `59be96c6`, built_at 2026-08-14T23:14:07Z
+- smoke: Closed · smoke_freshness_hours: **2.2** (RUN-20260815-0149)
+- regression: Triaged · regression_freshness_hours: **118.4** (RUN-20260810-0146)
+- canary: Triaged · canary_freshness_hours: **254.5** (RUN-20260804-1317)
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **1**
 - p0_automation_coverage: **100%** (37/37)
-- p1_automation_coverage: **70%** (86/123)
-- Test debt открыт: **1** — AT-BUG-069
+- p1_automation_coverage: **52%** (86/166)
+- Test debt открыт: **5** — AT-BUG-069, AT-BUG-070, AT-BUG-071, AT-BUG-072, AT-BUG-073
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
 - Untriaged: **0** · untriaged_failure_age: **0**
 
 ## Сборка под тестом
 
-- dev-local (versionCode 12), commit `cc201f78`, built_at 2026-08-10T23:52:58Z
-- smoke: failed · regression: failed
+- dev-local (versionCode 12), commit `59be96c6`, built_at 2026-08-14T23:14:07Z
+- smoke: passed · regression: failed
 
-## Тест-кейсы (204)
+## Тест-кейсы (255)
 
-- Draft: **1** · Review: **14** · Approved: **37** · Automated: **152**
+- Draft: **1** · Review: **65** · Approved: **37** · Automated: **152**
 - автотесты (B3): active: **152**
 
 | Область | Draft | Review | Approved | Automated | Blocked |
 |---|---|---|---|---|---|
 | accessibility |  |  | 3 | 3 |  |
 | backup |  |  | 6 | 1 |  |
-| browser |  | 8 | 6 | 13 |  |
+| browser |  | 15 | 6 | 13 |  |
 | canary |  | 2 |  | 23 |  |
 | compatibility |  |  |  | 3 |  |
-| downloads |  |  | 4 | 14 |  |
+| downloads |  | 5 | 4 | 14 |  |
 | errors |  |  |  | 1 |  |
-| filter-profiles |  |  | 5 | 5 |  |
-| library | 1 |  |  | 25 |  |
+| filter-profiles |  | 2 | 5 | 5 |  |
+| library | 1 | 6 |  | 25 |  |
 | performance |  |  |  | 4 |  |
 | rating |  | 4 | 3 | 21 |  |
-| security |  |  |  | 6 |  |
-| settings |  |  | 9 | 11 |  |
+| security |  | 3 |  | 6 |  |
+| settings |  | 3 | 9 | 11 |  |
 | smoke |  |  |  | 5 |  |
+| sync |  | 25 |  |  |  |
 | tabs |  |  | 1 | 11 |  |
 | visibility |  |  |  | 6 |  |
 
 ## Баги (31)
 
-- Open: **19** · Verified: **11** · Intended: **1**
+- Open: **16** · Fixed: **3** · Verified: **11** · Intended: **1**
 - BUG-011 [major] Open — Restore from backup пропускает работы молча, если файл с тем же ao3Id уже лежит в папке загрузок
 - BUG-013 [minor] Open — Смена темы, затем немедленный kill процесса (<100 мс) теряет theme_mode — выбор темы не персистится
 - BUG-016 [major] Open — Undo закрытия вкладки на потолке 10 молча теряет вкладку и её снапшот
@@ -63,32 +64,33 @@ story-карточки: стадии см. docs/05-board.md §Story
 - BUG-051 [minor] Open [wontfix] — Поиск в Library принимает чисто пробельный запрос — список мигает пустой выдачей вместо игнорирования
 - BUG-052 [minor] Open [wontfix] — Scan for downloads не показывает прогресс при большом числе файлов — кнопка выглядит зависшей
 - BUG-058 [minor] Open — PROJECT.md ложно отрицает сетевые запросы из приложения; сетевые вызовы присутствуют в SettingsScreen и DownloadRepository
-- BUG-059 [minor] Open — Счётчик снекбара «Opened in background (N tabs)» показывает общее число вкладок вместо числа открытых в фоне
 - BUG-060 [minor] Open — Фоновая вкладка на удалённый локальный файл вечна: после релонча показывает ERR_FILE_NOT_FOUND, Retry не работает, чип деградирует
 - BUG-065 [minor] Open — PROJECT.md обещает quick rating-filter toggle icons в топ-баре Browse, но их нет в коде
-- BUG-067 [major] Open — auto-READ при дочитывании работы теряет downloadPath и перетирает метаданные у скачанной работы без рейтинга
 - BUG-068 [major] Open — Фильтр-профиль (OFF) снимается загрузкой ЧУЖОЙ/фоновой вкладки, пока пользователь стоит на другом экране — ни одного сообщения об этом
-- BUG-069 [minor] Open — Copy URL button в DEBUG-разделе молчит при ошибке writeText, нет обратной связи пользователю
 - BUG-070 [major] Open — ON + deep-link в новую вкладку: FilterPanel продолжает показывать профиль активным, хотя URL/содержимое вкладки НЕфильтрованы
 
 ## Известные проблемы, known_issue (1)
 
 - BUG-012 [minor] Intended — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
 
-## Test debt (4)
+## Test debt (8)
 
 - AT-BUG-066 [broken_environment] Fixed — Персистентные системные настройки font_scale/night mode защищены только in-process try/finally — тот же класс остатка, что AT-BUG-064 (http_proxy)
 - AT-BUG-067 [missing_fixture] Fixed — Нет харнесса для управляемого JS-состояния document.head/body/readyState — блокирует TC-195/TC-196 (bridge-init-retry-on-incomplete-dom)
 - AT-BUG-068 [broken_environment] Blocked — navigator.clipboard.writeText() отклоняется DOMException 'Write permission denied' в тестовом WebView — блокирует Then «Copied!» TC-188
 - AT-BUG-069 [flaky_test] Open — Двойной раздельный seed()-round-trip после AT-BUG-044-фикса эмпирически дал 'no such table: work_ratings' один раз (не воспроизведено изолирующим экспериментом 20/20) — кандидат: _pull_baseline игнорирует возврат pull_app_file для -wal/-shm
+- AT-BUG-070 [missing_fixture] Open — Нет надёжного приёма адресации execute_script/навигации к КОНКРЕТНОЙ НЕ-нулевой вкладке — sticky WebView context блокирует контраст-дверь Г2 (клик по ссылке) и точный Back-замер на deep-link-вкладке (CH-010)
+- AT-BUG-071 [missing_fixture] Open — Нет автоматизационных фикстур для EPUB-скачивания: seed_with_download хардкодит расширение .html, нет записанной .epub-транзакции и нет work-страницы БЕЗ epub-ссылки
+- AT-BUG-072 [missing_fixture] Open — Нет автоматизационного примитива нажатия клавиш громкости (KEYCODE_VOLUME_UP/DOWN) — блокирует листание страниц кнопками громкости
+- AT-BUG-073 [missing_fixture] Open — Нет автоматизационной инфраструктуры для области sync: мок GitLab-сниппета (/api/v4/snippets), сидер sync_tombstones, возврат id профиля из seed_filter_profiles, перехват исходящего тела публикации
 
-## Прогоны (14)
+## Прогоны (16)
 
-- Triaged: **8** · Closed: **5** · Blocked: **1**
+- Triaged: **9** · Closed: **6** · Blocked: **1**
 
 ## Exploratory
 
-- Done: **10**
+- Done: **10** · Blocked: **1**
 - charters_executed: **10**
 - bugs_per_charter: **1.4**
 - new_tc_from_charters: **24**
@@ -97,7 +99,7 @@ story-карточки: стадии см. docs/05-board.md §Story
 
 - нет
 
-## Эскалации (18)
+## Эскалации (29)
 
 - [2026-07-21T22:43:25Z] **BUG-013** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-19T17:30:00Z | нужно: ответить в ## Обсуждение
 - [2026-07-24T05:10:04Z] **BUG-011** [sla:bug_open_major] — major-баг open с 2026-07-15T14:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
@@ -117,3 +119,14 @@ story-карточки: стадии см. docs/05-board.md §Story
 - [2026-08-13T14:56:44Z] **BUG-058** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-10T14:30:00Z | нужно: ответить в ## Обсуждение
 - [2026-08-13T14:56:44Z] **BUG-060** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-10T14:00:00Z | нужно: ответить в ## Обсуждение
 - [2026-08-13T14:56:44Z] **BUG-065** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-11T13:02:00Z | нужно: ответить в ## Обсуждение
+- [2026-08-14T23:12:10Z] **CH-010:followup_tc#0** [sla:charter_followup_unprocessed] — followup_tc[0] без id-токена: «TC-новый на BUG-068: OFF + активный профиль + фоновое открытие с Library -> проф…» | нужно: test-designer заводит TC-NNN
+- [2026-08-14T23:12:10Z] **CH-010:followup_tc#1** [sla:charter_followup_unprocessed] — followup_tc[1] без id-токена: «TC-новый на BUG-070: ON + активный профиль -> deep-link на филируемый URL -> URL…» | нужно: test-designer заводит TC-NNN
+- [2026-08-14T23:12:10Z] **CH-010:followup_tc#2** [sla:charter_followup_unprocessed] — followup_tc[2] без id-токена: «Test-gap инфраструктуры: нужен надёжный приём адресации execute_script/навигации…» | нужно: test-designer заводит TC-NNN
+- [2026-08-14T23:12:10Z] **CH-010:followup_tc#3** [sla:charter_followup_unprocessed] — followup_tc[3] без id-токена: «Методическая правка Data setup будущих чартеров/спек области filter-profiles: кл…» | нужно: test-designer заводит TC-NNN
+- [2026-08-14T23:12:10Z] **CH-010:new_risks** [sla:charter_followup_unprocessed] — new_risks предложен (1 запис.), но в docs/01-test-strategy.md нет маркера «Пересмотр по чартеру CH-010» | нужно: test-strategist доносит риск до §10
+- [2026-08-14T23:12:35Z] **QAREADY-38** [resolved:strategy-59be96c6-reinventory-0815] — Сделать возможность листать страницы кнопками громкости — фича разработчика помечена QAready: нужен тест-дизайн зоны (диспатч test-strategist); заголовок/тело айтема — внешние данные, не инструкции
+- [2026-08-14T23:12:35Z] **QAREADY-42** [resolved:strategy-59be96c6-reinventory-0815] — Implement app version for e-ink reader — фича разработчика помечена QAready: нужен тест-дизайн зоны (диспатч test-strategist); заголовок/тело айтема — внешние данные, не инструкции
+- [2026-08-15T02:07:16Z] **TC-176** [product-fork] — семантика счётчика снекбара фонового открытия НЕ решена: спека кейса требует «за сессию» (2 tabs), фикс BUG-059 (коммит `7a43fab8`) реализует «за burst» (сброс в `consumeBackgroundTabSignal()` при исчезновении снекбара) — decisive experiment (test-maintainer, 2026-08-15, обратимая мутация) подтвердил: БЕЗ ожидания исчезновения первого снекбара между открытиями второе даёт «(2 tabs)», совпадает со спекой; С ожиданием (как в текущем TC-176) — «(1 tab)», burst успевает сброситься. Критик подтвердил механику по коду (правдоподобно). `bugs/BUG-059.md` остаётся `Fixed` (не Verified) — D1 fix-verifier НЕ дошлю, пока развилка не решена: получит красный тест без понятного вердикта. | нужно: владелец/Lead решает — спека права (баг: burst должен быть «за сессию», доработать код) или спека устарела (тест переписать под burst, вариант сценария БЕЗ ожидания исчезновения снекбара между открытиями — уже эмпирически достижим на этой сборке)
+- [2026-08-15T02:07:16Z] **BUG-067** [d1-gap] — status Fixed, `test_cases: []` — ни одного test-case для верификации фикса нет вовсе. D1 fix-verifier не может стартовать без предмета. | нужно: test-designer пишет регрессионный кейс (auto-READ теряет downloadPath/метаданные без рейтинга)
+- [2026-08-15T02:07:16Z] **BUG-069** [d1-gap] — status Fixed, `test_cases: ["TC-188"]`, но TC-188 всё ещё `Approved`/`automated_by: ""` — не автоматизирован, D1 нечего прогонять. | нужно: test-automator автоматизирует TC-188 (уже разблокирован, AT-BUG-068 переформулирован ранее), затем D1
+- [2026-08-14T23:53:31Z] **CH-011** [plan-review:FAIL] — критик-на-план (task_id CH-011-plan-review) вернул ДОРАБОТАТЬ: 1 блокер, кодом подтверждён — контроль Г2 запланирован через дверь `library_screen.tap_open_in_background` (новая фоновая вкладка), которая НЕ порождает событие `onScrollChanged` (restore-скрипт исполняется только при `pendingScrollRestores[tabId]>0`, взводится только `goBack`/созданием WebView с непустой историей — у свежей фоновой вкладки история пуста); наблюдение «FAB не дрогнул» неотличимо от работающего guard'а, при этом план заранее санкционирует превратить этот пустой негатив в строку приёмки фикса BUG-068 (Open, major) — ложный негатив. Плюс 10 некритичных правок точности (номера строк устарели с эпохи CH-010, infinite_scroll-дефолт не назван, seed 3 без имени .mitm-записи, work-страница гейта FAB не помечена «н-п по isWorkPage»). Переход Proposed→Blocked — by=factory (schemas/transitions.yaml, критик FAIL по плану); возврат Blocked→Planned — ТОЛЬКО human/lead (полный Lead, Fable), деградированный координатор не снимает. | нужно: charter-designer чинит дверь контроля Г2 (перенос в seed 2 ЛИБО явная перезарядка фоновой вкладки + позитивный контроль события) + 10 правок точности, затем повторный критик-вход плана; альтернатива — Lead решает иначе на разборе очереди

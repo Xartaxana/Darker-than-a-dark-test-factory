@@ -1,0 +1,1 @@
+AT-BUG-063 recovery: перезапуск эмулятора: gpu=host (source: env AO3_EMU_GPU), avd=<tasks.ps1 default> (source: default); возраст state неизвестен (updated_utc отсутствует); state-файл: C:\Users\user\AppData\Local\Temp\pytest-of-user\pytest-2887\test_recovery_env_fallback_gpu0\emulator-session.json

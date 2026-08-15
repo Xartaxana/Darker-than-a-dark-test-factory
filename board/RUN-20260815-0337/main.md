@@ -1,0 +1,382 @@
+---
+key: "RUN-20260815-0337"
+project: "AO3"
+issueType: "run"
+status: "run-triaged"
+priority: "p2"
+summary: "RUN-20260815-0337"
+assignee: "qa-agents"
+reporter: "qa-agents"
+labels: ["run"]
+components: []
+fixVersions: []
+watchers: []
+parent: null
+epic: null
+created: "2026-07-02T00:00:00Z"
+updated: "2026-07-02T00:00:00Z"
+archived: false
+resolution: null
+---
+
+# RUN-20260815-0337
+
+_Спроецировано из `runs/RUN-20260815-0337.md` (источник правды).
+Статус в нашей машине: **Triaged**._
+
+# RUN-20260815-0337 — regression (replay) на dev-local (12)
+
+## Контекст запуска
+
+Триггер: тот же `state/app-under-test.yaml` (`source_commit
+59be96c6398786d33c878dbce33cb1ecde269374`), правило rules.yaml 1, шаг 2 после
+зелёного smoke (`RUN-20260815-0149`). Окружение переиспользовано из smoke-хода
+(эмулятор/Appium/APK уже подняты этим же ходом, device не освобождался между
+segments).
+
+**Селекция (D1, `scripts/impact_select.py`)**: диапазон по умолчанию
+`cc201f789f0f..59be96c639878`, 22 изменённых файла. `wide_impact`:
+`AndroidManifest.xml`, `ao3_bridge.js`, `Ao3App.kt`, `MainActivity.kt`,
+`AppDatabase.kt`, `SyncTombstoneDao.kt`, `SyncTombstone.kt`. `unknown` (вне
+карты): `data/sync/LibraryJson.kt`, `data/sync/SyncRepository.kt`,
+`res/xml/file_paths.xml` — новая shared-folder-sync фича ещё не отражена в
+`state/impact-map.yaml`. Оба признака триггерят fail-safe → **FULL
+REGRESSION**, селекция не сузила набор. `selection.mode: full`.
+
+**Команда**: `pytest tests -m "(p0 or p1) and not live"` (`$env:AO3_MODE =
+"replay"`, через `Invoke-Pytest`), 273 selected / 467 collected (194
+deselected).
+
+## Инцидент прогона: харнесс убил фоновый процесс на ~59-й минуте (рецидив
+известного класса)
+
+Первый запуск (весь набор 273 одним процессом, синхронное ожидание
+`Wait-Process` по канону, 7 полных раундов по 500с + начало 8-го) получил
+`status: killed` от харнесса на отметке **~59.4 мин** (span по timestamp'ам
+allure-результатов: старт `23:51:54Z`, последний зафиксированный результат
+`00:51:20Z` — `3566s`), прогресс на момент убийства — **58%** (`tests\test_rating.py`
+пройден, `tests\test_rating_listing.py` — 13 из 16 кейсов). Это **пятый**
+подряд документированный случай этого класса (`RUN-20260803-2012`,
+`RUN-20260804-1624`, `RUN-20260805-0437`, `RUN-20260810-0146` — все с тем же
+почерком «убито около 45–60 мин»), в этот раз БЕЗ проактивного разбиения на
+сегменты (в отличие от `RUN-20260811-0406`, где сегментация ЗАРАНЕЕ
+предотвратила повтор). Доклад для координатора: превентивная мера
+(проактивный сплит по границам файлов до старта) существующей практикой не
+закреплена машинно — полагаться на память процедуры недостаточно, класс
+рецидивирует пятый раз.
+
+**Восстановление** (тем же ходом, устройство не освобождалось): `Get-Device`
+→ `DEVICE: emulator-5554`, Appium `/status` → `ready:true` — окружение
+пережило убийство процесса-обёртки штатно, деградации устройства нет.
+Allure-результаты первого (частичного) запуска сохранены копией
+(`allure-results` framework → `runs/RUN-20260815-0337/allure/`, 174 raw
+файла) ДО старта второго сегмента (иначе `--clean-alluredir` их бы стёр).
+Сегмент 2 — явный список оставшихся файлов от `test_rating_listing.py`
+(целиком, включая уже пройденные 13 кейсов — дедуп по `historyId` ниже
+разрешает пересечение в пользу сегмента 2 как более свежей попытки) до
+`test_visibility.py`:
+
+```
+pytest tests/test_rating_listing.py tests/test_reading_ux.py
+  tests/test_rename_name_verification_unit.py tests/test_replay_ca_check_unit.py
+  tests/test_replay_infra_probe.py tests/test_residual_proxy_guard_unit.py
+  tests/test_saf_infra_probe.py tests/test_security_backup_privacy.py
+  tests/test_security_file_access.py tests/test_security_manifest.py
+  tests/test_seed_db_schema_race_unit.py tests/test_settings.py
+  tests/test_settings_ratings_fail_closed_unit.py tests/test_side_panel.py
+  tests/test_smoke.py tests/test_swipe_to_text_settle_unit.py tests/test_tabs.py
+  tests/test_visibility.py -m "(p0 or p1) and not live"
+```
+
+Дословный хвост сегмента 2:
+```
+tests\test_tabs.py ...........F                                          [ 94%]
+tests\test_visibility.py ......                                          [100%]
+AT-BUG-026 device-liveness guard: recoveries this session = 0/2
+==== 1 failed, 111 passed, 31 deselected, 2 warnings in 2399.07s (0:39:59) ====
+PYTEST_EXIT=1
+```
+
+Сегмент 1 (killed) `PYTEST_EXIT` неизвестен — процесс убит харнессом до
+`sessionfinish`, счётчик `recoveries` для него НЕ печатался (правило 3
+промпта test-runner: строки нет — pytest не дожил до финала; поле не
+подменяю). Сегмент 2 дошёл до `sessionfinish` штатно, `PYTEST_EXIT=1` (одно
+контентное падение, не env), `recoveries this session = 0/2` — frontmatter
+`recoveries: "0/2"` отражает ТОЛЬКО сегмент 2 (сегмент 1 — пробел, явно
+оговорён здесь, не молчание).
+
+## Слияние allure-результатов (dedup по historyId)
+
+`fullName` в allure-pytest НЕ включает параметризацию (коллизии у
+параметризованных тестов) — дедуп сделан по `historyId` (уникален на
+параметризацию, включает retry-группу), при пересечении (13 историй,
+пройденных в обоих сегментах) взята версия из **сегмента 2** (последняя по
+`stop`). Witness слияния (дословный вывод скрипта-анализа):
+
+```
+Segment 1 (partial, killed): raw files 174, unique tests (dedup by historyId) 174
+Segment 2 (recovery, full):  raw files 112, unique tests (dedup by historyId) 112
+overlap historyIds (seg2 authoritative): 13
+combined unique tests: 273
+status counts (raw combined): {'passed': 271, 'failed': 2}
+TOTALS: passed=271 failed=2 skipped=0 total=273
+```
+
+`273` совпадает с `273 selected` полного набора — расхождений/пропавших
+тестов между сегментами нет. `runs/RUN-20260815-0337/allure/` содержит оба
+сырых набора результатов (1590 файлов, включая дубли reruns — Allure сам
+разрешает дубли по `historyId` при генерации отчёта).
+
+## Падения (факт, без вердикта — не мандат test-runner)
+
+| Тест (TC) | Ошибка (кратко) | Allure статус |
+|---|---|---|
+| test_delete_downloaded_file_sweeps_both_download_locations (TC-154, `@pytest.mark.p1`) | `AssertionError: диалог повторного скана после удаления не показал ожидаемое "No .html files found in the download folder."` (`test_downloads.py`, докстрин: «регресс-замок BUG-047») | failed |
+| test_background_open_snackbar_counts_background_opens_not_total (TC-176, `@pytest.mark.p1`) | `AssertionError: текст snackbar не совпал с ожидаемым: 'Opened in background (1 tab)' != 'Opened in background (2 tabs)'` (`test_tabs.py`, докстрин: «регресс-замок на BUG-059») | failed |
+
+Триаж не выношу (не мандат test-runner) — два факта для failure-analyst.
+
+## Контекст триажа (не мой мандат, для сведения failure-analyst)
+
+`TC-176` — регресс-замок на `BUG-059` (счётчик снекбара фонового открытия);
+среди коалесцированных коммитов этой сборки есть `7a43fab8`, заявленный как
+фикс `BUG-059` (D1-верификация ожидается следующим шагом, не этим прогоном).
+Факт для триажа: тест ВСЁ ЕЩЁ красный, но с ДРУГИМ фактическим значением, чем
+в прошлом известном красном (`RUN-20260811-0406`: там тест тоже был `failed`
+как ожидаемый red-lock — сам текст прежнего actual не переснимал, не
+утверждаю совпадение/несовпадение сигнатуры без сверки). Здесь actual —
+`'Opened in background (1 tab)'` (не `(3 tabs)`, что было бы «сырым» багом
+BUG-059 до фикса, судя по описанию бага в докстринге теста). Это МЕНЯЕТ
+диагностическую картину (иное значение, не то же самое падение) — решение
+про сохранение/снятие red-lock и про судьбу D1-верификации BUG-059 не мой
+мандат, передаю как факт.
+
+`TC-154` отсутствует в `tc_results` прошлого triaged-baseline
+(`RUN-20260811-0406`) — новый тест-кейс в наборе (появился в репозитории
+после того прогона), сравнение «было ли красным раньше» невозможно.
+
+## Сверка с baseline (владелец — test-runner, правило 4а CLAUDE.md)
+
+Последний Triaged regression-прогон с полем `source_commit` в frontmatter —
+`RUN-20260811-0406` (`source_commit: cc201f789f0fb123722bbba7b29b8e0c6412dac1`).
+Проверка предковости ЭТИМ ходом:
+
+```
+. D:\AO3_tests\scripts\env.ps1
+git -C D:\AO3_tests\app-under-test merge-base --is-ancestor cc201f789f0fb123722bbba7b29b8e0c6412dac1 59be96c6398786d33c878dbce33cb1ecde269374
+EXIT=0
+```
+
+`EXIT=0` → baseline **ЯВЛЯЕТСЯ предком** текущей сборки, валиден для сверки.
+
+Красно-зелёная дельта против baseline (`TC-085` там `failed`/FLAKY-quarantined,
+`TC-176` там `failed`/red-lock; `TC-154` там отсутствовал): здесь `TC-085`
+зелёный (согласуется с прошлым вердиктом FLAKY, не регрессия), `TC-176`
+по-прежнему красный (см. «Контекст триажа» выше — факт про изменившееся
+actual-значение важен для D1), `TC-154` — новый красный без baseline для
+сравнения. Прочие TC baseline — зелёные и здесь. Содержательный триаж не мой
+мандат.
+
+## Дефекты-собратья (D-0043)
+
+- Класс «фоновый job харнесса убит на отметке ~45–60 мин» — **пятое**
+  документированное срабатывание (`RUN-20260803-2012`, `RUN-20260804-1624`,
+  `RUN-20260805-0437`, `RUN-20260810-0146`, этот прогон). Известная
+  превентивная мера (проактивный сплит на сбалансированные сегменты до
+  старта, применена в `RUN-20260811-0406`) в этом прогоне не была применена
+  заранее — только реактивно после первого убийства. Доклад координатору:
+  практика существует, но не закреплена ни в промпте test-runner, ни машинно
+  (нет проверки «набор > N тестов → сплит по умолчанию»). Не расширяю scope
+  (сам механизм не меняю — не мой мандат).
+- Тот же паттерн race, что документирован в `AT-BUG-026`/`AT-BUG-047`, здесь
+  НЕ наблюдался (`recoveries this session = 0/2` в сегменте 2, ни одного
+  device-recovery за весь регресс) — фиксирую отсутствие, не молчанием.
+
+## Падения и триаж (failure-analyst, 2026-08-15T01:48:05Z)
+
+| Тест (TC) | Ошибка (кратко) | Вердикт | Действие | Ссылка |
+|---|---|---|---|---|
+| `test_delete_downloaded_file_sweeps_both_download_locations` (TC-154) | `AssertionError: текст завершения скана не совпал с ожидаемым «No .html files found in the download folder.»` — фактический текст диалога (page source): `«No downloaded files found in the download folder.»` | **APP_CHANGED** | нового бага НЕ завожу: строку намеренно изменил коммит `6e64b1f` (EPUB-формат); test-maintainer обновляет ожидаемый литерал в `test_downloads.py` (2 места) + `TC-154.md`/`TC-037.md`, test-strategist фиксирует смену терминологии | `test-cases/downloads/TC-154.md`; `framework/tests/test_downloads.py:1135` и `:602`; `app-under-test .../ui/settings/SettingsScreen.kt:1487`; артефакты: `runs/RUN-20260815-0337/allure/1f700192-cf5a-42e9-b8d7-dbb60de072f6-attachment.png` (скриншот), `.../78d86f9e-a8ca-41ea-874b-f76b9479d7fe-attachment.xml` (page source), `.../39ac64b9-ea2d-482a-a23c-e86f9891cb75-attachment.txt` (logcat) |
+| `test_background_open_snackbar_counts_background_opens_not_total` (TC-176, `red_lock: BUG-059`) | `AssertionError: текст snackbar не совпал с ожидаемым: 'Opened in background (1 tab)' != 'Opened in background (2 tabs)'` | **APP_CHANGED** | нового бага НЕ завожу; **pre-fix сигнатура BUG-059 `(3 tabs)` БОЛЬШЕ НЕ ВОСПРОИЗВОДИТСЯ** (сигнал для D1-верификации BUG-059 — верификация остаётся за fix-verifier, я её не подменяю). test-maintainer перепиcывает ожидание кейса/теста под burst-семантику, test-reviewer (F1) снимает `red_lock`, test-strategist фиксирует изменившуюся семантику счётчика | `test-cases/tabs/TC-176.md`; `bugs/BUG-059.md`; `framework/tests/test_tabs.py:940`; коммит `7a43fab8`; артефакты: `runs/RUN-20260815-0337/allure/70299005-8c09-471b-9aa3-e21a4977279b-attachment.png` (скриншот), `.../17622f7d-1bc0-4def-aaf5-99835511e17e-attachment.xml` (page source: `text="Opened in background (1 tab)"`), `.../67acf315-fd65-4310-8c94-23d175d2dcdd-attachment.txt` (logcat) |
+
+Baseline для сверки — `RUN-20260811-0406` (`status: Triaged`, `source_commit
+cc201f789f0fb123722bbba7b29b8e0c6412dac1`); предковость перепроверена мной
+СВОИМ ходом (не тиражирую чужой вывод):
+
+```
+. D:\AO3_tests\scripts\env.ps1
+git -C D:\AO3_tests\app-under-test merge-base --is-ancestor cc201f789f0fb123722bbba7b29b8e0c6412dac1 59be96c6398786d33c878dbce33cb1ecde269374
+EXIT=0
+```
+
+Диапазон коммитов приложения baseline→эта сборка (`git -C app-under-test log
+--oneline cc201f789f0f..59be96c63987`, 9 коммитов): `59be96c` sync через
+GitLab-сниппет, `6e64b1f` EPUB/external reader/Library rating, `24b7b13`
+shared-folder sync, `2a1ceca` floating page-turn, `bc32c27` e-ink mode,
+`f8e66c3` volume-button scrolling, `07805a9` preserve downloadPath on auto-READ,
+`7a43fab` background-snackbar counter, `85fbed4` Copy URL feedback.
+
+### TC-154 — APP_CHANGED (намеренная смена текста диалога, коммит `6e64b1f`)
+
+**Ожидаемое (спека кейса):** после удаления и ручного скана диалог «Scan
+complete» гласит дословно «No .html files found in the download folder.»
+(`TC-154.md` And-пункт, литерал взят из device-witness fix-verifier по BUG-047
+на сборке `cc201f78`).
+**Фактическое (эта сборка):** диалог «Scan complete» ПОКАЗАН, текст —
+«No downloaded files found in the download folder.» (дословно из page source
+падения; в дереве всего 4 текстовых узла: `Scan complete`, эта строка, `OK`,
+пустой).
+
+Причина — коммит `6e64b1f` «Add EPUB download format, external-reader hand-off,
+and Library rating», который вводит второй формат загрузки и приводит
+терминологию UI в соответствие («Scan/delete sweeps now match both
+extensions»). Дословный дифф коммита:
+
+```
+-                    if (s.totalFound == 0) "No .html files found in the download folder."
++                    if (s.totalFound == 0) "No downloaded files found in the download folder."
+```
+
+(и рядом подзаголовок настройки: `"Re-link .html files in the folder above…"` →
+`"Re-link downloaded files in the folder above…"`). Изменение НАМЕРЕННОЕ и
+самосогласованное с фичей — не дефект: с появлением `.epub` слово «.html» в
+тексте стало бы ложным.
+
+**Почему это не APP_BUG:** проверяемое кейсом ПОВЕДЕНИЕ (регресс-замок BUG-047)
+на месте — все предшествующие шаги зелёные: silent-скан релинкнул 1 файл,
+`Delete downloaded file` подмёл ОБА файла `ao3Id=900000001` (device-side `ls`
+пуст), карточка осталась на Download-иконке, работа исчезла из вкладки FILES; а
+сам повторный скан отчитался ИМЕННО «ничего не найдено» (`totalFound == 0`) —
+семантика And-пункта выполнена, разошёлся только литерал.
+**Почему это не TEST_BUG:** тест соответствовал приложению на предыдущей сборке
+и падение вызвано изменением на стороне приложения, а не дефектом теста.
+**Почему это не FLAKY/ENV_ISSUE и почему не перезапускал изолированно:**
+падение детерминировано по построению — сравнение с константной строкой,
+которой в коде сборки физически нет (`SettingsScreen.kt:1487` — единственное
+место рендера этого текста); устройство/Appium были живы (весь сетап-цепочка из
+12 шагов зелёная, `recoveries 0/2`), в logcat нет FATAL/AndroidRuntime, а
+записи `no such element` — это ожидаемые промахи поллинга по устаревшему тексту.
+Перезапуск дал бы ту же строку и стоил бы device-времени.
+
+**Остаток (не мой мандат, для test-maintainer):** последний And кейса
+(«карточка ОСТАЁТСЯ на Download-иконке ПОСЛЕ скана») в этом прогоне не был
+достигнут — тест упал на предыдущем ассерте; после правки литерала он
+проверится штатно.
+
+### TC-176 — APP_CHANGED (фикс BUG-059 выбрал ДРУГУЮ семантику счётчика, чем предполагал кейс)
+
+**Фактическое значение из артефактов ЭТОГО прогона (перепроверено, не со слов
+test-runner):** allure-result `30ee69aa-…-result.json` — `status: failed`,
+message `'Opened in background (1 tab)' != 'Opened in background (2 tabs)'`;
+page source падения независимо подтверждает `text="Opened in background
+(1 tab)"`.
+
+**Три значения рядом:**
+
+| Источник | Текст снекбара после ВТОРОГО фонового открытия |
+|---|---|
+| Спека кейса TC-176 (ожидание) | «Opened in background (2 tabs)» |
+| pre-fix сигнатура BUG-059 (baseline `RUN-20260811-0406`, вердикт APP_BUG) | «Opened in background (3 tabs)» |
+| Эта сборка `59be96c6` (факт) | «Opened in background (1 tab)» |
+
+Значение не совпадает НИ со спекой, НИ с pre-fix — значит ветка «фикс сработал,
+кейс уже поведенчески зелёный» НЕ применима буквально, но и «тот же баг» —
+неверно. Разбор:
+
+Коммит `7a43fab8` «Count only background-opened tabs in the background-tab
+snackbar» (Refs #32 = BUG-059) НАМЕРЕННО заменил семантику счётчика, цитата
+сообщения коммита: *«The signal carried the total open tab count (including tabs
+already open, like the ever-present Home tab) instead of the number opened in
+background **during the current burst**»*. Код:
+
+```
+-data class BackgroundTabOpen(val seq: Long, val tabCount: Int)
++data class BackgroundTabOpen(val seq: Long, val openedCount: Int)
+...
++    // Background opens since the last consumed snackbar — the running "(N tabs)" count.
++    private var backgroundOpenBurst = 0
+     fun consumeBackgroundTabSignal() {
++        backgroundOpenBurst = 0
+```
+
+Тем же коммитом обновлена и спецификация приложения (`PROJECT.md`):
+«`openedCount` is the number opened in background during the current burst
+(resets when the snackbar is consumed), not the total tab count».
+
+**Почему `(1 tab)` — корректное поведение, а не новый APP_BUG.** Сценарий
+TC-176 НАМЕРЕННО ждёт ПОЛНОГО исчезновения первого снекбара перед вторым
+открытием (шаг «снекбар показан, затем дождались исчезновения» — зелёный).
+Исчезновение = `showSnackbar` вернулся = `consumeBackgroundTabSignal()`
+отработал = burst обнулён. Второе открытие — новый burst из одной вкладки, и
+`(1 tab)` есть ТОЧНОЕ «число вкладок, открытых в фоне» для этого сообщения.
+Более того, ровно этого требовал сам баг: `bugs/BUG-059.md` Then (ожидалось) —
+«Снекбар показывает «Opened in background (1 tab)»» для одиночного фонового
+открытия. Симптом бага (общее число, включая Home) не воспроизводится.
+Кумулятивный счёт «(2 tabs)» — предположение ДИЗАЙНА кейса (раздел «Почему
+сценарий строится на ДВУХ открытиях» + директива CH-009 «кейс на "1 tab" не
+писать», обоснованная тем, что при формуле ОБЩЕГО числа единица недостижима);
+после фикса это обоснование отпало, а сессионно-кумулятивную семантику
+приложение никогда не обещало.
+
+**Почему APP_CHANGED, а не TEST_BUG:** первопричина лежит на стороне
+приложения (намеренная смена семантики коммитом, с обновлением PROJECT.md), а
+не в дефекте теста — тест верно реализует ту редакцию кейса, что была написана
+до фикса. Маршрут APP_CHANGED (test-maintainer обновляет кейс+тест,
+test-strategist фиксирует) — ровно нужный здесь. Формальная оговорка D9 «без
+тикета» не выполняется дословно (тикет есть — BUG-059, это его фикс), поэтому
+фиксирую подвид явно: *«поведение изменено намеренно фиксом тикета, но в
+семантике, УЖЕ которой предполагал кейс»*. Ни `APP_BUG` (поведение
+соответствует задумке кода и спеке приложения), ни `FLAKY`/`ENV_ISSUE`
+(детерминированное расхождение литералов; 10 предшествующих шагов зелёные,
+`wait_persisted_tab_count` 1→2→3 подтверждает, что оба фоновых открытия
+реально произошли; logcat без FATAL) не подходят.
+
+**Наблюдение для D1-верификации BUG-059 (не подменяю fix-verifier).** На сборке
+`59be96c6` симптом BUG-059 («(3 tabs)» — общее число вкладок) НЕ
+воспроизводится; вместо него наблюдается `(1 tab)` — значение, совпадающее с
+Then-ожиданием самого бага для одиночного фонового открытия. Это позитивный
+сигнал «BUG-059 похоже исправлен»; окончательный вердикт и переход
+`Fixed → Verified` (включая ВТОРУЮ дверь — long-press по ссылке в WebView,
+`BrowserScreen.kt`, которую баг требовал закрыть тем же фиксом) — за
+fix-verifier по правилу D1.
+
+**Судьба `red_lock`.** Я его не трогаю (поле — мандат test-reviewer/F1). Факт
+для F1: замок на BUG-059 больше не описывает наблюдаемое падение — кейс красен
+из-за устаревшего ожидания, а не из-за незакрытого бага.
+
+## Дефекты-собратья триажа (D-0043, failure-analyst)
+
+Класс обоих вердиктов один: **устаревший строковый/числовой литерал ожидания
+после намеренного изменения приложения**. Аналоги, замеченные рядом (scope не
+расширяю, ничего не правлю):
+
+1. **`TC-037` / `test_downloads.py:602`** — тот же литерал «No .html files found
+   in the download folder.» в кейсе `test-cases/downloads/TC-037.md:68` и в
+   тесте `test_manual_scan_for_downloads_shows_dialog_on_zero_files`. Тест
+   помечен `p3` и в этот регресс (`(p0 or p1)`) НЕ попал — упадёт при первом же
+   p2/p3-прогоне. Латентный красный той же причины; чинить одним диффом с
+   TC-154 (`framework/tests/test_downloads.py` строки 602 и 1135, плюс
+   `requirements`-цитата в `TC-154.md:14` и текст `TC-154.md:49,133`).
+2. **Вторая дверь фонового открытия не покрыта ассертом счётчика.**
+   `bugs/BUG-059.md` явно требует закрыть ОБЕ двери (long-press по карточке
+   Library и long-press по ссылке в WebView, TC-026), а коммит `7a43fab8`
+   утверждает «Both doors … route through openTab, so one counter covers both».
+   Проверка ТЕКСТА счётчика существует ровно в одном месте
+   (`framework/tests/test_tabs.py:940`, TC-176) — по второй двери счётчик не
+   ассертируется никем (TC-026 в этом прогоне зелёный, но он про сам факт
+   открытия, не про число). Для fix-verifier/test-strategist: D1-верификация
+   BUG-059 на одной двери неполна.
+3. **Терминологический сдвиг `.html` → «downloaded» шире одного диалога.** Тем
+   же коммитом `6e64b1f` изменён и подзаголовок настройки «Re-link .html files
+   in the folder above…» (в тестах/кейсах не используется — сверено grep'ом с
+   позитивным контролем, ложных негативов нет). Но сама фича (EPUB, отдельный
+   `Download format`, hand-off во внешнюю читалку, `FileProvider`) —
+   непокрытая площадь, о которой стоит знать test-strategist: карта
+   `state/impact-map.yaml` эти файлы уже не знает (см. `selection` этого
+   прогона: `unknown`-файлы).
+
+## Условия закрытия прогона (Closed)
+- [x] Каждое падение имеет вердикт и связанное действие (баг / фикс теста / карантин) — оба APP_CHANGED, действие: test-maintainer + test-strategist (новых баг-артефактов не заводится).
+- [x] Baseline-сверка выполнена (ancestor, EXIT=0).
+- [x] `tc_results` заполнен из allure-results (слияние двух сегментов по historyId, 209 TC-меток).
+- [x] `selection` зафиксирован (full, wide_impact + unknown).
