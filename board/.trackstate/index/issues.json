@@ -2053,7 +2053,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-08-15T02:04:00Z",
+    "updated": "2026-08-15T20:45:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -7151,7 +7151,7 @@
     "epicPath": null,
     "summary": "Нет харнесса для управляемого JS-состояния document.head/body/readyState — блокирует TC-195/TC-196 (bridge-init-retry-on-incomplete-dom)",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -7160,8 +7160,8 @@
       "test_case:TC-196",
       "sev:minor"
     ],
-    "updated": "2026-08-13T22:52:02Z",
-    "resolution": null,
+    "updated": "2026-08-15T21:05:54Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -7387,6 +7387,49 @@
       "sev:minor"
     ],
     "updated": "2026-08-15T19:25:47Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-077",
+    "path": "board/AT-BUG-077/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "test_heartbeat_wrap.py::test_happy_path_order_and_child_env падает детерминированно, когда `python -m pytest scripts/tests` запущен ИЗ сессии, уже несущей AO3_LOOP_HOLDER (вложенный heartbeat)",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:minor"
+    ],
+    "updated": "2026-08-15T20:45:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-078",
+    "path": "board/AT-BUG-078/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "TC-026 (long-press ссылки в WebView) не ассертирует ТЕКСТ снекбара «Opened in background (N tabs)» — дверь (б) BUG-059 наблюдаемо не покрыта",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-026",
+      "sev:minor"
+    ],
+    "updated": "2026-08-15T21:19:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -7919,16 +7962,17 @@
     "epicPath": null,
     "summary": "Счётчик снекбара «Opened in background (N tabs)» показывает общее число вкладок вместо числа открытых в фоне",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "test_case:TC-176",
+      "test_case:TC-026",
       "sev:minor"
     ],
-    "updated": "2026-08-14T23:12:36Z",
-    "resolution": null,
+    "updated": "2026-08-15T21:19:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -8393,14 +8437,14 @@
     "epicPath": null,
     "summary": "RUN-20260815-0337",
     "issueType": "run",
-    "status": "run-triaged",
+    "status": "run-closed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "run"
     ],
     "updated": "2026-07-02T00:00:00Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -8418,7 +8462,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-writing-cases",
-      "регресс сборки: smoke RUN-20260815-0149 49/49 · чисто · regression RUN-20260815-0337 271/273 · разобрано · новых багов в прогоне: 0",
+      "регресс сборки: smoke RUN-20260815-0149 49/49 · чисто · regression RUN-20260815-0337 271/273 · чисто · новых багов в прогоне: 0",
       "фич без кейсов: 0/2",
       "черновиков: 1",
       "багов на кейсах стори: 3"
@@ -8442,7 +8486,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-covered",
-      "регресс сборки: smoke RUN-20260815-0149 49/49 · чисто · regression RUN-20260815-0337 271/273 · разобрано · новых багов в прогоне: 0",
+      "регресс сборки: smoke RUN-20260815-0149 49/49 · чисто · regression RUN-20260815-0337 271/273 · чисто · новых багов в прогоне: 0",
       "зелёные в RUN-20260815-0337: 5/5",
       "багов на кейсах стори: 0"
     ],
@@ -8465,7 +8509,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-review",
-      "регресс сборки: smoke RUN-20260815-0149 49/49 · чисто · regression RUN-20260815-0337 271/273 · разобрано · новых багов в прогоне: 0",
+      "регресс сборки: smoke RUN-20260815-0149 49/49 · чисто · regression RUN-20260815-0337 271/273 · чисто · новых багов в прогоне: 0",
       "багов на кейсах стори: 1"
     ],
     "updated": "2026-08-14T23:12:35Z",
@@ -8487,7 +8531,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-writing-cases",
-      "регресс сборки: smoke RUN-20260815-0149 49/49 · чисто · regression RUN-20260815-0337 271/273 · разобрано · новых багов в прогоне: 0",
+      "регресс сборки: smoke RUN-20260815-0149 49/49 · чисто · regression RUN-20260815-0337 271/273 · чисто · новых багов в прогоне: 0",
       "фич без кейсов: 5/8",
       "багов на кейсах стори: 0"
     ],

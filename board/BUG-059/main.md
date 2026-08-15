@@ -2,27 +2,27 @@
 key: "BUG-059"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p2"
 summary: "Счётчик снекбара «Opened in background (N tabs)» показывает общее число вкладок вместо числа открытых в фоне"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["bug", "test_case:TC-176", "sev:minor"]
+labels: ["bug", "test_case:TC-176", "test_case:TC-026", "sev:minor"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-14T23:12:36Z"
-updated: "2026-08-14T23:12:36Z"
+created: "2026-08-15T21:19:00Z"
+updated: "2026-08-15T21:19:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Счётчик снекбара «Opened in background (N tabs)» показывает общее число вкладок вместо числа открытых в фоне
 
 _Спроецировано из `bugs/BUG-059.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # BUG-059 — Счётчик снекбара показывает общее число вкладок, а не число открытых в фоне
 
@@ -61,10 +61,36 @@ _Спроецировано из `bugs/BUG-059.md` (источник правд�
 
 ## Верификация
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
+|---|---|---|---|---|
+| 2026-08-15 | source_commit 59be96c6398786d33c878dbce33cb1ecde269374, dev-local versionCode 12, built_at 2026-08-14T23:14:07Z (coalesced_commits содержит заявленный фикс 7a43fab8), apk_sha256 bf17f15f… | TC-176 (device, свежий прогон): `Invoke-Pytest -k test_background_open_snackbar_counts_background_opens_not_total -q` → `1 passed, 466 deselected in 35.93s`, `PYTEST_EXIT=0`. Allure result `6151ffea-…-result.json` прочитан дословно: финальный шаг Then — `снекбар «Opened in background» показывает дословно «'Opened in background (2 tabs)'»` → `passed` (burst-счётчик, не общее число 3 вкладок — старая семантика бага дала бы «(3 tabs)» и уронила бы ассерт). Дверь (а) закрыта device-witness'ом. — TC-026 (код-эмпирика, НЕ device-witness числа): автотест `test_long_press_link_opens_background_tab_without_switching` (строки 279-316) прогонялся ранее (RUN-20260815-0337, зелёный) и подтверждает факт открытия/переключения, но НЕ ассертирует текст снекбара — grep тела теста подтверждает отсутствие вызова `assert_opened_in_background_snackbar_text`. Взамен — структурная сверка кодом: `BrowserScreen.kt:718` (дверь б) и `MainActivity.kt:607` (дверь а, Library-overlay `onOpenInBackground`) вызывают ОДНУ и ту же `BrowserViewModel.openTab` (`:271-298`), которая строит сигнал единым приватным счётчиком `++backgroundOpenBurst` (`:281`) без ветвления по источнику вызова — подтверждает дословную формулировку commit message `7a43fab8` «Both doors route through openTab, so one counter covers both». Остаточный риск двери (б) (регрессия, ломающая ТОЛЬКО путь `BrowserScreen.kt:718`, не поймана бы ни одним текущим тестом) вынесен в `AT-BUG-078.md` (test_debt, missing_evidence), связан с этим багом. | Дверь (а): PASS (зелёный device-прогон, различающий ассерт). Дверь (б): код-эмпирика PASS (общий `openTab`-путь подтверждён чтением), наблюдаемое покрытие неполное — долг заведён. | **Verified** — обе двери фикс закрывает по коду; дверь (а) подтверждена живым прогоном, дверь (б) — структурным чтением кода (замена по DoD-инструкции диспатча: код-эмпирика вместо device-witness там, где наблюдаемого ассерта не существует), остаточный наблюдаемый риск явно передан в AT-BUG-078 (test_debt-долг), не блокирует закрытие продуктового бага. |
 
 ## Обсуждение
 
 **[gitlab:dyakagreen @ 2026-08-14T20:16:22.023Z]** Метка `qa-status::QAready` выставлена на GitLab issue — переход Open→Fixed зафиксирован автоматически (второй канал, docs/06 §3а, gitlab-label).
+
+**2026-08-15T21:19Z — fix-verifier, D1-верификация.** Обе двери, названные в
+«## Анализ», разобраны раздельно. Дверь (а) — TC-176 — прогнана заново на
+актуальной сборке (не reuse-witness: свежий прогон в этом же ходе),
+PYTEST_EXIT=0, allure result прочитан дословно (см. таблицу выше), текст
+снекбара «(2 tabs)» на burst из 2 фоновых открытий при 3 фактических
+вкладках — прямое доказательство, что старая (баговая) семантика
+«newTabs.size» устранена. Дверь (б) — TC-026 — существующий автотест НЕ
+ассертирует число в тексте снекбара (проверено чтением тела теста); замена
+— структурное чтение кода (`BrowserScreen.kt:718`/`MainActivity.kt:607` →
+общий `BrowserViewModel.openTab`), подтверждающее буквально то, что
+утверждает commit message фикса. Это НЕ device-witness для двери (б), явно
+называю это код-эмпирикой с остаточным наблюдаемым риском — заведён
+`AT-BUG-078.md` (test_debt, `missing_evidence`), связан с этим багом через
+оба `test_cases`. `status: Fixed → Verified`, `known_issue` уже был
+`"false"` (оставляю), `fixed_in` заполнен фактическим source_commit
+сборки-носителя фикса.
+
+**Дефекты-собратья (D-0043):** сам факт, что TC-026 был автоматизирован
+(2026-07-19, `AT-BUG-018.md`) РАНЬШЕ появления BUG-059/TC-176 и с самого
+начала не проверял точный текст снекбара — не изолированный случай; при
+последующем ревью TC-176 (F1, `2026-08-15T15:31`) уже отмечен похожий класс
+(`rule3`-рассогласование кейс/тест) как адресованный test-maintainer'у
+батчем — тот же адресат подходит и для AT-BUG-078.
 
 ## Чек-лист качества
 - [x] Проверены дубликаты (поиск по открытым багам)

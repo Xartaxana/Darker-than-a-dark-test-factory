@@ -1,20 +1,20 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-15T20:18:16Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-15T21:30:47Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
 - Сборка: dev-local (versionCode 12), commit `59be96c6`, built_at 2026-08-14T23:14:07Z
-- smoke: Closed · smoke_freshness_hours: **20.4** (RUN-20260815-0149)
-- regression: Triaged · regression_freshness_hours: **136.5** (RUN-20260810-0146)
-- canary: Triaged · canary_freshness_hours: **272.6** (RUN-20260804-1317)
+- smoke: Closed · smoke_freshness_hours: **21.6** (RUN-20260815-0149)
+- regression: Triaged · regression_freshness_hours: **137.7** (RUN-20260810-0146)
+- canary: Triaged · canary_freshness_hours: **273.8** (RUN-20260804-1317)
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **1**
 - p0_automation_coverage: **100%** (37/37)
 - p1_automation_coverage: **52%** (87/167)
-- Test debt открыт: **8** — AT-BUG-069, AT-BUG-070, AT-BUG-071, AT-BUG-072, AT-BUG-073, AT-BUG-074, AT-BUG-075, AT-BUG-076
+- Test debt открыт: **10** — AT-BUG-069, AT-BUG-070, AT-BUG-071, AT-BUG-072, AT-BUG-073, AT-BUG-074, AT-BUG-075, AT-BUG-076, AT-BUG-077, AT-BUG-078
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
 - Untriaged: **0** · untriaged_failure_age: **0**
@@ -51,7 +51,7 @@ story-карточки: стадии см. docs/05-board.md §Story
 
 ## Баги (31)
 
-- Open: **16** · Fixed: **3** · Verified: **11** · Intended: **1**
+- Open: **16** · Fixed: **2** · Verified: **12** · Intended: **1**
 - BUG-011 [major] Open — Restore from backup пропускает работы молча, если файл с тем же ao3Id уже лежит в папке загрузок
 - BUG-013 [minor] Open — Смена темы, затем немедленный kill процесса (<100 мс) теряет theme_mode — выбор темы не персистится
 - BUG-016 [major] Open — Undo закрытия вкладки на потолке 10 молча теряет вкладку и её снапшот
@@ -73,9 +73,8 @@ story-карточки: стадии см. docs/05-board.md §Story
 
 - BUG-012 [minor] Intended — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
 
-## Test debt (10)
+## Test debt (11)
 
-- AT-BUG-067 [missing_fixture] Fixed — Нет харнесса для управляемого JS-состояния document.head/body/readyState — блокирует TC-195/TC-196 (bridge-init-retry-on-incomplete-dom)
 - AT-BUG-068 [broken_environment] Blocked — navigator.clipboard.writeText() отклоняется DOMException 'Write permission denied' в тестовом WebView — блокирует Then «Copied!» TC-188
 - AT-BUG-069 [flaky_test] Open — Двойной раздельный seed()-round-trip после AT-BUG-044-фикса эмпирически дал 'no such table: work_ratings' один раз (не воспроизведено изолирующим экспериментом 20/20) — кандидат: _pull_baseline игнорирует возврат pull_app_file для -wal/-shm
 - AT-BUG-070 [missing_fixture] Open — Нет надёжного приёма адресации execute_script/навигации к КОНКРЕТНОЙ НЕ-нулевой вкладке — sticky WebView context блокирует контраст-дверь Г2 (клик по ссылке) и точный Back-замер на deep-link-вкладке (CH-010)
@@ -85,10 +84,12 @@ story-карточки: стадии см. docs/05-board.md §Story
 - AT-BUG-074 [missing_fixture] Open — render_work_page_html не несёт #chapters/.userstuff.module ни узлов dd.fandom/dd.words — блокирует TC-256 (auto-READ при дочитывании, onWorkFinished)
 - AT-BUG-075 [flaky_test] Open — TC-176 burst-окно: натуральный запас tap1->tap2 ~0.7-0.85с даже после классовой правки open_in_background_via_overlay — ниже критик-ориентира ≥1с, дальнейшее ужатие требует правок вне манифеста rework attempt2
 - AT-BUG-076 [missing_fixture] Open — Методическая норма Data Setup «auto_apply_filter материализуется только фактическим переключением тумблера» жила только прозой закрытого CH-010 — не была зафиксирована постоянным носителем, читаемым будущими test-designer-сессиями
+- AT-BUG-077 [broken_environment] Open — test_heartbeat_wrap.py::test_happy_path_order_and_child_env падает детерминированно, когда `python -m pytest scripts/tests` запущен ИЗ сессии, уже несущей AO3_LOOP_HOLDER (вложенный heartbeat)
+- AT-BUG-078 [missing_evidence] Open — TC-026 (long-press ссылки в WebView) не ассертирует ТЕКСТ снекбара «Opened in background (N tabs)» — дверь (б) BUG-059 наблюдаемо не покрыта
 
 ## Прогоны (16)
 
-- Triaged: **9** · Closed: **6** · Blocked: **1**
+- Triaged: **8** · Closed: **7** · Blocked: **1**
 
 ## Exploratory
 

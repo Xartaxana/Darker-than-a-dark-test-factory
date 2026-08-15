@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-15T02:04:00Z"
-updated: "2026-08-15T02:04:00Z"
+created: "2026-08-15T20:45:00Z"
+updated: "2026-08-15T20:45:00Z"
 archived: false
 resolution: null
 ---
@@ -144,6 +144,24 @@ download folder.»` (файлов этого `ao3Id` для релинка не 
   «Заметки для автоматизации» — SAF-подпапочная техника вместо закрытого
   BUG-021-пути. `status`/`automated_by` не менялись (`Approved`, design-only,
   как и раньше).
+- **Литерал изменён 2026-08-14 (коммит `a257ed4`, ход
+  `app-changed-59be96c6-fixes-0814`), НЕЗАВИСИМО ПЕРЕПРОВЕРЕН
+  2026-08-15T20:38Z — test-maintainer, APP_CHANGED (`RUN-20260815-0337`,
+  коммит приложения `6e64b1f` «Add EPUB download format, external-reader
+  hand-off, and Library rating»):** литерал диалога Scan complete сменился
+  НАМЕРЕННО (терминология «.html»→«downloaded» приведена в соответствие с
+  новым форматом `.epub`, `SettingsScreen.kt:1487`; тем же коммитом также
+  «Download HTML when rating a work as Favorite» → «Download when rating a
+  work as Favorite» — не ассертируется ни в одном тесте/кейсе, тумблер
+  локализуется по заголовку `Auto-download favorite works`) — And-пункт
+  (строка 49) и автотест (`test_downloads.py:602,1135`) обновлены с «No
+  .html files found in the download folder.» на «No downloaded files found
+  in the download folder.»; проверяемое поведение (регресс-замок BUG-047)
+  не ослаблено — And по-прежнему сверяет `totalFound == 0` и удержание
+  Download-иконки. Собрат `TC-037` починен тем же диффом. Witness
+  перепроверки 2026-08-15T20:38Z:
+  `test_delete_downloaded_file_sweeps_both_download_locations` PASSED на
+  сборке `59be96c6` (`1 passed in 78.89s`).
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»

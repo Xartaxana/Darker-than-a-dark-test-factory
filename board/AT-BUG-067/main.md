@@ -2,7 +2,7 @@
 key: "AT-BUG-067"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p2"
 summary: "Нет харнесса для управляемого JS-состояния document.head/body/readyState — блокирует TC-195/TC-196 (bridge-init-retry-on-incomplete-dom)"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-13T22:52:02Z"
-updated: "2026-08-13T22:52:02Z"
+created: "2026-08-15T21:05:54Z"
+updated: "2026-08-15T21:05:54Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Нет харнесса для управляемого JS-состояния document.head/body/readyState — блокирует TC-195/TC-196 (bridge-init-retry-on-incomplete-dom)
 
 _Спроецировано из `bugs/AT-BUG-067.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # AT-BUG-067 — Фреймворк не умеет вводить JS-контекст WebView в состояние «ранний onPageFinished» (document.head/body ещё null)
 
@@ -204,6 +204,7 @@ evaluateJavascript|document\\.head|document\\.body" framework/` — 0
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-08-15 | framework HEAD `90bb495` (fix-коммит `44c5323`, test_debt — сборка приложения не менялась, `app-under-test/` не тронут) | TC-195 (`test_bridge_init_retry_dcl_loading_idempotent`), TC-196 (`test_bridge_init_retry_setTimeout_only_path`) — оба прогнаны device-прогоном (эмулятор `ao3_test_api34`/`emulator-5554`, Appium :4723) | `Invoke-Pytest tests/canary/test_bridge_init_retry.py -v` → `test_bridge_init_retry_dcl_loading_idempotent[listing_basic.mitm] PASSED`, `test_bridge_init_retry_setTimeout_only_path[listing_basic.mitm] PASSED`, `2 passed in 52.14s`, `PYTEST_EXIT=0` (1 живой прогон этим ходом; первая попытка упала на `_ensure_replay_ca` — mitm-CA не был установлен на этом инстансе эмулятора, среда, не фикс — устранено `Install-MitmCA`, после чего оба теста зелёные с первой попытки) | Критерий готовности сверен построчно: `bridge_harness_steps.py` содержит все 4 примитива (`simulate_early_bridge_injection` — ОДИН `execute_script`, порядок «удаление враппers → тени head/body/readyState → delete window.__ao3Bridge → исполнение сырого текста скрипта из `_read_bridge_js_text()`»; `restore_shadow_and_dispatch_dcl` — АТОМАРНО, ОДИН `execute_script`, снятие теней+before+опциональный dispatchEvent+after/bridgeFlag; `count_rate_button_wraps`; `read_bridge_flag`), `test_bridge_init_retry.py` реализует TC-195/TC-196 через них с явными given_count/before_anchor/bridge_flag якорями. `python scripts/arch_check.py` — 0 ошибок (4 предупреждения, все pre-existing/известные, не связаны с этой правкой). `python -m pytest scripts/tests -q` — 1296 passed, 1 skipped, 1 FAILED (`test_heartbeat_wrap.py::test_happy_path_order_and_child_env`) — воспроизведено дважды (env.ps1-форма и голый `python`), причина `AO3_LOOP_HOLDER` реально выставлен в текущем shell-окружении (живой heartbeat-процесс оркестратора приписывает переменную os.environ на лету) — не связано с файлами этого бага (`bridge_harness_steps.py`/`test_bridge_init_retry.py` не пересекаются с `test_heartbeat_wrap.py`), пред-существующий env-артефакт, не регресс от этой правки. Красная проба задокументирована в «Починка» тремя раздельными пробами с конкретными атрибуциями строк — принята как описанная (не переисполнялась этим ходом, red-probe temp-файл уже удалён test-maintainer'ом). Найдена мелкая неточность документации (не блокер): «Критерий готовности»/«Суть долга» указывают per-element guard на `ao3_bridge.js:872`, фактическая строка — `:892` (`if (!li.querySelector('[data-ao3-btn-wrap]'))`) — код харнесса адресует guard по CSS-селектору, не по номеру строки, функциональной разницы нет. **Fixed → Verified.** |
 
 ## Починка (test-maintainer, B4, 2026-08-13)
 
@@ -409,6 +410,41 @@ overclaim). 3 подряд зелёных прогона `test_bridge_init_retry
 правки (первая попытка на свежем окружении упёрлась в известную флаку
 AT-BUG-043 порта 8080 mitmproxy — не связана с этой правкой, прошла со
 второй/третьей попытки).
+
+**2026-08-15 — fix-verifier, mode=verify.** Прочитаны оба файла целиком
+(`bridge_harness_steps.py`, `test_bridge_init_retry.py`) — все 4 примитива
+реализованы как описано в критерии готовности: примитив (2) — ОДИН
+`execute_script`, удаление враппers первым действием, ДО исполнения текста
+скрипта; примитив (3) — АТОМАРНО, один `execute_script`, снятие теней +
+before + опциональный `dispatchEvent` + after/bridgeFlag одним синхронным
+блоком. Живой прогон этим ходом (эмулятор `emulator-5554`/`ao3_test_api34`,
+Appium :4723): `Invoke-Pytest tests/canary/test_bridge_init_retry.py -v` —
+`2 passed`, `PYTEST_EXIT=0` (witness в таблице «Верификация»). Первая
+попытка упала на `_ensure_replay_ca` (mitm-CA не установлен на этом
+инстансе эмулятора) — env-негатив сверен и устранён `Install-MitmCA`
+штатной командой из `tasks.ps1`, не связано с правкой. `arch_check.py` — 0
+ошибок. `scripts/tests -q` — 1 FAILED
+(`test_heartbeat_wrap.py::test_happy_path_order_and_child_env`),
+воспроизведено дважды, причина — реально выставленный `AO3_LOOP_HOLDER` в
+текущем shell-окружении (живой heartbeat-процесс), файл теста не
+пересекается с правкой этого бага — пред-существующий env-артефакт, не
+регресс. Красная проба принята как описанная (три раздельные пробы с
+конкретной атрибуцией строк, temp-файл уже удалён test-maintainer'ом —
+переисполнение невозможно без порчи `app-under-test/` или воссоздания
+temp-файла; описание достаточно конкретное — точные строки кода, точный
+ожидаемый исход по каждому TC).
+
+**Дефект-собрат (D-0043), не блокер:** в «Критерии готовности» и «Сути
+долга» per-element guard указан как `ao3_bridge.js:872` — фактическая
+строка кода (`if (!li.querySelector('[data-ao3-btn-wrap]'))`) на момент
+этой верификации — `:892` (дрейф ~20 строк, вероятно из-за более поздних
+правок файла после расследования критика). Функционально не влияет:
+харнесс адресует guard по CSS-селектору `[data-ao3-btn-wrap]`, не по
+номеру строки, и красная проба/прогоны это подтверждают. Не правлю сам
+(текстовая правка задокументированного расследования — не моя роль в
+режиме verify); называю для порядка.
+
+**Fixed → Verified.**
 
 ## Чек-лист качества
 - [x] Проверены дубликаты среди открытых test_debt-багов — не совпадает с
