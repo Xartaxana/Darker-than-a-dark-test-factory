@@ -27,8 +27,11 @@ state/sla.yaml и ведёт реестр state/escalations.md:
                           status: Done — (1) непустая запись found_bugs без
                           id-токена BUG-NNN/AT-BUG-NNN = необработанный
                           кандидат bug-reporter'а; (2) непустая запись
-                          followup_tc без id-токена TC-NNN = необработанный
-                          кандидат test-designer'а; (3) непустой new_risks без
+                          followup_tc без id-токена TC-NNN/BUG-NNN/AT-BUG-NNN
+                          = необработанный кандидат test-designer'а (BUG-токен
+                          легален, когда follow-up закрывается долгом/тестгэпом,
+                          не новым кейсом — решение Lead 2026-08-15, прецедент
+                          CH-010#2 → AT-BUG-070); (3) непустой new_risks без
                           буквальной подстроки "Пересмотр по чартеру CH-NNN" в
                           docs/01-test-strategy.md = риск не донесён до §10
                           (проверка на уровне чартера, не записи). Условие
@@ -99,7 +102,14 @@ CHARTER_ACTIVE_STATUSES = ("Proposed", "Planned", "InProgress")
 # ОБРАБОТАННАЯ запись found_bugs/followup_tc (эталон — CH-008: found_bugs
 # несёт "BUG-NNN"/"AT-BUG-NNN", followup_tc несёт "TC-NNN").
 FOUND_BUGS_ID_RE = re.compile(r"\b(?:AT-)?BUG-\d+\b")
-FOLLOWUP_TC_ID_RE = re.compile(r"\bTC-\d+\b")
+# followup_tc легально закрывается НЕ ТОЛЬКО новым TC (test-designer), но и
+# BUG-NNN/AT-BUG-NNN — когда follow-up сам по себе test-gap/долг, а не кейс
+# (решение Lead 2026-08-15, живой прецедент CH-010 followup_tc#2: "ЗАКРЫТО →
+# AT-BUG-070" — test-gap инфраструктуры адресации вкладок, заведён как долг,
+# не как TC). Без BUG-ветки такая запись навсегда "необработана" для машины
+# и ложно эскалируется каждым проходом (state/escalations.md:2314,
+# CH-010:followup_tc#2, до этого фикса).
+FOLLOWUP_TC_ID_RE = re.compile(r"\b(?:TC|(?:AT-)?BUG)-\d+\b")
 
 # Фикс позднего дефекта (defect_found 2026-08-03 16:36): id-токен ГДЕ-ТО в
 # тексте — недостаточное условие "обработано". Живые ложные негативы (CH-007

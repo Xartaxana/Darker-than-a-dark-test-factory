@@ -372,6 +372,75 @@ def test_followup_tc_candidate_with_tc_id_is_quiet(repo):
     assert "charter_followup_unprocessed" not in _esc(repo)
 
 
+def test_followup_tc_candidate_with_at_bug_id_is_quiet(repo):
+    """Спека Lead 2026-08-15: followup_tc легально закрывается долгом/
+    тестгэпом через AT-BUG-NNN, не только новым TC (живой прецедент CH-010
+    followup_tc#2 → AT-BUG-070, до фикса ложно эскалировался каждым проходом)."""
+    _quiet_charter_queue(repo)
+    repo.charter("CH-010", "Done", extra=(
+        'found_bugs: []\n'
+        'followup_tc:\n  - "ЗАКРЫТО → AT-BUG-070 (test-designer, 2026-08-15, '
+        'test_debt): Test-gap инфраструктуры: нужен надёжный приём адресации '
+        'execute_script/навигации к КОНКРЕТНОЙ не-нулевой вкладке."\n'
+        'new_risks: []\n'))
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    assert "charter_followup_unprocessed" not in _esc(repo)
+
+
+def test_followup_tc_candidate_with_bug_id_is_quiet(repo):
+    """Форма без AT- префикса (BUG-NNN) тоже легальна."""
+    _quiet_charter_queue(repo)
+    repo.charter("CH-018", "Done", extra=(
+        'found_bugs: []\n'
+        'followup_tc:\n  - "ЗАКРЫТО → BUG-068 (test-designer): долг, не кейс"\n'
+        'new_risks: []\n'))
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    assert "charter_followup_unprocessed" not in _esc(repo)
+
+
+def test_followup_tc_candidate_with_tc_id_regression_pin_is_quiet(repo):
+    """Регресс-пин (DoD п.2): TC-id остаётся легальной формой закрытия
+    followup_tc после расширения регекса до TC/BUG."""
+    _quiet_charter_queue(repo)
+    repo.charter("CH-019", "Done", extra=(
+        'found_bugs: []\n'
+        'followup_tc:\n  - "ЗАКРЫТО → TC-205 (test-designer, 2026-08-15): '
+        'TC-новый на BUG-068."\n'
+        'new_risks: []\n'))
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    assert "charter_followup_unprocessed" not in _esc(repo)
+
+
+def test_followup_tc_malformed_bug_token_forms_still_flag(repo):
+    """Граница формы id-токена (правило 6a): "ABUG-12"/"ATBUG-12" —
+    склеенные/битые формы без разделителя ПЕРЕД "BUG" — НЕ матчатся (\\b
+    требует границы слова перед токеном), запись остаётся необработанной."""
+    _quiet_charter_queue(repo)
+    repo.charter("CH-020", "Done", extra=(
+        'found_bugs: []\n'
+        'followup_tc:\n'
+        '  - "ЗАКРЫТО → ABUG-12 (битая форма, без разделителя)"\n'
+        '  - "ЗАКРЫТО → ATBUG-12 (тоже битая форма)"\n'
+        'new_risks: []\n'))
+    _sla(repo)
+
+    ss.sweep(now=NOW)
+
+    text = _esc(repo)
+    assert "[sla:charter_followup_unprocessed]" in text
+    assert "CH-020:followup_tc#0" in text
+    assert "CH-020:followup_tc#1" in text
+
+
 def test_found_bugs_candidate_without_id_flags(repo):
     _quiet_charter_queue(repo)
     repo.charter("CH-012", "Done", extra=(
@@ -602,6 +671,33 @@ def test_record_processed_unit_dash_inside_id_not_a_delimiter():
 
 def test_record_processed_unit_no_id_at_all_is_unprocessed():
     assert ss._record_processed("КАНДИДАТ без id вовсе", ss.FOLLOWUP_TC_ID_RE) is False
+
+
+# --- FOLLOWUP_TC_ID_RE расширение до TC|BUG/AT-BUG (спека Lead 2026-08-15) ---
+
+
+def test_followup_tc_id_re_unit_at_bug_token_matches():
+    assert ss.FOLLOWUP_TC_ID_RE.search("AT-BUG-070") is not None
+    assert ss._record_processed("ЗАКРЫТО → AT-BUG-070: долг", ss.FOLLOWUP_TC_ID_RE) is True
+
+
+def test_followup_tc_id_re_unit_bug_token_matches():
+    assert ss.FOLLOWUP_TC_ID_RE.search("BUG-068") is not None
+    assert ss._record_processed("ЗАКРЫТО → BUG-068: долг", ss.FOLLOWUP_TC_ID_RE) is True
+
+
+def test_followup_tc_id_re_unit_tc_token_still_matches():
+    """Регресс-пин: TC-NNN остаётся валидным после расширения регекса."""
+    assert ss.FOLLOWUP_TC_ID_RE.search("TC-205") is not None
+    assert ss._record_processed("ЗАКРЫТО → TC-205: кейс", ss.FOLLOWUP_TC_ID_RE) is True
+
+
+def test_followup_tc_id_re_unit_malformed_forms_do_not_match():
+    """Граница формы (правило 6a): "ABUG-12"/"ATBUG-12" — нет разделителя
+    слова ПЕРЕД "BUG" (\\b не срабатывает между двумя word-символами) —
+    НЕ матчатся вовсе."""
+    assert ss.FOLLOWUP_TC_ID_RE.search("ABUG-12") is None
+    assert ss.FOLLOWUP_TC_ID_RE.search("ATBUG-12") is None
 
 
 def test_dry_run_writes_nothing(repo):
