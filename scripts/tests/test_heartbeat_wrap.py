@@ -35,11 +35,19 @@ def _sla(tmp_path, lock_stale=2):
 
 
 def _paths(tmp_path, **sla_kw):
+    # Критик-фикс BL-3 (rework attempt 2, 2026-08-15): budget_path ДОБАВЛЕН
+    # сюда — без него run_pass(**p) в этом файле читал/писал БОЕВОЙ
+    # state/heartbeat-budget.txt (критик замерил: 17 тестов сожгли 9 боевых
+    # прогонов; при боевом N<=0 юнит-тест позвал бы НАСТОЯЩИЙ
+    # schtasks /disable живой задачи AO3-QA-Heartbeat). tmp_path-путь без
+    # созданного файла = безлимит, тот же класс изоляции, что остальные
+    # пути ниже.
     return {
         "lock_file": tmp_path / "state" / "loop.lock",
         "reaps_path": tmp_path / "state" / "loop-lock-reaps.json",
         "escalations_path": tmp_path / "state" / "escalations.md",
         "sla_path": _sla(tmp_path, **sla_kw),
+        "budget_path": tmp_path / "state" / "heartbeat-budget.txt",
     }
 
 
@@ -88,7 +96,11 @@ def _read_orch(path):
 
 def test_busy_does_not_launch_claude_and_logs(tmp_path, orch_log, monkeypatch):
     p = _paths(tmp_path)
-    ll.acquire(holder="heartbeat:other:aaaaaaaa", now=NOW, **p)
+    # Критик-фикс BL-3 (C2): ll.acquire не принимает budget_path — явные
+    # kwargs вместо **p (которое теперь несёт budget_path для run_pass).
+    ll.acquire(lock_file=p["lock_file"], reaps_path=p["reaps_path"],
+              escalations_path=p["escalations_path"], sla_path=p["sla_path"],
+              holder="heartbeat:other:aaaaaaaa", now=NOW)
 
     calls = []
     monkeypatch.setattr(hw, "_popen", lambda *a, **kw: calls.append((a, kw)), raising=True)

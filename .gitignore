@@ -33,6 +33,10 @@ dump.xml
 logs/heartbeat.log
 state/loop.lock
 state/loop-lock-reaps.json
+# spec-heartbeat-budget.md v1 (2026-08-15): per-host операционное
+# состояние (число прогонов до автоотключения heartbeat) — тот же
+# класс, что loop.lock/emulator-session.json ниже, не версионируем.
+state/heartbeat-budget.txt
 # AT-BUG-063: локальное session-состояние Start-Emulator (GPU-бэкенд/AVD,
 # фактически разрешённые post-фолбэк) — машинно-специфично, пишется при
 # КАЖДОМ подъёме эмулятора, версионирование давало бы бессмысленные диффы

@@ -89,12 +89,25 @@ heartbeat_wrap.py включён в MECHANISM_PREFIXES scripts/mechanism_gate.py
 никогда не переопределяются в heartbeat.cmd):
   --lock-file/--reaps-file/--escalations-file/--sla-file — временные пути
   --claude-cmd — путь к исполняемому файлу вместо claude.cmd (смок kill-дерева)
+
+Бюджет прогонов (spec-heartbeat-budget.md v1, 2026-08-15): state/
+heartbeat-budget.txt — одно целое число, gitignored, интерфейс оператора
+намеренно без CLI/хелперов. Проверяется СТРОГО ПОСЛЕ BUSY-шортката (BUSY
+не жжёт бюджет) и СТРОГО ДО запуска ребёнка: файла нет — безлимит (текущее
+поведение байт-в-байт); N>0 — декремент ПОСЛЕ успешного Popen (неудачный
+spawn бюджет не жжёт); N<=0 — ребёнка не запускать, `schtasks /change /tn
+AO3-QA-Heartbeat /disable`, строка в orchestrator-log + эскалация
+`HEARTBEAT-BUDGET` в state/escalations.md (файл НЕ удаляется; отказ
+disable логируется, no-op-тик); мусор в файле — не запускать + та же
+эскалация, задачу НЕ отключать (оператор чинит файл). См.
+_read_budget/_write_budget/_schtasks_disable/_write_budget_escalation.
 """
 from __future__ import annotations
 
 import argparse
 import datetime
 import os
+import re
 import secrets
 import subprocess
 import sys
@@ -114,6 +127,7 @@ DEFAULT_LOCK_FILE = REPO / "state" / "loop.lock"
 DEFAULT_REAPS_PATH = REPO / "state" / "loop-lock-reaps.json"
 DEFAULT_ESCALATIONS_PATH = REPO / "state" / "escalations.md"
 DEFAULT_SLA_PATH = REPO / "state" / "sla.yaml"
+DEFAULT_BUDGET_PATH = REPO / "state" / "heartbeat-budget.txt"
 
 # Тот же абсолютный путь, что был в прежнем heartbeat.cmd (npm global
 # claude.cmd не гарантированно в PATH scheduled-контекста Task Scheduler).
@@ -126,6 +140,31 @@ TIMEOUT_KILL_WAIT_S = 30
 RULE = "heartbeat-обёртка"
 AGENT = "heartbeat_wrap"
 ARTIFACT = "logs/heartbeat.log"
+
+# --- бюджет прогонов (spec-heartbeat-budget.md v1, 2026-08-15) ------------
+# Носитель: state/heartbeat-budget.txt — одно целое число, gitignored
+# (per-host операционное состояние, класс emulator-session.json). Файла
+# нет => безлимит (текущее поведение байт-в-байт). Интерфейс оператора —
+# ОДНО число в ОДНОМ файле, намеренно без CLI/хелперов (внешняя критика
+# фабрики: «правила лечатся добавлением правил»).
+TASK_NAME = "AO3-QA-Heartbeat"
+_BUDGET_MAX_BYTES = 1024
+_BUDGET_UNLIMITED = "unlimited"
+_BUDGET_CORRUPT = "corrupt"
+HEARTBEAT_BUDGET_KEY = "HEARTBEAT-BUDGET"
+_BUDGET_EXHAUSTED_MSG = ("бюджет исчерпан, задача самоотключена; продолжение — "
+                         "новое число в файл + Enable")
+_BUDGET_CORRUPT_MSG = ("state/heartbeat-budget.txt не парсится в целое число — "
+                       "проход остановлен; задача НЕ отключена, оператор чинит "
+                       "файл, следующий тик подхватит")
+# AT-BUG-041-класс (EOL-перегон): '[^\r\n]*' вместо '.*$' под (?m) — см.
+# докстринг loop_lock.LOOP_LINE_RE, тот же образец, ключ здесь ФИКСИРОВАН
+# (не нумеруется LOOP-N) — состояние singleton, не растущий счётчик.
+# Патч E (критик, rework attempt 2): ключ собран через re.escape(...), не
+# продублирован литералом — единственный источник правды HEARTBEAT_BUDGET_KEY.
+_BUDGET_LINE_RE = re.compile(
+    r"(?m)^- \[(?P<ts>[^\]]+)\] \*\*" + re.escape(HEARTBEAT_BUDGET_KEY) +
+    r"\*\* \[heartbeat:budget\] — [^\r\n]*")
 
 
 def _utcnow() -> datetime.datetime:
@@ -204,22 +243,165 @@ def _tasklist_alive(pid: int) -> bool:
         return True
 
 
+def _read_budget(budget_path: Path) -> int | str:
+    """Читает state/heartbeat-budget.txt БАЙТАМИ (не read_text/encoding=
+    "utf-8" — критик-фикс BL-1/BL-2, rework attempt 2, 2026-08-15).
+
+    Оператор пишет файл из PowerShell 5.1: `echo 3 > file` даёт
+    UTF-16LE-с-BOM (read_text(encoding="utf-8") падал UnicodeDecodeError
+    НАРУЖУ run_pass ПОСЛЕ взятого лока — сирота до TTL); `'3' |
+    Set-Content -Encoding UTF8` даёт UTF-8-с-BOM (raw.strip() не считал
+    BOM-символ '﻿' пробельным — ложный `_BUDGET_CORRUPT` на валидном
+    числе). Декодирование — каскадом "utf-8-sig" (снимает BOM сам, если
+    он есть, и корректно читает голый UTF-8 без BOM) -> при неудаче
+    "utf-16" (второй по вероятности вид, который реально пишет
+    PowerShell 5.1; сам определяет BE/LE по BOM) -> при неудаче обоих —
+    corrupt. Чтение ограничено `_BUDGET_MAX_BYTES` (файл — ОДНО число,
+    оператор не пишет туда мегабайты; отсутствие потолка держало бы в
+    памяти произвольно большой файл на каждом тике).
+
+    Возвращает int (бюджет), `_BUDGET_UNLIMITED` (файла нет — безлимит,
+    текущее поведение байт-в-байт) или `_BUDGET_CORRUPT` (файл есть, но
+    НЕ парсится целым числом — ошибка чтения/оба декодирования упали/
+    после strip пусто/int() падает). Намерение лимита БЫЛО — corrupt
+    fail LOUD в сторону остановки, не тихий безлимит."""
+    if not budget_path.exists():
+        return _BUDGET_UNLIMITED
+    try:
+        with budget_path.open("rb") as f:
+            raw = f.read(_BUDGET_MAX_BYTES)
+    except OSError:
+        return _BUDGET_CORRUPT
+    try:
+        text = raw.decode("utf-8-sig")
+    except (UnicodeDecodeError, UnicodeError):
+        try:
+            text = raw.decode("utf-16")
+        except (UnicodeDecodeError, UnicodeError):
+            return _BUDGET_CORRUPT
+    text = text.strip()
+    if not text:
+        return _BUDGET_CORRUPT
+    try:
+        return int(text)
+    except ValueError:
+        return _BUDGET_CORRUPT
+
+
+def _write_budget(budget_path: Path, value: int) -> None:
+    """Декремент бюджета — вызывается ТОЛЬКО после успешного Popen
+    ребёнка (бюджет = фактически стартовавшие проходы)."""
+    budget_path.write_text(str(value), encoding="utf-8")
+
+
+def _schtasks_disable(task_name: str = TASK_NAME) -> tuple[int, str]:
+    """schtasks /change /tn <task_name> /disable — самоотключение при
+    исчерпании бюджета. НИКОГДА не бросает исключение наружу (тот же
+    приём, что _taskkill_tree): ребёнка в любом случае уже не запускаем,
+    этот вызов только best-effort отключает планировщик — отказ
+    логируется, не роняет тик (следующий тик повторит попытку, пока файл
+    бюджета всё ещё <= 0)."""
+    try:
+        p = subprocess.run(["schtasks", "/change", "/tn", task_name, "/disable"],
+                           capture_output=True, text=True, encoding="utf-8", errors="replace")
+        return p.returncode, (p.stdout or "") + (p.stderr or "")
+    except OSError as e:
+        return 127, str(e)
+
+
+def _write_budget_escalation(escalations_path: Path, message: str,
+                             now: datetime.datetime) -> None:
+    """Дописывает/обновляет ОДНУ открытую HEARTBEAT-BUDGET-эскалацию —
+    тот же приём, что loop_lock._write_loop_escalation, но ключ
+    ФИКСИРОВАН (не нумеруется LOOP-N): состояние singleton — второй
+    одновременной причины исчерпания быть не может, дедуп по задаче.
+    Тег `[heartbeat:budget]` (не `[sla:...]`) — sla_sweep.rewrite_registry
+    трогает только свои [sla:*]-строки (см. докстринг sla_sweep.py);
+    эскалация переживает его проходы, пока оператор не удалит строку
+    сам (штатный способ закрыть — см. ll.ESCALATIONS_HEADER)."""
+    stamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+    text = escalations_path.read_bytes().decode("utf-8") if escalations_path.exists() else ""
+    eol = "\r\n" if "\r\n" in text else "\n"
+
+    m = _BUDGET_LINE_RE.search(text)
+    if m:
+        new_line = f"- [{m.group('ts')}] **{HEARTBEAT_BUDGET_KEY}** [heartbeat:budget] — {message}"
+        new_text = text[:m.start()] + new_line + text[m.end():]
+    else:
+        if not text:
+            text = ll.ESCALATIONS_HEADER
+        elif not text.endswith("\n"):
+            text += eol
+        new_text = (text +
+                    f"- [{stamp}] **{HEARTBEAT_BUDGET_KEY}** [heartbeat:budget] — {message}{eol}")
+
+    escalations_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = escalations_path.with_name(escalations_path.name + ".tmp")
+    tmp.write_bytes(new_text.encode("utf-8"))
+    os.replace(tmp, escalations_path)
+
+
+def _release_and_finish(outcome: str, *, lock_file: Path, holder: str,
+                        reaps_path: Path) -> None:
+    """Release лока + M4-журнальная строка для РАННИХ budget-выходов
+    (corrupt/exhausted/spawn-failed) — лок к этому месту уже НАШ (acquire
+    вернул ACQUIRED выше по run_pass), в отличие от BUSY-ветки, где лок
+    чужой и release не нужен. Тот же учёт REFUSED/исключения, что в
+    финалке run_pass для пути с запущенным ребёнком (критик-фикс п.1/п.5,
+    2026-08-09): REFUSED помечается суффиксом, исключение release() не
+    съедает журнальную строку."""
+    try:
+        rcode, rlines = ll.release(lock_file=lock_file, holder=holder, reaps_path=reaps_path)
+        for line in rlines:
+            print(line)
+        if rcode != 0:
+            outcome += " release=refused-expected"
+            print(f"REFUSED (ожидаемо, fallback-сценарий): holder={holder} "
+                  "не совпал — лок обёртки не наш к моменту release")
+    except Exception as e:
+        outcome += f" release=error:{e}"
+    la.append_orchestrator([RULE, AGENT, ARTIFACT, outcome])
+
+
 def run_pass(*, lock_file: Path = DEFAULT_LOCK_FILE,
             reaps_path: Path = DEFAULT_REAPS_PATH,
             escalations_path: Path = DEFAULT_ESCALATIONS_PATH,
             sla_path: Path = DEFAULT_SLA_PATH,
+            budget_path: Path = DEFAULT_BUDGET_PATH,
             claude_cmd: str = CLAUDE_CMD,
             child_args: list[str] | None = None,
             now: datetime.datetime | None = None,
             kill_wait_sec: float = TIMEOUT_KILL_WAIT_S) -> int:
-    """Один проход обёртки: acquire → (BUSY-выход | запуск claude → wait/
-    kill → release) → журнальная строка. Возвращает 0 всегда (обёртка не
-    должна ронять Task Scheduler ненулевым кодом ни на BUSY, ни на
-    kill-failed — это видимые WARN-состояния, не крах вызова)."""
+    """Один проход обёртки: acquire → (BUSY-выход | бюджет-выход | запуск
+    claude → wait/kill → release) → журнальная строка. Возвращает 0
+    всегда (обёртка не должна ронять Task Scheduler ненулевым кодом ни на
+    BUSY, ни на kill-failed, ни на исчерпанный/битый бюджет — это видимые
+    WARN-состояния, не крах вызова).
+
+    Бюджет (spec-heartbeat-budget.md v1) проверяется СТРОГО ПОСЛЕ
+    BUSY-шортката (BUSY не жжёт бюджет) и СТРОГО ДО запуска ребёнка:
+    N<=0 — самоотключение задачи + эскалация; файл есть, но не
+    парсится — та же эскалация, задачу НЕ отключаем (оператор чинит
+    файл). Оба ранних выхода обязаны освободить лок сами (в отличие от
+    BUSY-ветки — там лок чужой)."""
     lock_file = Path(lock_file)
     reaps_path = Path(reaps_path)
     escalations_path = Path(escalations_path)
     sla_path = Path(sla_path)
+    budget_path = Path(budget_path)
+
+    # Критик-фикс BL-4 (rework attempt 2, 2026-08-15): compute_max_pass_sec
+    # вычислен ЗДЕСЬ — ДО acquire(), а не между acquire и внутренним
+    # try/finally, как было. Класс: любое исключение в окне между взятием
+    # лока и входом в try/finally НЕ снимает лок — сирота до TTL (тот же
+    # класс, что необорачиваемый _write_budget ниже, BL-4). sla_utils.
+    # load_lock_stale_hours сама не бросает (ловит всё внутри, докстринг
+    # sla_utils.py), но зависимость от sla_path здесь никак не связана с
+    # holder/acquire — меньшее вмешательство: подвинуть вызов раньше лока,
+    # а не оборачивать его в try/except на месте.
+    max_pass_sec, clamped = compute_max_pass_sec(sla_path)
+    if clamped:
+        print(f"MAX_PASS ужат до {int(round(max_pass_sec / 60))} мин по sla lock_stale")
 
     now = now or _utcnow()
     holder = _new_holder(now)
@@ -233,14 +415,56 @@ def run_pass(*, lock_file: Path = DEFAULT_LOCK_FILE,
         la.append_orchestrator([RULE, AGENT, ARTIFACT, "BUSY, проход не запускался"])
         return 0
 
-    max_pass_sec, clamped = compute_max_pass_sec(sla_path)
-    if clamped:
-        print(f"MAX_PASS ужат до {int(round(max_pass_sec / 60))} мин по sla lock_stale")
+    # --- бюджет прогонов: строго после BUSY (BUSY не жжёт бюджет), строго
+    # до запуска ребёнка. Лок к этой точке уже НАШ (acquire вернул
+    # ACQUIRED) — оба ранних выхода освобождают его сами.
+    budget = _read_budget(budget_path)
+    if budget == _BUDGET_CORRUPT:
+        print(f"BUDGET corrupt: {budget_path} не парсится в целое число — "
+              "проход не запускался")
+        _write_budget_escalation(escalations_path, _BUDGET_CORRUPT_MSG, now)
+        _release_and_finish("budget=corrupt, проход не запускался",
+                            lock_file=lock_file, holder=holder, reaps_path=reaps_path)
+        return 0
+    if budget != _BUDGET_UNLIMITED and budget <= 0:
+        print("BUDGET<=0: бюджет исчерпан — проход не запускался (claude не вызван)")
+        disable_rc, disable_out = _schtasks_disable()
+        if disable_rc == 0:
+            print(f"самоотключение: задача {TASK_NAME} disabled")
+            disable_note = "disable=ok"
+        else:
+            print(f"disable failed: rc={disable_rc} out={disable_out.strip()}")
+            disable_note = "disable=failed"
+        _write_budget_escalation(escalations_path, _BUDGET_EXHAUSTED_MSG, now)
+        _release_and_finish(f"budget<=0, проход не запускался, {disable_note}",
+                            lock_file=lock_file, holder=holder, reaps_path=reaps_path)
+        return 0
 
     child_env = dict(os.environ)
     child_env["AO3_LOOP_HOLDER"] = holder
     args = [claude_cmd, *(child_args if child_args is not None else DEFAULT_CHILD_ARGS)]
-    p = _popen(args, env=child_env)
+    try:
+        p = _popen(args, env=child_env)
+    except Exception as e:
+        # Неудачный spawn не жжёт бюджет: _write_budget ниже просто не
+        # достигается на этой ветке.
+        outcome = f"spawn-failed:{e}"
+        print(outcome)
+        _release_and_finish(outcome, lock_file=lock_file, holder=holder, reaps_path=reaps_path)
+        return 0
+
+    if budget != _BUDGET_UNLIMITED:
+        # декремент ПОСЛЕ успешного Popen (бюджет = фактически стартовавшие
+        # проходы) — N>0 гарантирован веткой выше (<=0 уже вернула).
+        # Критик-фикс BL-4 (rework attempt 2): исключение здесь — тот же
+        # класс, что необёрнутый _popen раньше (окно между acquire и
+        # try/finally) — ребёнок УЖЕ запущен (p существует), ронять проход
+        # сейчас означало бы сирота-лок + брошенный живой child. Не роняем:
+        # печатаем и идём дальше в штатный try/finally (wait/release).
+        try:
+            _write_budget(budget_path, budget - 1)
+        except OSError as e:
+            print(f"BUDGET decrement failed (бюджет не сожжён): {e}")
 
     should_release = True
     outcome = "exit=unknown"

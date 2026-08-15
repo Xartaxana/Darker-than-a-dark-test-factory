@@ -460,3 +460,4 @@ qa-orchestrator. Скрипты pre_steps (stale_locks и др.) тоже пиш
 | 2026-08-14T23:12:10Z | pre_step sla_sweep | sla_sweep.py | state/escalations.md | эскалации: +5 (CH-010:followup_tc#0(charter_followup_unprocessed), CH-010:followup_tc#1(charter_followup_unprocessed), CH-010:followup_tc#2(charter_followup_unprocessed), CH-010:followup_tc#3(charter_followup_unprocessed), CH-010:new_risks(charter_followup_unprocessed)), -0 (—) |
 | 2026-08-14T23:14:07Z | pre_step build_watch | build_watch.py | state/app-under-test.yaml | OK: собрана сборка 59be96c6, coalesced 8 |
 | 2026-08-15T10:36:48Z | pre_step sla_sweep | sla_sweep.py | state/escalations.md | эскалации: +1 (AT-BUG-068(blocked_any)), -3 (CH-010:followup_tc#0(charter_followup_unprocessed), CH-010:followup_tc#1(charter_followup_unprocessed), CH-010:followup_tc#2(charter_followup_unprocessed)) |
+| 2026-08-15T11:00:07Z | heartbeat-обёртка | heartbeat_wrap | logs/heartbeat.log | exit=1 |
