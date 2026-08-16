@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-16T17:52:50Z"
-updated: "2026-08-16T17:52:50Z"
+created: "2026-08-16T20:42:00Z"
+updated: "2026-08-16T20:42:00Z"
 archived: false
 resolution: null
 ---
@@ -154,7 +154,22 @@ Awaiting: none
 > 
 > Замечу: конфигурация «navigator.clipboard undefined» в этом приложении не экзотика — Clipboard API отсутствует на небезопасных origin, т.е. на КАЖДОЙ file://-вкладке со скачанной работой, так что guard закрывает вполне реальный путь. Верификация — за QA.
 
-**[gitlab:dyakagreen @ 2026-08-16T10:56:14.620Z]** Метка `qa-status::QAready` выставлена на GitLab issue — переход Open→Fixed зафиксирован автоматически (второй канал, docs/06 §3а, gitlab-label).
+**[gitlab:dyakagreen @ 2026-08-16T10:56:14.620Z]** Метла `qa-status::QAready` выставлена на GitLab issue — переход Open→Fixed зафиксирован автоматически (второй канал, docs/06 §3а, gitlab-label).
+
+**[qa @ 2026-08-16T20:42:00Z]**
+
+Принято: фикс коммита `aa377e0` (main) соответствует точно рекомендации из раздела "Рекомендация фикса" (п. 83-126): добавлен guard `if (navigator.clipboard && navigator.clipboard.writeText)` перед вызовом, ветка else направлена в fallback на `document.execCommand('copy')` через функцию `execCommandFallback()`. Синхронный TypeError на разыменование исключён.
+
+**Анализ по артефактам:**
+- Разработчик подтвердил: fallback вынесен в именованную функцию (улучшение читаемости)
+- Guard покрывает оба условия: наличие объекта И метода (полная защита)
+- Reject-ветка по-прежнему падает в fallback — кнопка ВСЕГДА даёт видимый отклик (Copied! / Copy failed)
+
+**Примечание:** Конфигурация `navigator.clipboard undefined` — не экзотика; на file:// origin (скачанные работы из AO3) Clipboard API отсутствует по спецификации браузера. Guard закрывает действительно распространённый путь, не теоретический.
+
+Статус: Fixed → ожидание fix-verifier для проверки TC и device-witness'а на новой сборке (docs/06 D1).
+
+Awaiting: none
 
 ## Чек-лист качества
 

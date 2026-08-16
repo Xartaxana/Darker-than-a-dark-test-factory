@@ -7475,6 +7475,29 @@
     "archived": false
   },
   {
+    "key": "AT-BUG-080",
+    "path": "board/AT-BUG-080/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "swipe_to_text считает успехом ЛЮБОЕ присутствие якорного текста (в т.ч. обрезок в 9 px у нижней кромки вьюпорта), а вызывающие ищут СОСЕДА по той же строке — соседний узел ещё вне дерева; экземпляр TC-004 open_clear_all_dialog в RUN-20260816-1831 (остаток класса AT-BUG-048)",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-004",
+      "run:RUN-20260816-1831",
+      "sev:major"
+    ],
+    "updated": "2026-08-16T20:49:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "BUG-001",
     "path": "board/BUG-001/main.md",
     "parent": null,
@@ -7625,7 +7648,7 @@
     "epicPath": null,
     "summary": "Undo закрытия вкладки на потолке 10 молча теряет вкладку и её снапшот",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -7634,8 +7657,8 @@
       "test_case:TC-024",
       "sev:major"
     ],
-    "updated": "2026-08-16T17:56:15Z",
-    "resolution": null,
+    "updated": "2026-08-16T21:06:22Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -7671,15 +7694,15 @@
     "epicPath": null,
     "summary": "DOM-ссылка «Next →» указывает на уже показанную страницу; тап уводит назад",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:major"
     ],
-    "updated": "2026-08-16T17:58:30Z",
-    "resolution": null,
+    "updated": "2026-08-16T21:31:05Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -7720,7 +7743,7 @@
       "bug",
       "sev:major"
     ],
-    "updated": "2026-08-16T17:52:50Z",
+    "updated": "2026-08-16T20:39:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -8184,7 +8207,28 @@
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-08-16T17:52:50Z",
+    "updated": "2026-08-16T20:42:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-072",
+    "path": "board/BUG-072/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "restoreClosedTab UI-недостижим второй раз: BrowserViewModel.kt KDoc и PROJECT.md обещают повторный Undo после отказа на потолке, но единственный вызов потребляется тем же снекбаром — вкладка остаётся безвозвратно потерянной",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:minor"
+    ],
+    "updated": "2026-08-16T21:21:06Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -8578,13 +8622,13 @@
     "epicPath": null,
     "summary": "RUN-20260816-1831",
     "issueType": "run",
-    "status": "run-needstriage",
+    "status": "run-triaged",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "run"
     ],
-    "updated": "2026-08-16T20:07:50Z",
+    "updated": "2026-08-16T20:52:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -8603,7 +8647,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-writing-cases",
-      "регресс сборки: smoke RUN-20260816-1758 49/49 · чисто · regression RUN-20260816-1831 289/290 · разбирается · новых багов в прогоне: 0",
+      "регресс сборки: smoke RUN-20260816-1758 49/49 · чисто · regression RUN-20260816-1831 289/290 · разобрано · новых багов в прогоне: 1",
       "фич без кейсов: 0/2",
       "черновиков: 1",
       "багов на кейсах стори: 3"
@@ -8627,7 +8671,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-covered",
-      "регресс сборки: smoke RUN-20260816-1758 49/49 · чисто · regression RUN-20260816-1831 289/290 · разбирается · новых багов в прогоне: 0",
+      "регресс сборки: smoke RUN-20260816-1758 49/49 · чисто · regression RUN-20260816-1831 289/290 · разобрано · новых багов в прогоне: 1",
       "зелёные в RUN-20260816-1831: 5/5",
       "багов на кейсах стори: 0"
     ],
@@ -8650,7 +8694,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-automation",
-      "регресс сборки: smoke RUN-20260816-1758 49/49 · чисто · regression RUN-20260816-1831 289/290 · разбирается · новых багов в прогоне: 0",
+      "регресс сборки: smoke RUN-20260816-1758 49/49 · чисто · regression RUN-20260816-1831 289/290 · разобрано · новых багов в прогоне: 1",
       "багов на кейсах стори: 1"
     ],
     "updated": "2026-08-14T23:12:35Z",
@@ -8672,7 +8716,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-writing-cases",
-      "регресс сборки: smoke RUN-20260816-1758 49/49 · чисто · regression RUN-20260816-1831 289/290 · разбирается · новых багов в прогоне: 0",
+      "регресс сборки: smoke RUN-20260816-1758 49/49 · чисто · regression RUN-20260816-1831 289/290 · разобрано · новых багов в прогоне: 1",
       "фич без кейсов: 5/8",
       "багов на кейсах стори: 0"
     ],

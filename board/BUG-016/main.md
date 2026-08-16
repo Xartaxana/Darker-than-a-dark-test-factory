@@ -2,7 +2,7 @@
 key: "BUG-016"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p1"
 summary: "Undo закрытия вкладки на потолке 10 молча теряет вкладку и её снапшот"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-16T17:56:15Z"
-updated: "2026-08-16T17:56:15Z"
+created: "2026-08-16T21:06:22Z"
+updated: "2026-08-16T21:06:22Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Undo закрытия вкладки на потолке 10 молча теряет вкладку и её снапшот
 
 _Спроецировано из `bugs/BUG-016.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # BUG-016 — Undo закрытия вкладки на потолке молча теряет вкладку
 
@@ -99,6 +99,7 @@ _Спроецировано из `bugs/BUG-016.md` (источник правд�
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-08-16 | dev-local (versionCode 12), build `aa377e0ec9664fcd5439fec9391638fabf94f448` | TC-023 (`test_swipe_close_undo_restores_position`), TC-024 (`test_undo_history_evicts_oldest_after_six_closes`) — оба прогнаны напрямую (`Invoke-Pytest -k "test_swipe_close_undo_restores_position or test_undo_history_evicts_oldest_after_six_closes" -v`, `AO3_MODE=replay`): `2 passed, 488 deselected in 116.25s`, `PYTEST_EXIT=0`, `recoveries this session = 0/2`. **Находка (см. «Обсуждение»): ни TC-023, ни TC-024 фактически НЕ достигают потолка MAX_TABS** — их зелёный цвет подтверждает отсутствие регрессии в обычном Undo/эвикции, но НЕ верифицирует сам фикс (проверка потолка ДО сжигания снапшота в `restoreClosedTab`). Дополнительно прогнан ОДНОРАЗОВЫЙ live-скретч по буквальному Given-When-Then тела бага (вариант А — кнопка `+`): построены 10 вкладок (потолок), закрыта вкладка на позиции 1 (Undo-снекбар жив), освободившийся слот занят тапом `+` (снова 10), нажат `Undo` на живом снекбаре. `Invoke-Pytest tests/test_bug016_verify_scratch.py -v`: `1 passed in 53.22s`, `PYTEST_EXIT=0`, `recoveries this session = 0/2`. Файл — временный (`framework/tests/test_bug016_verify_scratch.py`), удалён этим же ходом сразу после прогона, `git status --porcelain -- framework/tests/` пуст — в репозитории не остаётся. **Сценарий скретча (восстановлен критиком из `__pycache__`, для аудируемости witness — D-0052):** `wait_persisted_tab_count(10)` → `swipe_close_tab(1)` → `assert_undo_snackbar_visible` → `open_new_tab` → `tap_undo` → `assert_tab_limit_dialog_shown(expected_max=10, expected_message="You have 10 tabs open. Close some tabs before opening a new one.")` → `wait_persisted_tab_count(10)`. Критик независимо перепрогнал тот же сценарий (`test_bug016_critic_repro.py`, 1 passed in 54.47s, PYTEST_EXIT=0) + собственную пробу «снекбар Undo отсутствует после отказа» (зелёная). | TC-023 passed, TC-024 passed, скретч-репро потолка passed (диалог «Tab limit reached» с дословным текстом «You have 10 tabs open. Close some tabs before opening a new one.» показан вместо молчания; счёт вкладок остался 10, 11-я не создана) | **Verified** |
 
 ## Обсуждение
 Вопрос разработчику: является ли это предполагаемым поведением (Undo на потолке просто отказывает без сообщения), или это регрессия / недоделка?
@@ -149,6 +150,22 @@ awaiting: dev
 Верификацию выполнит fix-verifier по TC-023/TC-024 (рекомендация: включить вариант В в регрессионное покрытие, см. комментарий от 2026-08-10 про test-maintainer).
 
 awaiting: dev
+
+**[fix-verifier @ 2026-08-16T21:06:22Z]** Верификация выполнена на актуальной сборке (`aa377e0e`, dev-local 12) — `status: Fixed -> Verified`.
+
+**Находка (важнее, чем предполагала постановка задачи): TC-023 и TC-024 НЕ покрывают ни один вариант репро этого бага, не только вариант В.**
+- TC-023 (`test_swipe_close_undo_restores_position`) — happy path на 3 вкладках, потолок MAX_TABS вообще не достигается.
+- TC-024 (`test_undo_history_evicts_oldest_after_six_closes`) — 7 вкладок, 6 последовательных закрытий БЕЗ повторного открытия — освободившийся слот никогда не занимается перед Undo, потолок тоже не достигается.
+
+Их зелёный прогон подтверждает отсутствие регрессии в обычном Undo/эвикции истории после фикса, но НЕ является верификацией самого фикса (проверка `state.tabs.size >= MAX_TABS` ДО `closedTabSnapshots.remove(token)` в `restoreClosedTab`). Чтобы получить настоящий witness, этим ходом прогнан одноразовый live-скретч буквально по Given-When-Then тела бага (вариант А, кнопка `+`) — зелёный (`1 passed in 53.22s`, диалог «Tab limit reached» с дословным текстом показан вместо молчания, счёт вкладок остался 10). Скретч НЕ является постоянным TC — временный файл `framework/tests/test_bug016_verify_scratch.py`, удалён сразу после прогона (`git status --porcelain` пуст).
+
+**Задача для test-maintainer/test-designer (не блокирует верификацию, докладываю по правилу 9 CLAUDE.md):** ни один из трёх вариантов репро (А — кнопка `+`, Б — deep-link, В — «Open in background tab» из Library, #26) не имеет автоматизированного покрытия достижения потолка MAX_TABS перед Undo. Рекомендация из ветки от 2026-08-10 (расширить TC-023/TC-024 вариантом В) стоит расширить: нужен НОВЫЙ TC (или доработка TC-023/TC-024) на саму границу «потолок + занятой слот + Undo» — сейчас эта граница проверяется только вручную (exploratory CH-005 и этот одноразовый скретч), регрессионного замка на неё в сьюте нет.
+
+**Смежная находка (доклад, не расширяю scope):** TC-137.md (§«Доклад аналога») уже называл эту же ветку `restoreClosedTab` как непокрытую границу ДО того, как был заведён этот баг — тот же класс, что и рекомендация выше.
+
+Верификация: TC-023 passed, TC-024 passed (регрессия отсутствует), скретч-репро потолка passed (сам фикс подтверждён живым прогоном). `known_issue` уже `"false"`, `awaiting: none`.
+
+**[critic @ 2026-08-16T21:14:00Z]** Критик-вход приёмки: фикс подтверждён (диалог показан, счёт остаётся 10), но **вторая половина обещанного поведения UI-недостижима**. `restoreClosedTab` имеет ровно один вызов во всём приложении — `MainActivity.kt:325`, внутри `if (result == SnackbarResult.ActionPerformed)`. Нажатие Undo потребляет снекбар; второго снекбара с тем же токеном не будет. Значит сохранённый снапшот (правка `closedTabSnapshots[token]` без удаления при потолке) **недостижим из UI** — у пользователя нет способа повторно нажать Undo для того же токена. Вкладка по-прежнему теряется безвозвратно, разница только в том, что теперь это явно объявлено диалогом, а не молчанием. При этом `BrowserViewModel.kt:362-363` (KDoc) и `app-under-test/PROJECT.md:31` утверждают «so the user can close a tab and retry Undo instead of silently losing the tab» / «keeps the snapshot (nothing is silently lost)» — обещание, которого код не выполняет. Эмпирика критика: проба «снекбар Undo отсутствует после отказа на потолке» — зелёная. **Статус Verified НЕ отменяется** — «Then (ожидалось)» тела бага допускает альтернативу «показать пользователю, почему это невозможно», и она реализована; но заявленная в фиксе возможность retry — нет. Заведён отдельный доклад-кандидат на расхождение код↔документация: bugs/BUG-072.md (класс уже чинился коммитом `27d5cfd` «Correct two PROJECT.md claims that contradict the code»).
 
 ## Чек-лист качества (bug-reporter)
 - [x] Проверены дубликаты среди открытых багов (`bugs/`, status != Verified/Rejected) — аналогов не найдено
