@@ -417,6 +417,36 @@ def downloaded_work_seeded_with_path():
     yield work, device_path
 
 
+# TC-256 (AT-BUG-074): baseline с ЛОКАЛЬНЫМИ title/fandom/wordCount, отличными
+# от канонических значений work-страницы `listing_basic.mitm` несёт для
+# `W.LOVED` (`"A Loved Test Work"`/`"Fandom Alpha"`/`4200`, см.
+# `recording_builder.py::render_work_page_html`/`ALL_WORKS`) — тот же приём,
+# что Given TC-151/TC-152 (`test-cases/rating/TC-256.md` «Предусловия»):
+# ao3_id ДОЛЖЕН совпадать с `W.LOVED.ao3_id` (единственный, чья work-страница
+# записана в `listing_basic.mitm`), но title/fandom/wordCount — намеренно
+# ДРУГИЕ значения, чтобы Then кейса (локальные метаданные НЕ перезаписываются
+# скрейпом) был содержателен, а не тривиален совпадением.
+_TC256_LOCAL_WORK = Work(
+    W.LOVED.ao3_id, "ЛОКАЛЬНЫЙ заголовок", W.LOVED.author, "Мой фандом", 777777
+)
+
+
+@pytest.fixture()
+def tc256_auto_read_baseline():
+    """Работа W (`ao3_id` = `W.LOVED.ao3_id`) засеяна ОДНОЙ строкой
+    (`seed_db.seed_with_comment_and_download`, AT-BUG-046): `rating=None`,
+    комментарий `"note A"`, тег `"tagA"`, ЛОКАЛЬНЫЕ `title`/`fandom`/
+    `wordCount` (`_TC256_LOCAL_WORK`, отличные от канонической work-страницы
+    фикстуры) и реальный скачанный файл на устройстве (`downloadPath`) — до
+    старта сессии Appium (тот же порядок/обоснование, что `loved_work_seeded`
+    и остальные `*_seeded` фикстуры выше). Возвращает `(work, device_path)`."""
+    app_steps.clean_state()
+    tags_json = json.dumps(["tagA"])
+    rows = [(_TC256_LOCAL_WORK, None, "note A", tags_json, _DOWNLOADED_WORK_FIXTURE)]
+    device_paths = app_steps.seed_with_comment_and_download(rows)
+    yield _TC256_LOCAL_WORK, device_paths[_TC256_LOCAL_WORK.ao3_id]
+
+
 @pytest.fixture()
 def library_all_one_rating_seeded():
     """5 работ `works.ALL` засеяны с ОДНИМ рейтингом (PENDING) — все пять оказываются

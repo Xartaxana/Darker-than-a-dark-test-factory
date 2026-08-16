@@ -297,9 +297,11 @@ def test_clear_all_ratings_badge_resets_after_reload(loved_work_seeded, replay, 
     Механизм обхода (`AT-BUG-042` R8, подтверждён различающим замером
     `ao3Id|rating|timestamp`, НЕ COUNT): воскресшая строка появляется ИМЕННО в
     момент возврата на вкладку Browse, с `rating=SAVE` (никогда `READ` —
-    `onWorkFinished` auto-mark структурно исключён на этой фикстуре:
-    `works_multi.mitm` не несёт `<div id="chapters">`; на живой странице
-    слушатель существует, но пишет `READ`). Источник — транзитный mount+dispose
+    `onWorkFinished` auto-mark НЕ участвует в этом сценарии: `works_multi.mitm`
+    с AT-BUG-074 ТЕПЕРЬ несёт `<div id="chapters">` тоже, но auto-mark
+    срабатывает ТОЛЬКО на реальном браузерном `scroll`-событии, а этот тест ни
+    разу не скроллит WebView — reload/навигация сами по себе `scroll` не
+    порождают). Источник — транзитный mount+dispose
     `WorkRatingPanel` во время exit-анимации `AnimatedVisibility` на возврате
     (`onSelect` ставит `navExpanded=false` одновременно с `selectedTab=BROWSE`,
     `MainActivity.kt:426-429`/`BottomBar.kt:99-105`): dispose захватывает

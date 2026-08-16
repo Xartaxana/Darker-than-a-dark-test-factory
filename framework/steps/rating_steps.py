@@ -11,7 +11,8 @@ import re
 import allure
 
 from framework.core import contexts
-from framework.core.waits import wait_until
+from framework.core.waits import wait_for, wait_until
+from framework.data import seed_db
 from framework.screens.browser_screen import BrowserScreen
 from framework.screens.navigation import BottomNav
 from framework.screens.rating_overlay import RatingOverlay
@@ -100,6 +101,27 @@ def rate_current_work(driver, rating: str):
             f"меню рейтинга не появилось на странице работы ({_work_page_diagnosis(driver)})"
         )
     overlay.choose(rating)
+
+
+# --- TC-256 (AT-BUG-074): дожидается асинхронного upsert'а Room после
+# JS-события auto-mark-as-read (`Ao3JsBridge.onWorkFinished`,
+# `viewModelScope.launch`) — прямое чтение Room (`seed_db.read_work_ratings_
+# full()`), без похода в UI (тот же приём, что `app_steps.wait_for_tabs_count`/
+# `settings_steps` polling-функции). Слой steps (не tests/) — `wait_for`/
+# `framework.core.waits` запрещён в tests/ напрямую (docs/08 C1, arch_check.py).
+@allure.step("Then рейтинг работы {work_id} становится {expected}")
+def wait_for_rating(work_id: str, expected: str, timeout: int = 20) -> dict:
+    """Опрашивает `seed_db.read_work_ratings_full()` до появления
+    `rating == expected` у строки `work_id`. Возвращает ПОЛНУЮ строку (не
+    только факт совпадения рейтинга) — вызывающий код читает из неё
+    downloadPath/comment/tags/title/fandom/word_count/timestamp для
+    последующих Then-ассертов без второго похода в Room."""
+    wait_for(
+        lambda: seed_db.read_work_ratings_full().get(work_id, {}).get("rating") == expected,
+        timeout=timeout,
+        message=f"rating работы {work_id} не стал {expected!r}",
+    )
+    return seed_db.read_work_ratings_full()[work_id]
 
 
 @allure.step("When на странице работы в панели рейтинга раскрыт раздел тегов и добавлен личный тег «{tag}»")

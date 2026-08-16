@@ -698,6 +698,95 @@ def test_works_multi_work_pages_have_kudo_submit_node(works_multi_flows):
         assert "data-kudo-clicked" in onclick_js
 
 
+# --- AT-BUG-074: `#chapters`/.userstuff.module` + `dd.fandom a`/`dd.words` —
+# узлы, которые скрейпит auto-mark-as-read `onScroll` (`ao3_bridge.js:
+# 1164-1197`), нужны TC-256. Юниты по образцу AT-BUG-030/AT-BUG-035 выше:
+# `render_work_page_html` напрямую + `listing_basic_flows` собранная запись
+# (тот же потребитель, что использует Given TC-151/TC-152/TC-256).
+
+
+@pytest.mark.p2
+@allure.id("recording-builder-work-page-has-chapters-and-userstuff-module-node")
+@allure.title("render_work_page_html: несёт #chapters с .userstuff.module внутри (AT-BUG-074)")
+def test_render_work_page_html_has_chapters_node():
+    work = ALL_WORKS[0]
+    body = rb.render_work_page_html(work)
+    assert 'id="chapters"' in body
+    chapters_start = body.index('id="chapters"')
+    chapters_end = body.index("</div></div>", chapters_start) + len("</div></div>")
+    chapters_block = body[chapters_start:chapters_end]
+    assert 'class="userstuff module"' in chapters_block, (
+        f"#chapters не несёт .userstuff.module внутри себя: {chapters_block!r}"
+    )
+
+
+@pytest.mark.p2
+@allure.id("recording-builder-work-page-chapters-is-last-node-of-body")
+@allure.title("render_work_page_html: #chapters — буквально ПОСЛЕДНИЙ узел <body> (AT-BUG-074 геометрия scroll-to-bottom)")
+def test_render_work_page_html_chapters_is_last_node_of_body():
+    work = ALL_WORKS[0]
+    body = rb.render_work_page_html(work)
+    chapters_start = body.index('<div id="chapters">')
+    body_end = body.index("</body>")
+    wrapper_start = body.index('<div class="wrapper">')
+    # Then: #chapters ПОСЛЕ .wrapper (узел 3 AT-BUG-030 остаётся внутри .wrapper,
+    # #chapters — снаружи, после закрытия #workskin/#main, регрессия AT-BUG-030
+    # не задета: узел 3 не двигается)
+    assert wrapper_start < chapters_start
+    # And: между началом #chapters и </body> нет ничего, кроме самого блока
+    # #chapters и закрывающих тегов (никакой другой узел не идёт ПОСЛЕ него —
+    # критично для геометрии scroll-to-bottom, см. докстринг `_chapters_html`)
+    tail = body[chapters_start:body_end]
+    assert tail.count("<div") == 2, (  # #chapters + .userstuff.module, ничего лишнего
+        f"между #chapters и </body> найден лишний узел: {tail!r}"
+    )
+
+
+@pytest.mark.p2
+@allure.id("recording-builder-work-page-has-dd-fandom-and-dd-words-nodes")
+@allure.title("render_work_page_html: несёт dd.fandom a / dd.words (AT-BUG-074, отличны от preface h5.fandom.tags)")
+def test_render_work_page_html_has_dd_fandom_and_dd_words_nodes():
+    work = ALL_WORKS[0]
+    body = rb.render_work_page_html(work)
+    assert 'class="fandom tags"' in body  # preface h5 УЖЕ несёт этот класс — сверяем dd отдельно ниже
+    assert '<dd class="fandom tags">' in body, "dd.fandom (dl.work.meta.group) отсутствует"
+    assert f'<a class="tag" href="/tags/{work.fandom}/works">{work.fandom}</a>' in body
+    assert f'<dd class="words">{work.word_count}</dd>' in body, "dd.words (dl.stats) отсутствует"
+
+
+@pytest.mark.p2
+@allure.id("recording-builder-work-page-dd-fandom-and-words-precede-wrapper-not-inside-ul")
+@allure.title("render_work_page_html: dd.fandom/dd.words — СИБЛИНГ #kudo_submit, между ним и .wrapper (не ломает order-инвариант AT-BUG-035)")
+def test_render_work_page_html_dd_fandom_words_ordering_preserves_kudo_invariant():
+    work = ALL_WORKS[0]
+    body = rb.render_work_page_html(work)
+    ul_start = body.index('<ul class="work navigation actions"')
+    ul_end = body.index("</ul>", ul_start) + len("</ul>")
+    kudo_start = body.index('id="kudo_submit"')
+    meta_start = body.index('<dl class="work meta group">')
+    wrapper_start = body.index('<div class="wrapper">')
+    # Then: тот же regression-инвариант AT-BUG-035 (kudo строго между </ul> и
+    # .wrapper) держится и ПОСЛЕ добавления dd.fandom/dd.words между ними
+    assert ul_end < kudo_start < meta_start < wrapper_start
+
+
+@pytest.mark.p2
+@allure.id("recording-builder-listing-basic-work-pages-have-chapters-and-dd-fandom-words")
+@allure.title("listing_basic.mitm: КАЖДАЯ work-страница несёт #chapters/.userstuff.module и dd.fandom/dd.words (AT-BUG-074, собранная запись, потребитель TC-151/152/256)")
+def test_listing_basic_work_pages_have_chapters_and_dd_fandom_words_nodes(listing_basic_flows):
+    work_bodies = [
+        f.response.get_text()
+        for f in listing_basic_flows
+        if _WORK_PATH_RE.match(urlparse(f.request.url).path)
+    ]
+    assert len(work_bodies) == len(ALL_WORKS)  # symmetric с test_listing_basic_all_blurb_works_have_recorded_work_pages
+    for body in work_bodies:
+        assert 'id="chapters"' in body
+        assert 'class="userstuff module"' in body
+        assert '<dd class="fandom tags">' in body
+        assert '<dd class="words">' in body
+
+
 # --- work_metadata_fetch.mitm (AT-BUG-061) — HttpURLConnection-путь «Fetch
 # missing metadata» (`SettingsViewModel.fetchAo3WorkPage`/`parseAo3WorkHtml`,
 # `works/<id>?view_adult=true`), закрывает блокер TC-186/TC-187.

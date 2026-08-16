@@ -2528,6 +2528,41 @@ def scroll_listing_to_bottom(driver) -> None:
     )
 
 
+# --- TC-256 (AT-BUG-074): скролл work-страницы до самого конца документа —
+# триггер auto-mark-as-read (`ao3_bridge.js:1164-1197`, `onScroll`). Тот же
+# приём геометрии, что `scroll_listing_to_bottom` (browser-clamped `scrollTo`
+# гарантирует, что последний узел документа — `#chapters`/`.userstuff.module`,
+# AT-BUG-074 — оказывается в вьюпорте по построению, см. докстринг
+# `recording_builder._chapters_html`), но отдельная функция (не переиспользование
+# `scroll_listing_to_bottom`): разный домен (work-страница, не листинг),
+# разное диагностическое имя в Allure-шаге/аттаче.
+@allure.step("When work-страница проскроллена до самого конца документа")
+def scroll_work_page_to_bottom(driver) -> dict:
+    """Возвращает геометрию (`{y, ih, sh}`) — вызывающий код (TC-256) сам решает,
+    ждать ли эффект (`wait_for` на `seed_db.read_work_ratings_full()`), эта
+    функция только гарантирует, что скролл РЕАЛЬНО произошёл (тот же негативный
+    якорь, что `scroll_listing_to_bottom` — без него `assert`, ожидающий эффекта
+    `onWorkFinished`, был бы неинтерпретируем при недостаточно высокой странице)."""
+    with contexts.in_webview(driver):
+        result = driver.execute_script(
+            "window.scrollTo(0, document.body.scrollHeight);"
+            "return {y: window.scrollY, ih: window.innerHeight, "
+            "sh: document.body.scrollHeight};"
+        )
+    allure.attach(
+        f"scrollY={result['y']} innerHeight={result['ih']} "
+        f"scrollHeight={result['sh']}",
+        name="work-page-scroll-to-bottom-geometry",
+        attachment_type=allure.attachment_type.TEXT,
+    )
+    assert result["y"] > 0, (
+        f"work-страница не прокрутилась (scrollY=0, innerHeight={result['ih']}, "
+        f"scrollHeight={result['sh']}) — auto-mark-as-read Then ниже неинтерпретируем: "
+        f"документ не выше вьюпорта, скролл к концу не мог произойти"
+    )
+    return result
+
+
 @allure.step("Then на листинге весь бюджет остаётся ровно {expected} work-блёрб(ов) (li[id^='work_'])")
 def assert_work_blurb_count_holds(driver, expected: int, timeout: int = 8, poll_interval: float = 0.3) -> None:
     """TC-129: негативный Then («подгрузки не произошло») — тот же класс, что

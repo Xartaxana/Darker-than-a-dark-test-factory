@@ -63,7 +63,7 @@
 </div>
 </body>
 </html>
-,7:headers;77:44:12:Content-Type,24:text/html; charset=utf-8,]25:14:content-length,4:3142,]]12:http_version;8:HTTP/1.1,}7:request;279:4:path;40:/works?ao3_companion_fixture=works_multi,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:dfe1f6c7-472d-5ed8-2d8d-916fc7444107;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:22df07ee-1231-bccb-51a2-9d81d9ceb7b6;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:d9e828b8-3f6c-0ff9-ab63-100a78c830c6;4:type;4:http;7:version;2:21#}8579:9:websocket;0:~8:response;7203:6:reason;2:OK,11:status_code;3:200#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;6976:<!DOCTYPE html>
+,7:headers;77:44:12:Content-Type,24:text/html; charset=utf-8,]25:14:content-length,4:3142,]]12:http_version;8:HTTP/1.1,}7:request;279:4:path;40:/works?ao3_companion_fixture=works_multi,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:dfe1f6c7-472d-5ed8-2d8d-916fc7444107;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:22df07ee-1231-bccb-51a2-9d81d9ceb7b6;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:d9e828b8-3f6c-0ff9-ab63-100a78c830c6;4:type;4:http;7:version;2:21#}9314:9:websocket;0:~8:response;7938:6:reason;2:OK,11:status_code;3:200#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;7711:<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><title>A Loved Test Work | Archive of Our Own</title></head>
 <body>
@@ -87,6 +87,21 @@
     </li>
     </ul>
     <p class="kudos"><a href="#" id="kudo_submit" role="button" onclick="this.setAttribute('data-kudo-clicked', String(1+Number(this.getAttribute('data-kudo-clicked')||0)));return false;">Give Kudos</a></p>
+    <dl class="work meta group">
+      <dt class="fandom tags">Fandom:</dt>
+      <dd class="fandom tags">
+        <ul class="commas">
+          <li><a class="tag" href="/tags/Fandom Alpha/works">Fandom Alpha</a></li>
+        </ul>
+      </dd>
+    </dl>
+    <dl class="stats">
+      <dt class="words">Words:</dt><dd class="words">4200</dd>
+      <dt class="chapters">Chapters:</dt><dd class="chapters">1/1</dd>
+      <dt class="comments">Comments:</dt><dd class="comments">0</dd>
+      <dt class="kudos">Kudos:</dt><dd class="kudos">0</dd>
+      <dt class="hits">Hits:</dt><dd class="hits">1</dd>
+    </dl>
     <div class="wrapper">
       <p>Test fixture body for download-flow recording (4200 words).</p>
       
@@ -146,9 +161,10 @@
     </div>
   </div>
 </div>
+<div id="chapters"><div class="userstuff module"><p>Chapter content for auto-mark-as-read fixture (AT-BUG-074).</p></div></div>
 </body>
 </html>
-,7:headers;77:44:12:Content-Type,24:text/html; charset=utf-8,]25:14:content-length,4:6976,]]12:http_version;8:HTTP/1.1,}7:request;255:4:path;16:/works/900000001,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:c8837619-ef41-abcc-f98e-89235728c4d2;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:5f7ca42d-2366-bba3-b259-66ea62abedcd;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:74e1d1e5-c15f-1184-f4d4-fa7806f645c2;4:type;4:http;7:version;2:21#}8589:9:websocket;0:~8:response;7213:6:reason;2:OK,11:status_code;3:200#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;6986:<!DOCTYPE html>
+,7:headers;77:44:12:Content-Type,24:text/html; charset=utf-8,]25:14:content-length,4:7711,]]12:http_version;8:HTTP/1.1,}7:request;255:4:path;16:/works/900000001,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:c8837619-ef41-abcc-f98e-89235728c4d2;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:5f7ca42d-2366-bba3-b259-66ea62abedcd;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:74e1d1e5-c15f-1184-f4d4-fa7806f645c2;4:type;4:http;7:version;2:21#}9322:9:websocket;0:~8:response;7946:6:reason;2:OK,11:status_code;3:200#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;7719:<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><title>A Kudosed Test Work | Archive of Our Own</title></head>
 <body>
@@ -172,6 +188,21 @@
     </li>
     </ul>
     <p class="kudos"><a href="#" id="kudo_submit" role="button" onclick="this.setAttribute('data-kudo-clicked', String(1+Number(this.getAttribute('data-kudo-clicked')||0)));return false;">Give Kudos</a></p>
+    <dl class="work meta group">
+      <dt class="fandom tags">Fandom:</dt>
+      <dd class="fandom tags">
+        <ul class="commas">
+          <li><a class="tag" href="/tags/Fandom Beta/works">Fandom Beta</a></li>
+        </ul>
+      </dd>
+    </dl>
+    <dl class="stats">
+      <dt class="words">Words:</dt><dd class="words">1500</dd>
+      <dt class="chapters">Chapters:</dt><dd class="chapters">1/1</dd>
+      <dt class="comments">Comments:</dt><dd class="comments">0</dd>
+      <dt class="kudos">Kudos:</dt><dd class="kudos">0</dd>
+      <dt class="hits">Hits:</dt><dd class="hits">1</dd>
+    </dl>
     <div class="wrapper">
       <p>Test fixture body for download-flow recording (1500 words).</p>
       
@@ -231,6 +262,7 @@
     </div>
   </div>
 </div>
+<div id="chapters"><div class="userstuff module"><p>Chapter content for auto-mark-as-read fixture (AT-BUG-074).</p></div></div>
 </body>
 </html>
-,7:headers;77:44:12:Content-Type,24:text/html; charset=utf-8,]25:14:content-length,4:6986,]]12:http_version;8:HTTP/1.1,}7:request;255:4:path;16:/works/900000002,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:0a1a2db6-729d-089f-3199-874c2d22038e;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:d75bd08a-4368-1a6c-c270-c820ebdc6f25;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:e16b00b9-514b-6c09-b1d9-f533ac35449c;4:type;4:http;7:version;2:21#}
+,7:headers;77:44:12:Content-Type,24:text/html; charset=utf-8,]25:14:content-length,4:7719,]]12:http_version;8:HTTP/1.1,}7:request;255:4:path;16:/works/900000002,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:0a1a2db6-729d-089f-3199-874c2d22038e;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:d75bd08a-4368-1a6c-c270-c820ebdc6f25;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:e16b00b9-514b-6c09-b1d9-f533ac35449c;4:type;4:http;7:version;2:21#}

@@ -24,6 +24,7 @@ import allure
 import pytest
 
 from framework.data import recording_builder as rb
+from framework.data import seed_db
 from framework.data import works as W
 from framework.steps import app_steps, browser_steps, library_steps, rating_steps
 
@@ -178,3 +179,90 @@ def test_first_panel_save_clicks_kudos_once(clean_app, replay, driver):
     app_steps.open_tab(driver, "Browse")
     browser_steps.assert_kudo_submit_click_count(driver, 1)
     browser_steps.assert_kudo_submit_click_count_holds(driver, 1)
+
+
+# --- TC-256 (AT-BUG-074): auto-mark-as-read (`Ao3JsBridge.onWorkFinished`,
+# `BrowserViewModel.kt:1292-1326`, фикс `bugs/BUG-067.md` commit `07805a9f`,
+# сборка 59be96c6) — скролл work-страницы до конца `#chapters` при
+# `rating=null` проставляет `READ`, сохраняя `downloadPath` и НЕ перезаписывая
+# непустые локальные метаданные (`backfillMetadata` дозаполняет только ПУСТЫЕ
+# поля). Регресс-замок BUG-067 для двери `onWorkFinished` — companion TC-151/
+# TC-152 закрывают ТОТ ЖЕ класс дефекта («пересборка WorkRating конструктором
+# теряет downloadPath/метаданные»), но для дверей панели/overlay листинга;
+# ESC-026 (R1, `state/escalations.md`) явно называет дверь `onWorkFinished` НЕ
+# закрытой той партией — этот кейс закрывает именно её.
+#
+# `rb.LISTING_BASIC_FILENAME` — ТА ЖЕ запись, что несёт Given TC-151/TC-152
+# (`W.LOVED.ao3_id`, потребитель фикстуры, чинившейся `bugs/AT-BUG-074.md`:
+# `#chapters`/`.userstuff.module` + `dd.fandom a`/`dd.words`, узлы, которые
+# скрейпит `onScroll`, ao3_bridge.js:1184-1194).
+_TC256_READ_WAIT_TIMEOUT = 20  # асинхронный upsert через viewModelScope.launch
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-256")
+@allure.title(
+    "Дочитывание скачанной работы без рейтинга проставляет READ, сохраняя "
+    "downloadPath и локальные метаданные (auto-mark-as-read, AT-BUG-074)"
+)
+@pytest.mark.parametrize("replay", [rb.LISTING_BASIC_FILENAME], indirect=True)
+def test_auto_mark_as_read_on_scroll_to_bottom_preserves_download_path_and_local_metadata(
+    tc256_auto_read_baseline, replay, driver
+):
+    # Given работа W (`ao3_id` = `W.LOVED.ao3_id`, тот же ao3_id, что TC-151/152)
+    # скачана (`downloadPath` на реальный файл), рейтинг НЕ выставлен, личная
+    # заметка "note A" и тег "tagA" присутствуют, локальные title/fandom/
+    # wordCount ("ЛОКАЛЬНЫЙ заголовок"/"Мой фандом"/777777) ОТЛИЧАЮТСЯ от
+    # канонической work-страницы фикстуры ("A Loved Test Work"/"Fandom
+    # Alpha"/4200) — сидинг ДО старта сессии Appium (`tc256_auto_read_baseline`)
+    work, device_path = tc256_auto_read_baseline
+    baseline = seed_db.read_work_ratings_full()[work.ao3_id]
+    assert baseline["rating"] is None, (
+        f"Given TC-256 не выполнен: rating={baseline['rating']!r}, ожидался None"
+    )
+    baseline_timestamp = baseline["timestamp"]
+
+    app_steps.wait_app_ready(driver)
+    rating_steps.open_work_page(driver, work.ao3_id)
+
+    # When пользователь скроллит страницу работы до конца — последний
+    # .userstuff.module внутри #chapters целиком попадает в вьюпорт, ссылки
+    # «Next Chapter →» на странице нет (одностраничная работа) — onScroll
+    # (ao3_bridge.js:1184-1194) скрейпит title/author/fandom/wordCount со
+    # страницы и вызывает Ao3JsBridge.onWorkFinished
+    browser_steps.scroll_work_page_to_bottom(driver)
+
+    # Then рейтинг работы W становится READ. Различающий оракул timestamp
+    # (не инвариантный "поле осталось тем же значением") — если onScroll/upsert
+    # вообще не сработал (например, геометрия фикстуры не привела нижнюю
+    # границу .userstuff.module в вьюпорт), timestamp остался бы baseline-значением
+    # (тот же приём, что TC-152.md требование [2]/O1)
+    row = rating_steps.wait_for_rating(work.ao3_id, "READ", timeout=_TC256_READ_WAIT_TIMEOUT)
+    assert row["timestamp"] != baseline_timestamp, (
+        "timestamp не изменился относительно baseline — upsert-путь onWorkFinished "
+        "не сработал вовсе (различающий оракул CH-008/TC-152 [2]), rating=READ "
+        "выше ложно-позитивен"
+    )
+
+    # And downloadPath остаётся НЕИЗМЕННЫМ — тем же путём на тот же файл на диске
+    # (связь строка↔файл не рвётся операцией, которая файла не касается)
+    assert row["downloadPath"] == device_path
+
+    # And личная заметка "note A" и тег "tagA" остаются без изменений
+    assert row["comment"] == "note A"
+    assert row["tags"] == ["tagA"]
+
+    # And title/fandom/wordCount остаются ЛОКАЛЬНЫМИ значениями — скрейп со
+    # страницы их НЕ перезаписывает (backfillMetadata дозаполняет только ПУСТЫЕ
+    # поля; у этой строки все три уже непустые, канонические фикстурные
+    # значения "A Loved Test Work"/"Fandom Alpha"/4200 сюда НЕ попадают)
+    assert row["title"] == work.title
+    assert row["fandom"] == work.fandom
+    assert row["word_count"] == work.word_count
+
+    # And работа продолжает быть видна на вкладке FILES Library (файл цел,
+    # downloadPath жив) И появляется на вкладке READ (новый рейтинг)
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_work_in_tab(driver, "READ", work.title)
+    library_steps.assert_work_in_files_tab(driver, work.title)

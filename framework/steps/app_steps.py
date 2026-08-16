@@ -80,6 +80,19 @@ def seed_downloaded_works(rows: list[tuple[Work, str, Path]]) -> dict[str, str]:
     return seed_db.seed_with_download(rows)
 
 
+@allure.step("Given засеяны записи с комбинацией rating/comment/tags/downloadPath одной строкой")
+def seed_with_comment_and_download(
+    rows: list[tuple[Work, str | None, str | None, str | None, Path]]
+) -> dict[str, str]:
+    """Тонкая обёртка над `seed_db.seed_with_comment_and_download` (AT-BUG-046
+    baseline A/C) — тот же приём, что остальные `seed_*` в этом модуле (Given-шаг
+    с allure.step, без собственной логики). Нужна TC-256: baseline с ЛОКАЛЬНЫМИ
+    title/fandom/wordCount, отличными от фикстурной work-страницы, rating=None,
+    непустые comment/tags и реальный downloadPath — ОДНОЙ строкой (см. докстринг
+    `seed_db.seed_with_comment_and_download`)."""
+    return seed_db.seed_with_comment_and_download(rows)
+
+
 @allure.step("Given в уже выбранной SAF-папке загрузок появляется файл {filename}")
 def place_file_in_download_folder(remote_dir: str, filename: str, content: str) -> str:
     """Кладёт файл (adb push, вне UI) в каталог, УЖЕ выбранный ранее через

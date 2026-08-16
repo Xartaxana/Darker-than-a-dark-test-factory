@@ -588,6 +588,59 @@ def render_reading_ux_filler_html(min_height_px: int = WORK_PAGE_READING_UX_FILL
     return f'<div style="min-height: {min_height_px}px;">\n{paragraphs}\n    </div>'
 
 
+# --- AT-BUG-074: узлы `dd.fandom a`/`dd.words` (`dl.work.meta.group`/`dl.stats`,
+# реальная разметка AO3, ПО ОБРАЗЦУ уже существующей `render_work_metadata_page_
+# html`, AT-BUG-061:754-770) — `onScroll` (`ao3_bridge.js:1191-1192`) скрейпит
+# ИМЕННО эти узлы (не preface `h5.fandom.tags`, которую `render_work_page_html`
+# уже несёт для людей). Литерально тот же HTML-фрагмент, что и в
+# `render_work_metadata_page_html` (критерий готовности AT-BUG-074 п.1) —
+# скопирован буквально В ЭТОТ модуль как отдельная функция (не общий рефактор
+# обеих функций), чтобы не трогать байт-в-байт вывод `render_work_metadata_
+# page_html` (regression-инвариант `test_work_metadata_fetch_markup_matches_
+# generator`, AT-BUG-061).
+def _work_meta_group_and_stats_html(fandom: str, word_count: int | None) -> str:
+    word_count = word_count if word_count is not None else 0
+    return f"""<dl class="work meta group">
+      <dt class="fandom tags">Fandom:</dt>
+      <dd class="fandom tags">
+        <ul class="commas">
+          <li><a class="tag" href="/tags/{fandom}/works">{fandom}</a></li>
+        </ul>
+      </dd>
+    </dl>
+    <dl class="stats">
+      <dt class="words">Words:</dt><dd class="words">{word_count}</dd>
+      <dt class="chapters">Chapters:</dt><dd class="chapters">1/1</dd>
+      <dt class="comments">Comments:</dt><dd class="comments">0</dd>
+      <dt class="kudos">Kudos:</dt><dd class="kudos">0</dd>
+      <dt class="hits">Hits:</dt><dd class="hits">1</dd>
+    </dl>"""
+
+
+# --- AT-BUG-074: `<div id="chapters"><div class="userstuff module">...</div></div>`
+# — без него `onScroll` (`ao3_bridge.js:1170-1171`, `if (!chaptersDiv) return`)
+# не подписывает `scroll`-листенер вовсе, auto-mark-as-read (`onWorkFinished`)
+# физически недостижим (TC-256). Единственная глава (URL этой страницы не несёт
+# `/chapters/` — `isLastPage()` тривиально `true`, «Next Chapter →» заводить не
+# нужно, критерий готовности п.2). Геометрия: узел — БУКВАЛЬНО последний элемент
+# `<body>` (после закрытия `#main`), сразу ПОСЛЕ узла 3 AT-BUG-030
+# (`render_reading_ux_filler_html`, высота >= 3×innerHeight, внутри `.wrapper`)
+# — оба узла КОНЦЕПТУАЛЬНО не конфликтуют, т.к. #chapters лежит СНАРУЖИ
+# `.wrapper`, строго после него: скролл документа до самого низа (browser
+# clamps `scrollTo` к максимально возможной позиции) кладёт нижнюю границу
+# ПОСЛЕДНЕГО узла документа `<= window.innerHeight` по построению (тот же
+# приём геометрии, что уже физически проверен `scroll_listing_to_bottom`/TC-129
+# на листинговой фикстуре) — без собственной большой высоты, чтобы не отодвигать
+# фактическое дно документа дальше вниз.
+def _chapters_html() -> str:
+    return (
+        '<div id="chapters">'
+        '<div class="userstuff module">'
+        "<p>Chapter content for auto-mark-as-read fixture (AT-BUG-074).</p>"
+        "</div></div>"
+    )
+
+
 def render_work_page_html(work: Work) -> str:
     """Минимальная, но структурно-валидная work-страница AO3 (`#workskin`,
     `h2.title.heading`, `h3.byline.heading a[rel=author]` — сверено с Fragility note
@@ -605,7 +658,14 @@ def render_work_page_html(work: Work) -> str:
     AT-BUG-035: `#kudo_submit` (`_kudo_submit_html`) — СИБЛИНГ
     `<ul class="work navigation actions">`, между ней и `<div class="wrapper">`
     — не меняет порядок/индексы ни `_download_list_html` (внутри `<ul>`), ни
-    tap-zone-guard/reading-UX узлов (внутри `.wrapper`, идут строго после)."""
+    tap-zone-guard/reading-UX узлов (внутри `.wrapper`, идут строго после).
+
+    AT-BUG-074: `dd.fandom a`/`dd.words` (`_work_meta_group_and_stats_html`) —
+    СИБЛИНГ `#kudo_submit`, между ним и `<div class="wrapper">` (не меняет
+    порядок ul/kudo/wrapper regression-инварианта AT-BUG-035 выше — kudo_start
+    по-прежнему СТРОГО между `</ul>` и `<div class="wrapper">`). `#chapters`
+    (`_chapters_html`) — СНАРУЖИ `#workskin`/`#main`, буквально последний узел
+    `<body>` (см. докстринг `_chapters_html` про геометрию scroll-to-bottom)."""
     title = html.escape(work.title)
     author = html.escape(work.author)
     fandom = html.escape(work.fandom)
@@ -624,6 +684,7 @@ def render_work_page_html(work: Work) -> str:
       {_download_list_html(work)}
     </ul>
     {_kudo_submit_html()}
+    {_work_meta_group_and_stats_html(fandom, work.word_count)}
     <div class="wrapper">
       <p>Test fixture body for download-flow recording ({work.word_count} words).</p>
       {_tap_zone_guard_nodes_html()}
@@ -631,6 +692,7 @@ def render_work_page_html(work: Work) -> str:
     </div>
   </div>
 </div>
+{_chapters_html()}
 </body>
 </html>
 """
