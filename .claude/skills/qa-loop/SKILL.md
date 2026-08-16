@@ -61,8 +61,13 @@ job id, сырой URL дальше не передавать) и вызови p
 0а. **Лок прохода (анти-наложение; `scripts/loop_lock.py`, внедрён
    2026-07-17; heartbeat-ветка — M1/M2 разбора репетиции, 2026-08-09).**
    ПЕРВОЙ командой после сверки яруса — развилка по env `AO3_LOOP_HOLDER`
-   (его ставит ТОЛЬКО обёртка `scripts/heartbeat_wrap.py` в env дочернего
-   процесса; holder несёт нонс запуска):
+   (его ставит обёртка `scripts/heartbeat_wrap.py` в env дочернего
+   процесса, holder несёт нонс запуска — обёртка ДЕПРЕКИРОВАНА
+   spec-factory-window v6, 2026-08-16, production-путь больше её не
+   вызывает; ветка ниже — headless-carve-out N3, сохранена для ручных/
+   тестовых headless-заходов с этим env, не для штатного окна `/factory`,
+   у которого лок — интерактивный, см. `.claude/skills/factory/
+   SKILL.md` §3):
    - env ЗАДАН и `python scripts/loop_lock.py status` показывает лок
      ИМЕННО этого holder (штатно живой; STALE при клампе обёртки
      MAX_PASS < TTL недостижим — увидел STALE своего holder = аномалия,
@@ -340,9 +345,11 @@ scripts/gitlab_sync.py`; слово владельца 2026-08-10: GitLab — ж
       `python scripts/loop_lock.py release --holder "<holder из ACQUIRED>"`
       (без --holder release НЕ срабатывает никогда — дефолт не совпадает;
       критик-проба 2026-08-09). Если лок был локом обёртки heartbeat
-      (env-ветка шага 0а без собственного acquire) — release НЕ звать,
-      снимет finally обёртки; REFUSED обёртки при fallback-сценарии —
-      ожидаемый исход («refused-expected»), не инцидент. Штатный release
+      (env-ветка шага 0а без собственного acquire — сейчас ТОЛЬКО
+      headless-carve-out N3, обёртка деприкирована, см. шаг 0а выше) —
+      release НЕ звать, снимет finally обёртки; REFUSED обёртки при
+      fallback-сценарии — ожидаемый исход («refused-expected»), не
+      инцидент. Штатный release
       заодно сбрасывает счётчик подряд умерших проходов — живой проход =
       фабрика жива.
 - [ ] Каждый поставленный лок снят (или причина в логе).

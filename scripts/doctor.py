@@ -14,7 +14,8 @@ scheduled-проходом /qa-loop убеждаемся, что стенд це
         pin (disable_ipv6=1 на устройстве, если оно поднято — ESC-015);
         живой loop.lock с мёртвым pid (heartbeat-сирота, M1/R4); пакет на
         устройстве соответствует yaml (vc + sha base.apk,
-        mech-device-build-check)
+        mech-device-build-check); LastRunTime задачи AO3-QA-Heartbeat < 2ч
+        (warn, н/п при Disabled — spec-factory-window v6 К5в, 2026-08-16)
 
 Коды выхода: 0 — всё OK/WARN; 1 — есть FAIL (эскалация уже записана).
 FAIL дедуплицируется: одна строка **DOCTOR** на проверку, пока не устранена.
@@ -39,6 +40,7 @@ except (AttributeError, ValueError):
     pass
 
 import board_sync as bs
+import scheduled_task_reader as str_reader
 import sla_utils
 
 REPO = bs.REPO
@@ -50,6 +52,13 @@ ESCALATIONS_PATH = REPO / "state" / "escalations.md"
 LOCK_FILE = REPO / "state" / "loop.lock"
 SLA_PATH = REPO / "state" / "sla.yaml"
 AVD_NAME = "ao3_test_api34"
+# spec-factory-window v6 К5в (2026-08-16): та же задача, что
+# heartbeat_wrap.TASK_NAME / docs/06 §5 — не импортируется оттуда
+# намеренно (heartbeat_wrap.py депрекируется К5д, doctor.py её не
+# зависит), см. образец PACKAGE_ID выше (локальная константа с
+# комментарием-источником).
+HEARTBEAT_TASK_NAME = "AO3-QA-Heartbeat"
+HEARTBEAT_TASK_LAST_RUN_MAX_H = 2.0
 # mech-device-build-check (spec-device-build-check.md v3): истина —
 # framework/config/settings.py:24 (`APP_PACKAGE = "com.example.ao3_wrapper"`),
 # сверено builder'ом при реализации.
@@ -159,7 +168,10 @@ def _heartbeat_lock_dead_pid_check() -> Check:
         return Check(name, "run", True,
                     f"holder={holder!r} не heartbeat:* — pid не информативен, "
                     "проверка не применима")
-    threshold_h = sla_utils.load_lock_stale_hours(SLA_PATH)
+    # К4 (spec-factory-window v6, 2026-08-16): порог свежести loop.lock —
+    # loop_lock_ttl_hours (fallback lock_stale того же файла), НЕ голый
+    # lock_stale — тот же переход, что loop_lock.py acquire/status.
+    threshold_h = sla_utils.load_loop_lock_ttl_hours(SLA_PATH)
     age_h = _lock_age_hours(payload)
     if age_h is None or age_h > threshold_h:
         return Check(name, "run", True,
@@ -178,6 +190,40 @@ def _heartbeat_lock_dead_pid_check() -> Check:
              f"снимет через {threshold_h}ч, либо снять сейчас вручную "
              "`python scripts/loop_lock.py release --force`")
     return Check(name, "run", alive, detail, warn=not alive)
+
+
+def _heartbeat_task_last_run_check(*, now: datetime.datetime | None = None) -> Check:
+    """К5в (spec-factory-window v6, 2026-08-16): «задача планировщика тикает
+    вообще» — LastRunTime свежее HEARTBEAT_TASK_LAST_RUN_MAX_H (2ч,
+    прецедент doctor.py:180 warn=True — не FAIL, это НЕ блокирует проход).
+    Источник — единый ридер scheduled_task_reader (К5а): schtasks-парсинг
+    ЗАПРЕЩЁН (локализация cp866, r4 факт 5). Ветки:
+      - запрос не удался (ok=False) -> н/п («запрос не удался -> н/п»,
+        детектор фолбэка — эта строка + чек 3б session-handoff);
+      - State == Disabled -> н/п (задача намеренно выключена — сравнение
+        LastRunTime с ней бессмысленно, спека К5в);
+      - LastRunTime отсутствует (задача ни разу не запускалась) -> н/п;
+      - иначе — WARN, если возраст LastRunTime > порога, иначе OK."""
+    name = f"LastRunTime задачи {HEARTBEAT_TASK_NAME} < {HEARTBEAT_TASK_LAST_RUN_MAX_H:.0f}ч"
+    result = str_reader.read_task_state(HEARTBEAT_TASK_NAME)
+    if not result.ok:
+        return Check(name, "run", True,
+                    f"н/п — запрос состояния задачи не удался ({result.error})")
+    if result.state == "Disabled":
+        return Check(name, "run", True, "н/п — задача Disabled")
+    if result.last_run is None:
+        return Check(name, "run", True,
+                    "н/п — задача ни разу не запускалась (LastRunTime отсутствует)")
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    last_run = result.last_run
+    if last_run.tzinfo is None:
+        last_run = last_run.replace(tzinfo=datetime.timezone.utc)
+    age_h = (now - last_run).total_seconds() / 3600.0
+    ok = age_h <= HEARTBEAT_TASK_LAST_RUN_MAX_H
+    detail = (f"state={result.state} last_run={result.last_run.isoformat()} "
+             f"возраст={age_h:.2f}ч" +
+             ("" if ok else " — планировщик мог не тикать, сверь Task Scheduler"))
+    return Check(name, "run", ok, detail, warn=not ok)
 
 
 def _env_paths() -> dict[str, Path]:
@@ -521,6 +567,9 @@ def run_checks() -> list[Check]:
 
     # M1/R4 (plan-m1-m4.md v3, 2026-08-09): сирота-детектор для heartbeat-обёртки.
     checks.append(_heartbeat_lock_dead_pid_check())
+
+    # К5в (spec-factory-window v6, 2026-08-16): задача планировщика тикает.
+    checks.append(_heartbeat_task_last_run_check())
 
     return checks
 

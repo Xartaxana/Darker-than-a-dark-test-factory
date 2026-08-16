@@ -59,16 +59,42 @@ docs/09-improvement-plan.md). Journal: `logs/routing-log.jsonl`,
      Сверка дешёвая: свежий `state/escalations.md` (sla_sweep уже
      считает charter follow-up) + Grep по Open|Fixed багам и
      Approved-кейсам против занятости устройства на закрытии.
-   - **3б. Парность heartbeat-строк (детектор M4, разбор репетиции
-     2026-08-09).** Если за сессию/окно в `logs/heartbeat.log` появлялись
-     строки `heartbeat start` — каждая обязана иметь парную строку
-     обёртки (`heartbeat-обёртка` / `heartbeat_wrap`) в
-     `state/orchestrator-log.md` с exit/release-исходом. Непарная
-     start-строка = проход умер, не оставив следа (класс N6 репетиции) —
-     находка, не FAIL хендоффа: зафиксировать в журнале и в HANDOFF.
-     Сверка дешёвая: Grep обоих файлов по окну сессии. Остаток класса
-     (события ВНУТРИ умершего прохода не восстановимы) — известное
-     ограничение M4, чинится чеком 2 (open-dispatches).
+   - **3б. Сторож жив (детектор M4 ВЫВЕДЕН — spec-factory-window v6 К5а,
+     2026-08-16).** Прежний чек «парность heartbeat-строк»
+     (`logs/heartbeat.log` start ↔ `state/orchestrator-log.md`
+     heartbeat-обёртка) БОЛЬШЕ НЕ ПРИМЕНЯЕТСЯ: `logs/heartbeat.log`
+     никем не пишется (новая шапка `scripts/heartbeat.cmd` без echo,
+     `scripts/heartbeat_wrap.py` деприкирована) — безопасно вывести:
+     M4-строки были детектором child-spawn ЭТОЙ обёртки, обёртка не
+     запускается. На его месте — НОВЫЙ чек-импликация (Б-6):
+     **ЕСЛИ** задача `AO3-QA-Heartbeat` в состоянии `Ready` И
+     `LastRunTime` < 2ч, **ТО** `state/factory-watchdog.json` не старше
+     `LastRunTime + 30 мин`; задача `Disabled` → н/п (не FAIL). Форма
+     неравенства ЯВНАЯ: `LastRunTime − mtime(factory-watchdog.json) ≤
+     30 мин` (сторож пишет state-файл В МОМЕНТ своего запуска —
+     «не старше LastRunTime+30» в буквальном чтении дало бы FAIL
+     ВСЕГДА, т.к. mtime всегда ПОЗЖЕ LastRunTime).
+     **Источник состояния задачи — ЕДИНЫЙ ридер**
+     (`python scripts/scheduled_task_reader.py AO3-QA-Heartbeat` —
+     `Get-ScheduledTask(.State)` + `Get-ScheduledTaskInfo(.LastRunTime)`,
+     локале-независимо; `schtasks`-парсинг ЗАПРЕЩЁН — вывод
+     локализован, cp866 «Состояние: Отключено» на русской Windows;
+     `NextRunTime` у Disabled-задачи врёт). Тот же ридер использует
+     `doctor.py`. «Запрос не удался» (`error=...`, exit 1) → н/п +
+     строка в резюме сессии (F-30 CLAUDE.md — env-негатив без сверки не
+     факт; детектор фолбэка — строка в `state/factory-watchdog.json`
+     сторожа + этот же чек).
+     **Плюс чек mode-файла:** `state/factory-mode.json` СОГЛАСОВАН с
+     намерением оператора — если `mode: "active"`, `updated_ts` не
+     старше 2ч (окно реально ведётся, не забыто открытым без пульса);
+     `mode: "stopped"` или файла нет — н/п. Расхождение (`active`,
+     `updated_ts` протух) — находка, не FAIL хендоффа: зафиксировать в
+     журнале и в HANDOFF (детектор дрейфа mode — та же строка, что
+     упомянута в матрице сторожа К3 п.2).
+     Сверка дешёвая: `Get-Item state/factory-watchdog.json`
+     (`.LastWriteTime`) + `Get-Content state/factory-mode.json` (или
+     их отсутствие — оба файла gitignored, легитимно отсутствуют вне
+     активного окна/после чистого клона).
    - **3в. Обратный канал GitLab чист (детектор мёртвого канала,
      2026-08-09).** `python scripts/gitlab_inbound.py --check`: «чист»
      (exit 0) — ок; «деградация» (нет токена/сети/частичный отказ,

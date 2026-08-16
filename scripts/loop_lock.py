@@ -6,11 +6,15 @@
 scripts/ лок не ставили — «обещанный механизм без кода»).
 
 Лок — JSON-файл `{"holder": <строка>, "pid": <int>, "ts": "<ISO>"}`
-(по умолчанию state/loop.lock). Свежесть меряется тем же порогом, что
-и локи артефактов (state/sla.yaml → thresholds.lock_stale) — см.
-scripts/stale_locks.py, чей load_lock_stale_hours() здесь повторён
-дословно (тот же источник правды, независимая копия: разные файлы
-блокировки, общий порог).
+(по умолчанию state/loop.lock). Свежесть меряется ОТДЕЛЬНЫМ порогом
+`state/sla.yaml → thresholds.loop_lock_ttl_hours` (дефолт 4ч, fallback
+на lock_stale того же файла — sla_utils.load_loop_lock_ttl_hours,
+spec-factory-window v6 К4, 2026-08-16). ДО этой правки использовался
+общий `thresholds.lock_stale` (та же величина, что и локи артефактов у
+scripts/stale_locks.py) — пороги теперь РАЗВЕДЕНЫ: stale_locks.py и
+депрекируемый heartbeat_wrap.py остаются на lock_stale; loop_lock.py
+(этот модуль) и doctor-чек «живой loop.lock с мёртвым pid» — на новой
+load_loop_lock_ttl_hours.
 
 acquire:
   - лока нет ИЛИ он протух (возраст > lock_stale) => записать новый
@@ -79,6 +83,7 @@ DEFAULT_ESCALATIONS_PATH = REPO / "state" / "escalations.md"
 DEFAULT_SLA_PATH = REPO / "state" / "sla.yaml"
 
 DEFAULT_LOCK_STALE_H = sla_utils.DEFAULT_LOCK_STALE_H
+DEFAULT_LOOP_LOCK_TTL_H = sla_utils.DEFAULT_LOOP_LOCK_TTL_H
 REAP_ESCALATION_THRESHOLD = 2
 
 # AT-BUG-041: [^\r\n]* вместо .*$ — под '$' в (?m)-режиме '.' всё же матчит
@@ -129,9 +134,22 @@ def load_lock_stale_hours(sla_path: Path) -> float:
     2026-07-18): раньше был байт-идентичной копией stale_locks.py (разный
     лок-файл, тот же источник порога и тот же fallback — сама логика
     парсинга не отличалась ни байтом). Обёртка сохранена (сигнатура с
-    обязательным sla_path, как раньше — вызывающий код в этом модуле не
-    меняется)."""
+    обязательным sla_path, как раньше) для обратной совместимости и для
+    вызывающих, которым нужен ИМЕННО lock_stale (stale_locks.py) — сама
+    staleness-проверка ЭТОГО модуля больше её не использует (см.
+    load_loop_lock_ttl_hours ниже, spec-factory-window v6 К4)."""
     return sla_utils.load_lock_stale_hours(sla_path, DEFAULT_LOCK_STALE_H)
+
+
+def load_loop_lock_ttl_hours(sla_path: Path) -> float:
+    """thresholds.loop_lock_ttl_hours (fallback lock_stale ТОГО ЖЕ файла) —
+    spec-factory-window v6 К4 (2026-08-16): TTL, которым acquire/status
+    этого модуля меряют свежесть лока — ОТДЕЛЁН от lock_stale (тот
+    остаётся источником для stale_locks.py/депрекируемого
+    heartbeat_wrap.py, К5д). Обёртка над sla_utils.load_loop_lock_ttl_hours
+    (единый источник правды, тот же приём, что load_lock_stale_hours
+    выше)."""
+    return sla_utils.load_loop_lock_ttl_hours(sla_path, DEFAULT_LOOP_LOCK_TTL_H)
 
 
 def _atomic_write_text(path: Path, text: str) -> None:
@@ -241,7 +259,10 @@ def _write_loop_escalation(escalations_path: Path, count: int, now: datetime.dat
 def acquire(*, lock_file: Path, holder: str, reaps_path: Path, escalations_path: Path,
             sla_path: Path, now: datetime.datetime | None = None) -> tuple[int, list[str]]:
     now = now or _utcnow()
-    threshold_h = load_lock_stale_hours(sla_path)
+    # К4 (spec-factory-window v6, 2026-08-16): свежесть лока меряется
+    # loop_lock_ttl_hours (fallback lock_stale ЭТОГО ЖЕ файла), не голым
+    # lock_stale — см. load_loop_lock_ttl_hours.
+    threshold_h = load_loop_lock_ttl_hours(sla_path)
     existing = _read_lock_raw(lock_file)
     lines: list[str] = []
     reaped_prev_holder: str | None = None
@@ -311,7 +332,7 @@ def release(*, lock_file: Path, holder: str, reaps_path: Path,
 def status(*, lock_file: Path, reaps_path: Path, sla_path: Path,
            now: datetime.datetime | None = None) -> tuple[int, list[str]]:
     now = now or _utcnow()
-    threshold_h = load_lock_stale_hours(sla_path)
+    threshold_h = load_loop_lock_ttl_hours(sla_path)  # К4 — см. acquire()
     reaps = _load_reaps(reaps_path)
     lines: list[str] = []
 

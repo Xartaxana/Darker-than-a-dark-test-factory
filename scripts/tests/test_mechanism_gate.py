@@ -53,6 +53,11 @@ def test_mechanism_paths_filters_ao3_prefixes_with_boundary():
     assert mg.mechanism_paths(["delegation.config.yaml"]) == [
         "delegation.config.yaml"]
     assert mg.mechanism_paths(["delegation.config.yaml.bak"]) == []
+    # 2026-08-16 (spec-factory-window v6, К5г): сторож окна-фабрики —
+    # тот же образец, что heartbeat_wrap/doctor выше.
+    assert mg.mechanism_paths(["scripts/factory_watchdog.py"]) == [
+        "scripts/factory_watchdog.py"]
+    assert mg.mechanism_paths(["scripts/tests/test_factory_watchdog.py"]) == []
 
 
 def test_decide_skip_and_block_only_from_commit_message():

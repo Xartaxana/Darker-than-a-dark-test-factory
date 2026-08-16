@@ -33,6 +33,43 @@ def test_no_lock_stale_field_returns_default(tmp_path):
     assert su.load_lock_stale_hours(p) == su.DEFAULT_LOCK_STALE_H
 
 
+def test_loop_lock_ttl_missing_file_returns_own_default(tmp_path):
+    assert su.load_loop_lock_ttl_hours(tmp_path / "no-such.yaml") == su.DEFAULT_LOOP_LOCK_TTL_H
+
+
+def test_loop_lock_ttl_explicit_default_override_on_missing_file(tmp_path):
+    assert su.load_loop_lock_ttl_hours(tmp_path / "no-such.yaml", default=9.5) == 9.5
+
+
+def test_loop_lock_ttl_reads_own_key(tmp_path):
+    p = tmp_path / "sla.yaml"
+    p.write_text("version: 1\nthresholds:\n  lock_stale: 2\n  loop_lock_ttl_hours: 4.5\n",
+                 encoding="utf-8")
+    assert su.load_loop_lock_ttl_hours(p) == 4.5
+
+
+def test_loop_lock_ttl_falls_back_to_lock_stale_of_same_file_when_key_missing(tmp_path):
+    """К4 (spec-factory-window v6): ключа loop_lock_ttl_hours нет, но файл
+    читается — fallback на lock_stale ЭТОГО ЖЕ файла (не на голый
+    DEFAULT_LOOP_LOCK_TTL_H) — старые фикстуры/деплои со старым ключом не
+    должны молча получить другое число."""
+    p = tmp_path / "sla.yaml"
+    p.write_text("version: 1\nthresholds:\n  lock_stale: 2.5\n", encoding="utf-8")
+    assert su.load_loop_lock_ttl_hours(p) == 2.5
+
+
+def test_loop_lock_ttl_falls_back_to_regex_when_yaml_unparseable(tmp_path):
+    p = tmp_path / "sla.yaml"
+    p.write_text("thresholds:\n  loop_lock_ttl_hours: 3\n  [broken", encoding="utf-8")
+    assert su.load_loop_lock_ttl_hours(p) == 3.0
+
+
+def test_loop_lock_ttl_no_thresholds_at_all_returns_own_default(tmp_path):
+    p = tmp_path / "sla.yaml"
+    p.write_text("version: 1\nthresholds:\n  other_field: 7\n", encoding="utf-8")
+    assert su.load_loop_lock_ttl_hours(p) == su.DEFAULT_LOOP_LOCK_TTL_H
+
+
 def test_used_identically_by_both_call_sites(tmp_path):
     """Регрессия дедупа: stale_locks.py и loop_lock.py обязаны отдавать то
     же значение, что и sla_utils напрямую, для одного и того же файла."""

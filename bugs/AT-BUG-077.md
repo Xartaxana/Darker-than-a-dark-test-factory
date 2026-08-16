@@ -113,6 +113,26 @@ QA-агентов регулярно запускаются как дети hear
 
 ## Обсуждение
 
+**2026-08-16 — builder (sonnet), примечание (spec-factory-window v6,
+К5е — не чинил, вне owns этого диспатча).** Архитектура сменилась
+«окно-фабрика + сторож»: `scripts/heartbeat.cmd` (Task Scheduler,
+`AO3-QA-Heartbeat`) больше НЕ вызывает `scripts/heartbeat_wrap.py` —
+вызывает `scripts/factory_watchdog.py` (см. докстринг-деприкацию
+`heartbeat_wrap.py` и `docs/06-dark-factory.md` §5). Ambient-условие,
+делавшее этот баг ОРГАНИЧЕСКИ воспроизводимым (QA-агент, диспетчиро-
+ванный planировщиком ПОКА `heartbeat_wrap.py` реально держит проход и
+прокидывает `AO3_LOOP_HOLDER` дочернему `claude`), в production БОЛЬШЕ
+НЕ ВОЗНИКАЕТ — некому запускать эту цепочку вживую. Баг остаётся
+**Open** (сам дефект теста — `without_extra` вычёркивает
+`AO3_LOOP_HOLDER` только из ОДНОЙ стороны сравнения — НЕ исправлен,
+критерий готовности из тела бага не тронут). Repro теперь ТОЛЬКО
+синтетический: вручную выставить `AO3_LOOP_HOLDER` в env перед `python
+-m pytest scripts/tests/test_heartbeat_wrap.py -q` (как в исходном
+воспроизведении бага) — код обёртки и её тесты остаются живыми
+(страховка отката, `test_heartbeat_wrap*.py` держатся зелёными в общем
+прогоне `scripts/tests`), просто путь до этого сравнения больше не
+проходится ambient-путём.
+
 **2026-08-15 — test-maintainer, заведение (found_in, не чинил — вне owns
 диспатча RUN-20260815-0337-TC154-APP_CHANGED, D-0037 scope не
 расширяется).** Обнаружено при штатном DoD-шаге 4 (`python -m pytest

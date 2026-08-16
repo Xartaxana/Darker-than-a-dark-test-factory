@@ -29,6 +29,15 @@ thresholds:
   # Лок старше этого времени без записи о завершении = упавший агент; снять, залогировать
   lock_stale: 2
 
+  # spec-factory-window v6 К4 (2026-08-16): TTL СВЕЖЕСТИ state/loop.lock —
+  # ОТДЕЛЬНЫЙ от lock_stale выше порог (sla_utils.load_loop_lock_ttl_hours,
+  # fallback на lock_stale, если этого ключа нет). Читатели: loop_lock.py
+  # (acquire/status) и doctor-чек «живой loop.lock с мёртвым pid». Также
+  # порог «возраст лока» для сторожа (scripts/factory_watchdog.py К3 п.2,
+  # «лок без вождения» при mode=stopped). stale_locks.py (локи артефактов)
+  # и депрекируемый heartbeat_wrap.py остаются на lock_stale (К5д).
+  loop_lock_ttl_hours: 4
+
   # E5 (автозаведение exploratory-чартеров): детектор отказа автозаведения —
   # нет активного charter'а (Proposed/Planned/InProgress) И последний Done
   # старше этого порога (либо Done нет вовсе, либо у него битый/пустой

@@ -1,4 +1,39 @@
-"""heartbeat_wrap — честная обёртка вокруг heartbeat.cmd (M1+M4, план
+"""ДЕПРЕКИРОВАНО (spec-factory-window v6, К5д, 2026-08-16, слово оператора
+2026-08-16 «в идеале heartbeat просто подталкивает фабрику в открытом
+окне»): `scripts/heartbeat.cmd` БОЛЬШЕ НЕ ВЫЗЫВАЕТ этот модуль — вызывает
+`scripts/factory_watchdog.py` (сторож окна, не запускатель headless-
+прохода). Архитектура «невидимая фабрика в фоне» заменена на «окно-
+фабрика + сторож»: `/qa-loop` теперь ведёт скилл `.claude/skills/
+factory/SKILL.md` из ОТКРЫТОГО окна Claude Code, не эта обёртка из
+Task Scheduler.
+
+Обе ветки этого модуля мертвы в production, но КОД И ТЕСТЫ ОСТАЮТСЯ
+(страховка отката — `python -m pytest scripts/tests -q` держит
+`test_heartbeat_wrap*.py` зелёными; см. CLAUDE.md «Чини класс, а не
+экземпляр» — если откат понадобится, обёртка снова рабочая, не
+переписывается заново):
+  1. **child-spawn-ветка** (acquire/BUSY/Popen/kill-tree/release/M4-строка,
+     основное тело докстринга ниже) — код МЁРТВ, никто не вызывает
+     `run_pass`/`main` этого модуля из production-пути.
+  2. **бюджет+fastdeath-ветка** (`state/heartbeat-budget.txt`,
+     `state/heartbeat-fastdeath.json`, `HEARTBEAT-BUDGET`/
+     `HEARTBEAT-CHILD-DEATH`-эскалации) — тоже МЕРТВА: бюджет прогонов
+     ПЕРЕЕЗЖАЕТ в аргумент `/factory N` (лимит срабатываний одного
+     прохода окна = 5, слово оператора 2026-08-16 — см. К1 п.3 спеки),
+     `state/heartbeat-fastdeath.json` — мёртвый runtime-файл (не пишется,
+     не читается никаким живым путём); эскалация `HEARTBEAT-BUDGET`
+     БОЛЬШЕ НЕ РОЖДАЕТСЯ (некому — `_write_budget`/`_schtasks_disable` не
+     вызываются из production).
+
+TTL-источник (К4 спеки): эта ветка ОСТАЁТСЯ на `sla_utils.
+load_lock_stale_hours` (см. `compute_max_pass_sec` ниже) — НЕ переходит
+на новую `load_loop_lock_ttl_hours` (та — для loop_lock.py/doctor.py/
+сторожа, живых читателей).
+
+--- Исходный докстринг (M1+M4, живой контекст на момент, когда обёртка
+была ЕЩЁ production-путём) сохранён ниже без изменений: ---
+
+heartbeat_wrap — честная обёртка вокруг heartbeat.cmd (M1+M4, план
 plan-m1-m4.md v3, критик-на-план PASS 2026-08-09; контекст:
 runs/REHEARSAL-2026-08-04.md §«Находки окна» N1/N6).
 

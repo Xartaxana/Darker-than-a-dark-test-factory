@@ -191,6 +191,12 @@ MECHANISM_PREFIXES = (
     # в doctor без очереди Lead. Его тесты (scripts/tests/test_doctor.py) —
     # ВНЕ невода, тот же образец, что у heartbeat_wrap/log_append.
     "scripts/doctor.py",
+    # 2026-08-16 (spec-factory-window v6, К5г): сторож окна-фабрики решает,
+    # объявляется ли STALLED-тревога/эскалация — тот же класс gate-на-пути-
+    # исполнения (планировщик тикает его каждые 30 мин), что heartbeat_wrap/
+    # doctor выше. Его тесты (scripts/tests/test_factory_watchdog.py) — ВНЕ
+    # невода, тот же образец.
+    "scripts/factory_watchdog.py",
     # 2026-07-23: срез карты осей — вход этого же гейта; тихая правка
     # среза = обход полноты осевого блока, поэтому сам срез механизмен.
     MAP_SNAPSHOT_REL,

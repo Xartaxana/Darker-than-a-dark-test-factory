@@ -25,6 +25,13 @@ def env(repo, monkeypatch):
     monkeypatch.setattr(dr, "SLA_PATH", root / "state" / "sla.yaml", raising=True)
     monkeypatch.setattr(dr, "_run", lambda args, timeout=60: (0, "deps-ok"), raising=True)
     monkeypatch.setattr(dr, "_which", lambda name: f"C:/fake/{name}", raising=True)
+    # spec-factory-window v6 К5в: fake быстрого/детерминированного ридера
+    # задачи планировщика — реальный powershell.exe НЕ вызываем в каждом
+    # тесте doctor (медленно, environment-dependent); Disabled -> н/п,
+    # держит test_healthy_env_all_ok зелёным независимо от машины.
+    monkeypatch.setattr(
+        dr.str_reader, "read_task_state",
+        lambda name, **kw: dr.str_reader.TaskState(True, "Disabled", None, None), raising=True)
 
     def touch(rel: str, text: str = "x") -> Path:
         p = root / rel
@@ -450,4 +457,103 @@ def test_heartbeat_lock_stale_ttl_not_applicable(repo, env, monkeypatch):
 
     checks = dr.run_checks()
     chk = next(c for c in checks if c.name == "живой loop.lock с мёртвым pid")
+    assert chk.ok and not chk.warn
+
+
+# --- К5в (spec-factory-window v6, 2026-08-16): LastRunTime задачи -------
+
+def _lastrun_check(checks):
+    return next(c for c in checks
+                if c.name.startswith(f"LastRunTime задачи {dr.HEARTBEAT_TASK_NAME}"))
+
+
+def test_lastrun_check_query_failed_is_not_applicable(repo, env, monkeypatch):
+    monkeypatch.setattr(
+        dr.str_reader, "read_task_state",
+        lambda name, **kw: dr.str_reader.TaskState(False, None, None, "boom"), raising=True)
+
+    chk = _lastrun_check(dr.run_checks())
+
+    assert chk.ok and not chk.warn
+    assert "н/п" in chk.detail and "boom" in chk.detail
+    assert dr.main([]) == 0
+
+
+def test_lastrun_check_disabled_is_not_applicable(repo, env, monkeypatch):
+    monkeypatch.setattr(
+        dr.str_reader, "read_task_state",
+        lambda name, **kw: dr.str_reader.TaskState(True, "Disabled", None, None), raising=True)
+
+    chk = _lastrun_check(dr.run_checks())
+
+    assert chk.ok and not chk.warn
+    assert "н/п" in chk.detail and "Disabled" in chk.detail
+
+
+def test_lastrun_check_never_ran_is_not_applicable(repo, env, monkeypatch):
+    monkeypatch.setattr(
+        dr.str_reader, "read_task_state",
+        lambda name, **kw: dr.str_reader.TaskState(True, "Ready", None, None), raising=True)
+
+    chk = _lastrun_check(dr.run_checks())
+
+    assert chk.ok and not chk.warn
+    assert "н/п" in chk.detail
+
+
+def test_lastrun_check_fresh_is_ok(repo, env, monkeypatch):
+    fresh = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(minutes=5)
+    monkeypatch.setattr(
+        dr.str_reader, "read_task_state",
+        lambda name, **kw: dr.str_reader.TaskState(True, "Ready", fresh, None), raising=True)
+
+    chk = _lastrun_check(dr.run_checks())
+
+    assert chk.ok and not chk.warn
+    assert dr.main([]) == 0
+
+
+def test_lastrun_check_boundary_exactly_two_hours_is_ok(repo, env, monkeypatch):
+    """Граница НА пороге (ровно 2ч) — ok (<=, не строго <). `now` инжектится
+    явно (доктор поддерживает optional now= на этой функции, см. образец
+    _lock_age_hours) — избегает флейка от системного времени между
+    вычислением фикстуры и вызовом проверки."""
+    now = datetime.datetime(2026, 8, 16, 12, 0, 0, tzinfo=datetime.timezone.utc)
+    on_boundary = now - datetime.timedelta(hours=dr.HEARTBEAT_TASK_LAST_RUN_MAX_H)
+    monkeypatch.setattr(
+        dr.str_reader, "read_task_state",
+        lambda name, **kw: dr.str_reader.TaskState(True, "Ready", on_boundary, None), raising=True)
+
+    chk = dr._heartbeat_task_last_run_check(now=now)
+
+    assert chk.ok and not chk.warn
+
+
+def test_lastrun_check_boundary_just_past_two_hours_warns(repo, env, monkeypatch):
+    """Граница ЗА порогом (2ч + 1мин) — WARN, не FAIL."""
+    now = datetime.datetime(2026, 8, 16, 12, 0, 0, tzinfo=datetime.timezone.utc)
+    past_boundary = now - datetime.timedelta(hours=dr.HEARTBEAT_TASK_LAST_RUN_MAX_H, minutes=1)
+    monkeypatch.setattr(
+        dr.str_reader, "read_task_state",
+        lambda name, **kw: dr.str_reader.TaskState(True, "Ready", past_boundary, None), raising=True)
+
+    chk = dr._heartbeat_task_last_run_check(now=now)
+
+    assert not chk.ok and chk.warn
+    # WARN не валит doctor (прецедент :180) — сверка через полный run_checks/main
+    monkeypatch.setattr(
+        dr.str_reader, "read_task_state",
+        lambda name, **kw: dr.str_reader.TaskState(True, "Ready", past_boundary, None), raising=True)
+    assert dr.main([]) == 0
+
+
+def test_lastrun_check_naive_last_run_treated_as_utc(repo, env, monkeypatch):
+    naive_fresh = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None) \
+        - datetime.timedelta(minutes=5)
+    monkeypatch.setattr(
+        dr.str_reader, "read_task_state",
+        lambda name, **kw: dr.str_reader.TaskState(True, "Ready", naive_fresh, None), raising=True)
+
+    chk = _lastrun_check(dr.run_checks())
+
     assert chk.ok and not chk.warn

@@ -47,3 +47,12 @@ state/heartbeat-fastdeath.json
 # КАЖДОМ подъёме эмулятора, версионирование давало бы бессмысленные диффы
 # (тот же класс, что loop.lock/loop-lock-reaps.json выше).
 state/emulator-session.json
+# spec-factory-window v6 (2026-08-16): состояние вождения /factory
+# (владение по nonce, счётчики прохода, updated_ts-пульс) — тот же класс
+# per-host operational state, что loop.lock/emulator-session.json выше;
+# пишет ТОЛЬКО скилл factory (К1/К2).
+state/factory-mode.json
+# spec-factory-window v6 (2026-08-16): состояние сторожа
+# (scripts/factory_watchdog.py) — снапшоты лока/mode-файла на каждом
+# тике планировщика, тот же класс, что state/factory-mode.json выше.
+state/factory-watchdog.json

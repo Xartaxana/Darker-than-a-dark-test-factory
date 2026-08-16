@@ -313,6 +313,51 @@ def test_status_handles_naive_ts_without_crashing(tmp_path):
     assert any(l.startswith("LIVE:") and "naive-holder" in l for l in lines)
 
 
+def test_acquire_uses_loop_lock_ttl_hours_not_lock_stale(tmp_path):
+    """К4 (spec-factory-window v6, 2026-08-16): acquire мерит свежесть
+    ПОРОГОМ loop_lock_ttl_hours, а не lock_stale — файл несёт РАЗНЫЕ
+    значения обоих ключей, разница обязана быть видна в поведении."""
+    p = _paths(tmp_path)
+    p["sla_path"].write_text(
+        "version: 1\nthresholds:\n  lock_stale: 1\n  loop_lock_ttl_hours: 5\n",
+        encoding="utf-8")
+    ll.acquire(holder="qa-loop:old", now=NOW, **p)
+
+    later = NOW + datetime.timedelta(hours=3)   # 3ч: > lock_stale(1) НО < loop_lock_ttl_hours(5)
+    code, lines = ll.acquire(holder="qa-loop:new", now=later, **p)
+
+    assert code == 1
+    assert any(l.startswith("BUSY:") and "qa-loop:old" in l for l in lines)
+
+
+def test_load_loop_lock_ttl_hours_wrapper_reads_its_own_key(tmp_path):
+    p = _sla(tmp_path, lock_stale=2)
+    p.write_text("version: 1\nthresholds:\n  lock_stale: 2\n  loop_lock_ttl_hours: 6\n",
+                 encoding="utf-8")
+    assert ll.load_loop_lock_ttl_hours(p) == 6.0
+    # старый wrapper остаётся на lock_stale (используется stale_locks.py)
+    assert ll.load_lock_stale_hours(p) == 2.0
+
+
+def test_status_uses_loop_lock_ttl_hours_boundary(tmp_path):
+    """Граница НА и ЗА порогом loop_lock_ttl_hours (не lock_stale)."""
+    p = _paths(tmp_path)
+    p["sla_path"].write_text(
+        "version: 1\nthresholds:\n  lock_stale: 1\n  loop_lock_ttl_hours: 4\n",
+        encoding="utf-8")
+    ll.acquire(holder="h0", now=NOW, **p)
+
+    on_boundary = NOW + datetime.timedelta(hours=4)       # ровно на границе
+    code, lines = ll.status(lock_file=p["lock_file"], reaps_path=p["reaps_path"],
+                             sla_path=p["sla_path"], now=on_boundary)
+    assert any(l.startswith("LIVE:") for l in lines)       # <= порога => ещё LIVE
+
+    past_boundary = NOW + datetime.timedelta(hours=4, seconds=1)
+    code, lines = ll.status(lock_file=p["lock_file"], reaps_path=p["reaps_path"],
+                             sla_path=p["sla_path"], now=past_boundary)
+    assert any(l.startswith("STALE:") for l in lines)
+
+
 def test_idempotent_release_after_release_is_noop(tmp_path):
     p = _paths(tmp_path)
     ll.acquire(holder="h0", now=NOW, **p)
