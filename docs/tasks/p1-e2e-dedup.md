@@ -1,13 +1,14 @@
-# П1: дедуп e2e-тестов + нормы слияния (spec-p1-dedup v5)
+# П1: дедуп e2e-тестов + нормы слияния (spec-p1-dedup v7)
 
 Слово оператора 2026-08-16: «тесты не должны копировать друг друга
 (особенно эмуляторные); можно один тест подлиннее и несколько проверок;
 можно параметризовать». П1+П2 утверждены, П3 после.
 
-v5 — правки по критик-раунду 4 (2 блокера: carve-out по to=Blocked
-убивал bug Verified→Open и automation retired→deprecated; фолбэк
-board_inbound:186 безусловен). Статус: **план на критик-входе, раунд 5
-(точечный)**. Автор: Lead (Fable). «Оператор в петле» — информирован.
+v6 — правки по критик-раунду 5 (2 блокера: гард по терминальности
+src_status ломал Verified→Open с борды — нужен порульный по флагу;
+откат из Merged красил validate). Б1 (from_terminal) подтверждён
+эмпирикой r5. Статус: **план на критик-входе, раунд 6 (точечный)**.
+Автор: Lead (Fable). «Оператор в петле» — информирован.
 
 ## Факты (r1/r2, приняты; ключевые witness'ы критиков)
 
@@ -54,8 +55,19 @@ board_inbound:186 безусловен). Статус: **план на крит�
 2. schemas/transitions.yaml: **ДВА правила** — `Automated → Merged` и
    `Approved → Merged`, оба `by: [human, lead]`, effects: [];
    `terminal: [Merged]`; **явный откат** `Merged → Review,
-   by: [human, lead], rollback: true` (прецедент поля :82-84) — вместо
-   случайного «звёздочного» пути.
+   by: [human, lead], rollback: true, БЕЗ via_board** (иначе ключ
+   Merged попадает в board_whitelist — краснеет пин паритета и
+   открывается борд-путь из терминального; двигать Merged можно только
+   транзишеном руками/Lead). **Механика отката (r5):** откат ОБЯЗАН
+   тем же ходом обнулить `merged_into` (иначе двустороннее
+   validate-правило п.1 красит сам санкционированный выход); кейс
+   возвращается в Review с пустыми automated_by/automation_status
+   (функция уже удалена — легально у не-Automated). **Конфликтная
+   ветка борды:** apply_conflict пишет Blocked мимо whitelist —
+   для Merged-карточки (признак: **`artifact_status` на диске**, не
+   cursor_artifact) конфликт = ЭСКАЛАЦИЯ БЕЗ смены статуса; строка
+   эскалации и обновление курсора выполняются, не выполняется только
+   запись статуса (правка board_inbound.apply_conflict, файл в owns).
 3. **Фикс терминальности — ДЕКЛАРАТИВНЫЙ ФЛАГ в матрице (r4), интент
    каждой машины сохранён явным решением.** Валидатор матрицы
    (:180-184) НЕ меняется. Новое поле правила
@@ -65,24 +77,51 @@ board_inbound:186 безусловен). Статус: **план на крит�
    - bug `*`→Open (human, via_board) — **true**: путь переоткрытия
      Verified→Open сохранён (пин test_transitions.py:272-275 остаётся
      зелёным, док-путь docs/06:140/docs/07:97 жив);
-   - test-case/run/charter `*`→Blocked (factory) — **true**:
-     эскалационный интент пина :115-124 сохранён;
+   - run/charter `*`→Blocked (factory) — **true**: эскалационный
+     интент пина :115-124 сохранён; **test-case `*`→Blocked —
+     `false`** (r6, решение полного Lead): у test-case terminal
+     впервые непуст, и true открывал бы фабрике Merged→Blocked при
+     непустом merged_into (ERROR validate); эскалация по Merged-кейсу
+     = эскалация БЕЗ смены статуса, симметрично решению по
+     apply_conflict; для нетерминальных статусов test-case поведение
+     `*`→Blocked не меняется (флаг гейтит только терминальный from).
+     Уточнение (r7): на ФАБРИЧНОЙ ветке переход просто отсутствует —
+     эскалация без смены статуса реализуется только бордовой веткой
+     apply_conflict; фабричного писателя эскалаций НЕ изобретать.
+     Пин: **«фабрика не выводит из Merged» (is_allowed по всем
+     фабричным акторам = пусто)**;
    - test-case `*`→Review — **false**: это и глушит воскрешение
      Merged (выход из Merged — только явный rollback-переход);
    - automation `*`→deprecated (human/test-strategist) — **true**:
      семантика смежной машины НЕ меняется (пин :149-156 дополняется
      позитивным кейсом human/strategist).
-   Исполнители — ТРИ (r4): `transitions.find()`/`is_allowed` (учёт
-   флага); `board_whitelist()` — без изменений семантики ключа `"*"`;
-   **`board_inbound.py:186` — фолбэк на `allowed["*"]` применяется
-   только для НЕтерминального src_status** (terminal-набор
-   импортируется из transitions; ветка :183 `src_status == "*"` —
-   поведение не меняется). Пины: LEGACY_WHITELIST
-   (test_transitions.py:227-250), «`*` без флага не оживляет
-   терминальный», «Verified→Open человеком жив», «retired→deprecated
-   human/strategist жив», «откат rollback жив», **«Merged-карточку с
-   борды не применить» — пин на `board_inbound.classify()` (полный
-   путь с фолбэком), не на board_whitelist**.
+   **Область гарда (явно, r6): from_terminal гейтит ТОЛЬКО правила с
+   `from: "*"`; правило с ЯВНЫМ терминальным from (rollback-переходы:
+   Merged→Review, bug Verified→Fixed) матчит без флага.** Пин «откат
+   rollback жив» ОБЯЗАТЕЛЕН — слова rollback в scripts/tests сегодня
+   нет вовсе (негатив r6 со следом), сетки под альтернативное чтение
+   не существует.
+   Исполнители — ТРИ (r5: гард ПОРУЛЬНЫЙ по флагу, не по
+   терминальности src — иначе ломается Verified→Open с борды, у bug
+   нет прямого правила из Verified, только `*`→Open с флагом):
+   - `transitions.find()`/`is_allowed` — учёт флага;
+   - `transitions` отдаёт **board-aware хелпер `board_allowed(itype,
+     frm, to)` поверх find()** (учитывает from_terminal и via_board;
+     **guard НЕ участвует** — семантика board_whitelist; иная
+     реализация через is_allowed с meta=None молча превратила бы
+     будущее guard-правило в reject) + публичный аксессор
+     `terminal(itype)`; `board_whitelist()` и пин LEGACY_WHITELIST
+     НЕ трогаются;
+   - `board_inbound.classify()` зовёт `board_allowed` вместо
+     собственного фолбэка на `allowed["*"]` (:186) — классификатор
+     перестаёт дублировать логику матрицы (единый источник правды).
+   Пины: LEGACY_WHITELIST не тронут (test_transitions.py:227-250),
+   «`*` без флага не оживляет терминальный», «Verified→Open человеком
+   жив» (is_allowed), «retired→deprecated human/strategist жив»,
+   «откат rollback жив», и ДВА пина на classify(): негативный
+   «Merged-карточку с борды не применить» + **ПОЗИТИВНЫЙ «bug
+   Verified→Open с борды применяется»** (без него класс регрессии
+   без детектора).
 4. **Борда: отдельная колонка `tc-merged`** (STATUSES + WORKFLOWS +
    STATUS_MAP, обратимость INV 1:1 — коллапс невозможен); юнит
    test_board_sync.py:162 расширяется. Защита от ручного перетаскивания
@@ -212,8 +251,10 @@ not bridge"`** (bridge-тесты П2, приезжающие в p1 между �
   fix-verifier.md + test-runner.md (правило merged_into) ↔ промпты
   test-designer/automator/reviewer (батч с П2; порядок норм П2 первым)
   ↔ docs/02 ↔ **докось: docs/03-agent-system.md:66, docs/05-board.md:
-  20/65-66, docs/06-dark-factory.md:98/229, docs/templates/
-  test-case.md:9-11** ↔ test-cases/** ↔ framework/tests/** ↔
+  20/65-66, docs/06-dark-factory.md:98/229/140-141,
+  docs/07-board-inbound.md:97-100 (док-носители whitelist),
+  docs/templates/test-case.md:9-11** ↔ test-cases/** ↔
+  framework/tests/** ↔
   state/rules.yaml (не правится; шаг 4 идёт его правилами — названо) ↔
   qa-loop SKILL.md (не правится, строка сверки) ↔ генерируемые
   state/coverage-map.md, factory-status.md, escalations.md. Коммиты
@@ -238,10 +279,19 @@ not bridge"`** (bridge-тесты П2, приезжающие в p1 между �
   фикса терминальности с сохранением интента `*`→Blocked, борда через
   terminal-aware whitelist, статус-гард и машинная форма детектора
   проб, окно 2→4 + триаж Merged). Критик-раунды accepted.
-- N3f v4 → r4 ДОРАБОТАТЬ (carve-out по to бил Verified→Open;
-  board_inbound:186). **N3h v5** — этот файл — done (декларативный
-  from_terminal, три исполнителя, пин на classify, док-носители
-  whitelist в owns). **N3i критик r5 (точечный)** — in progress.
+- N3f v4 → r4 ДОРАБОТАТЬ. N3h v5 → r5 ДОРАБОТАТЬ (гард по src_status
+  бил Verified→Open с борды; откат без обнуления merged_into).
+  N3j v6 → r6 ДОРАБОТАТЬ (1 блокер: from_terminal:true на test-case
+  `*`→Blocked открывал фабрике Merged→Blocked; board_allowed
+  подтверждён точным дифом NONE). **N3l v7** — этот файл — done
+  (test-case `*`→Blocked = false, эскалация по Merged без смены
+  статуса, область гарда только from:"*", пин rollback обязателен,
+  поле apply_conflict = artifact_status, guard вне board_allowed,
+  квалификаторы в док-литералы). N3m критик r7 — **ПРИНЯТЬ** (блокер
+  закрыт сверкой матрицы; 2 замечания внесены). **ПЛАН ПРИНЯТ.**
+  DoD-строка builder'у N4 (r7-замечание 2): при правке docs/06/07
+  проверить литералы фабричного «любой → Blocked» для test-case на
+  тот же квалификатор «кроме терминальных (Merged)».
 - **N4 механизм Merged + нормы** — builder, после PASS r3 (батч
   промптов/схемы/validate/docs02 — общий с П2 N4). Owns (расширен):
   schemas/*, scripts/transitions.py, validate_frontmatter.py,
@@ -252,8 +302,9 @@ not bridge"`** (bridge-тесты П2, приезжающие в p1 между �
   обнуление automation_status у Merged — второй путь смерти автотеста
   мимо машины automation с её retired; выбран сознательно, чтобы не
   плодить переходы автомашины для поглощённых), docs/05,
-  docs/06:98/229 **и :140-141 (листинг whitelist)**,
-  **docs/07-board-inbound.md:97-100 (док-носитель whitelist)**,
+  docs/06:98/229 **и :140-141 (листинг whitelist — литерал «любой →
+  Review» дополняется квалификатором «кроме терминальных (Merged)»)**,
+  **docs/07-board-inbound.md:97-100 (тот же квалификатор в :99)**,
   docs/templates/test-case.md (+секции Чекпойнты/Красная проба).
   Non-goals: rules.yaml, qa-loop SKILL.md, test-cases/**,
   framework/tests/**. Критик-вход диффа обязателен.
