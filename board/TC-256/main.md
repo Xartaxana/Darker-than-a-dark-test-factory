@@ -2,7 +2,7 @@
 key: "TC-256"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Автоматическая отметка READ при дочитывании скачанной работы без рейтинга сохраняет downloadPath и не перезаписывает непустые локальные метаданные"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-15T10:20:00Z"
-updated: "2026-08-15T10:20:00Z"
+created: "2026-08-15T23:03:49Z"
+updated: "2026-08-15T23:03:49Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Автоматическая отметка READ при дочитывании скачанной работы без рейтинга сохраняет downloadPath и не перезаписывает непустые локальные метаданные
 
 _Спроецировано из `test-cases/rating/TC-256.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-256 — Дочитывание скачанной работы без рейтинга проставляет READ, сохраняя downloadPath и локальные метаданные
 

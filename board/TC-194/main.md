@@ -2,7 +2,7 @@
 key: "TC-194"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Закрытие панели work-страницы без набранных правок НЕ пишет в Room и не воскрешает запись, удалённую через Clear all ratings"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-13T15:15:00Z"
-updated: "2026-08-13T15:15:00Z"
+created: "2026-08-15T23:03:49Z"
+updated: "2026-08-15T23:03:49Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Закрытие панели work-страницы без набранных правок НЕ пишет в Room и не воскрешает запись, удалённую через Clear all ratings
 
 _Спроецировано из `test-cases/rating/TC-194.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-194 — Clear all ratings остаётся необратимым: панель без правок не воскрешает запись при закрытии
 

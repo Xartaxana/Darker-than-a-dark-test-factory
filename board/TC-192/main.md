@@ -2,7 +2,7 @@
 key: "TC-192"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Первая оценка ранее скачанной orphan-строки с листинга заполняет пустые title/автора/фандом/word count скрейпом страницы и делает работу видимой в фильтре по фандому"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-13T16:05:00Z"
-updated: "2026-08-13T16:05:00Z"
+created: "2026-08-15T23:03:49Z"
+updated: "2026-08-15T23:03:49Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Первая оценка ранее скачанной orphan-строки с листинга заполняет пустые title/автора/фандом/word count скрейпом страницы и делает работу видимой в фильтре по фандому
 
 _Спроецировано из `test-cases/rating/TC-192.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-192 — Первая оценка orphan-строки заполняет пустые метаданные и делает работу видимой в фильтре по фандому
 

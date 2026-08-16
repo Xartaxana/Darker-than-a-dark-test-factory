@@ -2,7 +2,7 @@
 key: "TC-238"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p2"
 summary: "Смена формата загрузки оставляет на диске оба файла: перезапись бьёт только по файлу той же крышки"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-15T00:10:14Z"
-updated: "2026-08-15T00:10:14Z"
+created: "2026-08-15T23:03:49Z"
+updated: "2026-08-15T23:03:49Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Смена формата загрузки оставляет на диске оба файла: перезапись бьёт только по файлу той же крышки
 
 _Спроецировано из `test-cases/downloads/TC-238.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-238 — Смешанные форматы на диске после смены формата
 

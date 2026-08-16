@@ -2,7 +2,7 @@
 key: "TC-196"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Ранний onPageFinished, когда DOMContentLoaded уже не случится (readyState != loading): Rate-кнопки листинга всё равно появляются без ручной перезагрузки — спасает безусловный setTimeout(250)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-13T01:00:00Z"
-updated: "2026-08-13T01:00:00Z"
+created: "2026-08-15T23:03:49Z"
+updated: "2026-08-15T23:03:49Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Ранний onPageFinished, когда DOMContentLoaded уже не случится (readyState != loading): Rate-кнопки листинга всё равно появляются без ручной перезагрузки — спасает безусловный setTimeout(250)
 
 _Спроецировано из `test-cases/canary/TC-196.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-196 — Ранний onPageFinished без шанса на DOMContentLoaded (readyState != loading): Rate-кнопки листинга появляются через 250мс благодаря безусловному таймеру (replay)
 

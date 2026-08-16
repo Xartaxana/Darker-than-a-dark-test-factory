@@ -2,7 +2,7 @@
 key: "TC-205"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "OFF: снятие активного фильтр-профиля фоновой загрузкой ЧУЖОЙ вкладки из Library сопровождается заметным уведомлением пользователя (R-16; red lock BUG-068)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-14T23:34:02Z"
-updated: "2026-08-14T23:34:02Z"
+created: "2026-08-15T23:03:49Z"
+updated: "2026-08-15T23:03:49Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # OFF: снятие активного фильтр-профиля фоновой загрузкой ЧУЖОЙ вкладки из Library сопровождается заметным уведомлением пользователя (R-16; red lock BUG-068)
 
 _Спроецировано из `test-cases/filter-profiles/TC-205.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-205 — Снятие активного фильтр-профиля фоновой загрузкой (Library) сопровождается уведомлением (red lock BUG-068)
 

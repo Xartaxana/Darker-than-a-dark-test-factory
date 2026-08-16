@@ -2,7 +2,7 @@
 key: "TC-193"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Набранная в панели work-страницы заметка сохраняется в Room при закрытии панели без явного тапа Save note"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-13T12:10:00Z"
-updated: "2026-08-13T12:10:00Z"
+created: "2026-08-15T23:03:49Z"
+updated: "2026-08-15T23:03:49Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Набранная в панели work-страницы заметка сохраняется в Room при закрытии панели без явного тапа Save note
 
 _Спроецировано из `test-cases/rating/TC-193.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-193 — Набранная заметка на панели work-страницы переживает закрытие панели без тапа Save
 

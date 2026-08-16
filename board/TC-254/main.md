@@ -2,7 +2,7 @@
 key: "TC-254"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Перехват громкости срабатывает и когда поверх Browse открыт оверлей/панель/диалог, а не только на голом WebView"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-15T00:10:14Z"
-updated: "2026-08-15T00:10:14Z"
+created: "2026-08-15T23:03:49Z"
+updated: "2026-08-15T23:03:49Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Перехват громкости срабатывает и когда поверх Browse открыт оверлей/панель/диалог, а не только на голом WebView
 
 _Спроецировано из `test-cases/browser/TC-254.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-254 — Перехват громкости шире заявленного: работает поверх оверлея
 

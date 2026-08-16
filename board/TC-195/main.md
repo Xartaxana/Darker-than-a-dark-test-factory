@@ -2,7 +2,7 @@
 key: "TC-195"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Ранний onPageFinished (readyState=loading, DOM ещё не готов) не «сжигает» инжекцию: Rate-кнопки листинга появляются без ручной перезагрузки, оба независимых повтора не задваивают их"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-13T01:00:00Z"
-updated: "2026-08-13T01:00:00Z"
+created: "2026-08-15T23:03:49Z"
+updated: "2026-08-15T23:03:49Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Ранний onPageFinished (readyState=loading, DOM ещё не готов) не «сжигает» инжекцию: Rate-кнопки листинга появляются без ручной перезагрузки, оба независимых повтора не задваивают их
 
 _Спроецировано из `test-cases/canary/TC-195.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-195 — Ранний onPageFinished с `readyState=loading`: Rate-кнопки листинга появляются через DOMContentLoaded-повтор, второй (setTimeout) повтор их не задваивает (replay)
 

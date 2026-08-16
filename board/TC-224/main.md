@@ -2,7 +2,7 @@
 key: "TC-224"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Ручной прогон с несуществующим Snippet ID показывает «Snippet не найден» и не меняет локальные данные"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-15T00:10:14Z"
-updated: "2026-08-15T00:10:14Z"
+created: "2026-08-15T23:03:49Z"
+updated: "2026-08-15T23:03:49Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Ручной прогон с несуществующим Snippet ID показывает «Snippet не найден» и не меняет локальные данные
 
 _Спроецировано из `test-cases/sync/TC-224.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-224 — Ошибка 404: сниппет не найден
 

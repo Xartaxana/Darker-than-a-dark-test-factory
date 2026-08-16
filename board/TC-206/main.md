@@ -2,7 +2,7 @@
 key: "TC-206"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "ON + deep-link в новую вкладку: FilterPanel показывает «None» — состояние ИМЕННО ЭТОЙ вкладки, а не глобально активный профиль (red lock BUG-070)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-14T23:34:02Z"
-updated: "2026-08-14T23:34:02Z"
+created: "2026-08-15T23:03:49Z"
+updated: "2026-08-15T23:03:49Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # ON + deep-link в новую вкладку: FilterPanel показывает «None» — состояние ИМЕННО ЭТОЙ вкладки, а не глобально активный профиль (red lock BUG-070)
 
 _Спроецировано из `test-cases/filter-profiles/TC-206.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-206 — FilterPanel на НЕфильтрованной deep-link-вкладке отражает ЕЁ состояние, не глобальный профиль (red lock BUG-070)
 

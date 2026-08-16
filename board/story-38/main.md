@@ -2,12 +2,12 @@
 key: "story-38"
 project: "AO3"
 issueType: "story"
-status: "story-review"
+status: "story-automation"
 priority: "p2"
 summary: "Сделать возможность листать страницы кнопками громкости"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["stage:story-review", "регресс сборки: smoke RUN-20260815-0149 49/49 · чисто · regression RUN-20260815-0337 271/273 · чисто · новых багов в прогоне: 0", "багов на кейсах стори: 1"]
+labels: ["stage:story-automation", "регресс сборки: smoke RUN-20260815-0149 49/49 · чисто · regression RUN-20260815-0337 271/273 · чисто · новых багов в прогоне: 0", "багов на кейсах стори: 1"]
 components: []
 fixVersions: []
 watchers: []
@@ -23,7 +23,7 @@ resolution: null
 
 _Синтезировано из `state/escalations.md` (QAREADY-38) + `docs/feature-registry.yaml` (story:38) — READ-ONLY, борда не меняет источники._
 
-Стадия: **На ревью**
+Стадия: **Автоматизация**
 
 TC зоны: TC-251, TC-252, TC-253, TC-254, TC-255
 

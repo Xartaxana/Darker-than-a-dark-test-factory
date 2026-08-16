@@ -2,7 +2,7 @@
 key: "TC-244"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Правка заметки без смены рейтинга в Library-overlay не повторяет авто-скачивание/kudos (edge-vs-level)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-15T00:10:14Z"
-updated: "2026-08-15T00:10:14Z"
+created: "2026-08-15T23:03:49Z"
+updated: "2026-08-15T23:03:49Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Правка заметки без смены рейтинга в Library-overlay не повторяет авто-скачивание/kudos (edge-vs-level)
 
 _Спроецировано из `test-cases/library/TC-244.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-244 — Повторное сохранение той же оценки не дублирует побочные эффекты
 

@@ -2,7 +2,7 @@
 key: "TC-237"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Скачивание в EPUB без доступной ссылки на странице завершается ошибкой «EPUB download link not found on page»"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-15T00:10:14Z"
-updated: "2026-08-15T00:10:14Z"
+created: "2026-08-15T23:03:49Z"
+updated: "2026-08-15T23:03:49Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Скачивание в EPUB без доступной ссылки на странице завершается ошибкой «EPUB download link not found on page»
 
 _Спроецировано из `test-cases/downloads/TC-237.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-237 — Ошибка скачивания EPUB без ссылки на странице
 

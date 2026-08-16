@@ -2,7 +2,7 @@
 key: "TC-242"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Оценка Favorite/Kudosed из Library отправляет kudos на AO3, если среди вкладок открыта страница этой работы"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-15T00:10:14Z"
-updated: "2026-08-15T00:10:14Z"
+created: "2026-08-15T23:03:49Z"
+updated: "2026-08-15T23:03:49Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Оценка Favorite/Kudosed из Library отправляет kudos на AO3, если среди вкладок открыта страница этой работы
 
 _Спроецировано из `test-cases/library/TC-242.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-242 — Kudos из Library при открытой вкладке работы (R-17 грань)
 

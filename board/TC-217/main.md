@@ -2,7 +2,7 @@
 key: "TC-217"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Обновление поверх старой БД (v7) сохраняет все пользовательские данные и не падает"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-15T00:10:14Z"
-updated: "2026-08-15T00:10:14Z"
+created: "2026-08-15T23:03:49Z"
+updated: "2026-08-15T23:03:49Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Обновление поверх старой БД (v7) сохраняет все пользовательские данные и не падает
 
 _Спроецировано из `test-cases/sync/TC-217.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-217 — Миграция схемы 7→8 не теряет данные и не падает
 

@@ -2,7 +2,7 @@
 key: "TC-204"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Изменение «Hide Disliked works» пушит обновление баннера ВО ВСЕ открытые вкладки с листингом, включая фоновые, не только в активную"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-13T23:27:32Z"
-updated: "2026-08-13T23:27:32Z"
+created: "2026-08-15T23:03:49Z"
+updated: "2026-08-15T23:03:49Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Изменение «Hide Disliked works» пушит обновление баннера ВО ВСЕ открытые вкладки с листингом, включая фоновые, не только в активную
 
 _Спроецировано из `test-cases/browser/TC-204.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-204 — Живой пуш баннера доходит до ФОНОВОЙ вкладки (propagation)
 

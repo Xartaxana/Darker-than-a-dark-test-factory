@@ -729,7 +729,7 @@
     "epicPath": null,
     "summary": "Баннер над листингом сообщает о visibility-скрытии текстом «Some works may be hidden by your visibility settings» (ratedHidden=true, filterActive=false)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -737,7 +737,7 @@
       "area:browser",
       "risk:R-06"
     ],
-    "updated": "2026-08-13T22:41:29Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -751,7 +751,7 @@
     "epicPath": null,
     "summary": "Баннер НЕ показывается вовсе в режиме Dim без активного AO3-фильтра, хотя визуально-скрытая работа остаётся на странице затемнённой (грань hide/dim)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -759,7 +759,7 @@
       "area:browser",
       "risk:R-06"
     ],
-    "updated": "2026-08-13T22:41:29Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -773,7 +773,7 @@
     "epicPath": null,
     "summary": "Баннер над листингом сообщает только об активном AO3-фильтре текстом «Some works may be hidden by the active AO3 filter» (ratedHidden=false, filterActive=true)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -781,7 +781,7 @@
       "area:browser",
       "risk:R-06"
     ],
-    "updated": "2026-08-13T22:41:29Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -795,7 +795,7 @@
     "epicPath": null,
     "summary": "Баннер над листингом сообщает ОБЕ причины разом текстом «Some works may be hidden by visibility settings and active AO3 filter», когда активны и visibility-скрытие, и AO3-фильтр",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -803,7 +803,7 @@
       "area:browser",
       "risk:R-06"
     ],
-    "updated": "2026-08-13T22:41:29Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -817,7 +817,7 @@
     "epicPath": null,
     "summary": "Баннер над листингом НЕ появляется, когда ни visibility-скрытие, ни AO3-фильтр не активны",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -825,7 +825,7 @@
       "area:browser",
       "risk:R-06"
     ],
-    "updated": "2026-08-13T22:41:29Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -839,7 +839,7 @@
     "epicPath": null,
     "summary": "Баннер не показывается на странице отдельной работы, даже если visibility-скрытие активно (баннер существует только над листингом)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -847,7 +847,7 @@
       "area:browser",
       "risk:R-06"
     ],
-    "updated": "2026-08-13T22:41:29Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -861,7 +861,7 @@
     "epicPath": null,
     "summary": "Выключение «Hide Disliked works» на уже открытом листинге убирает баннер БЕЗ перезагрузки страницы (живое обновление)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -869,7 +869,7 @@
       "area:browser",
       "risk:R-06"
     ],
-    "updated": "2026-08-13T22:41:29Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -883,7 +883,7 @@
     "epicPath": null,
     "summary": "Изменение «Hide Disliked works» пушит обновление баннера ВО ВСЕ открытые вкладки с листингом, включая фоновые, не только в активную",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -891,7 +891,7 @@
       "area:browser",
       "risk:R-06"
     ],
-    "updated": "2026-08-13T23:27:32Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -905,7 +905,7 @@
     "epicPath": null,
     "summary": "Плавающие кнопки листания (обе включены): правая листает вперёд, левая назад, каждый тап — ~0.9 высоты экрана",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -913,7 +913,7 @@
       "area:browser",
       "risk:R-11"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -927,7 +927,7 @@
     "epicPath": null,
     "summary": "Плавающие кнопки листания видны только при ОБОИХ условиях одновременно (E-ink ON И Show page-turn buttons ON)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -935,7 +935,7 @@
       "area:browser",
       "risk:R-11"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -949,7 +949,7 @@
     "epicPath": null,
     "summary": "Плавающие кнопки листания не перекрывают FAB «Scroll to top» и нижнюю панель",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -957,7 +957,7 @@
       "area:browser",
       "risk:R-13"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -971,7 +971,7 @@
     "epicPath": null,
     "summary": "Переключение E-ink mode перезагружает КАЖДУЮ открытую вкладку Browse, теряя позицию скролла и окно пагинации листинга",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -979,7 +979,7 @@
       "area:browser",
       "risk:R-11"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -993,7 +993,7 @@
     "epicPath": null,
     "summary": "Кнопки громкости листают Browse (Down — вперёд, Up — назад) без появления системного индикатора",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1001,7 +1001,7 @@
       "area:browser",
       "risk:R-16"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1015,7 +1015,7 @@
     "epicPath": null,
     "summary": "Off-инвариант: при выключенной настройке кнопки громкости на Browse работают как обычно (меняют громкость)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1023,7 +1023,7 @@
       "area:browser",
       "risk:R-16"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1037,7 +1037,7 @@
     "epicPath": null,
     "summary": "Перехват громкости срабатывает и когда поверх Browse открыт оверлей/панель/диалог, а не только на голом WebView",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1045,7 +1045,7 @@
       "area:browser",
       "risk:R-16"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1588,7 +1588,7 @@
     "epicPath": null,
     "summary": "Ранний onPageFinished (readyState=loading, DOM ещё не готов) не «сжигает» инжекцию: Rate-кнопки листинга появляются без ручной перезагрузки, оба независимых повтора не задваивают их",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1596,7 +1596,7 @@
       "area:canary",
       "risk:R-02"
     ],
-    "updated": "2026-08-13T01:00:00Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1610,7 +1610,7 @@
     "epicPath": null,
     "summary": "Ранний onPageFinished, когда DOMContentLoaded уже не случится (readyState != loading): Rate-кнопки листинга всё равно появляются без ручной перезагрузки — спасает безусловный setTimeout(250)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1618,7 +1618,7 @@
       "area:canary",
       "risk:R-02"
     ],
-    "updated": "2026-08-13T01:00:00Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2111,7 +2111,7 @@
     "epicPath": null,
     "summary": "Скачивание в формате EPUB сохраняет файл .epub с MIME application/epub+zip и появляется на вкладке Files",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2119,7 +2119,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2133,7 +2133,7 @@
     "epicPath": null,
     "summary": "Скачивание в EPUB без доступной ссылки на странице завершается ошибкой «EPUB download link not found on page»",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2141,7 +2141,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2155,7 +2155,7 @@
     "epicPath": null,
     "summary": "Смена формата загрузки оставляет на диске оба файла: перезапись бьёт только по файлу той же крышки",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -2163,7 +2163,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2177,7 +2177,7 @@
     "epicPath": null,
     "summary": "Открытие скачанной EPUB-работы (Open downloaded / Open in background tab) отдаёт файл внешнему ридеру, а не создаёт вкладку",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2185,7 +2185,7 @@
       "area:downloads",
       "risk:R-16"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2199,7 +2199,7 @@
     "epicPath": null,
     "summary": "«Open in e-reader app» открывает скачанный файл любого формата внешним приложением; без файла — неактивен с подсказкой",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2207,7 +2207,7 @@
       "area:downloads",
       "risk:R-16"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2469,7 +2469,7 @@
     "epicPath": null,
     "summary": "OFF: снятие активного фильтр-профиля фоновой загрузкой ЧУЖОЙ вкладки из Library сопровождается заметным уведомлением пользователя (R-16; red lock BUG-068)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2477,7 +2477,7 @@
       "area:filter-profiles",
       "risk:R-09"
     ],
-    "updated": "2026-08-14T23:34:02Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2491,7 +2491,7 @@
     "epicPath": null,
     "summary": "ON + deep-link в новую вкладку: FilterPanel показывает «None» — состояние ИМЕННО ЭТОЙ вкладки, а не глобально активный профиль (red lock BUG-070)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2499,7 +2499,7 @@
       "area:filter-profiles",
       "risk:R-09"
     ],
-    "updated": "2026-08-14T23:34:02Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3109,7 +3109,7 @@
     "epicPath": null,
     "summary": "«Rate / edit note» в Library сохраняет рейтинг/заметку/теги и переносит карточку в нужную вкладку, не покидая Library",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -3117,7 +3117,7 @@
       "area:library",
       "risk:R-04"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3131,7 +3131,7 @@
     "epicPath": null,
     "summary": "Оценка Favorite/Kudosed из Library отправляет kudos на AO3, если среди вкладок открыта страница этой работы",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -3139,7 +3139,7 @@
       "area:library",
       "risk:R-17"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3153,7 +3153,7 @@
     "epicPath": null,
     "summary": "Оценка Favorite/Kudosed из Library НЕ отправляет kudos, если ни одна вкладка с этой работой не открыта",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -3161,7 +3161,7 @@
       "area:library",
       "risk:R-17"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3175,7 +3175,7 @@
     "epicPath": null,
     "summary": "Правка заметки без смены рейтинга в Library-overlay не повторяет авто-скачивание/kudos (edge-vs-level)",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -3183,7 +3183,7 @@
       "area:library",
       "risk:R-05"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3197,7 +3197,7 @@
     "epicPath": null,
     "summary": "Оценка Favorite из Library обновляет бейдж работы на уже открытой вкладке листинга без reload",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -3205,7 +3205,7 @@
       "area:library",
       "risk:R-04"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3219,7 +3219,7 @@
     "epicPath": null,
     "summary": "На вкладках Library/Settings кнопки громкости работают штатно независимо от настройки",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -3227,7 +3227,7 @@
       "area:library",
       "risk:R-16"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3882,7 +3882,7 @@
     "epicPath": null,
     "summary": "Сохранение заметки с листинга по существующей строке НЕ перезаписывает непустые локальные title/фандом/word count скрейпом текущей страницы",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -3890,7 +3890,7 @@
       "area:rating",
       "risk:R-01/R-10"
     ],
-    "updated": "2026-08-13T16:05:00Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3904,7 +3904,7 @@
     "epicPath": null,
     "summary": "Первая оценка ранее скачанной orphan-строки с листинга заполняет пустые title/автора/фандом/word count скрейпом страницы и делает работу видимой в фильтре по фандому",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -3912,7 +3912,7 @@
       "area:rating",
       "risk:R-01/R-10"
     ],
-    "updated": "2026-08-13T16:05:00Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3926,7 +3926,7 @@
     "epicPath": null,
     "summary": "Набранная в панели work-страницы заметка сохраняется в Room при закрытии панели без явного тапа Save note",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -3934,7 +3934,7 @@
       "area:rating",
       "risk:R-01/R-10"
     ],
-    "updated": "2026-08-13T12:10:00Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3948,7 +3948,7 @@
     "epicPath": null,
     "summary": "Закрытие панели work-страницы без набранных правок НЕ пишет в Room и не воскрешает запись, удалённую через Clear all ratings",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -3956,7 +3956,7 @@
       "area:rating",
       "risk:R-01/R-10"
     ],
-    "updated": "2026-08-13T15:15:00Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3970,7 +3970,7 @@
     "epicPath": null,
     "summary": "Автоматическая отметка READ при дочитывании скачанной работы без рейтинга сохраняет downloadPath и не перезаписывает непустые локальные метаданные",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -3978,7 +3978,7 @@
       "area:rating",
       "risk:R-01"
     ],
-    "updated": "2026-08-15T10:20:00Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4130,7 +4130,7 @@
     "epicPath": null,
     "summary": "Приватность синхронизации: токен GitLab хранится открытым текстом и попадает в авто-бэкап",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -4138,7 +4138,7 @@
       "area:security",
       "risk:R-15"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4152,7 +4152,7 @@
     "epicPath": null,
     "summary": "Приватность синхронизации: токен уходит заголовком PRIVATE-TOKEN на ЛЮБОЙ введённый пользователем хост",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -4160,7 +4160,7 @@
       "area:security",
       "risk:R-15"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4174,7 +4174,7 @@
     "epicPath": null,
     "summary": "Приватность синхронизации: публикуемая нагрузка несёт личные заметки/теги, но НЕ downloadPath",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -4182,7 +4182,7 @@
       "area:security",
       "risk:R-15"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4647,7 +4647,7 @@
     "epicPath": null,
     "summary": "Выбор формата загрузки HTML/EPUB в Settings применяется со следующего скачивания без перезапуска и переживает рестарт",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -4655,7 +4655,7 @@
       "area:settings",
       "risk:R-05"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4669,7 +4669,7 @@
     "epicPath": null,
     "summary": "Тумблер E-ink mode: персистентность, и пока выключен — вложенная строка «Show page-turn buttons» отсутствует, но её значение сохраняется",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -4677,7 +4677,7 @@
       "area:settings",
       "risk:R-11"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4691,7 +4691,7 @@
     "epicPath": null,
     "summary": "Тумблер «Page with volume buttons» переживает рестарт, по умолчанию включён",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -4699,7 +4699,7 @@
       "area:settings",
       "risk:R-16"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4826,7 +4826,7 @@
     "epicPath": null,
     "summary": "Слияние работы: более свежая удалённая версия замещает локальную целиком, кроме downloadPath",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -4834,7 +4834,7 @@
       "area:sync",
       "risk:R-01"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4848,7 +4848,7 @@
     "epicPath": null,
     "summary": "Слияние работы: при равном timestamp побеждает локальная версия",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -4856,7 +4856,7 @@
       "area:sync",
       "risk:R-01"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4870,7 +4870,7 @@
     "epicPath": null,
     "summary": "Входящее надгробие удаляет работу вместе со скачанным файлом, невзирая на локальные заметки/теги",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -4878,7 +4878,7 @@
       "area:sync",
       "risk:R-01"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4892,7 +4892,7 @@
     "epicPath": null,
     "summary": "Локальное удаление создаёт надгробие, которое не воскресает более старой входящей строкой",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -4900,7 +4900,7 @@
       "area:sync",
       "risk:R-01"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4914,7 +4914,7 @@
     "epicPath": null,
     "summary": "Повторная оценка ранее удалённой работы снимает надгробие и защищает от повторного удаления синком",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -4922,7 +4922,7 @@
       "area:sync",
       "risk:R-01"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4936,7 +4936,7 @@
     "epicPath": null,
     "summary": "Слияние фильтр-профилей: более свежая удалённая версия заменяет локальную на обеих поверхностях",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -4944,7 +4944,7 @@
       "area:sync",
       "risk:R-09"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4958,7 +4958,7 @@
     "epicPath": null,
     "summary": "Входящее надгробие удаляет фильтр-профиль с обеих поверхностей",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -4966,7 +4966,7 @@
       "area:sync",
       "risk:R-09"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4980,7 +4980,7 @@
     "epicPath": null,
     "summary": "downloadPath не приходит с удалённой стороны: работа без локального файла остаётся без файла после слияния",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -4988,7 +4988,7 @@
       "area:sync",
       "risk:R-01"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5002,7 +5002,7 @@
     "epicPath": null,
     "summary": "После слияния устройство публикует полное состояние (works + filterProfiles + tombstones) в сниппет",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5010,7 +5010,7 @@
       "area:sync",
       "risk:R-01"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5024,7 +5024,7 @@
     "epicPath": null,
     "summary": "Повторный синк без изменений не пишет в сниппет и показывает «Everything already in sync.»",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5032,7 +5032,7 @@
       "area:sync",
       "risk:R-01"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5046,7 +5046,7 @@
     "epicPath": null,
     "summary": "Обновление поверх старой БД (v7) сохраняет все пользовательские данные и не падает",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5054,7 +5054,7 @@
       "area:sync",
       "risk:R-01"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5068,7 +5068,7 @@
     "epicPath": null,
     "summary": "Конфигурация Sync: три поля переживают рестарт, токен замаскирован по умолчанию и раскрывается Show/Hide",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5076,7 +5076,7 @@
       "area:sync",
       "risk:R-16"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5090,7 +5090,7 @@
     "epicPath": null,
     "summary": "Поле Snippet ID принимает только цифры — буквы/пробел/вставка постороннего текста отфильтрованы",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -5098,7 +5098,7 @@
       "area:sync",
       "risk:R-16"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5112,7 +5112,7 @@
     "epicPath": null,
     "summary": "Кнопка «Sync now» неактивна при пустом токене и становится активной после его заполнения",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5120,7 +5120,7 @@
       "area:sync",
       "risk:R-16"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5134,7 +5134,7 @@
     "epicPath": null,
     "summary": "Ручной прогон с реальными изменениями: подпись «Syncing…», повторный тап игнорируется, итоговый диалог называет числа изменений",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5142,7 +5142,7 @@
       "area:sync",
       "risk:R-16"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5156,7 +5156,7 @@
     "epicPath": null,
     "summary": "Ручной прогон с только локальными изменениями показывает «No incoming changes. Snippet updated.»",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -5164,7 +5164,7 @@
       "area:sync",
       "risk:R-16"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5178,7 +5178,7 @@
     "epicPath": null,
     "summary": "Первый прогон с пустым Snippet ID создаёт приватный сниппет и сам подставляет его номер в Settings",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5186,7 +5186,7 @@
       "area:sync",
       "risk:R-16"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5200,7 +5200,7 @@
     "epicPath": null,
     "summary": "Ручной прогон с несуществующим Snippet ID показывает «Snippet не найден» и не меняет локальные данные",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5208,7 +5208,7 @@
       "area:sync",
       "risk:R-16"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5222,7 +5222,7 @@
     "epicPath": null,
     "summary": "Ручной прогон с отклонённым токеном показывает «GitLab rejected the token» и не меняет локальные данные",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5230,7 +5230,7 @@
       "area:sync",
       "risk:R-16"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5244,7 +5244,7 @@
     "epicPath": null,
     "summary": "Ретроактивность: работа, оценённая до настройки синхронизации, уходит в первый авто-триггер после настройки",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5252,7 +5252,7 @@
       "area:sync",
       "risk:R-01"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5266,7 +5266,7 @@
     "epicPath": null,
     "summary": "Off-инвариант: авто-триггер молчит без единого сетевого вызова, пока токен пуст",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5274,7 +5274,7 @@
       "area:sync",
       "risk:R-01"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5288,7 +5288,7 @@
     "epicPath": null,
     "summary": "Идемпотентность: второй выход на передний план внутри 60-секундного окна без изменений не запускает новый прогон",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5296,7 +5296,7 @@
       "area:sync",
       "risk:R-01"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5310,7 +5310,7 @@
     "epicPath": null,
     "summary": "Propagation: авто-триггер, слив изменённый рейтинг, сразу отражается на уже открытом экране Library",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5318,7 +5318,7 @@
       "area:sync",
       "risk:R-01"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5332,7 +5332,7 @@
     "epicPath": null,
     "summary": "Асимметрия молчания: авто-триггер, столкнувшись с ошибкой синка, не показывает пользователю ничего",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5340,7 +5340,7 @@
       "area:sync",
       "risk:R-16"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5354,7 +5354,7 @@
     "epicPath": null,
     "summary": "Асимметрия молчания: авто-триггер удаляет работу и файл по надгробию без единого уведомления",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5362,7 +5362,7 @@
       "area:sync",
       "risk:R-01"
     ],
-    "updated": "2026-08-15T00:10:14Z",
+    "updated": "2026-08-15T23:03:49Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -7196,7 +7196,7 @@
     "epicPath": null,
     "summary": "Двойной раздельный seed()-round-trip после AT-BUG-044-фикса эмпирически дал 'no such table: work_ratings' один раз (не воспроизведено изолирующим экспериментом 20/20) — кандидат: _pull_baseline игнорирует возврат pull_app_file для -wal/-shm",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -7204,7 +7204,7 @@
       "test_case:TC-187",
       "sev:minor"
     ],
-    "updated": "2026-08-14T02:58:53Z",
+    "updated": "2026-08-15T23:59:07Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -8057,7 +8057,7 @@
       "test_case:TC-256",
       "sev:major"
     ],
-    "updated": "2026-08-14T23:12:36Z",
+    "updated": "2026-08-15T23:05:57Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -8093,7 +8093,7 @@
     "epicPath": null,
     "summary": "Copy URL button в DEBUG-разделе молчит при ошибке writeText, нет обратной связи пользователю",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -8101,8 +8101,8 @@
       "test_case:TC-188",
       "sev:minor"
     ],
-    "updated": "2026-08-14T23:12:36Z",
-    "resolution": null,
+    "updated": "2026-08-15T23:12:46Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -8504,11 +8504,11 @@
     "epicPath": null,
     "summary": "Сделать возможность листать страницы кнопками громкости",
     "issueType": "story",
-    "status": "story-review",
+    "status": "story-automation",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
-      "stage:story-review",
+      "stage:story-automation",
       "регресс сборки: smoke RUN-20260815-0149 49/49 · чисто · regression RUN-20260815-0337 271/273 · чисто · новых багов в прогоне: 0",
       "багов на кейсах стори: 1"
     ],

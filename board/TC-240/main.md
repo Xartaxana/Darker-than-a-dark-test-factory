@@ -2,7 +2,7 @@
 key: "TC-240"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "«Open in e-reader app» открывает скачанный файл любого формата внешним приложением; без файла — неактивен с подсказкой"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-15T00:10:14Z"
-updated: "2026-08-15T00:10:14Z"
+created: "2026-08-15T23:03:49Z"
+updated: "2026-08-15T23:03:49Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # «Open in e-reader app» открывает скачанный файл любого формата внешним приложением; без файла — неактивен с подсказкой
 
 _Спроецировано из `test-cases/downloads/TC-240.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-240 — «Open in e-reader app»: HTML и EPUB, и disabled-состояние
 

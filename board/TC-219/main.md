@@ -2,7 +2,7 @@
 key: "TC-219"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p2"
 summary: "Поле Snippet ID принимает только цифры — буквы/пробел/вставка постороннего текста отфильтрованы"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-15T00:10:14Z"
-updated: "2026-08-15T00:10:14Z"
+created: "2026-08-15T23:03:49Z"
+updated: "2026-08-15T23:03:49Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Поле Snippet ID принимает только цифры — буквы/пробел/вставка постороннего текста отфильтрованы
 
 _Спроецировано из `test-cases/sync/TC-219.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-219 — Snippet ID: адверсариальный ввод отфильтрован до цифр
 
