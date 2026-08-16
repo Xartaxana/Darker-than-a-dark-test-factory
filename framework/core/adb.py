@@ -402,14 +402,81 @@ def run_as_file_or_raise(path: str, timeout: float = settings.ADB_SHELL_TIMEOUT)
     )
 
 
+_PULL_RC_SENTINEL = b"\nAT_BUG_069_PULL_RC="
+
+
 def pull_app_file(rel_path: str, dest: Path) -> bool:
     """Тянет файл из приватной песочницы приложения на хост через run-as cat (бинарно).
     Не идёт через `_run()` (нужны сырые байты без `text=True`) — тот же конечный
-    `ADB_TRANSFER_TIMEOUT` (AT-BUG-009) применён напрямую."""
+    `ADB_TRANSFER_TIMEOUT` (AT-BUG-009) применён напрямую.
+
+    AT-BUG-069 (fail-closed на транспортную ошибку, отдельно от легитимного
+    отсутствия файла): живой сверкой на emulator-5554 (5 сценариев —
+    реальный файл, синтетически отсутствующий путь, легитимно-пустой WAL,
+    несуществующий пакет для `run-as`, несуществующая серийка устройства)
+    подтверждено, что `adb exec-out` НЕ транслирует returncode/stderr
+    удалённой команды: и содержимое файла, и текст ошибки `cat`
+    («No such file or directory»), и текст ошибки самого `run-as`
+    («unknown package: …») попадают в ОДИН и тот же локальный `cp.stdout`
+    с `cp.returncode == 0` во всех трёх случаях — старая проверка
+    `cp.returncode != 0 or not cp.stdout` НЕ различала «файла легитимно
+    нет» от «run-as вообще не запустился» и на синтетически отсутствующем
+    пути была готова записать текст ошибки `cat` в `dest` как будто это
+    содержимое файла (непустой `cp.stdout`, `returncode == 0`). Единственное,
+    что реально отражает состояние ЛОКАЛЬНОГО adb-клиента (устройство
+    офлайн/не найдено) — `cp.returncode`/`cp.stderr` ЭТОГО subprocess-вызова
+    (эмпирически: `-s emulator-9999` дал `returncode=-1`,
+    `stderr=b"error: device ... not found"`, ПУСТОЙ `stdout`).
+
+    Фикс — тот же приём, что `run_as_file_or_raise` (AT-BUG-055), только
+    маркер дописывается в КОНЕЦ БИНАРНОГО `stdout` (нельзя разделить каналы
+    редиректом `>&2`: живой пробой подтверждено — `exec-out` сливает remote
+    stdout+stderr в один локальный stdout, `>&2` на этот вывод не влияет):
+    удалённая команда сама печатает `$?` ПОСЛЕ содержимого через `printf`.
+    `rfind()` берёт ПОСЛЕДНЕЕ вхождение маркера — безопасно даже если
+    бинарные байты файла случайно содержат похожую подстроку раньше.
+    - маркер найден, `rc == 0`, контент непуст -> `cat` реально прочитал
+      файл, это его байты -> пишем в `dest`, `True`.
+    - маркер найден, `rc != 0` (типично ENOENT) ИЛИ контент пуст -> `cat`
+      сам не смог прочитать (легитимное отсутствие WAL/SHM — см.
+      `_pull_baseline`) -> `False`, текст ошибки `cat` ИГНОРИРУЕТСЯ, не
+      попадает в `dest` (не путается с байтами файла).
+    - маркер ОТСУТСТВУЕТ в `stdout` вовсе -> удалённая `sh`-сессия не
+      выполнилась до `printf` (`run-as` не смог переключиться на пакет —
+      «unknown package»/«not debuggable» — или устройство недоступно) ->
+      `RuntimeError`, fail-closed (это и есть кандидат-причина AT-BUG-069:
+      раньше такой вход тоже тихо возвращал `False`, неотличимо от
+      легитимного отсутствия файла).
+
+    AT-BUG-069 rework attempt 2 (критик-вход, живая сверка): `rel_path`
+    ТЕПЕРЬ обёрнут в одинарные кавычки внутри удалённой `sh -c '...'`-команды.
+    Attempt 1 интерполировал `rel_path` НЕЗАКВОЧЕННЫМ — критик живьём
+    подтвердил три поломки на emulator-5554: (1) путь с пробелом
+    (`files/critic_sp ace.bin`, существующий читаемый файл) — `sh -c`
+    делил незаквоченный путь на два `cat`-аргумента, `cat` падал с ошибкой
+    на КАЖДОМ из них по отдельности, маркер печатался с `rc!=0` -> `False`
+    вместо `True`+байты — тот же класс путаницы «легитимно нет» vs «сбой»,
+    который весь этот фикс должен устранять, регресс; (2) пустой/пробельный
+    `rel_path` — `cat` без операнда читал STDIN -> зависание до
+    `ADB_TRANSFER_TIMEOUT` (120s) вместо мгновенной ошибки; (3) `rel_path`
+    с метасимволами (`;`) — удалённое исполнение произвольной команды.
+    `rel_path` — ВСЕГДА module-level константа (`seed_db._DB_REL`/`_WAL`/
+    `_SHM`), не пользовательский ввод, но fail-closed правильнее молчаливой
+    поломки: одинарная кавычка ВНУТРИ `rel_path` сломала бы само
+    квотирование (закрыла бы кавычку раньше) -> явный `ValueError` ДО
+    похода на устройство, а не непредсказуемая remote-команда."""
+    if "'" in rel_path:
+        raise ValueError(
+            f"pull_app_file: rel_path содержит одинарную кавычку "
+            f"({rel_path!r}) — небезопасно для квотирования в remote "
+            "sh -c '...'; ожидается module-level константа без кавычек "
+            "(AT-BUG-069 rework attempt 2)."
+        )
     try:
         cp = subprocess.run(
             [settings.ADB, "-s", settings.DEVICE_NAME, "exec-out",
-             "run-as", _PKG, "cat", rel_path],
+             "run-as", _PKG, "sh", "-c",
+             f"cat '{rel_path}'; printf '\\nAT_BUG_069_PULL_RC=%d' $?"],
             capture_output=True,  # bytes, без text=True
             timeout=settings.ADB_TRANSFER_TIMEOUT,
         )
@@ -418,9 +485,25 @@ def pull_app_file(rel_path: str, dest: Path) -> bool:
             f"adb exec-out run-as cat {rel_path} не ответил за "
             f"{settings.ADB_TRANSFER_TIMEOUT}s (AT-BUG-009)"
         ) from exc
-    if cp.returncode != 0 or not cp.stdout:
+    idx = cp.stdout.rfind(_PULL_RC_SENTINEL)
+    if idx == -1:
+        raise RuntimeError(
+            f"pull_app_file({rel_path}) — rc-маркер отсутствует в выводе "
+            f"(returncode adb-клиента={cp.returncode!r}, stderr={cp.stderr!r}, "
+            f"сырой stdout[:200]={cp.stdout[:200]!r}) — run-as/remote-shell "
+            "не завершились однозначно (устройство офлайн, пакет не "
+            "debuggable/не установлен, битый toybox) — НЕ то же самое, что "
+            "легитимное отсутствие файла (AT-BUG-069)."
+        )
+    content = cp.stdout[:idx]
+    rc_raw = cp.stdout[idx + len(_PULL_RC_SENTINEL):]
+    try:
+        rc = int(rc_raw)
+    except ValueError:
+        rc = None
+    if rc != 0 or not content:
         return False
-    dest.write_bytes(cp.stdout)
+    dest.write_bytes(content)
     return True
 
 

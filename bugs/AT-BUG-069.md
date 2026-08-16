@@ -4,16 +4,16 @@ title: "Двойной раздельный seed()-round-trip после AT-BUG-
 type: test_debt
 debt_kind: flaky_test
 severity: minor
-status: Open
+status: Fixed
 found_in: "живая разработка фикстуры TC-187 (metadata_fetch_stop_queue_seeded), test-automator, 2026-08-14; framework env"
-fixed_in: ""
+fixed_in: "framework/core/adb.py::pull_app_file (AT-BUG-069 fix, 2026-08-16)"
 last_seen_in: ""
 test_cases: ["TC-187"]
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-08-14T02:40:00Z"
-updated: "2026-08-14T02:58:53Z"
+status_since: "2026-08-15T23:59:07Z"
+updated: "2026-08-15T23:59:07Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -122,19 +122,172 @@ work_ratings` при следующей вставке.
 
 ## Критерий готовности (Fixed)
 
-- [ ] `_pull_baseline` различает «WAL/SHM легитимно отсутствуют» (штатно —
+- [x] `_pull_baseline` различает «WAL/SHM легитимно отсутствуют» (штатно —
   файл не создавался Room, не ошибка) от «пулл реально не удался»
   (returncode/транспорт) — на втором случае fail-closed (raise/retry), а не
   молчаливое продолжение. Симметрично `_schema_ready()` (AT-BUG-044) и
   `run_as_file_or_raise` (AT-BUG-055) — тот же принцип: логически
   критичные операции проверяют возврат явно, не полагаются на «пусто =
   нормально».
-- [ ] Красная/зелёная проба на новую ветку (или обоснование, почему красная
-  проба недостижима без искусственной инъекции сбоя транспорта).
-- [ ] Все текущие потребители `_pull_baseline` (`seed*`, `read_*`) остаются
+- [x] Красная/зелёная проба на новую ветку.
+- [x] Все текущие потребители `_pull_baseline` (`seed*`, `read_*`) остаются
   зелёными, регресс не внесён.
-- [ ] `arch_check.py`/`validate_frontmatter.py` — 0/0.
-- [ ] Ни одно изменение не внесено в `app-under-test/`.
+- [x] `arch_check.py`/`validate_frontmatter.py` — 0/0.
+- [x] Ни одно изменение не внесено в `app-under-test/`.
+
+## Фикс (test-maintainer, 2026-08-16)
+
+**Живая эмпирика ПЕРЕД правкой (5 сценариев на `emulator-5554`, скрипт в
+транскрипте хода) показала, что кандидат-причина из шапки бага была
+СФОРМУЛИРОВАНА НЕТОЧНО, но правка того же духа закрывает и уточнённую
+причину.** `adb exec-out` не транслирует returncode/stderr удалённой
+команды: и реальное содержимое файла, и текст ошибки `cat`
+(«No such file or directory»), и текст ошибки самого `run-as`
+(«unknown package») попадают в ОДИН и тот же локальный `cp.stdout` с
+`cp.returncode == 0` во всех трёх случаях. Старая проверка
+`cp.returncode != 0 or not cp.stdout` (`framework/core/adb.py`, было
+:405-424) была готова записать текст ошибки `run-as`/`cat` в `dest` КАК
+БУДТО это содержимое файла (непустой `cp.stdout`, `returncode == 0`) — это
+даже ХУЖЕ исходной гипотезы «тихо возвращает False» (то тоже происходит на
+пустом `stdout`, но НЕ на непустом с текстом ошибки).
+
+**Фикс** — `pull_app_file` (`framework/core/adb.py:405-...`): удалённая
+команда теперь `run-as PKG sh -c 'cat REL; printf "\nAT_BUG_069_PULL_RC=%d" $?'`
+— явный rc-маркер дописывается ПОСЛЕ содержимого в ТОТ ЖЕ бинарный
+`stdout` (тот же приём, что `run_as_file_or_raise`/AT-BUG-055, только на
+бинарном канале — `>&2` НЕ помогает, живой пробой подтверждено: `exec-out`
+сливает remote stdout+stderr в один локальный stdout, редирект на удалённой
+стороне на это не влияет). `rfind()` маркера с конца:
+- маркер найден, `rc==0`, контент непуст -> реальные байты файла -> `True`.
+- маркер найден, `rc!=0` ИЛИ контент пуст -> `cat` сам не смог прочитать
+  (легитимное отсутствие WAL/SHM) -> `False`, текст ошибки `cat`
+  ИГНОРИРУЕТСЯ (не пишется в `dest`).
+- маркер ОТСУТСТВУЕТ вовсе -> `run-as`/remote-shell не выполнились
+  (устройство офлайн, пакет не debuggable/не установлен, битый toybox) ->
+  `RuntimeError`, fail-closed — САМ БЛОКЕР этого бага.
+
+Сигнатура `pull_app_file(rel_path, dest) -> bool` НЕ менялась — рефакторинг
+вызывающих мест НЕ потребовался (3 вызова, все в `seed_db._pull_baseline`);
+`RuntimeError` теперь может прилететь оттуда же, откуда раньше прилетал бы
+для main-db-ветки (`if not ok: raise RuntimeError(...)`), просто раньше он
+не мог случиться на WAL/SHM-ветках вовсе (возврат игнорировался), теперь
+может — и это ЖЕЛАЕМОЕ поведение (fail-closed), не расширение контракта,
+требующее правки `_pull_baseline`.
+
+**Свидетельства (полный вывод в транскрипте хода):**
+- Живая 5-сценарная сверка на `emulator-5554` (реальный файл /
+  синтетически-отсутствующий путь / легитимно-пустой WAL / несуществующий
+  пакет для `run-as` / несуществующая серийка устройства) — обосновала
+  дизайн ДО правки.
+- Новый device-free юнит-тест
+  `framework/tests/test_pull_app_file_fail_closed_unit.py` — 10 кейсов
+  (матрица + регресс-замок), GREEN после фикса; тот же регресс-замок
+  проверен и вручную (`scratchpad/red_green_pull_app_file.py`) против
+  ДОСЛОВНОЙ старой ветки логики из `git show HEAD` — RED (старый код
+  возвращал `True` и писал текст ошибки как байты файла) до фикса,
+  GREEN после.
+- `framework/tests/test_seed_db_full_baseline_live.py` (живой, использует
+  `_pull_baseline` напрямую, без Appium) — 3/3 зелёных прогона подряд на
+  `emulator-5554` после фикса.
+- Живая реконструкция ОРИГИНАЛЬНОГО паттерна бага (два последовательных
+  `seed()`/`force_stop()`/`ensure_db_initialized()` round-trip на одном
+  `pm clear`, `scratchpad/double_seed_roundtrip_probe.py`) — 8/8 итераций
+  без исключений после фикса.
+- `python -m pytest framework/tests -k unit` — 290 passed (device-free
+  regressиона нет).
+- `python -m pytest scripts/tests -q` — 1297 passed, 1 skipped (0 failed;
+  единственный сбой в первом прогоне — утечка `AO3_LOOP_HOLDER` из
+  ПАРАЛЛЕЛЬНОГО heartbeat-процесса в env текущей bash-сессии, не связана с
+  этим диффом — подтверждено повтором с очищенным env).
+- `python scripts/arch_check.py` — 0 ошибок (4 предупреждения, все —
+  ранее известные allowlist-исключения/несвязанный rule3-пункт TC-176).
+- `python scripts/validate_frontmatter.py` — 0/0.
+
+**Область правки:** только `framework/core/adb.py` (одна функция) +
+новый тест-файл. `_pull_baseline`/`seed_db.py` НЕ тронуты (правка
+изолирована в `pull_app_file`, ниже по стеку — соответствует
+предупреждению координатора о ядровой природе `_pull_baseline`: сам
+`_pull_baseline` не менялся вовсе, только функция, которую он вызывает).
+`app-under-test/` не тронут.
+
+**Rework attempt 2 (test-maintainer, критик-вход rework attempt 1, два
+блокера B1/B2):**
+
+- **B1 (механический):** frontmatter `status_since`/`updated` были
+  `2026-08-16T00:50:00Z` — на +57 минут В БУДУЩЕМ относительно
+  фактического UTC на момент критик-прогона (`2026-08-15T23:52:26Z`).
+  Исправлено на фактическое время этого хода
+  (`2026-08-15T23:59:07Z`, реальный вывод `datetime.now(timezone.utc)`).
+  `lock` снят (было `test-maintainer:2026-08-16T01:05:00Z`).
+- **B2 (регрессия, суть):** `pull_app_file` (`framework/core/adb.py`)
+  интерполировала `rel_path` в удалённую `sh -c '...'`-строку БЕЗ кавычек
+  — критик живьём подтвердил на `emulator-5554` три поломки: (1) путь с
+  пробелом (существующий читаемый файл) молча давал `False` вместо
+  `True`+байты — та же путаница «легитимно нет» vs «сбой», которую весь
+  фикс должен был устранить, регресс; (2) пустой/пробельный `rel_path` —
+  `cat` без операнда читает STDIN -> hang до `ADB_TRANSFER_TIMEOUT`
+  (120s); (3) метасимволы (`;`) в `rel_path` -> удалённое исполнение
+  произвольной команды. Исправлено: `rel_path` теперь заквочен
+  одинарными кавычками (`cat '{rel_path}'; printf ...`) — критик-кандидат,
+  живьём проверенный им (путь с пробелом -> корректные байты; пустой
+  `rel_path` -> мгновенная ошибка ~0.1s, не hang). Одинарная кавычка
+  ВНУТРИ `rel_path` (сломала бы само квотирование) — явный `ValueError`
+  ДО похода на устройство (`rel_path` всегда module-level константа
+  `seed_db._DB_REL`/`_WAL`/`_SHM`, но fail-closed правильнее молчаливой
+  поломки).
+
+  Собственная live-переверификация этого хода
+  (`scratchpad/rework2_verify_pull_app_file.py`, реальная production-
+  функция, `emulator-5554`) воспроизвела результаты критика на
+  исправленном коде: путь с пробелом (`files/rework2_sp ace.bin`) ->
+  `ok=True`, байты совпали точно; пустой `rel_path` -> `ok=False` за
+  0.08s (не hang); кавычка-инъекция -> `ValueError` мгновенно, до
+  `subprocess.run`.
+
+  Новые device-free юнит-кейсы (критик указал: старые 10 мокают
+  `subprocess.run` целиком готовым `CompletedProcess` и не видят класс
+  «argv не заквотирован») в
+  `framework/tests/test_pull_app_file_fail_closed_unit.py`:
+  `test_rel_path_with_space_is_single_quoted_in_remote_command` (проверяет
+  СОСТАВ построенной remote-команды — путь обёрнут в кавычки, а не
+  голый), `test_empty_rel_path_is_quoted_not_left_bare_for_stdin_cat`
+  (пустой `rel_path` остаётся явным `''`, не голым `cat ;`),
+  `test_rel_path_with_single_quote_rejected_fail_closed_before_subprocess`
+  (`ValueError` до `subprocess.run`, файл `subprocess.run` вообще не
+  вызывается).
+
+  **Опционально, НЕ сделано в этом ходе (критик пометил non-blocking):**
+  `2>/dev/null` на `cat` по симметрии с `run_as_file_or_raise`
+  (`adb.py:378`) — сейчас stderr-текст `cat` при УСПЕШНОМ пулле
+  теоретически мог бы примешаться в бинарный `content` (redirect на
+  удалённой стороне уже подтверждён неэффективным для разделения
+  каналов в докстринге функции — `exec-out` сливает remote stdout+stderr
+  в один локальный stdout независимо от редиректа, так что `2>/dev/null`
+  дал бы эффект только на СОБСТВЕННО STDERR remote-`cat`, не на общую
+  проблему смешения каналов; сейчас маркер-подход уже отделяет ошибку от
+  контента по `rc`, так что практическая ценность этого добавления мала).
+  Оставлено координатору как возможное мелкое улучшение, не блокер.
+
+  **Witness rework attempt 2 (дословно):**
+  - `Invoke-Pytest tests/test_pull_app_file_fail_closed_unit.py -q` ->
+    `13 passed in 0.23s`, `PYTEST_EXIT=0` (было 10, +3 новых).
+  - `Invoke-Pytest tests -k unit -q` -> `293 passed, 187 deselected, 3
+    warnings in 22.84s`, `PYTEST_EXIT=0` (было 290, +3 новых кейса; 3
+    предупреждения — известный AT-BUG-026 device-liveness guard шум, не
+    связаны с этим диффом).
+  - `python scripts/arch_check.py` -> `ошибок 0, предупреждений 4` (4 —
+    те же ранее известные allowlist-исключения, что и до rework).
+  - `python scripts/validate_frontmatter.py` -> `validate_frontmatter:
+    ошибок 0, предупреждений 0` (0/0 — критик поймал attempt1 на этом
+    гейте с некорректным future-timestamp'ом B1, в этом заходе чисто).
+
+**Явно НЕ в этом ходе (по прямому указанию диспатча, не расширяю scope):**
+4 сиблинга композитных seed-вызовов (`library_mixed_download_status_seeded`,
+`library_favorite_and_files_scroll_seeded`, `library_downloaded_only_seeded`,
+`backup_restore_seeded`) и класс «единый timestamp» (`_insert_rows`/
+`_insert_rows_full`/`_insert_rows_with_download`/
+`_insert_rows_full_with_download`/`seed_filter_profiles`) — оба остаются в
+очереди координатору, как и было помечено при заведении бага.
 
 ## Обсуждение
 
