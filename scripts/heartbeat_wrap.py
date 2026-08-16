@@ -1,34 +1,52 @@
-"""ДЕПРЕКИРОВАНО (spec-factory-window v6, К5д, 2026-08-16, слово оператора
+"""ЧАСТИЧНО ДЕПРЕКИРОВАНО (spec-factory-window v7 = v6 + Д1 ночной резерв,
+docs/tasks/factory-visible-window.md §Д, 2026-08-16, слово оператора
 2026-08-16 «в идеале heartbeat просто подталкивает фабрику в открытом
-окне»): `scripts/heartbeat.cmd` БОЛЬШЕ НЕ ВЫЗЫВАЕТ этот модуль — вызывает
-`scripts/factory_watchdog.py` (сторож окна, не запускатель headless-
-прохода). Архитектура «невидимая фабрика в фоне» заменена на «окно-
-фабрика + сторож»: `/qa-loop` теперь ведёт скилл `.claude/skills/
-factory/SKILL.md` из ОТКРЫТОГО окна Claude Code, не эта обёртка из
-Task Scheduler.
+окне»): `scripts/heartbeat.cmd` БОЛЬШЕ НЕ ВЫЗЫВАЕТ `run_pass`/`main` этого
+модуля НАПРЯМУЮ — вызывает `scripts/factory_watchdog.py` (сторож окна).
+Архитектура «невидимая фабрика в фоне» заменена на «окно-фабрика + сторож»:
+`/qa-loop` ведёт скилл `.claude/skills/factory/SKILL.md` из ОТКРЫТОГО окна
+Claude Code как штатный путь. НО: класс «фон не ведёт» (v6-редакция этой
+шапки) ПЕРЕСТАЛ БЫТЬ ВЕРНЫМ БЕЗ ОГОВОРОК с Д1 — `heartbeat.cmd`
+ТРАНЗИТИВНО вызывает child-spawn-машинерию ЭТОГО модуля: сторож
+(`factory_watchdog.py`), увидев мёртвое окно (STALLED ≥ 15 мин, предикаты
+fastdeath/slowdeath чисты, `night_fallback` не выключен), спавнит ОДИН
+резервный проход через `run_fallback_pass(...)` НИЖЕ — тот же самый
+acquire/Popen/kill-tree/release-контур, что и депрекированный `run_pass`.
 
-Обе ветки этого модуля мертвы в production, но КОД И ТЕСТЫ ОСТАЮТСЯ
-(страховка отката — `python -m pytest scripts/tests -q` держит
-`test_heartbeat_wrap*.py` зелёными; см. CLAUDE.md «Чини класс, а не
-экземпляр» — если откат понадобится, обёртка снова рабочая, не
-переписывается заново):
-  1. **child-spawn-ветка** (acquire/BUSY/Popen/kill-tree/release/M4-строка,
-     основное тело докстринга ниже) — код МЁРТВ, никто не вызывает
-     `run_pass`/`main` этого модуля из production-пути.
-  2. **бюджет+fastdeath-ветка** (`state/heartbeat-budget.txt`,
-     `state/heartbeat-fastdeath.json`, `HEARTBEAT-BUDGET`/
-     `HEARTBEAT-CHILD-DEATH`-эскалации) — тоже МЕРТВА: бюджет прогонов
-     ПЕРЕЕЗЖАЕТ в аргумент `/factory N` (лимит срабатываний одного
-     прохода окна = 5, слово оператора 2026-08-16 — см. К1 п.3 спеки),
-     `state/heartbeat-fastdeath.json` — мёртвый runtime-файл (не пишется,
-     не читается никаким живым путём); эскалация `HEARTBEAT-BUDGET`
-     БОЛЬШЕ НЕ РОЖДАЕТСЯ (некому — `_write_budget`/`_schtasks_disable` не
-     вызываются из production).
+Судьба веток (v7, после Д1):
+
+  1. **child-spawn-ядро** (acquire/BUSY/Popen/kill-tree/release/REFUSED,
+     вынесено в общее `_run_child(...)`) — ЖИВОЕ: используется ОБОИМИ
+     `run_pass` (прежний контракт, вечный `0`, из production НЕ
+     вызывается — страховка отката, старые пины `test_heartbeat_wrap*.py`
+     держатся зелёными) И `run_fallback_pass` (НОВАЯ точка входа Д1,
+     production-путь через `factory_watchdog.py`, см. её докстринг ниже).
+  2. **fastdeath-учёт** (`state/heartbeat-fastdeath.json`,
+     `HEARTBEAT-CHILD-DEATH`-эскалация) — ЖИВОЙ (снова): `run_fallback_pass`
+     инкрементирует/сбрасывает тот же файл через общее ядро. **Правка
+     семантики (Д п.6, консолидированная секция — серии ДИЗЪЮНКТНЫ):**
+     сброс (`_fastdeath_reset`) теперь происходит ТОЛЬКО при
+     `child_rc == 0` — медленный отказ (`rc != 0`, `runtime >=
+     FAST_DEATH_SEC`) БОЛЬШЕ НЕ СБРАСЫВАЕТ fastdeath (раньше сбрасывал —
+     это ошибка старой модели «не-быстрая смерть = здоровая»; теперь
+     медленные отказы копят ОТДЕЛЬНУЮ серию `slowdeath` — её домен ВНЕ
+     этого модуля, в `scripts/factory_watchdog.py`, т.к. серия живёт в
+     `state/factory-watchdog.json`, не здесь). `timeout_kill` НЕ трогает
+     fastdeath вовсе (ни инкремент, ни сброс) — она относится ТОЛЬКО к
+     slowdeath-серии сторожа.
+  3. **бюджет-ветка** (`state/heartbeat-budget.txt`, `HEARTBEAT-BUDGET`,
+     `_write_budget`/`_schtasks_disable`) — ОСТАЁТСЯ МЁРТВОЙ: бюджет
+     прогонов живёт в `/factory N` (окно) и в `passes_done`/`budget_total`
+     `state/factory-mode.json` (резерв, через `on_pass_done`), НЕ в этом
+     файле. `run_fallback_pass(..., budget_enabled=False)` эту ветку явно
+     НЕ вызывает — `budget_enabled=True` не реализован (`NotImplementedError`
+     на вызов), недостижимость — КОДОМ, не дисциплиной.
 
 TTL-источник (К4 спеки): эта ветка ОСТАЁТСЯ на `sla_utils.
 load_lock_stale_hours` (см. `compute_max_pass_sec` ниже) — НЕ переходит
 на новую `load_loop_lock_ttl_hours` (та — для loop_lock.py/doctor.py/
-сторожа, живых читателей).
+сторожа, живых читателей); `run_fallback_pass` использует ТОТ ЖЕ клamp
+(МAX_PASS-киллер легален и для резерва — архив v3 §9).
 
 --- Исходный докстринг (M1+M4, живой контекст на момент, когда обёртка
 была ЕЩЁ production-путём) сохранён ниже без изменений: ---
@@ -146,19 +164,48 @@ _read_budget/_write_budget/_schtasks_disable/_write_singleton_escalation.
 budget-файла — намерение оператора здесь не пишется руками). При
 count>=3 подряд — singleton-эскалация `HEARTBEAT-CHILD-DEATH`
 [heartbeat:child-death] (та же машинерия, что HEARTBEAT-BUDGET —
-обобщено в `_write_singleton_escalation`); здоровый проход (rc=0) или
-медленная смерть (runtime >= FAST_DEATH_SEC) сбрасывает счётчик в 0.
-Задача планировщика НЕ отключается (смерть-серия самоизлечивается,
-когда причину чинит оператор). Если бюджет прогонов был сожжён в ЭТОМ
+обобщено в `_write_singleton_escalation`); текст эскалации указывает на
+`logs/fallback-YYYYMMDD.log` (Д1: живой производственный вызыватель —
+`run_fallback_pass`, не замороженный `logs/heartbeat.log`) и называет ДВА
+пути сброса — сторож сбрасывает реестр при живом прогрессе окна ИЛИ
+пробный запуск при `last_ts` реестра старше 6ч (спека:
+docs/tasks/factory-visible-window.md §Д п.6 «Единый стартовый гейт»;
+реализация — `factory_watchdog._series_blocked`).
+
+**Правка семантики (Д п.6, консолидированная секция — серии
+ДИЗЪЮНКТНЫ, ЗАМЕНЯЕТ прежнее правило ниже):** сброс счётчика (rc=0)
+происходит ТОЛЬКО при `child_rc == 0`. Медленный отказ (`rc != 0 И
+runtime >= FAST_DEATH_SEC`) БОЛЬШЕ НЕ СБРАСЫВАЕТ fastdeath (прежняя
+редакция ошибочно трактовала «не-быстрая смерть» как здоровую — на
+самом деле это ОТДЕЛЬНАЯ серия `slowdeath`, её домен и хранилище — ВНЕ
+этого модуля, `state/factory-watchdog.json`/`scripts/factory_watchdog.py`,
+т.к. `run_pass` не знает о слоudeath вовсе, а `run_fallback_pass` не
+хранит эту серию сам — её накапливает вызывающий сторож по возвращённому
+исходу). `timeout_kill` НЕ трогает fastdeath НИКАК (ни инкремент, ни
+сброс) — она относится ТОЛЬКО к slowdeath-серии сторожа. Задача
+планировщика НЕ отключается (смерть-серия самоизлечивается, когда
+причину чинит оператор). Если бюджет прогонов был сожжён в ЭТОМ
 проходе (декремент прошёл без OSError) и смерть быстрая — бюджет
 возвращается перечиткой+инкрементом (не восстановлением старого
-значения — конкурентная правка оператора не должна быть затёрта). Обе
+значения — конкурентная правка оператора не должна быть затёрта; ветка
+`run_fallback_pass` бюджет не трогает вовсе, budget_enabled=False). Обе
 записи (счётчик, эскалация) никогда не бросают исключение наружу
-run_pass (класс BL-4 — писатель эскалаций на занятом escalations.md
-раньше сиротил лок; починено для ВСЕХ трёх площадок singleton-эскалаций
-через общий catch внутри `_write_singleton_escalation`). См.
+`run_pass`/`run_fallback_pass` (класс BL-4 — писатель эскалаций на
+занятом escalations.md раньше сиротил лок; починено для ВСЕХ площадок
+singleton-эскалаций через общий catch внутри
+`_write_singleton_escalation`). См.
 _read_fastdeath/_write_fastdeath/_fastdeath_increment/_fastdeath_reset/
-_refund_budget.
+_fastdeath_after_spawn/_refund_budget.
+
+Общее ядро `_run_child(...)` (Д п.2): acquire/spawn(Popen без
+PIPE)/wait-или-timeout-kill/tasklist/release/REFUSED/fastdeath-учёт —
+ОДНА реализация, вызывается ОБОИМИ `run_pass` (через `pre_spawn`/
+`post_spawn`-хуки — бюджет-логика ЦЕЛИКОМ остаётся в `run_pass`,
+`_run_child` о бюджете не знает) И `run_fallback_pass` (через
+`pre_spawn`=`on_spawn`-обёртку, `on_pass_done`-CAS-хук, `stdout_target`=
+файловый дескриптор `logs/fallback-*.log`). Дублирование
+acquire/kill-tree/tasklist/release/REFUSED/fastdeath между двумя точками
+входа запрещено (D-0043) — обе используют эту функцию.
 """
 from __future__ import annotations
 
@@ -229,10 +276,37 @@ HEARTBEAT_BUDGET_TAG = "heartbeat:budget"
 
 # --- детектор серийной быстрой смерти + возврат бюджета
 # (spec-heartbeat-fastdeath.md v2, 2026-08-15) ------------------------------
-FAST_DEATH_SEC = 120.0
+FAST_DEATH_SEC = float(os.environ.get("AO3_FASTDEATH_SEC", "120") or 120)
+# r6-фикс (Д п.6): MAX_PASS_SEC env-настраиваем — малое значение могло дать
+# timeout_kill за <120с, что раньше давало ОБА инкремента (fastdeath И
+# slowdeath) на одном исходе. FAST_DEATH_SEC теперь ТОЖЕ env-настраиваем
+# (AO3_FASTDEATH_SEC, дефолт 120) исключительно для тестов на границе (M6);
+# production не переопределяет.
 FAST_DEATH_ESCALATE_AT = 3
 HEARTBEAT_CHILD_DEATH_KEY = "HEARTBEAT-CHILD-DEATH"
 HEARTBEAT_CHILD_DEATH_TAG = "heartbeat:child-death"
+
+# --- ночной резерв (Д1, консолидированная секция spec-factory-window v7) --
+DEFAULT_FALLBACK_CHILD_ARGS = ["-p", "/qa-loop 5", "--model", "sonnet"]
+DEFAULT_FALLBACK_LOG_DIR = REPO / "logs"
+
+
+def fallback_log_path(now: datetime.datetime, *, log_dir: Path = DEFAULT_FALLBACK_LOG_DIR) -> Path:
+    """`logs/fallback-YYYYMMDD.log` (Д п.2) — М4-артефакт ночного резерва на
+    ВСЕХ исходах run_fallback_pass (busy/spawned/spawn_failed/timeout_kill);
+    fastdeath-эскалация указывает на этот же путь."""
+    return Path(log_dir) / f"fallback-{now.strftime('%Y%m%d')}.log"
+
+
+def _fallback_artifact_rel(now: datetime.datetime) -> str:
+    """REPO-относительная строка `logs/fallback-YYYYMMDD.log` — М4-
+    артефакт-колонка `run_fallback_pass` (Б1, критик-раунд Д1): та же
+    дата-схема, что `fallback_log_path`, но НЕЗАВИСИМАЯ от фактического
+    `log_path`-параметра (тесты могут передать произвольный tmp-путь для
+    самого файла — колонка orchestrator-log остаётся стандартной, симметрия
+    с `run_pass.ARTIFACT`, которая тоже не равна реальному пути
+    перенаправления stdout)."""
+    return f"logs/fallback-{now.strftime('%Y%m%d')}.log"
 
 
 def _utcnow() -> datetime.datetime:
@@ -266,12 +340,15 @@ def compute_max_pass_sec(sla_path: Path) -> tuple[float, bool]:
     return env_min * 60.0, False
 
 
-def _popen(args: list[str], *, env: dict) -> subprocess.Popen:
+def _popen(args: list[str], *, env: dict, stdout=None, stderr=None) -> subprocess.Popen:
     """Обёртка вокруг Popen; подменяется в тестах. БЕЗ PIPE (B4): внуки
     процесса (appium/adb/gradle деревья, что claude.cmd порождает внутри
     /qa-loop) держали бы хэндлы stdout/stderr и `wait()` после `taskkill`
-    висел бы мимо таймаута."""
-    return subprocess.Popen(args, env=env)
+    висел бы мимо таймаута. `stdout`/`stderr` — ТОЛЬКО прямой файловый
+    дескриптор (Д п.2, `run_fallback_pass`) или `None` (наследование от
+    родителя, прежнее поведение `run_pass`) — НИКОГДА `subprocess.PIPE`
+    (тот же класс B4: анонимный pipe без читателя блокирует ребёнка)."""
+    return subprocess.Popen(args, env=env, stdout=stdout, stderr=stderr)
 
 
 def _taskkill_tree(pid: int) -> tuple[int, str]:
@@ -375,6 +452,20 @@ def _schtasks_disable(task_name: str = TASK_NAME) -> tuple[int, str]:
         return p.returncode, (p.stdout or "") + (p.stderr or "")
     except OSError as e:
         return 127, str(e)
+
+
+def _append_m4_safe(fields: list[str]) -> None:
+    """Non-throwing M4-писатель (класс BL-4, критик r2 ночного контура):
+    `la.append_orchestrator` был ЕДИНСТВЕННЫМ бросающим писателем на
+    production-пути резерва — OSError (журнал занят) пропускал финальную
+    запись state тика (следующий тик закрывал эпизод собственной записью
+    резерва), а SystemExit из `la._verify_environment` пролетал мимо
+    catch-all `main()` (except Exception) и ронял задачу планировщика.
+    Ловим ОБА named-класса; KeyboardInterrupt намеренно не глотаем."""
+    try:
+        la.append_orchestrator(fields)
+    except (Exception, SystemExit) as e:      # noqa: BLE001 — см. докстринг
+        print(f"M4 write failed: {e}")
 
 
 def _write_singleton_escalation(escalations_path: Path, key: str, tag: str, message: str,
@@ -485,7 +576,8 @@ def _write_fastdeath(fastdeath_path: Path, data: dict) -> None:
 
 def _fastdeath_increment(fastdeath_path: Path, escalations_path: Path,
                          now: datetime.datetime, rc: int | None,
-                         runtime: float | None) -> str:
+                         runtime: float | None,
+                         log_hint: str = "logs/heartbeat.log") -> str:
     """Инкрементирует счётчик серии быстрых смертей (spawn-failed или
     rc!=0 и runtime < FAST_DEATH_SEC), пишет файл, при достижении порога
     FAST_DEATH_ESCALATE_AT пишет/обновляет singleton-эскалацию
@@ -499,7 +591,19 @@ def _fastdeath_increment(fastdeath_path: Path, escalations_path: Path,
     начала прохода: `stamp` берётся из `_utcnow()` здесь, на месте.
     Аргумент `now` остаётся ТОЛЬКО меткой строки реестра эскалаций
     (`_write_singleton_escalation`, семантика ll._write_loop_escalation —
-    момент записи строки, не момент события)."""
+    момент записи строки, не момент события).
+
+    Rework attempt 2 (Б2, критик-раунд Д1): `log_hint` — параметризованный
+    путь-указатель в тексте эскалации (симметрия M4-артефакта). Дефолт
+    `"logs/heartbeat.log"` — для (депрекированного) `run_pass`;
+    `run_fallback_pass` передаёт СВОЙ `logs/fallback-YYYYMMDD.log` через
+    `_run_child(..., fastdeath_log_hint=...)`. Текст также называет ДВА
+    пути сброса (шапка модуля :165-172 — целевой текст, этот код
+    приводится к нему): сторож сбрасывает реестр при живом прогрессе окна
+    ИЛИ пробный запуск при `last_ts` реестра старше 6ч — НЕ «сбросится сам
+    первым здоровым проходом» (прежняя формулировка была неточной: для
+    `run_fallback_pass` сброс тоже возможен ТОЛЬКО через здоровый
+    (`rc==0`) резервный проход, но триггерится СТОРОЖЕМ, не «само собой»)."""
     data = _read_fastdeath(fastdeath_path)
     prev_count = data["count"]                       # уже int (B2: приведено в _read_fastdeath)
     count = prev_count + 1
@@ -513,8 +617,10 @@ def _fastdeath_increment(fastdeath_path: Path, escalations_path: Path,
         message = (
             f"{count} быстрых смертей подряд, окно {first_ts}..{stamp}, "
             f"последний rc={rc}, runtime={runtime_txt}; первые строки причины — "
-            "logs/heartbeat.log; причину чинит оператор/Lead, счётчик сбросится "
-            "сам первым здоровым проходом")
+            f"{log_hint}; причину чинит оператор/Lead — сбросит сторож при живом "
+            "прогрессе окна ИЛИ пробный запуск через 6ч (спека: "
+            "docs/tasks/factory-visible-window.md §Д п.6 «Единый стартовый "
+            "гейт»; реализация — factory_watchdog._series_blocked)")
         _write_singleton_escalation(escalations_path, HEARTBEAT_CHILD_DEATH_KEY,
                                     HEARTBEAT_CHILD_DEATH_TAG, message, now)
         suffix += " escalated"
@@ -522,16 +628,51 @@ def _fastdeath_increment(fastdeath_path: Path, escalations_path: Path,
 
 
 def _fastdeath_reset(fastdeath_path: Path) -> str:
-    """Сбрасывает счётчик серии в 0 (rc==0 либо медленная смерть, спека
-    п.3). Здоровый проход при УЖЕ нулевом/отсутствующем счётчике файл НЕ
-    переписывает и НЕ создаёт — запись только при сбросе с ненулевого
-    значения. Возвращает суффикс `` или ` fastdeath-reset`."""
+    """Сбрасывает счётчик серии в 0. **Правка Д п.6 (консолидированная
+    секция, серии ДИЗЪЮНКТНЫ):** вызывается ТОЛЬКО при `child_rc == 0`
+    (см. `_fastdeath_after_spawn` ниже) — прежняя редакция вызывала это и
+    на медленной смерти (`rc != 0`, `runtime >= FAST_DEATH_SEC`), что
+    ошибочно роднило «не-быструю смерть» со «здоровым проходом»; теперь
+    медленный отказ НЕ трогает fastdeath вовсе (своя серия — slowdeath,
+    вне этого модуля). Здоровый проход при УЖЕ нулевом/отсутствующем
+    счётчике файл НЕ переписывает и НЕ создаёт — запись только при сбросе
+    с ненулевого значения. Возвращает суффикс `` или ` fastdeath-reset`."""
     data = _read_fastdeath(fastdeath_path)
     if data["count"] == 0:                            # уже int (B2: приведено в _read_fastdeath)
         return ""
     _write_fastdeath(fastdeath_path, {"count": 0, "first_ts": None,
                                       "last_ts": None, "last_rc": None})
     return " fastdeath-reset"
+
+
+def _fastdeath_after_spawn(fastdeath_path: Path, escalations_path: Path,
+                           now: datetime.datetime, rc: int, runtime: float,
+                           log_hint: str = "logs/heartbeat.log") -> tuple[bool, str]:
+    """fastdeath-учёт ПОСЛЕ получения `rc` дочернего процесса (Д п.6,
+    консолидированная секция — серии ДИЗЪЮНКТНЫ). Общая точка для
+    `_run_child`, используется ОБОИМИ `run_pass`/`run_fallback_pass`:
+
+    - `rc == 0` -> сброс (`_fastdeath_reset`), `fast_death=False`;
+    - `rc != 0` И `runtime < FAST_DEATH_SEC` -> инкремент
+      (`_fastdeath_increment`), `fast_death=True`;
+    - `rc != 0` И `runtime >= FAST_DEATH_SEC` (медленный отказ) -> NO-OP:
+      ни инкремент, ни сброс (домен медленных отказов — `slowdeath`,
+      серия вне этого модуля, см. `scripts/factory_watchdog.py`).
+
+    `timeout_kill` эту функцию НЕ зовёт вовсе (вызывающий код `_run_child`
+    решает это до получения `rc`) — не инкрементирует и не сбрасывает
+    fastdeath ни при каких условиях; DoD-юнит «timeout_kill не
+    инкрементирует fastdeath, инкрементирует slowdeath» — вторая половина
+    (slowdeath) проверяется в тестах `factory_watchdog.py` по возвращённому
+    `outcome=="timeout_kill"`.
+
+    Возвращает `(fast_death, suffix)`."""
+    if rc == 0:
+        return False, _fastdeath_reset(fastdeath_path)
+    if runtime is not None and runtime < FAST_DEATH_SEC:
+        return True, _fastdeath_increment(fastdeath_path, escalations_path, now, rc, runtime,
+                                          log_hint=log_hint)
+    return False, ""
 
 
 def _refund_budget(budget_path: Path) -> str:
@@ -579,7 +720,136 @@ def _release_and_finish(outcome: str, *, lock_file: Path, holder: str,
                   "не совпал — лок обёртки не наш к моменту release")
     except Exception as e:
         outcome += f" release=error:{e}"
-    la.append_orchestrator([RULE, AGENT, ARTIFACT, outcome])
+    _append_m4_safe([RULE, AGENT, ARTIFACT, outcome])
+
+
+def _run_child(*, lock_file: Path, reaps_path: Path, escalations_path: Path, sla_path: Path,
+              fastdeath_path: Path, claude_cmd: str, child_args: list[str],
+              now: datetime.datetime, kill_wait_sec: float, max_pass_sec: float,
+              holder: str, stdout_target=None, pre_spawn=None, on_spawn_failed=None,
+              post_spawn=None, on_pass_done=None,
+              fastdeath_log_hint: str = "logs/heartbeat.log") -> dict:
+    """Общее ядро child-spawn-контура (Д п.2, консолидированная секция):
+    acquire → (BUSY-выход | опциональный `pre_spawn`-абóрт | Popen → wait/
+    timeout-kill/tasklist → release/REFUSED). Единственная реализация
+    acquire/kill-tree/tasklist/release/REFUSED/fastdeath-учёта — вызывается
+    ОБОИМИ `run_pass` (прежний контракт, holder=`heartbeat:*`) и
+    `run_fallback_pass` (Д1, тот же holder-класс); дублирование запрещено
+    (D-0043).
+
+    Хуки (ВСЕ опциональны, run_pass и run_fallback_pass используют РАЗНЫЕ
+    поднаборы — бюджет-логика ЦЕЛИКОМ в run_pass, эта функция о бюджете не
+    знает):
+    - `pre_spawn()` -> `str|None` — вызывается ПОСЛЕ успешного acquire, ДО
+      Popen. Ненулевой (не-None) возврат = АБОРТ: Popen НЕ вызывается,
+      `outcome="pre_spawn_abort"`, `abort_reason=<возврат>`; лок НЕ
+      релизится этой функцией — вызывающий код (тот, кто уже держит его
+      закрытым в pre_spawn) отвечает за release сам (run_pass использует
+      это для budget corrupt/exhausted — `_release_and_finish` внутри
+      самого хука). `None` = продолжить (побочные эффекты разрешены —
+      run_fallback_pass инкрементирует fallback_runs здесь через `on_spawn`).
+    - `on_spawn_failed()` — вызывается, если Popen ПОСЛЕ успешного
+      `pre_spawn()` всё же бросил исключение (компенсирующий откат
+      побочных эффектов pre_spawn, напр. отмена инкремента fallback_runs).
+    - `post_spawn()` — вызывается СРАЗУ после успешного Popen (после
+      фиксации `t_spawn`), ДО `p.wait(...)` — run_pass декрементирует
+      бюджет здесь (byte-в-byte прежний порядок: t_spawn ДО декремента).
+    - `on_pass_done(rc, runtime)` — вызывается ТОЛЬКО при `rc == 0`
+      (результативный проход), ПОКА лок ЕЩЁ держится (до release в
+      `finally`) — run_fallback_pass передаёт сюда CAS-инкремент
+      `passes_done` мод-файла (Д п.3).
+
+    Возвращает dict: `outcome` (`busy|pre_spawn_abort|spawn_failed|
+    spawned|timeout_kill`), `abort_reason`, `spawn_error`, `wait_exception`,
+    `child_rc`, `runtime`, `kill_alive`, `acquire_lines`, `print_lines`,
+    `fast_death`, `fastdeath_suffix`, `release_called`, `release_rcode`,
+    `release_lines`, `release_error`, `holder`."""
+    result = {
+        "outcome": None, "abort_reason": None, "spawn_error": None,
+        "wait_exception": None, "child_rc": None, "runtime": None,
+        "kill_alive": None, "acquire_lines": [], "print_lines": [],
+        "fast_death": False, "fastdeath_suffix": "",
+        "release_called": False, "release_rcode": None, "release_lines": [],
+        "release_error": None, "holder": holder,
+    }
+    code, lines = ll.acquire(lock_file=lock_file, holder=holder, reaps_path=reaps_path,
+                             escalations_path=escalations_path, sla_path=sla_path, now=now)
+    result["acquire_lines"] = lines
+    if code != 0:
+        result["outcome"] = "busy"
+        return result
+
+    if pre_spawn is not None:
+        abort_reason = pre_spawn()
+        if abort_reason is not None:
+            result["outcome"] = "pre_spawn_abort"
+            result["abort_reason"] = abort_reason
+            return result   # лок ОСТАЁТСЯ держан — release отвечает вызывающий (см. докстринг)
+
+    child_env = dict(os.environ)
+    child_env["AO3_LOOP_HOLDER"] = holder
+    args = [claude_cmd, *child_args]
+    popen_kwargs = {"env": child_env}
+    if stdout_target is not None:
+        popen_kwargs["stdout"] = stdout_target
+        popen_kwargs["stderr"] = subprocess.STDOUT
+
+    should_release = True
+    try:
+        try:
+            p = _popen(args, **popen_kwargs)
+        except Exception as e:
+            result["outcome"] = "spawn_failed"
+            result["spawn_error"] = e
+            if on_spawn_failed is not None:
+                on_spawn_failed()
+            should_release = False   # ребёнок не запущен — нечего релизить ЗДЕСЬ (вызывающий сам)
+            return result
+
+        # t_spawn — сразу после успешного _popen: точка отсчёта runtime
+        # для детектора быстрой/медленной смерти.
+        t_spawn = time.monotonic()
+        if post_spawn is not None:
+            post_spawn()
+
+        try:
+            rc = p.wait(timeout=max_pass_sec)
+            runtime = time.monotonic() - t_spawn
+            result["outcome"] = "spawned"
+            result["child_rc"] = rc
+            result["runtime"] = runtime
+            fast_death, suffix = _fastdeath_after_spawn(
+                fastdeath_path, escalations_path, now, rc, runtime, log_hint=fastdeath_log_hint)
+            result["fast_death"] = fast_death
+            result["fastdeath_suffix"] = suffix
+            if rc == 0 and on_pass_done is not None:
+                on_pass_done(rc, runtime)
+        except subprocess.TimeoutExpired:
+            _taskkill_tree(p.pid)
+            try:
+                p.wait(kill_wait_sec)
+            except subprocess.TimeoutExpired:
+                pass  # пост-проверка ниже решает по факту, не по этому wait
+            alive = _tasklist_alive(p.pid)
+            result["outcome"] = "timeout_kill"
+            result["kill_alive"] = alive
+            if alive:
+                should_release = False
+                result["print_lines"].append("kill-failed, лок оставлен")
+        except Exception as e:                      # child умер/raise
+            result["outcome"] = "spawned"
+            result["wait_exception"] = e
+    finally:
+        if should_release:
+            result["release_called"] = True
+            try:
+                rcode, rlines = ll.release(lock_file=lock_file, holder=holder,
+                                           reaps_path=reaps_path)
+                result["release_rcode"] = rcode
+                result["release_lines"] = rlines
+            except Exception as e:
+                result["release_error"] = e
+    return result
 
 
 def run_pass(*, lock_file: Path = DEFAULT_LOCK_FILE,
@@ -596,7 +866,10 @@ def run_pass(*, lock_file: Path = DEFAULT_LOCK_FILE,
     claude → wait/kill → release) → журнальная строка. Возвращает 0
     всегда (обёртка не должна ронять Task Scheduler ненулевым кодом ни на
     BUSY, ни на kill-failed, ни на исчерпанный/битый бюджет — это видимые
-    WARN-состояния, не крах вызова).
+    WARN-состояния, не крах вызова). ПРЕЖНИЙ КОНТРАКТ (byte-в-byte) —
+    тонкая обёртка над `_run_child` (см. её докстринг): вся бюджет-логика
+    (проверка/декремент/refund) — ЗДЕСЬ, через `pre_spawn`/`post_spawn`
+    хуки; `_run_child` о бюджете не знает.
 
     Бюджет (spec-heartbeat-budget.md v1) проверяется СТРОГО ПОСЛЕ
     BUSY-шортката (BUSY не жжёт бюджет) и СТРОГО ДО запуска ребёнка:
@@ -606,12 +879,12 @@ def run_pass(*, lock_file: Path = DEFAULT_LOCK_FILE,
     BUSY-ветки — там лок чужой).
 
     Детектор серийной быстрой смерти + возврат бюджета
-    (spec-heartbeat-fastdeath.md v2) — таблица исходов ЕДИНСТВЕННЫЙ
-    источник правды (спека §«M-A» п.3): BUSY и ранние budget-выходы
-    fastdeath-счётчик НЕ трогают; spawn-failed и (rc!=0, runtime <
-    FAST_DEATH_SEC) — инкремент (+ refund бюджета, если он был сожжён
-    В ЭТОМ проходе); rc==0 или (rc!=0, runtime >= FAST_DEATH_SEC) —
-    сброс в 0; exit=error/timeout-kill — no-op."""
+    (spec-heartbeat-fastdeath.md v2, ПРАВКА Д п.6 — серии дизъюнктны) —
+    BUSY и ранние budget-выходы fastdeath-счётчик НЕ трогают; spawn-failed
+    и (rc!=0, runtime < FAST_DEATH_SEC) — инкремент (+ refund бюджета,
+    если он был сожжён В ЭТОМ проходе); rc==0 — сброс в 0; (rc!=0,
+    runtime >= FAST_DEATH_SEC) и timeout-kill — NO-OP (не инкремент, не
+    сброс — медленные отказы больше НЕ трактуются как здоровые)."""
     lock_file = Path(lock_file)
     reaps_path = Path(reaps_path)
     escalations_path = Path(escalations_path)
@@ -621,145 +894,295 @@ def run_pass(*, lock_file: Path = DEFAULT_LOCK_FILE,
 
     # Критик-фикс BL-4 (rework attempt 2, 2026-08-15): compute_max_pass_sec
     # вычислен ЗДЕСЬ — ДО acquire(), а не между acquire и внутренним
-    # try/finally, как было. Класс: любое исключение в окне между взятием
-    # лока и входом в try/finally НЕ снимает лок — сирота до TTL (тот же
-    # класс, что необорачиваемый _write_budget ниже, BL-4). sla_utils.
-    # load_lock_stale_hours сама не бросает (ловит всё внутри, докстринг
-    # sla_utils.py), но зависимость от sla_path здесь никак не связана с
-    # holder/acquire — меньшее вмешательство: подвинуть вызов раньше лока,
-    # а не оборачивать его в try/except на месте.
+    # try/finally, как было.
     max_pass_sec, clamped = compute_max_pass_sec(sla_path)
     if clamped:
         print(f"MAX_PASS ужат до {int(round(max_pass_sec / 60))} мин по sla lock_stale")
 
     now = now or _utcnow()
     holder = _new_holder(now)
-    code, lines = ll.acquire(lock_file=lock_file, holder=holder, reaps_path=reaps_path,
-                             escalations_path=escalations_path, sla_path=sla_path, now=now)
-    for line in lines:
+
+    budget_state: dict = {"value": None, "burned": False}
+
+    def _budget_pre_spawn():
+        budget = _read_budget(budget_path)
+        budget_state["value"] = budget
+        if budget == _BUDGET_CORRUPT:
+            print(f"BUDGET corrupt: {budget_path} не парсится в целое число — "
+                  "проход не запускался")
+            _write_singleton_escalation(escalations_path, HEARTBEAT_BUDGET_KEY,
+                                        HEARTBEAT_BUDGET_TAG, _BUDGET_CORRUPT_MSG, now)
+            _release_and_finish("budget=corrupt, проход не запускался",
+                                lock_file=lock_file, holder=holder, reaps_path=reaps_path)
+            return "corrupt"
+        if budget != _BUDGET_UNLIMITED and budget <= 0:
+            print("BUDGET<=0: бюджет исчерпан — проход не запускался (claude не вызван)")
+            disable_rc, disable_out = _schtasks_disable()
+            if disable_rc == 0:
+                print(f"самоотключение: задача {TASK_NAME} disabled")
+                disable_note = "disable=ok"
+            else:
+                print(f"disable failed: rc={disable_rc} out={disable_out.strip()}")
+                disable_note = "disable=failed"
+            _write_singleton_escalation(escalations_path, HEARTBEAT_BUDGET_KEY,
+                                        HEARTBEAT_BUDGET_TAG, _BUDGET_EXHAUSTED_MSG, now)
+            _release_and_finish(f"budget<=0, проход не запускался, {disable_note}",
+                                lock_file=lock_file, holder=holder, reaps_path=reaps_path)
+            return "exhausted"
+        return None
+
+    def _budget_post_spawn():
+        # декремент ПОСЛЕ успешного Popen (бюджет = фактически стартовавшие
+        # проходы). Критик-фикс BL-4: исключение здесь не роняет проход —
+        # ребёнок УЖЕ запущен, ронять сейчас означало бы сирота-лок.
+        budget = budget_state["value"]
+        if budget != _BUDGET_UNLIMITED:
+            try:
+                _write_budget(budget_path, budget - 1)
+                budget_state["burned"] = True
+            except OSError as e:
+                print(f"BUDGET decrement failed (бюджет не сожжён): {e}")
+
+    r = _run_child(
+        lock_file=lock_file, reaps_path=reaps_path, escalations_path=escalations_path,
+        sla_path=sla_path, fastdeath_path=fastdeath_path, claude_cmd=claude_cmd,
+        child_args=(child_args if child_args is not None else DEFAULT_CHILD_ARGS),
+        now=now, kill_wait_sec=kill_wait_sec, max_pass_sec=max_pass_sec, holder=holder,
+        stdout_target=None, pre_spawn=_budget_pre_spawn, post_spawn=_budget_post_spawn)
+
+    for line in r["acquire_lines"]:
         print(line)
 
-    if code != 0:
+    if r["outcome"] == "busy":
         print(f"BUSY: holder={holder} — проход не запускался (claude не вызван)")
-        la.append_orchestrator([RULE, AGENT, ARTIFACT, "BUSY, проход не запускался"])
+        _append_m4_safe([RULE, AGENT, ARTIFACT, "BUSY, проход не запускался"])
         return 0
 
-    # --- бюджет прогонов: строго после BUSY (BUSY не жжёт бюджет), строго
-    # до запуска ребёнка. Лок к этой точке уже НАШ (acquire вернул
-    # ACQUIRED) — оба ранних выхода освобождают его сами.
-    budget = _read_budget(budget_path)
-    if budget == _BUDGET_CORRUPT:
-        print(f"BUDGET corrupt: {budget_path} не парсится в целое число — "
-              "проход не запускался")
-        _write_singleton_escalation(escalations_path, HEARTBEAT_BUDGET_KEY,
-                                    HEARTBEAT_BUDGET_TAG, _BUDGET_CORRUPT_MSG, now)
-        _release_and_finish("budget=corrupt, проход не запускался",
-                            lock_file=lock_file, holder=holder, reaps_path=reaps_path)
-        return 0
-    if budget != _BUDGET_UNLIMITED and budget <= 0:
-        print("BUDGET<=0: бюджет исчерпан — проход не запускался (claude не вызван)")
-        disable_rc, disable_out = _schtasks_disable()
-        if disable_rc == 0:
-            print(f"самоотключение: задача {TASK_NAME} disabled")
-            disable_note = "disable=ok"
-        else:
-            print(f"disable failed: rc={disable_rc} out={disable_out.strip()}")
-            disable_note = "disable=failed"
-        _write_singleton_escalation(escalations_path, HEARTBEAT_BUDGET_KEY,
-                                    HEARTBEAT_BUDGET_TAG, _BUDGET_EXHAUSTED_MSG, now)
-        _release_and_finish(f"budget<=0, проход не запускался, {disable_note}",
-                            lock_file=lock_file, holder=holder, reaps_path=reaps_path)
-        return 0
+    if r["outcome"] == "pre_spawn_abort":
+        return 0   # budget-хук уже сделал release + M4-строку сам (_release_and_finish)
 
-    child_env = dict(os.environ)
-    child_env["AO3_LOOP_HOLDER"] = holder
-    args = [claude_cmd, *(child_args if child_args is not None else DEFAULT_CHILD_ARGS)]
-    try:
-        p = _popen(args, env=child_env)
-    except Exception as e:
-        # Неудачный spawn не жжёт бюджет: _write_budget ниже просто не
-        # достигается на этой ветке. Таблица исходов M-A п.3: spawn-failed
-        # — тот же операторский симптом класса, что серия быстрых смертей
-        # («тика не было, фабрика молча стоит»), мгновенный по определению
-        # — считается серией (инкремент fastdeath, refund не применим —
-        # бюджет тут не жёгся).
-        outcome = f"spawn-failed:{e}"
+    for line in r["print_lines"]:
+        print(line)
+
+    if r["outcome"] == "spawn_failed":
+        # Неудачный spawn не жжёт бюджет (декремент — в post_spawn, который
+        # на этой ветке не достигается). spawn-failed мгновенный по
+        # определению — считается серией (инкремент fastdeath, refund не
+        # применим — бюджет тут не жёгся).
+        outcome = f"spawn-failed:{r['spawn_error']}"
         outcome += _fastdeath_increment(fastdeath_path, escalations_path, now, None, None)
         print(outcome)
         _release_and_finish(outcome, lock_file=lock_file, holder=holder, reaps_path=reaps_path)
         return 0
 
-    # t_spawn — сразу после успешного _popen (спека §«M-A» п.1): точка
-    # отсчёта runtime для детектора быстрой смерти.
-    t_spawn = time.monotonic()
+    if r["outcome"] == "timeout_kill":
+        outcome = "timeout-kill release=kill-failed" if r["kill_alive"] else "timeout-kill release=ok"
+    elif r["wait_exception"] is not None:
+        outcome = f"exit=error:{r['wait_exception']}"
+    else:
+        outcome = f"exit={r['child_rc']}"
+        outcome += r["fastdeath_suffix"]
+        if r["fast_death"] and budget_state["burned"]:
+            outcome += _refund_budget(budget_path)
 
-    budget_burned = False
-    if budget != _BUDGET_UNLIMITED:
-        # декремент ПОСЛЕ успешного Popen (бюджет = фактически стартовавшие
-        # проходы) — N>0 гарантирован веткой выше (<=0 уже вернула).
-        # Критик-фикс BL-4 (rework attempt 2): исключение здесь — тот же
-        # класс, что необёрнутый _popen раньше (окно между acquire и
-        # try/finally) — ребёнок УЖЕ запущен (p существует), ронять проход
-        # сейчас означало бы сирота-лок + брошенный живой child. Не роняем:
-        # печатаем и идём дальше в штатный try/finally (wait/release).
-        try:
-            _write_budget(budget_path, budget - 1)
-            budget_burned = True  # M-B: refund допустим ТОЛЬКО если декремент прошёл (спека)
-        except OSError as e:
-            print(f"BUDGET decrement failed (бюджет не сожжён): {e}")
+    for line in r["release_lines"]:
+        print(line)
+    if r["release_rcode"] not in (None, 0):
+        # REFUSED: holder лока при finally уже не наш (fallback-сценарий M2
+        # — SKILL сам держит свой qa-loop-holder, либо взял лок заново
+        # после того, как наш пропал) — ОЖИДАЕМЫЙ исход, не инцидент.
+        outcome += " release=refused-expected"
+        print(f"REFUSED (ожидаемо, fallback-сценарий): holder={holder} "
+              "не совпал — лок обёртки не наш к моменту release")
+    elif r["release_error"] is not None:
+        # [некритично п.5] Исключение release() НЕ должно съедать M4-строку.
+        outcome += f" release=error:{r['release_error']}"
 
-    should_release = True
-    outcome = "exit=unknown"
-    try:
-        try:
-            rc = p.wait(timeout=max_pass_sec)
-            outcome = f"exit={rc}"
-            # Таблица исходов M-A п.3: rc!=0 и runtime < FAST_DEATH_SEC —
-            # быстрая смерть (инкремент + refund, если бюджет был сожжён);
-            # rc==0 ЛИБО (rc!=0 и runtime >= FAST_DEATH_SEC) — сброс.
-            runtime = time.monotonic() - t_spawn
-            if rc != 0 and runtime < FAST_DEATH_SEC:
-                outcome += _fastdeath_increment(fastdeath_path, escalations_path, now, rc, runtime)
-                if budget_burned:
-                    outcome += _refund_budget(budget_path)
-            else:
-                outcome += _fastdeath_reset(fastdeath_path)
-        except subprocess.TimeoutExpired:
-            _taskkill_tree(p.pid)
-            try:
-                p.wait(kill_wait_sec)
-            except subprocess.TimeoutExpired:
-                pass  # пост-проверка ниже решает по факту, не по этому wait
-            alive = _tasklist_alive(p.pid)
-            if alive:
-                should_release = False
-                outcome = "timeout-kill release=kill-failed"
-                print("kill-failed, лок оставлен")
-            else:
-                outcome = "timeout-kill release=ok"
-        except Exception as e:                      # child умер/raise
-            outcome = f"exit=error:{e}"
-    finally:
-        if should_release:
-            try:
-                rcode, rlines = ll.release(lock_file=lock_file, holder=holder,
-                                           reaps_path=reaps_path)
-                for line in rlines:
-                    print(line)
-                if rcode != 0:
-                    # REFUSED: holder лока при finally уже не наш (fallback-
-                    # сценарий M2 — SKILL сам держит свой qa-loop-holder,
-                    # либо взял лок заново после того, как наш пропал) —
-                    # ОЖИДАЕМЫЙ исход, не инцидент (см. докстринг модуля).
-                    outcome += " release=refused-expected"
-                    print(f"REFUSED (ожидаемо, fallback-сценарий): holder={holder} "
-                          "не совпал — лок обёртки не наш к моменту release")
-            except Exception as e:
-                # [некритично п.5] Исключение release() НЕ должно съедать
-                # M4-строку — finally всё равно обязан её дописать.
-                outcome += f" release=error:{e}"
-        la.append_orchestrator([RULE, AGENT, ARTIFACT, outcome])
+    _append_m4_safe([RULE, AGENT, ARTIFACT, outcome])
     return 0
+
+
+def run_fallback_pass(*, child_args: list[str] | None = None, budget_enabled: bool = False,
+                      on_spawn=None, on_pass_done=None,
+                      claude_cmd: str = CLAUDE_CMD,
+                      lock_file: Path = DEFAULT_LOCK_FILE,
+                      reaps_path: Path = DEFAULT_REAPS_PATH,
+                      escalations_path: Path = DEFAULT_ESCALATIONS_PATH,
+                      sla_path: Path = DEFAULT_SLA_PATH,
+                      fastdeath_path: Path = DEFAULT_FASTDEATH_PATH,
+                      log_path: Path | None = None,
+                      artifact: str | None = None,
+                      now: datetime.datetime | None = None,
+                      kill_wait_sec: float = TIMEOUT_KILL_WAIT_S) -> dict:
+    """Ночной резерв (Д п.2, консолидированная секция) — ОДИН резервный
+    проход `/qa-loop 5` через ОБЩЕЕ ядро `_run_child` (acquire/kill-tree/
+    tasklist/release/REFUSED/fastdeath-учёт — та же реализация, что
+    `run_pass`; дублирование запрещено, D-0043). Вызывается
+    `scripts/factory_watchdog.py` при STALLED-триггере (К3+Д п.1).
+
+    `budget_enabled=False` — бюджет-ветка (`state/heartbeat-budget.txt`,
+    `_schtasks_disable`) ОТКЛЮЧЕНА КОДОМ: единственное легальное значение
+    этого параметра — `False`; `True` роняет `NotImplementedError` СРАЗУ
+    (до acquire, без побочных эффектов) — недостижимость поддерживается
+    явным ассертом, не пустой веткой (иначе ноль в боевом
+    `heartbeat-budget.txt` отключил бы саму задачу сторожа, архив v3 Б3).
+    Бюджет ночи — ЕДИНСТВЕННО через `on_pass_done`/`passes_done` мод-файла
+    (Д п.3), не через этот файл.
+
+    `on_spawn` — коллбэк БЕЗ аргументов, вызывается ПОСЛЕ успешного
+    acquire, ДО Popen (BUSY НЕ вызывает его вовсе — by construction, тот
+    же порог, что в `_run_child.pre_spawn`). Компенсирующий non-throwing
+    откат на `spawn_failed` (архив v3 F2) — `on_spawn` МОЖЕТ вернуть
+    zero-arg callable «undo»: если Popen после этого всё же не удался,
+    `run_fallback_pass` сам вызывает этот callable (под тем же локом, ДО
+    release) — публичная сигнатура остаётся ОДНИМ коллбэком, как в спеке.
+
+    `on_pass_done(rc, runtime)` — вызывается ТОЛЬКО при `rc == 0`, ПОКА
+    лок ещё держится (Д п.3: CAS-инкремент `passes_done` ДО release);
+    возвращаемое значение (снимок фактически записанных полей mode-файла
+    ИЛИ `None` при отказе/`nonce`-несовпадении) уходит в исход как
+    `mode_write` — сторож использует его как `self_write_snapshot`
+    (атрибуция прогресса, Д п.4).
+
+    `log_path` — файловый путь (НЕ PIPE, класс B4): stdout/stderr ребёнка
+    открываются в РЕЖИМЕ ДОБАВЛЕНИЯ (`"ab"`) и закрываются по завершении.
+    `None` — потоки наследуются от родителя (тесты/смок без записи в
+    файл). Производственный вызывающий (`factory_watchdog.py`) передаёт
+    `fallback_log_path(now)` (`logs/fallback-YYYYMMDD.log`).
+
+    **Б1 (критик-раунд Д1): M4-строка ЗА КАЖДЫЙ резервный проход, НА ВСЕХ
+    исходах (busy/spawned/spawn_failed/timeout_kill)** — через
+    `log_append.append_orchestrator([RULE, AGENT, artifact, outcome])`,
+    симметрия с `run_pass`. `artifact` — параметр (не жёстко привязан к
+    фактическому `log_path`, тот же образец, что `run_pass.ARTIFACT` не
+    равен реальному месту перенаправления stdout): по умолчанию
+    `logs/fallback-YYYYMMDD.log`, вычисленный из `now`
+    (`_fallback_artifact_rel`). Та же строка передаётся в
+    `_fastdeath_increment(..., log_hint=artifact)` — текст эскалации
+    HEARTBEAT-CHILD-DEATH указывает на ТОТ ЖЕ путь, что M4-колонка.
+
+    Возвращает `{outcome: busy|spawned|spawn_failed|timeout_kill,
+    child_rc, fast_death, holder, mode_write}`."""
+    if budget_enabled:
+        raise NotImplementedError(
+            "run_fallback_pass: budget_enabled=True не реализован — бюджет "
+            "ночного резерва ЕДИНСТВЕННО через on_pass_done/passes_done "
+            "мод-файла (Д п.3); бюджет-ветка heartbeat-budget.txt отключена "
+            "КОДОМ (архив v3 Б3) — см. докстринг")
+
+    lock_file = Path(lock_file)
+    reaps_path = Path(reaps_path)
+    escalations_path = Path(escalations_path)
+    sla_path = Path(sla_path)
+    fastdeath_path = Path(fastdeath_path)
+
+    max_pass_sec, _clamped = compute_max_pass_sec(sla_path)
+    now = now or _utcnow()
+    holder = _new_holder(now)
+    args = child_args if child_args is not None else DEFAULT_FALLBACK_CHILD_ARGS
+    artifact = artifact if artifact is not None else _fallback_artifact_rel(now)
+
+    undo_box: dict = {"undo": None}
+    mode_write_box: dict = {"value": None}
+
+    def _pre_spawn():
+        if on_spawn is not None:
+            undo_box["undo"] = on_spawn()
+        return None    # on_spawn НИКОГДА не абортит спавн — только считает
+
+    def _on_spawn_failed():
+        undo = undo_box["undo"]
+        if undo is not None:
+            try:
+                undo()
+            except Exception as e:            # non-throwing (BL-4) — откат best-effort
+                print(f"FALLBACK on_spawn undo failed: {e}")
+
+    def _on_pass_done(rc, runtime):
+        if on_pass_done is not None:
+            mode_write_box["value"] = on_pass_done(rc, runtime)
+
+    log_fh = None
+    if log_path is not None:
+        log_path = Path(log_path)
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        log_fh = log_path.open("ab")
+
+    try:
+        r = _run_child(
+            lock_file=lock_file, reaps_path=reaps_path, escalations_path=escalations_path,
+            sla_path=sla_path, fastdeath_path=fastdeath_path, claude_cmd=claude_cmd,
+            child_args=args, now=now, kill_wait_sec=kill_wait_sec,
+            max_pass_sec=max_pass_sec, holder=holder, stdout_target=log_fh,
+            pre_spawn=_pre_spawn, on_spawn_failed=_on_spawn_failed,
+            on_pass_done=_on_pass_done, fastdeath_log_hint=artifact)
+    finally:
+        if log_fh is not None:
+            log_fh.close()
+
+    for line in r["acquire_lines"]:
+        print(line)
+    for line in r["print_lines"]:
+        print(line)
+
+    # --- Б1 (критик-раунд Д1): M4-строка НА ВСЕХ исходах ------------------
+    fast_death = r["fast_death"]
+    if r["outcome"] == "busy":
+        m4_outcome = "BUSY, резервный проход не запускался"
+
+    elif r["outcome"] == "spawn_failed":
+        # spawn-failed мгновенный по определению — считается серией (та же
+        # трактовка, что run_pass: docstring модуля §M-A).
+        _fastdeath_increment(fastdeath_path, escalations_path, now, None, None,
+                             log_hint=artifact)
+        fast_death = True
+        m4_outcome = f"spawn-failed:{r['spawn_error']}"
+        # _run_child НЕ релизит лок на этой ветке (ребёнок не запущен,
+        # решение «как релизить» — за вызывающим, тот же приём, что у
+        # run_pass/_release_and_finish) — релизим здесь явно, non-throwing.
+        try:
+            rcode, rlines = ll.release(lock_file=lock_file, holder=holder, reaps_path=reaps_path)
+            for line in rlines:
+                print(line)
+            if rcode != 0:
+                m4_outcome += " release=refused-expected"
+                print(f"REFUSED (ожидаемо, fallback-сценарий): holder={holder} "
+                      "не совпал — лок резерва не наш к моменту release")
+        except Exception as e:
+            m4_outcome += f" release=error:{e}"
+            print(f"FALLBACK release=error:{e}")
+
+    else:
+        # spawned (нормальный/wait_exception) или timeout_kill — _run_child
+        # уже попытался release (кроме timeout_kill+alive: release_rcode
+        # остаётся None by construction, should_release=False).
+        if r["outcome"] == "timeout_kill":
+            m4_outcome = ("timeout-kill release=kill-failed" if r["kill_alive"]
+                         else "timeout-kill release=ok")
+        elif r["wait_exception"] is not None:
+            m4_outcome = f"exit=error:{r['wait_exception']}"
+        else:
+            m4_outcome = f"exit={r['child_rc']}" + r["fastdeath_suffix"]
+
+        for line in r["release_lines"]:
+            print(line)
+        if r["release_rcode"] not in (None, 0):
+            m4_outcome += " release=refused-expected"
+            print(f"REFUSED (ожидаемо, fallback-сценарий): holder={holder} "
+                  "не совпал — лок резерва не наш к моменту release")
+        elif r["release_error"] is not None:
+            m4_outcome += f" release=error:{r['release_error']}"
+            print(f"FALLBACK release=error:{r['release_error']}")
+
+    _append_m4_safe([RULE, AGENT, artifact, m4_outcome])
+
+    return {
+        "outcome": r["outcome"],
+        "child_rc": r["child_rc"],
+        "fast_death": fast_death,
+        "holder": holder,
+        "mode_write": mode_write_box["value"],
+    }
 
 
 def main(argv: list[str] | None = None) -> int:

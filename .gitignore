@@ -56,3 +56,12 @@ state/factory-mode.json
 # (scripts/factory_watchdog.py) — снапшоты лока/mode-файла на каждом
 # тике планировщика, тот же класс, что state/factory-mode.json выше.
 state/factory-watchdog.json
+# spec-factory-window v7 = v6 + Д1 ночной резерв (2026-08-16): канал
+# пустоты прохода (scripts/pass_summary.py пишет, scripts/
+# factory_watchdog.py читает) — per-host операционное состояние, тот же
+# класс, что state/factory-mode.json/factory-watchdog.json выше.
+state/last-pass-summary.json
+# Д1 ночной резерв: лог headless-ребёнка run_fallback_pass (М4-артефакт
+# на всех исходах busy/spawned/spawn_failed/timeout_kill) — прогонный
+# вывод, тот же класс, что logs/heartbeat.log выше, не версионируем.
+logs/fallback-*.log

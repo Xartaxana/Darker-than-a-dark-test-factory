@@ -53,14 +53,17 @@ def _write_mode(p, mode="active", updated_ts=None, passes_done=0, nonce="n1"):
     }), encoding="utf-8")
 
 
-def _mode_snap_dict(mode="active", updated_ts=None, passes_done=0):
+def _mode_snap_dict(mode="active", updated_ts=None, passes_done=0, nonce="n1"):
     """Снимок mode-файла В ТОЙ ЖЕ форме, что fw._mode_snapshot() читает из
     файла, записанного _write_mode(...) с ТЕМИ ЖЕ аргументами — нужен,
     чтобы «прошлый снимок» в state-файле совпадал с текущим прочитанным
     mode-файлом (иначе прогресс детектируется КАЖДЫЙ тик просто потому,
     что в тесте не смоделирован предыдущий снимок, и last_progress_ts
-    всегда сбрасывается на now — тишина никогда не накапливается)."""
-    return {"mode": mode, "updated_ts": updated_ts, "passes_done": passes_done}
+    всегда сбрасывается на now — тишина никогда не накапливается).
+    `nonce="n1"` — дефолт `_write_mode()`'s `nonce` (Д п.4: session_nonce
+    входит в снимок с v7)."""
+    return {"mode": mode, "updated_ts": updated_ts, "passes_done": passes_done,
+           "session_nonce": nonce}
 
 
 def _write_state(p, **fields):
@@ -68,7 +71,8 @@ def _write_state(p, **fields):
     base = {
         "last_lock_snapshot": {"exists": False, "corrupt": False, "holder": None,
                                "ts": None, "raw_hash": None},
-        "last_mode_snapshot": {"mode": None, "updated_ts": None, "passes_done": None},
+        "last_mode_snapshot": {"mode": None, "updated_ts": None, "passes_done": None,
+                               "session_nonce": None},
         "last_progress_ts": NOW.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "last_alert_ts": None,
         "last_state": "ok",
@@ -191,7 +195,7 @@ def test_state_file_nonlist_notes_does_not_kill_tick(tmp_path):
                  last_progress_ts=old.strftime("%Y-%m-%dT%H:%M:%SZ"),
                  last_mode_snapshot={"mode": "active",
                                      "updated_ts": old.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                                     "passes_done": 0},
+                                     "passes_done": 0, "session_nonce": "n1"},
                  notes=5)                       # нелистовой тип — раньше TypeError
     _write_mode(p, mode="active",
                 updated_ts=old.strftime("%Y-%m-%dT%H:%M:%SZ"))
@@ -400,7 +404,7 @@ def test_branch3_progress_via_mode_updated_ts_resets_silence(tmp_path):
     old = NOW - datetime.timedelta(minutes=200)
     _write_state(p, last_state="ok", last_progress_ts=fw._fmt_ts(old),
                 last_mode_snapshot={"mode": "active", "updated_ts": fw._fmt_ts(old),
-                                    "passes_done": 0})
+                                    "passes_done": 0, "session_nonce": "n1"})
     _write_mode(p, mode="active", updated_ts=fw._fmt_ts(NOW))   # свежий пульс
 
     code = fw.run_tick(now=NOW, toast_fn=_NoToast(), stall_no_lock_min=60, **p)
@@ -579,6 +583,9 @@ def test_non_throwing_missing_parent_dirs_everywhere(tmp_path):
 
 def test_main_never_raises_and_exits_0_on_totally_missing_state(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
+    # permission-hygiene: --no-toast defensively (bootstrap-ветка не должна
+    # доходить до show_toast вовсе, но флаг здесь бесплатно закрывает риск
+    # будущей правки сценария, поднимающей его до STALLED).
     code = fw.main([
         "--lock-file", str(tmp_path / "state" / "loop.lock"),
         "--mode-file", str(tmp_path / "state" / "factory-mode.json"),
@@ -586,12 +593,72 @@ def test_main_never_raises_and_exits_0_on_totally_missing_state(tmp_path, monkey
         "--sla-file", str(tmp_path / "state" / "sla.yaml"),
         "--escalations-file", str(tmp_path / "state" / "escalations.md"),
         "--orchestrator-log", str(tmp_path / "state" / "orchestrator-log.md"),
-        "--now", "2026-08-16T12:00:00Z",
+        "--now", "2026-08-16T12:00:00Z", "--no-toast",
     ])
     assert code == 0
 
 
+# --- permission-hygiene (слово оператора 2026-08-16 вечер, повтор):
+# --no-toast/AO3_FACTORY_NO_TOAST подменяют show_toast заглушкой ДО того,
+# как run_tick вообще мог бы его вызвать — poison-pill монкипатч show_toast
+# доказывает, что живой тост НЕ звонится, даже если сценарий STALLED. -----
+
+def test_cli_no_toast_flag_suppresses_real_toast_even_when_stalled(tmp_path, monkeypatch):
+    p = _paths(tmp_path)
+    _write_sla(p)
+    started = NOW - datetime.timedelta(minutes=61)
+    _write_state(p, last_state="ok", last_progress_ts=fw._fmt_ts(started),
+                last_mode_snapshot=_mode_snap_dict("active", fw._fmt_ts(started)))
+    _write_mode(p, mode="active", updated_ts=fw._fmt_ts(started))
+
+    def _poison(*a, **kw):
+        raise AssertionError("show_toast НЕ должен звониться при --no-toast")
+    monkeypatch.setattr(fw, "show_toast", _poison, raising=True)
+
+    code = fw.main([
+        "--lock-file", str(p["lock_file"]), "--mode-file", str(p["mode_file"]),
+        "--state-file", str(p["state_file"]), "--sla-file", str(p["sla_file"]),
+        "--escalations-file", str(p["escalations_file"]),
+        "--orchestrator-log", str(p["orchestrator_log"]),
+        "--now", fw._fmt_ts(NOW), "--no-toast",
+    ])
+
+    assert code == 0
+    assert _read_state(p)["last_state"] == "stalled"       # тревога всё равно объявлена
+    assert "FACTORY-STALLED" in _read_esc(p)                # эскалация пишется независимо от тоста
+
+
+def test_cli_env_no_toast_suppresses_real_toast(tmp_path, monkeypatch):
+    p = _paths(tmp_path)
+    _write_sla(p)
+    started = NOW - datetime.timedelta(minutes=61)
+    _write_state(p, last_state="ok", last_progress_ts=fw._fmt_ts(started),
+                last_mode_snapshot=_mode_snap_dict("active", fw._fmt_ts(started)))
+    _write_mode(p, mode="active", updated_ts=fw._fmt_ts(started))
+    monkeypatch.setenv("AO3_FACTORY_NO_TOAST", "1")
+
+    def _poison(*a, **kw):
+        raise AssertionError("show_toast НЕ должен звониться при AO3_FACTORY_NO_TOAST=1")
+    monkeypatch.setattr(fw, "show_toast", _poison, raising=True)
+
+    code = fw.main([
+        "--lock-file", str(p["lock_file"]), "--mode-file", str(p["mode_file"]),
+        "--state-file", str(p["state_file"]), "--sla-file", str(p["sla_file"]),
+        "--escalations-file", str(p["escalations_file"]),
+        "--orchestrator-log", str(p["orchestrator_log"]),
+        "--now", fw._fmt_ts(NOW),
+    ])
+
+    assert code == 0
+    assert _read_state(p)["last_state"] == "stalled"
+
+
 def test_env_overrides_stall_thresholds(monkeypatch, tmp_path):
+    """Permission-hygiene (слово оператора 2026-08-16 вечер, повтор):
+    этот сценарий реально пересекает порог STALLED -> fw.main() без
+    --no-toast звал бы РЕАЛЬНЫЙ show_toast (живой WinRT-тост на экране
+    оператора) при каждом прогоне pytest — пин через `--no-toast`
+    (CLI-флаг, добавленный этим же диффом) закрывает находку."""
     p = _paths(tmp_path)
     _write_sla(p)
     started = NOW - datetime.timedelta(minutes=10)
@@ -600,12 +667,16 @@ def test_env_overrides_stall_thresholds(monkeypatch, tmp_path):
     _write_mode(p, mode="active", updated_ts=fw._fmt_ts(started))
     monkeypatch.setenv("AO3_FACTORY_STALL_MIN", "5")            # ужимаем порог env'ом
 
+    def _poison(*a, **kw):
+        raise AssertionError("show_toast НЕ должен звониться в юнит-тестах (permission-hygiene)")
+    monkeypatch.setattr(fw, "show_toast", _poison, raising=True)
+
     code = fw.main([
         "--lock-file", str(p["lock_file"]), "--mode-file", str(p["mode_file"]),
         "--state-file", str(p["state_file"]), "--sla-file", str(p["sla_file"]),
         "--escalations-file", str(p["escalations_file"]),
         "--orchestrator-log", str(p["orchestrator_log"]),
-        "--now", fw._fmt_ts(NOW),
+        "--now", fw._fmt_ts(NOW), "--no-toast",
     ])
 
     assert code == 0

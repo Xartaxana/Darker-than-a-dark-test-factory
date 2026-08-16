@@ -114,12 +114,15 @@ v5 — переработка по критик-раунду 4 (Б-Ⅰ…Б-Ⅴ 
    нейтральный, гашение таймера на стопе (урок
    no-command-as-wakeup-prompt).
 
-### К2. `state/factory-mode.json`
+### К2. `state/factory-mode.json` (обновлено Д, r-diff Н4)
 
-Пишет только скилл factory; gitignored. Поля: mode, budget_total,
-passes_done, session_nonce, session_started_ts, **updated_ts (пульс —
-каждое срабатывание, см. К1 п.2)**, heartbeat_note (короткая строка
-«что сейчас»), stopped_reason.
+**Писателей ДВОЕ**: скилл factory (владелец, ставит
+driver="factory-skill" каждой записью) и ночной резерв (ограниченные
+поля под локом, driver="watchdog-fallback" — см. Д п.3); gitignored.
+Поля: mode, budget_total, passes_done, session_nonce,
+session_started_ts, **updated_ts (пульс — каждое срабатывание, К1
+п.2)**, heartbeat_note, stopped_reason, **driver, night_fallback,
+last_fallback_ts** (Д).
 
 ### К3. `scripts/factory_watchdog.py` — сторож
 

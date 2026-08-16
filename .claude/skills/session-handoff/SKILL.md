@@ -59,14 +59,30 @@ docs/09-improvement-plan.md). Journal: `logs/routing-log.jsonl`,
      Сверка дешёвая: свежий `state/escalations.md` (sla_sweep уже
      считает charter follow-up) + Grep по Open|Fixed багам и
      Approved-кейсам против занятости устройства на закрытии.
-   - **3б. Сторож жив (детектор M4 ВЫВЕДЕН — spec-factory-window v6 К5а,
-     2026-08-16).** Прежний чек «парность heartbeat-строк»
-     (`logs/heartbeat.log` start ↔ `state/orchestrator-log.md`
-     heartbeat-обёртка) БОЛЬШЕ НЕ ПРИМЕНЯЕТСЯ: `logs/heartbeat.log`
-     никем не пишется (новая шапка `scripts/heartbeat.cmd` без echo,
-     `scripts/heartbeat_wrap.py` деприкирована) — безопасно вывести:
-     M4-строки были детектором child-spawn ЭТОЙ обёртки, обёртка не
-     запускается. На его месте — НОВЫЙ чек-импликация (Б-6):
+   - **3б. Сторож жив (детектор M4 ВЫВЕДЕН для СТАРОЙ ПАРЫ — spec-
+     factory-window v6 К5а, 2026-08-16; ПРАВКА Д1, 2026-08-16 вечером —
+     обёртка снова пишет M4-строки, см. ниже).** Прежний чек «парность
+     heartbeat-строк» (`logs/heartbeat.log` start ↔
+     `state/orchestrator-log.md` heartbeat-обёртка) БОЛЬШЕ НЕ
+     ПРИМЕНЯЕТСЯ и остаётся выведенным: `logs/heartbeat.log` по-прежнему
+     никем не пишется (шапка `scripts/heartbeat.cmd` без echo НЕ
+     менялась) — детектор был парой «файл ↔ строка», а файла нет, пары
+     физически не из чего собрать. **НО обоснование «M4-строки были
+     детектором child-spawn ЭТОЙ обёртки, обёртка не запускается» —
+     УСТАРЕЛО (Д1, консолидированная секция spec-factory-window v7):**
+     `scripts/heartbeat_wrap.py::run_pass` (прежний production-контракт)
+     действительно не вызывается, НО `run_fallback_pass` (ночной резерв,
+     `scripts/factory_watchdog.py`) — ЖИВОЙ вызыватель, и он ПИШЕТ M4-
+     строку `heartbeat-обёртка/heartbeat_wrap` НА КАЖДЫЙ резервный
+     проход (busy/spawned/spawn_failed/timeout_kill), с артефакт-
+     колонкой `logs/fallback-YYYYMMDD.log` (НЕ `logs/heartbeat.log`).
+     Эти строки — легитимный аудиторский след ночных резервных
+     проходов (Grep `orchestrator-log.md` по `heartbeat_wrap.*
+     logs/fallback-` при разборе ночи), НЕ детектор старой пары —
+     новый парный детектор для НИХ не заводится (нет соответствующего
+     «start»-файла, как не было и раньше; сам факт наличия строки уже
+     самодостаточен как М4-артефакт). На месте выведенного детектора —
+     НОВЫЙ чек-импликация (Б-6):
      **ЕСЛИ** задача `AO3-QA-Heartbeat` в состоянии `Ready` И
      `LastRunTime` < 2ч, **ТО** `state/factory-watchdog.json` не старше
      `LastRunTime + 30 мин`; задача `Disabled` → н/п (не FAIL). Форма
@@ -91,6 +107,18 @@ docs/09-improvement-plan.md). Journal: `logs/routing-log.jsonl`,
      `updated_ts` протух) — находка, не FAIL хендоффа: зафиксировать в
      журнале и в HANDOFF (детектор дрейфа mode — та же строка, что
      упомянута в матрице сторожа К3 п.2).
+     **Driver-оговорка (Д1 ночной резерв, spec-factory-window v7,
+     2026-08-16):** поле `driver` mode-файла различает, КТО пульсировал
+     последним — `"factory-skill"` (окно) или `"watchdog-fallback"`
+     (резерв сторожа). `mode: "active"` со свежим `updated_ts` И
+     `driver: "watchdog-fallback"` — ШТАТНОЕ ночное вождение резервом
+     (окно закрыто/умерло, резерв самостоятельно довозит очередь до
+     `budget_total`/two_empty) — это НЕ «оператор забыл окно открытым»,
+     дрейф-находка выше НЕ применяется в этом случае; зафиксировать в
+     резюме сессии факт «ночь вела резерв» (кто/сколько проходов, если
+     виден `passes_done`), не как отклонение. `driver: "factory-skill"`
+     со свежим `updated_ts` при отсутствии видимого открытого окна на
+     этой машине — вот это остаётся дрейф-находкой (несогласованность).
      Сверка дешёвая: `Get-Item state/factory-watchdog.json`
      (`.LastWriteTime`) + `Get-Content state/factory-mode.json` (или
      их отсутствие — оба файла gitignored, легитимно отсутствуют вне

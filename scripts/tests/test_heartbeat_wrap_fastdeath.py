@@ -241,10 +241,15 @@ def test_healthy_pass_with_absent_counter_file_does_not_create_it(
 
 
 # ---------------------------------------------------------------------------
-# Пин 4: медленная смерть (runtime >= FAST_DEATH_SEC) -> счётчик сброшен
+# Пин 4 (ПЕРЕПИСАН — Д п.6, консолидированная секция spec-factory-window v7:
+# серии ДИЗЪЮНКТНЫ): медленная смерть (rc!=0, runtime >= FAST_DEATH_SEC)
+# БОЛЬШЕ НЕ СБРАСЫВАЕТ fastdeath — это NO-OP для fastdeath (ни инкремент, ни
+# сброс); медленные отказы копят ОТДЕЛЬНУЮ серию slowdeath ВНЕ этого модуля
+# (scripts/factory_watchdog.py). Прежняя редакция ошибочно трактовала
+# «не-быструю смерть» как здоровую.
 # ---------------------------------------------------------------------------
 
-def test_slow_death_resets_counter(tmp_path, orch_log, monkeypatch):
+def test_slow_death_is_noop_for_fastdeath_counter(tmp_path, orch_log, monkeypatch):
     p = _paths(tmp_path, fastdeath=json.dumps(
         {"count": 2, "first_ts": "2026-08-15T10:00:00Z",
          "last_ts": "2026-08-15T10:00:00Z", "last_rc": 1}))
@@ -257,8 +262,11 @@ def test_slow_death_resets_counter(tmp_path, orch_log, monkeypatch):
 
     assert rc == 0
     data = json.loads(p["fastdeath_path"].read_text(encoding="utf-8"))
-    assert data["count"] == 0
-    assert "fastdeath-reset" in _read(orch_log)
+    assert data["count"] == 2                          # НЕ тронут — ни инкремент, ни сброс
+    text = _read(orch_log)
+    assert "fastdeath-reset" not in text
+    assert "fastdeath=3" not in text
+    assert "exit=1" in text                             # M4-строка честная, без fastdeath-суффикса
 
 
 # ---------------------------------------------------------------------------
@@ -464,8 +472,11 @@ def test_fast_death_does_not_orphan_lock(tmp_path, orch_log, monkeypatch):
 # ЗА ней (FAST_DEATH_SEC - 0.01)
 # ---------------------------------------------------------------------------
 
-def test_boundary_runtime_exactly_fast_death_sec_is_slow_death_reset(
+def test_boundary_runtime_exactly_fast_death_sec_is_slow_death_noop(
         tmp_path, orch_log, monkeypatch):
+    """Граница M6: `runtime == FAST_DEATH_SEC` — уже НЕ быстрая смерть
+    (`<` строгое), уже slowdeath-территория — NO-OP для fastdeath (Пин 4
+    класс, см. выше)."""
     p = _paths(tmp_path, fastdeath=json.dumps(
         {"count": 1, "first_ts": "2026-08-15T10:00:00Z",
          "last_ts": "2026-08-15T10:00:00Z", "last_rc": 1}))
@@ -477,8 +488,8 @@ def test_boundary_runtime_exactly_fast_death_sec_is_slow_death_reset(
 
     assert rc == 0
     data = json.loads(p["fastdeath_path"].read_text(encoding="utf-8"))
-    assert data["count"] == 0
-    assert "fastdeath-reset" in _read(orch_log)
+    assert data["count"] == 1                           # не тронут
+    assert "fastdeath-reset" not in _read(orch_log)
 
 
 def test_boundary_runtime_just_under_fast_death_sec_is_fast_death_increment(
