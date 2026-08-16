@@ -1,15 +1,15 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-16T00:53:23Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-16T01:50:08Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
-- Сборка: dev-local (versionCode 12), commit `59be96c6`, built_at 2026-08-14T23:14:07Z
-- smoke: Closed · smoke_freshness_hours: **24.9** (RUN-20260815-0149)
-- regression: Triaged · regression_freshness_hours: **141.1** (RUN-20260810-0146)
-- canary: Triaged · canary_freshness_hours: **277.2** (RUN-20260804-1317)
+- Сборка: dev-local (versionCode 12), commit `27d5cfd1`, built_at 2026-08-16T01:01:26Z
+- smoke: Closed · smoke_freshness_hours: **0.3** (RUN-20260816-0332)
+- regression: Closed · regression_freshness_hours: **0.3** (RUN-20260816-0334)
+- canary: Triaged · canary_freshness_hours: **278.1** (RUN-20260804-1317)
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **1**
 - p0_automation_coverage: **100%** (37/37)
@@ -21,8 +21,8 @@ story-карточки: стадии см. docs/05-board.md §Story
 
 ## Сборка под тестом
 
-- dev-local (versionCode 12), commit `59be96c6`, built_at 2026-08-14T23:14:07Z
-- smoke: passed · regression: failed
+- dev-local (versionCode 12), commit `27d5cfd1`, built_at 2026-08-16T01:01:26Z
+- smoke: passed · regression: passed
 
 ## Тест-кейсы (256)
 
@@ -51,7 +51,7 @@ story-карточки: стадии см. docs/05-board.md §Story
 
 ## Баги (32)
 
-- Open: **15** · Fixed: **3** · Verified: **13** · Intended: **1**
+- Open: **15** · Fixed: **1** · Verified: **15** · Intended: **1**
 - BUG-011 [major] Open — Restore from backup пропускает работы молча, если файл с тем же ao3Id уже лежит в папке загрузок
 - BUG-013 [minor] Open — Смена темы, затем немедленный kill процесса (<100 мс) теряет theme_mode — выбор темы не персистится
 - BUG-016 [major] Open — Undo закрытия вкладки на потолке 10 молча теряет вкладку и её снапшот
@@ -87,9 +87,9 @@ story-карточки: стадии см. docs/05-board.md §Story
 - AT-BUG-078 [missing_evidence] Open — TC-026 (long-press ссылки в WebView) не ассертирует ТЕКСТ снекбара «Opened in background (N tabs)» — дверь (б) BUG-059 наблюдаемо не покрыта
 - AT-BUG-079 [broken_environment] Open — Квотирование shell-команд в adb.py неполное: run_as_file_or_raise и push_app_file интерполируют пути БЕЗ защиты
 
-## Прогоны (16)
+## Прогоны (18)
 
-- Triaged: **8** · Closed: **7** · Blocked: **1**
+- Triaged: **8** · Closed: **9** · Blocked: **1**
 
 ## Exploratory
 

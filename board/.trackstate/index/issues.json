@@ -7962,15 +7962,15 @@
     "epicPath": null,
     "summary": "PROJECT.md ложно отрицает сетевые запросы из приложения; сетевые вызовы присутствуют в SettingsScreen и DownloadRepository",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-08-16T00:23:59Z",
-    "resolution": null,
+    "updated": "2026-08-16T01:07:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -8049,15 +8049,15 @@
     "epicPath": null,
     "summary": "PROJECT.md обещает quick rating-filter toggle icons в топ-баре Browse, но их нет в коде",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-08-16T00:23:59Z",
-    "resolution": null,
+    "updated": "2026-08-16T01:15:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -8491,6 +8491,46 @@
     "archived": false
   },
   {
+    "key": "RUN-20260816-0332",
+    "path": "board/RUN-20260816-0332/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "RUN-20260816-0332",
+    "issueType": "run",
+    "status": "run-closed",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "run"
+    ],
+    "updated": "2026-08-16T01:34:20Z",
+    "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "RUN-20260816-0334",
+    "path": "board/RUN-20260816-0334/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "RUN-20260816-0334",
+    "issueType": "run",
+    "status": "run-closed",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "run"
+    ],
+    "updated": "2026-08-16T01:34:20Z",
+    "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "story-26",
     "path": "board/story-26/main.md",
     "parent": null,
@@ -8504,7 +8544,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-writing-cases",
-      "регресс сборки: smoke RUN-20260815-0149 49/49 · чисто · regression RUN-20260815-0337 271/273 · чисто · новых багов в прогоне: 0",
+      "регресс сборки: smoke RUN-20260816-0332 49/49 · чисто · regression RUN-20260816-0334 0/0 · чисто · новых багов в прогоне: 0",
       "фич без кейсов: 0/2",
       "черновиков: 1",
       "багов на кейсах стори: 3"
@@ -8528,8 +8568,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-covered",
-      "регресс сборки: smoke RUN-20260815-0149 49/49 · чисто · regression RUN-20260815-0337 271/273 · чисто · новых багов в прогоне: 0",
-      "зелёные в RUN-20260815-0337: 5/5",
+      "регресс сборки: smoke RUN-20260816-0332 49/49 · чисто · regression RUN-20260816-0334 0/0 · чисто · новых багов в прогоне: 0",
       "багов на кейсах стори: 0"
     ],
     "updated": "2026-08-09T23:04:10Z",
@@ -8551,7 +8590,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-automation",
-      "регресс сборки: smoke RUN-20260815-0149 49/49 · чисто · regression RUN-20260815-0337 271/273 · чисто · новых багов в прогоне: 0",
+      "регресс сборки: smoke RUN-20260816-0332 49/49 · чисто · regression RUN-20260816-0334 0/0 · чисто · новых багов в прогоне: 0",
       "багов на кейсах стори: 1"
     ],
     "updated": "2026-08-14T23:12:35Z",
@@ -8573,7 +8612,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-writing-cases",
-      "регресс сборки: smoke RUN-20260815-0149 49/49 · чисто · regression RUN-20260815-0337 271/273 · чисто · новых багов в прогоне: 0",
+      "регресс сборки: smoke RUN-20260816-0332 49/49 · чисто · regression RUN-20260816-0334 0/0 · чисто · новых багов в прогоне: 0",
       "фич без кейсов: 5/8",
       "багов на кейсах стори: 0"
     ],

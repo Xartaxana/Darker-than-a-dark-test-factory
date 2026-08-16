@@ -1,0 +1,151 @@
+---
+key: "RUN-20260816-0334"
+project: "AO3"
+issueType: "run"
+status: "run-closed"
+priority: "p2"
+summary: "RUN-20260816-0334"
+assignee: "qa-agents"
+reporter: "qa-agents"
+labels: ["run"]
+components: []
+fixVersions: []
+watchers: []
+parent: null
+epic: null
+created: "2026-08-16T01:34:20Z"
+updated: "2026-08-16T01:34:20Z"
+archived: false
+resolution: "done"
+---
+
+# RUN-20260816-0334
+
+_Спроецировано из `runs/RUN-20260816-0334.md` (источник правды).
+Статус в нашей машине: **Closed**._
+
+# RUN-20260816-0334 — regression (replay) на dev-local (12)
+
+## Контекст запуска
+
+Триггер: тот же `state/app-under-test.yaml` (`source_commit
+27d5cfd193b3e0475b872d5c5c80daadcc299a79`), правило rules.yaml 1, шаг 2 после
+зелёного smoke (`RUN-20260816-0332`). Окружение переиспользовано из smoke-хода
+(эмулятор/Appium/APK уже подняты этим же ходом).
+
+## Селекция (D1, `scripts/impact_select.py`)
+
+```
+python scripts/impact_select.py
+Диапазон: 59be96c6398786d33c878dbce33cb1ecde269374..27d5cfd193b3e0475b872d5c5c80daadcc299a79 (app-under-test/)
+Файлов изменено: 1
+
+## ignore
+- PROJECT.md
+
+## wide_impact
+- нет
+
+## rules (области)
+- нет
+
+## unknown (вне карты)
+- нет
+
+## Решение
+Затронутые области: нет (все файлы ignore)
+
+## smoke (гоняется на любой сборке)
+
+- TC-001 [P0, Automated] automated_by: framework/tests/test_smoke.py::test_app_launches_and_loads_ao3
+- TC-002 [P0, Automated] automated_by: framework/tests/test_smoke.py::test_bottom_nav_switches_screens
+- TC-003 [P0, Automated] automated_by: framework/tests/test_smoke.py::test_seeded_work_appears_in_correct_tab
+- TC-004 [P0, Automated] automated_by: framework/tests/test_smoke.py::test_clear_all_ratings
+- TC-005 [P0, Automated] automated_by: framework/tests/test_smoke.py::test_theme_toggle_stable
+```
+(Хвостовая секция «## smoke» печатается скриптом безусловно, вне зависимости
+от режима вызова — приложена дословно; эти 5 TC исполняются под smoke-сюитой,
+не под этой regression-селекцией, см. `RUN-20260816-0332`, где все зелёные.)
+
+Диапазон по умолчанию (`coalesced_commits: []` в `state/app-under-test.yaml` →
+родитель самого `source_commit`, D11) разрешился в
+`59be96c639878..27d5cfd193b3e` — это ровно предыдущий smoke/regression
+baseline-коммит. Сверено независимо (`git -C app-under-test log --oneline
+59be96c639878..27d5cfd193b3e`): один коммит, `27d5cfd1` «Correct two
+PROJECT.md claims that contradict the code» (BUG-058/BUG-065, документация),
+`git show --stat` подтверждает: изменён только `PROJECT.md` (7 insertions, 3
+deletions), прикладного кода приложения дифф не касается.
+
+Файл матчится правилом карты `ignore: ["*.md", "**/*.md", ...]`
+(`state/impact-map.yaml:12-13`) — ни `wide_impact`, ни `unknown` не
+сработали (это НЕ случай "селекция недоступна/wide/unknown" из DoD, где
+предписан fail-safe на full; здесь легитимный узкий исход: **0 затронутых
+областей**). `selection.mode: impact`, `areas: []`.
+
+## Исполнение
+
+Импакт-селекция вернула пустой список областей → по протоколу test-runner
+(«гони ТОЛЬКО перечисленные automated_by-пути затронутых областей») выполнять
+нечего сверх уже пройденного smoke — pytest для regression этим ходом НЕ
+запускался (не было ни одного automated_by-пути в выдаче селектора).
+`allure: ""` и `tc_results: {}` — явно по конструкции (0 выбранных тестов),
+не по сбою сбора: allure-results для regression в этом прогоне физически не
+создавались, так как ни один pytest-процесс regression не стартовал.
+
+Предыдущий полный regression-прогон (`RUN-20260815-0337`, `status: Closed`,
+271 passed / 2 failed на момент того прогона) выполнялся на
+`source_commit 59be96c6398786d33c878dbce33cb1ecde269374`, который является
+ПРЯМЫМ родителем текущего `27d5cfd1` (единственный промежуточный коммит —
+документационный, вне области любого `automated_by`). Прикладной код между
+двумя сборками не менялся.
+
+Критик-вход приёмки (2026-08-16, исправление формулировки): исходные 2
+падения baseline (`TC-154`, `TC-176`) закрыты не вердиктом триажа как
+таковым, а ФАКТИЧЕСКИМИ зелёными точечными прогонами ПОСЛЕ baseline —
+`TC-154` (`test-cases/downloads/TC-154.md:158`): `1 passed in 78.89s` на
+`59be96c6`; `TC-176` (`test-cases/tabs/TC-176.md:225`): `1 passed, 466
+deselected in 41.83s`, `PYTEST_EXIT=0` — после rework под burst-семантику
+(`framework/tests/test_tabs.py`, коммит `2a736de`, 2026-08-15, ПОСЛЕ
+baseline-прогона `RUN-20260815-0337`). Оговорка по границам переноса: сюита
+между baseline и этим прогоном выросла (467→480 collected, два теста
+переписаны `2a736de`) — импакт-селекция видит только дифф `app-under-test/`
+и эту дельту фреймворка не отражает; перенос покрытия валиден для
+ПРИЛОЖЕНИЯ (код не менялся), но не утверждает, что +13 новых
+collected-элементов сюиты были исполнены этим прогоном.
+
+## Сверка с baseline (владелец — test-runner, правило 4а CLAUDE.md)
+
+Последний Triaged/Closed regression-прогон с полем `source_commit` в
+frontmatter — `RUN-20260815-0337`
+(`source_commit: 59be96c6398786d33c878dbce33cb1ecde269374`). Проверка
+предковости ЭТИМ ходом:
+
+```
+cd D:\AO3_tests\app-under-test
+git merge-base --is-ancestor 59be96c6398786d33c878dbce33cb1ecde269374 27d5cfd193b3e0475b872d5c5c80daadcc299a79
+EXIT=0
+```
+
+`EXIT=0` → baseline **ЯВЛЯЕТСЯ предком** текущей сборки, валиден. Раз дифф
+между baseline и текущей сборкой — только документация (см. выше), картина
+baseline переносится на текущую сборку прикладного кода без изменений
+(регрессии не привнесено, потому что не привнесено кода); оба исторических
+падения baseline закрыты именно зелёными точечными прогонами TC-154/TC-176
+(цитаты выше), не одной лишь пометкой вердикта.
+
+## Падения
+
+Нет — 0 тестов выбрано селекцией к исполнению, 0 падений. Ничего для триажа.
+
+## Дефекты-собратья (D-0043)
+
+Ничего нового не замечено. Этот прогон не исполнял device-тестов (0 pytest
+regression-инвокаций) — класс device-liveness/webview-race здесь неприменим,
+`recoveries`-поле не заполнено (строки в выводе нет по конструкции: не было
+самого запуска pytest для regression), не по сбою/Blocked.
+
+## Условия закрытия прогона (Closed)
+- [x] Падений нет — триажить нечего, вердикты не требуются.
+- [x] Baseline-сверка выполнена (ancestor, EXIT=0).
+- [x] `tc_results` — явно пуст по конструкции (0 тестов выбрано селекцией), причина задокументирована выше, не молчание.
+- [x] `selection` зафиксирован (impact, areas: [], диапазон явно указан).

@@ -2,7 +2,7 @@
 key: "BUG-058"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p2"
 summary: "PROJECT.md ложно отрицает сетевые запросы из приложения; сетевые вызовы присутствуют в SettingsScreen и DownloadRepository"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-16T00:23:59Z"
-updated: "2026-08-16T00:23:59Z"
+created: "2026-08-16T01:07:00Z"
+updated: "2026-08-16T01:07:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # PROJECT.md ложно отрицает сетевые запросы из приложения; сетевые вызовы присутствуют в SettingsScreen и DownloadRepository
 
 _Спроецировано из `bugs/BUG-058.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # BUG-058 — PROJECT.md ложно отрицает сетевые запросы из приложения
 
@@ -92,6 +92,7 @@ BUG-001 открыт как коллекция класса; BUG-058 — тре�
 | Дата | Версия сборки | Метод | Результат | Вердикт |
 |---|---|---|---|---|
 | 2026-08-10 | 1.10 (versionCode 11), commit 6f884d97 | Code inspection: чтение исходников + git log | Оба файла (SettingsScreen.kt, DownloadRepository.kt) содержат прямые сетевые запросы; git log подтверждает: файлы не менялись после 2026-07-17 (дата решения по BUG-001) | Расхождение подтверждено, статический факт |
+| 2026-08-16 | dev-local (versionCode 12), source_commit 27d5cfd193b3e0475b872d5c5c80daadcc299a79 | Code inspection carve-out (test_cases: [], документационный класс — по функциональному критерию `.claude/agents/fix-verifier.md` «device-прогон не может исполнить проверяемое поведение», образец — BUG-061; **не** BUG-067/ESC-033, тот прецедент carve-out НЕ разрешает): `git merge-base --is-ancestor 6f884d97 HEAD` в `app-under-test` → `ANCESTOR_OK` (found_in — предок fixed-коммита); `git show 27d5cfd1:PROJECT.md` дословно + `git show 27d5cfd1 --stat` на diff | Ложная строка "No network calls from the app itself" отсутствует (`grep -n "No network calls" PROJECT.md` → без совпадений). PROJECT.md:255-259 дословно: `"**All AO3 *browsing* traffic goes through the WebView** — the app never renders AO3 pages itself. It does, however, make three kinds of direct HTTP calls outside the WebView:"` далее перечислены все три канала — `SettingsScreen.kt` `fetchAo3WorkPage` (HttpURLConnection, works/{id}?view_adult=true), `DownloadRepository.kt` (OkHttpClient, скачивание файла), `SyncRepository.kt` (OkHttpClient, GitLab snippets API, "the only call that does not go to AO3") — и строка про переиспользование WebView-cookie (`CookieManager.getInstance().getCookie(...)`, `Cookie` header). PROJECT.md:262 сужает claim о credentials до AO3 и явно называет персистящийся GitLab-токен в `SharedPreferences`. Diff-статистика подтверждает `PROJECT.md \| 10 +++++++--- (7 insertions, 3 deletions)`, commit message ссылается `Refs #31` (совпадает с `gitlab_issue: 31` бага) | Фикс (вариант A) подтверждён дословным чтением на коммите фикса; все три пункта ноты разработчика (2026-08-15T23:08:39Z) присутствуют в тексте — Verified |
 
 ## Обсуждение
 
@@ -131,6 +132,12 @@ awaiting: dev
 > awaiting: qa
 
 **[gitlab:dyakagreen @ 2026-08-15T23:08:49.299Z]** Метка `qa-status::QAready` выставлена на GitLab issue — переход Open→Fixed зафиксирован автоматически (второй канал, docs/06 §3а, gitlab-label).
+
+**[fix-verifier @ 2026-08-16T01:07:00Z]** Верифицировано (mode=verify, carve-out — `test_cases: []`, документационный класс без device-исполнимого предмета, функциональный критерий `.claude/agents/fix-verifier.md`, образец BUG-061).
+
+**[critic @ 2026-08-16T01:37Z, приёмочный вход]** Существо перепроверено независимо (собственные `git show`/`git merge-base`/`grep` на коммите фикса) — PASS, `Verified` не откатывается. Обоснование в исходной записи fix-verifier ошибочно ссылалось на «прецедент BUG-067 D1/ESC-033»: тот прецедент carve-out ровно ЗАПРЕЩАЕТ (`state/escalations.md` ESC-033, `bugs/BUG-067.md:171` — «carve-out … сюда НЕ подходит … эскалационный по протоколу»). Ссылка исправлена на действительное основание (функциональный критерий контракта fix-verifier + образец BUG-061). Открыт пункт очереди полного Lead: документационный класс (PROJECT.md vs код, коллекция BUG-001) явно не назван в перечислении carve-out `.claude/agents/fix-verifier.md:17-24` — по духу подходит, по букве нет; решение о правке контракта — за Lead, не за Sonnet-координатором/воркером. Ancestry: `git merge-base --is-ancestor 6f884d97 HEAD` в `app-under-test` (HEAD=`27d5cfd193b3e0475b872d5c5c80daadcc299a79`) → `ANCESTOR_OK`. Чтение `git show 27d5cfd1:PROJECT.md` дословно подтверждает все три пункта ноты разработчика: (1) ложная фраза "No network calls from the app itself" заменена на перечисление трёх каналов (`SettingsScreen.kt fetchAo3WorkPage`, `DownloadRepository.kt`, `SyncRepository.kt` — с явной пометкой, что sync-вызов единственный не к AO3); (2) добавлена строка про переиспользование WebView-cookie обоими AO3-вызовами; (3) claim про credentials сужен до AO3, GitLab-токен назван явно как персистящийся в `SharedPreferences`. `grep -n "No network calls" PROJECT.md` на коммите фикса — без совпадений (строка действительно убрана, не задвоена). Diff commit `27d5cfd` — `PROJECT.md | 10 +++++++--- 1 file changed, 7 insertions(+), 3 deletions(-)`, сообщение коммита `Refs #31` совпадает с `gitlab_issue: 31`. `status: Fixed → Verified`, `awaiting: none`, lock снят.
+
+**Дефект-собрат:** тот же коммит `27d5cfd` также правит соседний документационный дефект (rating-filter toggles задокументированы как top-bar иконки Browse, фактически живут в side panel/Settings, `Refs #35`) — вне scope BUG-058 (другой GitLab issue), но тот же класс D-0043 (документационное расхождение PROJECT.md vs код), не проверялся этим проходом — доклад для владельца очереди/Lead.
 
 ## Чек-лист качества
 - [x] Проверены дубликаты — не совпадает с BUG-001 (другой класс расхождения: отрицание вместо неправильного названия)
