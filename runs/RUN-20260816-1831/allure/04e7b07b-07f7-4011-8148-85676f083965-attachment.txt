@@ -1,0 +1,1 @@
+AT-BUG-066 WARNING: adb shell settings get system font_scale вернул код 1 (устройство offline/unauthorized?) -- stderr: 'error: device offline' -- get_font_scale() не может определить текущее значение, возвращаю None (не путать с "дефолт"); не бросаю, чтобы не ронять сессию.

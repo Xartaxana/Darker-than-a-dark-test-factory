@@ -2,7 +2,7 @@
 key: "TC-257"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Journey «скачанный файл»: открытие стилизует, удаление файла сохраняет рейтинг, удаление работы убирает всё"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-16T00:00:00Z"
-updated: "2026-08-16T00:00:00Z"
+created: "2026-08-16T15:40:04Z"
+updated: "2026-08-16T15:40:04Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Journey «скачанный файл»: открытие стилизует, удаление файла сохраняет рейтинг, удаление работы убирает всё
 
 _Спроецировано из `test-cases/downloads/TC-257.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-257 — Journey: открыть скачанный файл → удалить файл → удалить работу
 

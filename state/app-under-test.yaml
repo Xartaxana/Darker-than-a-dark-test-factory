@@ -2,7 +2,7 @@
 # изменение этого файла = триггер для test-runner (см. docs/03 §3, правило 1).
 app: ao3-wrapper
 repo: https://gitlab.com/dyakagreen-group/ao3-wrapper
-source_commit: 27d5cfd193b3e0475b872d5c5c80daadcc299a79   # 2026-06-28
+source_commit: aa377e0ec9664fcd5439fec9391638fabf94f448   # 2026-06-28
 race_note: ""
 provided_ref: ""
 build_source: local
@@ -11,8 +11,8 @@ version_name: "dev-local"
 version_code: 12
 build_type: debug
 apk_path: app-under-test/app/build/outputs/apk/debug/app-debug.apk
-apk_sha256: "bf17f15f3b441a1572bc505f2896f603f56b8117862df5a427ff23f17738e7cd"
-built_at: "2026-08-16T01:01:26Z"
-smoke_status: passed   # RUN-20260816-0332 (Closed): 49/49 passed на dev-local (12), source_commit 27d5cfd1. Полный p0-набор (49 selected / 480 collected), env поднято с нуля (Start-Emulator -WritableSystem, CA visible in apex store: OK, apk_sha256 сверен фактом). device-liveness guard recoveries 0/2 (ENV_ISSUE-токена нет), sessionfinish достигнут штатно, PYTEST_EXIT=0. Падений нет — триажить нечего. Baseline-сверка: последний Closed smoke с source_commit — RUN-20260815-0149 (59be96c6) — git merge-base --is-ancestor → EXIT=0, ЯВЛЯЕТСЯ предком; те же 37 TC-меток зелёные и здесь.
-regression_status: passed   # RUN-20260816-0334 (Closed): 0/0 — selection: impact, диапазон 59be96c639878..27d5cfd193b3e (default range = ровно предыдущий baseline-коммит, единственный промежуточный коммит 27d5cfd1 — документационная правка PROJECT.md, BUG-058/BUG-065), areas: [] (файл матчится ignore "*.md", не wide_impact/unknown — легитимный узкий исход, не fail-safe кейс, перепрогнан критиком независимо). pytest для regression этим ходом не запускался (0 automated_by-путей в выдаче селектора), allure/tc_results пусты по конструкции, задокументировано явно. Baseline RUN-20260815-0337 (Closed, 271/273) — source_commit 59be96c6 является ПРЯМЫМ родителем текущего (git merge-base --is-ancestor → EXIT=0), прикладной код между сборками не менялся; оба исторических падения (TC-154, TC-176) закрыты зелёными точечными прогонами ПОСЛЕ baseline (test-cases/downloads/TC-154.md, test-cases/tabs/TC-176.md), не одной пометкой вердикта — см. RUN-20260816-0334 для цитат.
+apk_sha256: "34e2abced39e3754b037919efdcfc819a599ac5f4228cc5a2157faac2a92ce32"
+built_at: "2026-08-16T17:53:45Z"
+smoke_status: passed   # RUN-20260816-1758 (Closed): 49/49 passed на dev-local (12), source_commit aa377e0e. Полный p0-набор (49 selected / 489 collected), env поднято с нуля (Start-Emulator -WritableSystem, CA visible in apex store: OK, apk_sha256 сверен фактом). device-liveness guard recoveries 0/2 (ENV_ISSUE-токена нет), sessionfinish достигнут штатно, PYTEST_EXIT=0. Падений нет — триажить нечего. Baseline-сверка: последний Closed smoke с source_commit — RUN-20260816-0332 (27d5cfd1) — git merge-base --is-ancestor → EXIT=0, ЯВЛЯЕТСЯ предком; те же 37 TC-меток зелёные и здесь.
+regression_status: failed   # RUN-20260816-1831 (NeedsTriage): 289 passed / 1 failed (290 selected, полный (p0 or p1) and not live) на dev-local (12), source_commit aa377e0e. selection: full (wide_impact: app/src/main/assets/ao3_bridge.js), диапазон 27d5cfd193b3e..aa377e0ec966. Проактивная сегментация 150+140 (класс «харнесс убивает фоновый pytest ~45-60 мин») — оба сегмента дошли до sessionfinish штатно, recoveries 0/2 в обоих, ENV_ISSUE-токена нет, 0 пересечений historyId. Падение: TC-004 (test_clear_all_ratings, p0) — assert "кнопка «Clear…» не найдена" после swipe; тот же тест зелёный в соседнем smoke-прогоне этой же сборки (RUN-20260816-1758) и в baseline — факт для failure-analyst, вердикт не вынесен. Baseline-сверка: последний Closed regression с source_commit — RUN-20260816-0334 (27d5cfd1) — git merge-base --is-ancestor → EXIT=0, ЯВЛЯЕТСЯ предком (тот прогон сам 0 тестов не гонял, impact areas:[]); TC-154/TC-176 (падения RUN-20260815-0337) здесь зелёные.
 canary_status: passed    # RUN-20260814-0605 (Closed): 10/10 passed live под предписанной TC-078 конфигурацией (hw.gpu.mode=host, сверено фактом в hardware-qemu.ini), scope -m live (канон RUN-20260804-1355). Canary-каталог вырос 23→25 collected items (2 новых в deselected, не live) — состав -m live (10) не изменился. recoveries 0/2. Предыдущий: RUN-20260810-1529 (Closed) 10/10.

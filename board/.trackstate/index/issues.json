@@ -2218,7 +2218,7 @@
     "epicPath": null,
     "summary": "Journey «скачанный файл»: открытие стилизует, удаление файла сохраняет рейтинг, удаление работы убирает всё",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2226,7 +2226,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-08-16T00:00:00Z",
+    "updated": "2026-08-16T15:40:04Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -7286,15 +7286,14 @@
     "issueType": "bug",
     "status": "bug-open",
     "priority": "p1",
-    "assignee": "test-maintainer",
+    "assignee": "qa-agents",
     "labels": [
       "bug",
       "test_case:TC-252",
       "test_case:TC-253",
       "test_case:TC-254",
       "test_case:TC-255",
-      "sev:major",
-      "wip:test-maintainer"
+      "sev:major"
     ],
     "updated": "2026-08-15T00:10:14Z",
     "resolution": null,
@@ -7550,14 +7549,14 @@
     "epicPath": null,
     "summary": "Смена темы, затем немедленный kill процесса (<100 мс) теряет theme_mode — выбор темы не персистится",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-intended",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-07-19T17:30:00Z",
+    "updated": "2026-08-16T18:00:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -7626,7 +7625,7 @@
     "epicPath": null,
     "summary": "Undo закрытия вкладки на потолке 10 молча теряет вкладку и её снапшот",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -7635,7 +7634,7 @@
       "test_case:TC-024",
       "sev:major"
     ],
-    "updated": "2026-08-10T10:12:00Z",
+    "updated": "2026-08-16T17:56:15Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -7672,14 +7671,14 @@
     "epicPath": null,
     "summary": "DOM-ссылка «Next →» указывает на уже показанную страницу; тап уводит назад",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:major"
     ],
-    "updated": "2026-07-31T19:30:00Z",
+    "updated": "2026-08-16T17:58:30Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -7693,14 +7692,14 @@
     "epicPath": null,
     "summary": "Back после автопрыжка плотности не выводит назад — ловушка + рост истории",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:major"
     ],
-    "updated": "2026-07-31T19:30:00Z",
+    "updated": "2026-08-16T17:56:15Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -7714,14 +7713,14 @@
     "epicPath": null,
     "summary": "Простановка DISLIKE уводит пользователя со страницы; автонавигация live-push под открытым bottom-sheet",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:major"
     ],
-    "updated": "2026-07-31T19:30:00Z",
+    "updated": "2026-08-16T17:52:50Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -8178,14 +8177,14 @@
     "epicPath": null,
     "summary": "Copy URL button разыменовывает navigator.clipboard БЕЗ guard'а при отсутствии API, выбрасывает синхронный TypeError",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-08-16T00:28:00Z",
+    "updated": "2026-08-16T17:52:50Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -8551,6 +8550,46 @@
     "archived": false
   },
   {
+    "key": "RUN-20260816-1758",
+    "path": "board/RUN-20260816-1758/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "RUN-20260816-1758",
+    "issueType": "run",
+    "status": "run-closed",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "run"
+    ],
+    "updated": "2026-08-16T18:27:12Z",
+    "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "RUN-20260816-1831",
+    "path": "board/RUN-20260816-1831/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "RUN-20260816-1831",
+    "issueType": "run",
+    "status": "run-needstriage",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "run"
+    ],
+    "updated": "2026-08-16T20:07:50Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "story-26",
     "path": "board/story-26/main.md",
     "parent": null,
@@ -8564,7 +8603,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-writing-cases",
-      "регресс сборки: smoke RUN-20260816-0332 49/49 · чисто · regression RUN-20260816-0334 0/0 · чисто · новых багов в прогоне: 0",
+      "регресс сборки: smoke RUN-20260816-1758 49/49 · чисто · regression RUN-20260816-1831 289/290 · разбирается · новых багов в прогоне: 0",
       "фич без кейсов: 0/2",
       "черновиков: 1",
       "багов на кейсах стори: 3"
@@ -8588,7 +8627,8 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-covered",
-      "регресс сборки: smoke RUN-20260816-0332 49/49 · чисто · regression RUN-20260816-0334 0/0 · чисто · новых багов в прогоне: 0",
+      "регресс сборки: smoke RUN-20260816-1758 49/49 · чисто · regression RUN-20260816-1831 289/290 · разбирается · новых багов в прогоне: 0",
+      "зелёные в RUN-20260816-1831: 5/5",
       "багов на кейсах стори: 0"
     ],
     "updated": "2026-08-09T23:04:10Z",
@@ -8610,7 +8650,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-automation",
-      "регресс сборки: smoke RUN-20260816-0332 49/49 · чисто · regression RUN-20260816-0334 0/0 · чисто · новых багов в прогоне: 0",
+      "регресс сборки: smoke RUN-20260816-1758 49/49 · чисто · regression RUN-20260816-1831 289/290 · разбирается · новых багов в прогоне: 0",
       "багов на кейсах стори: 1"
     ],
     "updated": "2026-08-14T23:12:35Z",
@@ -8632,7 +8672,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-writing-cases",
-      "регресс сборки: smoke RUN-20260816-0332 49/49 · чисто · regression RUN-20260816-0334 0/0 · чисто · новых багов в прогоне: 0",
+      "регресс сборки: smoke RUN-20260816-1758 49/49 · чисто · regression RUN-20260816-1831 289/290 · разбирается · новых багов в прогоне: 0",
       "фич без кейсов: 5/8",
       "багов на кейсах стори: 0"
     ],

@@ -491,8 +491,8 @@
   },
   "TC-257": {
     "itype": "test-case",
-    "artifact_status": "Review",
-    "board_status": "Review"
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
   "TC-046": {
     "itype": "test-case",
@@ -1661,8 +1661,8 @@
   },
   "BUG-013": {
     "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
+    "artifact_status": "Intended",
+    "board_status": "Intended"
   },
   "BUG-014": {
     "itype": "bug",
@@ -1676,8 +1676,8 @@
   },
   "BUG-016": {
     "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
+    "artifact_status": "Fixed",
+    "board_status": "Fixed"
   },
   "BUG-017": {
     "itype": "bug",
@@ -1686,18 +1686,18 @@
   },
   "BUG-018": {
     "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
+    "artifact_status": "Fixed",
+    "board_status": "Fixed"
   },
   "BUG-019": {
     "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
+    "artifact_status": "Fixed",
+    "board_status": "Fixed"
   },
   "BUG-020": {
     "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
+    "artifact_status": "Fixed",
+    "board_status": "Fixed"
   },
   "BUG-021": {
     "itype": "bug",
@@ -1801,8 +1801,8 @@
   },
   "BUG-071": {
     "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
+    "artifact_status": "Fixed",
+    "board_status": "Fixed"
   },
   "RUN-20260702-0300": {
     "itype": "run",
@@ -1893,5 +1893,15 @@
     "itype": "run",
     "artifact_status": "Closed",
     "board_status": "Closed"
+  },
+  "RUN-20260816-1758": {
+    "itype": "run",
+    "artifact_status": "Closed",
+    "board_status": "Closed"
+  },
+  "RUN-20260816-1831": {
+    "itype": "run",
+    "artifact_status": "NeedsTriage",
+    "board_status": "NeedsTriage"
   }
 }

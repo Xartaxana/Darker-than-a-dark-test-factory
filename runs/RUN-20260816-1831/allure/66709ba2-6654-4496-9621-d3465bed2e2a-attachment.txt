@@ -1,0 +1,1 @@
+AT-BUG-063 recovery: перезапуск эмулятора: gpu=<tasks.ps1 default> (source: default), avd=ao3_test_api34 (source: state); возраст state неизвестен (updated_utc отсутствует); state-файл: C:\Users\user\AppData\Local\Temp\pytest-of-user\pytest-3192\test_f4_avdname_adversarial_ba5\emulator-session.json

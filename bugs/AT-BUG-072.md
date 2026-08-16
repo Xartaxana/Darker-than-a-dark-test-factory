@@ -17,7 +17,7 @@ updated: "2026-08-15T00:10:14Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
-lock: "test-maintainer:2026-08-16T10:50:00Z"
+lock: ""
 ---
 
 # AT-BUG-072 — нет обёртки над `adb shell input keyevent KEYCODE_VOLUME_UP/DOWN` с наблюдаемым подтверждением

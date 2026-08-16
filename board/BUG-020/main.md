@@ -2,7 +2,7 @@
 key: "BUG-020"
 project: "AO3"
 issueType: "bug"
-status: "bug-open"
+status: "bug-fixed"
 priority: "p1"
 summary: "Простановка DISLIKE уводит пользователя со страницы; автонавигация live-push под открытым bottom-sheet"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-07-31T19:30:00Z"
-updated: "2026-07-31T19:30:00Z"
+created: "2026-08-16T17:52:50Z"
+updated: "2026-08-16T17:52:50Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Простановка DISLIKE уводит пользователя со страницы; автонавигация live-push под открытым bottom-sheet
 
 _Спроецировано из `bugs/BUG-020.md` (источник правды).
-Статус в нашей машине: **Open**._
+Статус в нашей машине: **Fixed**._
 
 # BUG-020 — Простановка DISLIKE уводит пользователя со страницы
 
@@ -98,6 +98,15 @@ _Спроецировано из `bugs/BUG-020.md` (источник правд�
 ## Обсуждение
 
 ---
+
+**[gitlab:dyakagreen @ 2026-08-16T10:44:36.031Z]** > **Исправлено в `aa377e0` (main).** Автонавигация при live-push фильтра отключена полностью:
+> 
+> - `broadcastRatingChange` (BrowserViewModel.kt) выставляет флаг `window.__ao3LiveRatingPush` на время своего вызова `applyRatings` (синхронно, через try/finally);
+> - `checkPageDensity` (ao3_bridge.js) при этом флаге выходит сразу — автопрыжок остаётся возможен только на пути первичной загрузки страницы (setHiddenRatings/applyRatings из onPageFinished), где он и задуман.
+> 
+> Итог: DISLIKE последней видимой работы больше не выполняет навигацию под открытым bottom-sheet — оверлей и страница остаются на месте, пустое состояние объясняет баннер «Some works may be hidden…». Дополнительно автопрыжок теперь идёт через `location.replace` (см. BUG-019 / #10), так что даже штатный прыжок при загрузке не оставляет ловушку в истории. Верификация по seed 2c/2d CH-006 — за QA.
+
+**[gitlab:dyakagreen @ 2026-08-16T10:56:13.689Z]** Метка `qa-status::QAready` выставлена на GitLab issue — переход Open→Fixed зафиксирован автоматически (второй канал, docs/06 §3а, gitlab-label).
 
 ## Чек-лист качества (bug-reporter)
 - [x] Проверены дубликаты среди открытых багов (`bugs/`, status != Verified/Rejected) — BUG-015 идентифицирован как сосед по классу (незапрошенное действие вместо пользователя), но это ДРУГОЙ механизм (навигация, не kudos), отдельный баг

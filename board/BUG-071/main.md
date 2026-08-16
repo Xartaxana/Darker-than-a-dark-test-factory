@@ -2,7 +2,7 @@
 key: "BUG-071"
 project: "AO3"
 issueType: "bug"
-status: "bug-open"
+status: "bug-fixed"
 priority: "p2"
 summary: "Copy URL button разыменовывает navigator.clipboard БЕЗ guard'а при отсутствии API, выбрасывает синхронный TypeError"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-16T00:28:00Z"
-updated: "2026-08-16T00:28:00Z"
+created: "2026-08-16T17:52:50Z"
+updated: "2026-08-16T17:52:50Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Copy URL button разыменовывает navigator.clipboard БЕЗ guard'а при отсутствии API, выбрасывает синхронный TypeError
 
 _Спроецировано из `bugs/BUG-071.md` (источник правды).
-Статус в нашей машине: **Open**._
+Статус в нашей машине: **Fixed**._
 
 # BUG-071 — navigator.clipboard БЕЗ guard'а в Copy URL button вызывает синхронный TypeError
 
@@ -145,6 +145,16 @@ btn.addEventListener('click', function () {
 Severity: **minor** — DEBUG-функция, но всё же видима пользователю и влияет на UX при отсутствии Clipboard API (реальные устройства/конфигурации).
 
 Awaiting: none
+
+**[gitlab:dyakagreen @ 2026-08-16T10:44:36.787Z]** > **Исправлено в `aa377e0` (main).** Реализован рекомендованный guard:
+> 
+> - fallback на `document.execCommand('copy')` вынесен в именованную функцию `execCommandFallback()`;
+> - вызов `navigator.clipboard.writeText` обёрнут в `if (navigator.clipboard && navigator.clipboard.writeText)`, ветка else идёт сразу в fallback — синхронный TypeError на разыменовании исключён;
+> - reject-ветка промиса по-прежнему падает в тот же fallback, кнопка всегда даёт видимый отклик (Copied! / Copy failed).
+> 
+> Замечу: конфигурация «navigator.clipboard undefined» в этом приложении не экзотика — Clipboard API отсутствует на небезопасных origin, т.е. на КАЖДОЙ file://-вкладке со скачанной работой, так что guard закрывает вполне реальный путь. Верификация — за QA.
+
+**[gitlab:dyakagreen @ 2026-08-16T10:56:14.620Z]** Метка `qa-status::QAready` выставлена на GitLab issue — переход Open→Fixed зафиксирован автоматически (второй канал, docs/06 §3а, gitlab-label).
 
 ## Чек-лист качества
 
