@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-16T15:32:51Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-08-16T17:44:43Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 ⚠ реестр фич протух: сборка 27d5cfd193b3e0475b872d5c5c80daadcc299a79, реестр инвентаризован против 59be96c6398786d33c878dbce33cb1ecde269374
@@ -96,9 +96,9 @@ generated_at: 2026-08-16T15:32:51Z · генератор: `scripts/coverage_map.
 | library-filters-clear-all-topbar | library | нет кейсов |
 | library-card-open-work | library | library:TC-136[Automated], library:TC-137[Automated] |
 | library-card-download | library | downloads:TC-033[Automated] |
-| library-card-open-file | library | downloads:TC-034[Merged], downloads:TC-156[Approved], downloads:TC-257[Review] |
-| library-card-delete-file | library | downloads:TC-035[Merged], downloads:TC-154[Approved], downloads:TC-257[Review] |
-| library-card-delete-work | library | downloads:TC-036[Merged], downloads:TC-257[Review] |
+| library-card-open-file | library | downloads:TC-034[Merged], downloads:TC-156[Approved], downloads:TC-257[Approved] |
+| library-card-delete-file | library | downloads:TC-035[Merged], downloads:TC-154[Approved], downloads:TC-257[Approved] |
+| library-card-delete-work | library | downloads:TC-036[Merged], downloads:TC-257[Approved] |
 | library-card-open-background-tab | library | library:TC-173[Automated], library:TC-174[Automated], library:TC-175[Automated], library:TC-189[Automated], library:TC-190[Draft], filter-profiles:TC-205[Approved] |
 | library-open-epub-hands-off-external | library | downloads:TC-239[Approved] |
 | library-card-open-external-action | library | downloads:TC-240[Approved] |
@@ -359,7 +359,7 @@ generated_at: 2026-08-16T15:32:51Z · генератор: `scripts/coverage_map.
 - coverage_status: **partial** (11/21 Automated)
 - риски: R-05, R-16
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-153 [P1, Approved], TC-154 [P1, Approved], TC-236 [P1, Approved], TC-237 [P1, Approved], TC-239 [P1, Approved], TC-240 [P1, Approved], TC-257 [P1, Review]
+- P0/P1 не в Automated: TC-153 [P1, Approved], TC-154 [P1, Approved], TC-236 [P1, Approved], TC-237 [P1, Approved], TC-239 [P1, Approved], TC-240 [P1, Approved], TC-257 [P1, Approved]
 - автотесты (automated_by): framework/tests/test_downloads.py::test_auto_download_triggers_on_loved_rating, framework/tests/test_downloads.py::test_change_download_folder_triggers_silent_scan_and_relinks_orphan_file, framework/tests/test_downloads.py::test_delete_downloaded_file_sweeps_both_download_locations, framework/tests/test_downloads.py::test_deselecting_favorite_rating_does_not_download, framework/tests/test_downloads.py::test_edit_note_on_already_saved_work_via_listing_overlay_does_not_redownload, framework/tests/test_downloads.py::test_edit_tag_on_already_saved_work_via_panel_does_not_redownload, framework/tests/test_downloads.py::test_enabling_auto_download_does_not_retroactively_download_favorites, framework/tests/test_downloads.py::test_epub_download_saves_epub_file_and_shows_on_files_tab, framework/tests/test_downloads.py::test_favorite_rating_does_not_download_when_auto_download_off, framework/tests/test_downloads.py::test_manual_download_from_library_adds_local_file, framework/tests/test_downloads.py::test_manual_scan_for_downloads_shows_dialog_on_zero_files, framework/tests/test_downloads.py::test_rating_change_from_favorite_to_kudosed_does_not_download, framework/tests/test_downloads.py::test_repeated_manual_scan_two_files_same_ao3id_converges_to_relinked_zero, framework/tests/test_downloads.py::test_restore_folds_orphan_scan_into_single_dialog
 - last_green_run: RUN-20260816-0332 (suite: smoke, status: Closed, updated: 2026-08-16T01:34:20Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
@@ -378,7 +378,7 @@ generated_at: 2026-08-16T15:32:51Z · генератор: `scripts/coverage_map.
 | Priority | Draft | Review | Approved | Automated | Merged | Blocked |
 |---|---|---|---|---|---|---|
 | P0 |  |  |  |  |  |  |
-| P1 |  | 1 | 6 | 6 | 3 |  |
+| P1 |  |  | 7 | 6 | 3 |  |
 | P2 |  |  | 2 | 3 |  |  |
 | P3 |  |  | 1 | 2 |  |  |
 
