@@ -2,12 +2,12 @@
 key: "TC-034"
 project: "AO3"
 issueType: "test-case"
-status: "tc-automated"
+status: "tc-merged"
 priority: "p1"
 summary: "Открытие скачанного файла применяет мобильный viewport и reader.css"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:downloads", "risk:R-05", "automation:active"]
+labels: ["test-case", "area:downloads", "risk:R-05"]
 components: []
 fixVersions: []
 watchers: []
@@ -22,7 +22,7 @@ resolution: "done"
 # Открытие скачанного файла применяет мобильный viewport и reader.css
 
 _Спроецировано из `test-cases/downloads/TC-034.md` (источник правды).
-Статус в нашей машине: **Automated**._
+Статус в нашей машине: **Merged**._
 
 # TC-034 — Открытие file:// применяет стилизацию (viewport + reader.css)
 
@@ -117,3 +117,7 @@ _Спроецировано из `test-cases/downloads/TC-034.md` (источн�
 - [x] Then проверяет наблюдаемое поведение, а не реализацию
 - [x] Указаны приоритет, область и источник требования
 - [x] Кейс независим от порядка выполнения других кейсов
+
+## Обсуждение
+- Кандидат на поглощение journey-кейсом TC-257 (пилот П1); статусы переведёт
+  Lead (Merged — до удаления функций, Р4 шаг 2).

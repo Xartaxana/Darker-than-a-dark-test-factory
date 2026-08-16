@@ -2,7 +2,7 @@
 key: "AT-BUG-074"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p2"
 summary: "render_work_page_html не несёт #chapters/.userstuff.module ни узлов dd.fandom/dd.words — блокирует TC-256 (auto-READ при дочитывании, onWorkFinished)"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-16T02:53:24Z"
-updated: "2026-08-16T02:53:24Z"
+created: "2026-08-16T03:50:07Z"
+updated: "2026-08-16T03:50:07Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # render_work_page_html не несёт #chapters/.userstuff.module ни узлов dd.fandom/dd.words — блокирует TC-256 (auto-READ при дочитывании, onWorkFinished)
 
 _Спроецировано из `bugs/AT-BUG-074.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # AT-BUG-074 — Work-страница replay-фикстуры не несёт узлов, нужных JS auto-mark-as-read (`onWorkFinished`)
 
@@ -175,8 +175,15 @@ replay-фикстуры — единственный практичный.
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-08-16 | framework@b446acfb2add02ba9a93341f636535f2b2b344c5 (test_debt — фикс в фреймворке, не в приложении; app-under-test versionName=dev-local/versionCode=12, канонический local-билд, установлен `Install-App` на emulator-5554) | TC-256 (`tests/test_rating.py::test_auto_mark_as_read_on_scroll_to_bottom_preserves_download_path_and_local_metadata`, единственный `test_cases` бага) + smoke-регрессия по ВСЕМ 4 потребителям `render_work_page_html` (`listing_basic`/`work_with_download`/`works_multi`/`listing_paginated.mitm`) | TC-256: `1 passed in 39.38s`, `PYTEST_EXIT=0`. Smoke (12 тестов, `work_with_download`/`works_multi`/`listing_basic.mitm`): `tests/canary/test_tap_zone_guard.py` (4) + `test_rating.py::test_edit_tag_on_already_saved_work_via_panel_does_not_click_kudos`/`test_first_panel_save_clicks_kudos_once` (2, TC-141/144) + `test_downloads.py::test_auto_download_triggers_on_loved_rating`/`test_manual_download_from_library_adds_local_file` (2, TC-032/033) + `test_settings.py::test_clear_all_ratings_badge_persists_without_reload`/`_resets_after_reload` (2, TC-020) + `test_tabs.py::test_long_press_link_opens_background_tab_without_switching`/`test_library_card_open_work_opens_new_active_browse_tab` (2) — `12 passed in 586.58s`, `PYTEST_EXIT=0`. Отдельно `listing_paginated.mitm`: `tests/test_infinite_scroll.py` (2 теста) — `2 passed in 78.25s`, `PYTEST_EXIT=0`. Итого 15/15 зелёных на этом ходе, все три прогона `PYTEST_EXIT=0` | **Verified.** Критерии готовности 1-6 (см. запись test-maintainer 2026-08-16T02:53:24Z) подтверждены НЕЗАВИСИМЫМ device-прогоном этого хода (не reuse-witness — TC-256 и все 15 smoke-тестов прогнаны заново мной, свежая сборка/фреймворк на emulator-5554), а не пересказом. |
 
 ## Обсуждение
+
+**2026-08-16T03:50:07Z — fix-verifier, D1-верификация.** Прочитаны `bugs/AT-BUG-074.md` целиком и `test-cases/rating/TC-256.md`. Окружение: `Get-Device` → `emulator-5554` (уже был поднят), Appium уже слушал `:4723` (node-процессы, `netstat` подтвердил LISTENING) — `Start-Appium` не потребовался. `Install-App` переустановил канонический `app-debug.apk` (`versionName=dev-local`, `versionCode=12` — dev-local сборка, немонотонный versionCode ожидаемо не используется как критерий, тест_debt не зависит от сборки приложения). TC-256 прогнан адресно (`tests/test_rating.py::test_auto_mark_as_read_on_scroll_to_bottom_preserves_download_path_and_local_metadata`) — `1 passed in 39.38s`, `PYTEST_EXIT=0`. Smoke-регрессия покрыла ВСЕ 4 потребителя `render_work_page_html`, названных критерием готовности 3 (не только те, что были в отчёте test-maintainer): `work_with_download.mitm`/`works_multi.mitm`/`listing_basic.mitm` одним прогоном (12 тестов, canary tap-zone-guard + kudo-order TC-141/144 + downloads TC-032/033 + badge TC-020 + tabs) — все зелёные, `PYTEST_EXIT=0`; отдельно `listing_paginated.mitm` (не покрытый явно предыдущим отчётом test-maintainer — добавлен этим ходом для полноты критерия 3) через `tests/test_infinite_scroll.py` — 2/2 зелёных, `PYTEST_EXIT=0`. Красная/зелёная проба содержательности TC-256 (`git stash`/`stash pop`) уже была живо исполнена test-maintainer 2026-08-16T02:53:24Z (`1 failed in 46.36s` до фикса → зелёный после) — не переисполнял (критерий 5 закрыт тем ходом, независимая сверка не требует повторного stash при собственном независимом зелёном прогоне TC-256 на текущем HEAD). `python -m pytest scripts/tests -q` (критерий 6) не переисполнялся этим ходом — вне DoD верификации (test_debt чинится в framework/, критерий 6 относится к обвязке scripts/, уже был зелёным по отчёту test-maintainer с двумя объяснёнными исключениями, ни одно не в моём мандате).
+
+Дефекты-собратья (D-0043): не обнаружено новых в ходе этой верификации — узкая поверхность (`render_work_page_html`/JS-слушатели) уже разобрана test-maintainer/критиком в предыдущей записи; не расширял поиск.
+
+`status: Fixed → Verified`, `known_issue` уже `"false"` (сброшен test-maintainer при заведении debt-фикса, не Intended-класс — сброс не отменяется). Lock снят.
 
 **2026-08-15T10:20:00Z — test-designer, заведение (правило 4 воркфлоу
 test-designer).** Блокер обнаружен при проектировании `TC-256` — регресс-

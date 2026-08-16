@@ -5,9 +5,9 @@ issueType: "bug"
 status: "bug-open"
 priority: "p1"
 summary: "Нет автоматизационного примитива нажатия клавиш громкости (KEYCODE_VOLUME_UP/DOWN) — блокирует листание страниц кнопками громкости"
-assignee: "qa-agents"
+assignee: "test-maintainer"
 reporter: "qa-agents"
-labels: ["bug", "test_case:TC-252", "test_case:TC-253", "test_case:TC-254", "test_case:TC-255", "sev:major"]
+labels: ["bug", "test_case:TC-252", "test_case:TC-253", "test_case:TC-254", "test_case:TC-255", "sev:major", "wip:test-maintainer"]
 components: []
 fixVersions: []
 watchers: []

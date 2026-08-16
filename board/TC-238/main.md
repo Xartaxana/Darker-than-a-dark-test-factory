@@ -49,8 +49,10 @@ _Спроецировано из `test-cases/downloads/TC-238.md` (источн�
 | После повторного скачивания в EPUB | `<id>.html` + `<id>.epub` на диске, downloadPath → epub |
 
 ## Заметки для автоматизации
-- **Блокер автоматизации — `bugs/AT-BUG-071.md`** (нужна EPUB-ссылка в
-  replay-записи для второго скачивания). Кейс оставлен в `Review`.
+- **Блокер автоматизации `bugs/AT-BUG-071.md` устранён** (2026-08-16,
+  test-maintainer B4): EPUB-ссылка + транзакция записаны
+  (`framework/data/recordings/work_with_download_epub.mitm`), верифицированы
+  регенерацией. Кейс разблокирован для test-automator.
 - Судьбу двух файлов при последующем «Delete downloaded file» (сносит ОБА,
   `extractWorkId` матчит `html|epub`) — отдельная грань, покрыта смежной
   записью `settings-scan-duplicate-file-group`, не дублируется здесь.

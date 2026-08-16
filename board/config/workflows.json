@@ -7,6 +7,7 @@
       "tc-approved",
       "tc-awaiting-review",
       "tc-automated",
+      "tc-merged",
       "tc-blocked"
     ],
     "transitions": [

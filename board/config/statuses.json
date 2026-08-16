@@ -25,6 +25,11 @@
     "category": "done"
   },
   {
+    "id": "tc-merged",
+    "name": "Merged",
+    "category": "done"
+  },
+  {
     "id": "tc-blocked",
     "name": "Blocked",
     "category": "indeterminate"

@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-16T03:22:01Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-08-16T15:32:51Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 ⚠ реестр фич протух: сборка 27d5cfd193b3e0475b872d5c5c80daadcc299a79, реестр инвентаризован против 59be96c6398786d33c878dbce33cb1ecde269374
@@ -14,7 +14,7 @@ generated_at: 2026-08-16T03:22:01Z · генератор: `scripts/coverage_map.
 | browser | 34 | 13 | partial |
 | canary | 25 | 23 | partial |
 | compatibility | 3 | 3 | designed-full |
-| downloads | 23 | 14 | partial |
+| downloads | 21 | 11 | partial |
 | errors | 1 | 1 | designed-full |
 | filter-profiles | 12 | 5 | partial |
 | library | 32 | 25 | partial |
@@ -35,7 +35,7 @@ generated_at: 2026-08-16T03:22:01Z · генератор: `scripts/coverage_map.
 | R-02 | TECH | canary:TC-066, canary:TC-067, canary:TC-068, canary:TC-069, canary:TC-070, canary:TC-071, canary:TC-072, canary:TC-073, canary:TC-074, canary:TC-075, canary:TC-076, canary:TC-077, canary:TC-078, canary:TC-079, canary:TC-080, canary:TC-081, canary:TC-082, canary:TC-083, canary:TC-118, canary:TC-119, canary:TC-120, canary:TC-121, canary:TC-122, canary:TC-195, canary:TC-196 |
 | R-03 | TECH | errors:TC-046, smoke:TC-001 |
 | R-04 | DATA | canary:TC-072, canary:TC-073, canary:TC-074, canary:TC-075, canary:TC-076, canary:TC-077, library:TC-016, library:TC-017, library:TC-241, library:TC-245, rating:TC-007, rating:TC-008, rating:TC-009, rating:TC-010, rating:TC-011, rating:TC-012, smoke:TC-003 |
-| R-05 | TECH | downloads:TC-032, downloads:TC-033, downloads:TC-034, downloads:TC-035, downloads:TC-036, downloads:TC-037, downloads:TC-038, downloads:TC-039, downloads:TC-112, downloads:TC-113, downloads:TC-114, downloads:TC-115, downloads:TC-116, downloads:TC-117, downloads:TC-153, downloads:TC-154, downloads:TC-164, downloads:TC-236, downloads:TC-237, downloads:TC-238, library:TC-244, settings:TC-235 |
+| R-05 | TECH | downloads:TC-032, downloads:TC-033, downloads:TC-034, downloads:TC-035, downloads:TC-036, downloads:TC-037, downloads:TC-038, downloads:TC-039, downloads:TC-112, downloads:TC-113, downloads:TC-114, downloads:TC-115, downloads:TC-116, downloads:TC-117, downloads:TC-153, downloads:TC-154, downloads:TC-164, downloads:TC-236, downloads:TC-237, downloads:TC-238, downloads:TC-257, library:TC-244, settings:TC-235 |
 | R-06 | BUS | browser:TC-094, browser:TC-197, browser:TC-198, browser:TC-199, browser:TC-200, browser:TC-201, browser:TC-202, browser:TC-203, browser:TC-204, library:TC-027, library:TC-028, library:TC-029, library:TC-030, library:TC-031, library:TC-060, library:TC-061, library:TC-062, library:TC-063, library:TC-064, library:TC-065, library:TC-177, library:TC-178, library:TC-179, library:TC-180, visibility:TC-013, visibility:TC-014, visibility:TC-015, visibility:TC-092, visibility:TC-093, visibility:TC-095 |
 | R-07 | OPS | риск не покрыт дизайном |
 | R-08 | TECH | library:TC-136, library:TC-137, library:TC-173, library:TC-174, library:TC-175, library:TC-189, library:TC-190, tabs:TC-022, tabs:TC-023, tabs:TC-024, tabs:TC-025, tabs:TC-026, tabs:TC-084, tabs:TC-131, tabs:TC-132, tabs:TC-133, tabs:TC-134, tabs:TC-135, tabs:TC-176 |
@@ -96,9 +96,9 @@ generated_at: 2026-08-16T03:22:01Z · генератор: `scripts/coverage_map.
 | library-filters-clear-all-topbar | library | нет кейсов |
 | library-card-open-work | library | library:TC-136[Automated], library:TC-137[Automated] |
 | library-card-download | library | downloads:TC-033[Automated] |
-| library-card-open-file | library | downloads:TC-034[Automated], downloads:TC-156[Approved] |
-| library-card-delete-file | library | downloads:TC-035[Automated], downloads:TC-154[Approved] |
-| library-card-delete-work | library | downloads:TC-036[Automated] |
+| library-card-open-file | library | downloads:TC-034[Merged], downloads:TC-156[Approved], downloads:TC-257[Review] |
+| library-card-delete-file | library | downloads:TC-035[Merged], downloads:TC-154[Approved], downloads:TC-257[Review] |
+| library-card-delete-work | library | downloads:TC-036[Merged], downloads:TC-257[Review] |
 | library-card-open-background-tab | library | library:TC-173[Automated], library:TC-174[Automated], library:TC-175[Automated], library:TC-189[Automated], library:TC-190[Draft], filter-profiles:TC-205[Approved] |
 | library-open-epub-hands-off-external | library | downloads:TC-239[Approved] |
 | library-card-open-external-action | library | downloads:TC-240[Approved] |
@@ -239,12 +239,12 @@ generated_at: 2026-08-16T03:22:01Z · генератор: `scripts/coverage_map.
   - TC-107: нет зелёного per-TC
   - TC-108: нет зелёного per-TC
 
-| Priority | Draft | Review | Approved | Automated | Blocked |
-|---|---|---|---|---|---|
-| P0 |  |  |  |  |  |
-| P1 |  |  |  |  |  |
-| P2 |  |  | 3 | 3 |  |
-| P3 |  |  |  |  |  |
+| Priority | Draft | Review | Approved | Automated | Merged | Blocked |
+|---|---|---|---|---|---|---|
+| P0 |  |  |  |  |  |  |
+| P1 |  |  |  |  |  |  |
+| P2 |  |  | 3 | 3 |  |  |
+| P3 |  |  |  |  |  |  |
 
 ### backup
 
@@ -257,12 +257,12 @@ generated_at: 2026-08-16T03:22:01Z · генератор: `scripts/coverage_map.
 - per-TC last green:
   - TC-021: RUN-20260816-0332 (updated: 2026-08-16T01:34:20Z)
 
-| Priority | Draft | Review | Approved | Automated | Blocked |
-|---|---|---|---|---|---|
-| P0 |  |  |  | 1 |  |
-| P1 |  |  |  |  |  |
-| P2 |  |  | 1 |  |  |
-| P3 |  |  | 5 |  |  |
+| Priority | Draft | Review | Approved | Automated | Merged | Blocked |
+|---|---|---|---|---|---|---|
+| P0 |  |  |  | 1 |  |  |
+| P1 |  |  |  |  |  |  |
+| P2 |  |  | 1 |  |  |  |
+| P3 |  |  | 5 |  |  |  |
 
 ### browser
 
@@ -287,12 +287,12 @@ generated_at: 2026-08-16T03:22:01Z · генератор: `scripts/coverage_map.
   - TC-128: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
   - TC-130: RUN-20260803-2012 (updated: 2026-08-03T20:40:00Z)
 
-| Priority | Draft | Review | Approved | Automated | Blocked |
-|---|---|---|---|---|---|
-| P0 |  |  |  |  |  |
-| P1 |  |  | 18 | 11 |  |
-| P2 |  |  | 3 |  |  |
-| P3 |  |  |  | 2 |  |
+| Priority | Draft | Review | Approved | Automated | Merged | Blocked |
+|---|---|---|---|---|---|---|
+| P0 |  |  |  |  |  |  |
+| P1 |  |  | 18 | 11 |  |  |
+| P2 |  |  | 3 |  |  |  |
+| P3 |  |  |  | 2 |  |  |
 
 ### canary
 
@@ -327,12 +327,12 @@ generated_at: 2026-08-16T03:22:01Z · генератор: `scripts/coverage_map.
   - TC-121: RUN-20260816-0332 (updated: 2026-08-16T01:34:20Z)
   - TC-122: RUN-20260816-0332 (updated: 2026-08-16T01:34:20Z)
 
-| Priority | Draft | Review | Approved | Automated | Blocked |
-|---|---|---|---|---|---|
-| P0 |  |  |  | 21 |  |
-| P1 |  |  | 2 | 1 |  |
-| P2 |  |  |  | 1 |  |
-| P3 |  |  |  |  |  |
+| Priority | Draft | Review | Approved | Automated | Merged | Blocked |
+|---|---|---|---|---|---|---|
+| P0 |  |  |  | 21 |  |  |
+| P1 |  |  | 2 | 1 |  |  |
+| P2 |  |  |  | 1 |  |  |
+| P3 |  |  |  |  |  |  |
 
 ### compatibility
 
@@ -347,27 +347,24 @@ generated_at: 2026-08-16T03:22:01Z · генератор: `scripts/coverage_map.
   - TC-110: нет зелёного per-TC
   - TC-111: нет зелёного per-TC
 
-| Priority | Draft | Review | Approved | Automated | Blocked |
-|---|---|---|---|---|---|
-| P0 |  |  |  |  |  |
-| P1 |  |  |  |  |  |
-| P2 |  |  |  | 3 |  |
-| P3 |  |  |  |  |  |
+| Priority | Draft | Review | Approved | Automated | Merged | Blocked |
+|---|---|---|---|---|---|---|
+| P0 |  |  |  |  |  |  |
+| P1 |  |  |  |  |  |  |
+| P2 |  |  |  | 3 |  |  |
+| P3 |  |  |  |  |  |  |
 
 ### downloads
 
-- coverage_status: **partial** (14/23 Automated)
+- coverage_status: **partial** (11/21 Automated)
 - риски: R-05, R-16
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-153 [P1, Approved], TC-154 [P1, Approved], TC-236 [P1, Approved], TC-237 [P1, Approved], TC-239 [P1, Approved], TC-240 [P1, Approved]
-- автотесты (automated_by): framework/tests/test_downloads.py::test_auto_download_triggers_on_loved_rating, framework/tests/test_downloads.py::test_change_download_folder_triggers_silent_scan_and_relinks_orphan_file, framework/tests/test_downloads.py::test_delete_downloaded_file_keeps_rating_row, framework/tests/test_downloads.py::test_delete_downloaded_file_sweeps_both_download_locations, framework/tests/test_downloads.py::test_delete_work_removes_row_and_file, framework/tests/test_downloads.py::test_deselecting_favorite_rating_does_not_download, framework/tests/test_downloads.py::test_edit_note_on_already_saved_work_via_listing_overlay_does_not_redownload, framework/tests/test_downloads.py::test_edit_tag_on_already_saved_work_via_panel_does_not_redownload, framework/tests/test_downloads.py::test_enabling_auto_download_does_not_retroactively_download_favorites, framework/tests/test_downloads.py::test_favorite_rating_does_not_download_when_auto_download_off, framework/tests/test_downloads.py::test_manual_download_from_library_adds_local_file, framework/tests/test_downloads.py::test_manual_scan_for_downloads_shows_dialog_on_zero_files, framework/tests/test_downloads.py::test_open_downloaded_file_applies_viewport_and_reader_css, framework/tests/test_downloads.py::test_rating_change_from_favorite_to_kudosed_does_not_download, framework/tests/test_downloads.py::test_repeated_manual_scan_two_files_same_ao3id_converges_to_relinked_zero, framework/tests/test_downloads.py::test_restore_folds_orphan_scan_into_single_dialog
+- P0/P1 не в Automated: TC-153 [P1, Approved], TC-154 [P1, Approved], TC-236 [P1, Approved], TC-237 [P1, Approved], TC-239 [P1, Approved], TC-240 [P1, Approved], TC-257 [P1, Review]
+- автотесты (automated_by): framework/tests/test_downloads.py::test_auto_download_triggers_on_loved_rating, framework/tests/test_downloads.py::test_change_download_folder_triggers_silent_scan_and_relinks_orphan_file, framework/tests/test_downloads.py::test_delete_downloaded_file_sweeps_both_download_locations, framework/tests/test_downloads.py::test_deselecting_favorite_rating_does_not_download, framework/tests/test_downloads.py::test_edit_note_on_already_saved_work_via_listing_overlay_does_not_redownload, framework/tests/test_downloads.py::test_edit_tag_on_already_saved_work_via_panel_does_not_redownload, framework/tests/test_downloads.py::test_enabling_auto_download_does_not_retroactively_download_favorites, framework/tests/test_downloads.py::test_epub_download_saves_epub_file_and_shows_on_files_tab, framework/tests/test_downloads.py::test_favorite_rating_does_not_download_when_auto_download_off, framework/tests/test_downloads.py::test_manual_download_from_library_adds_local_file, framework/tests/test_downloads.py::test_manual_scan_for_downloads_shows_dialog_on_zero_files, framework/tests/test_downloads.py::test_rating_change_from_favorite_to_kudosed_does_not_download, framework/tests/test_downloads.py::test_repeated_manual_scan_two_files_same_ao3id_converges_to_relinked_zero, framework/tests/test_downloads.py::test_restore_folds_orphan_scan_into_single_dialog
 - last_green_run: RUN-20260816-0332 (suite: smoke, status: Closed, updated: 2026-08-16T01:34:20Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
   - TC-032: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
   - TC-033: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
-  - TC-034: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
-  - TC-035: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
-  - TC-036: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
   - TC-037: нет зелёного per-TC
   - TC-038: нет зелёного per-TC
   - TC-039: нет зелёного per-TC
@@ -378,12 +375,12 @@ generated_at: 2026-08-16T03:22:01Z · генератор: `scripts/coverage_map.
   - TC-116: нет зелёного per-TC
   - TC-117: нет зелёного per-TC
 
-| Priority | Draft | Review | Approved | Automated | Blocked |
-|---|---|---|---|---|---|
-| P0 |  |  |  |  |  |
-| P1 |  |  | 6 | 9 |  |
-| P2 |  |  | 2 | 3 |  |
-| P3 |  |  | 1 | 2 |  |
+| Priority | Draft | Review | Approved | Automated | Merged | Blocked |
+|---|---|---|---|---|---|---|
+| P0 |  |  |  |  |  |  |
+| P1 |  | 1 | 6 | 6 | 3 |  |
+| P2 |  |  | 2 | 3 |  |  |
+| P3 |  |  | 1 | 2 |  |  |
 
 ### errors
 
@@ -396,12 +393,12 @@ generated_at: 2026-08-16T03:22:01Z · генератор: `scripts/coverage_map.
 - per-TC last green:
   - TC-046: нет зелёного per-TC
 
-| Priority | Draft | Review | Approved | Automated | Blocked |
-|---|---|---|---|---|---|
-| P0 |  |  |  |  |  |
-| P1 |  |  |  |  |  |
-| P2 |  |  |  | 1 |  |
-| P3 |  |  |  |  |  |
+| Priority | Draft | Review | Approved | Automated | Merged | Blocked |
+|---|---|---|---|---|---|---|
+| P0 |  |  |  |  |  |  |
+| P1 |  |  |  |  |  |  |
+| P2 |  |  |  | 1 |  |  |
+| P3 |  |  |  |  |  |  |
 
 ### filter-profiles
 
@@ -418,12 +415,12 @@ generated_at: 2026-08-16T03:22:01Z · генератор: `scripts/coverage_map.
   - TC-085: RUN-20260803-2012 (updated: 2026-08-03T20:40:00Z)
   - TC-086: RUN-20260803-2012 (updated: 2026-08-03T20:40:00Z)
 
-| Priority | Draft | Review | Approved | Automated | Blocked |
-|---|---|---|---|---|---|
-| P0 |  |  |  |  |  |
-| P1 |  |  | 7 | 5 |  |
-| P2 |  |  |  |  |  |
-| P3 |  |  |  |  |  |
+| Priority | Draft | Review | Approved | Automated | Merged | Blocked |
+|---|---|---|---|---|---|---|
+| P0 |  |  |  |  |  |  |
+| P1 |  |  | 7 | 5 |  |  |
+| P2 |  |  |  |  |  |  |
+| P3 |  |  |  |  |  |  |
 
 ### library
 
@@ -460,12 +457,12 @@ generated_at: 2026-08-16T03:22:01Z · генератор: `scripts/coverage_map.
   - TC-180: RUN-20260811-0406 (updated: None)
   - TC-189: RUN-20260811-0406 (updated: None)
 
-| Priority | Draft | Review | Approved | Automated | Blocked |
-|---|---|---|---|---|---|
-| P0 |  |  |  | 2 |  |
-| P1 |  |  | 5 | 19 |  |
-| P2 | 1 |  | 1 | 3 |  |
-| P3 |  |  |  | 1 |  |
+| Priority | Draft | Review | Approved | Automated | Merged | Blocked |
+|---|---|---|---|---|---|---|
+| P0 |  |  |  | 2 |  |  |
+| P1 |  |  | 5 | 19 |  |  |
+| P2 | 1 |  | 1 | 3 |  |  |
+| P3 |  |  |  | 1 |  |  |
 
 ### performance
 
@@ -481,12 +478,12 @@ generated_at: 2026-08-16T03:22:01Z · генератор: `scripts/coverage_map.
   - TC-098: RUN-20260816-0332 (updated: 2026-08-16T01:34:20Z)
   - TC-099: RUN-20260816-0332 (updated: 2026-08-16T01:34:20Z)
 
-| Priority | Draft | Review | Approved | Automated | Blocked |
-|---|---|---|---|---|---|
-| P0 |  |  |  | 2 |  |
-| P1 |  |  |  | 2 |  |
-| P2 |  |  |  |  |  |
-| P3 |  |  |  |  |  |
+| Priority | Draft | Review | Approved | Automated | Merged | Blocked |
+|---|---|---|---|---|---|---|
+| P0 |  |  |  | 2 |  |  |
+| P1 |  |  |  | 2 |  |  |
+| P2 |  |  |  |  |  |  |
+| P3 |  |  |  |  |  |  |
 
 ### rating
 
@@ -519,12 +516,12 @@ generated_at: 2026-08-16T03:22:01Z · генератор: `scripts/coverage_map.
   - TC-143: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
   - TC-144: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
 
-| Priority | Draft | Review | Approved | Automated | Blocked |
-|---|---|---|---|---|---|
-| P0 |  |  |  | 3 |  |
-| P1 |  |  | 8 | 13 |  |
-| P2 |  |  |  | 3 |  |
-| P3 |  |  |  | 2 |  |
+| Priority | Draft | Review | Approved | Automated | Merged | Blocked |
+|---|---|---|---|---|---|---|
+| P0 |  |  |  | 3 |  |  |
+| P1 |  |  | 8 | 13 |  |  |
+| P2 |  |  |  | 3 |  |  |
+| P3 |  |  |  | 2 |  |  |
 
 ### security
 
@@ -542,12 +539,12 @@ generated_at: 2026-08-16T03:22:01Z · генератор: `scripts/coverage_map.
   - TC-104: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
   - TC-105: нет зелёного per-TC
 
-| Priority | Draft | Review | Approved | Automated | Blocked |
-|---|---|---|---|---|---|
-| P0 |  |  |  |  |  |
-| P1 |  |  | 3 | 6 |  |
-| P2 |  |  |  |  |  |
-| P3 |  |  |  |  |  |
+| Priority | Draft | Review | Approved | Automated | Merged | Blocked |
+|---|---|---|---|---|---|---|
+| P0 |  |  |  |  |  |  |
+| P1 |  |  | 3 | 6 |  |  |
+| P2 |  |  |  |  |  |  |
+| P3 |  |  |  |  |  |  |
 
 ### settings
 
@@ -570,12 +567,12 @@ generated_at: 2026-08-16T03:22:01Z · генератор: `scripts/coverage_map.
   - TC-125: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
   - TC-129: RUN-20260803-2012 (updated: 2026-08-03T20:40:00Z)
 
-| Priority | Draft | Review | Approved | Automated | Blocked |
-|---|---|---|---|---|---|
-| P0 |  |  |  |  |  |
-| P1 |  |  | 11 | 7 |  |
-| P2 |  |  | 1 | 3 |  |
-| P3 |  |  |  | 1 |  |
+| Priority | Draft | Review | Approved | Automated | Merged | Blocked |
+|---|---|---|---|---|---|---|
+| P0 |  |  |  |  |  |  |
+| P1 |  |  | 11 | 7 |  |  |
+| P2 |  |  | 1 | 3 |  |  |
+| P3 |  |  |  | 1 |  |  |
 
 ### smoke
 
@@ -592,12 +589,12 @@ generated_at: 2026-08-16T03:22:01Z · генератор: `scripts/coverage_map.
   - TC-004: RUN-20260816-0332 (updated: 2026-08-16T01:34:20Z)
   - TC-005: RUN-20260816-0332 (updated: 2026-08-16T01:34:20Z)
 
-| Priority | Draft | Review | Approved | Automated | Blocked |
-|---|---|---|---|---|---|
-| P0 |  |  |  | 5 |  |
-| P1 |  |  |  |  |  |
-| P2 |  |  |  |  |  |
-| P3 |  |  |  |  |  |
+| Priority | Draft | Review | Approved | Automated | Merged | Blocked |
+|---|---|---|---|---|---|---|
+| P0 |  |  |  | 5 |  |  |
+| P1 |  |  |  |  |  |  |
+| P2 |  |  |  |  |  |  |
+| P3 |  |  |  |  |  |  |
 
 ### sync
 
@@ -610,12 +607,12 @@ generated_at: 2026-08-16T03:22:01Z · генератор: `scripts/coverage_map.
 - per-TC last green:
   - нет Automated-кейсов
 
-| Priority | Draft | Review | Approved | Automated | Blocked |
-|---|---|---|---|---|---|
-| P0 |  |  |  |  |  |
-| P1 |  |  | 20 |  |  |
-| P2 |  |  | 5 |  |  |
-| P3 |  |  |  |  |  |
+| Priority | Draft | Review | Approved | Automated | Merged | Blocked |
+|---|---|---|---|---|---|---|
+| P0 |  |  |  |  |  |  |
+| P1 |  |  | 20 |  |  |  |
+| P2 |  |  | 5 |  |  |  |
+| P3 |  |  |  |  |  |  |
 
 ### tabs
 
@@ -639,12 +636,12 @@ generated_at: 2026-08-16T03:22:01Z · генератор: `scripts/coverage_map.
   - TC-135: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
   - TC-176: нет зелёного per-TC
 
-| Priority | Draft | Review | Approved | Automated | Blocked |
-|---|---|---|---|---|---|
-| P0 |  |  |  |  |  |
-| P1 |  |  |  | 11 |  |
-| P2 |  |  |  |  |  |
-| P3 |  |  |  | 1 |  |
+| Priority | Draft | Review | Approved | Automated | Merged | Blocked |
+|---|---|---|---|---|---|---|
+| P0 |  |  |  |  |  |  |
+| P1 |  |  |  | 11 |  |  |
+| P2 |  |  |  |  |  |  |
+| P3 |  |  |  | 1 |  |  |
 
 ### visibility
 
@@ -662,10 +659,10 @@ generated_at: 2026-08-16T03:22:01Z · генератор: `scripts/coverage_map.
   - TC-093: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
   - TC-095: RUN-20260810-0146 (updated: 2026-08-10T03:50:00Z)
 
-| Priority | Draft | Review | Approved | Automated | Blocked |
-|---|---|---|---|---|---|
-| P0 |  |  |  | 3 |  |
-| P1 |  |  |  | 3 |  |
-| P2 |  |  |  |  |  |
-| P3 |  |  |  |  |  |
+| Priority | Draft | Review | Approved | Automated | Merged | Blocked |
+|---|---|---|---|---|---|---|
+| P0 |  |  |  | 3 |  |  |
+| P1 |  |  |  | 3 |  |  |
+| P2 |  |  |  |  |  |  |
+| P3 |  |  |  |  |  |  |
 

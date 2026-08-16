@@ -1747,14 +1747,13 @@
     "epicPath": null,
     "summary": "Открытие скачанного файла применяет мобильный viewport и reader.css",
     "issueType": "test-case",
-    "status": "tc-automated",
+    "status": "tc-merged",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:downloads",
-      "risk:R-05",
-      "automation:active"
+      "risk:R-05"
     ],
     "updated": "2026-07-09T11:05:00Z",
     "resolution": "done",
@@ -1770,14 +1769,13 @@
     "epicPath": null,
     "summary": "Delete downloaded file удаляет только файл, сохраняя строку рейтинга",
     "issueType": "test-case",
-    "status": "tc-automated",
+    "status": "tc-merged",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:downloads",
-      "risk:R-05",
-      "automation:active"
+      "risk:R-05"
     ],
     "updated": "2026-07-09T11:15:00Z",
     "resolution": "done",
@@ -1793,14 +1791,13 @@
     "epicPath": null,
     "summary": "Delete work удаляет и файл, и строку рейтинга целиком",
     "issueType": "test-case",
-    "status": "tc-automated",
+    "status": "tc-merged",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:downloads",
-      "risk:R-05",
-      "automation:active"
+      "risk:R-05"
     ],
     "updated": "2026-07-09T11:20:00Z",
     "resolution": "done",
@@ -2111,7 +2108,7 @@
     "epicPath": null,
     "summary": "Скачивание в формате EPUB сохраняет файл .epub с MIME application/epub+zip и появляется на вкладке Files",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2119,7 +2116,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-08-15T23:03:49Z",
+    "updated": "2026-08-16T08:02:56Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2208,6 +2205,28 @@
       "risk:R-16"
     ],
     "updated": "2026-08-15T23:03:49Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-257",
+    "path": "board/TC-257/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Journey «скачанный файл»: открытие стилизует, удаление файла сохраняет рейтинг, удаление работы убирает всё",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:downloads",
+      "risk:R-05"
+    ],
+    "updated": "2026-08-16T00:00:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -7218,15 +7237,15 @@
     "epicPath": null,
     "summary": "Нет надёжного приёма адресации execute_script/навигации к КОНКРЕТНОЙ НЕ-нулевой вкладке — sticky WebView context блокирует контраст-дверь Г2 (клик по ссылке) и точный Back-замер на deep-link-вкладке (CH-010)",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:major"
     ],
-    "updated": "2026-08-14T23:34:02Z",
-    "resolution": null,
+    "updated": "2026-08-16T10:42:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -7239,7 +7258,7 @@
     "epicPath": null,
     "summary": "Нет автоматизационных фикстур для EPUB-скачивания: seed_with_download хардкодит расширение .html, нет записанной .epub-транзакции и нет work-страницы БЕЗ epub-ссылки",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -7251,8 +7270,8 @@
       "test_case:TC-240",
       "sev:major"
     ],
-    "updated": "2026-08-15T00:10:14Z",
-    "resolution": null,
+    "updated": "2026-08-16T10:40:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -7267,14 +7286,15 @@
     "issueType": "bug",
     "status": "bug-open",
     "priority": "p1",
-    "assignee": "qa-agents",
+    "assignee": "test-maintainer",
     "labels": [
       "bug",
       "test_case:TC-252",
       "test_case:TC-253",
       "test_case:TC-254",
       "test_case:TC-255",
-      "sev:major"
+      "sev:major",
+      "wip:test-maintainer"
     ],
     "updated": "2026-08-15T00:10:14Z",
     "resolution": null,
@@ -7335,7 +7355,7 @@
     "epicPath": null,
     "summary": "render_work_page_html не несёт #chapters/.userstuff.module ни узлов dd.fandom/dd.words — блокирует TC-256 (auto-READ при дочитывании, onWorkFinished)",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -7343,8 +7363,8 @@
       "test_case:TC-256",
       "sev:minor"
     ],
-    "updated": "2026-08-16T02:53:24Z",
-    "resolution": null,
+    "updated": "2026-08-16T03:50:07Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -8070,7 +8090,7 @@
     "epicPath": null,
     "summary": "auto-READ при дочитывании работы теряет downloadPath и перетирает метаданные у скачанной работы без рейтинга",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -8078,8 +8098,8 @@
       "test_case:TC-256",
       "sev:major"
     ],
-    "updated": "2026-08-15T23:05:57Z",
-    "resolution": null,
+    "updated": "2026-08-16T04:15:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },

@@ -2,7 +2,7 @@
 key: "TC-236"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Скачивание в формате EPUB сохраняет файл .epub с MIME application/epub+zip и появляется на вкладке Files"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-15T23:03:49Z"
-updated: "2026-08-15T23:03:49Z"
+created: "2026-08-16T08:02:56Z"
+updated: "2026-08-16T08:02:56Z"
 archived: false
 resolution: null
 ---
@@ -51,9 +51,13 @@ _Спроецировано из `test-cases/downloads/TC-236.md` (источн�
 | Ожидаемый MIME | `application/epub+zip` |
 
 ## Заметки для автоматизации
-- **Блокер автоматизации — `bugs/AT-BUG-071.md`** (test_debt, заведён этим
-  же ходом): нет mitm-записи work-страницы с EPUB-ссылкой. Кейс оставлен в
-  `Review` — Given/Then полны, ограничение чисто инструментальное.
+- **Блокер `bugs/AT-BUG-071.md` устранён (test-maintainer, 2026-08-16):**
+  `_push_download_fixture` выводит расширение из `local_file.suffix` (не
+  хардкодит `.html`), добавлены `work_with_download_epub.mitm`/
+  `work_no_epub_link.mitm` — доказательство пригодности зелёным прогоном
+  `test_epub_download_saves_epub_file_and_shows_on_files_tab` (`automated_by`
+  заполнен). Статус кейса — прежний `Approved`: в `Automated` переводит
+  только test-reviewer (F1, `schemas/transitions.yaml`).
 - Позитивный симметричный кейс к HTML-скачиванию (TC-032/033).
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
