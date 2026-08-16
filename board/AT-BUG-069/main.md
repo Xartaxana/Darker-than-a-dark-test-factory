@@ -2,7 +2,7 @@
 key: "AT-BUG-069"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p2"
 summary: "Двойной раздельный seed()-round-trip после AT-BUG-044-фикса эмпирически дал 'no such table: work_ratings' один раз (не воспроизведено изолирующим экспериментом 20/20) — кандидат: _pull_baseline игнорирует возврат pull_app_file для -wal/-shm"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-15T23:59:07Z"
-updated: "2026-08-15T23:59:07Z"
+created: "2026-08-16T02:07:28Z"
+updated: "2026-08-16T02:07:28Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Двойной раздельный seed()-round-trip после AT-BUG-044-фикса эмпирически дал 'no such table: work_ratings' один раз (не воспроизведено изолирующим экспериментом 20/20) — кандидат: _pull_baseline игнорирует возврат pull_app_file для -wal/-shm
 
 _Спроецировано из `bugs/AT-BUG-069.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # AT-BUG-069 — рецидив сигнатуры AT-BUG-044 на двойном seed()-round-trip, кандидат-причина не подтверждена изолирующим экспериментом
 
@@ -287,6 +287,11 @@ work_ratings` при следующей вставке.
 `_insert_rows_full`/`_insert_rows_with_download`/
 `_insert_rows_full_with_download`/`seed_filter_profiles`) — оба остаются в
 очереди координатору, как и было помечено при заведении бага.
+
+## Верификация (заполняет fix-verifier)
+| Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
+|---|---|---|---|---|
+| 2026-08-16 | framework HEAD `72a0243` (фикс `0107bf1`, `framework/core/adb.py::pull_app_file`); `type: test_debt` — независим от версии приложения | `framework/tests/test_pull_app_file_fail_closed_unit.py` (device-free юнит на rc-маркер + квотирование `rel_path`, 13 кейсов); `TC-187` = `framework/tests/test_settings.py::test_fetch_missing_metadata_stop_mid_process` (Given-фикстура `metadata_fetch_stop_queue_seeded`, где проявлялся рецидив), device-прогон на `emulator-5554` | `Invoke-Pytest tests/test_pull_app_file_fail_closed_unit.py -q` -> `13 passed in 0.21s`, `PYTEST_EXIT=0`; `Invoke-Pytest tests/test_settings.py -k test_fetch_missing_metadata_stop_mid_process -q` -> `1 passed, 10 deselected in 42.20s`, `PYTEST_EXIT=0` | Verified — независимый прогон fix-verifier подтверждает: rc-маркер юниты зелёные (13/13, счёт совпадает с заявленным в «Фикс»), TC-187 зелёный на живом устройстве, `validate_frontmatter` 0/0 |
 
 ## Обсуждение
 

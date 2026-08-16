@@ -4,7 +4,7 @@ title: "Двойной раздельный seed()-round-trip после AT-BUG-
 type: test_debt
 debt_kind: flaky_test
 severity: minor
-status: Fixed
+status: Verified
 found_in: "живая разработка фикстуры TC-187 (metadata_fetch_stop_queue_seeded), test-automator, 2026-08-14; framework env"
 fixed_in: "framework/core/adb.py::pull_app_file (AT-BUG-069 fix, 2026-08-16)"
 last_seen_in: ""
@@ -12,8 +12,8 @@ test_cases: ["TC-187"]
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-08-15T23:59:07Z"
-updated: "2026-08-15T23:59:07Z"
+status_since: "2026-08-16T02:07:28Z"
+updated: "2026-08-16T02:07:28Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -288,6 +288,11 @@ work_ratings` при следующей вставке.
 `_insert_rows_full`/`_insert_rows_with_download`/
 `_insert_rows_full_with_download`/`seed_filter_profiles`) — оба остаются в
 очереди координатору, как и было помечено при заведении бага.
+
+## Верификация (заполняет fix-verifier)
+| Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
+|---|---|---|---|---|
+| 2026-08-16 | framework HEAD `72a0243` (фикс `0107bf1`, `framework/core/adb.py::pull_app_file`); `type: test_debt` — независим от версии приложения | `framework/tests/test_pull_app_file_fail_closed_unit.py` (device-free юнит на rc-маркер + квотирование `rel_path`, 13 кейсов); `TC-187` = `framework/tests/test_settings.py::test_fetch_missing_metadata_stop_mid_process` (Given-фикстура `metadata_fetch_stop_queue_seeded`, где проявлялся рецидив), device-прогон на `emulator-5554` | `Invoke-Pytest tests/test_pull_app_file_fail_closed_unit.py -q` -> `13 passed in 0.21s`, `PYTEST_EXIT=0`; `Invoke-Pytest tests/test_settings.py -k test_fetch_missing_metadata_stop_mid_process -q` -> `1 passed, 10 deselected in 42.20s`, `PYTEST_EXIT=0` | Verified — независимый прогон fix-verifier подтверждает: rc-маркер юниты зелёные (13/13, счёт совпадает с заявленным в «Фикс»), TC-187 зелёный на живом устройстве, `validate_frontmatter` 0/0 |
 
 ## Обсуждение
 

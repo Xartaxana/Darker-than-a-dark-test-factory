@@ -3970,7 +3970,7 @@
     "epicPath": null,
     "summary": "Автоматическая отметка READ при дочитывании скачанной работы без рейтинга сохраняет downloadPath и не перезаписывает непустые локальные метаданные",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -7196,7 +7196,7 @@
     "epicPath": null,
     "summary": "Двойной раздельный seed()-round-trip после AT-BUG-044-фикса эмпирически дал 'no such table: work_ratings' один раз (не воспроизведено изолирующим экспериментом 20/20) — кандидат: _pull_baseline игнорирует возврат pull_app_file для -wal/-shm",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -7204,8 +7204,8 @@
       "test_case:TC-187",
       "sev:minor"
     ],
-    "updated": "2026-08-15T23:59:07Z",
-    "resolution": null,
+    "updated": "2026-08-16T02:07:28Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -7335,7 +7335,7 @@
     "epicPath": null,
     "summary": "render_work_page_html не несёт #chapters/.userstuff.module ни узлов dd.fandom/dd.words — блокирует TC-256 (auto-READ при дочитывании, onWorkFinished)",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -7343,7 +7343,7 @@
       "test_case:TC-256",
       "sev:minor"
     ],
-    "updated": "2026-08-15T10:20:00Z",
+    "updated": "2026-08-16T02:53:24Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -7516,7 +7516,7 @@
       "test_case:TC-020",
       "sev:minor"
     ],
-    "updated": "2026-08-15T21:58:00Z",
+    "updated": "2026-08-16T02:20:00Z",
     "resolution": null,
     "children": [],
     "archived": false

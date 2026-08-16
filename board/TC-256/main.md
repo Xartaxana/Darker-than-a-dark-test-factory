@@ -2,7 +2,7 @@
 key: "TC-256"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Автоматическая отметка READ при дочитывании скачанной работы без рейтинга сохраняет downloadPath и не перезаписывает непустые локальные метаданные"
 assignee: "qa-agents"

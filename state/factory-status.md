@@ -1,20 +1,20 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-16T01:50:08Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-16T03:21:59Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
 - Сборка: dev-local (versionCode 12), commit `27d5cfd1`, built_at 2026-08-16T01:01:26Z
-- smoke: Closed · smoke_freshness_hours: **0.3** (RUN-20260816-0332)
-- regression: Closed · regression_freshness_hours: **0.3** (RUN-20260816-0334)
-- canary: Triaged · canary_freshness_hours: **278.1** (RUN-20260804-1317)
+- smoke: Closed · smoke_freshness_hours: **1.8** (RUN-20260816-0332)
+- regression: Closed · regression_freshness_hours: **1.8** (RUN-20260816-0334)
+- canary: Triaged · canary_freshness_hours: **279.6** (RUN-20260804-1317)
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **1**
 - p0_automation_coverage: **100%** (37/37)
 - p1_automation_coverage: **52%** (87/167)
-- Test debt открыт: **10** — AT-BUG-070, AT-BUG-071, AT-BUG-072, AT-BUG-073, AT-BUG-074, AT-BUG-075, AT-BUG-076, AT-BUG-077, AT-BUG-078, AT-BUG-079
+- Test debt открыт: **9** — AT-BUG-070, AT-BUG-071, AT-BUG-072, AT-BUG-073, AT-BUG-075, AT-BUG-076, AT-BUG-077, AT-BUG-078, AT-BUG-079
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
 - Untriaged: **0** · untriaged_failure_age: **0**
@@ -72,15 +72,14 @@ story-карточки: стадии см. docs/05-board.md §Story
 
 - BUG-012 [minor] Intended — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
 
-## Test debt (12)
+## Test debt (11)
 
 - AT-BUG-068 [broken_environment] Blocked — navigator.clipboard.writeText() отклоняется DOMException 'Write permission denied' в тестовом WebView — блокирует Then «Copied!» TC-188
-- AT-BUG-069 [flaky_test] Fixed — Двойной раздельный seed()-round-trip после AT-BUG-044-фикса эмпирически дал 'no such table: work_ratings' один раз (не воспроизведено изолирующим экспериментом 20/20) — кандидат: _pull_baseline игнорирует возврат pull_app_file для -wal/-shm
 - AT-BUG-070 [missing_fixture] Open — Нет надёжного приёма адресации execute_script/навигации к КОНКРЕТНОЙ НЕ-нулевой вкладке — sticky WebView context блокирует контраст-дверь Г2 (клик по ссылке) и точный Back-замер на deep-link-вкладке (CH-010)
 - AT-BUG-071 [missing_fixture] Open — Нет автоматизационных фикстур для EPUB-скачивания: seed_with_download хардкодит расширение .html, нет записанной .epub-транзакции и нет work-страницы БЕЗ epub-ссылки
 - AT-BUG-072 [missing_fixture] Open — Нет автоматизационного примитива нажатия клавиш громкости (KEYCODE_VOLUME_UP/DOWN) — блокирует листание страниц кнопками громкости
 - AT-BUG-073 [missing_fixture] Open — Нет автоматизационной инфраструктуры для области sync: мок GitLab-сниппета (/api/v4/snippets), сидер sync_tombstones, возврат id профиля из seed_filter_profiles, перехват исходящего тела публикации
-- AT-BUG-074 [missing_fixture] Open — render_work_page_html не несёт #chapters/.userstuff.module ни узлов dd.fandom/dd.words — блокирует TC-256 (auto-READ при дочитывании, onWorkFinished)
+- AT-BUG-074 [missing_fixture] Fixed — render_work_page_html не несёт #chapters/.userstuff.module ни узлов dd.fandom/dd.words — блокирует TC-256 (auto-READ при дочитывании, onWorkFinished)
 - AT-BUG-075 [flaky_test] Open — TC-176 burst-окно: натуральный запас tap1->tap2 ~0.7-0.85с даже после классовой правки open_in_background_via_overlay — ниже критик-ориентира ≥1с, дальнейшее ужатие требует правок вне манифеста rework attempt2
 - AT-BUG-076 [missing_fixture] Open — Методическая норма Data Setup «auto_apply_filter материализуется только фактическим переключением тумблера» жила только прозой закрытого CH-010 — не была зафиксирована постоянным носителем, читаемым будущими test-designer-сессиями
 - AT-BUG-077 [broken_environment] Open — test_heartbeat_wrap.py::test_happy_path_order_and_child_env падает детерминированно, когда `python -m pytest scripts/tests` запущен ИЗ сессии, уже несущей AO3_LOOP_HOLDER (вложенный heartbeat)

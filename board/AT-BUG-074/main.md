@@ -2,7 +2,7 @@
 key: "AT-BUG-074"
 project: "AO3"
 issueType: "bug"
-status: "bug-open"
+status: "bug-fixed"
 priority: "p2"
 summary: "render_work_page_html не несёт #chapters/.userstuff.module ни узлов dd.fandom/dd.words — блокирует TC-256 (auto-READ при дочитывании, onWorkFinished)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-15T10:20:00Z"
-updated: "2026-08-15T10:20:00Z"
+created: "2026-08-16T02:53:24Z"
+updated: "2026-08-16T02:53:24Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # render_work_page_html не несёт #chapters/.userstuff.module ни узлов dd.fandom/dd.words — блокирует TC-256 (auto-READ при дочитывании, onWorkFinished)
 
 _Спроецировано из `bugs/AT-BUG-074.md` (источник правды).
-Статус в нашей машине: **Open**._
+Статус в нашей машине: **Fixed**._
 
 # AT-BUG-074 — Work-страница replay-фикстуры не несёт узлов, нужных JS auto-mark-as-read (`onWorkFinished`)
 
@@ -203,6 +203,124 @@ transitions.yaml`, test-case `initial: [Draft, Review]`; здесь нет сп�
 `render_work_page_html`/JS-слушателя `onScroll` — вне мандата этого
 диспатча (регресс-замок одного конкретного бага, не полный аудит фикстур).
 
+**2026-08-16T02:53:24Z — test-maintainer, устранение долга (B4).**
+`render_work_page_html` (`framework/data/recording_builder.py`) теперь несёт,
+в дополнение к существующему телу, БЕЗ ломки регресс-инвариантов AT-BUG-030/
+AT-BUG-035:
+- `_work_meta_group_and_stats_html(fandom, word_count)` — `<dl class="work
+  meta group"><dd class="fandom tags">...</dd></dl>` + `<dl class="stats">
+  <dd class="words">...</dd>...</dl>`, СИБЛИНГ `#kudo_submit`, между ним и
+  `<div class="wrapper">` (критерий 1: буквально тот же HTML-фрагмент, что
+  `render_work_metadata_page_html`, AT-BUG-061 — скопирован в ОТДЕЛЬНУЮ
+  функцию, не рефактор общего кода, чтобы не задеть byte-for-byte вывод
+  `render_work_metadata_page_html`, regression-инвариант `test_work_metadata_
+  fetch_markup_matches_generator`).
+- `_chapters_html()` — `<div id="chapters"><div class="userstuff module">...
+  </div></div>`, буквально ПОСЛЕДНИЙ узел `<body>` (СНАРУЖИ `#workskin`/
+  `#main`, ПОСЛЕ узла 3 AT-BUG-030) — критерий 2: browser-clamped `scrollTo`
+  кладёт нижнюю границу последнего узла документа `<= innerHeight` по
+  построению, без собственной высоты узла (не спорит с высоким `.wrapper`
+  AT-BUG-030 — они снаружи друг друга, не на одном уровне).
+
+**Критерий 3 (регрессия ВСЕХ потребителей)** — все четыре `.mitm`
+(`listing_basic`/`work_with_download`/`works_multi`/`listing_paginated`)
+пересобраны `scripts/build_replay_recordings.py`. Явно прогнаны живым
+device-прогоном (emulator-5554), все зелёные:
+`tests/canary/test_tap_zone_guard.py` (4, узел 1/2/3 AT-BUG-030 не задет),
+`tests/test_reading_ux.py` (6, включая TC-125 kill+relaunch),
+`tests/test_settings.py::test_clear_all_ratings_badge_{persists_without_
+reload,resets_after_reload}` (TC-020, `works_multi.mitm`),
+`tests/test_rating.py::test_edit_tag_on_already_saved_work_via_panel_does_
+not_click_kudos`/`test_first_panel_save_clicks_kudos_once` (TC-141/144, kudo
+order-инвариант держится и с новыми узлами между ним и `.wrapper`),
+`tests/test_downloads.py::test_auto_download_triggers_on_loved_rating`
+(TC-032)/`test_manual_download_from_library_adds_local_file` (TC-033)/
+`test_edit_note_on_already_saved_work_via_listing_overlay_does_not_
+redownload` (TC-115)/`test_edit_tag_on_already_saved_work_via_panel_does_
+not_redownload`, `tests/test_tabs.py::test_long_press_link_opens_
+background_tab_without_switching` (TC-026)/`test_library_card_open_work_
+opens_new_active_browse_tab` — 20/20 passed (witness: PYTEST_EXIT=0 на двух
+device-прогонах: 10 passed in 606.40s, 10 passed in 460.07s). Стале docstring
+`test_settings.py` (утверждал «works_multi.mitm не несёт `#chapters`» как
+причину, почему `onWorkFinished` структурно не может воскресить строку) —
+обновлён под новую реальность (`#chapters` теперь есть и там, но auto-mark
+срабатывает только на РЕАЛЬНОМ `scroll`-событии, а TC-020 ни разу не
+скроллит WebView — reload/навигация сами `scroll` не порождают).
+
+**Критерий 4/5 (TC-256 реализован, красная+зелёная проба, 3 прогона
+подряд)** — `TC-256.md`/`automated_by` был пуст на момент диспатча (кейс
+спроектирован test-designer, `status: Review`→`Approved`, но не
+автоматизирован) — реализован НОВЫЙ тест
+`framework/tests/test_rating.py::test_auto_mark_as_read_on_scroll_to_
+bottom_preserves_download_path_and_local_metadata` (baseline —
+новая fixture `conftest.py::tc256_auto_read_baseline`,
+`seed_db.seed_with_comment_and_download`/AT-BUG-046 — ОДНОЙ строкой rating=
+null + comment "note A" + tag "tagA" + ЛОКАЛЬНЫЕ title/fandom/wordCount,
+отличные от канонической work-страницы; новый шаг `browser_steps.scroll_
+work_page_to_bottom`; наблюдение — `rating_steps.wait_for_rating`, новая
+steps-функция, НЕ прямой `framework.core.waits.wait_for` в tests/ — C1
+layering, arch_check поймал первую версию диффа с прямым импортом,
+исправлено).
+
+Красная проба (`git stash` только `recording_builder.py`+`listing_basic.
+mitm` на HEAD, БЕЗ узлов AT-BUG-074, тот же новый тест): `1 failed in
+46.36s` — `TimeoutError: rating работы 900000001 не стал 'READ' ... (after
+20s)` — доказывает, что Then кейса содержателен (не тривиально зелен из-за
+отсутствия узла), реальная причина падения — отсутствующий `#chapters`
+(JS-guard `ao3_bridge.js:1170-1171`). `git stash pop` вернул фикс. Зелёная
+проба ПОСЛЕ восстановления фикса — 4 прогона подряд (первый + явные 3
+стабильности): `1 passed in 37.05s`, `1 passed in 35.35s`, `1 passed in
+35.03s`, `1 passed in 35.32s`, все `PYTEST_EXIT=0`.
+
+**Критерий 6** (`python -m pytest scripts/tests -q`) — 1295 passed, 1
+skipped, 2 failed: (а) `test_arch_check.py::test_real_repo_framework_passes`
+— ловил ПЕРВУЮ версию диффа (прямой `framework.core.waits.wait_for` в
+`test_rating.py`), исправлено переносом опроса в
+`rating_steps.wait_for_rating` (steps-слой), после фикса
+`scripts/tests/test_arch_check.py` — 42/42 зелёных; (б)
+`test_heartbeat_wrap.py::test_happy_path_order_and_child_env` — падение НЕ
+затронутыми этим долгом файлами (я не трогал `scripts/heartbeat_wrap.py`/
+`scripts/lockfile`): изолированный прогон ОДНОГО этого файла (без моего
+диффа в scope) даёт ТУ ЖЕ ошибку (`AO3_LOOP_HOLDER` уже в `os.environ` —
+утечка от реально работающего `scripts/heartbeat_wrap.py`-процесса этой же
+машины/сессии, PID виден в `Get-CimInstance Win32_Process`) — не регрессия
+этого фикса; кандидат на отдельный test_debt (см. отчёт координатору), не
+заводится здесь — не открыт этим ходом и не относится к узкой поверхности
+`render_work_page_html`.
+
+**Дефекты-собратья (D-0043), повторная проверка на момент фикса:** класс
+«`render_work_page_html`/сиблинг несёт не всю нужную разметку под
+конкретного JS-потребителя» — единственный явно названный сиблинг в
+мандате этого хода уже закрыт (`AT-BUG-030`/`AT-BUG-061`, оба `Verified`
+до этого хода). Новых сиблингов той же узкой поверхности
+(`render_work_page_html`/JS-слушателей `ao3_bridge.js`) в ходе починки не
+обнаружено — не расширял поиск за пределы мандата (регресс-замок одного
+бага).
+
+**Находки критик-входа приёмки (2026-08-16, координатор применяет батчем):**
+- Семантический сдвиг общей фикстуры (не блокер, не регрессия): до этого
+  диффа `dd.fandom a`/`dd.words` отсутствовали на work-страницах записей —
+  `BrowserViewModel.workInfoJs` (`:983-988`, путь сохранения ВСТРОЕННОЙ
+  панелью, вызовы `:731`/`:782`) скрейпит ТЕ ЖЕ узлы; строка, создаваемая
+  панелью на этих 4 записях, раньше получала `fandom=''→null`/
+  `wordCount='0'`, теперь получает реальные значения (`Fandom Alpha`/
+  `4200`). Ни один текущий ассерт на пустые значения не опирался (проверено
+  критиком grep'ом по `framework/`), `TC-144` (первое сохранение панелью)
+  зелёный — регрессии нет, но контракт фикстуры для будущих кейсов
+  изменился молча. Ближайший незакрытый сосед той же поверхности:
+  `dd.relationship a.tag`/`dd.freeform a.tag` (`workInfoJs:987-988`) по-прежнему
+  НЕ несутся новой разметкой — не регрессия (их и не было), текущими
+  кейсами не требуется, но следующий кейс, зависящий от pairing/freeform
+  панельного пути, на этих записях эти поля не получит.
+- `scripts/tests/test_heartbeat_wrap.py::test_happy_path_order_and_child_env`
+  хрупок к среде (сравнивает env ребёнка с `os.environ` без очистки
+  унаследованного `AO3_LOOP_HOLDER`) — падает в ЛЮБОЙ сессии, запущенной
+  из-под `scripts/heartbeat_wrap.py`. Подтверждено критиком исключающим
+  прогоном (`env -u AO3_LOOP_HOLDER` → зелёный). НЕ регрессия этого долга
+  (изолированный прогон без диффа даёт ту же ошибку) — кандидат на
+  отдельный test_debt, в очередь B4 следующим проходом, не заводится этим
+  ходом (не открыт узкой поверхностью `render_work_page_html`).
+
 ## Чек-лист качества
 - [x] Проверены дубликаты среди открытых test_debt-багов: `AT-BUG-030`
       (тот же паттерн «`render_work_page_html` не несёт нужную разметку»,
@@ -217,3 +335,8 @@ transitions.yaml`, test-case `initial: [Draft, Review]`; здесь нет сп�
 - [x] Ни одно изменение не внесено в `app-under-test/`
 - [x] `test_cases: ["TC-256"]` — единственный кейс, заблокированный этим
       фикстурным пробелом на момент заведения
+- [x] Фикс: критерии готовности 1-6 выполнены, red/green проба живая
+      (`git stash`/`stash pop`), 3+1 стабильных зелёных прогона TC-256,
+      регрессия 20 device-тестов (ВСЕХ потребителей render_work_page_html
+      с риском по факту) зелёная, `arch_check.py`/`validate_frontmatter.py`
+      — 0 ошибок
