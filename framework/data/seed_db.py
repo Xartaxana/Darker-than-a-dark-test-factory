@@ -551,12 +551,24 @@ _DOWNLOAD_FIXTURE_REL_DIR = "files/ao3_test_downloads"
 _DEVICE_DATA_ROOT = f"/data/user/0/{settings.APP_PACKAGE}"
 
 
-def _push_download_fixture(local_html: Path, work: Work) -> str:
-    """Копирует локальный HTML-фикстур в internal-песочницу приложения на
-    устройстве. Возвращает абсолютный путь для записи в `downloadPath`."""
-    rel = f"{_DOWNLOAD_FIXTURE_REL_DIR}/{work.ao3_id}.html"
+def _push_download_fixture(local_file: Path, work: Work) -> str:
+    """Копирует локальный фикстур в internal-песочницу приложения на устройстве.
+    Возвращает абсолютный путь для записи в `downloadPath`.
+
+    AT-BUG-071: расширение устройственного пути ВЫВОДИТСЯ из `local_file.suffix`
+    (не хардкодится `.html`) — вызывающая сторона передаёт локальный файл С
+    РЕАЛЬНЫМ целевым расширением (`.html`/`.epub`), сидер сохраняет его 1:1 в
+    имени на устройстве. MIME при открытии файла определяется РАСШИРЕНИЕМ пути
+    (`MainActivity.kt:765`, `path.endsWith(".epub", ignoreCase = true)`), не
+    содержимым — поэтому расширение устройственного пути — единственное, что
+    имеет значение для сценариев «уже скачано как EPUB» (TC-239/TC-240-E).
+    Байт-в-байт не меняет поведение для всех СУЩЕСТВУЮЩИХ вызовов (они всегда
+    передавали `.html`-фикстуры — `framework/data/fixtures/downloaded_work.html` —
+    и получали `.html` на устройстве, как и раньше)."""
+    ext = local_file.suffix or ".html"
+    rel = f"{_DOWNLOAD_FIXTURE_REL_DIR}/{work.ao3_id}{ext}"
     adb.run_as(f"mkdir -p {_DOWNLOAD_FIXTURE_REL_DIR}")
-    adb.push_app_file(local_html, rel)
+    adb.push_app_file(local_file, rel)
     return f"{_DEVICE_DATA_ROOT}/{rel}"
 
 

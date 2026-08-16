@@ -159,3 +159,144 @@ def in_webview(driver, timeout: int | None = None):
         yield name
     finally:
         to_native(driver)
+
+
+def _current_window_handle_or_none(driver) -> str | None:
+    """AT-BUG-070 rework (критик round1, блокер B2): фиксирует УЖЕ выбранное
+    chromedriver-окно НА ВХОДЕ в `in_webview_matching`/`in_webview_handle`, ДО
+    того как они переключат его — используется для восстановления в `finally`.
+
+    Без этого выход из этих примитивов молча оставлял driver переключённым на
+    ПОСЛЕДНЕЕ проитерированное (`in_webview_matching`, включая оба отказных
+    пути — `NoMatchingWebviewWindow`/`AssertionError` на цикле) либо адресованное
+    (`in_webview_handle`) окно — обычный ПОСЛЕДУЮЩИЙ `contexts.in_webview` на
+    эту же chromedriver-сессию (window handles живут на уровне chromedriver,
+    не Appium `contexts`, см. докстринг `in_webview_matching` — переключение в
+    NATIVE и обратно в WEBVIEW их не сбрасывает) молча читал/исполнял бы JS на
+    оставленной, не активной вкладке.
+
+    `None`, если на входе ещё нет ни одного выбранного окна (WebDriverException
+    — самый первый вызов на этой chromedriver-сессии, восстанавливать нечего)."""
+    try:
+        return driver.current_window_handle
+    except WebDriverException:
+        return None
+
+
+@contextlib.contextmanager
+def in_webview_handle(driver, handle: str, timeout: int | None = None):
+    """AT-BUG-070 — переключается на УЖЕ ИЗВЕСТНЫЙ `window_handles`-handle
+    (см. `in_webview_matching`) напрямую, без повторного матчинга по
+    predicate. Нужен, когда вызывающий код уже один раз адресовал нужную
+    вкладку (например, по нативному заголовку чипа ДО навигации) и должен
+    вернуться к ТОЙ ЖЕ вкладке ПОСЛЕ действия, которое могло изменить
+    матчащий признак (напр. `document.title`/URL после навигации внутри
+    страницы) — эмпирически подтверждено (test-maintainer, 2026-08-16):
+    набор `window_handles` идентичен (тот же `set`) после выхода из
+    `in_webview` и повторного входа, т.е. сам handle остаётся валиден и
+    адресует ТУ ЖЕ живую WebView независимо от смены её url/title.
+
+    AT-BUG-070 rework (критик round1, блокер B2): восстанавливает РАНЕЕ
+    выбранное окно (см. `_current_window_handle_or_none`) в `finally` на
+    выходе — не оставляет driver прилипшим к `handle` для последующих,
+    независимых вызовов `in_webview`."""
+    with in_webview(driver, timeout):
+        original_handle = _current_window_handle_or_none(driver)
+        try:
+            driver.switch_to.window(handle)
+            yield handle
+        finally:
+            if original_handle is not None:
+                driver.switch_to.window(original_handle)
+
+
+class NoMatchingWebviewWindow(RuntimeError):
+    """AT-BUG-070: ни один `driver.window_handles` не удовлетворил предикату
+    адресации — несёт список кандидатов (url, title) для диагностики, не
+    просто "не нашли"."""
+
+
+@contextlib.contextmanager
+def in_webview_matching(driver, predicate, timeout: int | None = None, description: str = ""):
+    """AT-BUG-070 (test_debt, Fixed) — адресует `execute_script`/`driver.get`/
+    чтение DOM-состояния к КОНКРЕТНОЙ живой `android.webkit.WebView`, пока
+    ДРУГИЕ WebView (в т.ч. вкладка-0) тоже живы, БЕЗ свёртки числа вкладок к
+    одной (reduce-to-one).
+
+    Класс проблемы (`browser_screen.py`, докстринг у `tab_chip_locator`,
+    AT-BUG-018/019/022): при >1 живом `android.webkit.WebView` Appium/
+    chromedriver экспонирует РОВНО ОДИН **контекст** `WEBVIEW_<pkg>`
+    (`driver.contexts`/`webview_name()` выше) вне зависимости от числа
+    вкладок — переключение `driver.switch_to.context(...)` не может выбрать
+    конкретную вкладку. НО chromedriver, однажды подключённый к ЭТОМУ
+    контексту, видит остальные живые WebView-инстансы того же процесса как
+    ОТДЕЛЬНЫЕ **окна** (CDP targets) — Selenium-уровневый
+    `driver.window_handles`/`driver.switch_to.window(handle)` (НЕ Appium
+    `contexts` API) даёт РОВНО один handle НА КАЖДУЮ живую вкладку, включая
+    вкладку-0. Эмпирически подтверждено (test-maintainer, 2026-08-16, живой
+    прогон, 3 вкладки — Home/marker1/marker2):
+    - `driver.window_handles` внутри `in_webview` вернул 3 РАЗНЫХ handle;
+      `switch_to.window(h)` + `current_url`/`title` на каждом дал 3 РАЗНЫХ
+      пары (Home/marker1/marker2) — не одно и то же "прилипшее" значение;
+    - ИЗОЛЯЦИЯ: JS-глобал (`window.__probe`), записанный на handle вкладки
+      2, НЕ виден на handle вкладки 1 или вкладки 0 (`None`/`undefined`) —
+      подтверждает, что это НЕЗАВИСИМЫЕ JS-контексты, не общий sticky-объект;
+    - `window.scrollTo` на handle вкладки 2 НЕ изменил `scrollY`, прочитанный
+      на handle вкладки 1 (0 -> 0) — та же изоляция для скролла;
+    - СТАБИЛЬНОСТЬ: набор handle идентичен (тот же `set`) после выхода из
+      `in_webview` (`to_native`) и повторного входа — можно закэшировать
+      handle между отдельными `in_webview`-блоками в рамках одного теста
+      (не проверено между РАЗНЫМИ вкладками/действиями, вызывающими
+      создание/уничтожение WebView — новый `open_tab`/закрытие вкладки может
+      изменить набор, матчить заново после таких действий).
+
+    `predicate(url, title)` — функция сопоставления; НЕ `current_url`-
+    угадывание (критерий готовности AT-BUG-070 явно требует "другого
+    способа") — вызывающий код обязан знать признак цели ЗАРАНЕЕ (известный
+    URL/URL-подстрока, известный `document.title` — на практике совпадает с
+    нативным `TabInfo.title` чипа, см. `tab_chip_title_at`/`onReceivedTitle`
+    в докстринге `tab_chip_locator`). Бросает `NoMatchingWebviewWindow` со
+    списком ВСЕХ (handle, url, title)-кандидатов, если предикат не
+    удовлетворён НИ ОДНИМ (диагностируемый отказ, не тихий no-op) — либо
+    `AssertionError` с тем же списком, если предикату удовлетворяют ≥2
+    (адресация неоднозначна, вызывающий код обязан сузить предикат).
+
+    Оставляет driver переключённым на найденное окно ВНУТРИ `with`-блока;
+    как и `in_webview`, гарантированно возвращает в нативный контекст на
+    выходе (через вложенный `in_webview`).
+
+    AT-BUG-070 rework (критик round1, блокер B2): восстанавливает РАНЕЕ
+    выбранное окно (см. `_current_window_handle_or_none`) в `finally` на
+    выходе — покрывает И успешный путь, И ОБА отказных (`NoMatchingWebviewWindow`
+    при 0 совпадений, `AssertionError` при ≥2), которые иначе оставляли driver
+    переключённым на ПОСЛЕДНЕЕ проитерированное в цикле окно, ломая молча
+    ПОСЛЕДУЮЩИЙ независимый `in_webview`."""
+    with in_webview(driver, timeout) as ctx_name:
+        original_handle = _current_window_handle_or_none(driver)
+        try:
+            candidates = []
+            matched = []
+            for handle in driver.window_handles:
+                driver.switch_to.window(handle)
+                url = driver.current_url
+                title = driver.title
+                candidates.append((handle, url, title))
+                if predicate(url, title):
+                    matched.append(handle)
+            if not matched:
+                raise NoMatchingWebviewWindow(
+                    f"ни одно окно WebView не удовлетворило предикату"
+                    f"{f' ({description})' if description else ''}; кандидаты "
+                    f"(handle, url, title): {candidates}"
+                )
+            if len(matched) > 1:
+                raise AssertionError(
+                    f"предикату{f' ({description})' if description else ''} удовлетворили "
+                    f"{len(matched)} окон WebView одновременно — адресация неоднозначна; "
+                    f"кандидаты (handle, url, title): {candidates}"
+                )
+            driver.switch_to.window(matched[0])
+            yield matched[0]
+        finally:
+            if original_handle is not None:
+                driver.switch_to.window(original_handle)

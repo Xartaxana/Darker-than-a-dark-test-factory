@@ -155,6 +155,41 @@ def set_display_mode(driver, label: str):
     SettingsScreen(driver).tap_display_mode(label)
 
 
+@allure.step("Given в Settings формат загрузки переключён на «{label}»")
+def select_download_format(driver, label: str):
+    """AT-BUG-071: TextButton "HTML"/"EPUB" (SettingsScreen.kt:969-1003) — тот же
+    приём клика на родителе TextButton, что `select_theme`/`tap_display_mode`.
+    Идемпотентности НЕ проверяет (в отличие от `set_auto_download` — тот тумблер,
+    этот сегментированный выбор из ровно двух значений всегда переключается тапом
+    по целевой метке независимо от текущего состояния)."""
+    SettingsScreen(driver).tap_download_format(label)
+
+
+@allure.step("Given в Settings включена опция «Page with volume buttons»")
+def enable_volume_button_scroll(driver):
+    """AT-BUG-072/TC-252: дефолт ON (`volumeButtonScroll: Boolean = true`,
+    SettingsScreen.kt:86) — вызов идемпотентен (тот же приём, что
+    `enable_infinite_scroll`/`enable_tap_to_scroll`); явный вызов делает Given
+    TC-252 независимым от значения дефолта."""
+    SettingsScreen(driver).set_volume_button_scroll(True)
+
+
+@allure.step("Given в Settings выключена опция «Page with volume buttons»")
+def disable_volume_button_scroll(driver):
+    """TC-253 (off-инвариант): симметрично `enable_volume_button_scroll`."""
+    SettingsScreen(driver).set_volume_button_scroll(False)
+
+
+@allure.step("Then в Settings тумблер «Page with volume buttons» показывает {expected}")
+def assert_volume_button_scroll_enabled(driver, expected: bool = True):
+    """Given-предпосылка кейса сверяется явным assert'ом, а не предполагается —
+    тот же класс, что `assert_tap_to_scroll_enabled`/`assert_infinite_scroll_enabled`."""
+    actual = SettingsScreen(driver).is_volume_button_scroll_checked()
+    assert actual == expected, (
+        f"тумблер «Page with volume buttons» показывает {actual}, ожидали {expected}"
+    )
+
+
 @allure.step("When открыт диалог «Clear all ratings» и подтверждён")
 def clear_all_ratings(driver):
     s = SettingsScreen(driver)

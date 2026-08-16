@@ -293,6 +293,76 @@ def send_app_to_background(driver) -> None:
     )
 
 
+@allure.step("When нажата клавиша громкости {direction} (`input keyevent KEYCODE_VOLUME_{direction}`)")
+def press_volume_key(driver, direction: str, oracle, timeout: int = 5) -> None:
+    """AT-BUG-072 (test_debt, Fixed): обёртка над `adb shell input keyevent
+    KEYCODE_VOLUME_DOWN/UP` по образцу `send_app_to_background` выше (`input
+    keyevent KEYCODE_HOME` + ожидание `driver.query_app_state`) — голое
+    нажатие клавиши само по себе НЕ наблюдаемо (`adb.shell` глотает
+    returncode/stderr, см. докстринг `send_app_to_background`), поэтому тихо
+    не сработавшее нажатие неотличимо от штатного эффекта без явного
+    ожидания ПОСЛЕДСТВИЯ.
+
+    `oracle` — параметризуемый предикат `Callable[[], bool]` без аргументов
+    (вызывающий код замыкает нужный контекст в лямбде, тот же приём, что
+    предикаты `wait_for` по всему фреймворку) — подтверждает, что нажатие
+    СОСТОЯЛОСЬ. Конкретный наблюдаемый эффект зависит от сценария
+    (`browse-volume-button-paging`, `MainActivity.kt:105-124,304-310`,
+    `volumePageHandler`):
+      - перехват активен (настройка `volume_button_scroll` ON, вкладка
+        Browse фронтмост) — сдвиг `window.scrollY` активной вкладки
+        (`BrowserViewModel.scrollActivePageBy` -> `evalJs(...
+        window.scrollBy(0, Math.round(innerHeight*0.9)*direction)...)`),
+        строго проверяется отдельно `browser_steps.
+        assert_volume_page_scroll_delta` (TC-252);
+      - перехват неактивен (настройка OFF либо активная вкладка != Browse,
+        `MainActivity.kt:304` `volumePagingActive`) — штатное системное
+        изменение громкости, наблюдаемое через `adb.volume_dialog_visible()`
+        (`dumpsys window windows`, окно `VolumeDialogImpl` — НЕ входит в
+        accessibility-дерево Appium, т.к. это отдельное OS-окно вне
+        `app_package`, но видно через adb; TC-253/255).
+
+    direction: `"down"` -> `KEYCODE_VOLUME_DOWN`, `"up"` -> `KEYCODE_VOLUME_UP`."""
+    keycodes = {"down": "KEYCODE_VOLUME_DOWN", "up": "KEYCODE_VOLUME_UP"}
+    assert direction in keycodes, f"direction должен быть 'down'/'up', получено {direction!r}"
+    adb.shell(f"input keyevent {keycodes[direction]}")
+    wait_for(
+        oracle,
+        timeout=timeout,
+        message=(
+            f"клавиша громкости {keycodes[direction]} не произвела наблюдаемого "
+            f"эффекта за {timeout}с — похоже на тихо не сработавшее нажатие "
+            f"(adb.shell глотает returncode, см. AT-BUG-072)"
+        ),
+    )
+
+
+@allure.step(
+    "Then системный индикатор громкости (VolumeDialogImpl) не появился в течение "
+    "{budget_s}с после нажатия клавиши"
+)
+def assert_no_volume_dialog_appears(budget_s: float = 1.5, interval_s: float = 0.3) -> None:
+    """TC-252: перехват `MainActivity.onKeyDown`/`onKeyUp` (возвращает `true`,
+    событие потребляется до штатной обработки громкости системой) означает,
+    что `VolumeDialogImpl` не должен возникнуть ВООБЩЕ — не гонка «появится
+    чуть позже», а структурное отсутствие пути к показу диалога, пока
+    перехват активен. Опрашивает ВЕСЬ бюджет (`assert_holds_for`, не
+    одноразовое чтение) — симметрично `browser_steps.assert_scroll_unchanged`:
+    негативный инвариант ловит и отложенный/анимированный показ диалога, не
+    только мгновенный снимок сразу после нажатия."""
+    assert_holds_for(
+        lambda: not adb.volume_dialog_visible(),
+        budget_s=budget_s,
+        interval_s=interval_s,
+        msg=(
+            "системный индикатор громкости (VolumeDialogImpl, dumpsys window "
+            "windows) появился после нажатия клавиши громкости, хотя перехват "
+            "`MainActivity.volumePageHandler` должен был подавить его целиком "
+            "(AT-BUG-072/TC-252)"
+        ),
+    )
+
+
 @allure.step("When приложение возвращено на передний план БЕЗ нового deep-link intent'а")
 def bring_app_to_foreground_without_deep_link() -> None:
     """TC-133: `am start -n <package>/<activity>` БЕЗ флага `-d` — в отличие от
@@ -566,6 +636,43 @@ def assert_persisted_tab_url_at(position: int, expected_url: str) -> None:
     actual = tabs[position].get("url")
     assert actual == expected_url, (
         f"URL вкладки на позиции {position}: {actual!r}, ожидали {expected_url!r}"
+    )
+
+
+@allure.step("Then вкладка на позиции {position} в open_tabs_urls становится {expected_url} (с поллингом)")
+def wait_persisted_tab_url_at(position: int, expected_url: str, timeout: int = 10) -> None:
+    """AT-BUG-070 rework (критик round1, блокер B1): опрашивающий вариант
+    `assert_persisted_tab_url_at` — нужен, когда URL на позиции меняется
+    ДЕЙСТВИЕМ, чей эффект на prefs асинхронен (`SharedPreferences.apply()`,
+    тот же класс debounce/apply()-гонки, что закрывает `wait_persisted_tab_count`
+    выше), а не сидингом/предшествующим `wait_persisted_tab_count`, который уже
+    гарантировал стабильность снимка. Одиночное чтение сразу после действия
+    рискует застать ЕЩЁ не осевшую запись (гонка, не факт «URL не поменялся»).
+
+    Диагностика при таймауте несёт ФАКТИЧЕСКОЕ последнее прочитанное значение
+    (тот же приём `holder`/ленивого сообщения, что `wait_persisted_tab_count`,
+    AT-BUG-036) — не просто «не совпало»."""
+    holder: dict[str, object] = {}
+    wait_err: TimeoutError | None = None
+
+    def _check() -> bool:
+        tabs = _parse_persisted_tabs(_read_tabs_prefs_raw())
+        assert 0 <= position < len(tabs), (
+            f"позиция {position} вне диапазона: всего вкладок в prefs {len(tabs)}"
+        )
+        holder["url"] = tabs[position].get("url")
+        return holder["url"] == expected_url
+
+    try:
+        wait_for(_check, timeout=timeout, message=f"URL вкладки на позиции {position} не стал {expected_url!r}")
+    except TimeoutError as exc:
+        wait_err = exc
+        if "url" not in holder:
+            raise
+    assert holder.get("url") == expected_url, (
+        f"URL вкладки на позиции {position} не стал {expected_url!r} "
+        f"(последнее наблюдение: {holder.get('url')!r})"
+        + (f"; ожидание прервано: {wait_err}" if wait_err is not None else "")
     )
 
 

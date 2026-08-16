@@ -22,6 +22,14 @@ app-under-test — источник истины при расхождении �
 покрывает и WebView-навигацию, и сетевой вызов `DownloadRepository` без
 дополнительной настройки.
 
+TC-236 (скачивание в формате EPUB, доказательство пригодности AT-BUG-071
+фикстур) — EPUB-зеркало TC-033: та же `DownloadRepository.downloadWork`, но
+`downloadFormat == "epub"` (переключается `settings_steps.select_download_format`
+ДО скачивания) уводит regex `:220` на `.epub`-ссылку вместо `.html`. Новая
+запись `work_with_download_epub.mitm` (`build_work_with_download_epub`) несёт
+ОБЕ EPUB-транзакции тем же приёмом, что `work_with_download.mitm`. См. блочный
+докстринг у самого теста ниже за деталями критерия готовности AT-BUG-071.
+
 TC-038 (auto-scan/relink при смене папки загрузок) использует SAF-инфраструктуру
 AT-BUG-005 (`framework/steps/saf_steps.py::saf_pick_folder`, блокер снят инкрементом 1,
 доказано зелёным `test_saf_infra_probe.py::test_saf_pick_download_folder`) — заметка в
@@ -79,6 +87,7 @@ import pytest
 
 from framework.core import adb
 from framework.data import recording_builder as rb
+from framework.data import seed_db
 from framework.data import works as W
 from framework.steps import (
     app_steps,
@@ -234,6 +243,66 @@ def test_manual_download_from_library_adds_local_file(replay, loved_work_seeded,
 
     # And работа появляется на вкладке FILES (Downloads) экрана Library
     library_steps.assert_work_in_files_tab(driver, work.title)
+
+
+# --- TC-236: скачивание в формате EPUB (симметричный позитивный кейс к TC-032/033,
+# AT-BUG-071 доказательство пригодности) — EPUB-зеркало TC-033 (ручное скачивание,
+# Auto-download off): `rb.WORK_WITH_DOWNLOAD_EPUB_FILENAME` несёт work-страницу с
+# рабочей EPUB-ссылкой + саму `.epub`-транзакцию (обе через ОДИН replay-прокси,
+# тот же приём, что `WORK_WITH_DOWNLOAD_FILENAME`/TC-032/033). Единственная НОВАЯ
+# предпосылка относительно TC-033 — переключение формата загрузки на EPUB в
+# Settings (`settings_steps.select_download_format`, AT-BUG-071) ДО скачивания:
+# `DownloadRepository.downloadWork` (`:52-55`) читает `downloadFormat` в момент
+# вызова, регекс `:220` ищет `.epub`-ссылку вместо `.html`.
+#
+# Первый и на момент фикса ЕДИНСТВЕННЫЙ зелёный прогон на новой EPUB-
+# инфраструктуре (extension-aware `seed_with_download`/новые mitm-записи) —
+# доказательство пригодности по критерию готовности AT-BUG-071. TC-237/238/239/240
+# (остальные заблокированные кейсы) разблокированы этой же инфраструктурой, но их
+# автоматизация — задача test-automator (вне мандата фикса test debt).
+
+@pytest.mark.p1
+@pytest.mark.replay
+@pytest.mark.produces_download
+@allure.id("TC-236")
+@allure.title("Скачивание работы в формате EPUB сохраняет .epub-файл и появляется на вкладке Files")
+@pytest.mark.parametrize("replay", [rb.WORK_WITH_DOWNLOAD_EPUB_FILENAME], indirect=True)
+def test_epub_download_saves_epub_file_and_shows_on_files_tab(replay, loved_work_seeded, driver):
+    # Given формат загрузки переключён на EPUB в Settings, работа W засеяна с
+    # рейтингом Loved (SAVE), downloadPath=null, Auto-download выключен (дефолт
+    # после clean_state — см. loved_work_seeded); та же гонка, что закрыта в
+    # TC-032/114/115 (см. докстринги выше в модуле): wait_app_ready (не
+    # wait_ui_ready) ПЕРЕД навигацией по Settings.
+    work = loved_work_seeded
+    app_steps.wait_app_ready(driver)
+    saf_steps.open_settings_scrolled_to(driver, "Download format")
+    settings_steps.select_download_format(driver, "EPUB")
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_work_in_tab(driver, "SAVE", work.title)
+    library_steps.assert_download_icon_shown(driver, work.title)
+
+    # When пользователь нажимает download-иконку на карточке
+    library_steps.download_via_card(driver, work.title)
+
+    # Then запускается ручное скачивание — regex `DownloadRepository.kt:220` ищет
+    # `.epub` (не `.html`, `downloadFormat == "epub"`), находит записанную
+    # EPUB-ссылку work-страницы, скачивает второй flow того же `.mitm`; по
+    # завершении download-иконка заменяется на open-иконку
+    library_steps.assert_open_icon_shown(driver, work.title, timeout=_DOWNLOAD_OPEN_ICON_TIMEOUT)
+
+    # And работа появляется на вкладке FILES (Downloads) экрана Library
+    library_steps.assert_work_in_files_tab(driver, work.title)
+
+    # And downloadPath указывает на .epub-файл — MIME при открытии файла
+    # определяется РАСШИРЕНИЕМ пути (`MainActivity.kt:765`:
+    # `path.endsWith(".epub", ignoreCase = true) -> "application/epub+zip"`), не
+    # содержимым файла — расширение сохранённого пути и есть наблюдаемый прокси
+    # ожидаемого MIME из проверяемых данных кейса.
+    rows = seed_db.read_work_ratings_full()
+    download_path = rows[work.ao3_id]["downloadPath"]
+    assert download_path is not None and download_path.endswith(".epub"), (
+        f"downloadPath не указывает на .epub-файл (формат загрузки — EPUB): {download_path!r}"
+    )
 
 
 # --- TC-112: тумблер Auto-download выключен — простановка Favorite НЕ скачивает

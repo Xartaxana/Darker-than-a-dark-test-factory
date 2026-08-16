@@ -1,0 +1,17 @@
+AT-BUG-071 placeholder fixture for "already downloaded as EPUB" seeding.
+
+Not a real EPUB (ZIP/OCF) binary — content is irrelevant for the scenarios this
+fixture supports (TC-239/TC-240-E: "downloadPath already points at a .epub
+file", used via seed_db.seed_with_download/_push_download_fixture). Neither the
+app under test nor the automation framework parses the bytes of an
+already-downloaded file for these cases: MainActivity.kt's openFileExternally
+picks the MIME (application/epub+zip) purely from the PATH EXTENSION
+(`path.endsWith(".epub", ignoreCase = true)`), and hands the file off via
+ACTION_VIEW to whatever external reader app is installed (or shows the
+"No app found to open this file" toast when none is) — the test environment's
+emulator has no e-reader app, so the bytes are never actually rendered.
+
+If a scenario ever needs a genuinely valid EPUB container (e.g. an assertion
+that inspects the file's internal structure), replace this placeholder with a
+real minimal EPUB and update this comment — do not silently assume this stays
+a placeholder forever.

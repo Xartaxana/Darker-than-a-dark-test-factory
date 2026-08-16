@@ -4,16 +4,16 @@ title: "Нет надёжного приёма адресации execute_script
 type: test_debt
 debt_kind: missing_fixture
 severity: major
-status: Open
+status: Verified
 found_in: "exploratory charter CH-010 (2026-08-14), followup_tc #2 — сид 2 (Г2/Г5), контраст-дверь и Back-измерение не пройдены, заблокированы известным классом AT-BUG-018/019/022"
-fixed_in: ""
+fixed_in: "framework (test-only, без сборки приложения) — framework/core/contexts.py (in_webview_handle/in_webview_matching/NoMatchingWebviewWindow), framework/steps/browser_steps.py (in_webview_at_tab_position/webview_url_at_tab_position/execute_script_at_tab_position/webview_handle_for_url/navigate_tab_via_page_js_to/assert_webview_handle_url), framework/tests/test_filter_profiles.py (регресс-замок контраст-двери Г2)"
 last_seen_in: ""
 test_cases: []
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-08-14T23:34:02Z"
-updated: "2026-08-14T23:34:02Z"
+status_since: "2026-08-16T10:42:00Z"
+updated: "2026-08-16T10:42:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -117,8 +117,248 @@ critical: обе заблокированные грани — КОНТРАСТ/
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
 | — | — | — | — | Open, ждёт разбора |
+| 2026-08-16T06:20:00Z | framework (рабочее дерево, unstaged — test_debt, фикс исключительно во фреймворке, сборка приложения не требуется; app-under-test не менялся) | `test_filter_profiles.py::test_content_initiated_navigation_on_non_zero_tab_reaches_interceptor` (регресс-замок контраст-двери Г2, `@allure.id("AT-BUG-070-g2-contrast-door-non-zero-tab")`) x3 изолированно + полный `test_filter_profiles.py` (12 тестов, регрессия по всей области filter-profiles) | Изолированно: **PASSED/PASSED/PASSED**, 110.64s/47.42s/47.07s, `PYTEST_EXIT=0` каждый раз. Полный `test_filter_profiles.py -v`: **12 passed in 776.60s**, `PYTEST_EXIT=0` (новый тест — 4-й позиции из 12, соседи без регресса). `Get-Device` до серии → `emulator-5554` | **Open → Fixed** (test-maintainer, критерий готовности п.1 — механизм найден и эмпирически подтверждён, контраст-дверь Г2 доведена до зелёного регресс-замка) |
+| 2026-08-16T10:06:17Z | framework (rework поверх критик round1 — B1/B2, unstaged; app-under-test не менялся) | `test_filter_profiles.py::test_content_initiated_navigation_on_non_zero_tab_reaches_interceptor` x3 изолированно (после B1/B2 rework) + полный `test_filter_profiles.py` (12 тестов) | Изолированно: **PASSED/PASSED/PASSED**, 60.29s/119.65s/58.78s, `PYTEST_EXIT=0` каждый раз. Полный `test_filter_profiles.py -v`: **12 passed in 1564.42s (0:26:04)**, `PYTEST_EXIT=0` (новый узел — 8-я позиция из 12 в этом прогоне, соседи без регресса). `Get-Device` до серии → `emulator-5554` | **Fixed (доработка round1 закрыта)** — B1 (доп. НЕ-WebView оракул на tab-1) и B2 (`finally`-восстановление handle) верифицированы живым прогоном |
+| 2026-08-16T10:42:00Z | framework (рабочее дерево, unstaged, идентично состоянию критик round2 — фикс исключительно во фреймворке, `type: test_debt`, B4: новая сборка приложения не требуется; `app-under-test` не менялся) | `test_filter_profiles.py::test_content_initiated_navigation_on_non_zero_tab_reaches_interceptor` (`@allure.id("AT-BUG-070-g2-contrast-door-non-zero-tab")`, единственный связанный узел — `test_cases: []`, carve-out test_debt/CLAUDE.md «Границы»: замок и есть DoD-артефакт критерия готовности) x1 witness-подтверждающий прогон — критерий готовности уже 6x зелёный (test-maintainer 3x + критик round2 3x), полная регрессия `test_filter_profiles.py` дважды чистая (12/12 оба раза), повторная не требуется | `Get-Device` → `emulator-5554` (DEVICE, позитивная сверка), Appium `/status` → 200. **PASSED**, `1 passed in 77.93s (0:01:17)`, `PYTEST_EXIT=0`. AT-BUG-026 device-liveness guard: recoveries this session = 0/2 (без восстановлений) | **Fixed → Verified** (fix-verifier, D1) — фикс живой и стабильный на 7-м независимом прогоне подряд (3+3+1), рекомендация критик round2 «ПРИНЯТЬ без блокеров» подтверждена device-прогоном |
 
 ## Обсуждение
+
+**2026-08-16T10:42:00Z — fix-verifier, D1: Fixed → Verified.** `type: test_debt`
+(framework-only фикс, B4 — новая сборка приложения не требуется) —
+`test_cases: []` штатно по carve-out CLAUDE.md «Границы» (инфраструктурный
+долг фреймворка, привязываемых продуктовых TC в принципе нет; предметный
+DoD-артефакт критерия готовности — сам регресс-замок
+`test_content_initiated_navigation_on_non_zero_tab_reaches_interceptor`,
+исполнен живым device-прогоном, не прочитан). Дифф уже дважды прошёл
+критик-вход (round1 ДОРАБОТАТЬ → закрыто, round2 ПРИНЯТЬ без блокеров) —
+эта запись не переоткрывает вердикт, только штатно подтверждает
+стабильность фикса дополнительным независимым прогоном на текущем рабочем
+дереве. `Get-Device` → `emulator-5554` (позитивная сверка, DEVICE), Appium
+`/status` → 200 до прогона. Witness:
+```
+Invoke-Pytest tests/test_filter_profiles.py::test_content_initiated_navigation_on_non_zero_tab_reaches_interceptor -v
+  PASSED, 1 passed in 77.93s (0:01:17), PYTEST_EXIT=0
+  AT-BUG-026 device-liveness guard: recoveries this session = 0/2
+```
+Полная регрессия `test_filter_profiles.py` не повторена в этом ходе —
+дважды чисто прогнана ранее в этом же файле (12/12 оба раза, test-maintainer
++ критик round2), задача явно допускала ограничиться witness-прогоном.
+`app-under-test/` не тронут. Аналогов рядом не замечено (D-0043) — второй
+заблокированный CH-010 mission_leftover (точный Back-замер на deep-link-
+вкладке) остаётся отдельным заведением следующего прохода, уже
+задокументирован выше как явный остаток, не скрытый аналог этого бага.
+
+**2026-08-16T10:06:17Z — test-maintainer, доработка критик round1 (2 блокера) закрыта, статус остаётся Fixed.**
+
+Критик round1 вернул `Fixed` с ДОРАБОТАТЬ (2 блокера), не rejected — код,
+закрывающий оба, был написан той же/следующей headless-сессией, но убит
+heartbeat-таймаутом до живого прогона и до обновления этого файла. Этот ход
+— верификация уже написанного rework (код читался, не переписывался заново)
++ живые прогоны + обновление документации.
+
+- **B1 (регресс-замок не различал реальную адресацию от sticky-деградации).**
+  `test_content_initiated_navigation_on_non_zero_tab_reaches_interceptor`
+  под гипотетической регрессией «`in_webview_handle` молча деградировал до
+  sticky tab-0» читал бы `assert_webview_handle_url` тем же значением
+  `LISTING_FILTERED_URL`, что уже стоит на tab-0 с Given, — тест был бы
+  зелёным ДАЖЕ при поломке адресации (вырождался в уже зелёного соседа
+  `test_same_url_renderer_navigation_reaches_interceptor`). Закрыто: добавлен
+  НЕЗАВИСИМЫЙ НЕ-WebView оракул `app_steps.wait_persisted_tab_url_at(1,
+  LISTING_FILTERED_URL, timeout=10)` СРАЗУ ПОСЛЕ WebView-оракула — читает
+  persisted `open_tabs_urls` (тот же источник, что уже используется для
+  Given/негатива tab-0 в этом же узле), независимый от `window_handles`-
+  адресации канал. Новая функция `app_steps.wait_persisted_tab_url_at` —
+  опрашивающий вариант уже существующего `assert_persisted_tab_url_at`
+  (поллинг нужен: запись в prefs после `shouldOverrideUrlLoading` асинхронна,
+  `apply()`), с тем же приёмом диагностики через `holder`/ленивое сообщение,
+  что `wait_persisted_tab_count` (AT-BUG-036).
+- **B2 (утечка выбранного chromedriver-окна между независимыми вызовами).**
+  `in_webview_handle`/`in_webview_matching` оставляли driver переключённым
+  на последнее адресованное/проитерированное окно на выходе (включая ОБА
+  отказных пути `in_webview_matching` — `NoMatchingWebviewWindow` и
+  `AssertionError` на неоднозначности) — следующий независимый
+  `contexts.in_webview` на той же chromedriver-сессии молча читал/исполнял
+  JS на оставленной, не активной вкладке. Закрыто: `_current_window_handle_
+  or_none(driver)` фиксирует УЖЕ выбранное окно НА ВХОДЕ (до переключения;
+  `None`, если это первый вызов на сессии — `WebDriverException`,
+  восстанавливать нечего), оба примитива восстанавливают его в `finally` —
+  покрывает и успешный путь, и оба отказных.
+
+**Witness rework (живые прогоны, `emulator-5554`, синхронно, после
+autotest-фикса `framework/core/contexts.py` +
+`framework/steps/app_steps.py::wait_persisted_tab_url_at` +
+`framework/tests/test_filter_profiles.py`):**
+```
+Invoke-Pytest tests/test_filter_profiles.py::test_content_initiated_navigation_on_non_zero_tab_reaches_interceptor -v
+  run 1: PASSED, 1 passed in 60.29s, PYTEST_EXIT=0
+  run 2: PASSED, 1 passed in 119.65s, PYTEST_EXIT=0
+  run 3: PASSED, 1 passed in 58.78s, PYTEST_EXIT=0
+
+Invoke-Pytest tests/test_filter_profiles.py -v  (полный модуль, 12 тестов)
+  12 passed in 1564.42s (0:26:04), PYTEST_EXIT=0
+```
+`framework/steps/app_steps.py::wait_persisted_tab_url_at` уже существовала в
+рабочем дереве (та же незакоммиченная сессия) — сверена по `git diff`,
+сигнатура/поведение по образцу `assert_persisted_tab_url_at` с поллингом,
+доработка не потребовалась. `app-under-test/` за этот ход не тронут.
+Пересмотра стратегии/рисков доработка не требует (тот же класс/спека, что
+и round1 — только устранение двух конкретных методологических пробелов
+внутри уже принятого решения, не новый риск).
+
+**2026-08-16T10:19:00Z — критик round2: ПРИНЯТЬ, без блокеров.** B1
+перепроверен трассировкой гипотезы деградации (независимый prefs-канал не
+вырождается вместе с адресацией) + собственным живым перепрогоном 3/3. B2
+доказан ИСПОЛНЕНИЕМ (не чтением) — device-free проба всех путей выхода
+(успех/оба отказа/исключение тела/битый handle/отсутствие entry-окна), 8/8
+зелёных, точные последовательности `switch_to.window` сверены. Класс-полнота:
+`switch_to.window` во всём репо — только в `contexts.py`, все под `finally`;
+`git diff --stat` — 374 insertions/0 deletions (ни одна существующая строка
+не тронута), собратьев вне этого файла нет. 4 неблокирующие находки —
+батч мелочей (не новый test_debt, D-0043 — точечные методологические
+хвосты того же rework, не отдельный класс):
+1. `finally`-восстановление (`contexts.py:210,302`) может замаскировать
+   исходное исключение, если `switch_to.window(original_handle)` сам
+   бросит `WebDriverException` (недостижимо на текущих call-site'ах —
+   никто не закрывает вкладки внутри блока).
+2. `in_webview_at_tab_position`/`webview_url_at_tab_position`/
+   `execute_script_at_tab_position` — ноль call-site'ов, не покрыты живым
+   прогоном (только URL-маршрут `webview_handle_for_url` эмпирически
+   подтверждён); покрыть прогоном либо снять как мёртвый API.
+3. Исполнитель этого rework-хода не приложил `validate_frontmatter.py` к
+   witness при правке frontmatter — критик прогнал сам (чисто).
+4. При `original_handle is None` (первый вызов на свежей chromedriver-
+   сессии) восстановления нет — известный, задокументированный остаток,
+   не дефект-сюрприз.
+
+**2026-08-16T06:20:00Z — test-maintainer (B4), Open → Fixed. Критерий
+готовности п.1 — механизм найден, эмпирически подтверждён, контраст-дверь
+Г2 доведена до зелёного регресс-замка.**
+
+**Найденный механизм.** `driver.contexts`/`switch_to.context(...)`
+(Appium-уровень) действительно даёт РОВНО один контекст `WEBVIEW_<pkg>`
+независимо от числа живых вкладок и прилипает к вкладке-0 (это и есть сам
+долг) — НО chromedriver, однажды подключённый к этому контексту, видит
+ОСТАЛЬНЫЕ живые `android.webkit.WebView` того же процесса как отдельные
+**окна** (CDP targets) на Selenium-уровне: `driver.window_handles`/
+`driver.switch_to.window(handle)` — API, отдельный от Appium `contexts`,
+до этого долга нигде в фреймворке не использовавшийся для адресации
+конкретной вкладки. Эмпирически подтверждено (живой прогон, эмулятор
+`emulator-5554`, 3 вкладки — Home/marker1/marker2, `contexts.
+in_webview_matching`, см. докстринг `framework/core/contexts.py`):
+
+- `driver.window_handles` внутри `in_webview` вернул 3 РАЗНЫХ handle;
+  `switch_to.window(h)` + `current_url`/`title` на каждом дал 3 РАЗНЫХ
+  пары (Home/marker1/marker2) — НЕ одно и то же "прилипшее" значение, как
+  при штатном `driver.contexts`-переключении.
+- **Изоляция**: JS-глобал (`window.__probe`), записанный на handle
+  вкладки 2, НЕ виден на handle вкладки 1 или вкладки 0 (`None`/
+  `undefined`) — подтверждает, что это НЕЗАВИСИМЫЕ JS-контексты, не общий
+  sticky-объект.
+- `window.scrollTo` на handle вкладки 2 НЕ изменил `scrollY`, прочитанный
+  на handle вкладки 1 (0 → 0) — та же изоляция для скролла.
+- **Стабильность**: набор `window_handles` идентичен (тот же `set`) после
+  выхода из `in_webview` (`to_native`) и повторного входа — handle можно
+  захватить один раз и переиспользовать между отдельными
+  `in_webview`-блоками в рамках одного теста (действие внутри страницы,
+  меняющее URL/title, НЕ инвалидирует handle — проверено адресно: захват
+  `webview_handle_for_url` ДО `navigate_tab_via_page_js_to`, повторное
+  обращение к ТОМУ ЖЕ handle ПОСЛЕ навигации через `in_webview_handle`
+  успешно читает новый URL).
+
+Это НЕ `current_url`-угадывание (явно исключено критерием готовности) —
+адресация идёт по признаку, известному ЗАРАНЕЕ из независимого источника
+(нативный заголовок чипа `TabInfo.title`/`tab_chip_title_at` — тот же
+источник, что `document.title`, читается ДО входа в WEBVIEW; либо, когда
+заголовки неоднозначны — как оказалось на фикстуре `listing_basic.mitm`,
+где отфильтрованная и неотфильтрованная страницы несут ОДИН И ТОТ ЖЕ
+`<title>` — известный URL из НЕ-WebView-оракула `app_steps.
+assert_persisted_tab_url_at`/`open_tabs_urls`).
+
+**Реализация** (`framework/core/contexts.py`):
+`in_webview_matching(driver, predicate, ...)` — общий примитив: внутри
+`in_webview` перебирает ВСЕ `window_handles`, матчит `(url, title)`
+против `predicate`, бросает `NoMatchingWebviewWindow` при 0 совпадений
+(список кандидатов для диагностики) или `AssertionError` при ≥2
+(неоднозначность), иначе оставляет driver переключённым на найденное окно.
+`in_webview_handle(driver, handle, ...)` — прямая адресация по уже
+известному handle (без повторного матчинга), для возврата к ранее
+захваченной вкладке после действия, которое могло сменить матчащий
+признак. `framework/steps/browser_steps.py` добавляет прикладной слой:
+`in_webview_at_tab_position`/`webview_url_at_tab_position`/
+`execute_script_at_tab_position` (адресация по нативной позиции чипа —
+общий случай), `webview_handle_for_url`/`navigate_tab_via_page_js_to`/
+`assert_webview_handle_url` (адресация по известному URL + сохранение
+handle через навигацию — случай неоднозначных заголовков, использован
+ниже).
+
+**Контраст-дверь Г2 доведена до зелёного регресс-замка** (критерий
+готовности, «плюс»-часть): `framework/tests/test_filter_profiles.py::
+test_content_initiated_navigation_on_non_zero_tab_reaches_interceptor`
+(`@allure.id("AT-BUG-070-g2-contrast-door-non-zero-tab")`) — Given tab-0
+несёт применённый профиль; When реальный deep-link открывает tab-1 на
+БАЗОВОМ URL (программная дверь `bugs/BUG-070.md`, оракул вне WebView —
+`assert_persisted_tab_url_at`, тот же приём, что TC-206); захват
+стабильного handle tab-1 по её ИЗВЕСТНОМУ URL (`webview_handle_for_url`
+— заголовок здесь неоднозначен, обе фикстурные страницы делят один
+`<title>`); When КОНТРАСТ — content-initiated (`window.location.href`)
+навигация на тот же URL, адресованная ИМЕННО на tab-1 через захваченный
+handle (`navigate_tab_via_page_js_to`); Then URL tab-1 (тот же handle)
+становится ОТФИЛЬТРОВАННЫМ (`assert_webview_handle_url`) — content-
+initiated дверь ДОХОДИТ до `shouldOverrideUrlLoading` и дописывает
+фильтр, в отличие от deep-link, ДАЖЕ на не-нулевой/не-активной по
+sticky-прилипанию вкладке; And tab-0 остаётся на своём URL (без
+кросс-вкладочной утечки). Узел — регрессионный замок (`@allure.id`
+описательный слаг, тот же паттерн, что уже используется соседним
+`test_same_url_renderer_navigation_reaches_interceptor` и
+`AT-BUG-047-*`), НЕ формальный TC — заведение отдельного TC (если решение
+поднять контраст-дверь Г2 до продуктового покрытия R-09) остаётся за
+test-designer, `test_cases` этого бага намеренно пуст.
+
+**Точный Back-замер на deep-link-вкладке** (второй из двух заблокированных
+CH-010 mission_leftover-пунктов) технически достижим ТЕМ ЖЕ механизмом
+(`webview_url_at_tab_position`/`webview_handle_for_url` до и после
+программной Back-навигации), но НЕ доведён до кейса этим ходом — критерий
+готовности требует «минимум ОДИН из двух», Г2 выше закрывает эту часть
+целиком; Back-замер остаётся заведением следующего прохода (test-designer/
+test-maintainer), если решение поднять его до покрытия будет принято.
+
+**Witness** (живые прогоны, framework, синхронно, `emulator-5554`,
+Appium `:4723`):
+```
+Invoke-Pytest tests/test_filter_profiles.py::test_content_initiated_navigation_on_non_zero_tab_reaches_interceptor -v
+  run 1: PASSED, 1 passed in 110.64s, PYTEST_EXIT=0
+  run 2: PASSED, 1 passed in 47.42s, PYTEST_EXIT=0
+  run 3: PASSED, 1 passed in 47.07s, PYTEST_EXIT=0
+
+Invoke-Pytest tests/test_filter_profiles.py -v  (полный модуль, 12 тестов)
+  12 passed in 776.60s (0:12:56), PYTEST_EXIT=0
+```
+
+**Смежная находка (доклад, не расширяю scope, D-0037).** Регрессионный
+прогон `framework/tests/test_tabs.py` (полный файл, добровольная сверка —
+`contexts.py` разделяемая инфраструктура) на ТОЙ ЖЕ уже давно живой
+Appium/эмулятор-сессии дал 2 падения (`test_max_tabs_limit_blocks_11th_tab`,
+`test_library_card_open_at_tab_limit_shows_dialog_and_switches_screen`) —
+оба `ReadTimeoutError` на ОДНОМ вызове (`execute_script` внутри
+`wait_home_page_loaded`), воспроизведено идентично и в изолированном
+повторном прогоне (2/2). Диагностика (device жив, Appium `/status` отвечает
+200 быстро) совпадает с уже задокументированным и `Verified`-закрытым
+классом `bugs/AT-BUG-009.md` («позиционная деградация длинной живой
+Appium/эмулятор-сессии»), который сам явно предсказывал рецидив как
+основание для `Reopened`. Диффы этого бага (`contexts.py`/
+`browser_steps.py`) структурно НЕ трогают `wait_home_page_loaded`/код,
+на котором падает `test_tabs.py` (только новые функции добавлены, ни одна
+существующая не изменена) — не регрессия этого фикса. Не дубликат, не
+новый test_debt (класс уже поимённо покрыт `AT-BUG-009.md`, Verified,
+предсказывавшим ровно такой рецидив) — заведена запись `state/
+escalations.md` ESC-034 с решением (Reopened `AT-BUG-009` или нет) за
+координатором/Lead; `AT-BUG-070`/этот регресс-замок этой находкой НЕ
+блокированы (целевой тест использует другой механизм адресации, 3/3
+зелёных, никогда не воспроизвёл этот класс).
+
+`app-under-test/` не затронут за весь ход. Пересмотра стратегии/рисков не
+требует (та же спека CH-010/R-09, тот же наблюдательный класс, что уже
+разбирал test-designer при заведении) — проход test-strategist не нужен.
 
 **[test-designer @ 2026-08-15] Заведено по followup CH-010 (#2).** Источник
 — `exploratory-charters/CH-010.md`, `followup_tc[2]` дословно: «Test-gap

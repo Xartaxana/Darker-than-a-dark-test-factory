@@ -476,6 +476,101 @@ def test_same_url_renderer_navigation_reaches_interceptor(replay, filter_profile
 
 @pytest.mark.p1
 @pytest.mark.replay
+@allure.id("AT-BUG-070-g2-contrast-door-non-zero-tab")
+@allure.title(
+    "Контраст-дверь Г2 (CH-010/BUG-070): content-initiated навигация на "
+    "deep-link-вкладке (позиция != 0, НЕ sticky tab-0) ДОХОДИТ до "
+    "shouldOverrideUrlLoading и дописывает queryString активного профиля"
+)
+@pytest.mark.parametrize("replay", [rb.LISTING_BASIC_FILENAME], indirect=True)
+def test_content_initiated_navigation_on_non_zero_tab_reaches_interceptor(
+    replay, filter_profile_applied_seeded, driver
+):
+    """Инфраструктурный регрессионный замок (test-maintainer, B4, AT-BUG-070
+    закрытие test_debt + CH-010 mission_leftover #1 "контраст-дверь Г2"), не
+    формальный тест-кейс (заведение TC — за test-designer, если решит
+    поднять до продуктового покрытия R-09; `@allure.id` — описательный слаг,
+    тот же паттерн, что `test_same_url_renderer_navigation_reaches_interceptor`
+    выше и `AT-BUG-047-*`).
+
+    ЧТО ПРОВЕРЯЕТ: `bugs/BUG-070.md` документирует, что ПРОГРАММНАЯ дверь
+    (deep-link, `openOrNavigateDeepLink` -> `loadUrl`) НЕ проходит
+    `shouldOverrideUrlLoading` — новая вкладка (позиция 1) остаётся
+    нефильтрованной, хотя `activeFilterId` глобально жив (`TC-206`). CH-010
+    (seed 2) попыталась проверить КОНТРАСТ — что дверь, инициированная
+    СОДЕРЖИМЫМ страницы (клик по ссылке / `window.location.href`, тот же
+    код-путь), НАПРОТИВ дописывает фильтр — но не смогла прочитать/направить
+    действие именно на tab-1 из-за sticky WebView context (execute_script
+    внутри `contexts.in_webview` бьёт по вкладке-0), поэтому находка осталась
+    "remains open" (`bugs/BUG-070.md` Обсуждение) и заведена как test_debt
+    (`bugs/AT-BUG-070.md`).
+
+    Этот узел закрывает именно эту находку эмпирически, используя
+    АДРЕСОВАННЫЙ механизм AT-BUG-070 (`browser_steps.webview_handle_for_url`/
+    `navigate_tab_via_page_js_to`/`assert_webview_handle_url` —
+    `driver.window_handles` внутри WEBVIEW-контекста, НЕ `driver.contexts`,
+    см. `framework/core/contexts.py::in_webview_matching` за полной
+    эмпирикой) — навигация РЕАЛЬНО выполняется и читается именно на tab-1,
+    не на tab-0 по случайности sticky-прилипания.
+
+    AT-BUG-070 rework (критик round1, блокер B1): `assert_webview_handle_url`
+    ПО ХЕНДЛУ сам по себе не различает гипотезу «адресация по handle реально
+    ушла на tab-1» от «handle молча деградировал до sticky tab-0» — под ЭТОЙ
+    деградацией WebView-оракул тоже читал бы `LISTING_FILTERED_URL` (это URL
+    tab-0 после Given), и узел вырождался бы в уже зелёного соседа
+    `test_same_url_renderer_navigation_reaches_interceptor`. Добавлен
+    НЕ-WebView оракул на ЦЕЛЕВУЮ вкладку (`app_steps.wait_persisted_tab_url_at`
+    на позиции 1, persisted-prefs, тот же независимый источник, что уже
+    использован для Given/негатива tab-0 ниже) — с поллингом, потому что запись
+    в prefs после `shouldOverrideUrlLoading` асинхронна (`apply()`)."""
+    name = filter_profile_applied_seeded
+
+    # Given tab-0 несёт применённый профиль (LISTING_FILTERED_URL)
+    app_steps.wait_ui_ready(driver)
+    app_steps.open_tab(driver, "Browse")
+    browser_steps.open_listing(driver, rb.LISTING_BASIC_URL)
+    browser_steps.open_filter_dropdown(driver)
+    browser_steps.select_filter_option(driver, name)
+    browser_steps.assert_active_tab_url(driver, rb.LISTING_FILTERED_URL)
+
+    # When реальный deep-link открывает tab-1 на БАЗОВОМ (нефильтрованном) URL —
+    # программная дверь BUG-070, оракул вне WebView-контекста (тот же, что TC-206)
+    app_steps.open_deep_link(rb.LISTING_BASIC_URL)
+    app_steps.wait_persisted_tab_count(2, timeout=15)
+    app_steps.assert_persisted_tab_url_at(1, rb.LISTING_BASIC_URL)
+
+    # Захватываем стабильный handle tab-1 ПО ЕЁ ИЗВЕСТНОМУ URL (не по
+    # заголовку — обе фикстурные страницы, отфильтрованная и нет, несут
+    # ОДИНАКОВЫЙ document.title "Test Fixture Listing | Archive of Our Own",
+    # title-матчинг здесь неоднозначен, эмпирически обнаружено при разведке
+    # этого узла — `webview_handle_for_url` существует ИМЕННО для этого случая)
+    tab1_handle = browser_steps.webview_handle_for_url(driver, rb.LISTING_BASIC_URL, timeout=10)
+
+    # When контраст: content-initiated (renderer) навигация на ТОТ ЖЕ URL,
+    # адресованная ИМЕННО на tab-1 через захваченный handle (не sticky-контекст)
+    browser_steps.navigate_tab_via_page_js_to(driver, tab1_handle, rb.LISTING_BASIC_URL, timeout=10)
+
+    # Then URL tab-1 (тот же handle) становится LISTING_FILTERED_URL — контраст
+    # подтверждён: content-initiated дверь ДОХОДИТ до перехватчика, в отличие
+    # от deep-link (BUG-070), даже на НЕ-нулевой/НЕ-активной по chromedriver-
+    # прилипанию вкладке
+    browser_steps.assert_webview_handle_url(driver, tab1_handle, rb.LISTING_FILTERED_URL, timeout=10)
+
+    # And НЕ-WebView оракул на ТУ ЖЕ цель (AT-BUG-070 rework B1): URL persisted
+    # tab-1 (независимый от handle-адресации источник) тоже стал
+    # LISTING_FILTERED_URL — различает "адресация по handle реально ушла на
+    # tab-1" от "handle молча деградировал до sticky tab-0" (под этой
+    # деградацией WebView-оракул выше был бы зелёным тривиально, т.к. tab-0 уже
+    # LISTING_FILTERED_URL с Given). Поллинг: запись в prefs после
+    # shouldOverrideUrlLoading асинхронна (apply()).
+    app_steps.wait_persisted_tab_url_at(1, rb.LISTING_FILTERED_URL, timeout=10)
+
+    # And tab-0 остаётся на своём уже отфильтрованном URL — без кросс-вкладочной утечки
+    app_steps.assert_persisted_tab_url_at(0, rb.LISTING_FILTERED_URL)
+
+
+@pytest.mark.p1
+@pytest.mark.replay
 @allure.id("TC-184")
 @allure.title("OFF: обычная навигация не дописывает фильтр И снимает активный профиль (регрессионный замок фактического поведения)")
 @pytest.mark.parametrize("replay", [rb.LISTING_BASIC_FILENAME], indirect=True)

@@ -161,6 +161,34 @@ class SettingsScreen(BaseScreen):
             self.tap(self._INFINITE_SCROLL_SWITCH)
         return self
 
+    # --- Volume-button paging toggle (секция "Reader", SettingsScreen.kt:777-782,
+    # AT-BUG-072/TC-252) — тот же приём XPath `following::`, что
+    # `_TAP_TO_SCROLL_SWITCH`/`_INFINITE_SCROLL_SWITCH`: Compose `Switch` без
+    # text/content-desc, ближайший checkable-узел ПОСЛЕ подписи строки в document
+    # order. Строка идёт СРАЗУ ПОСЛЕ "Tap to scroll (work pages)" (:770-775) и
+    # ПЕРЕД "Infinite scroll (listing pages)" (:784-789) — `following::` от ЭТОГО
+    # текста ловит СВОЙ checkable-узел, не соседний (порядок в дереве сверен с
+    # исходником). `swipe_to_text` перед поиском — тот же паттерн, что
+    # `is_tap_to_scroll_checked`/`is_infinite_scroll_checked`.
+    _VOLUME_BUTTON_SCROLL_SWITCH = (
+        AppiumBy.XPATH,
+        '(//*[@text="Page with volume buttons"]/following::*[@checkable="true"])[1]',
+    )
+
+    def is_volume_button_scroll_checked(self, timeout: int | None = None) -> bool:
+        assert self.swipe_to_text("Page with volume buttons"), (
+            "строка «Page with volume buttons» не найдена прокруткой (Reader)"
+        )
+        el = self.find(self._VOLUME_BUTTON_SCROLL_SWITCH, timeout)
+        return el.get_attribute("checked") == "true"
+
+    def set_volume_button_scroll(self, enabled: bool):
+        """Тумблер — таплю только если текущее состояние не совпадает с желаемым
+        (идемпотентно, тот же приём, что `set_tap_to_scroll`/`set_infinite_scroll`)."""
+        if self.is_volume_button_scroll_checked() != enabled:
+            self.tap(self._VOLUME_BUTTON_SCROLL_SWITCH)
+        return self
+
     # --- Per-rating "Hide {rating} works" toggle (секция "Content Visibility",
     # SettingsScreen.kt:718-759, TC-015) — тот же приём XPath `following::`, что и
     # `_AUTO_DOWNLOAD_SWITCH`: Compose `Switch` без text/content-desc, ближайший
@@ -202,6 +230,22 @@ class SettingsScreen(BaseScreen):
             "секция «Display mode» не найдена прокруткой (Content Visibility)"
         )
         self.tap(self._display_mode_button_locator(label))
+        return self
+
+    # --- Download format (секция "Data", SettingsScreen.kt:969-1003, `listOf("html"
+    # to "HTML", "epub" to "EPUB")`) — TextButton с текстом ровно "HTML"/"EPUB",
+    # клик висит на кликабельном РОДИТЕЛЕ (TextButton), не на дочернем `Text` — тот
+    # же приём XPath `/..`, что `_display_mode_button_locator` (AT-BUG-071:
+    # доказательство пригодности EPUB-фикстур, TC-236 — первый и на момент фикса
+    # единственный потребитель; TC-235/238/239/240 остаются test-automator).
+    def _download_format_button_locator(self, label: str):
+        return (AppiumBy.XPATH, f'//*[@text="{label}"]/..')
+
+    def tap_download_format(self, label: str):
+        assert self.swipe_to_text("Download format"), (
+            "секция «Download format» не найдена прокруткой (Data)"
+        )
+        self.tap(self._download_format_button_locator(label))
         return self
 
     # --- Auto-apply on navigation toggle (секция "SAVED AO3 FILTERS",

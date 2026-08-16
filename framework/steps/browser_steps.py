@@ -1,6 +1,7 @@
 """Бизнес-шаги содержимого WebView, не привязанные к конкретному нативному экрану."""
 from __future__ import annotations
 
+import contextlib
 import re
 import time
 import uuid
@@ -919,6 +920,57 @@ def assert_tap_to_scroll_delta(
     return get_webview_scroll_y(driver)
 
 
+_VOLUME_PAGE_SCROLL_RATIO = 0.9
+# AT-BUG-072/TC-252: `BrowserViewModel.scrollActivePageBy` — `window.scrollBy(0,
+# Math.round(window.innerHeight*0.9)*direction)` — множитель 0.9, НЕ 0.95 как у
+# `_TAP_TO_SCROLL_DELTA_RATIO` выше: разные механизмы (volume-button paging vs
+# tap-to-scroll), совпадение множителя не гарантировано и не проверено.
+_VOLUME_PAGE_SCROLL_TOLERANCE_RATIO = 0.15
+
+
+@allure.step(
+    "Then window.scrollY изменился примерно на {direction}×0.9×innerHeight "
+    "относительно scrollY до нажатия клавиши громкости ({scroll_before})"
+)
+def assert_volume_page_scroll_delta(
+    driver, scroll_before: int, inner_height: int, direction: int, timeout: int = 5,
+) -> int:
+    """TC-252 (AT-BUG-072) — параллельная структура `assert_tap_to_scroll_delta`
+    выше (TC-126/127): тот же приём опроса (не одноразовое чтение) и той же
+    диагностики при таймауте (последнее РЕАЛЬНО НАБЛЮДЁННОЕ внутри опроса
+    значение `scrollY`, AT-BUG-039-класс), но множитель `_VOLUME_PAGE_
+    SCROLL_RATIO=0.9` (`BrowserViewModel.scrollActivePageBy`), не 0.95 —
+    разные JS-вызовы (`MainActivity.volumePageHandler` -> `evalJs`, не
+    `ao3_bridge.js` tap-хэндлер), значения множителей независимы."""
+    expected_delta = direction * _VOLUME_PAGE_SCROLL_RATIO * inner_height
+    tolerance_px = abs(expected_delta) * _VOLUME_PAGE_SCROLL_TOLERANCE_RATIO
+
+    holder: dict[str, int] = {}
+
+    def _matches(d):
+        holder["scroll_y"] = get_webview_scroll_y(d)
+        actual_delta = holder["scroll_y"] - scroll_before
+        return abs(actual_delta - expected_delta) <= tolerance_px
+
+    try:
+        wait_until(
+            driver, _matches, timeout=timeout,
+            message=(
+                f"scrollY не изменился на ожидаемую дельту {expected_delta:.1f}px "
+                f"(±{tolerance_px:.1f}px) относительно scrollY до нажатия={scroll_before} "
+                f"за {timeout}с"
+            ),
+        )
+    except TimeoutException as exc:
+        raise TimeoutException(
+            f"scrollY не изменился на ожидаемую дельту {expected_delta:.1f}px "
+            f"(±{tolerance_px:.1f}px) относительно scrollY до нажатия={scroll_before} "
+            f"за {timeout}с (последнее наблюдённое внутри опроса scrollY="
+            f"{holder.get('scroll_y')})"
+        ) from exc
+    return get_webview_scroll_y(driver)
+
+
 # --- TC-123: tap_to_scroll=OFF — негативный инвариант (ни одна треть work-страницы
 # не производит эффекта). Единственный гейт `ao3_bridge.js:1153`
 # (`if (!window.__ao3TapToScroll) return;`) применяется ДО вычисления координаты
@@ -1259,6 +1311,106 @@ def assert_tab_became_active_via_scroll(
         "(!= 0) не покрыт эмпирической проверкой AT-BUG-022 в этой сессии — не "
         "использовать без отдельного живого прогона, подтверждающего симметрию "
         "приёма для не-нулевой цели"
+    )
+
+
+@contextlib.contextmanager
+def in_webview_at_tab_position(driver, position: int, timeout: int | None = None):
+    """AT-BUG-070 (test_debt, Fixed) — адресует WEBVIEW-контекст к вкладке на
+    НАТИВНОЙ (0-based) позиции `position`, ЛЮБОЙ — включая `!= 0`, пока
+    другие вкладки (в т.ч. вкладка-0) тоже живы, БЕЗ свёртки числа вкладок к
+    одной (в отличие от established-приёма reduce-to-one, см. докстринг
+    `browser_screen.py::tab_chip_locator`).
+
+    Признак адресации — нативный заголовок чипа вкладки
+    (`BrowserScreen.tab_chip_title_at`, источник — `WebChromeClient.
+    onReceivedTitle`, ТОТ ЖЕ источник, что `document.title` внутри самой
+    страницы) читается ДО входа в WEBVIEW (нативное дерево, sticky-класс
+    здесь не участвует), затем матчится против `driver.title` каждого
+    `driver.window_handles` (`contexts.in_webview_matching` — общий
+    механизм и полная эмпирика в `framework/core/contexts.py`). Это НЕ
+    `current_url`-угадывание (критерий готовности AT-BUG-070 явно требует
+    другого способа) — заголовок известен ЗАРАНЕЕ из независимого,
+    небраузерного источника.
+
+    ВНИМАНИЕ: если несколько вкладок несут одинаковый заголовок (напр. две
+    ещё не догрузившиеся вкладки с одинаковым плейсхолдером), матчинг
+    бросит `AssertionError` (неоднозначность) — вызывающему коду нужен
+    более узкий признак (см. `contexts.in_webview_matching` напрямую с
+    собственным предикатом, напр. по известному URL из `open_tabs_urls`)."""
+    expected_title = BrowserScreen(driver).tab_chip_title_at(position, timeout=timeout)
+    with contexts.in_webview_matching(
+        driver,
+        lambda url, title: title == expected_title,
+        timeout=timeout,
+        description=f"tab position {position}, native title={expected_title!r}",
+    ) as handle:
+        yield handle
+
+
+@allure.step("Then прочитан URL вкладки на позиции {position} через WEBVIEW-контекст (AT-BUG-070)")
+def webview_url_at_tab_position(driver, position: int, timeout: int | None = None) -> str:
+    with in_webview_at_tab_position(driver, position, timeout=timeout):
+        return driver.current_url
+
+
+@allure.step("Then выполнен JS `{script}` на вкладке на позиции {position} через WEBVIEW-контекст (AT-BUG-070)")
+def execute_script_at_tab_position(driver, position: int, script: str, timeout: int | None = None):
+    with in_webview_at_tab_position(driver, position, timeout=timeout):
+        return driver.execute_script(script)
+
+
+@allure.step("Then получен стабильный WEBVIEW-handle вкладки, чей текущий URL — {url} (AT-BUG-070)")
+def webview_handle_for_url(driver, url: str, timeout: int | None = None) -> str:
+    """AT-BUG-070 — альтернатива `in_webview_at_tab_position` для сценариев, где
+    у нескольких вкладок совпадает `document.title` (эмпирически найдено на
+    `listing_basic.mitm`: обе фикстурные страницы, отфильтрованная и
+    неотфильтрованная, несут ОДИН И ТОТ ЖЕ `<title>` "Test Fixture Listing |
+    Archive of Our Own" — title-матчинг там неоднозначен), но известен
+    ТЕКУЩИЙ URL цели из НЕ-WebView-оракула (`app_steps.
+    assert_persisted_tab_url_at`/`open_tabs_urls` — не `current_url`-
+    угадывание). Возвращает handle для повторного адресного использования
+    через `contexts.in_webview_handle` — сам URL цели может ИЗМЕНИТЬСЯ
+    следующим действием (напр. `navigate_tab_via_page_js_to`), а handle
+    остаётся валиден (эмпирически подтверждено, см. `contexts.
+    in_webview_handle` докстринг)."""
+    with contexts.in_webview_matching(
+        driver,
+        lambda u, t: u.rstrip("/") == url.rstrip("/"),
+        timeout=timeout,
+        description=f"tab currently at known url={url!r}",
+    ) as handle:
+        return handle
+
+
+@allure.step("When вкладка (handle {handle}) сама переходит на {url} (renderer-initiated, AT-BUG-070)")
+def navigate_tab_via_page_js_to(driver, handle: str, url: str, timeout: int | None = None) -> None:
+    """AT-BUG-070 — тот же приём, что `navigate_listing_via_page_js`
+    (renderer-initiated `window.location.href`, проходит `shouldOverride
+    UrlLoading` в отличие от host-initiated `driver.get()`), но явно
+    адресован к КОНКРЕТНОЙ вкладке через её ранее захваченный `window_handles`
+    handle (`webview_handle_for_url`/`in_webview_at_tab_position`) — не
+    активной/sticky вкладке. Нужен для утверждений про НЕ-активные/
+    НЕ-нулевые вкладки (напр. TC-207, контраст-дверь Г2 CH-010/BUG-070)."""
+    with contexts.in_webview_handle(driver, handle, timeout=timeout):
+        driver.execute_script(f"window.location.href = {url!r};")
+
+
+@allure.step("Then URL вкладки (handle {handle}) стал {url}")
+def assert_webview_handle_url(driver, handle: str, url: str, timeout: int | None = None) -> str:
+    """AT-BUG-070 — опрашивает URL КОНКРЕТНОЙ вкладки (по стабильному
+    handle, не по позиции/заголовку — оба могли смениться отложенной
+    навигацией) до совпадения с `url`, тот же класс поллинга, что
+    `assert_active_tab_url`, но адресован не к sticky-контексту."""
+    def _current(_d):
+        with contexts.in_webview_handle(driver, handle, timeout=timeout):
+            return driver.current_url
+
+    return wait_until(
+        driver,
+        lambda d: (u := _current(d)) and u.rstrip("/") == url.rstrip("/") and u,
+        timeout=timeout or settings.WEBVIEW_LOAD_TIMEOUT,
+        message=f"URL вкладки (handle {handle}) не стал {url!r}",
     )
 
 

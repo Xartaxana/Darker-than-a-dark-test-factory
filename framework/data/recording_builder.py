@@ -75,6 +75,23 @@ LISTING_DUPLICATE_URL = "https://archiveofourown.org/works?ao3_companion_fixture
 # `scripts/build_replay_recordings.py`.
 WORK_WITH_DOWNLOAD_FILENAME = "work_with_download.mitm"
 
+# --- AT-BUG-071: work-страница с EPUB-ссылкой + сама .epub-транзакция (TC-236,
+# симметричный EPUB-аналог TC-032/033) — ЗЕРКАЛО `WORK_WITH_DOWNLOAD_FILENAME`
+# для формата EPUB, единственное отличие построения (`build_work_with_download_epub`
+# в `scripts/build_replay_recordings.py`) — `download_url(work, ext="epub")` вместо
+# дефолтного `ext="html"`. Work-страница несёт ВСЕ 4 формата (`include_epub=True`,
+# как обычно) — регекс `DownloadRepository.kt:220` ищет `.epub` (когда
+# `downloadFormat == "epub"`), находит EPUB-ссылку раньше HTML/PDF/MOBI, второй GET
+# идёт на записанный `.epub`-flow этого же `.mitm`.
+WORK_WITH_DOWNLOAD_EPUB_FILENAME = "work_with_download_epub.mitm"
+
+# --- AT-BUG-071: work-страница БЕЗ EPUB-пункта в списке форматов (PDF/HTML/MOBI
+# есть, EPUB нет) — TC-237 («EPUB download link not found on page»). Без этой
+# записи регекс `DownloadRepository.kt:220` находил бы EPUB-ссылку на ЛЮБОЙ из
+# остальных work-страниц (все несут `include_epub=True` по умолчанию) раньше
+# ожидаемой ошибки — см. `bugs/AT-BUG-071.md` §«Суть долга» п.2.
+WORK_NO_EPUB_LINK_FILENAME = "work_no_epub_link.mitm"
+
 # --- Идентификаторы фикстуры маркерных страниц вкладок (TC-023/024/025, area=tabs) ---
 # Каждая страница — статичная, ВЫСОКАЯ (гарантированный scrollHeight выше вьюпорта
 # любого разумного эмулятора — см. AT-BUG-015 про короткие живые страницы) и с
@@ -469,12 +486,17 @@ def download_url(work: Work, ext: str = "html") -> str:
     return f"https://archiveofourown.org{download_href(work, ext)}"
 
 
-def _download_list_html(work: Work) -> str:
+def _download_list_html(work: Work, include_epub: bool = True) -> str:
     """`li.download` с вложенным `ul.download-list` (PDF/HTML/MOBI/EPUB) — тот же
     контейнер, что реальный AO3 кладёт в `ul.work.navigation.actions` work-страницы.
     `document.querySelector`/regex не требуют, чтобы `a[href*=".html"]` был прямым
-    потомком `li.download` — вложенность допустима."""
-    exts = ("pdf", "html", "mobi", "epub")
+    потомком `li.download` — вложенность допустима.
+
+    `include_epub=False` (AT-BUG-071, TC-237) — опускает EPUB-пункт из списка
+    форматов, оставляя PDF/HTML/MOBI. По умолчанию `True` — вывод байт-в-байт
+    идентичен прежней (безусловной) версии для ВСЕХ существующих вызовов без
+    этого параметра."""
+    exts = ("pdf", "html", "mobi", "epub") if include_epub else ("pdf", "html", "mobi")
     items = "\n".join(
         f'        <li><a href="{download_href(work, ext)}" title="{ext.upper()}">{ext.upper()}</a></li>'
         for ext in exts
@@ -641,11 +663,17 @@ def _chapters_html() -> str:
     )
 
 
-def render_work_page_html(work: Work) -> str:
+def render_work_page_html(work: Work, include_epub: bool = True) -> str:
     """Минимальная, но структурно-валидная work-страница AO3 (`#workskin`,
     `h2.title.heading`, `h3.byline.heading a[rel=author]` — сверено с Fragility note
     `PROJECT.md`) с валидной download-ссылкой (`li.download a[href*=".html"]`,
     `_download_list_html`). Самодостаточна — без внешних `<script src>`/`<link>`.
+
+    `include_epub=False` (AT-BUG-071, TC-237) — пробрасывается в
+    `_download_list_html`, страница несёт PDF/HTML/MOBI, но НЕ EPUB-пункт.
+    По умолчанию `True` — вывод байт-в-байт идентичен прежней сигнатуре для
+    ВСЕХ существующих вызовов (`listing_basic.mitm`/`work_with_download.mitm`/
+    `listing_paginated.mitm`/`works_multi.mitm` не меняются от этого расширения).
 
     AT-BUG-030: тело (`.wrapper`) несёт ТРИ дополнительных узла ПОСЛЕ исходного
     `<p>`-филлера — узлы 1/2 (`_tap_zone_guard_nodes_html`, whitelisted `<button>`
@@ -681,7 +709,7 @@ def render_work_page_html(work: Work) -> str:
       <h5 class="fandom tags"><a class="tag" href="/tags/{fandom}/works">{fandom}</a></h5>
     </div>
     <ul class="work navigation actions" role="navigation">
-      {_download_list_html(work)}
+      {_download_list_html(work, include_epub=include_epub)}
     </ul>
     {_kudo_submit_html()}
     {_work_meta_group_and_stats_html(fandom, work.word_count)}

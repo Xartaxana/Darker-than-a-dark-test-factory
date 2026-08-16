@@ -105,6 +105,45 @@ def build_work_with_download() -> Path:
     return path
 
 
+def build_work_with_download_epub() -> Path:
+    """AT-BUG-071: зеркало `build_work_with_download`, но для формата EPUB — TC-236
+    (позитивное скачивание в EPUB, симметричный кейс к TC-032/033) и предпосылка
+    TC-238/239/240-E (доводится test-automator: этот `.mitm` разблокирует
+    ПОВТОРНОЕ реальное скачивание работы W, уже скачанной как HTML — TC-238). Та же
+    работа (`ALL_WORKS[0]`, `LOVED`), что `build_work_with_download` — произвольный
+    выбор, ни один из кейсов не завязан на конкретную работу набора `ALL_WORKS`.
+    Единственное отличие от `build_work_with_download` — `ext="epub"` у
+    `rb.download_url`/`rb.render_downloaded_work_html`'s target (второй GET идёт на
+    `.epub`-путь вместо `.html`); work-страница по-прежнему несёт ВСЕ 4 формата
+    (`rb.render_work_page_html(work)`, `include_epub=True` по умолчанию) — тот же
+    HTML, что и `work_with_download.mitm`, только вторая транзакция — другой файл."""
+    work = ALL_WORKS[0]
+    work_page_flow = rb.make_html_get_flow(work.url, rb.render_work_page_html(work))
+    download_flow = rb.make_html_get_flow(
+        rb.download_url(work, ext="epub"), rb.render_downloaded_work_html(work)
+    )
+    path = settings.RECORDINGS_DIR / rb.WORK_WITH_DOWNLOAD_EPUB_FILENAME
+    rb.write_flows(path, [work_page_flow, download_flow])
+    return path
+
+
+def build_work_no_epub_link() -> Path:
+    """AT-BUG-071: work-страница БЕЗ EPUB-пункта в списке форматов — TC-237
+    («EPUB download link not found on page»). `include_epub=False` опускает EPUB
+    из `_download_list_html`, оставляя PDF/HTML/MOBI — regex `DownloadRepository.
+    kt:220` (ищет `.epub`) не находит совпадения на ЭТОЙ странице, что и
+    воспроизводит ожидаемую ошибку. Та же работа (`ALL_WORKS[0]`, `LOVED`), что
+    остальные download-фикстуры — изолированный `.mitm`, коллизии с
+    `work_with_download.mitm`/`work_with_download_epub.mitm` (те же URL, но ДРУГОЙ
+    HTML) нет: только ОДНА запись подключена к replay-прокси за раз (`replay`
+    фикстура, `conftest.py`, indirect-параметризация по имени файла)."""
+    work = ALL_WORKS[0]
+    flow = rb.make_html_get_flow(work.url, rb.render_work_page_html(work, include_epub=False))
+    path = settings.RECORDINGS_DIR / rb.WORK_NO_EPUB_LINK_FILENAME
+    rb.write_flows(path, [flow])
+    return path
+
+
 def build_tab_markers() -> Path:
     """`TAB_MARKER_COUNT` статичных высоких страниц с уникальными `<title>` — area=tabs
     (TC-023/024/025): различение вкладок по НАТИВНО видимому заголовку чипа
@@ -216,6 +255,8 @@ def main() -> None:
         build_listing_basic(),
         build_listing_duplicate_work(),
         build_work_with_download(),
+        build_work_with_download_epub(),
+        build_work_no_epub_link(),
         build_tab_markers(),
         build_listing_paginated(),
         build_works_multi(),

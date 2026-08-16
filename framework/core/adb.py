@@ -47,6 +47,23 @@ def force_stop() -> None:
     shell(f"am force-stop {_PKG}")
 
 
+def volume_dialog_visible() -> bool:
+    """AT-BUG-072: системный индикатор громкости (`VolumeDialogImpl`,
+    процесс `com.android.systemui`) — отдельное OS-окно (WindowManager,
+    `TYPE_VOLUME_OVERLAY`), НЕ часть `app_package` и потому недоступное
+    Appium accessibility-локаторам, но видимое в `dumpsys window windows`
+    (эмпирика emulator-5554, 2026-08-16: `Window #3 Window{... u0
+    VolumeDialogImpl}` появляется сразу после `input keyevent
+    KEYCODE_VOLUME_DOWN/UP`, когда клавиша НЕ перехвачена приложением, и
+    исчезает сам через несколько секунд — auto-dismiss, не требует явного
+    закрытия). Используется как наблюдаемый оракул `app_steps.
+    press_volume_key`/`assert_no_volume_dialog_appears`: позитивный (TC-253/
+    255 — штатная обработка громкости, диалог ПОКАЗЫВАЕТСЯ) и негативный
+    (TC-252 — перехват активен, диалог НЕ должен появиться вовсе)."""
+    out = shell("dumpsys window windows | grep -i volumedialog")
+    return "volumedialog" in out.lower()
+
+
 def clear_app_data() -> None:
     """Полный сброс приложения к состоянию чистой установки (pm clear).
 
