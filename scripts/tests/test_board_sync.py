@@ -31,13 +31,21 @@ def _expected_board_transition_pairs() -> dict[str, set[tuple[str, str]]]:
     for machine_key in ("test-case", "bug", "run"):
         machine = matrix["machines"][machine_key]
         statuses = machine["statuses"]
+        terminal = set(machine.get("terminal") or [])
         pairs: set[tuple[str, str]] = set()
         for t in machine["transitions"]:
             if not t.get("via_board"):
                 continue
             to = t["to"]
             frm = t["from"]
-            froms = [s for s in statuses if s != to] if frm == "*" else [frm]
+            if frm == "*":
+                # Н2 критик-диффа: '*' не разворачивается на терминальные
+                # статусы без from_terminal (независимый пересчёт — та же
+                # семантика, что _board_transitions_for_machine).
+                froms = [s for s in statuses
+                         if s != to and (t.get("from_terminal") or s not in terminal)]
+            else:
+                froms = [frm]
             pairs.update((f, to) for f in froms)
         expected[machine_key] = pairs
     return expected
@@ -134,9 +142,15 @@ def test_board_transitions_expected_shapes():
     cfg = bs._workflows_config()
 
     tc_pairs = {(t["from"], t["to"]) for t in cfg["test-workflow"]["transitions"]}
+    # Н2 критик-диффа (2026-08-16): "*" больше НЕ разворачивается на
+    # терминальные статусы без from_terminal — кнопка ("Merged", "Review")
+    # не генерируется (раньше рисовалась и отбивалась classify — UX-мусор и
+    # второй дубль wildcard-семантики вне матрицы). Клик-защита на
+    # потреблении сохраняется (test_merged_card_not_movable_from_board).
     assert tc_pairs == {
         ("Draft", "Approved"), ("Review", "Approved"),
-        ("Draft", "Review"), ("Approved", "Review"), ("Automated", "Review"), ("Blocked", "Review"),
+        ("Draft", "Review"), ("Approved", "Review"), ("Automated", "Review"),
+        ("Blocked", "Review"),
     }
 
     bug_pairs = {(t["from"], t["to"]) for t in cfg["bug-workflow"]["transitions"]}
@@ -180,6 +194,15 @@ def test_blocked_run_lands_in_blocked_column(repo):
     repo.run("RUN-400", "Blocked")
     bs.build()
     assert _issue_index("RUN-400")["status"] == "run-blocked"
+
+
+# --- 5c-bis: Merged-кейс попадает в свою колонку (П1 Р0 п.4, spec-p1-dedup v7) --
+
+def test_merged_test_case_lands_in_merged_column(repo):
+    repo.test_case("TC-450", "Merged", extra=(
+        'automated_by: ""\nautomation_status: ""\nmerged_into: TC-451\n'))
+    bs.build()
+    assert _issue_index("TC-450")["status"] == "tc-merged"
 
 
 # --- 5d: warning-фолбэк на неизвестном статусе --------------------------------

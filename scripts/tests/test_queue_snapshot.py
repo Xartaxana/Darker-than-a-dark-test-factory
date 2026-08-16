@@ -165,6 +165,26 @@ def test_release_readiness_p0_p1_coverage_and_uncovered(repo, monkeypatch):
     assert "непокрытые P0: TC-101" in section
 
 
+# --- П1 Р0 п.5 (spec-p1-dedup v7): Merged не в знаменателе P0/P1 coverage ---
+
+def test_merged_excluded_from_p0_denominator_and_not_uncovered(repo, monkeypatch):
+    """Merged-кейс НЕ в tc_priority_total (знаменатель) и НЕ в списке
+    непокрытых P0 — покрытие несёт merged_into, не сам поглощённый кейс."""
+    monkeypatch.setattr(qs, "REPO", repo.root, raising=True)
+    monkeypatch.setattr(qs, "AUT_PATH", repo.root / "state" / "app-under-test.yaml", raising=True)
+    monkeypatch.setattr(qs, "ESCALATIONS_PATH", repo.root / "state" / "escalations.md", raising=True)
+    repo.test_case("TC-200", "Automated", extra="priority: P0\n")
+    repo.test_case("TC-201", "Merged", extra=(
+        "priority: P0\nautomated_by: \"\"\nautomation_status: \"\"\nmerged_into: TC-200\n"))
+
+    text = qs.render(qs.collect(), "2026-07-08T00:00:00Z")
+    section = text.split("## Release readiness")[1].split("## Сборка под тестом")[0]
+
+    # Знаменатель БЕЗ Merged: 1 Automated / 1 total (не /2) -> 100%.
+    assert "- p0_automation_coverage: **100%** (1/1)" in section
+    assert "непокрытые P0" not in section
+
+
 def test_release_readiness_test_debt_open_and_quarantine(repo, monkeypatch):
     """Item 6/7: test_debt Open|Reopened (Fixed исключён) + карантин автотестов."""
     monkeypatch.setattr(qs, "REPO", repo.root, raising=True)

@@ -254,6 +254,102 @@ def test_run_has_no_board_transitions():
     assert tr.board_whitelist()["run"] == {}
 
 
+# --- П1 Р0 п.3 (spec-p1-dedup v7, r4-r7): from_terminal + Merged --------------
+
+def test_test_case_terminal_is_merged():
+    assert tr.terminal("test-case") == {"Merged"}
+
+
+def test_wildcard_without_flag_does_not_revive_terminal():
+    """«* без флага не оживляет терминальный»: test-case `*`→Review НЕ несёт
+    from_terminal — с Merged (терминал) он не матчит ни для одного актора без
+    явного правила. test-automator не входит в акторы явного rollback-перехода
+    Merged→Review — изолирует именно wildcard-гейт (не путать с рестором ниже)."""
+    assert not tr.is_allowed("test-case", "Merged", "Review", "test-automator")
+    assert not tr.is_allowed("test-case", "Merged", "Review", "test-maintainer")
+    assert not tr.is_allowed("test-case", "Merged", "Review", "sla_sweep")
+
+
+def test_factory_never_exits_merged():
+    """«фабрика не выводит из Merged»: is_allowed по ВСЕМ фабричным акторам и
+    ВСЕМ статусам test-case из Merged — пусто. Правило test-case `*`→Blocked
+    несёт from_terminal: false намеренно (r6/r7) — фабрика эскалирует Merged-
+    конфликт БЕЗ смены статуса (board_inbound.apply_conflict), не переходом."""
+    factory = sorted((yaml.safe_load(
+        (SCHEMAS / "transitions.yaml").read_text(encoding="utf-8"))
+        ["actors"]["groups"]["factory"]))
+    for actor in factory:
+        for to in tr.statuses("test-case"):
+            if to == "Merged":
+                continue
+            assert not tr.is_allowed("test-case", "Merged", to, actor), (actor, to)
+
+
+def test_bug_verified_to_open_still_allowed_by_human_after_terminal_fix():
+    """«Verified→Open человеком жив» — позитивный пин к from_terminal: true на
+    bug `*`→Open (Verified — терминал bug, у него нет отдельного правила ИЗ
+    Verified, только это *-правило)."""
+    assert tr.is_allowed("bug", "Verified", "Open", "human")
+    assert not tr.is_allowed("bug", "Verified", "Open", "fix-verifier")
+
+
+def test_automation_retired_to_deprecated_human_strategist_still_allowed():
+    """«retired→deprecated human/strategist жив» — позитив к
+    test_deprecated_is_human_or_strategist_retired_is_terminal (:149-156):
+    from_terminal: true на automation `*`→deprecated сохраняет прежнюю
+    (уже легальную ДО фикса терминальности) семантику."""
+    assert tr.is_allowed("automation", "retired", "deprecated", "human")
+    assert tr.is_allowed("automation", "retired", "deprecated", "test-strategist")
+    assert not tr.is_allowed("automation", "retired", "deprecated", "test-maintainer")
+
+
+def test_merged_rollback_to_review_is_allowed_for_human_and_lead():
+    """«откат rollback жив» — явный переход Merged→Review (rollback: true, БЕЗ
+    via_board) матчит НЕЗАВИСИМО от from_terminal (флаг гейтит только
+    "*"-правила, явный терминальный from — всегда)."""
+    assert tr.is_allowed("test-case", "Merged", "Review", "human")
+    assert tr.is_allowed("test-case", "Merged", "Review", "lead")
+    assert not tr.is_allowed("test-case", "Merged", "Review", "test-automator")
+
+
+def test_merged_to_review_not_in_board_whitelist():
+    """Rollback БЕЗ via_board (r5) — Merged не попадает в board_whitelist,
+    LEGACY_WHITELIST выше остаётся неизменным (паритет-тест
+    test_board_whitelist_parity_with_legacy_literal уже это покрывает целиком;
+    здесь — прицельная проверка на самом Merged-ключе)."""
+    wl = tr.board_whitelist()["test-case"]
+    assert "Merged" not in wl
+    assert "Merged" not in wl.get("*", set())
+
+
+def test_board_allowed_direct_merged_and_verified():
+    """Прямые юниты на board_allowed() (не только через board_inbound.classify()):
+    Merged-src отклонён (терминал без флага на *->Review), Verified-src (bug)
+    принят (флаг from_terminal: true)."""
+    assert not tr.board_allowed("test-case", "Merged", "Review")
+    assert tr.board_allowed("bug", "Verified", "Open")
+    assert not tr.board_allowed("bug", "Open", "Open")   # петля
+
+
+def test_board_allowed_ignores_meta_signature():
+    """board_allowed() не принимает meta вовсе (в отличие от is_allowed) —
+    семантика board_whitelist(): guard-переходы (test_debt) существуют
+    ПАРАЛЛЕЛЬНО обычному human-правилу (bug Open→Fixed несёт ОБА — human
+    via_board:true и test-maintainer/test-automator guard:test_debt БЕЗ
+    via_board); board_allowed находит человеческое via_board-правило
+    независимо от guard-варианта, не падая на отсутствии meta."""
+    assert tr.board_allowed("bug", "Open", "Fixed")
+
+
+def test_merged_transitions_require_human_or_lead():
+    assert tr.is_allowed("test-case", "Automated", "Merged", "human")
+    assert tr.is_allowed("test-case", "Automated", "Merged", "lead")
+    assert tr.is_allowed("test-case", "Approved", "Merged", "human")
+    assert tr.is_allowed("test-case", "Approved", "Merged", "lead")
+    assert not tr.is_allowed("test-case", "Automated", "Merged", "test-automator")
+    assert not tr.is_allowed("test-case", "Automated", "Merged", "test-reviewer")
+
+
 # --- границы ответственности акторов ---------------------------------------
 
 def test_only_human_marks_fixed():

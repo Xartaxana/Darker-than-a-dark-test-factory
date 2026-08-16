@@ -96,7 +96,9 @@ TrackState — git-native трекер: **единственный источн�
 
 - **bug:** `Open|Reopened → Fixed | Rejected | Intended | Blocked`; `любой → Open`
   (ручное переоткрытие);
-- **test-case:** `Draft|Review → Approved`; `любой → Review` (вернуть на доработку);
+- **test-case:** `Draft|Review → Approved`; `любой → Review` (вернуть на
+  доработку) **кроме терминальных (Merged)** — П1 spec-p1-dedup v7: выход
+  из `Merged` только явным rollback-переходом руками/Lead, не бордой;
 - **run:** переходы не принимаются (только комментарии).
 
 Переход применяется как правка `status:` во frontmatter артефакта + обновление

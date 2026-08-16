@@ -67,7 +67,13 @@ machines:
            матрица обязана описывать оба)"}
       - {from: Reopened, to: Rejected, by: [human], via_board: true, ref: "D4"}
       - {from: Reopened, to: Intended, by: [human], via_board: true, ref: "D5"}
-      - {from: "*",      to: Open,     by: [human], via_board: true, ref: "ручное переоткрытие из любого статуса"}
+      # from_terminal: true (П1 Р0 п.3, r4-r7): сохраняет ЖИВОЙ путь переоткрытия
+      # Verified→Open с борды (bug не несёт отдельного правила ИЗ Verified — только
+      # это *-правило). Пин test_transitions.py:272-275 (is_allowed) остаётся
+      # зелёным без изменений; ДОБАВЛЕН позитивный пин classify() «bug Verified→Open
+      # с борды применяется» (test_board_inbound.py).
+      - {from: "*",      to: Open,     by: [human], via_board: true, from_terminal: true,
+         ref: "ручное переоткрытие из любого статуса"}
       # --- вердикты фабрики ---
       - {from: Fixed,    to: Verified, by: [fix-verifier],
          ref: "D1: связанные TC зелёные на сборке новее found_in; только fix-verifier, человек НЕ закрывает баги мимо верификации"}
@@ -102,8 +108,12 @@ machines:
 
   test-case:
     initial: [Draft, Review]   # test-designer: Draft при спорных требованиях, иначе сразу Review
-    terminal: []
-    statuses: [Draft, Review, Approved, Automated, Blocked]
+    # П1 Р0 (spec-p1-dedup v7, r4-r7): Merged — терминал. Валидатор терминальности
+    # (:180-184 ниже, scripts/transitions.py validate()) видит только явные
+    # from:<term> правила — from_terminal на *-правилах ниже гейтит доступ
+    # фабрики/борды к Merged (см. пометки по каждому правилу этой машины).
+    terminal: [Merged]
+    statuses: [Draft, Review, Approved, Automated, Blocked, Merged]
     transitions:
       - {from: Draft,    to: Approved, by: [human], via_board: true, ref: "D12: аппрув (в т.ч. с борды)"}
       - {from: Review,   to: Approved, by: [human], via_board: true, ref: "D12"}
@@ -117,8 +127,31 @@ machines:
       # автор не принимает собственную работу.
       - {from: Approved, to: Automated, by: [test-reviewer], effects: [automated_by_required],
          ref: "F1: ревью пройдено; заодно ревьюер ставит automation_status: active (B3)"}
+      # П1 Р0 п.1/2 (spec-p1-dedup v7): дубль-кейс поглощён journey-TC — human/Lead
+      # переводят вручную ВМЕСТЕ с merged_into (validate-правило требует обоих полей
+      # согласованно) и обнулением automated_by/automation_status. Оба ниже — БЕЗ
+      # via_board (двигать Merged можно только руками/Lead, не драг-н-дропом).
+      - {from: Automated, to: Merged, by: [human, lead], effects: [],
+         ref: "П1 Р0 п.1/2: Automated-дубль поглощён journey"}
+      - {from: Approved,  to: Merged, by: [human, lead], effects: [],
+         ref: "П1 Р0 п.1/2: Approved-дубль поглощён journey ДО автоматизации (пилот Р4 шаг 2)"}
+      # Явный откат (r5/r6): обязан тем же ходом обнулить merged_into (двустороннее
+      # validate-правило иначе красит сам откат) — механика в board_inbound/ручной
+      # правке, не в этой строке. rollback: true — метка исключения из инварианта
+      # терминальности (validate() пускает не-human выход из terminal только с ней);
+      # БЕЗ via_board намеренно (иначе Merged попадает в board_whitelist и открывает
+      # борд-путь из терминального).
+      - {from: Merged,   to: Review,   by: [human, lead], rollback: true, effects: [],
+         ref: "П1 Р0 п.2 (r5/r6): откат ошибочного слияния — только явный переход руками/Lead"}
+      # from_terminal: false (default, r6/r7) — гейтит доступ ИЗ Merged через это
+      # *-правило: «любой → Review» НЕ оживляет Merged (выход — только явный
+      # rollback-переход выше). Для нетерминальных статусов поведение не меняется.
       - {from: "*",      to: Review, by: [human, test-automator, test-maintainer], via_board: true,
          ref: "вернуть на доработку (прецедент TC-009: replay-блокер)"}
+      # from_terminal: false (default, r6) — НЕ true: у test-case terminal впервые
+      # непуст (Merged), и true открывал бы фабрике Merged→Blocked при непустом
+      # merged_into (ERROR validate). Эскалация по Merged-кейсу — БЕЗ смены статуса
+      # (board_inbound.apply_conflict, отдельная ветка по artifact_status==Merged).
       - {from: "*",      to: Blocked, by: [factory], effects: [escalation],
          ref: "деградация/конфликт (прецедент TC-013..015)"}
 
@@ -131,7 +164,9 @@ machines:
          ref: "каждое падение получило вердикт из реестра"}
       - {from: Triaged, to: Closed, by: [bug-reporter, test-maintainer, qa-loop],
          ref: "все вердикты обработаны: баг заведён / тест починен / карантин"}
-      - {from: "*", to: Blocked, by: [factory], effects: [escalation],
+      # from_terminal: true (П1 Р0 п.3, r4-r7): эскалационный интент пина
+      # test_transitions.py:115-124 сохранён без изменений.
+      - {from: "*", to: Blocked, by: [factory], effects: [escalation], from_terminal: true,
          ref: "деградация (прецедент RUN-REH-901: нечего гонять — не выдумывать вердикт)"}
       - {from: Blocked, to: NeedsTriage, by: [human], ref: "человек разобрал причину блока"}
 
@@ -160,7 +195,10 @@ machines:
          ref: "разобрался: это не flake, а детерминированная поломка"}
       - {from: needs_maintenance, to: active, by: [test-maintainer],
          ref: "починен: 3 зелёных прогона подряд"}
-      - {from: "*", to: deprecated, by: [human, test-strategist],
+      # from_terminal: true (П1 Р0 п.3, r4-r7): семантика смежной машины НЕ меняется —
+      # пин test_transitions.py:149-156 дополняется ПОЗИТИВНЫМ кейсом human/strategist
+      # (retired→deprecated остаётся легальным, как и до фикса терминальности).
+      - {from: "*", to: deprecated, by: [human, test-strategist], from_terminal: true,
          ref: "кейс/область устарели — решение человека или стратегии, не воркера"}
       - {from: deprecated, to: retired, by: [human, test-maintainer],
          ref: "код теста удалён из suite, allure.id снят; терминал"}
@@ -185,7 +223,9 @@ machines:
          ref: "лок взят, сессия идёт"}
       - {from: InProgress, to: Done, by: [exploratory-tester],
          ref: "протокол и follow-up заполнены"}
-      - {from: "*", to: Blocked, by: [factory], effects: [escalation],
+      # from_terminal: true (П1 Р0 п.3, r4-r7): эскалационный интент пина
+      # test_transitions.py:102-106 (charter) сохранён без изменений.
+      - {from: "*", to: Blocked, by: [factory], effects: [escalation], from_terminal: true,
          ref: "критик FAIL по плану / деградация сессии"}
       - {from: Blocked, to: Planned, by: [human, lead],
          ref: "человек/Lead разобрал причину блока; актор lead добавлен 2026-07-31

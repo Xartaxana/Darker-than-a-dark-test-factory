@@ -184,6 +184,16 @@ def test_cases_by_area() -> dict[str, list[dict]]:
     return by_area
 
 
+def _automated_by_display(c: dict) -> str:
+    """Строка листинга кейса для колонки automated_by (П1 Р0 п.5,
+    spec-p1-dedup v7): у `status: Merged` `automated_by` пуст по построению
+    (дубль-кейс поглощён journey) — «—» читался бы как «автоматизация не
+    ведётся», хотя покрытие несёт `merged_into`. Показываем явно."""
+    if str(c.get("status")) == "Merged":
+        return f"merged → {c.get('merged_into') or '?'}"
+    return c.get("automated_by") or "—"
+
+
 def select(frm: str, to: str, cmap: dict) -> dict:
     files = diff_files(frm, to)
     ignored: list[str] = []
@@ -274,7 +284,7 @@ def render(frm: str, to: str, result: dict) -> str:
             for c in sorted(cases, key=lambda m: str(m.get("id"))):
                 lines.append(
                     f"- {c.get('id')} [{c.get('priority')}, {c.get('status')}] "
-                    f"automated_by: {c.get('automated_by') or '—'}")
+                    f"automated_by: {_automated_by_display(c)}")
 
     lines += ["", "## smoke (гоняется на любой сборке)", ""]
     smoke_cases = test_cases_by_area().get(SMOKE_AREA, [])
@@ -282,7 +292,7 @@ def render(frm: str, to: str, result: dict) -> str:
         for c in sorted(smoke_cases, key=lambda m: str(m.get("id"))):
             lines.append(
                 f"- {c.get('id')} [{c.get('priority')}, {c.get('status')}] "
-                f"automated_by: {c.get('automated_by') or '—'}")
+                f"automated_by: {_automated_by_display(c)}")
     else:
         lines.append("- область без кейсов")
 

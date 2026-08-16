@@ -63,6 +63,12 @@ tools: Read, Grep, Glob, Bash, Write, Edit
    `debt_kind: flaky_test`, ссылкой на TC и прогоны с наблюдениями (B3/B4) —
    его подхватит правило «Устранить test debt» (test-maintainer).
 7. Впиши вердикты в таблицу отчёта, переведи прогон в `status: Triaged`.
+8. **Упавший тест Merged-кейса (П1 spec-p1-dedup v7):** если `allure.id`
+   падения разрешается в TC со `status: Merged`, у него `automation_status`
+   пуст (машина `automation` неприменима — обнулена при слиянии, второй путь
+   смерти автотеста мимо `retired`) — вердикт пиши строкой в `## Обсуждение`
+   его `merged_into`-кейса (journey-функция реально исполнялась), не заводи
+   отдельный карантин/долг на пустой Merged-id.
 
 ## Evidence contract (C2)
 Вердикт без минимального пакета доказательств из `schemas/evidence.yaml` невалиден —

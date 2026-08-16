@@ -34,7 +34,7 @@ AUT_PATH = REPO / "state" / "app-under-test.yaml"
 ESCALATIONS_PATH = REPO / "state" / "escalations.md"
 
 # Порядок вывода статусов (жизненный цикл, не алфавит)
-TC_ORDER = ["Draft", "Review", "Approved", "Automated", "Blocked"]
+TC_ORDER = ["Draft", "Review", "Approved", "Automated", "Merged", "Blocked"]
 BUG_ORDER = ["Open", "Reopened", "Fixed", "Verified", "Rejected", "Intended", "Blocked"]
 RUN_ORDER = ["NeedsTriage", "Triaged", "Closed", "Blocked"]
 AUTOMATION_ORDER = ["active", "quarantined", "needs_maintenance", "deprecated", "retired"]
@@ -158,11 +158,14 @@ def collect() -> dict:
                     not str(meta.get("red_probe") or "").strip():
                 red_probe_missing.append(key)
             priority = str(meta.get("priority") or "").strip()
-            if priority:
+            # П1 Р0 п.5: Merged не в знаменателе P0/P1 automation coverage — дубль-
+            # кейс поглощён journey, его покрытие несёт merged_into, а не отдельный
+            # automated_by. Без исключения из знаменателя доля навсегда занижалась бы.
+            if priority and status != "Merged":
                 tc_priority_total[priority] += 1
                 if status == "Automated":
                     tc_priority_automated[priority] += 1
-            if priority == "P0" and status != "Automated":
+            if priority == "P0" and status not in ("Automated", "Merged"):
                 p0_uncovered.append(key)
         elif itype == "bug":
             # B4: test_debt — не дефект приложения; своя секция, не пугает счётчики багов.

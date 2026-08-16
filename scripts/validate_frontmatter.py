@@ -257,6 +257,31 @@ def check_cross_field(meta: dict, schema: dict, rel: str) -> list[str]:
             errors.append(
                 f"{rel}: id `{bug_id}` с префиксом `AT-BUG-` требует "
                 f"`type: test_debt` (получено `{_s(meta.get('type')) or '(нет)'}`)")
+    # П1 Р0 п.1 (spec-p1-dedup v7): двустороннее правило Merged <-> merged_into.
+    # Merged ⇒ automated_by пуст И automation_status пуст И merged_into непуст
+    # (обратный путь automation-машины через retired НЕ используется для
+    # поглощённых — второй, более прямой путь смерти автотеста, docs/03 §2);
+    # merged_into непуст ⇒ status == Merged (иначе поле бессмысленно/протухло).
+    if schema.get("type") == "test-case":
+        status = _s(meta.get("status"))
+        merged_into = _s(meta.get("merged_into")).strip()
+        if status == "Merged":
+            if _s(meta.get("automated_by")).strip():
+                errors.append(
+                    f"{rel}: `status: Merged` требует пустой `automated_by` "
+                    f"(дубль-кейс поглощён journey — automated_by держит journey, не он)")
+            if _s(meta.get("automation_status")).strip():
+                errors.append(
+                    f"{rel}: `status: Merged` требует пустой `automation_status` "
+                    f"(обнуляется при слиянии — второй путь смерти автотеста мимо retired)")
+            if not merged_into:
+                errors.append(
+                    f"{rel}: `status: Merged` требует непустой `merged_into` "
+                    f"(TC-id кейса, поглотившего этот дубль)")
+        if merged_into and status != "Merged":
+            errors.append(
+                f"{rel}: `merged_into: {merged_into}` требует `status: Merged` "
+                f"(получено `{status}`)")
     # Красный замок (Lead 2026-08-03, прецедент TC-139/BUG-015): red_lock
     # указывает баг, до фикса которого автотест намеренно красный — guard
     # правила F1 в rules.yaml читает это поле; здесь держим целостность.
@@ -302,6 +327,67 @@ def check_cross_field_warn(meta: dict, schema: dict, rel: str) -> list[str]:
             f"{rel}: status Intended с known_issue `{_s(meta.get('known_issue'))}` — "
             "Intended держит known_issue \"true\" (гард D3 still-repro, ESC-029)")
     return warns
+
+
+# --- П1 Р3 (spec-p1-dedup v7): машинный детектор проб на journey-чекпойнты ---
+#
+# Машинная форма (r3/r4, Н1 критик-диффа: ПРЕФИКС-матч обоих заголовков —
+# симметрия; суффиксы вида «(journey)» не выключают гейт молча): чекпойнты —
+# пункты НУМЕРОВАННОГО списка раздела `## Чекпойнты*`; записи проб — строки,
+# начинающиеся `- проба:`, в разделе, чей заголовок начинается С ПРЕФИКСА
+# `## Красная проба` (существующие 16 секций несут суффикс «(red_probe,
+# ретрофит — …)» — прочный матч только по префиксу). Раздел = от заголовка до
+# СЛЕДУЮЩЕГО `## ` или до конца файла. Статус-гард: ERROR только при
+# `status: Automated` (до Automated пробы ещё не ставились — F1 впереди,
+# правило молчит на Review/Approved).
+_CHECKPOINTS_HEADER_RE = re.compile(r"(?m)^## Чекпойнты")
+_RED_PROBE_HEADER_RE = re.compile(r"(?m)^## Красная проба")
+_NEXT_H2_RE = re.compile(r"(?m)^## ")
+_NUMBERED_ITEM_RE = re.compile(r"(?m)^[ \t]*\d+[.)][ \t]+\S")
+_PROBE_LINE_RE = re.compile(r"(?m)^-[ \t]*проба:")
+
+
+def _section_body(body: str, header_re: re.Pattern) -> str | None:
+    """Текст секции ПОСЛЕ заголовка (по header_re) до следующего `## ` (или EOF).
+    None — секция отсутствует."""
+    m = header_re.search(body)
+    if m is None:
+        return None
+    start = m.end()
+    nxt = _NEXT_H2_RE.search(body, start)
+    return body[start:nxt.start() if nxt else len(body)]
+
+
+def check_checkpoint_probes(meta: dict, schema: dict, body: str, rel: str) -> list[str]:
+    """Journey-TC (П1 Р1): у `status: Automated` число `- проба:` в разделе
+    `## Красная проба*` обязано быть >= числу пунктов раздела `## Чекпойнты*`
+    (проба на КАЖДЫЙ чекпойнт). Кейс без раздела `## Чекпойнты` — не journey,
+    правило не применяется. Н1 критик-диффа: секция ЕСТЬ, но нумерованных
+    пунктов 0 — гейт не выключается молча, а даёт ERROR (fail-closed:
+    защита объявлена тотальной — реализована тотальной)."""
+    if schema.get("type") != "test-case":
+        return []
+    if _s(meta.get("status")) != "Automated":
+        return []
+    section = _section_body(body, _CHECKPOINTS_HEADER_RE)
+    if section is None:
+        return []
+    checkpoints = len(_NUMBERED_ITEM_RE.findall(section))
+    if checkpoints == 0:
+        return [
+            f"{rel}: раздел «## Чекпойнты» есть, но нумерованных пунктов 0 — "
+            "битая форма journey-кейса (нумерованный список обязателен, П1 Р3; "
+            "гейт fail-closed)"
+        ]
+    probe_section = _section_body(body, _RED_PROBE_HEADER_RE)
+    probes = len(_PROBE_LINE_RE.findall(probe_section)) if probe_section else 0
+    if probes < checkpoints:
+        return [
+            f"{rel}: раздел «## Чекпойнты» несёт {checkpoints} пункт(ов), а «## "
+            f"Красная проба…» — только {probes} строк(и) «- проба:» (Automated "
+            f"требует пробу на КАЖДЫЙ чекпойнт, П1 Р3)"
+        ]
+    return []
 
 
 def check_feature_ids(meta: dict, schema: dict, rel: str,
@@ -373,7 +459,7 @@ def validate() -> tuple[list[str], list[str]]:
                 continue
             rel = md.relative_to(REPO).as_posix()
             text = md.read_text(encoding="utf-8", errors="replace")
-            meta, _body = bs._parse_frontmatter(text)
+            meta, body = bs._parse_frontmatter(text)
             if not meta:
                 errors.append(f"{rel}: frontmatter отсутствует или не парсится")
                 continue
@@ -389,6 +475,7 @@ def validate() -> tuple[list[str], list[str]]:
             e, w = check_meta(meta, schema, rel)
             errors += e
             warns += w
+            errors += check_checkpoint_probes(meta, schema, body, rel)
             warns += check_cross_field_warn(meta, schema, rel)
             fe, fw = check_feature_ids(meta, schema, rel, registry_ids)
             errors += fe

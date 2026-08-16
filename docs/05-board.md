@@ -17,7 +17,9 @@
   `board/` целиком. Идемпотентен.
 
 ### Маппинг статусов (наши → колонки борды по категориям new/indeterminate/done)
-- **test-case:** Draft · Review · Approved · **Automated**
+- **test-case:** Draft · Review · Approved · **Automated** · **Merged** (П1
+  spec-p1-dedup v7 — дубль-кейс поглощён journey; терминален, откат только
+  явным переходом, не бордой)
 - **bug:** Open · Reopened · Blocked · Fixed · **Verified** · Rejected · Intended
 - **run:** NeedsTriage · Triaged · **Closed**
 - Приоритет: P0–P3; severity бага → приоритет (blocker/critical→P0, major→P1, minor→P2, trivial→P3).
@@ -63,7 +65,9 @@ Show-Board        # запускает сервер и открывает бра
    Draft- или Blocked-кейс (бейджи называют причину);
 3. **На ревью** — все кейсы написаны, слабое звено = Review (ваш Approve);
 4. **Автоматизация** — все Approved, не все Automated;
-5. **Покрыта** — все кейсы Automated.
+5. **Покрыта** — все кейсы Automated ИЛИ Merged (П1 spec-p1-dedup v7: дубль-
+   кейс, поглощённый journey, засчитан — его покрытие несёт кейс из
+   `merged_into`).
 
 Бейджи: «фич без кейсов N/M», «черновиков N», «⚠ заблокировано», «переоткрыта»,
 «багов на кейсах стори: N», «автотестов в карантине: N», «регресс сборки: …»

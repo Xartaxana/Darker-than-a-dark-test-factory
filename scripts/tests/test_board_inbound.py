@@ -222,6 +222,58 @@ def test_sync_comments_creates_section_if_missing(repo):
     assert "## Обсуждение" in src.read_text(encoding="utf-8")
 
 
+# --- П1 Р0 п.3 (spec-p1-dedup v7, r4-r7): Merged терминален для борды --------
+
+def test_merged_card_not_movable_from_board(repo):
+    """Негативный пин: «Merged-карточку с борды не применить». cursor_artifact
+    == "Merged" (терминал test-case) — человек-перетаскивание на Review не
+    применяется (единственный легальный выход — явный rollback-переход руками/
+    Lead в frontmatter, не борда)."""
+    src = repo.test_case(
+        "TC-300", "Merged",
+        extra="automated_by: \"\"\nautomation_status: \"\"\nmerged_into: TC-301\n",
+    )
+    repo.board_card("TC-300", "test-case", "Review")
+    repo.cursor({"TC-300": {"itype": "test-case", "artifact_status": "Merged", "board_status": "Merged"}})
+
+    action, _ = _classify_one("TC-300")
+    assert action.kind == "reject"
+    assert "status: Merged" in src.read_text(encoding="utf-8")
+
+
+def test_bug_verified_to_open_applies_from_board(repo):
+    """Позитивный пин: «bug Verified→Open с борды применяется». Verified —
+    терминал bug, но `*`→Open несёт from_terminal: true (r4-r7) — переоткрытие
+    с борды остаётся живым несмотря на терминальный гейт."""
+    src = repo.bug("BUG-300", "Verified")
+    repo.board_card("BUG-300", "bug", "Open")
+    repo.cursor({"BUG-300": {"itype": "bug", "artifact_status": "Verified", "board_status": "Verified"}})
+
+    action, _ = _classify_one("BUG-300")
+    assert action.kind == "apply"
+    assert action.new_status == "Open"
+    assert src.read_text(encoding="utf-8")  # артефакт существует до apply_status
+
+
+def test_apply_conflict_on_merged_escalates_without_status_change(repo):
+    """apply_conflict: Merged-карточка (artifact_status на диске) — конфликт
+    остаётся эскалацией БЕЗ смены статуса (не Blocked, П1 Р0 п.3)."""
+    src = repo.test_case(
+        "TC-302", "Merged",
+        extra="automated_by: \"\"\nautomation_status: \"\"\nmerged_into: TC-301\n",
+    )
+    repo.board_card("TC-302", "test-case", "Review")
+    repo.cursor({"TC-302": {"itype": "test-case", "artifact_status": "Approved", "board_status": "Approved"}})
+
+    action = bi.Action("TC-302", "conflict", "конфликт", src=src)
+    bi.apply_conflict(action, "Review", "Merged", dry=False)
+    text = src.read_text(encoding="utf-8")
+    assert "status: Merged" in text
+    assert "status: Blocked" not in text
+    assert bi.ESCALATIONS_PATH.exists()
+    assert "TC-302" in bi.ESCALATIONS_PATH.read_text(encoding="utf-8")
+
+
 def test_dry_run_does_not_write(repo):
     """--dry-run: ни статус, ни комментарии не пишутся на диск."""
     src = repo.bug("BUG-205", "Open")

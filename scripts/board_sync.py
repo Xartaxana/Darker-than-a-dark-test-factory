@@ -63,6 +63,11 @@ STATUSES = [
     # заполненный automated_by = F1-гейт, ждёт test-reviewer. См. _board_status_for.
     ("tc-awaiting-review", "Awaiting Review", "indeterminate"),
     ("tc-automated", "Automated", "done"),
+    # П1 Р0 п.4 (spec-p1-dedup v7): отдельная колонка для Merged — дубль-кейс,
+    # поглощённый journey-TC. INV 1:1 с STATUS_MAP ниже (коллапс невозможен).
+    # board_view.py COLUMNS её сознательно НЕ несёт (как сейчас tc-blocked) —
+    # карточка не отображается на HTML-борде, только на TrackState.
+    ("tc-merged", "Merged", "done"),
     ("tc-blocked", "Blocked", "indeterminate"),
     # bug
     ("bug-open", "Open", "new"),
@@ -98,7 +103,7 @@ _STORY_STAGE_NAME = {sid: name for sid, name, _ in STATUSES if sid.startswith("s
 WORKFLOWS = {
     "test-workflow": {
         "name": "Test Case Workflow",
-        "statuses": ["tc-draft", "tc-review", "tc-approved", "tc-awaiting-review", "tc-automated", "tc-blocked"],
+        "statuses": ["tc-draft", "tc-review", "tc-approved", "tc-awaiting-review", "tc-automated", "tc-merged", "tc-blocked"],
         "machine": "test-case",
     },
     "bug-workflow": {
@@ -125,7 +130,7 @@ WORKFLOWS = {
 # Наш статус (в YAML артефакта) -> id статуса TrackState, по типу артефакта
 STATUS_MAP = {
     "test-case": {"Draft": "tc-draft", "Review": "tc-review", "Approved": "tc-approved",
-                  "Automated": "tc-automated", "Blocked": "tc-blocked"},
+                  "Automated": "tc-automated", "Merged": "tc-merged", "Blocked": "tc-blocked"},
     "bug": {"Open": "bug-open", "Reopened": "bug-reopened", "Blocked": "bug-blocked", "Fixed": "bug-fixed",
             "Verified": "bug-verified", "Rejected": "bug-rejected", "Intended": "bug-intended"},
     "run": {"NeedsTriage": "run-needstriage", "Triaged": "run-triaged", "Closed": "run-closed",
@@ -388,13 +393,22 @@ def _board_transitions_for_machine(matrix: dict, machine_key: str) -> list[dict]
     детерминированы, чтобы вывод был воспроизводим и сравним в self-test'ах."""
     machine = (matrix.get("machines") or {}).get(machine_key) or {}
     statuses = list(machine.get("statuses") or [])
+    terminal = set(machine.get("terminal") or [])
     out: list[dict] = []
     for t in machine.get("transitions") or []:
         if not t.get("via_board"):
             continue
         to = str(t["to"])
         frm = str(t["from"])
-        froms = [s for s in statuses if s != to] if frm == "*" else [frm]
+        # Н2 критик-диффа: '*' не разворачивается на терминальные статусы
+        # без from_terminal — иначе борда рисует кнопку (Merged -> Review),
+        # которую classify всё равно отобьёт (UX-мусор + второй дубль
+        # wildcard-семантики вне матрицы).
+        if frm == "*":
+            froms = [s for s in statuses
+                     if s != to and (t.get("from_terminal") or s not in terminal)]
+        else:
+            froms = [frm]
         for f in froms:
             out.append({
                 "id": f"{machine_key}-{f}-{to}".lower(),
@@ -698,9 +712,12 @@ def collect_stories() -> tuple[list[dict], list[str]]:
             # Критик-вход (не-блокер): статус вне enum test-case.schema.yaml
             # молча утекал бы в "Покрыта" (else-ветка ловила ЛЮБОЙ остаток) —
             # трактуем как слабое звено (стадия 2) + WARN, не падение.
+            # П1 Р0 п.5 (spec-p1-dedup v7): Merged — легальный статус, НЕ попадает
+            # в unknown_cases (иначе каждый journey-поглощённый дубль ложно
+            # деградировал бы стадию стори до «слабое звено»).
             unknown_cases = [
                 m for m in zone_tc_metas
-                if str(m.get("status")) not in ("Draft", "Review", "Approved", "Automated", "Blocked")
+                if str(m.get("status")) not in ("Draft", "Review", "Approved", "Automated", "Blocked", "Merged")
             ]
 
             if no_links or features_without_cases or draft_cases or blocked_cases or unknown_cases:
@@ -724,24 +741,33 @@ def collect_stories() -> tuple[list[dict], list[str]]:
                 # непуст ⇒ у каждой фичи зоны есть >=1 кейс ⇒ zone_tc_metas непуст) —
                 # никаких all([])/vacuous truth над потенциально пустым множеством.
                 # unknown_cases уже исключены веткой выше ⇒ статусы ⊆
-                # {Review, Approved, Automated}.
+                # {Review, Approved, Automated, Merged}.
                 statuses_present = {str(m.get("status")) for m in zone_tc_metas}
                 if "Review" in statuses_present:
                     stage_idx = 2  # "На ревью"
                 elif "Approved" in statuses_present:
                     stage_idx = 3  # "Автоматизация"
-                elif zone_tc_metas and all(str(m.get("status")) == "Automated" for m in zone_tc_metas):
+                elif zone_tc_metas and all(str(m.get("status")) in ("Automated", "Merged") for m in zone_tc_metas):
                     # Критик-вход (не-блокер): ПОЗИТИВНАЯ проверка, не "что осталось
                     # после исключений" — "Покрыта" требует явного all(), а не
                     # молчаливого else. Недостижимо иначе по построению выше, но
                     # защита от будущего протекания статуса остаётся явной.
+                    # П1 Р0 п.5: Merged засчитан в «Покрыта» — дубль-кейс поглощён
+                    # journey, его покрытие несёт merged_into.
                     stage_idx = 4  # "Покрыта"
                     if latest_run is not None:
                         tc_results = latest_run.get("tc_results") or {}
-                        present = [k for k in zone_tc_keys if k in tc_results]
+                        # Знаменатель бейджа БЕЗ Merged (П1 Р0 п.5): у Merged-кейса
+                        # automated_by пуст, он никогда не появится в tc_results —
+                        # включение его в знаменатель занижало бы дробь навсегда.
+                        non_merged_keys = [
+                            k for k in zone_tc_keys
+                            if str(tc_by_id.get(k, {}).get("status")) != "Merged"
+                        ]
+                        present = [k for k in non_merged_keys if k in tc_results]
                         if present:
                             green = sum(1 for k in present if tc_results.get(k) == "passed")
-                            badges.append(f"зелёные в {latest_run.get('id')}: {green}/{len(zone_tc_keys)}")
+                            badges.append(f"зелёные в {latest_run.get('id')}: {green}/{len(non_merged_keys)}")
                     quarantine = [
                         m for m in zone_tc_metas
                         if str(m.get("status")) == "Automated"
@@ -878,7 +904,7 @@ def build():
             "reporter": "qa-agents", "labels": labels, "components": [], "fixVersions": [],
             "watchers": [], "parent": None, "epic": None,
             "created": updated, "updated": updated, "archived": False,
-            "resolution": "done" if status_id.endswith(("automated", "verified", "closed")) else None,
+            "resolution": "done" if status_id.endswith(("automated", "verified", "closed", "merged")) else None,
         }
         fm_lines = "\n".join(f"{k}: {json.dumps(v, ensure_ascii=False)}" for k, v in fm.items())
         main = f"---\n{fm_lines}\n---\n\n# {summary}\n\n_Спроецировано из `{src.relative_to(REPO).as_posix()}` (источник правды).\nСтатус в нашей машине: **{meta.get('status')}**._\n\n{body}"

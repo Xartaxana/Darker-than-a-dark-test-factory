@@ -33,7 +33,7 @@ AUT_PATH = REPO / "state" / "app-under-test.yaml"
 
 # Порядок из schemas/test-case.schema.yaml (enum priority/status) — не угадан.
 PRIORITY_ORDER = ["P0", "P1", "P2", "P3"]
-TC_STATUS_ORDER = ["Draft", "Review", "Approved", "Automated", "Blocked"]
+TC_STATUS_ORDER = ["Draft", "Review", "Approved", "Automated", "Merged", "Blocked"]
 
 _RISK_ID_RE = re.compile(r"(R-\d+)")
 _RISK_ROW_RE = re.compile(r"^\|\s*(R-\d+)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|")
@@ -221,8 +221,12 @@ def collect() -> dict:
 
 
 def _area_stats(cases: list[dict]) -> dict:
-    total = len(cases)
-    automated = sum(1 for c in cases if str(c.get("status")) == "Automated")
+    # П1 Р0 п.5: total БЕЗ Merged — дубль-кейс поглощён journey, знаменатель
+    # coverage_status/процента иначе навсегда занижен (Merged никогда не станет
+    # Automated повторно, automated_by у него пуст по построению).
+    non_merged = [c for c in cases if str(c.get("status")) != "Merged"]
+    total = len(non_merged)
+    automated = sum(1 for c in non_merged if str(c.get("status")) == "Automated")
     if total == 0:
         coverage_status = None
     elif automated == 0:
@@ -241,10 +245,12 @@ def _area_stats(cases: list[dict]) -> dict:
         st = str(c.get("status") or "?")
         counts[(pr, st)] += 1
 
+    # П1 Р0 п.5: P0/P1-Merged не «пробел» — покрытие несёт journey из merged_into.
     not_automated_hi = sorted(
         (str(c.get("id")), str(c.get("priority")), str(c.get("status")))
         for c in cases
-        if str(c.get("priority")) in ("P0", "P1") and str(c.get("status")) != "Automated"
+        if str(c.get("priority")) in ("P0", "P1")
+        and str(c.get("status")) not in ("Automated", "Merged")
     )
 
     automated_by = sorted(

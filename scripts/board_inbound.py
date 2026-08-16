@@ -179,11 +179,15 @@ def classify(ts: TicketState) -> Action:
             src=ts.src, extra={"human_to": ts.board_status, "agent_to": ts.artifact_status},
         )
 
-    # Только человек подвинул — проверяем whitelist.
+    # Только человек подвинул — проверяем матрицу С БОРДЫ. П1 Р0 п.3 (r4-r7):
+    # tr.board_allowed() поверх find() — единый источник правды, учитывает
+    # from_terminal (терминальный src, напр. Merged, гейтит общие "*"-правила;
+    # ДОБАВЛЕН пин "Merged-карточку с борды не применить" + позитивный "bug
+    # Verified→Open с борды применяется", test_board_inbound.py). Классификатор
+    # больше не дублирует логику матрицы собственным фолбэком на allowed["*"].
     src_status = ts.cursor_artifact or "*"
     target = ts.board_status
-    allowed = WHITELIST.get(ts.itype, {})
-    ok = target in allowed.get(src_status, set()) or target in allowed.get("*", set())
+    ok = tr.board_allowed(ts.itype, src_status, target)
     if not ok:
         return Action(
             ts.key, "reject",
@@ -296,10 +300,30 @@ def apply_status(src: Path, new_status: str, *, dry: bool) -> str:
 
 
 def apply_conflict(action: Action, ts_board: str, ts_agent: str, *, dry: bool) -> str:
-    """Конфликт (§4): артефакт → Blocked, строка в escalations, реплика в обсуждение."""
+    """Конфликт (§4): артефакт → Blocked, строка в escalations, реплика в обсуждение.
+
+    Merged-карточка (П1 Р0 п.3, r5) — признак: `artifact_status` СЕЙЧАС НА ДИСКЕ
+    (читаем status: из самого файла, не из курсора) == "Merged". Merged
+    терминален для test-case и фабричный `*`→Blocked на него не заведён с
+    флагом from_terminal (r6/r7) — писать Blocked поверх Merged открыло бы
+    фабрике путь мимо решения r6 и нарушило бы двустороннее validate-правило
+    (merged_into остался бы непустым при status не-Merged после отката вручную).
+    Конфликт остаётся ЭСКАЛАЦИЕЙ, но БЕЗ смены статуса — курсор продвигается
+    штатно (reconcile._advance_cursor), решение по Merged-кейсу — за человеком."""
     if action.src is None:
         return f"  [WARN] {action.key}: конфликт без артефакта — только эскалация"
     text = action.src.read_bytes().decode("utf-8")
+    meta, _body = bs._parse_frontmatter(text)
+    if str(meta.get("status", "")) == "Merged":
+        if not dry:
+            _append_escalation(
+                action.key,
+                f"конфликт борда↔артефакт на Merged-кейсе: человек→{ts_board}, "
+                f"агент→{ts_agent}. Merged терминален — статус НЕ изменён (только "
+                f"явный rollback-переход руками/Lead), нужно решение человека.",
+            )
+        return (f"  [CONFLICT] {action.key}: CONFLICT на Merged — эскалация БЕЗ "
+                f"смены статуса (человек→{ts_board}, агент→{ts_agent})")
     stamp = _utcnow()
     new, changed = _rewrite_field(text, "status", "Blocked")
     new = _set_field(new, "status_since", f'"{stamp}"')

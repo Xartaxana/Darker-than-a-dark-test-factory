@@ -230,6 +230,51 @@ def test_all_automated_gives_covered_stage(repo):
     assert s["stage_id"] == "story-covered"
 
 
+# --- Merged (П1 Р0 п.5, spec-p1-dedup v7): дубль-кейс засчитан в «Покрыта» --
+
+def test_merged_case_counts_toward_covered_stage(repo):
+    """Зона с ОДНИМ Automated и ОДНИМ Merged кейсом — «Покрыта», не «слабое
+    звено» (Merged добавлен в unknown_cases-исключение и в all()-проверку)."""
+    _write_escalations(_qaready_line(21, "ts", "T", resolved="s"))
+    _write_registry([_feature("feat-a", story=21)])
+    repo.test_case("TC-920", "Automated", extra="features: [feat-a]\nautomation_status: active\n")
+    repo.test_case("TC-921", "Merged", extra=(
+        "features: [feat-a]\nautomated_by: \"\"\nautomation_status: \"\"\n"
+        "merged_into: TC-920\n"))
+    stories, _warns = bs.collect_stories()
+    s = _by_iid(stories, "21")
+    assert s["stage_id"] == "story-covered"
+
+
+def test_merged_only_zone_is_covered_all_merged(repo):
+    """Граница: ВСЕ кейсы зоны — Merged (0 Automated) — всё ещё «Покрыта»
+    (all() над {Automated, Merged}, не только «есть хоть один Automated»)."""
+    _write_escalations(_qaready_line(22, "ts", "T", resolved="s"))
+    _write_registry([_feature("feat-a", story=22)])
+    repo.test_case("TC-922", "Merged", extra=(
+        "features: [feat-a]\nautomated_by: \"\"\nautomation_status: \"\"\n"
+        "merged_into: TC-900\n"))
+    stories, _warns = bs.collect_stories()
+    s = _by_iid(stories, "22")
+    assert s["stage_id"] == "story-covered"
+
+
+def test_merged_case_excluded_from_green_badge_denominator(repo):
+    """Знаменатель бейджа «зелёные в RUN» — БЕЗ Merged (у него automated_by
+    пуст, он никогда не появится в tc_results): 1 Automated + 1 Merged
+    зоны -> знаменатель 1, не 2."""
+    _write_escalations(_qaready_line(23, "ts", "T", resolved="s"))
+    _write_registry([_feature("feat-a", story=23)])
+    repo.test_case("TC-923", "Automated", extra="features: [feat-a]\nautomation_status: active\n")
+    repo.test_case("TC-924", "Merged", extra=(
+        "features: [feat-a]\nautomated_by: \"\"\nautomation_status: \"\"\n"
+        "merged_into: TC-923\n"))
+    repo.run("RUN-20260501-0000", "Closed", extra="tc_results: { TC-923: passed }\n")
+    stories, _warns = bs.collect_stories()
+    s = _by_iid(stories, "23")
+    assert any("зелёные в RUN-20260501-0000: 1/1" in b for b in s["badges"])
+
+
 # --- «Покрыта»: последний прогон + отсутствие TC в tc_results --------------
 
 def test_covered_stage_green_badge_uses_latest_run_by_id(repo):

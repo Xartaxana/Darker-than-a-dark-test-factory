@@ -62,11 +62,36 @@ def _all_group_actors() -> set[str]:
     return out
 
 
+def terminal(itype: str) -> set[str]:
+    """Терминальные статусы машины itype (schemas/transitions.yaml, поле terminal).
+
+    Публичный аксессор (П1 Р0 п.3, spec-p1-dedup v7 r4-r7) — используется
+    board_allowed() и вызывающим кодом, который хочет знать терминальность
+    без прямого чтения матрицы."""
+    return set(_machine(itype).get("terminal") or [])
+
+
 def find(itype: str, frm: str, to: str) -> list[dict]:
-    """Все правила матрицы, покрывающие переход frm→to (учитывая from: "*")."""
+    """Все правила матрицы, покрывающие переход frm→to (учитывая from: "*").
+
+    from_terminal (П1 Р0 п.3, r4-r7): правило с from: "*" матчит ТЕРМИНАЛЬНЫЙ
+    frm только если несёт `from_terminal: true` (default false) — иначе фабрика/
+    борда молча оживляли бы терминальный статус через общий wildcard-переход
+    (класс, пойманный на Merged: `*`→Review глушить надо, `*`→Open у bug —
+    наоборот, оставить живым). Правило с ЯВНЫМ терминальным `from` (не "*",
+    например rollback-переходы Merged→Review/Verified→Fixed) матчит ВСЕГДА —
+    флаг гейтит только "*"-правила, не трогает явные."""
+    term = terminal(itype)
     out = []
     for t in _machine(itype).get("transitions") or []:
-        if t.get("to") == to and t.get("from") in (frm, "*"):
+        if t.get("to") != to:
+            continue
+        t_from = t.get("from")
+        if t_from == frm:
+            out.append(t)
+        elif t_from == "*":
+            if frm in term and not t.get("from_terminal", False):
+                continue
             out.append(t)
     return out
 
@@ -129,6 +154,30 @@ def board_whitelist() -> dict[str, dict[str, set[str]]]:
             wl.setdefault(str(t["from"]), set()).add(str(t["to"]))
         out[itype] = wl
     return out
+
+
+def board_allowed(itype: str, frm: str, to: str) -> bool:
+    """Легален ли переход frm→to С БОРДЫ человеком (via_board: true, human в by),
+    поверх find() — учитывает from_terminal (терминальный frm гейтит "*"-правила),
+    единый источник правды с is_allowed().
+
+    guard НЕ участвует (П1 Р0 п.3, r5) — семантика board_whitelist(): борда решает
+    по via_board/by БЕЗ frontmatter-meta артефакта (whitelist строится статически,
+    guard-переходы вроде test_debt требуют meta и board_whitelist() их и так не
+    видит — is_allowed() применял бы guard, здесь сознательно find(), не is_allowed()).
+
+    frm может быть литеральным "*" (вызывающий код board_inbound.classify() не
+    знает предыдущего статуса артефакта) — find() тогда матчит только правила,
+    чей from САМ буквально "*" (единственный случай, когда terminal-гейт не
+    участвует: терминальность неизвестного src непроверяема)."""
+    if frm == to:
+        return False
+    for t in find(itype, frm, to):
+        if not t.get("via_board"):
+            continue
+        if "human" in (t.get("by") or []):
+            return True
+    return False
 
 
 def validate() -> list[str]:

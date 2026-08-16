@@ -161,6 +161,33 @@ def test_p0_p1_not_automated_listed(repo, monkeypatch):
     assert "TC-122" not in section
 
 
+# --- П1 Р0 п.5 (spec-p1-dedup v7): Merged исключён из знаменателя ------------
+
+def test_merged_case_excluded_from_total_and_designed_full(repo, monkeypatch):
+    """Merged НЕ в знаменателе total/coverage_status — область с одним
+    Automated и одним Merged кейсом остаётся designed-full (1/1), не
+    partial (1/2): дубль поглощён journey, его покрытие несёт merged_into."""
+    _patch(repo, monkeypatch)
+    _tc(repo.root, "TC-130", "journey-area", "Automated", priority="P1")
+    _tc(repo.root, "TC-131", "journey-area", "Merged", priority="P1")
+
+    text = cm.render(cm.collect(), "T")
+
+    assert "| journey-area | 1 | 1 | designed-full |" in text
+
+
+def test_merged_p0_not_flagged_as_gap(repo, monkeypatch):
+    """P0/P1-Merged не «пробел» (не в списке not_automated_hi)."""
+    _patch(repo, monkeypatch)
+    _tc(repo.root, "TC-132", "rating", "Merged", priority="P0", risk="R-04")
+    _tc(repo.root, "TC-133", "rating", "Automated", priority="P0", risk="R-04")
+
+    text = cm.render(cm.collect(), "T")
+
+    section = text.split("### rating")[1]
+    assert "P0/P1 не в Automated: нет" in section
+
+
 def test_idempotent_same_state(repo, monkeypatch):
     _patch(repo, monkeypatch)
     _tc(repo.root, "TC-130", "smoke", "Automated", priority="P0", risk="R-01")

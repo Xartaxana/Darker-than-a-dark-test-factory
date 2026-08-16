@@ -59,6 +59,11 @@ tools: Read, Bash, Write, Edit
    `framework/` (требование схемы), а `Invoke-Pytest` ставит cwd=framework —
    перед подстановкой в pytest СРЕЖЬ ведущий `framework/`
    (`framework/tests/x.py::f` → `tests/x.py::f`), иначе путь не резолвится.
+   **Merged-кейс (П1 spec-p1-dedup v7):** `status: Merged` несёт пустой
+   `automated_by` по построению — при impact-селекции/сборе путей гони тест
+   ИЗ `merged_into`-кейса (journey несёт `automated_by`), не по пустому
+   полю самого Merged-id; цель без `automated_by` (окно пилота) — явный
+   «прогон невозможен: journey не автоматизирован» в отчёте, не молчание.
 3. Собери итоги: passed/failed/skipped/quarantined, длительность, каталог Allure.
    **Счётчик device-liveness guard'а (AT-BUG-026):** терминальная сводка pytest
    несёт строку «...recoveries this session = N/M» (печатается ВСЕГДА; при N>0

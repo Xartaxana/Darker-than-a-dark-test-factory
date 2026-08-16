@@ -65,6 +65,14 @@ board_inbound; целостность и паритет закреплены `sc
 ```
 Draft → Review → Approved → Automated
                     ↑ (человек утверждает; допустим авто-approve для P2/P3)
+Approved|Automated → Merged (человек/Lead, П1 spec-p1-dedup v7: дубль-кейс
+                              поглощён journey — automated_by/automation_status
+                              обнуляются синхронно со статусом; ВТОРОЙ путь
+                              смерти автотеста мимо машины automation с её
+                              retired, выбран сознательно, чтобы не плодить
+                              переходы автомашины ради поглощённых. Откат —
+                              только явный rollback-переход Merged → Review
+                              руками/Lead, не борда)
 ```
 
 **Баг** (`bugs/`):

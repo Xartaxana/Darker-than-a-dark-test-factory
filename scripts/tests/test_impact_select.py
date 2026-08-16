@@ -36,8 +36,10 @@ def _write_map(repo, text: str = MAP_YAML) -> Path:
 
 
 def _tc(root: Path, key: str, area: str, priority: str = "P1", status: str = "Automated",
-        automated_by: str | None = None) -> Path:
+        automated_by: str | None = None, merged_into: str | None = None) -> Path:
     extra = f'automated_by: "{automated_by}"\n' if automated_by else ""
+    if merged_into:
+        extra += f'merged_into: {merged_into}\n'
     text = (
         f"---\nid: {key}\ntitle: TC {key}\narea: {area}\npriority: {priority}\n"
         f"status: {status}\n{extra}updated: \"2026-07-01T00:00:00Z\"\nlock: \"\"\n---\n\n# {key}\n\nтело\n"
@@ -205,6 +207,42 @@ def test_select_areas_and_render_lists_tc(repo, monkeypatch):
     # smoke упоминается всегда, даже если сам не в затронутых областях
     assert "## smoke (гоняется на любой сборке)" in text
     assert "TC-001 [P0, Automated] automated_by: framework/tests/test_smoke.py::test_smoke" in text
+
+
+# --- П1 Р0 п.5 (spec-p1-dedup v7): Merged-кейс листится «merged → TC-YYY» ---
+
+def test_merged_case_shows_merged_into_not_dash(repo, monkeypatch):
+    _patch(repo, monkeypatch)
+    _write_map(repo)
+    _tc(repo.root, "TC-051", "browser", priority="P1", status="Merged",
+        merged_into="TC-050")
+    app = _init_app_repo(repo.root)
+    c1 = _commit(app, {"README.md": "a"}, "init")
+    c2 = _commit(app, {
+        "app/src/main/java/com/example/ao3_wrapper/ui/browser/TabStrip.kt": "x",
+    }, "tabs/browser change")
+
+    cmap = isel.load_map()
+    result = isel.select(c1, c2, cmap)
+    text = isel.render(c1, c2, result)
+    assert "TC-051 [P1, Merged] automated_by: merged → TC-050" in text
+    assert "TC-051 [P1, Merged] automated_by: —" not in text
+
+
+def test_merged_smoke_case_shows_merged_into_too(repo, monkeypatch):
+    """Тот же формат в блоке smoke (второй f-string, :282-285)."""
+    _patch(repo, monkeypatch)
+    _write_map(repo)
+    _tc(repo.root, "TC-052", "smoke", priority="P0", status="Merged",
+        merged_into="TC-001")
+    app = _init_app_repo(repo.root)
+    c1 = _commit(app, {"README.md": "a"}, "init")
+    c2 = _commit(app, {"README.md": "b"}, "noop change")
+
+    cmap = isel.load_map()
+    result = isel.select(c1, c2, cmap)
+    text = isel.render(c1, c2, result)
+    assert "TC-052 [P0, Merged] automated_by: merged → TC-001" in text
 
 
 def test_render_full_regression_still_mentions_smoke(repo, monkeypatch):

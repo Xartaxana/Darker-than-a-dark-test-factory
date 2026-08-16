@@ -521,6 +521,218 @@ def test_past_updated_is_clean(repo, schemas):
     assert not any("BUG-102" in e and "будущем" in e for e in errors)
 
 
+# --- П1 Р0 п.1 (spec-p1-dedup v7): статус Merged — двустороннее правило -----
+
+def test_merged_status_clean_pair(repo, schemas):
+    repo.test_case("TC-200", "Merged", extra=(
+        'automated_by: ""\n'
+        'automation_status: ""\n'
+        'merged_into: TC-201\n'
+    ))
+
+    errors, _warns = vf.validate()
+    assert errors == []
+
+
+def test_merged_with_automated_by_is_error(repo, schemas):
+    repo.test_case("TC-202", "Merged", extra=(
+        'automated_by: "framework/tests/test_x.py::test_y"\n'
+        'automation_status: ""\n'
+        'merged_into: TC-201\n'
+    ))
+
+    errors, _warns = vf.validate()
+    assert any("TC-202" in e and "automated_by" in e for e in errors)
+
+
+def test_merged_with_automation_status_is_error(repo, schemas):
+    repo.test_case("TC-203", "Merged", extra=(
+        'automated_by: ""\n'
+        'automation_status: active\n'
+        'merged_into: TC-201\n'
+    ))
+
+    errors, _warns = vf.validate()
+    assert any("TC-203" in e and "automation_status" in e for e in errors)
+
+
+def test_merged_without_merged_into_is_error(repo, schemas):
+    repo.test_case("TC-204", "Merged", extra=(
+        'automated_by: ""\n'
+        'automation_status: ""\n'
+    ))
+
+    errors, _warns = vf.validate()
+    assert any("TC-204" in e and "merged_into" in e for e in errors)
+
+
+def test_merged_into_without_merged_status_is_error(repo, schemas):
+    """Обратная сторона: merged_into непуст, но status != Merged (протухшее поле
+    после ручного отката без обнуления, r5)."""
+    repo.test_case("TC-205", "Review", extra='merged_into: TC-201\n')
+
+    errors, _warns = vf.validate()
+    assert any("TC-205" in e and "merged_into" in e and "status: Merged" in e for e in errors)
+
+
+def test_merged_into_bad_pattern_is_error(repo, schemas):
+    """Схема: merged_into — `^$|^TC-\\d+$`."""
+    repo.test_case("TC-206", "Merged", extra=(
+        'automated_by: ""\n'
+        'automation_status: ""\n'
+        'merged_into: not-a-tc-id\n'
+    ))
+
+    errors, _warns = vf.validate()
+    assert any("TC-206" in e and "merged_into" in e for e in errors)
+
+
+# --- П2 Р1 (spec-p2-pyramid v4): поле `layer` — старые кейсы не краснеют ----
+
+def test_layer_empty_is_clean(repo, schemas):
+    """Пустая строка/отсутствие layer проходит МОЛЧА (гейт «непусто И в enum»
+    держит F1-промпт, не код схемы) — старые 257 кейсов не краснеют."""
+    repo.test_case("TC-210", "Approved")
+
+    errors, _warns = vf.validate()
+    assert errors == []
+
+
+def test_layer_valid_enum_is_clean(repo, schemas):
+    repo.test_case("TC-211", "Approved", extra="layer: L2\n")
+
+    errors, _warns = vf.validate()
+    assert errors == []
+
+
+def test_layer_bad_enum_is_error(repo, schemas):
+    repo.test_case("TC-212", "Approved", extra="layer: L1\n")   # L1 намеренно вне enum
+
+    errors, _warns = vf.validate()
+    assert any("TC-212" in e and "layer" in e for e in errors)
+
+
+# --- П1 Р3 (spec-p1-dedup v7): машинный детектор проб на journey-чекпойнты --
+
+def _journey_case(root: Path, key: str, status: str, body_extra: str, *, extra: str = "") -> Path:
+    """Пишет test-case напрямую (repo.test_case не даёт управлять телом файла) —
+    frontmatter в стиле Repo.test_case + произвольное markdown-тело ПОСЛЕ него."""
+    text = (
+        f"---\nid: {key}\ntitle: TC {key}\narea: test\npriority: P1\nstatus: {status}\n"
+        f"{extra}updated: \"2026-07-01T00:00:00Z\"\n---\n\n# {key}\n\n{body_extra}\n"
+    )
+    p = root / "test-cases" / f"{key}.md"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(text, encoding="utf-8")
+    return p
+
+
+def test_checkpoint_probes_zero_checkpoints_is_error_fail_closed(repo, schemas):
+    """Н1 критик-диффа (fail-closed): раздел «## Чекпойнты» ЕСТЬ, но
+    нумерованных пунктов 0 — битая форма journey-кейса, гейт даёт ERROR,
+    а не выключается молча (защита объявлена тотальной — реализована
+    тотальной). Кейс БЕЗ раздела — по-прежнему не journey (следующий тест)."""
+    _journey_case(repo.root, "TC-220", "Automated",
+                  "## Чекпойнты\n\n## Красная проба (red_probe, ретрофит — n/a)\n",
+                  extra='automated_by: "framework/tests/test_x.py::test_y"\n')
+
+    errors, _warns = vf.validate()
+    assert any("TC-220" in e and "нумерованных пунктов 0" in e for e in errors)
+
+
+def test_checkpoint_probes_header_with_suffix_still_gates(repo, schemas):
+    """Н1: заголовок с суффиксом («## Чекпойнты (journey)») НЕ выключает гейт
+    молча — префикс-матч симметричен заголовку проб."""
+    _journey_case(repo.root, "TC-222", "Automated",
+                  "## Чекпойнты (journey)\n\n1. первый\n2. второй\n\n"
+                  "## Красная проба (red_probe)\n\n- проба: одна\n",
+                  extra='automated_by: "framework/tests/test_x.py::test_y"\n')
+
+    errors, _warns = vf.validate()
+    assert any("TC-222" in e and "2" in e for e in errors)   # 2 чекпойнта, 1 проба
+
+
+def test_checkpoint_probes_missing_section_is_silent(repo, schemas):
+    """Кейс без раздела «## Чекпойнты» вовсе — не journey, правило не касается."""
+    _journey_case(repo.root, "TC-221", "Automated", "Обычное тело без секций.\n",
+                  extra='automated_by: "framework/tests/test_x.py::test_y"\n')
+
+    errors, _warns = vf.validate()
+    assert not any("TC-221" in e and "Чекпойнты" in e for e in errors)
+
+
+def test_checkpoint_probes_prose_instead_of_probe_lines_is_error(repo, schemas):
+    """1 чекпойнт, раздел «Красная проба» есть, но прозой — не матчит `- проба:`
+    — ERROR."""
+    _journey_case(repo.root, "TC-222", "Automated", (
+        "## Чекпойнты\n1. Открыть файл\n\n"
+        "## Красная проба (red_probe, ретрофит — n/a)\n"
+        "Проверили руками, тест падает на порче.\n"
+    ), extra='automated_by: "framework/tests/test_x.py::test_y"\n')
+
+    errors, _warns = vf.validate()
+    assert any("TC-222" in e and "Чекпойнты" in e for e in errors)
+
+
+def test_checkpoint_probes_review_case_without_probes_is_silent(repo, schemas):
+    """Статус-гард: Review с чекпойнтами без проб — молчание (F1 ещё впереди)."""
+    _journey_case(repo.root, "TC-223", "Review",
+                  "## Чекпойнты\n1. Открыть файл\n2. Удалить файл\n")
+
+    errors, _warns = vf.validate()
+    assert not any("TC-223" in e and "Чекпойнты" in e for e in errors)
+
+
+def test_checkpoint_probes_automated_without_probes_is_error(repo, schemas):
+    """Automated без единой пробы — ERROR (граница: 1 чекпойнт, 0 проб)."""
+    _journey_case(repo.root, "TC-224", "Automated",
+                  "## Чекпойнты\n1. Открыть файл\n\n## Красная проба (red_probe, ретрофит — n/a)\n",
+                  extra='automated_by: "framework/tests/test_x.py::test_y"\n')
+
+    errors, _warns = vf.validate()
+    assert any("TC-224" in e and "1 пункт" in e and "0 строк" in e for e in errors)
+
+
+def test_checkpoint_probes_exact_match_is_clean(repo, schemas):
+    """Граница НА месте: 3 чекпойнта, ровно 3 пробы — чисто."""
+    _journey_case(repo.root, "TC-225", "Automated", (
+        "## Чекпойнты\n1. Открыть файл (CSS)\n2. Удалить файл (рейтинг жив)\n"
+        "3. Удалить работу (всё удалено)\n\n"
+        "## Красная проба (red_probe, ретрофит — n/a)\n"
+        "- проба: чекпойнт 1 упал на порче локатора\n"
+        "- проба: чекпойнт 2 упал на порче сида\n"
+        "- проба: чекпойнт 3 упал на порче assert'а\n"
+    ), extra='automated_by: "framework/tests/test_x.py::test_y"\n')
+
+    errors, _warns = vf.validate()
+    assert not any("TC-225" in e and "Чекпойнты" in e for e in errors)
+
+
+def test_checkpoint_probes_one_short_is_error(repo, schemas):
+    """Граница ЗА местом: 3 чекпойнта, только 2 пробы — ERROR."""
+    _journey_case(repo.root, "TC-226", "Automated", (
+        "## Чекпойнты\n1. Открыть файл\n2. Удалить файл\n3. Удалить работу\n\n"
+        "## Красная проба (red_probe, ретрофит — n/a)\n"
+        "- проба: чекпойнт 1\n- проба: чекпойнт 2\n"
+    ), extra='automated_by: "framework/tests/test_x.py::test_y"\n')
+
+    errors, _warns = vf.validate()
+    assert any("TC-226" in e and "3 пункт" in e and "2 строк" in e for e in errors)
+
+
+def test_checkpoint_probes_header_matched_by_prefix(repo, schemas):
+    """Заголовок «## Красная проба» матчится ПРЕФИКСОМ — существующие 16 секций
+    несут суффикс «(red_probe, ретрофит — …)», это не должно ломать детектор."""
+    _journey_case(repo.root, "TC-227", "Automated", (
+        "## Чекпойнты\n1. Открыть файл\n\n"
+        "## Красная проба (red_probe, ретрофит — 2026-08-16T10:00:00Z)\n"
+        "- проба: упал на порче\n"
+    ), extra='automated_by: "framework/tests/test_x.py::test_y"\n')
+
+    errors, _warns = vf.validate()
+    assert not any("TC-227" in e and "Чекпойнты" in e for e in errors)
+
+
 def test_future_status_since_is_error(repo, schemas):
     """Тот же детектор — на `status_since`, не только на `updated` (второй
     инцидент AT-BUG-029: +4..11ч в будущее)."""
