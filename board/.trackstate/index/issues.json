@@ -7435,6 +7435,27 @@
     "archived": false
   },
   {
+    "key": "AT-BUG-079",
+    "path": "board/AT-BUG-079/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Квотирование shell-команд в adb.py неполное: run_as_file_or_raise и push_app_file интерполируют пути БЕЗ защиты",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:minor"
+    ],
+    "updated": "2026-08-16T00:15:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "BUG-001",
     "path": "board/BUG-001/main.md",
     "parent": null,
@@ -7941,14 +7962,14 @@
     "epicPath": null,
     "summary": "PROJECT.md ложно отрицает сетевые запросы из приложения; сетевые вызовы присутствуют в SettingsScreen и DownloadRepository",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-08-10T14:30:00Z",
+    "updated": "2026-08-16T00:23:59Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -8028,14 +8049,14 @@
     "epicPath": null,
     "summary": "PROJECT.md обещает quick rating-filter toggle icons в топ-баре Browse, но их нет в коде",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-08-11T13:02:00Z",
+    "updated": "2026-08-16T00:23:59Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -8124,6 +8145,27 @@
       "sev:major"
     ],
     "updated": "2026-08-14T03:49:31Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-071",
+    "path": "board/BUG-071/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Copy URL button разыменовывает navigator.clipboard БЕЗ guard'а при отсутствии API, выбрасывает синхронный TypeError",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:minor"
+    ],
+    "updated": "2026-08-16T00:28:00Z",
     "resolution": null,
     "children": [],
     "archived": false

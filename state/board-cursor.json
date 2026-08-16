@@ -1634,6 +1634,11 @@
     "artifact_status": "Open",
     "board_status": "Open"
   },
+  "AT-BUG-079": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
   "BUG-001": {
     "itype": "bug",
     "artifact_status": "Verified",
@@ -1746,8 +1751,8 @@
   },
   "BUG-058": {
     "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
+    "artifact_status": "Fixed",
+    "board_status": "Fixed"
   },
   "BUG-059": {
     "itype": "bug",
@@ -1766,8 +1771,8 @@
   },
   "BUG-065": {
     "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
+    "artifact_status": "Fixed",
+    "board_status": "Fixed"
   },
   "BUG-067": {
     "itype": "bug",
@@ -1785,6 +1790,11 @@
     "board_status": "Verified"
   },
   "BUG-070": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "BUG-071": {
     "itype": "bug",
     "artifact_status": "Open",
     "board_status": "Open"

@@ -2,7 +2,7 @@
 key: "BUG-058"
 project: "AO3"
 issueType: "bug"
-status: "bug-open"
+status: "bug-fixed"
 priority: "p2"
 summary: "PROJECT.md ложно отрицает сетевые запросы из приложения; сетевые вызовы присутствуют в SettingsScreen и DownloadRepository"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-10T14:30:00Z"
-updated: "2026-08-10T14:30:00Z"
+created: "2026-08-16T00:23:59Z"
+updated: "2026-08-16T00:23:59Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # PROJECT.md ложно отрицает сетевые запросы из приложения; сетевые вызовы присутствуют в SettingsScreen и DownloadRepository
 
 _Спроецировано из `bugs/BUG-058.md` (источник правды).
-Статус в нашей машине: **Open**._
+Статус в нашей машине: **Fixed**._
 
 # BUG-058 — PROJECT.md ложно отрицает сетевые запросы из приложения
 
@@ -105,6 +105,32 @@ BUG-001 открыт как коллекция класса; BUG-058 — тре�
 3. Рассмотреть переделку обеих фич под WebView (требует архитектурного решения).
 
 awaiting: dev
+
+**[gitlab:dyakagreen @ 2026-08-15T23:08:39.624Z]** > **[dev @ 2026-08-16] Исправлено — вариант A (правка документации)**
+> 
+> Расхождение подтверждено, и на актуальном `main` оно было **шире, чем в отчёте**: прямых сетевых клиентов не два, а три. Третий (`SyncRepository.kt:76`, `OkHttpClient` к GitLab snippets API для синхронизации библиотеки) появился в коммите `59be96c`, уже после заведения бага, и это единственный вызов, идущий не на AO3.
+> 
+> Полный список, внесённый в `PROJECT.md`:
+> 
+> | Вызывающий код | Клиент | Назначение |
+> |---|---|---|
+> | `SettingsScreen.kt:342` (`fetchAo3WorkPage`) | `HttpURLConnection` | Fetch missing metadata |
+> | `DownloadRepository.kt:38` | `OkHttpClient` | Скачивание файла работы |
+> | `SyncRepository.kt:76` | `OkHttpClient` | Sync библиотеки через GitLab snippet |
+> 
+> Вариант C (переделка обеих фич под WebView) отклонён: обе принципиально не рендерят страницы, им нужен сырой ответ (HTML под парсер и файл под запись на диск), гонять это через WebView — усложнение без выигрыша.
+> 
+> Что именно изменено в `PROJECT.md`:
+> 
+> 1. Ложное утверждение «No network calls from the app itself» заменено на реальный инвариант: через WebView идёт весь **браузинг** AO3, приложение само страницы не рендерит — плюс перечислены все три исключения с назначением каждого.
+> 2. Добавлен пункт про то, что оба AO3-вызова не логинятся отдельно, а переиспользуют сессию WebView: читают куку из `CookieManager.getInstance().getCookie("https://archiveofourown.org")` и шлют её заголовком `Cookie` (`DownloadRepository.kt:49`, `SettingsScreen.kt:1142`). Это важно как предупреждение: любая правка обработки кук в WebView задевает и их.
+> 3. Заодно уточнён соседний пункт про креденшелы — он утверждал «no credentials stored in app» без оговорок, тогда как GitLab access token для sync действительно persist-ится в `SharedPreferences`. Теперь claim сужен до AO3, а токен назван явно.
+> 
+> Коммит: `27d5cfd` на `main`.
+> 
+> awaiting: qa
+
+**[gitlab:dyakagreen @ 2026-08-15T23:08:49.299Z]** Метка `qa-status::QAready` выставлена на GitLab issue — переход Open→Fixed зафиксирован автоматически (второй канал, docs/06 §3а, gitlab-label).
 
 ## Чек-лист качества
 - [x] Проверены дубликаты — не совпадает с BUG-001 (другой класс расхождения: отрицание вместо неправильного названия)
