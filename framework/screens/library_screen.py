@@ -6,9 +6,14 @@ Favorite | Kudosed | Read | Pending | Disliked | Files.
 """
 from __future__ import annotations
 
+import logging
+
 from appium.webdriver.common.appiumby import AppiumBy
 
+from framework.core.waits import poll_until_stable
 from framework.screens.base_screen import BaseScreen
+
+logger = logging.getLogger(__name__)
 
 # Соответствие Rating.enum -> подпись вкладки Library.
 # Вкладки Tab рендерятся в ВЕРХНЕМ РЕГИСТРЕ (accessibility-текст = uppercase).
@@ -21,11 +26,71 @@ TAB_BY_RATING = {
 }
 FILES_TAB = "FILES"
 
+# --- Tab-switch settle (AT-BUG-082 Б2/Б3, критик-вход rework) ---
+# HorizontalPager (`LibraryScreen.kt:238`) animates the tab transition
+# (`pagerState.animateScrollToPage`, triggered by `Tab.onClick` in
+# `PrimaryTabRow`) — right after `tap()` returns, the OUTGOING page's content
+# can still be present in the accessibility tree alongside the INCOMING
+# page's while the scroll is still mid-flight. Any reader that scans the
+# WHOLE SCREEN immediately afterwards (`has_work`/`by_text`, no card/tab
+# scope — the accessibility tree carries no per-tab boundary) risks matching
+# the OUTGOING tab's content:
+#   - false GREEN for a POSITIVE Then (`assert_work_in_files_tab` et al.) —
+#     a title that's really on the outgoing tab satisfies the query even
+#     though the target tab doesn't have it (Б2, critic grep: 9 risky call
+#     sites across 6 files);
+#   - false RED for a NEGATIVE Then — handled separately by the settle+hold
+#     poll in `library_steps._poll_files_tab_absent` (Б1), which also needs
+#     the pager to have stopped moving before its own settle-phase reads are
+#     meaningful.
+#
+# `open_tab` now waits for the visible-text fingerprint (`_scroll_fingerprint`,
+# same primitive already validated for `_settle_clipped_anchor`,
+# AT-BUG-048/080) to stop changing across `_TAB_SWITCH_SETTLE_STABLE_READS`
+# consecutive polls before returning. No dedicated "pager idle"/`selected`
+# UI signal is used — not verified reliable on this Compose `Tab` on the
+# live tree within this rework's time budget; the fingerprint-stabilize
+# primitive is proven and already lives in the codebase for the structurally
+# identical problem (list settle after a swipe). Best-effort/bounded
+# (`_TAB_SWITCH_SETTLE_TIMEOUT`): does not raise if it never converges (same
+# spirit as `_settle_clipped_anchor` — an unmeasurable/slower-than-budget
+# settle must not block the caller) — logs a diagnostic warning instead, so a
+# caller that reads a still-transitioning tree afterwards leaves a paper
+# trail rather than failing silently (Б4).
+#
+# ALL FIVE existing readers that go through `open_tab`/`open_tab_for_rating`
+# (`library_steps.assert_work_in_tab`, `assert_work_not_in_tab` — AT-BUG-083
+# sibling, `assert_work_tags_visible`, `assert_work_note_icon_visible`,
+# `assert_work_in_files_tab`) get this settle "for free" — the fix lives at
+# the ONE place all of them share (D-0043: chini class, not instance;
+# AT-BUG-082 Б3 критик-вход).
+_TAB_SWITCH_SETTLE_TIMEOUT = 2.0
+_TAB_SWITCH_SETTLE_INTERVAL = 0.2
+_TAB_SWITCH_SETTLE_STABLE_READS = 2
+
 
 class LibraryScreen(BaseScreen):
     def open_tab(self, label: str):
         self.tap(self.by_text(label))
+        self._settle_tab_switch(label)
         return self
+
+    def _settle_tab_switch(self, label: str) -> None:
+        """AT-BUG-082 Б2/Б3 — см. блок-комментарий у констант выше."""
+        _, converged = poll_until_stable(
+            self._scroll_fingerprint,
+            stable_reads=_TAB_SWITCH_SETTLE_STABLE_READS,
+            timeout=_TAB_SWITCH_SETTLE_TIMEOUT,
+            interval=_TAB_SWITCH_SETTLE_INTERVAL,
+        )
+        if not converged:
+            logger.warning(
+                "AT-BUG-082 Б4 (LibraryScreen._settle_tab_switch): вкладка %r "
+                "не устаканилась за %.1fs бюджета (visible-text fingerprint "
+                "продолжал меняться) — следующее чтение может застать "
+                "переходное состояние HorizontalPager'а",
+                label, _TAB_SWITCH_SETTLE_TIMEOUT,
+            )
 
     def open_tab_for_rating(self, rating: str):
         return self.open_tab(TAB_BY_RATING[rating])

@@ -1,9 +1,15 @@
 """Бизнес-шаги экрана Library (GWT)."""
 from __future__ import annotations
 
+import logging
+import time
+
 import allure
 
+from framework.core.waits import assert_holds_for
 from framework.screens.library_screen import FILES_TAB, TAB_BY_RATING, LibraryScreen
+
+logger = logging.getLogger(__name__)
 
 
 @allure.step("When открыта вкладка Library для рейтинга {rating}")
@@ -79,10 +85,113 @@ def assert_work_in_files_tab(driver, title: str):
     assert lib.has_work(title), f"работа «{title}» не найдена во вкладке FILES"
 
 
+# --- AT-BUG-082: settle+hold опрос для негативного Then вкладки FILES ---
+# `LibraryScreen.open_tab`/`open_tab_for_rating` таплю по вкладке top bar,
+# реализованной через `HorizontalPager` (`LibraryScreen.kt:238`) — сам Compose
+# АНИМИРОВАННО скроллит страницы; во время скролла ИСХОДНАЯ (ещё не полностью
+# ушедшая с экрана) страница временно сосуществует с ЦЕЛЕВОЙ в accessibility-
+# дереве. Прежний (докоммитный, ДО AT-BUG-082) код (`is_present(timeout=4)`,
+# ОДИН `WebDriverWait`) возвращал `True` НЕМЕДЛЕННО на первом же снимке, где
+# заголовок найден ГДЕ УГОДНО на экране — включая ещё не до конца ушедшую
+# СТАРУЮ вкладку (например FAVORITE, где работа реально есть до скачивания),
+# что ошибочно трактовалось как «работа появилась на FILES» (`bugs/
+# AT-BUG-082.md`: 7-й тест по порядку в `test_downloads.py`, TC-112, красный
+# ТОЛЬКО в полном прогоне файла). Тот же класс гонки, что `AT-BUG-081` (Then
+# читает раньше, чем состояние устаканилось), но здесь слой — UI-анимация
+# Pager'а, не асинхронная запись Room. AT-BUG-082 Б2/Б3 критик-вход:
+# `LibraryScreen.open_tab` теперь сам ждёт устаканивания Pager'а ПЕРЕД
+# возвратом (см. `library_screen.py`, `_settle_tab_switch`) — settle-фаза
+# ниже, соответственно, реже видит транзитный стейл-позитив вовсе, но
+# оставлена как вторая линия защиты (settle внутри `open_tab` — best-effort,
+# не гарантирует конвергенции, см. её докстринг).
+#
+# Фаза 1 (settle) опрашивает `has_work` до `_FILES_TAB_SETTLE_TIMEOUT` секунд
+# (шаг `_FILES_TAB_SETTLE_INTERVAL`, БЫСТРОЕ одиночное чтение на каждом шаге,
+# `_FILES_TAB_SETTLE_READ_TIMEOUT`) — отфильтровывает транзитный стейл-
+# позитив ещё-не-ушедшей соседней вкладки; тот же приём, что
+# `settings_steps._poll_ratings_marker` (AT-BUG-081). Если присутствие НИКОГДА
+# не сходится к отсутствию за весь settle-бюджет — это уже НЕ транзитный
+# артефакт, а persistent-регрессия, возвращается `False` немедленно.
+#
+# AT-BUG-082 Б1 критик-вход (rework, живой пробой): attempt 1 (settle-фаза
+# БЕЗ фазы 2 ниже) выходил на ПЕРВОМ ЖЕ чтении «отсутствует» — фактическое
+# наблюдаемое окно негатива схлопнулось с прежних 4с (старая ОДНОРАЗОВАЯ
+# семантика наблюдала присутствие В ЛЮБОЙ момент 4с-окна) до
+# `_FILES_TAB_SETTLE_READ_TIMEOUT=1s` в худшем случае немедленной сходимости.
+# Критик воспроизвёл живым прогоном: работа появляется на FILES через ~1.5с
+# (внутри старого 4с окна, ПОСЛЕ первого «отсутствует»-чтения attempt 1) —
+# attempt 1 давал ложный PASS там, где старая семантика честно давала FAIL.
+# Фаза 2 (hold) ниже держит «отсутствует» ФИКСИРОВАННЫЙ
+# `_FILES_TAB_ABSENT_HOLD_BUDGET` (`waits.assert_holds_for`, докстринг
+# буквально описывает нужный паттерн: «держать» негатив весь бюджет, не
+# полагаться на первый снимок) — суммарное окно наблюдения (settle + hold)
+# ГАРАНТИРОВАННО >= старых 4с независимо от того, как быстро settle-фаза
+# сошлась к отсутствию (hold-бюджет фиксирован, не «остаток» вычитанием уже
+# потраченного времени — проще и надёжнее арифметики остатка).
+_FILES_TAB_SETTLE_TIMEOUT = 3.0
+_FILES_TAB_SETTLE_INTERVAL = 0.3
+_FILES_TAB_SETTLE_READ_TIMEOUT = 1
+_FILES_TAB_ABSENT_HOLD_BUDGET = 4.0
+_FILES_TAB_ABSENT_HOLD_INTERVAL = 0.3
+
+
+def _poll_files_tab_absent(lib: LibraryScreen, title: str) -> bool:
+    """Возвращает `True`, если `title` settled на ОТСУТСТВИИ на текущей
+    вкладке (фаза 1) И остаётся отсутствующей весь `_FILES_TAB_ABSENT_
+    HOLD_BUDGET` (фаза 2) — см. блок-комментарий у констант выше
+    (AT-BUG-082, Б1/Б4 критик-вход rework)."""
+    deadline = time.monotonic() + _FILES_TAB_SETTLE_TIMEOUT
+    present = lib.has_work(title, timeout=_FILES_TAB_SETTLE_READ_TIMEOUT)
+    settle_reads = 1
+    while present and time.monotonic() < deadline:
+        time.sleep(_FILES_TAB_SETTLE_INTERVAL)
+        present = lib.has_work(title, timeout=_FILES_TAB_SETTLE_READ_TIMEOUT)
+        settle_reads += 1
+    if present:
+        # Никогда не сходилось к отсутствию за весь settle-бюджет — persistent
+        # присутствие, настоящая регрессия (не транзитный артефакт анимации).
+        return False
+    if settle_reads > 1:
+        # Б4 критик-вход: транзитный стейл-позитив был ПРОГЛОЧЕН settle-фазой
+        # (сошлись к отсутствию не с первого чтения) — паспорт факта, не
+        # молчаливое решение, иначе "фикс подтверждён живыми прогонами"
+        # неотличим от "гонка просто не выстрелила в этом прогоне" (правило 14).
+        logger.warning(
+            "AT-BUG-082 Б4 (library_steps._poll_files_tab_absent): транзитный "
+            "стейл-позитив «%s» на вкладке FILES проглочен settle-фазой за "
+            "%d чтени(й/е) — расследуй, если повторяется часто (может "
+            "означать, что анимация Pager'а систематически шире "
+            "_FILES_TAB_SETTLE_TIMEOUT=%.1fs)",
+            title, settle_reads, _FILES_TAB_SETTLE_TIMEOUT,
+        )
+    try:
+        assert_holds_for(
+            lambda: not lib.has_work(title, timeout=_FILES_TAB_SETTLE_READ_TIMEOUT),
+            budget_s=_FILES_TAB_ABSENT_HOLD_BUDGET,
+            interval_s=_FILES_TAB_ABSENT_HOLD_INTERVAL,
+            msg=f"работа «{title}» вновь появилась во вкладке FILES во время hold-окна наблюдения",
+        )
+    except AssertionError:
+        # Б1/Б4 критик-вход: ПОЗДНЯЯ регрессия — появилась ПОСЛЕ того, как
+        # settle-фаза уже сошлась к отсутствию, но ДО истечения полного окна
+        # наблюдения (ровно сценарий живой пробы критика). hold-фаза её ловит
+        # (см. докстринг констант) — лог оставляет паспорт факта рядом с
+        # итоговым AssertionError вызывающего Then (assert_work_not_in_files_tab).
+        logger.warning(
+            "AT-BUG-082 Б1/Б4 (library_steps._poll_files_tab_absent): работа "
+            "«%s» вновь появилась во вкладке FILES во время hold-окна "
+            "наблюдения (после %d settle-чтени(й/е)) — ПОЗДНЯЯ регрессия, "
+            "пойманная hold-фазой (старый settle-only код Б1 пропустил бы её)",
+            title, settle_reads,
+        )
+        return False
+    return True
+
+
 @allure.step("Then во вкладке FILES НЕТ работы «{title}»")
 def assert_work_not_in_files_tab(driver, title: str):
     lib = LibraryScreen(driver).open_tab(FILES_TAB)
-    assert not lib.has_work(title, timeout=4), (
+    assert _poll_files_tab_absent(lib, title), (
         f"работа «{title}» неожиданно присутствует во вкладке FILES"
     )
 

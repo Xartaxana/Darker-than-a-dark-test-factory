@@ -4,7 +4,7 @@ title: "assert_no_ratings() читает Room СРАЗУ после confirm_clea
 type: test_debt
 debt_kind: flaky_test
 severity: major
-status: Fixed
+status: Verified
 found_in: "test-maintainer, AT-BUG-080 verification pass (изолированный повтор TC-004, 2026-08-16)"
 fixed_in: "commit f8d059d (framework/config/settings.py: RATINGS_DB_POLL_TIMEOUT/
   RATINGS_DB_POLL_INTERVAL; framework/steps/settings_steps.py: _poll_ratings_marker +
@@ -17,8 +17,8 @@ test_cases: ["TC-004"]
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-08-17T00:00:00Z"
-updated: "2026-08-17T00:00:00Z"
+status_since: "2026-08-17T04:59:00Z"
+updated: "2026-08-17T04:59:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -194,6 +194,18 @@ run 3: 1 passed in 99.19s  (0:01:39), PYTEST_EXIT=0
   — async Room-запись без await): `rating_steps.wait_for_rating`
   (AT-BUG-074) уже опрашивает `seed_db.read_work_ratings_full()` через
   `wait_for` — не затронут долгом, уже поллит.
+**Формальная D1-верификация (fix-verifier, 2026-08-17T04:59:00Z) — test_debt-класс,
+сборка приложения роли не играет (правило D1); фикс уже прошёл полный критик-вход
+приёмки в этой же сессии (см. `[critic @ 2026-08-17T04:38:00Z]` ниже — независимый
+красный/зелёный на реальном git-откате `settings_steps.py`, класс-полнота grep'ом +
+чтением app-source, живой TC-004 изолированно). Ниже — SPOT-CHECK поверх этого объёма,
+не повтор с нуля:**
+- `framework/tests/test_settings_ratings_fail_closed_unit.py` (device-free): `25 passed
+  in 0.62s`, `PYTEST_EXIT=0`.
+- `tests/test_smoke.py::test_clear_all_ratings` (TC-004, изолированный вызов
+  `Invoke-Pytest`, emulator-5554): `1 passed in 110.23s (0:01:50)`, `PYTEST_EXIT=0`.
+- `python scripts/validate_frontmatter.py`: `ошибок 0, предупреждений 0`.
+- Оба прогона зелёные → `Fixed` → `Verified`, lock снят.
 - Проверен `SettingsScreen.importFromUri` (Restore, читается
   `backup_steps.assert_restored_fields_match`/`assert_filter_profiles_match`)
   — живым чтением `app-under-test` (`SettingsScreen.kt:401-454`):
@@ -238,3 +250,13 @@ unit-сьют + 3 изолированных TC-004 подряд + все ост
 последовательного мок-теста; точечный откат ИМЕННО этих двух хелперов красной
 пробой не поймается. Кандидат для будущего B4-прохода: 2 параметризованных
 кейса по образцу существующего.
+
+**[fix-verifier @ 2026-08-17T04:59:00Z]** Формальная D1-верификация (test_debt —
+сборка приложения роли не играет). Не переоткрывал критик-приёмку — только
+spot-check поверх уже состоявшегося объёма (см. «Верификация» выше):
+device-free `test_settings_ratings_fail_closed_unit.py` 25/25 PASSED +
+изолированный `tests/test_smoke.py::test_clear_all_ratings` (TC-004) PASSED +
+`validate_frontmatter.py` 0/0. `Fixed → Verified`, lock снят. Открытая заметка
+критика (Н1, не блокер) — регресс-замок пока покрывает только
+`assert_no_ratings` из трёх переведённых хелперов — остаётся в очереди
+B4-follow-up, закрытию не мешает.

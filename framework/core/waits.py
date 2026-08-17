@@ -91,3 +91,37 @@ def assert_holds_for(check: Callable[[], bool], budget_s: float, interval_s: flo
         if time.time() >= deadline:
             return
         time.sleep(interval_s)
+
+
+def poll_until_stable(read_fn: Callable[[], T], stable_reads: int = 2,
+                       timeout: float = 2.0, interval: float = 0.2) -> tuple[T, bool]:
+    """Опрашивает `read_fn()`, пока результат не совпадёт `stable_reads` раз
+    ПОДРЯД, либо не истечёт `timeout` — обобщение приёма «фингерпринт
+    стабилизировался», уже проверенного на `BaseScreen._scroll_fingerprint`/
+    `_settle_clipped_anchor` (AT-BUG-048/080): settle без выделенного UI-
+    сигнала «анимация/переход завершены» (AT-BUG-082 Б2/Б3 критик-вход —
+    `LibraryScreen.open_tab`, `HorizontalPager`-переход между вкладками, где
+    нет надёжного `selected`-атрибута для опроса).
+
+    Возвращает `(last_value, converged)` — `last_value` ПОСЛЕДНЕЕ прочитанное
+    значение независимо от исхода (best-effort settle, симметрично
+    `_settle_clipped_anchor`: неуспевшая устаканиться анимация не блокирует
+    вызывающий код, а отдаёт последнее известное состояние), `converged`
+    различает «реально стабилизировалось» от «бюджет истёк раньше, чем набралось
+    `stable_reads` подряд одинаковых чтений» — вызывающий код решает, логировать
+    ли диагностику незавершённого settle (AT-BUG-082 Б4: проглоченное
+    незавершённое ожидание не должно быть немым).
+
+    Первый опрос — сразу (t=0, streak=1); каждый следующий — через `interval`.
+    Совпадающие подряд идущие чтения увеличивают streak, несовпадение сбрасывает
+    его на 1 (не на 0 — сам текущий отличающийся отсчёт уже участвует в НОВОЙ
+    серии)."""
+    deadline = time.time() + timeout
+    last = read_fn()
+    streak = 1
+    while streak < stable_reads and time.time() < deadline:
+        time.sleep(interval)
+        current = read_fn()
+        streak = streak + 1 if current == last else 1
+        last = current
+    return last, streak >= stable_reads

@@ -1,20 +1,20 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-17T04:51:21Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-17T09:59:28Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
 - Сборка: dev-local (versionCode 12), commit `aa377e0e`, built_at 2026-08-16T17:53:45Z
-- smoke: Closed · smoke_freshness_hours: **10.4** (RUN-20260816-1758)
-- regression: Triaged · regression_freshness_hours: **8.0** (RUN-20260816-1831)
-- canary: Triaged · canary_freshness_hours: **305.1** (RUN-20260804-1317)
+- smoke: Closed · smoke_freshness_hours: **15.5** (RUN-20260816-1758)
+- regression: Triaged · regression_freshness_hours: **13.1** (RUN-20260816-1831)
+- canary: Triaged · canary_freshness_hours: **310.3** (RUN-20260804-1317)
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **2**
 - p0_automation_coverage: **100%** (37/37)
 - p1_automation_coverage: **51%** (84/165)
-- Test debt открыт: **8** — AT-BUG-072, AT-BUG-073, AT-BUG-075, AT-BUG-076, AT-BUG-077, AT-BUG-078, AT-BUG-079, AT-BUG-082
+- Test debt открыт: **10** — AT-BUG-072, AT-BUG-073, AT-BUG-075, AT-BUG-076, AT-BUG-077, AT-BUG-078, AT-BUG-079, AT-BUG-083, AT-BUG-084, AT-BUG-085
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
 - Untriaged: **0** · untriaged_failure_age: **0**
@@ -70,7 +70,7 @@ story-карточки: стадии см. docs/05-board.md §Story
 - BUG-012 [minor] Intended — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
 - BUG-013 [minor] Intended — Смена темы, затем немедленный kill процесса (<100 мс) теряет theme_mode — выбор темы не персистится
 
-## Test debt (10)
+## Test debt (12)
 
 - AT-BUG-068 [broken_environment] Blocked — navigator.clipboard.writeText() отклоняется DOMException 'Write permission denied' в тестовом WebView — блокирует Then «Copied!» TC-188
 - AT-BUG-072 [missing_fixture] Open — Нет автоматизационного примитива нажатия клавиш громкости (KEYCODE_VOLUME_UP/DOWN) — блокирует листание страниц кнопками громкости
@@ -80,8 +80,10 @@ story-карточки: стадии см. docs/05-board.md §Story
 - AT-BUG-077 [broken_environment] Open — test_heartbeat_wrap.py::test_happy_path_order_and_child_env падает детерминированно, когда `python -m pytest scripts/tests` запущен ИЗ сессии, уже несущей AO3_LOOP_HOLDER (вложенный heartbeat)
 - AT-BUG-078 [missing_evidence] Open — TC-026 (long-press ссылки в WebView) не ассертирует ТЕКСТ снекбара «Opened in background (N tabs)» — дверь (б) BUG-059 наблюдаемо не покрыта
 - AT-BUG-079 [broken_environment] Open — Квотирование shell-команд в adb.py неполное: run_as_file_or_raise и push_app_file интерполируют пути БЕЗ защиты
-- AT-BUG-081 [flaky_test] Fixed — assert_no_ratings() читает Room СРАЗУ после confirm_clear_all() — Clear all ratings пишет через viewModelScope.launch(Dispatchers.IO) без await, одноразовый adb-read гонится с записью
-- AT-BUG-082 [flaky_test] Open — TC-112 (test_favorite_rating_does_not_download_when_auto_download_off) падает на assert_work_not_in_files_tab при прогоне ВСЕГО test_downloads.py, но 1/1 зелёный в изолированном перезапуске — order/state-зависимый флейк, не трогает Settings/find_row_sibling код
+- AT-BUG-082 [flaky_test] Fixed — TC-112 (test_favorite_rating_does_not_download_when_auto_download_off) падает на assert_work_not_in_files_tab при прогоне ВСЕГО test_downloads.py, но 1/1 зелёный в изолированном перезапуске — order/state-зависимый флейк, не трогает Settings/find_row_sibling код
+- AT-BUG-083 [flaky_test] Open — assert_work_not_in_tab гонится с анимацией HorizontalPager Library (тот же класс, что AT-BUG-082, но на ЛЮБОЙ вкладке, не только FILES) — не почин, только заведён (D-0043 queued follow-up)
+- AT-BUG-084 [flaky_test] Open — in_webview choke point 2 (AT-BUG-047, Verified) рвётся НОВОЙ сигнатурой 'No such context found.' — не входит в _WEBVIEW_SWITCH_RACE_SIGNATURES, ретрай обрывается на 2-й попытке
+- AT-BUG-085 [flaky_test] Open — assert_comment_collapsed_with_text читает RatingOverlay.comment_expanded() сразу после save_note() без settle — TC-115 красный в полном test_downloads.py (структурно не связан с AT-BUG-082 fix)
 
 ## Прогоны (20)
 
@@ -126,5 +128,5 @@ story-карточки: стадии см. docs/05-board.md §Story
 - [2026-08-16T00:12:38Z] **QAREADY-SYNC-RACE-BUG-065** [resolved:lead-gitlab-race-0816] — ЗАКРЫТО 2026-08-16 полным Lead (Opus), тот же корень и та же проверка, что у `QAREADY-SYNC-RACE-BUG-058` (см. строку выше): нота `[gitlab:dyakagreen @ 2026-08-15T23:08:38Z]` втянута, label-событие применено → **BUG-065 Open → Fixed, `awaiting: qa`**; `gitlab_sync --check` → «все BUG-* синхронизированы». Скрипт сохранил ярлык вместо затирания сигнала разработчика — штатное поведение. BUG-065 — кандидат D1 следующего прохода. Исходный текст — история: BUG-065: gitlab_sync собрался снять ярлык qa-status::QAready (внутренний статус Open — Open|Reopened, сигнал ещё не сведён) — вероятная гонка с gitlab_inbound (ярлык поставлен разработчиком, ещё не обработан). Ярлык СОХРАНЁН, снятие пропущено; разберитесь и пометьте [resolved:<task_id>] после проверки.
 - [2026-08-16T05:30:32Z] **BUG-068** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-14T03:49:31Z | нужно: ответить в ## Обсуждение
 - [2026-08-16T05:30:32Z] **BUG-070** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-14T03:49:31Z | нужно: ответить в ## Обсуждение
-- [2026-08-16T20:00:02Z] **FACTORY-STALLED** [resolved:factory-watchdog-recovered] [factory:stalled] — восстановлено 2026-08-17T02:00:02Z
+- [2026-08-16T20:00:02Z] **FACTORY-STALLED** [factory:stalled] — mode активный ('active'), лок есть, тишина 90.0 мин (порог 90 мин); зафиксировано 2026-08-17T09:30:02Z; вариант снятия лока — `python scripts/loop_lock.py release --force`
 - [2026-08-17T02:46:22Z] **QAREADY-SYNC-RACE-BUG-019** — BUG-019: gitlab_sync собрался снять ярлык qa-status::QAready (внутренний статус Reopened — Open|Reopened, сигнал ещё не сведён) — вероятная гонка с gitlab_inbound (ярлык поставлен разработчиком, ещё не обработан). Ярлык СОХРАНЁН, снятие пропущено; разберитесь и пометьте [resolved:<task_id>] после проверки.

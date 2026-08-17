@@ -7506,7 +7506,7 @@
     "epicPath": null,
     "summary": "assert_no_ratings() читает Room СРАЗУ после confirm_clear_all() — Clear all ratings пишет через viewModelScope.launch(Dispatchers.IO) без await, одноразовый adb-read гонится с записью",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -7514,8 +7514,8 @@
       "test_case:TC-004",
       "sev:major"
     ],
-    "updated": "2026-08-17T00:00:00Z",
-    "resolution": null,
+    "updated": "2026-08-17T04:59:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -7528,6 +7528,49 @@
     "epicPath": null,
     "summary": "TC-112 (test_favorite_rating_does_not_download_when_auto_download_off) падает на assert_work_not_in_files_tab при прогоне ВСЕГО test_downloads.py, но 1/1 зелёный в изолированном перезапуске — order/state-зависимый флейк, не трогает Settings/find_row_sibling код",
     "issueType": "bug",
+    "status": "bug-fixed",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-112",
+      "sev:major"
+    ],
+    "updated": "2026-08-17T08:25:19Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-083",
+    "path": "board/AT-BUG-083/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "assert_work_not_in_tab гонится с анимацией HorizontalPager Library (тот же класс, что AT-BUG-082, но на ЛЮБОЙ вкладке, не только FILES) — не почин, только заведён (D-0043 queued follow-up)",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:minor"
+    ],
+    "updated": "2026-08-17T08:25:19Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-084",
+    "path": "board/AT-BUG-084/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "in_webview choke point 2 (AT-BUG-047, Verified) рвётся НОВОЙ сигнатурой 'No such context found.' — не входит в _WEBVIEW_SWITCH_RACE_SIGNATURES, ретрай обрывается на 2-й попытке",
+    "issueType": "bug",
     "status": "bug-open",
     "priority": "p1",
     "assignee": "qa-agents",
@@ -7536,7 +7579,29 @@
       "test_case:TC-112",
       "sev:major"
     ],
-    "updated": "2026-08-17T01:06:32Z",
+    "updated": "2026-08-17T06:12:28Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-085",
+    "path": "board/AT-BUG-085/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "assert_comment_collapsed_with_text читает RatingOverlay.comment_expanded() сразу после save_note() без settle — TC-115 красный в полном test_downloads.py (структурно не связан с AT-BUG-082 fix)",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-115",
+      "sev:minor"
+    ],
+    "updated": "2026-08-17T08:25:19Z",
     "resolution": null,
     "children": [],
     "archived": false
