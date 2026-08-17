@@ -8244,15 +8244,15 @@
     "epicPath": null,
     "summary": "Copy URL button разыменовывает navigator.clipboard БЕЗ guard'а при отсутствии API, выбрасывает синхронный TypeError",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-08-16T20:42:00Z",
-    "resolution": null,
+    "updated": "2026-08-17T03:52:33Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },

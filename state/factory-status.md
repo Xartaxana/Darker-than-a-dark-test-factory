@@ -1,15 +1,15 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-17T03:34:40Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-17T04:10:09Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
 - Сборка: dev-local (versionCode 12), commit `aa377e0e`, built_at 2026-08-16T17:53:45Z
-- smoke: Closed · smoke_freshness_hours: **9.1** (RUN-20260816-1758)
-- regression: Triaged · regression_freshness_hours: **6.7** (RUN-20260816-1831)
-- canary: Triaged · canary_freshness_hours: **303.8** (RUN-20260804-1317)
+- smoke: Closed · smoke_freshness_hours: **9.7** (RUN-20260816-1758)
+- regression: Triaged · regression_freshness_hours: **7.3** (RUN-20260816-1831)
+- canary: Triaged · canary_freshness_hours: **304.4** (RUN-20260804-1317)
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **2**
 - p0_automation_coverage: **100%** (37/37)
@@ -51,7 +51,7 @@ story-карточки: стадии см. docs/05-board.md §Story
 
 ## Баги (34)
 
-- Open: **11** · Reopened: **1** · Fixed: **1** · Verified: **19** · Intended: **2**
+- Open: **11** · Reopened: **1** · Verified: **20** · Intended: **2**
 - BUG-011 [major] Open — Restore from backup пропускает работы молча, если файл с тем же ao3Id уже лежит в папке загрузок
 - BUG-017 [major] Open — Быстрое закрытие вкладок → долгий парад снекбаров; подозрение на потерю Undo-токенов при задержке показа
 - BUG-019 [major] Reopened — Back после автопрыжка плотности не выводит назад — ловушка + рост истории

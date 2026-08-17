@@ -2,7 +2,7 @@
 key: "BUG-071"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p2"
 summary: "Copy URL button разыменовывает navigator.clipboard БЕЗ guard'а при отсутствии API, выбрасывает синхронный TypeError"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-16T20:42:00Z"
-updated: "2026-08-16T20:42:00Z"
+created: "2026-08-17T03:52:33Z"
+updated: "2026-08-17T03:52:33Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Copy URL button разыменовывает navigator.clipboard БЕЗ guard'а при отсутствии API, выбрасывает синхронный TypeError
 
 _Спроецировано из `bugs/BUG-071.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # BUG-071 — navigator.clipboard БЕЗ guard'а в Copy URL button вызывает синхронный TypeError
 
@@ -135,6 +135,7 @@ btn.addEventListener('click', function () {
 
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-08-17T03:52:33Z | source_commit `aa377e0` (HEAD `27d5cfd` — `aa377e0` подтверждён предком через `git merge-base --is-ancestor`), versionName `dev-local`/versionCode `12` (`app/build/outputs/apk/debug/output-metadata.json`), APK built Aug 16 19:53 (после commit-времени фикса 12:43 +02:00 того же дня) | `test_cases: []` — постоянного TC нет (carve-out DoD-демонстрацией не применён: полноценное живое воспроизведение оказалось практично, code-inspection carve-out не понадобился). Живой ad-hoc probe (`framework/tests/test_bug071_probe.py`, удалён после прогона — не постоянный TC): реальный Android-тач по DEBUG-кнопке «Copy URL» (`browser_steps.tap_copy_url_button`, UiAutomator2 ActionBuilder) на replay work-странице, ПОСЛЕ инструментальной нейтрализации `navigator.clipboard` (`Object.defineProperty(window.navigator,'clipboard',{value:undefined,configurable:true})` — программный аналог file://-origin, который дал бы то же самое `typeof navigator.clipboard === 'undefined'`, но live driver у framework работает с mitm-replay по http, не file://, так что нейтрализация — практичная замена, не carve-out) + шпион на `document.execCommand` + `MutationObserver` на textContent кнопки + `window.onerror`-ловушка на синхронные исключения. Дополнительно (доказательство ИСТОЧНИКА, не только рантайма): `adb pull` установленного `base.apk` с устройства → `unzip assets/ao3_bridge.js` → `grep` подтвердил присутствие `execCommandFallback`/guard `if (navigator.clipboard && navigator.clipboard.writeText)` в РЕАЛЬНО установленном ассете (не только в git-исходнике) | Witness (дословно из `allure-results` ДО очистки следующим прогоном): precondition `{'clipboardType': 'undefined'}`; post-tap `{'clickCount': 1, 'execCalls': 1, 'label': 'Copy URL', 'syncErrors': [], 'labelHistory': [{'text': 'Copy URL', note: 'observer installed'}, {'text': 'Copied!'}, {'text': 'Copy URL'}]}`. **Правка критик-входа (Б1): `execCalls=1`+`syncErrors=[]` САМИ ПО СЕБЕ НЕ различают ветку `else` от ветки `if` с последующим async reject-handler'ом — критик живьём воспроизвёл ТУ ЖЕ подпись на ветке `if` (clipboard присутствует, `writeText` отклоняется, reject-handler зовёт тот же `execCommandFallback` асинхронно, +553мс после клика), а pre-fix код несёт такой же fallback в reject-ветке — значит эта подпись совместима и со старым кодом при живом clipboard.** Действительно различающий сигнал (установлен критик-входом собственным 3-фазным прогоном): **синхронность** вызова `execCommand` относительно click-диспатча — на ветке `else` (`navigator.clipboard` реально `undefined` и до, и ПОСЛЕ тапа — критик добавил пост-тапное перечтение) `execCommand` вызывается СИНХРОННО внутри того же диспатча (критик замерил: его собственный click-слушатель, зарегистрированный ПОСЛЕ обработчика моста, уже видел `execCalls=2` в том же тике), тогда как на ветке `if`+reject `execCommand` приходит асинхронно (+553мс). Красная проба (та же, что подтверждает контраст с pre-fix): критик прогнал ВЕРБАТИМ pre-fix обработчик (`git show 27d5cfd:app/src/main/assets/ao3_bridge.js`) при `navigator.clipboard===undefined` живьём (не гипотетически) — `execCalls` остался `0`, `window.onerror` поймал `["Script error."]` (+1 к базовой линии), подпись кнопки не изменилась (`Copy URL` без перехода в `Copied!`) — ровно симптом из тела бага. `MutationObserver` на фикс-коде поймал транзиентный переход `Copy URL → Copied! → Copy URL` (откат — штатный `setTimeout(...,1500)` внутри `flash()`, не баг). Полный протокол критик-входа (3 фазы, дословные тайминги) — в ## Обсуждение | **Verified** |
 
 ## Обсуждение
 
@@ -168,6 +169,27 @@ Awaiting: none
 **Примечание:** Конфигурация `navigator.clipboard undefined` — не экзотика; на file:// origin (скачанные работы из AO3) Clipboard API отсутствует по спецификации браузера. Guard закрывает действительно распространённый путь, не теоретический.
 
 Статус: Fixed → ожидание fix-verifier для проверки TC и device-witness'а на новой сборке (docs/06 D1).
+
+Awaiting: none
+
+**[fix-verifier @ 2026-08-17T03:52:33Z]**
+
+Верификация D1. Сборка новее `found_in`: `aa377e0` (HEAD `27d5cfd`, `git merge-base --is-ancestor aa377e0 HEAD` — подтверждён); установленный на `emulator-5554` APK (`adb pull` base.apk, 22050221 байт — совпадает с `app/build/outputs/apk/debug/app-debug.apk`, собран 2026-08-16 19:53, после commit-времени фикса 12:43 того же дня) вскрыт (`unzip assets/ao3_bridge.js`) — guard `if (navigator.clipboard && navigator.clipboard.writeText)` и `execCommandFallback()` присутствуют в РЕАЛЬНО установленном ассете, не только в git-исходнике.
+
+`test_cases: []` — постоянного TC для этого бага нет. Полноценное живое воспроизведение оказалось практично (code-inspection carve-out не понадобился): временный ad-hoc probe-тест (`framework/tests/test_bug071_probe.py`, удалён после прогона по завершении — не постоянный TC, не входит в suite) на реальном device-driver'е нейтрализовал `navigator.clipboard` программно (`Object.defineProperty(window.navigator, 'clipboard', {value: undefined, configurable: true})` — заменяет недостижимый в текущей mitm-replay-инфраструктуре file://-origin тем же наблюдаемым состоянием `typeof navigator.clipboard === 'undefined'`, которое дал бы file://), затем выполнил РЕАЛЬНЫЙ Android-тач (UiAutomator2 `ActionBuilder`, не синтетический `dispatchEvent`) по DEBUG-кнопке «Copy URL» на replay work-странице.
+
+Изначально записанный витнесс опирался на `execCalls=1`+`syncErrors=[]` как «различающий» сигнал ветки `else` — **это было неверно (см. критик-вход ниже)**.
+
+**[critic @ 2026-08-17T04:05:00Z]** Критик-вход приёмки: существо подтверждено — фикс работает, `Verified` не откатываю. Но заявленный «различающий» витнесс (`execCalls=1`+`syncErrors=[]`) НЕ различает ветку `else` от ветки `if`+async-reject: собственным 3-фазным прогоном (реальный тач, click-слушатель зарегистрирован ПОСЛЕ обработчика моста для замера синхронности) получил:
+- **Фаза 1** (clipboard ШТАТНЫЙ, фикс-код): `execCalls=1`, `syncErrors=[]`, `Copy URL→Copied!→Copy URL` — ТА ЖЕ подпись, что в исходной записи, но через ветку `if` (reject-handler зовёт тот же `execCommandFallback` АСИНХРОННО, execCommand пришёл через +553мс после клика). Pre-fix код несёт такой же fallback в reject-ветке (`27d5cfd:1104-1116`) — значит эта подпись совместима и со старым кодом при живом clipboard.
+- **Фаза 2** (clipboard `undefined` ДО и ПОСЛЕ тапа — добавлено пост-тапное перечтение, которого не было в исходном витнессе): `execCommand` вызван СИНХРОННО внутри click-диспатча (мой пост-обработчиковый слушатель в ТОМ ЖЕ тике уже видел `execCalls=2`) — это и есть настоящее доказательство ветки `else`.
+- **Фаза 3** (вербатим PRE-FIX код при `clipboard=undefined`, живая красная проба вместо гипотетического чтения диффа): `execCalls=0`, `window.onerror` поймал `["Script error."]`, подпись кнопки не изменилась (осталась «Copy URL», молчит) — ровно симптом из тела BUG-071.
+
+Класс-полнота: поверхность «разыменование опционального Web API без guard в `ao3_bridge.js`» пройдена — единственная другая промис-цепочка (`fetch`, `:617`) несёт `.catch` (`:670`); негейтированный `localStorage.*` (6 мест) — низкий риск (`domStorageEnabled=true`, путь на http(s)-листингах, не file://). Отсрочка воркера по D-0043 легитимна (обход владеет Lead), но точнее формулируется «отдельно не искал», а не «аналогов не выявлено» (F-34, неустановленный негатив).
+
+Сиблинг-баг BUG-069 (тот же Copy URL button, тот же класс «неполная обработка Promise») уже `Verified` — оба сиблинга закрыты одним и тем же коммитом `aa377e0`.
+
+`status: Fixed → Verified`. `known_issue` уже был `"false"` (сброс не требуется). Lock снят.
 
 Awaiting: none
 
