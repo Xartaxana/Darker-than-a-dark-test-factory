@@ -6,12 +6,12 @@ debt_kind: flaky_test
 severity: major
 status: Fixed
 found_in: "test-maintainer, AT-BUG-080 verification pass (изолированный повтор TC-004, 2026-08-16)"
-fixed_in: "framework/config/settings.py (RATINGS_DB_POLL_TIMEOUT/RATINGS_DB_POLL_INTERVAL),
-  framework/steps/settings_steps.py (_poll_ratings_marker + _read_ratings_count,
-  assert_no_ratings/assert_ratings_present/assert_rating_rows_empty теперь опрашивают
-  вместо одноразового чтения), framework/tests/test_settings_ratings_fail_closed_unit.py
-  (fast-poll fixture + 2 различающих регресс-теста poll-retry/poll-timeout) —
-  test-maintainer, 2026-08-17"
+fixed_in: "commit f8d059d (framework/config/settings.py: RATINGS_DB_POLL_TIMEOUT/
+  RATINGS_DB_POLL_INTERVAL; framework/steps/settings_steps.py: _poll_ratings_marker +
+  _read_ratings_count, assert_no_ratings/assert_ratings_present/assert_rating_rows_empty
+  теперь опрашивают вместо одноразового чтения; framework/tests/
+  test_settings_ratings_fail_closed_unit.py: fast-poll fixture + 2 различающих
+  регресс-теста poll-retry/poll-timeout) — test-maintainer, 2026-08-17"
 last_seen_in: ""
 test_cases: ["TC-004"]
 runs: []
