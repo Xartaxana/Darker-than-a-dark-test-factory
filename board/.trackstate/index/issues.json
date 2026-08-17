@@ -7506,7 +7506,7 @@
     "epicPath": null,
     "summary": "assert_no_ratings() читает Room СРАЗУ после confirm_clear_all() — Clear all ratings пишет через viewModelScope.launch(Dispatchers.IO) без await, одноразовый adb-read гонится с записью",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -7514,7 +7514,7 @@
       "test_case:TC-004",
       "sev:major"
     ],
-    "updated": "2026-08-16T22:21:53Z",
+    "updated": "2026-08-17T00:00:00Z",
     "resolution": null,
     "children": [],
     "archived": false

@@ -22,7 +22,7 @@ updated: "2026-08-17T00:00:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
-resolution: "fixed"
+resolution: ""
 resolution_comment: "AT-BUG-081 B4: три Then-хелпера work_ratings
   (assert_no_ratings/assert_ratings_present/assert_rating_rows_empty) переведены
   с одноразового adb-read на опрос (_poll_ratings_marker, бюджет
@@ -31,7 +31,7 @@ resolution_comment: "AT-BUG-081 B4: три Then-хелпера work_ratings
   не гонка), количественная ветка (count/rows) ждёт нужного значения. Красная
   проба: 3 изолированных повтора tests/test_smoke.py::test_clear_all_ratings
   подряд — все PASSED (witness ниже). Проверены остальные caller'ы того же
-  класса (см. «Верификация»): TC-018/019 (assert_ratings_present),
+  класса (см. «Верификация»): TC-018 (assert_ratings_present; правка критик-входа Н2 — TC-019 этот хелпер не вызывает, проверяет вкладки Library, не work_ratings),
   TC-020(б) (assert_rating_rows_empty), TC-021 (assert_no_ratings) —
   все зелёные после рефакторинга, регрессий не найдено. importFromUri
   (Restore) — НЕ того же класса гонки (Room-запись await'ится ВНУТРИ
@@ -179,8 +179,11 @@ run 3: 1 passed in 99.19s  (0:01:39), PYTEST_EXIT=0
 **Критерий готовности пункт 3 (остальные callers того же класса гонки) —
 проверено, не просто продекларировано:**
 - `tests/test_settings.py::test_clear_all_ratings_shows_confirmation_dialog`
-  (TC-018) + `test_cancel_clear_all_dialog_keeps_data` (TC-019) —
-  `assert_ratings_present()`: `2 passed in 197.63s`, `PYTEST_EXIT=0`.
+  (TC-018) — `assert_ratings_present()`: **правка критик-входа (Н2)** — прогнан
+  вместе с `test_cancel_clear_all_dialog_keeps_data` (TC-019, `2 passed in
+  197.63s`, `PYTEST_EXIT=0`), но реально вызывает `assert_ratings_present()`
+  только TC-018; TC-019 проверяет вкладки Library, этого хелпера не касается
+  (регрессии не найдено ни в одном, атрибуция уточнена).
 - `tests/test_settings.py::test_clear_all_ratings_badge_resets_after_reload[works_multi.mitm]`
   (TC-020, ветка (б)) — `assert_rating_rows_empty()` сразу после
   `clear_all_ratings()`: `1 passed in 106.56s`, `PYTEST_EXIT=0`.
@@ -210,7 +213,7 @@ run 3: 1 passed in 99.19s  (0:01:39), PYTEST_EXIT=0
 дефекта (async DB race в Then-хелпере, не swipe/bounds-геометрия). Доклад +
 баг, диспетчеризация фикса — за Lead/очередь B4.
 
-**[test-maintainer @ 2026-08-17T00:00:00Z]** Fixed. `assert_no_ratings`/
+**[test-maintainer @ 2026-08-17T04:20:00Z]** Fixed. `assert_no_ratings`/
 `assert_ratings_present`/`assert_rating_rows_empty` переведены на
 `_poll_ratings_marker` (опрос до 3.0s/0.3s, settled немедленно на
 NOSQLITE/ERROR-ветках) — см. «Верификация» за полным witness (device-free
@@ -220,3 +223,18 @@ unit-сьют + 3 изолированных TC-004 подряд + все ост
 `assert_no_ratings`/`assert_rating_rows_empty`, ни одного queued follow-up не
 осталось; сиблинг-класс `wait_for_rating`/`importFromUri` проверены и
 подтверждены НЕ подверженными этой гонке). Lock снят.
+
+**[critic @ 2026-08-17T04:38:00Z]** Критик-вход приёмки: ПРИНЯТЬ, 0
+блокеров. Красная проба перепрогнана СИЛЬНЕЕ заявленного — реальный откат
+`settings_steps.py` на pre-fix коммит байтовой копией (не только copy-скрипт
+в scratchpad), красный на подлинном докоммитном коде, восстановлен md5-сверкой.
+Живой TC-004 изолированно PASSED. Класс-полнота пройдена собственным grep'ом
+(ровно 4 боевых call site) и чтением app-source (3 экземпляра
+`viewModelScope.launch` в SettingsScreen.kt, 2 непочиненных гейтятся UI-опросом
+ДО чтения БД — не того же класса). Н2 (TC-019 не вызывает `assert_ratings_present`)
+устранена координатором выше. **Очередь (Н1, не блокер):** регресс-замок
+покрывает только 1 из 3 переведённых хелперов (`assert_no_ratings`) —
+`assert_rating_rows_empty` и `assert_ratings_present` не имеют своего
+последовательного мок-теста; точечный откат ИМЕННО этих двух хелперов красной
+пробой не поймается. Кандидат для будущего B4-прохода: 2 параметризованных
+кейса по образцу существующего.

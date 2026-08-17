@@ -2,7 +2,7 @@
 key: "AT-BUG-081"
 project: "AO3"
 issueType: "bug"
-status: "bug-open"
+status: "bug-fixed"
 priority: "p1"
 summary: "assert_no_ratings() читает Room СРАЗУ после confirm_clear_all() — Clear all ratings пишет через viewModelScope.launch(Dispatchers.IO) без await, одноразовый adb-read гонится с записью"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-16T22:21:53Z"
-updated: "2026-08-16T22:21:53Z"
+created: "2026-08-17T00:00:00Z"
+updated: "2026-08-17T00:00:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # assert_no_ratings() читает Room СРАЗУ после confirm_clear_all() — Clear all ratings пишет через viewModelScope.launch(Dispatchers.IO) без await, одноразовый adb-read гонится с записью
 
 _Спроецировано из `bugs/AT-BUG-081.md` (источник правды).
-Статус в нашей машине: **Open**._
+Статус в нашей машине: **Fixed**._
 
 # AT-BUG-081 — `assert_no_ratings()` гонится с асинхронной записью `confirmClearAll()`
 
@@ -87,17 +87,105 @@ AssertionError: ожидали 0 рейтингов, в БД: '5'
 
 ## Критерий готовности (Fixed)
 
-- [ ] `assert_no_ratings()` (и симметрично `assert_rating_rows_empty`,
+- [x] `assert_no_ratings()` (и симметрично `assert_rating_rows_empty`,
       `assert_ratings_present` — тот же слой) переведены на `poll_for`/
       `wait_for`-подобный опрос БД вместо одноразового чтения — ждать
       `count == "0"` в течение разумного бюджета (например 2-3с), а не
       падать по первому снимку.
-- [ ] Красная проба/регресс-проверка: 3 зелёных ИЗОЛИРОВАННЫХ повтора
+- [x] Красная проба/регресс-проверка: 3 зелёных ИЗОЛИРОВАННЫХ повтора
       `tests/test_smoke.py::test_clear_all_ratings` подряд (тот же протокол,
       которым долг обнаружен).
-- [ ] Проверить остальные callers `read_rating_rows`/`assert_ratings_present`
+- [x] Проверить остальные callers `read_rating_rows`/`assert_ratings_present`
       на тот же класс гонки (запись после UI-действия, читаемая одним
       снимком adb) — класс, не экземпляр.
+
+## Верификация
+
+Fix: `_poll_ratings_marker(read_fn, settled, timeout=None)`
+(`framework/steps/settings_steps.py`) — опрашивает `read_fn()` до
+`settings.RATINGS_DB_POLL_TIMEOUT` (3.0s, шаг `RATINGS_DB_POLL_INTERVAL`
+0.3s), пока `settled(out)` не станет `True`; `settled` возвращает `True`
+НЕМЕДЛЕННО на `NOSQLITE`/отсутствии `OK`-маркера (детерминированные исходы,
+не гонка — ждать их «устаканивания» нечего) и только количественная ветка
+(count == "0" / rows == "" / count not in ("0","")) реально ждёт. Три
+хелпера (`assert_no_ratings`, `assert_ratings_present`,
+`assert_rating_rows_empty`) переведены на эту функцию; `_read_ratings_count()`
+вынесена как общий read для первых двух (не разъезжающиеся копии SQL-команды).
+
+**Различающий сигнал (критик-урок этой сессии — не полагаться на "тест
+прошёл" как на доказательство фикса):** добавлен
+`test_assert_no_ratings_polls_until_settled`
+(`framework/tests/test_settings_ratings_fail_closed_unit.py`) — мок
+`adb.run_as` отдаёт `"5\nOK\n"`, `"5\nOK\n"`, `"0\nOK\n"` НА
+ПОСЛЕДОВАТЕЛЬНЫЕ вызовы (симуляция реальной гонки: 2 снимка «запись ещё в
+процессе», 3-й — «завершилась»). Различающая сила ПРОВЕРЕНА эмпирически, НЕ
+предположена: отдельный standalone-скрипт-проба
+(`scratchpad/prefix_race_probe.py`, реальный файл РЕПОЗИТОРИЙ НЕ трогает —
+verbatim-копия ДОКОММИТНОГО (pre-fix) тела `assert_no_ratings` в изолированном
+модуле) прогнан на ТОЙ ЖЕ последовательности моков `"5\nOK\n"/"5\nOK\n"/
+"0\nOK\n"` — дословный вывод:
+```
+CONFIRMED pre-fix fails on the race sequence: AssertionError: ожидали 0 рейтингов, в БД: '5'
+calls made: 1
+```
+т.е. pre-fix (одноразовое чтение) падает НА ПЕРВОМ вызове (1 call), забирая
+только "5\nOK\n" и никогда не видя "0\nOK\n" — тот же ассерт-текст, что и
+реальный красный прогон TC-004 (bugs/AT-BUG-081.md «Обнаружено»:
+`ожидали 0 рейтингов, в БД: '5'`). ТЕКУЩИЙ (пост-фикс) код на ТОЙ ЖЕ
+последовательности проходит за 3 вызова (см. `test_assert_no_ratings_
+polls_until_settled` выше, живой прогон в device-free unit-сьюте ниже) —
+разница в поведении между pre-fix и post-fix на идентичном входе
+подтверждена, не предположена. Симметричный
+`test_assert_no_ratings_raises_after_budget_exhausted` доказывает, что опрос
+не превращается в бесконечное молчание — персистентный дефект (count всегда
+`"7"`) всё ещё даёт честный `AssertionError` по истечении бюджета.
+
+**Device-free unit-сьют (после рефакторинга, включая 2 новых теста):**
+```
+25 passed in 0.75s (tests/test_settings_ratings_fail_closed_unit.py)
+305 passed, 191 deselected in 23.04s (tests -k _unit, полный device-free срез)
+PYTEST_EXIT=0
+```
+
+**Красная проба B4 (протокол обнаружения — 3 ИЗОЛИРОВАННЫХ повтора
+`tests/test_smoke.py::test_clear_all_ratings`, каждый отдельным вызовом
+`Invoke-Pytest`, emulator-5554):**
+```
+run 1: 1 passed in 102.08s (0:01:42), PYTEST_EXIT=0
+run 2: 1 passed in 105.88s (0:01:45), PYTEST_EXIT=0
+run 3: 1 passed in 99.19s  (0:01:39), PYTEST_EXIT=0
+```
+Три подряд PASSED — тот же протокол, которым долг обнаружен (PASS/FAIL/PASS
+до фикса).
+
+**Критерий готовности пункт 3 (остальные callers того же класса гонки) —
+проверено, не просто продекларировано:**
+- `tests/test_settings.py::test_clear_all_ratings_shows_confirmation_dialog`
+  (TC-018) — `assert_ratings_present()`: **правка критик-входа (Н2)** — прогнан
+  вместе с `test_cancel_clear_all_dialog_keeps_data` (TC-019, `2 passed in
+  197.63s`, `PYTEST_EXIT=0`), но реально вызывает `assert_ratings_present()`
+  только TC-018; TC-019 проверяет вкладки Library, этого хелпера не касается
+  (регрессии не найдено ни в одном, атрибуция уточнена).
+- `tests/test_settings.py::test_clear_all_ratings_badge_resets_after_reload[works_multi.mitm]`
+  (TC-020, ветка (б)) — `assert_rating_rows_empty()` сразу после
+  `clear_all_ratings()`: `1 passed in 106.56s`, `PYTEST_EXIT=0`.
+- `tests/test_backup_restore.py::test_backup_clear_restore_returns_original_data`
+  (TC-021) — `assert_no_ratings()` сразу после `clear_all_ratings()`:
+  `1 passed in 200.16s`, `PYTEST_EXIT=0`.
+- Проверен СИБЛИНГ-класс (не caller `settings_steps`, но та же природа гонки
+  — async Room-запись без await): `rating_steps.wait_for_rating`
+  (AT-BUG-074) уже опрашивает `seed_db.read_work_ratings_full()` через
+  `wait_for` — не затронут долгом, уже поллит.
+- Проверен `SettingsScreen.importFromUri` (Restore, читается
+  `backup_steps.assert_restored_fields_match`/`assert_filter_profiles_match`)
+  — живым чтением `app-under-test` (`SettingsScreen.kt:401-454`):
+  `repo.upsertWorkRating`/`upsertFilterProfile` вызываются `suspend`-функциями
+  ВНУТРИ ТОГО ЖЕ `viewModelScope.launch(Dispatchers.IO)` блока, который
+  синхронно (await) исполняется ДО `_importState.value = ImportState.Done(...)`
+  — к моменту, когда UI показывает диалог результата (наблюдаемый Then-сигнал
+  `assert_restore_result_dialog`), запись УЖЕ завершена. НЕ тот же класс гонки,
+  что `confirmClearAll()` (который вообще не обновляет никакое UI-состояние
+  по завершении) — не тронут, полей опроса не требует.
 
 ## Обсуждение
 
@@ -106,3 +194,29 @@ AssertionError: ожидали 0 рейтингов, в БД: '5'
 прогона TC-004»). Не расширяю scope AT-BUG-080 починкой этого — другой класс
 дефекта (async DB race в Then-хелпере, не swipe/bounds-геометрия). Доклад +
 баг, диспетчеризация фикса — за Lead/очередь B4.
+
+**[test-maintainer @ 2026-08-17T04:20:00Z]** Fixed. `assert_no_ratings`/
+`assert_ratings_present`/`assert_rating_rows_empty` переведены на
+`_poll_ratings_marker` (опрос до 3.0s/0.3s, settled немедленно на
+NOSQLITE/ERROR-ветках) — см. «Верификация» за полным witness (device-free
+unit-сьют + 3 изолированных TC-004 подряд + все остальные caller'ы того же
+класса перепрогнаны зелёными). Класс закрыт полностью (пункт 3 критерия —
+проверены ВСЕ caller'ы `read_rating_rows`/`assert_ratings_present`/
+`assert_no_ratings`/`assert_rating_rows_empty`, ни одного queued follow-up не
+осталось; сиблинг-класс `wait_for_rating`/`importFromUri` проверены и
+подтверждены НЕ подверженными этой гонке). Lock снят.
+
+**[critic @ 2026-08-17T04:38:00Z]** Критик-вход приёмки: ПРИНЯТЬ, 0
+блокеров. Красная проба перепрогнана СИЛЬНЕЕ заявленного — реальный откат
+`settings_steps.py` на pre-fix коммит байтовой копией (не только copy-скрипт
+в scratchpad), красный на подлинном докоммитном коде, восстановлен md5-сверкой.
+Живой TC-004 изолированно PASSED. Класс-полнота пройдена собственным grep'ом
+(ровно 4 боевых call site) и чтением app-source (3 экземпляра
+`viewModelScope.launch` в SettingsScreen.kt, 2 непочиненных гейтятся UI-опросом
+ДО чтения БД — не того же класса). Н2 (TC-019 не вызывает `assert_ratings_present`)
+устранена координатором выше. **Очередь (Н1, не блокер):** регресс-замок
+покрывает только 1 из 3 переведённых хелперов (`assert_no_ratings`) —
+`assert_rating_rows_empty` и `assert_ratings_present` не имеют своего
+последовательного мок-теста; точечный откат ИМЕННО этих двух хелперов красной
+пробой не поймается. Кандидат для будущего B4-прохода: 2 параметризованных
+кейса по образцу существующего.
