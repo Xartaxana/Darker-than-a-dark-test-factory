@@ -218,6 +218,22 @@ PROXY_DEVICE_REACHABLE_TIMEOUT_AFTER_RECOVERY = int(
 # больную среду под видом «прогон прошёл».
 MAX_RECOVERIES_PER_SESSION = int(os.environ.get("AO3_MAX_RECOVERIES_PER_SESSION", "2"))
 
+# RATINGS_DB_POLL_TIMEOUT / RATINGS_DB_POLL_INTERVAL — AT-BUG-081: три
+# work_ratings-Then-хелпера (`settings_steps.assert_no_ratings`/
+# `assert_ratings_present`/`assert_rating_rows_empty`) читают Room через adb
+# СРАЗУ после UI-действий (`confirm_clear_all` и т.п.), чья запись в БД
+# запущена `viewModelScope.launch(Dispatchers.IO)` БЕЗ await и без
+# UI-сигнала завершения (`SettingsViewModel.confirmClearAll()`,
+# SettingsScreen.kt:545-548) — одноразовое чтение гонится с этой записью
+# (эмпирика: 3 изолированных прогона TC-004 дали PASS/FAIL/PASS, второй упал
+# с "ожидали 0 рейтингов, в БД: '5'"). Бюджет НЕ откалиброван точным
+# профилированием самой корутины (ОЦЕНКА по порядку с соседними
+# adb-таймаутами этого файла/poll_frequency WebDriverWait — не замер) — если
+# долг повторится на большем бюджете, значение стоит пересмотреть по
+# фактическому замеру, не по этой оценке.
+RATINGS_DB_POLL_TIMEOUT = float(os.environ.get("AO3_RATINGS_DB_POLL_TIMEOUT", "3.0"))
+RATINGS_DB_POLL_INTERVAL = float(os.environ.get("AO3_RATINGS_DB_POLL_INTERVAL", "0.3"))
+
 # --- Артефакты ---
 RUNS_DIR = REPO_ROOT / "runs"
 ALLURE_RESULTS = Path(os.environ.get("ALLURE_RESULTS", FRAMEWORK_ROOT / "allure-results"))

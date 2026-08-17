@@ -37,6 +37,24 @@ def _ensure_app_installed():
     yield
 
 
+@pytest.fixture(autouse=True)
+def _fast_ratings_poll(monkeypatch):
+    """AT-BUG-081: три хелперы под тестом теперь ОПРАШИВАЮТ через
+    `_poll_ratings_marker` вместо одноразового чтения — не связано с логикой
+    самого фикса, только скорость ЭТОГО device-free unit-теста. Мок
+    `_fake_run_as` в `_outcome`/`test_remote_command_uses_command_v_gate`
+    возвращает ОДИН И ТОТ ЖЕ `recorded_output` на КАЖДЫЙ вызов, поэтому
+    "assert"-ветки CASES (count/rows не совпадают с ожидаемым состоянием)
+    НИКОГДА не settled раньше бюджета — на боевом дефолте
+    `RATINGS_DB_POLL_TIMEOUT=3.0s` это добавило бы секунды к каждому такому
+    кейсу. Бюджет здесь укорочен на порядки; итоговая классификация
+    pass/assert/runtime НЕ меняется — `settled` в `_poll_ratings_marker`
+    ловит NOSQLITE/отсутствие OK-маркера НЕМЕДЛЕННО на любом бюджете (эти
+    ветки вообще не проходят через retry-цикл)."""
+    monkeypatch.setattr(ss.settings, "RATINGS_DB_POLL_TIMEOUT", 0.05)
+    monkeypatch.setattr(ss.settings, "RATINGS_DB_POLL_INTERVAL", 0.01)
+
+
 FUNCS = {
     "assert_ratings_present": ss.assert_ratings_present,
     "assert_no_ratings": ss.assert_no_ratings,
@@ -160,3 +178,51 @@ def test_remote_command_uses_command_v_gate(monkeypatch):
         assert not cmd.rstrip("'\"").endswith("echo NOSQLITE"), (
             f"{fn_name}: хвост команды всё ещё безусловный `|| echo NOSQLITE` после SELECT: {cmd!r}"
         )
+
+
+@pytest.mark.p1
+@allure.id("AT-BUG-081-poll-retries-until-settled")
+@allure.title("assert_no_ratings ОПРАШИВАЕТ до совпадения count, не падает на первом устаревшем снимке")
+def test_assert_no_ratings_polls_until_settled(monkeypatch):
+    """Различающий регресс-тест AT-BUG-081 (критик-урок: зелёный результат
+    сам по себе не доказывает, что чинит именно retry-цикл — нужен сценарий,
+    неотличимый для fix, но провальный для pre-fix одноразового чтения).
+
+    Симулирует РЕАЛЬНУЮ гонку: первые 2 чтения ещё видят старое значение
+    (async `viewModelScope.launch(Dispatchers.IO)` из `confirmClearAll()`
+    ещё не отработал), 3-е чтение видит `"0"` (запись завершилась).
+
+    Pre-fix код (`out = adb.run_as(...)`, ОДИН вызов) получил бы ПЕРВЫЙ
+    элемент `outputs` ("5\\nOK\\n") и упал бы `AssertionError` немедленно,
+    ни разу не увидев "0\\nOK\\n" — этот тест ловит именно такой регресс: он
+    проходит СЕЙЧАС (поллинг реально повторяет чтение), но упал бы, вернись
+    код к одноразовому `adb.run_as()`. Ровно 3 вызова (не `>=3`) — доказывает,
+    что опрос останавливается НЕМЕДЛЕННО по первому settled-снимку, не жуёт
+    оставшийся бюджет впустую."""
+    monkeypatch.setattr(ss.settings, "RATINGS_DB_POLL_TIMEOUT", 1.0)
+    monkeypatch.setattr(ss.settings, "RATINGS_DB_POLL_INTERVAL", 0.01)
+    outputs = iter(["5\nOK\n", "5\nOK\n", "0\nOK\n"])
+    calls: list[str] = []
+
+    def _fake_run_as(cmd: str) -> str:
+        calls.append(cmd)
+        return next(outputs)
+
+    monkeypatch.setattr(adb, "run_as", _fake_run_as)
+    ss.assert_no_ratings()  # НЕ должно поднять AssertionError
+    assert len(calls) == 3, f"ожидали ровно 3 попытки чтения (2 «в процессе» + 1 settled), реально {len(calls)}"
+
+
+@pytest.mark.p1
+@allure.id("AT-BUG-081-poll-timeout-still-raises-on-persistent-mismatch")
+@allure.title("assert_no_ratings всё ещё падает, если count НЕ сошёлся до конца бюджета (не бесконечный retry)")
+def test_assert_no_ratings_raises_after_budget_exhausted(monkeypatch):
+    """Симметричный контроль к `test_assert_no_ratings_polls_until_settled`:
+    гонка — не оправдание бесконечно молчать при РЕАЛЬНОМ дефекте (count так
+    и не стал "0" за весь бюджет) — опрос обязан завершиться честным
+    `AssertionError` с последним фактическим значением, не тихим pass."""
+    monkeypatch.setattr(ss.settings, "RATINGS_DB_POLL_TIMEOUT", 0.05)
+    monkeypatch.setattr(ss.settings, "RATINGS_DB_POLL_INTERVAL", 0.01)
+    monkeypatch.setattr(adb, "run_as", lambda cmd: "7\nOK\n")
+    with pytest.raises(AssertionError, match="7"):
+        ss.assert_no_ratings()

@@ -1,6 +1,9 @@
 """Бизнес-шаги экрана Settings (GWT)."""
 from __future__ import annotations
 
+import time
+from typing import Callable
+
 import allure
 
 from framework.config import settings
@@ -382,6 +385,57 @@ def assert_clear_all_dialog_closed(driver, timeout: int = 3):
 _RATINGS_DB_REL = "databases/ao3_ratings.db"
 
 
+def _poll_ratings_marker(
+    read_fn: Callable[[], str], settled: Callable[[str], bool], timeout: float | None = None,
+) -> str:
+    """AT-BUG-081: общий опрос для трёх Then-хелперов ниже
+    (`assert_no_ratings`/`assert_ratings_present`/`assert_rating_rows_empty`).
+
+    `SettingsViewModel.confirmClearAll()` (`SettingsScreen.kt:545-548`)
+    запускает `viewModelScope.launch(Dispatchers.IO) { repo.clearAllRatings()
+    }` — БЕЗ await и без какого-либо UI-сигнала «удаление завершено». Прежний
+    код делал ОДИН `read_fn()` сразу после того, как UI-тап вернул
+    управление — это гонка между быстрым Appium round-trip и асинхронной
+    Room-записью: `read_fn()` мог успеть выполниться ДО того, как корутина
+    отработала. Эмпирически подтверждено (bugs/AT-BUG-081.md): 3 изолированных
+    перезапуска `tests/test_smoke.py::test_clear_all_ratings` подряд дали
+    PASS/FAIL/PASS, второй упал на `assert_no_ratings` с "в БД: '5'" при
+    штатно прошедшем `confirm_clear_all`.
+
+    Опрашивает `read_fn()` до `settings.RATINGS_DB_POLL_TIMEOUT` секунд
+    (шаг `settings.RATINGS_DB_POLL_INTERVAL`), пока `settled(out)` не вернёт
+    `True`, и возвращает ПОСЛЕДНИЙ прочитанный `out` (сырой, с маркером) —
+    вызывающий Then-хелпер сам разбирает маркер/тело и решает финальный
+    assert. `settled` обязан вернуть `True` НЕМЕДЛЕННО (на первом снимке) для
+    `NOSQLITE`-деградации и для отсутствия `OK`-маркера (транспорт/SELECT
+    ошибка) — это ДЕТЕРМИНИРОВАННЫЕ исходы, не гонка с записью, ждать их
+    «устаканивания» бюджетом нечего; опрос имеет смысл только для веток,
+    ждущих КОНКРЕТНОГО значения count/rows после `OK`.
+
+    Первый опрос — сразу (t=0), без начальной паузы (симметрично
+    `waits.poll_for`/`assert_holds_for`)."""
+    timeout = timeout if timeout is not None else settings.RATINGS_DB_POLL_TIMEOUT
+    interval = settings.RATINGS_DB_POLL_INTERVAL
+    deadline = time.monotonic() + timeout
+    out = read_fn()
+    while not settled(out) and time.monotonic() < deadline:
+        time.sleep(interval)
+        out = read_fn()
+    return out
+
+
+def _read_ratings_count() -> str:
+    """Общая remote-команда `SELECT COUNT(*) FROM work_ratings` с fail-closed
+    маркером (AT-BUG-045) — используется И `assert_no_ratings`, И
+    `assert_ratings_present` (AT-BUG-081: вынесена в отдельную функцию, чтобы
+    оба Then-хелпера опрашивали ОДИН И ТОТ ЖЕ read, не расходящиеся копии
+    команды)."""
+    return adb.run_as(
+        "sh -c 'command -v sqlite3 >/dev/null 2>&1 || { echo NOSQLITE; exit 0; }; "
+        f"sqlite3 {_RATINGS_DB_REL} \"SELECT COUNT(*) FROM work_ratings\" 2>&1 && echo OK'"
+    ).strip()
+
+
 def _no_sqlite_marker_missing_error(step: str, out: str) -> RuntimeError:
     """AT-BUG-045: общий текст ошибки для трёх Then-хелперов ниже — вынесено,
     чтобы формулировка не разъезжалась по копипасте."""
@@ -425,11 +479,18 @@ def assert_ratings_present():
     OK`) — реальное отсутствие бинаря коротит выполнение до SELECT; любая
     ошибка самого SELECT (нет таблицы / БД заблокирована / файла нет) теперь
     остаётся сырым текстом БЕЗ какого-либо маркера и попадает в ту же ветку
-    `RuntimeError`, что и пустой транспортный `out`."""
-    out = adb.run_as(
-        "sh -c 'command -v sqlite3 >/dev/null 2>&1 || { echo NOSQLITE; exit 0; }; "
-        f"sqlite3 {_RATINGS_DB_REL} \"SELECT COUNT(*) FROM work_ratings\" 2>&1 && echo OK'"
-    ).strip()
+    `RuntimeError`, что и пустой транспортный `out`.
+
+    AT-BUG-081: опрашивает `_read_ratings_count()` (см. `_poll_ratings_marker`
+    за полным разбором класса гонки) — settled сразу на `NOSQLITE`/отсутствии
+    `OK`-маркера (детерминированные исходы), иначе ждёт, пока count перестанет
+    быть `"0"`/пустым (например, seed-фикстура ещё дописывает Room)."""
+    def _settled(out: str) -> bool:
+        if "NOSQLITE" in out or not out.endswith("OK"):
+            return True
+        return out[: -len("OK")].strip() not in ("0", "")
+
+    out = _poll_ratings_marker(_read_ratings_count, _settled)
     if "NOSQLITE" in out:
         return
     if not out.endswith("OK"):
@@ -481,8 +542,18 @@ def assert_rating_rows_empty():
     строк — распаковываем его здесь тем же приёмом, что и в двух остальных
     хелперах (см. `assert_ratings_present`); пустое ТЕЛО (до маркера) при
     наличии `OK` — легитимный ожидаемый Then (таблица пуста), пустой `out`
-    БЕЗ всякого маркера — отказ транспорта, ERROR."""
-    out = read_rating_rows()
+    БЕЗ всякого маркера — отказ транспорта, ERROR.
+
+    AT-BUG-081: опрашивает `read_rating_rows()` (см. `_poll_ratings_marker`
+    за полным разбором класса гонки — та же async-запись `confirmClearAll()`,
+    что и `assert_no_ratings`) — settled сразу на `NOSQLITE`/отсутствии
+    `OK`-маркера, иначе ждёт, пока тело не станет пустой строкой."""
+    def _settled(out: str) -> bool:
+        if "NOSQLITE" in out or not out.endswith("OK"):
+            return True
+        return out[: -len("OK")].strip() == ""
+
+    out = _poll_ratings_marker(read_rating_rows, _settled)
     if "NOSQLITE" in out:
         return
     if not out.endswith("OK"):
@@ -496,11 +567,25 @@ def assert_no_ratings():
     """AT-BUG-045: тот же fail-closed маркер, что `assert_ratings_present`
     (см. её докстринг за полным разбором класса дефекта) — раньше пустой
     `out` без `NOSQLITE` маскировал отказ транспорта под легитимную
-    деградацию «нет sqlite3»."""
-    out = adb.run_as(
-        "sh -c 'command -v sqlite3 >/dev/null 2>&1 || { echo NOSQLITE; exit 0; }; "
-        f"sqlite3 {_RATINGS_DB_REL} \"SELECT COUNT(*) FROM work_ratings\" 2>&1 && echo OK'"
-    ).strip()
+    деградацию «нет sqlite3».
+
+    AT-BUG-081: `SettingsViewModel.confirmClearAll()` (`SettingsScreen.kt:
+    545-548`) пишет `repo.clearAllRatings()` в `viewModelScope.launch(
+    Dispatchers.IO)` БЕЗ await и без UI-сигнала завершения — раньше эта
+    функция делала ОДИН `_read_ratings_count()` СРАЗУ после
+    `confirm_clear_all()`, гонясь с асинхронной записью (эмпирика: 3
+    изолированных прогона TC-004 дали PASS/FAIL/PASS, второй упал с
+    "ожидали 0 рейтингов, в БД: '5'" при штатно прошедшем шаге подтверждения
+    диалога — см. `bugs/AT-BUG-081.md`). Теперь опрашивает через
+    `_poll_ratings_marker` (см. её докстринг за полным разбором) — settled
+    сразу на `NOSQLITE`/отсутствии `OK`-маркера (детерминированные исходы,
+    не гонка), иначе ждёт, пока count не станет `"0"`."""
+    def _settled(out: str) -> bool:
+        if "NOSQLITE" in out or not out.endswith("OK"):
+            return True
+        return out[: -len("OK")].strip() == "0"
+
+    out = _poll_ratings_marker(_read_ratings_count, _settled)
     # На части образов нет бинаря sqlite3 — тогда проверку делает UI-слой (пустые вкладки)
     if "NOSQLITE" in out:
         return
