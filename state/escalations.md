@@ -2489,4 +2489,5 @@ vs env) — решение Lead: остаётся state-first (state отраж�
   TC-131/TC-137) сам по себе НЕ тронут и НЕ почален этим ходом — вне
   мандата текущего B4-лока (`AT-BUG-070`).
 - Статус: open (эта запись — не resolved, ждёт решения координатора/Lead).
-- [2026-08-16T20:00:02Z] **FACTORY-STALLED** [resolved:factory-watchdog-recovered] [factory:stalled] — восстановлено 2026-08-16T21:00:02Z
+- [2026-08-16T20:00:02Z] **FACTORY-STALLED** [resolved:factory-watchdog-recovered] [factory:stalled] — восстановлено 2026-08-17T02:00:02Z
+- [2026-08-17T02:46:22Z] **QAREADY-SYNC-RACE-BUG-019** — BUG-019: gitlab_sync собрался снять ярлык qa-status::QAready (внутренний статус Reopened — Open|Reopened, сигнал ещё не сведён) — вероятная гонка с gitlab_inbound (ярлык поставлен разработчиком, ещё не обработан). Ярлык СОХРАНЁН, снятие пропущено; разберитесь и пометьте [resolved:<task_id>] после проверки.

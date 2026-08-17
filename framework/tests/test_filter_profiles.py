@@ -5,9 +5,10 @@
 
 TC-085/TC-086 переиспользуют существующую инфраструктуру без новой фикстуры/
 сидинга (`filter_profile_applied_seeded`/`two_filter_profiles_seeded`, см. TC-041/
-TC-042 выше). Новый локатор `SettingsScreen._rename_button_locator` — тот же
-приём disambiguation `following::` от текстового узла с именем профиля, что и
-`_delete_button_locator`; диалог "Rename filter" переиспользует то же
+TC-042 выше). `SettingsScreen.open_rename_dialog` резолвит кнопку Rename через
+`BaseScreen.find_row_sibling` (AT-BUG-080: гард «тот же ряд» по bounds, не
+голый `following::…[1]`) — тот же приём disambiguation, что и
+`delete_filter_profile`; диалог "Rename filter" переиспользует то же
 `className("android.widget.EditText")`, что диалог "Save filter"
 (`browser_screen.py::_FILTER_NAME_FIELD`) — оба рендерятся BasicTextField-based
 компонентами Compose. TC-086 не различает две одноимённые строки Settings по

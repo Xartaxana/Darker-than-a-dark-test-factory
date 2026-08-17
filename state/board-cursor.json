@@ -1646,6 +1646,16 @@
   },
   "AT-BUG-080": {
     "itype": "bug",
+    "artifact_status": "Fixed",
+    "board_status": "Fixed"
+  },
+  "AT-BUG-081": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "AT-BUG-082": {
+    "itype": "bug",
     "artifact_status": "Open",
     "board_status": "Open"
   },
@@ -1696,8 +1706,8 @@
   },
   "BUG-019": {
     "itype": "bug",
-    "artifact_status": "Fixed",
-    "board_status": "Fixed"
+    "artifact_status": "Reopened",
+    "board_status": "Reopened"
   },
   "BUG-020": {
     "itype": "bug",

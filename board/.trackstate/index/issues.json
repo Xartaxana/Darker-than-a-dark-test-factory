@@ -7483,7 +7483,7 @@
     "epicPath": null,
     "summary": "swipe_to_text считает успехом ЛЮБОЕ присутствие якорного текста (в т.ч. обрезок в 9 px у нижней кромки вьюпорта), а вызывающие ищут СОСЕДА по той же строке — соседний узел ещё вне дерева; экземпляр TC-004 open_clear_all_dialog в RUN-20260816-1831 (остаток класса AT-BUG-048)",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -7492,7 +7492,51 @@
       "run:RUN-20260816-1831",
       "sev:major"
     ],
-    "updated": "2026-08-16T20:49:00Z",
+    "updated": "2026-08-17T01:39:05Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-081",
+    "path": "board/AT-BUG-081/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "assert_no_ratings() читает Room СРАЗУ после confirm_clear_all() — Clear all ratings пишет через viewModelScope.launch(Dispatchers.IO) без await, одноразовый adb-read гонится с записью",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-004",
+      "sev:major"
+    ],
+    "updated": "2026-08-16T22:21:53Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-082",
+    "path": "board/AT-BUG-082/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "TC-112 (test_favorite_rating_does_not_download_when_auto_download_off) падает на assert_work_not_in_files_tab при прогоне ВСЕГО test_downloads.py, но 1/1 зелёный в изолированном перезапуске — order/state-зависимый флейк, не трогает Settings/find_row_sibling код",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-112",
+      "sev:major"
+    ],
+    "updated": "2026-08-17T01:06:32Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -7579,7 +7623,7 @@
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-08-16T18:00:00Z",
+    "updated": "2026-08-16T22:01:29Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -7715,14 +7759,14 @@
     "epicPath": null,
     "summary": "Back после автопрыжка плотности не выводит назад — ловушка + рост истории",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-reopened",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:major"
     ],
-    "updated": "2026-08-16T17:56:15Z",
+    "updated": "2026-08-17T02:24:53Z",
     "resolution": null,
     "children": [],
     "archived": false

@@ -2,7 +2,7 @@
 key: "BUG-019"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-reopened"
 priority: "p1"
 summary: "Back после автопрыжка плотности не выводит назад — ловушка + рост истории"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-16T17:56:15Z"
-updated: "2026-08-16T17:56:15Z"
+created: "2026-08-17T02:24:53Z"
+updated: "2026-08-17T02:24:53Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Back после автопрыжка плотности не выводит назад — ловушка + рост истории
 
 _Спроецировано из `bugs/BUG-019.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Reopened**._
 
 # BUG-019 — Back после автопрыжка плотности не выводит назад
 
@@ -68,6 +68,7 @@ _Спроецировано из `bugs/BUG-019.md` (источник правд�
 ## Артефакты
 - Протокол: `exploratory-charters/CH-006.md` (пункты 9-10, раздел Находки #2)
 - Скриншоты: `exploratory-charters/attachments/CH-006/s2a-01-landed.png` (автопрыжок на page 2), `s2b-01-landed.png` (цепочка на page 4), `s2b-02-after-back1.png`, `s2b-02-after-back2.png`, `s2b-02-after-back3.png`
+- **Скриншоты верификации D1 (сборка aa377e0e, критик-вход правка Б2):** `bug019-verify-seed2a-trapped-aa377e0e.png` (ловушка после Back воспроизведена на исправленной сборке, seed 2a), `bug019-verify-seed2b-trapped-aa377e0e.png` (то же, seed 2b, цепочка Back×3) — скопированы из allure-прогонов fix-verifier/критика в постоянное место (эфемерный scratchpad прогона не носитель)
 - Код приложения: `ao3_bridge.js:619` (гейт infinite ON), `:123` (checkPageDensity вызывается из applyAllFilters), `:617-629` (сама функция autoskip)
 
 ## Анализ (баг приложения)
@@ -92,6 +93,8 @@ _Спроецировано из `bugs/BUG-019.md` (источник правд�
 
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
+|---|---|---|---|---|
+| 2026-08-17 | source_commit `aa377e0ec9664fcd5439fec9391638fabf94f448` (HEAD app-under-test, `state/app-under-test.yaml`), versionName `dev-local`, versionCode 12, built_at `2026-08-16T17:53:45Z`, apk_sha256 `34e2abced39e3754b037919efdcfc819a599ac5f4228cc5a2157faac2a92ce32`; found_in 1.10/versionCode 11 (built_at 2026-07-02) — aa377e0e закоммичен 2026-08-16, HEAD, хронологически позже (тот же аргумент, что принят в BUG-018 этой сессией: `27d5cfd1` → `aa377e0e` — предок подтверждён по коммит-логу) | `test_cases: []` — постоянного TC нет; followup_tc CH-006 закрыл TC-159/160/161 только на сам факт автопрыжка `checkPageDensity` (без Back), Back-ловушку не покрывает ни один. Carve-out D1 (app_bug без TC, живой прогон вместо теоретического code-inspection — прецедент BUG-018 этой сессии): scratch pytest (`test_bug019_verify.py`, НЕ закоммичен, session scratchpad; scratch-conftest `from framework.tests.conftest import *`, тот же приём CH-006/BUG-018), буквально исполняющий протокол CH-006 seed 2a и seed 2b. **Литеральный сценарий (обе функции):** Given — `app_steps.clean_state()` + `app_steps.seed_library([(works.LOVED,"DISLIKE")])` (seed 2a) / `[(LOVED,"DISLIKE"),(KUDOSED,"DISLIKE"),(READ,"DISLIKE")]` (seed 2b) ДО старта Appium-сессии (тот же порядок, что `conftest.loved_work_seeded`); `enable_infinite_scroll`, `assert_rating_hidden(driver,"Disliked",True)`; `open_listing(LISTING_PAGINATED_URL)`. When — `wait_until` на `"page=2"`/`"page=4"` в query (checkPageDensity автопрыжок), снимок id блёрбов landed-страницы, `window.__ch006Marker` выставлен, снят `{href, history.length, marker}` (webview-контекст). Затем `contexts.to_native(driver)` + `driver.back()` (СИСТЕМНЫЙ Back в NATIVE_APP-контексте — тот же механизм, что `library_screen.py::close_sort_menu` использует для `BackHandler`/`dismissOnBackPress`, НЕ chromedriver `window.history.back()`), `time.sleep(3)` settle, повторный снимок `{href, history.length, marker}` + id блёрбов. Seed 2b повторяет Back×3 подряд с тем же снимком на каждой итерации. Ассерт (обе функции): пользователь НЕ должен остаться на landed-странице (`ids_after != landed_id or href_after != href_before`) | **RED на обоих seed** (allure `statusDetails.message`, дословно, `--alluredir` изолированная директория данного прогона): seed 2a — `AssertionError: user still trapped on page 2 after Back settled: before={'historyLength': 1, 'href': 'https://archiveofourown.org/works?ao3_companion_fixture=listing_paginated&page=2', 'marker': 'seed2a-on-page2'}, after={'historyLength': 2, 'href': 'https://archiveofourown.org/works?ao3_companion_fixture=listing_paginated&page=2', 'marker': None}, ids_after=['900000002']`. Seed 2b (3× Back подряд после цепочки на page=4) — `AssertionError: user still trapped on page 4 after 3x Back settled: [(1, {'historyLength': 1,...'page=4','marker': None}, {'historyLength': 2,...'page=4','marker': None}, ['900000004']), (2, {'historyLength': 2,...}, {'historyLength': 3,...'page=4',...}, ['900000004']), (3, {'historyLength': 3,...}, {'historyLength': 4,...'page=4',...}, ['900000004'])]` — на всех трёх Back `historyLength` растёт РОВНО на +1/press (1→2→3→4, НЕ +2/press как в исходном дефекте — `location.replace` реально ограничил рост нативной WebView-истории), но `href`/landed work id НЕ МЕНЯЮТСЯ ни разу: пользователь остаётся на page=4 после каждого из трёх Back. **правка критик-входа:** маркер — свидетельство только для seed 2a (выставлен `'seed2a-on-page2'`, потерян на первом Back — документ WebView реально пересоздан, не косметика); в seed 2b маркер НЕ использовался вовсе (`None` уже в `before` первого Back по построению сценария) — несущее наблюдение для 2b это неизменные `href`/landed work id на всех трёх Back, не маркер | **Reopened.** Диагноз (эмпирический, не только чтение кода — подтверждён живым прогоном выше): фикс `navigateEffective`/`location.replace` (`ao3_bridge.js:563-568`) действует ТОЛЬКО на нативную `window.history`, которую использует НЕвызываемый нигде в приложении путь `BrowserViewModel.requestActiveTabGoBack()`→`webView.goBack()` (мёртвый код — ни одного вызова во всём `app/src/main/java`, кроме собственного объявления, `grep -rn requestActiveTabGoBack` пусто вне `BrowserViewModel.kt:686`). РЕАЛЬНЫЙ достижимый пользователем Back — аппаратная/системная кнопка/жест, `BrowserScreen.kt:261 BackHandler(enabled=isActive)` — идёт через ДРУГОЙ, полностью независимый от `window.history` стек: `TabNavHistory`/`BrowserViewModel.goBack(tabId)` (`BrowserViewModel.kt:37-75,457-464`) + `webViews[tabId]?.loadUrl(url)` (`BrowserScreen.kt:263-265`). Этот стек наполняется `recordPageLoad`→`history.recordUrl(url)` НА КАЖДОЙ загрузке страницы (`onPageFinished`, `BrowserScreen.kt:663`) СОВЕРШЕННО НЕЗАВИСИМО от того, каким JS API (`location.href` vs `location.replace`) вызвана навигация — `recordUrl` видит только финальный URL, не то, как до него дошли. Диф коммита `aa377e0e` в `BrowserViewModel.kt` (см. `git show aa377e0e -- BrowserViewModel.kt`) правит ТОЛЬКО `restoreClosedTab` (BUG-016) и `__ao3LiveRatingPush`-гейт (BUG-020) — `goBack()`/`TabNavHistory`/`recordPageLoad` НЕ тронуты. Поэтому цикл «Back → Kotlin `loadUrl(page1)` → полный reload → `checkPageDensity` срабатывает заново (`_didAutoAdvance` сброшен per-load) → `navigateEffective` уводит обратно на ту же landed-страницу → `recordPageLoad` пушит её же в `TabNavHistory`» воспроизводится ЖИВЬЁМ на исправленной сборке в неизменном виде: пользователь по-прежнему заперт. Единственное реальное улучшение фикса — рост НАТИВНОЙ `window.history.length` ограничен (+1/press вместо +2/press): это следствие того, что `location.replace` не создаёt новую нативную запись при повторном автопрыжке САМ ПО СЕБЕ, но Kotlin-side `loadUrl()`-вызов из `goBack()` всё равно создаёт свою (отсюда +1, не +0). Для дальнейшей починки любое решение обязано либо (а) заставить Kotlin-стек различать «страница, до которой докрутил автопрыжок» и не пушить её повторно при возврате туда же, либо (б) не использовать `loadUrl()` для реализации Back вовсе. **Дефект-собрат (D-0043):** класс «фикс на уровне `window.history`/JS не достигает пользователя, потому что реальный Back в этом приложении сознательно обходит `window.history` через собственный `TabNavHistory`» — стоит иметь в виду для ЛЮБОГО будущего бага, где предлагаемое решение апеллирует к `location.replace`/`pushState`/`history.length`: без проверки, каким путём Back РЕАЛЬНО достижим (`BackHandler` vs мёртвый `requestActiveTabGoBack`), такой фикс рискует не менять наблюдаемое поведение. BUG-020 (сосед по тому же коммиту) этим не затронут — его фикс (`__ao3LiveRatingPush`) не связан с Back/историей, отдельная проверка не требуется этой записью |
 
 ---
 
@@ -118,6 +121,18 @@ _Спроецировано из `bugs/BUG-019.md` (источник правд�
 - Или наличие готового артефакта сборки для тестирования
 
 После получения версии запущу перепрогон seed 2a/2b и обновлю результаты верификации.
+
+**[fix-verifier @ 2026-08-17T02:24:53Z]** Верифицировано на `aa377e0e` (versionCode 12) — **Reopened**, репро живо. Полные данные и дословный witness — таблица «Верификация» выше; кратко:
+
+Живой прогон seed 2a и seed 2b CH-006 (буквально, реальный системный Back, не `window.history.back()` из webview-контекста) показывает, что пользователь ОСТАЁТСЯ на landed-странице (page 2 / page 4) после каждого нажатия Back — ровно тот же наблюдаемый симптом, что описан в исходном баге, хотя нативный `window.history.length` теперь растёт медленнее (+1/press вместо +2/press, это фикс реально изменил).
+
+Причина: реальная кнопка Back в приложении (`BrowserScreen.kt:261`, `BackHandler`) НЕ использует `window.history`/`webView.goBack()` вовсе — она идёт через собственный Kotlin-стек `TabNavHistory` (`BrowserViewModel.kt`), который наполняется на КАЖДОЙ загрузке страницы независимо от того, каким JS API (`href` или `replace`) эта загрузка была вызвана. Путь, который ДЕЙСТВИТЕЛЬНО чувствителен к `location.replace` (`BrowserViewModel.requestActiveTabGoBack()`→`webView.goBack()`) в коде существует, но нигде не вызывается (мёртвый код) — то есть фикс исправил механизм, который приложение не использует для показа Back пользователю. Диф коммита `aa377e0e` не касается `TabNavHistory`/`goBack(tabId)`/`recordPageLoad` — только BUG-016/BUG-020.
+
+Похоже, требуется правка на стороне Kotlin-стека (например, не пушить в `TabNavHistory` повторный auto-advance на ту же landed-страницу, куда только что вернулись через Back), а не (только) JS-сторона. Оставляю на усмотрение разработчика — сам код `app-under-test/` не трогал.
+
+**[critic @ 2026-08-17T02:38:00Z]** Критик-вход приёмки: вывод Reopened подтверждён НЕЗАВИСИМЫМ живым воспроизведением (свой прогон, значения совпали с witness выше) + контрольным экспериментом (Back БЕЗ автопрыжка — работает штатно, гипотеза «Back сломан вообще» исключена) + байтовой сверкой APK на устройстве (фикс реально в проверяемой сборке). 2 блокера устранены координатором тем же ходом (уточнение маркера seed 2b выше, постоянные скриншоты в «## Артефакты»).
+
+**Очередь (N1, критик-вход, координатор):** постоянного TC на Back-ловушку по-прежнему нет — сценарий третий раз подряд (CH-006 → эта верификация → контроль критика) пишется одноразовым скретчем и выбрасывается. Кандидат для test-designer: TC на «Back после автопрыжка плотности» по протоколу seed 2a/2b, ожидаемо-красный до фикса Kotlin-стека (`TabNavHistory`/`recordPageLoad`) — красный замок явно свяжет с этим багом, не с BUG-018/BUG-020 того же коммита.
 
 ## Чек-лист качества (bug-reporter)
 - [x] Проверены дубликаты среди открытых багов (`bugs/`, status != Verified/Rejected) — аналогов не найдено

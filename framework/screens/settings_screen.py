@@ -85,108 +85,106 @@ class SettingsScreen(BaseScreen):
     BRIGHTNESS_SLIDER = (AppiumBy.CLASS_NAME, "android.widget.SeekBar")
 
     # --- Auto-download toggle (секция "Data", SettingsScreen.kt SettingsSwitchRow —
-    # Compose Switch без text/content-desc). Тот же приём XPath `following::`, что и
-    # `_delete_button_locator` ниже: ближайший checkable-узел ПОСЛЕ подписи строки в
-    # document order (сверено живым деревом test-automator при автоматизации TC-032,
-    # 2026-07-18 — строка "DATA" -> title TextView "Auto-download favorite works" ->
-    # subtitle TextView -> сам Switch `class="android.view.View" checkable="true"`,
-    # без промежуточных checkable-узлов между title и самим Switch). ---
-    _AUTO_DOWNLOAD_SWITCH = (
-        AppiumBy.XPATH,
-        '(//*[@text="Auto-download favorite works"]/following::*[@checkable="true"])[1]',
-    )
+    # Compose Switch без text/content-desc). AT-BUG-080 Б1 rework: переведён с голого
+    # XPath `(...following::*[@checkable="true"])[1]` на `find_row_sibling`/
+    # `tap_row_sibling` — тот же приём, что `is_tap_to_scroll_checked`/`_AUTO_DOWNLOAD_
+    # LABEL` ниже: ближайший checkable-узел ПОСЛЕ подписи строки в document order,
+    # принадлежащий ИМЕННО этой строке по Y-bounds (сверено живым деревом
+    # test-automator при автоматизации TC-032, 2026-07-18 — строка "DATA" -> title
+    # TextView "Auto-download favorite works" -> subtitle TextView -> сам Switch
+    # `class="android.view.View" checkable="true"`, без промежуточных checkable-узлов
+    # между title и самим Switch — единственный кандидат `following::`, поэтому и
+    # голый XPath раньше не падал, но нёс тот же класс риска, что остальные 8 мест). ---
+    _AUTO_DOWNLOAD_LABEL = "Auto-download favorite works"
 
     def is_auto_download_checked(self, timeout: int | None = None) -> bool:
-        el = self.find(self._AUTO_DOWNLOAD_SWITCH, timeout)
+        el = self.find_row_sibling(self._AUTO_DOWNLOAD_LABEL, '@checkable="true"', timeout)
         return el.get_attribute("checked") == "true"
 
     def set_auto_download(self, enabled: bool):
         """Тумблер — таплю только если текущее состояние не совпадает с желаемым
         (идемпотентно, тот же приём, что `LibraryScreen.set_downloaded_only`)."""
         if self.is_auto_download_checked() != enabled:
-            self.tap(self._AUTO_DOWNLOAD_SWITCH)
+            self.tap_row_sibling(self._AUTO_DOWNLOAD_LABEL, '@checkable="true"')
         return self
 
     # --- Tap to scroll toggle (секция "Reader", SettingsScreen.kt:695-700,
     # AT-BUG-030/TC-119/120/122) — тот же приём XPath `following::`, что
-    # `_AUTO_DOWNLOAD_SWITCH`/`_hide_rating_switch_locator`: Compose `Switch` без
+    # `_AUTO_DOWNLOAD_SWITCH`/`is_rating_hidden` (AT-BUG-080: через `find_row_
+    # sibling`, не голый XPath): Compose `Switch` без
     # text/content-desc, ближайший checkable-узел ПОСЛЕ подписи строки в document
     # order. Секция "Reader" начинается сразу после "Theme" (используемого
     # `is_loaded()`), но "Tap to scroll" — ниже Font size/Brightness/Reset
     # brightness в том же разделе — `swipe_to_text` перед поиском на случай, если
     # строка ещё не скомпонована в вьюпорте (тот же паттерн, что `is_rating_hidden`).
-    _TAP_TO_SCROLL_SWITCH = (
-        AppiumBy.XPATH,
-        '(//*[@text="Tap to scroll (work pages)"]/following::*[@checkable="true"])[1]',
-    )
+    _TAP_TO_SCROLL_LABEL = "Tap to scroll (work pages)"
 
     def is_tap_to_scroll_checked(self, timeout: int | None = None) -> bool:
-        assert self.swipe_to_text("Tap to scroll (work pages)"), (
+        assert self.swipe_to_text(self._TAP_TO_SCROLL_LABEL), (
             "строка «Tap to scroll (work pages)» не найдена прокруткой (Reader)"
         )
-        el = self.find(self._TAP_TO_SCROLL_SWITCH, timeout)
+        # AT-BUG-080 item 3: `find_row_sibling` вместо голого `following::…[1]`
+        # — гарантирует, что найденный Switch принадлежит ИМЕННО этой строке
+        # (bounds по Y), а не следующей (если свой Switch ещё обрезан кромкой).
+        el = self.find_row_sibling(self._TAP_TO_SCROLL_LABEL, '@checkable="true"', timeout)
         return el.get_attribute("checked") == "true"
 
     def set_tap_to_scroll(self, enabled: bool):
         """Тумблер — таплю только если текущее состояние не совпадает с желаемым
         (идемпотентно, тот же приём, что `set_auto_download`)."""
         if self.is_tap_to_scroll_checked() != enabled:
-            self.tap(self._TAP_TO_SCROLL_SWITCH)
+            self.tap_row_sibling(self._TAP_TO_SCROLL_LABEL, '@checkable="true"')
         return self
 
     # --- Infinite scroll toggle (секция "Reader", SettingsScreen.kt:701-707,
-    # TC-129/TC-130) — тот же приём XPath `following::`, что `_TAP_TO_SCROLL_SWITCH`:
+    # TC-129/TC-130) — тот же приём (`find_row_sibling`, AT-BUG-080), что `is_tap_to_scroll_checked`:
     # Compose `Switch` без text/content-desc, ближайший checkable-узел ПОСЛЕ подписи
     # строки в document order. Строка идёт СРАЗУ ПОСЛЕ "Tap to scroll (work pages)" в
     # том же разделе Reader (SettingsScreen.kt:694-707) — `following::` от ЭТОГО текста
     # не зацепит чужой (более ранний) checkable-узел tap-to-scroll, только следующий в
     # document order. `swipe_to_text` перед поиском — тот же паттерн, что
     # `is_tap_to_scroll_checked`.
-    _INFINITE_SCROLL_SWITCH = (
-        AppiumBy.XPATH,
-        '(//*[@text="Infinite scroll (listing pages)"]/following::*[@checkable="true"])[1]',
-    )
+    _INFINITE_SCROLL_LABEL = "Infinite scroll (listing pages)"
 
     def is_infinite_scroll_checked(self, timeout: int | None = None) -> bool:
-        assert self.swipe_to_text("Infinite scroll (listing pages)"), (
+        assert self.swipe_to_text(self._INFINITE_SCROLL_LABEL), (
             "строка «Infinite scroll (listing pages)» не найдена прокруткой (Reader)"
         )
-        el = self.find(self._INFINITE_SCROLL_SWITCH, timeout)
+        # AT-BUG-080 item 3: см. `is_tap_to_scroll_checked`.
+        el = self.find_row_sibling(self._INFINITE_SCROLL_LABEL, '@checkable="true"', timeout)
         return el.get_attribute("checked") == "true"
 
     def set_infinite_scroll(self, enabled: bool):
         """Тумблер — таплю только если текущее состояние не совпадает с желаемым
         (идемпотентно, тот же приём, что `set_tap_to_scroll`)."""
         if self.is_infinite_scroll_checked() != enabled:
-            self.tap(self._INFINITE_SCROLL_SWITCH)
+            self.tap_row_sibling(self._INFINITE_SCROLL_LABEL, '@checkable="true"')
         return self
 
     # --- Volume-button paging toggle (секция "Reader", SettingsScreen.kt:777-782,
     # AT-BUG-072/TC-252) — тот же приём XPath `following::`, что
-    # `_TAP_TO_SCROLL_SWITCH`/`_INFINITE_SCROLL_SWITCH`: Compose `Switch` без
+    # `is_tap_to_scroll_checked`/`is_infinite_scroll_checked` (AT-BUG-080, `find_row_sibling`): Compose `Switch` без
     # text/content-desc, ближайший checkable-узел ПОСЛЕ подписи строки в document
     # order. Строка идёт СРАЗУ ПОСЛЕ "Tap to scroll (work pages)" (:770-775) и
     # ПЕРЕД "Infinite scroll (listing pages)" (:784-789) — `following::` от ЭТОГО
     # текста ловит СВОЙ checkable-узел, не соседний (порядок в дереве сверен с
     # исходником). `swipe_to_text` перед поиском — тот же паттерн, что
     # `is_tap_to_scroll_checked`/`is_infinite_scroll_checked`.
-    _VOLUME_BUTTON_SCROLL_SWITCH = (
-        AppiumBy.XPATH,
-        '(//*[@text="Page with volume buttons"]/following::*[@checkable="true"])[1]',
-    )
+    _VOLUME_BUTTON_SCROLL_LABEL = "Page with volume buttons"
 
     def is_volume_button_scroll_checked(self, timeout: int | None = None) -> bool:
-        assert self.swipe_to_text("Page with volume buttons"), (
+        assert self.swipe_to_text(self._VOLUME_BUTTON_SCROLL_LABEL), (
             "строка «Page with volume buttons» не найдена прокруткой (Reader)"
         )
-        el = self.find(self._VOLUME_BUTTON_SCROLL_SWITCH, timeout)
+        # AT-BUG-080 item 3: см. `is_tap_to_scroll_checked`.
+        el = self.find_row_sibling(self._VOLUME_BUTTON_SCROLL_LABEL, '@checkable="true"', timeout)
         return el.get_attribute("checked") == "true"
 
     def set_volume_button_scroll(self, enabled: bool):
         """Тумблер — таплю только если текущее состояние не совпадает с желаемым
         (идемпотентно, тот же приём, что `set_tap_to_scroll`/`set_infinite_scroll`)."""
         if self.is_volume_button_scroll_checked() != enabled:
-            self.tap(self._VOLUME_BUTTON_SCROLL_SWITCH)
+            self.tap_row_sibling(self._VOLUME_BUTTON_SCROLL_LABEL, '@checkable="true"')
         return self
 
     # --- Per-rating "Hide {rating} works" toggle (секция "Content Visibility",
@@ -195,24 +193,22 @@ class SettingsScreen(BaseScreen):
     # checkable-узел ПОСЛЕ подписи строки в document order. `swipe_to_text` перед
     # поиском — тот же паттерн, что `open_clear_all_dialog`/`_swipe_to_profile`:
     # секция "Content Visibility" ниже "fold" сразу после открытия Settings.
-    def _hide_rating_switch_locator(self, rating_label: str):
-        return (
-            AppiumBy.XPATH,
-            f'(//*[@text="Hide {rating_label} works"]/following::*[@checkable="true"])[1]',
-        )
-
     def is_rating_hidden(self, rating_label: str, timeout: int | None = None) -> bool:
-        assert self.swipe_to_text(f"Hide {rating_label} works"), (
-            f"строка «Hide {rating_label} works» не найдена прокруткой (Content Visibility)"
+        label = f"Hide {rating_label} works"
+        assert self.swipe_to_text(label), (
+            f"строка «{label}» не найдена прокруткой (Content Visibility)"
         )
-        el = self.find(self._hide_rating_switch_locator(rating_label), timeout)
+        # AT-BUG-080 item 3: `find_row_sibling` (см. `is_tap_to_scroll_checked`)
+        # вместо голого `following::…[1]` — несколько тумблеров "Hide {rating}
+        # works" подряд делают риск чужого ряда особенно вероятным.
+        el = self.find_row_sibling(label, '@checkable="true"', timeout)
         return el.get_attribute("checked") == "true"
 
     def set_hide_rating(self, rating_label: str, enabled: bool):
         """Тумблер — таплю только если текущее состояние не совпадает с желаемым
         (идемпотентно, тот же приём, что `set_auto_download`)."""
         if self.is_rating_hidden(rating_label) != enabled:
-            self.tap(self._hide_rating_switch_locator(rating_label))
+            self.tap_row_sibling(f"Hide {rating_label} works", '@checkable="true"')
         return self
 
     # --- Display mode Hide/Dim (секция "Content Visibility", SettingsScreen.kt:779-798,
@@ -250,30 +246,28 @@ class SettingsScreen(BaseScreen):
 
     # --- Auto-apply on navigation toggle (секция "SAVED AO3 FILTERS",
     # SettingsScreen.kt:811-816, TC-181/182/183/184/185) — тот же приём XPath
-    # `following::`, что `_TAP_TO_SCROLL_SWITCH`/`_AUTO_DOWNLOAD_SWITCH`: Compose
+    # `find_row_sibling` (AT-BUG-080), что `is_tap_to_scroll_checked`/`_AUTO_DOWNLOAD_SWITCH`: Compose
     # `Switch` без text/content-desc, ближайший checkable-узел ПОСЛЕ подписи строки
     # в document order (сверено с исходником: строка `SettingsSwitchRow(title =
     # "Auto-apply on navigation", ...)` — единственный checkable-узел сразу перед
     # секцией самого списка профилей). `swipe_to_text` перед поиском — тот же
     # паттерн, что `is_tap_to_scroll_checked`/`_swipe_to_profile`: секция "SAVED AO3
     # FILTERS" ниже "fold" сразу после открытия Settings.
-    _AUTO_APPLY_FILTER_SWITCH = (
-        AppiumBy.XPATH,
-        '(//*[@text="Auto-apply on navigation"]/following::*[@checkable="true"])[1]',
-    )
+    _AUTO_APPLY_FILTER_LABEL = "Auto-apply on navigation"
 
     def is_auto_apply_filter_checked(self, timeout: int | None = None) -> bool:
-        assert self.swipe_to_text("Auto-apply on navigation"), (
+        assert self.swipe_to_text(self._AUTO_APPLY_FILTER_LABEL), (
             "строка «Auto-apply on navigation» не найдена прокруткой (Saved AO3 Filters)"
         )
-        el = self.find(self._AUTO_APPLY_FILTER_SWITCH, timeout)
+        # AT-BUG-080 item 3: см. `is_tap_to_scroll_checked`.
+        el = self.find_row_sibling(self._AUTO_APPLY_FILTER_LABEL, '@checkable="true"', timeout)
         return el.get_attribute("checked") == "true"
 
     def set_auto_apply_filter(self, enabled: bool):
         """Тумблер — таплю только если текущее состояние не совпадает с желаемым
         (идемпотентно, тот же приём, что `set_tap_to_scroll`)."""
         if self.is_auto_apply_filter_checked() != enabled:
-            self.tap(self._AUTO_APPLY_FILTER_SWITCH)
+            self.tap_row_sibling(self._AUTO_APPLY_FILTER_LABEL, '@checkable="true"')
         return self
 
     # --- Saved AO3 Filters (секция "SAVED AO3 FILTERS", SettingsScreen.kt) — TC-042 ---
@@ -328,12 +322,12 @@ class SettingsScreen(BaseScreen):
             return False
         return self.is_present(self.by_text(name), timeout=timeout if timeout is not None else 8)
 
-    def _delete_button_locator(self, name: str):
-        return (AppiumBy.XPATH, f'(//*[@text="{name}"]/following::*[@content-desc="Delete"])[1]')
-
     def delete_filter_profile(self, name: str):
         assert self._swipe_to_profile(name), f"профиль «{name}» не найден прокруткой"
-        self.tap(self._delete_button_locator(name))
+        # AT-BUG-080 item 3: `tap_row_sibling` вместо голого `following::…[1]`
+        # — ЭТО деструктивное действие (удаление профиля), риск нажать чужой
+        # Delete из-за обрезанного кромкой СВОЕГО ряда опаснее, чем у тумблеров.
+        self.tap_row_sibling(name, '@content-desc="Delete"')
         return self
 
     def count_filter_profile_occurrences(self, name: str) -> int:
@@ -346,7 +340,8 @@ class SettingsScreen(BaseScreen):
 
     # --- Rename filter profile (SettingsScreen.kt requestRenameFilter/
     # confirmRenameFilter, диалог "Rename filter") — TC-085/TC-086. Тот же приём
-    # disambiguation, что `_delete_button_locator`: XPath `following::` от
+    # disambiguation, что `delete_filter_profile`: `find_row_sibling` (AT-BUG-080)
+    # от
     # текстового узла с именем профиля до БЛИЖАЙШЕГО content-desc="Rename" в
     # document order (порядок в дереве name -> summary -> Rename -> Delete, см.
     # комментарий выше) — Rename стоит ПЕРЕД Delete, тот же класс неоднозначности
@@ -361,12 +356,10 @@ class SettingsScreen(BaseScreen):
     _RENAME_NAME_FIELD = (AppiumBy.ANDROID_UIAUTOMATOR,
                           'new UiSelector().className("android.widget.EditText")')
 
-    def _rename_button_locator(self, name: str):
-        return (AppiumBy.XPATH, f'(//*[@text="{name}"]/following::*[@content-desc="Rename"])[1]')
-
     def open_rename_dialog(self, name: str):
         assert self._swipe_to_profile(name), f"профиль «{name}» не найден прокруткой"
-        self.tap(self._rename_button_locator(name))
+        # AT-BUG-080 item 3: `tap_row_sibling` (см. `delete_filter_profile`).
+        self.tap_row_sibling(name, '@content-desc="Rename"')
         return self
 
     def rename_dialog_visible(self, timeout: int | None = None) -> bool:
@@ -532,25 +525,23 @@ class SettingsScreen(BaseScreen):
         return self
 
     # --- Show copy-URL button toggle (секция "Debug", SettingsScreen.kt:1064-1069,
-    # TC-188) — тот же приём XPath `following::`, что `_TAP_TO_SCROLL_SWITCH`/
+    # TC-188) — тот же приём (`find_row_sibling`, AT-BUG-080), что `is_tap_to_scroll_checked`/
     # `_AUTO_DOWNLOAD_SWITCH`: Compose `Switch` без text/content-desc, ближайший
     # checkable-узел ПОСЛЕ подписи строки в document order. "Debug" — последняя
     # секция экрана, `swipe_to_text` обязателен.
-    _DEBUG_COPY_URL_SWITCH = (
-        AppiumBy.XPATH,
-        '(//*[@text="Show copy-URL button"]/following::*[@checkable="true"])[1]',
-    )
+    _DEBUG_COPY_URL_LABEL = "Show copy-URL button"
 
     def is_debug_copy_url_checked(self, timeout: int | None = None) -> bool:
-        assert self.swipe_to_text("Show copy-URL button"), (
+        assert self.swipe_to_text(self._DEBUG_COPY_URL_LABEL), (
             "строка «Show copy-URL button» не найдена прокруткой (Debug)"
         )
-        el = self.find(self._DEBUG_COPY_URL_SWITCH, timeout)
+        # AT-BUG-080 item 3: см. `is_tap_to_scroll_checked`.
+        el = self.find_row_sibling(self._DEBUG_COPY_URL_LABEL, '@checkable="true"', timeout)
         return el.get_attribute("checked") == "true"
 
     def set_debug_copy_url(self, enabled: bool):
         """Тумблер — таплю только если текущее состояние не совпадает с желаемым
         (идемпотентно, тот же приём, что `set_tap_to_scroll`)."""
         if self.is_debug_copy_url_checked() != enabled:
-            self.tap(self._DEBUG_COPY_URL_SWITCH)
+            self.tap_row_sibling(self._DEBUG_COPY_URL_LABEL, '@checkable="true"')
         return self
