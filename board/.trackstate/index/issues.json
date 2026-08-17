@@ -7483,7 +7483,7 @@
     "epicPath": null,
     "summary": "swipe_to_text считает успехом ЛЮБОЕ присутствие якорного текста (в т.ч. обрезок в 9 px у нижней кромки вьюпорта), а вызывающие ищут СОСЕДА по той же строке — соседний узел ещё вне дерева; экземпляр TC-004 open_clear_all_dialog в RUN-20260816-1831 (остаток класса AT-BUG-048)",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -7492,8 +7492,8 @@
       "run:RUN-20260816-1831",
       "sev:major"
     ],
-    "updated": "2026-08-17T01:39:05Z",
-    "resolution": null,
+    "updated": "2026-08-17T02:58:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -7780,15 +7780,15 @@
     "epicPath": null,
     "summary": "Простановка DISLIKE уводит пользователя со страницы; автонавигация live-push под открытым bottom-sheet",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:major"
     ],
-    "updated": "2026-08-16T20:39:00Z",
-    "resolution": null,
+    "updated": "2026-08-17T03:12:14Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -8273,6 +8273,27 @@
       "sev:minor"
     ],
     "updated": "2026-08-16T21:21:06Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-073",
+    "path": "board/BUG-073/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Тумблер «Hide Disliked works» (Settings) вызывает ту же незапрошенную live-push навигацию, что BUG-020 — гейт __ao3LiveRatingPush защищает только broadcastRatingChange, не setHiddenRatings",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:major"
+    ],
+    "updated": "2026-08-17T03:33:29Z",
     "resolution": null,
     "children": [],
     "archived": false

@@ -2,7 +2,7 @@
 key: "AT-BUG-080"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p1"
 summary: "swipe_to_text считает успехом ЛЮБОЕ присутствие якорного текста (в т.ч. обрезок в 9 px у нижней кромки вьюпорта), а вызывающие ищут СОСЕДА по той же строке — соседний узел ещё вне дерева; экземпляр TC-004 open_clear_all_dialog в RUN-20260816-1831 (остаток класса AT-BUG-048)"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-17T01:39:05Z"
-updated: "2026-08-17T01:39:05Z"
+created: "2026-08-17T02:58:00Z"
+updated: "2026-08-17T02:58:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # swipe_to_text считает успехом ЛЮБОЕ присутствие якорного текста (в т.ч. обрезок в 9 px у нижней кромки вьюпорта), а вызывающие ищут СОСЕДА по той же строке — соседний узел ещё вне дерева; экземпляр TC-004 open_clear_all_dialog в RUN-20260816-1831 (остаток класса AT-BUG-048)
 
 _Спроецировано из `bugs/AT-BUG-080.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # AT-BUG-080 — `swipe_to_text` доводит якорь до кромки вьюпорта, сосед по строке остаётся вне дерева
 
@@ -256,6 +256,7 @@ Clear all ratings — последняя строка списка)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
 | 2026-08-17T01:39:05Z (test-maintainer, rework self-verification — не fix-verifier) | dev-local (versionCode 12), фреймворк-фикс, сборка приложения не менялась | Device-free: `framework/tests/test_swipe_to_text_settle_unit.py` (10/10, вкл. 3 новые Б2/Б3-пробы, каждая индивидуально red→green по докоммитному base_screen.py). Device (emulator-5554): TC-004 3 изолированных перезапуска подряд (139.51s/145.02s/140.23s, все PASSED); TC-032 (`test_auto_download_triggers_on_loved_rating`, Б1-путь через `find_row_sibling`/`tap_row_sibling`) 3 изолированных перезапуска подряд (82.39s/82.14s/82.30s, все PASSED); `tests/test_settings.py` полностью (10 passed, 1 skipped — пре-существующий TC-188, не связан); `tests/test_downloads.py` полностью (16 passed, 1 failed — TC-112, изолированный повторный прогон того же узла PASSED; **правка критик-входа round2 (N2)**: тело TC-112 само не исполняет изменённый код, но падение order/state-зависимое, а СОСЕДНИЕ тесты того же файла его исполняют (`enable_auto_download`→`tap_row_sibling`, `open_settings_scrolled_to`→`_settle_clipped_anchor`) — вклад rework'а в это падение НЕ исключён и НЕ подтверждён (правило 14, каузальный негатив требует исключающего прогона, не сделан); заведён `AT-BUG-082` с той же честной рамкой); `tests/test_filter_profiles.py` полностью (12/12 passed, покрывает `tap_row_sibling` с content-desc предикатом Rename/Delete). `scripts/validate_frontmatter.py`: 0/0. `scripts/arch_check.py`: 0 ошибок, 4 пре-существующих WARN (не новые). Ни одной правки в `app-under-test/` | Self-verification test-maintainer (не заменяет проход fix-verifier); статус остаётся `Fixed` |
+| 2026-08-17T02:58:00Z (fix-verifier) | dev-local (versionCode 12); test_debt — сборка приложения роли не играет (правило D1) | Формальный D1-проход поверх уже состоявшейся двухраундовой критик-приёмки этой сессии (attempt1→критик R1: 4 блокера Б1-Б4 все с witness→rework attempt2→критик R2 точечный: независимые живые пробы по каждому Б1-Б4 + мутационная проверка красноты 3 новых проб + живые device-прогоны TC-004/TC-032/TC-042 + grep класс-полноты 9/9 тапающих мест — ПРИНЯТ без блокеров, **правка мини-критик-входа (N1)**: полный текст обоих раундов живёт в `logs/routing-log.jsonl` — события `2026-08-16T23:52:18` (rejected R1, 4 блокера с witness), `23:52:29` (accepted R1), `2026-08-17T02:04:09` (accepted attempt2 + accepted R2); «## Обсуждение» этого файла несёт только пересказ test-maintainer и текстовые правки N1/N2 round2, не сами раунды). Не повторяю весь этот объём — SPOT-CHECK: изолированный `tests/test_smoke.py::test_clear_all_ratings` (TC-004, самый первый экземпляр этого долга, `-m p0 -k test_clear_all_ratings`, 493 deselected) — 1 passed, 161.94s; полный `framework/tests/test_swipe_to_text_settle_unit.py` (device-free) — 10 passed, 0.11s. `python scripts/validate_frontmatter.py`: ошибок 0, предупреждений 0. Ни одной правки в `app-under-test/`. **Открытый остаток (N2, мини-критик-вход):** вклад rework'а в падение TC-112 (`AT-BUG-082`) НЕ исключён и НЕ подтверждён, исключающий прогон не назначен — `Verified` этого бага решение не закрывает | Оба spot-check зелёные, согласуются с объёмом уже проведённой критик-приёмки → перевожу `Fixed` → `Verified` |
 
 ## Обсуждение
 
@@ -368,3 +369,23 @@ item 3 (`find_row_sibling`): `test_reading_ux.py`, `test_infinite_scroll.py`,
 Open → Fixed, снимаю lock (guard B4: `test-maintainer` легален для
 `type: test_debt`). Fixed → Verified — за fix-verifier (сборка приложения не
 нужна, фикс во фреймворке).
+
+**[fix-verifier @ 2026-08-17T02:58:00Z]** Формальный D1-проход. Фикс уже
+прошёл необычно глубокую приёмку в этой сессии (attempt1 → критик round1: 4
+блокера Б1-Б4, все с живым witness → rework attempt2 → критик round2
+точечный: независимые живые пробы по каждому блокеру + мутационная проверка
+красноты 3 новых проб + живые device-прогоны TC-004/TC-032/TC-042 + grep
+класс-полноты 9/9 тапающих мест → ПРИНЯТ без блокеров) — не переоткрываю это
+ревью, беру его как основание. Роль fix-verifier по D1 формально отделена от
+test-maintainer (guard B4 не даёт test-maintainer самому закрыть цикл), поэтому
+делаю независимый SPOT-CHECK: изолированный запуск самого первого экземпляра
+долга, `tests/test_smoke.py::test_clear_all_ratings` (TC-004) —
+`Invoke-Pytest -m p0 -k test_clear_all_ratings` → `1 passed, 493 deselected in
+161.94s`, PYTEST_EXIT=0; полный `framework/tests/test_swipe_to_text_settle_unit.py`
+(device-free, 10 проб, включая 3 новые Б2/Б3-пробы этого rework'а) →
+`10 passed in 0.11s`, PYTEST_EXIT=0. `Get-Device` до прогона — `DEVICE:
+emulator-5554`. `python scripts/validate_frontmatter.py`: ошибок 0,
+предупреждений 0. Оба прогона зелёные с первой попытки, красных не было —
+разбирать нечего. Ни одной правки в `app-under-test/`. По правилу D1
+(test_debt-класс, сборка приложения роли не играет) перевожу Fixed →
+Verified, `known_issue` уже `"false"` (не требует сброса), снимаю lock.

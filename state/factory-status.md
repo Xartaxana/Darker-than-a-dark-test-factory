@@ -1,15 +1,15 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-17T02:45:58Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-17T03:34:40Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
 - Сборка: dev-local (versionCode 12), commit `aa377e0e`, built_at 2026-08-16T17:53:45Z
-- smoke: Closed · smoke_freshness_hours: **8.3** (RUN-20260816-1758)
-- regression: Triaged · regression_freshness_hours: **5.9** (RUN-20260816-1831)
-- canary: Triaged · canary_freshness_hours: **303.0** (RUN-20260804-1317)
+- smoke: Closed · smoke_freshness_hours: **9.1** (RUN-20260816-1758)
+- regression: Triaged · regression_freshness_hours: **6.7** (RUN-20260816-1831)
+- canary: Triaged · canary_freshness_hours: **303.8** (RUN-20260804-1317)
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **2**
 - p0_automation_coverage: **100%** (37/37)
@@ -49,9 +49,9 @@ story-карточки: стадии см. docs/05-board.md §Story
 | tabs |  |  |  | 12 |  |  |
 | visibility |  |  |  | 6 |  |  |
 
-## Баги (33)
+## Баги (34)
 
-- Open: **10** · Reopened: **1** · Fixed: **2** · Verified: **18** · Intended: **2**
+- Open: **11** · Reopened: **1** · Fixed: **1** · Verified: **19** · Intended: **2**
 - BUG-011 [major] Open — Restore from backup пропускает работы молча, если файл с тем же ao3Id уже лежит в папке загрузок
 - BUG-017 [major] Open — Быстрое закрытие вкладок → долгий парад снекбаров; подозрение на потерю Undo-токенов при задержке показа
 - BUG-019 [major] Reopened — Back после автопрыжка плотности не выводит назад — ловушка + рост истории
@@ -63,13 +63,14 @@ story-карточки: стадии см. docs/05-board.md §Story
 - BUG-068 [major] Open — Фильтр-профиль (OFF) снимается загрузкой ЧУЖОЙ/фоновой вкладки, пока пользователь стоит на другом экране — ни одного сообщения об этом
 - BUG-070 [major] Open — ON + deep-link в новую вкладку: FilterPanel продолжает показывать профиль активным, хотя URL/содержимое вкладки НЕфильтрованы
 - BUG-072 [minor] Open — restoreClosedTab UI-недостижим второй раз: BrowserViewModel.kt KDoc и PROJECT.md обещают повторный Undo после отказа на потолке, но единственный вызов потребляется тем же снекбаром — вкладка остаётся безвозвратно потерянной
+- BUG-073 [major] Open — Тумблер «Hide Disliked works» (Settings) вызывает ту же незапрошенную live-push навигацию, что BUG-020 — гейт __ao3LiveRatingPush защищает только broadcastRatingChange, не setHiddenRatings
 
 ## Известные проблемы, known_issue (2)
 
 - BUG-012 [minor] Intended — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
 - BUG-013 [minor] Intended — Смена темы, затем немедленный kill процесса (<100 мс) теряет theme_mode — выбор темы не персистится
 
-## Test debt (11)
+## Test debt (10)
 
 - AT-BUG-068 [broken_environment] Blocked — navigator.clipboard.writeText() отклоняется DOMException 'Write permission denied' в тестовом WebView — блокирует Then «Copied!» TC-188
 - AT-BUG-072 [missing_fixture] Open — Нет автоматизационного примитива нажатия клавиш громкости (KEYCODE_VOLUME_UP/DOWN) — блокирует листание страниц кнопками громкости
@@ -79,7 +80,6 @@ story-карточки: стадии см. docs/05-board.md §Story
 - AT-BUG-077 [broken_environment] Open — test_heartbeat_wrap.py::test_happy_path_order_and_child_env падает детерминированно, когда `python -m pytest scripts/tests` запущен ИЗ сессии, уже несущей AO3_LOOP_HOLDER (вложенный heartbeat)
 - AT-BUG-078 [missing_evidence] Open — TC-026 (long-press ссылки в WebView) не ассертирует ТЕКСТ снекбара «Opened in background (N tabs)» — дверь (б) BUG-059 наблюдаемо не покрыта
 - AT-BUG-079 [broken_environment] Open — Квотирование shell-команд в adb.py неполное: run_as_file_or_raise и push_app_file интерполируют пути БЕЗ защиты
-- AT-BUG-080 [flaky_test] Fixed — swipe_to_text считает успехом ЛЮБОЕ присутствие якорного текста (в т.ч. обрезок в 9 px у нижней кромки вьюпорта), а вызывающие ищут СОСЕДА по той же строке — соседний узел ещё вне дерева; экземпляр TC-004 open_clear_all_dialog в RUN-20260816-1831 (остаток класса AT-BUG-048)
 - AT-BUG-081 [flaky_test] Open — assert_no_ratings() читает Room СРАЗУ после confirm_clear_all() — Clear all ratings пишет через viewModelScope.launch(Dispatchers.IO) без await, одноразовый adb-read гонится с записью
 - AT-BUG-082 [flaky_test] Open — TC-112 (test_favorite_rating_does_not_download_when_auto_download_off) падает на assert_work_not_in_files_tab при прогоне ВСЕГО test_downloads.py, но 1/1 зелёный в изолированном перезапуске — order/state-зависимый флейк, не трогает Settings/find_row_sibling код
 
@@ -98,7 +98,7 @@ story-карточки: стадии см. docs/05-board.md §Story
 
 - нет
 
-## Эскалации (27)
+## Эскалации (28)
 
 - [2026-07-24T05:10:04Z] **BUG-011** [sla:bug_open_major] — major-баг open с 2026-07-15T14:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
 - [2026-08-01T16:01:07Z] **BUG-017** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-30T00:00:00Z | нужно: ответить в ## Обсуждение
@@ -127,3 +127,4 @@ story-карточки: стадии см. docs/05-board.md §Story
 - [2026-08-16T05:30:32Z] **BUG-068** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-14T03:49:31Z | нужно: ответить в ## Обсуждение
 - [2026-08-16T05:30:32Z] **BUG-070** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-14T03:49:31Z | нужно: ответить в ## Обсуждение
 - [2026-08-16T20:00:02Z] **FACTORY-STALLED** [resolved:factory-watchdog-recovered] [factory:stalled] — восстановлено 2026-08-17T02:00:02Z
+- [2026-08-17T02:46:22Z] **QAREADY-SYNC-RACE-BUG-019** — BUG-019: gitlab_sync собрался снять ярлык qa-status::QAready (внутренний статус Reopened — Open|Reopened, сигнал ещё не сведён) — вероятная гонка с gitlab_inbound (ярлык поставлен разработчиком, ещё не обработан). Ярлык СОХРАНЁН, снятие пропущено; разберитесь и пометьте [resolved:<task_id>] после проверки.
