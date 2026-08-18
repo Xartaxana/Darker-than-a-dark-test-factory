@@ -302,6 +302,41 @@ def test_return_toast_fires_once_not_every_tick(tmp_path):
     assert [t for t, _ in toast.calls] == ["[factory:limit-back]"]
 
 
+def test_stale_limit_window_is_cleared_silently_without_return_toast(tmp_path):
+    """Сброс наступил, пока фабрика стояла (окно закрыто оператором, хост
+    спал): «лимиты вернулись» СУТКИ спустя — не новость, а шум того же
+    класса, который механизм убирает."""
+    p = _paths(tmp_path)
+    stale = RESET + datetime.timedelta(hours=20)
+    _stalled_setup(p, stalled_since_minutes_ago=600,
+                   extra_state={"usage_limit_until": fw._fmt_ts(RESET)})
+    calls, toast = [], _NoToast()
+
+    fw.run_tick(now=stale, toast_fn=toast,
+                reserve_runner=_runner(calls, {"outcome": "spawned", "child_rc": 0,
+                                               "fast_death": False, "holder": "h",
+                                               "mode_write": None, "usage_limit": None}), **p)
+
+    assert [t for t, _ in toast.calls] == ["[factory:fallback]"]   # обычный ход, не лимитный
+    st = _read_state(p)
+    assert st["usage_limit_until"] is None and st["usage_limit_grace_until"] is None
+    assert any("протухло" in n for n in st["notes"])
+
+
+def test_return_toast_still_fires_at_the_lag_boundary(tmp_path):
+    """M6-граница: РОВНО на пороге давности тост ещё звучит."""
+    p = _paths(tmp_path)
+    at_boundary = RESET + datetime.timedelta(hours=fw.LIMIT_RETURN_TOAST_MAX_LAG_H)
+    _stalled_setup(p, stalled_since_minutes_ago=600,
+                   extra_state={"usage_limit_until": fw._fmt_ts(RESET)})
+    toast = _NoToast()
+
+    fw.run_tick(now=at_boundary, toast_fn=toast,
+                reserve_runner=_runner([], _limit_result()), **p)
+
+    assert [t for t, _ in toast.calls] == ["[factory:limit-back]"]
+
+
 def test_after_grace_expires_reserve_resumes(tmp_path):
     """Оператор не пришёл — прежние правила ночного резерва возвращаются."""
     p = _paths(tmp_path)

@@ -137,6 +137,12 @@ FALLBACK_BROKEN_TAG = "factory:fallback-broken"
 # минут после сброса резерв не стартует — это время оператора толкнуть
 # окно. Не пришёл — дальше прежние правила ночного резерва.
 LIMIT_GRACE_MIN_DEFAULT = 45.0
+# Возвратный тост осмыслен, только пока сброс СВЕЖИЙ. Тик — раз в 30 мин,
+# то есть штатное запаздывание <= 30 мин; 3ч — с запасом на пропущенные
+# тики (спящий хост). Дальше это уже не новость, а протухшее состояние:
+# гасим молча, иначе «лимиты вернулись» прилетит через сутки — ровно тот
+# класс шума, от которого механизм и заводится.
+LIMIT_RETURN_TOAST_MAX_LAG_H = 3.0
 FACTORY_LIMIT_KEY = "FACTORY-USAGE-LIMIT"
 FACTORY_LIMIT_TAG = "factory:usage-limit"
 
@@ -881,7 +887,20 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
         # доедет». Возвратный тост тоже здесь — он нужен ровно тогда,
         # когда окно мертво (иначе будить оператора незачем).
         limit_active = (usage_limit_until is not None and now < usage_limit_until)
-        if (usage_limit_until is not None and not limit_active
+        limit_return_lag_h = (
+            (now - usage_limit_until).total_seconds() / 3600.0
+            if (usage_limit_until is not None and not limit_active) else None)
+        if (limit_return_lag_h is not None
+                and limit_return_lag_h > LIMIT_RETURN_TOAST_MAX_LAG_H):
+            # протухшее окно (сброс наступил, пока фабрика стояла) —
+            # гасим МОЛЧА, без тоста и без grace
+            night_fallback_notes.append(
+                f"лимитное окно протухло (сброс {_fmt_ts(usage_limit_until)}, "
+                f"давность {limit_return_lag_h:.1f}ч) — снято молча")
+            usage_limit_until = None
+            usage_limit_raw = None
+            usage_limit_toast_ts = None
+        elif (usage_limit_until is not None and not limit_active
                 and usage_limit_grace_until is None):
             # момент сброса наступил — РОВНО ОДИН возвратный тост, дальше
             # grace-окно приоритета живого окна над резервом
