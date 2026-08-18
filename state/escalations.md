@@ -2489,7 +2489,7 @@ vs env) — решение Lead: остаётся state-first (state отраж�
   TC-131/TC-137) сам по себе НЕ тронут и НЕ почален этим ходом — вне
   мандата текущего B4-лока (`AT-BUG-070`).
 - Статус: open (эта запись — не resolved, ждёт решения координатора/Lead).
-- [2026-08-16T20:00:02Z] **FACTORY-STALLED** [factory:stalled] — mode активный ('active'), лок есть, тишина 90.0 мин (порог 90 мин); зафиксировано 2026-08-17T12:00:02Z; вариант снятия лока — `python scripts/loop_lock.py release --force`
+- [2026-08-16T20:00:02Z] **FACTORY-STALLED** [resolved:factory-watchdog-recovered] [factory:stalled] — восстановлено 2026-08-18T10:30:02Z
 - [2026-08-17T02:46:22Z] **QAREADY-SYNC-RACE-BUG-019** — BUG-019: gitlab_sync собрался снять ярлык qa-status::QAready (внутренний статус Reopened — Open|Reopened, сигнал ещё не сведён) — вероятная гонка с gitlab_inbound (ярлык поставлен разработчиком, ещё не обработан). Ярлык СОХРАНЁН, снятие пропущено; разберитесь и пометьте [resolved:<task_id>] после проверки.
 
 ## ESC-035 — AT-BUG-082, эскалация правила 6 (poll_until_stable структурно не сходится)
