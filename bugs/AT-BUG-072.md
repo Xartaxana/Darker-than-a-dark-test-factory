@@ -4,16 +4,16 @@ title: "Нет автоматизационного примитива нажа�
 type: test_debt
 debt_kind: missing_fixture
 severity: major
-status: Open
+status: Fixed
 found_in: "test-designer, дизайн области «reading-UX: листание страниц кнопками громкости» (docs/01-test-strategy.md §9, needs-design заведена test-strategist 2026-08-15 по QAREADY-38)"
-fixed_in: ""
+fixed_in: "framework (test-only, без сборки приложения) — commit 9656fee (хвост убитого утреннего прохода): framework/core/adb.py (volume_dialog_visible), framework/steps/app_steps.py (press_volume_key, assert_no_volume_dialog_appears), framework/steps/browser_steps.py (assert_volume_page_scroll_delta), framework/steps/settings_steps.py + framework/screens/settings_screen.py (enable/disable_volume_button_scroll, assert_volume_button_scroll_enabled), framework/data/recording_builder.py (LISTING_PAGINATED_*), framework/tests/test_volume_paging.py (TC-252) — верификация и Open→Fixed переход этим ходом (test-maintainer, B4)"
 last_seen_in: ""
 test_cases: ["TC-252", "TC-253", "TC-254", "TC-255"]
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-08-15T00:10:14Z"
-updated: "2026-08-15T00:10:14Z"
+status_since: "2026-08-18T07:10:00Z"
+updated: "2026-08-18T07:10:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -73,9 +73,95 @@ TC-253 (off-инвариант — клавиши при выключенной 
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
-| | | | | |
+| — | — | — | — | Open, ждёт разбора |
+| 2026-08-18T07:10:00Z | framework (test-only, `type: test_debt` — код уже был в рабочем дереве/HEAD с commit 9656fee, хвост убитого утреннего прохода; `app-under-test` не менялся, source_commit `app-under-test.yaml` не трогался) | `test_volume_paging.py::test_volume_buttons_page_browse_listing` (TC-252) x3 изолированно подряд + красная проба (no-op keyevent вместо `KEYCODE_VOLUME_DOWN/UP`, временная правка, откачена `git checkout` — porcelain был пуст до правки) x1 + смок относящейся области: `test_reading_ux.py` + `test_infinite_scroll.py` + `test_settings.py` + `test_volume_paging.py` целиком | TC-252 изолированно: **PASSED/PASSED/PASSED**, 53.85s/52.03s/49.69s, `PYTEST_EXIT=0` каждый раз. Красная проба: **FAILED** — `TimeoutError: клавиша громкости KEYCODE_VOLUME_DOWN не произвела наблюдаемого эффекта за 5с — похоже на тихо не сработавшее нажатие (adb.shell глотает returncode, см. AT-BUG-072) (after 5s)`, `PYTEST_EXIT=1`; откат подтверждён `git status --porcelain` (пусто) + побайтовым `diff` со scratchpad-копией. Смок области: **19 passed, 1 skipped in 1181.84s (0:19:41)**, `PYTEST_EXIT=0` (1 skip — предсуществующий, `test_debug_copy_url_toggle_both_directions_without_overlap`, TC-188-automate rework attempt2, не связан с этим ходом). `Get-Device` до серии → `emulator-5554` (DEVICE, позитивная сверка) | **Open → Fixed** (test-maintainer, критерий готовности выполнен: примитив `press_volume_key` с наблюдаемым оракулом, TC-252 зелёный 3x подряд, красная проба различает успех/тихий отказ нажатия, смок области без регресса) |
 
 ## Обсуждение
+
+**2026-08-18T07:10:00Z — test-maintainer, B4: Open → Fixed.** Задача пришла
+как rework поверх `rejected/tooling` (routing-log `AT-BUG-072-B4-debt-
+0816-p3`, 2026-08-16T17:44:06Z, `by: fable`) — предыдущий воркер был убит
+timeout-kill'ом heartbeat-прохода ДО сдачи, но его частичные артефакты
+(`framework/steps/app_steps.py::press_volume_key`/
+`assert_no_volume_dialog_appears`, `framework/core/adb.py::
+volume_dialog_visible`, `framework/steps/browser_steps.py::
+assert_volume_page_scroll_delta`, `framework/steps/settings_steps.py` +
+`framework/screens/settings_screen.py` (`volume_button_scroll` toggle),
+`framework/data/recording_builder.py` (`LISTING_PAGINATED_*`),
+`framework/data/recordings/listing_paginated.mitm`,
+`framework/tests/test_volume_paging.py` — TC-252) уже были закоммичены
+хвост-коммитом `9656fee` (см. его сообщение: «AT-BUG-072 (volume paging,
+воркер убит - rejected/tooling в журнале, rework B4-правилом)»). Этот ход —
+верификация уже написанного кода (прочитан, не переписывался заново) +
+живые прогоны + красная проба + обновление документации/статуса, без
+изменений в `framework/` (кроме временной правки для красной пробы, тут же
+откаченной).
+
+**Прочитан `MainActivity.kt:105-124`** (`onKeyDown`/`onKeyUp`,
+`volumePageHandler`) — подтверждена структура перехвата: `onKeyDown`
+вызывает хендлер и возвращает `true` (событие потреблено ДО штатной
+обработки громкости системой), `onKeyUp` тоже глотает совпадающую клавишу
+(иначе `VolumeDialogImpl` остаётся «зависшим» после отпускания) — код уже
+существующий (`press_volume_key`/`assert_no_volume_dialog_appears`) верно
+опирается именно на эти детали.
+
+**Примитив** (`app_steps.press_volume_key(driver, direction, oracle,
+timeout=5)`): `adb shell input keyevent KEYCODE_VOLUME_DOWN/UP` +
+`wait_for(oracle, ...)` — по образцу `send_app_to_background`
+(`input keyevent KEYCODE_HOME` + `driver.query_app_state`). `oracle` —
+параметризуемый предикат: для TC-252 (перехват активен) — сдвиг
+`window.scrollY` активной вкладки; для TC-253/255 (перехват неактивен) —
+`adb.volume_dialog_visible()` (`dumpsys window windows`, окно
+`VolumeDialogImpl`, отдельное OS-окно вне `app_package`, недоступное
+Appium accessibility-локаторам, но видимое через adb).
+
+**TC-252 доведён до зелёного прогона** (`test_volume_paging.py::
+test_volume_buttons_page_browse_listing`) — Given `volume_button_scroll`
+ON, Browse на длинной странице (`listing_paginated.mitm`, тот же fixture,
+что TC-129/130), предскролл к середине; When 2x VOLUME_DOWN, затем 2x
+VOLUME_UP — каждое нажатие проверяется НЕЗАВИСИМО (сдвиг `scrollY` ~±0.9×
+innerHeight, `assert_volume_page_scroll_delta`) И системный индикатор
+громкости не появляется (`assert_no_volume_dialog_appears`, опрос ВЕСЬ
+бюджет, не одноразовое чтение). 3/3 зелёных подряд.
+
+**Красная проба** (обязательный п.6 DoD): временно заменил реальный
+keyevent на `input keyevent KEYCODE_UNKNOWN` (no-op — устройство не
+получает настоящего нажатия громкости) внутри `press_volume_key`, оставив
+`oracle`/сообщение без изменений. Прогон TC-252 упал на первом же нажатии
+с `TimeoutError`, несущим именно диагностику «похоже на тихо не
+сработавшее нажатие (adb.shell глотает returncode, см. AT-BUG-072)» —
+примитив реально РАЗЛИЧАЕТ «нажатие сработало» / «нажатие тихо не
+сработало», не просто зелёный по совпадению. Правка отменена: porcelain
+для `framework/steps/app_steps.py` был пуст ДО правки (сверено `git status
+--porcelain`), байтовая копия сохранена в `scratchpad/` ДО порчи, откат —
+`git checkout -- framework/steps/app_steps.py`, подтверждён пустым
+`git status --porcelain` И побайтовым `diff` с сохранённой копией
+(дисциплина команд CLAUDE.md п.8).
+
+**Смок без регресса**: `test_reading_ux.py` (tap-to-scroll/tap-zone,
+смежная reading-UX область) + `test_infinite_scroll.py` (тот же
+`listing_paginated.mitm` fixture) + `test_settings.py` (тот же экран
+Settings, где включается `volume_button_scroll`) + `test_volume_paging.py`
+целиком — 19 passed, 1 skipped (skip предсуществующий и не связан с этим
+ходом, см. таблицу выше), `PYTEST_EXIT=0`.
+
+TC-253/254/255 (off-инвариант, асимметрия перехвата поверх оверлея,
+граница Library/Settings) остаются `status: Review`, автоматизация — вне
+скоупа этого B4-хода (критерий готовности требовал минимум ОДИН кейс,
+рекомендован и закрыт TC-252); полный F1-цикл автоматизации оставшихся
+кейсов — задача test-automator/test-reviewer отдельным правилом, TC-статусы
+этим ходом не тронуты.
+
+`app-under-test/` не затронут за весь ход (только красная проба
+`framework/steps/app_steps.py`, откаченная тем же ходом). Аналогов рядом не
+замечено (D-0043) — примитив/приём общий (та же форма, что
+`send_app_to_background`), новых блокеров не обнаружено.
+
+**2026-08-16T17:44:06Z — rejected/tooling (routing-log, `by: fable`):**
+воркер убит timeout-kill'ом утреннего heartbeat-прохода (11:10Z) до сдачи —
+не дефект исполнителя. Частичные артефакты закоммичены хвост-коммитом
+`9656fee`; продолжение — B4-правило первым проходом окна-фабрики (см.
+верификацию выше).
 
 **2026-08-15T00:10:14Z — test-designer (заведение при дизайне области
 «reading-UX: листание кнопками громкости»):** блокер найден при
