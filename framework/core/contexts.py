@@ -43,6 +43,21 @@ uniqueContextId not found
 бы маскировка, прямой запрет `AT-BUG-047`). Любая ДРУГАЯ, не входящая в
 набор, сигнатура `WebDriverException` по-прежнему перебрасывается на первой
 же попытке.
+
+**Третья сигнатура, test_debt (test-maintainer, 2026-08-17, `bugs/AT-BUG-084.md`,
+найдено попутно в regression-прогоне AT-BUG-082, TC-112).** Тот же choke
+point, но `driver.switch_to.context()` в этот раз оборвал handshake
+`NoSuchContextException` (подкласс `WebDriverException`) с текстом:
+
+```
+appium.common.exceptions.NoSuchContextException: Message: No such context found.
+```
+
+Ретрай на попытке 1/3 сматчился по известной сигнатуре `uniqueContextId not
+found`, но попытка 2/3 упала с ЭТОЙ, ранее не задокументированной
+сигнатурой и переброшена немедленно (`_matched_webview_switch_race_signature`
+вернул `None`), не исчерпав оставшийся бюджет. Набор расширен ещё раз —
+классовая правка (правило 9 CLAUDE.md), не новый механизм.
 """
 from __future__ import annotations
 
@@ -62,16 +77,18 @@ NATIVE = "NATIVE_APP"
 # AT-BUG-047 choke point 2: НАБОР известных узких сигнатур гонки
 # chromedriver-старта при переключении в WEBVIEW ПОКА стартовая загрузка
 # Home ещё не осела. Классовая форма (правило 9 CLAUDE.md, рецидив
-# 2026-08-11, RUN-20260811-0405/TC-009): один и тот же choke point рвёт
-# handshake РАЗНЫМИ хвостами сообщения в зависимости от того, в какой
-# момент прокси-старта его застигла гонка — набор растёт по мере
-# наблюдаемых экземпляров, НЕ общим `except WebDriverException`. НЕ путать
-# с сигнатурой `core/navigate.py` (`cannot determine loading status from no
-# such window`) — разные choke points, разные маркеры (см. докстринг
-# модуля).
+# 2026-08-11, RUN-20260811-0405/TC-009; рецидив AT-BUG-084, 2026-08-17,
+# TC-112): один и тот же choke point рвёт handshake РАЗНЫМИ хвостами
+# сообщения (в т.ч. другим классом исключения — `NoSuchContextException`,
+# подкласс `WebDriverException`) в зависимости от того, в какой момент
+# прокси-старта его застигла гонка — набор растёт по мере наблюдаемых
+# экземпляров, НЕ общим `except WebDriverException`. НЕ путать с сигнатурой
+# `core/navigate.py` (`cannot determine loading status from no such
+# window`) — разные choke points, разные маркеры (см. докстринг модуля).
 _WEBVIEW_SWITCH_RACE_SIGNATURES = (
     "loader has changed while resolving nodes",
     "uniqueContextId not found",
+    "No such context found.",
 )
 _WEBVIEW_SWITCH_RACE_RETRIES = 3
 _WEBVIEW_SWITCH_RACE_BACKOFF = 1.0

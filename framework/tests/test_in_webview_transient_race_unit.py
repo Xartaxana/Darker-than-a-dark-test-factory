@@ -30,7 +30,7 @@ WebDriverException`.
 что `test_navigate_transient_race_unit.py` для choke point 1): фейковый
 `driver.switch_to.context()` кидает РЕАЛЬНЫЙ `WebDriverException` заданное
 число раз перед успехом/никогда. Проверяет:
-1. Обе известные сигнатуры набора ретраятся по отдельности, `in_webview`
+1. Все три известные сигнатуры набора ретраятся по отдельности, `in_webview`
    прозрачно восстанавливается (yield происходит, `to_native` вызывается в
    finally как обычно).
 2. Ретрай bounded — исчерпание попыток поднимает исходный
@@ -52,6 +52,7 @@ from types import SimpleNamespace
 
 import allure
 import pytest
+from appium.common.exceptions import NoSuchContextException
 from selenium.common.exceptions import WebDriverException
 
 from framework.core.contexts import (
@@ -133,6 +134,14 @@ def _webview_switch_race_exc_unique_context_id() -> WebDriverException:
     )
 
 
+def _webview_switch_race_exc_no_such_context() -> WebDriverException:
+    """AT-BUG-084 (2026-08-17, найдено попутно в regression-прогоне
+    AT-BUG-082, TC-112) — ТОТ ЖЕ choke point, ТРЕТЬЯ сигнатура, на этот раз
+    ДРУГОЙ КЛАСС исключения (`NoSuchContextException`, подкласс
+    `WebDriverException`), не просто другой хвост сообщения."""
+    return NoSuchContextException("No such context found.")
+
+
 def _unrelated_webdriver_exc() -> WebDriverException:
     return WebDriverException("Message: chrome not reachable")
 
@@ -148,11 +157,15 @@ def _navigate_race_signature_exc() -> WebDriverException:
 
 @pytest.mark.p2
 @allure.id("AT-BUG-047-in-webview-retries-narrow-race-signature")
-@allure.title("Проба: in_webview() ретраит набор из двух узких сигнатур choke point 2 и входит в контекст без исключения (device-free)")
+@allure.title("Проба: in_webview() ретраит набор из трёх узких сигнатур choke point 2 и входит в контекст без исключения (device-free)")
 @pytest.mark.parametrize(
     "exc_factory",
-    [_webview_switch_race_exc, _webview_switch_race_exc_unique_context_id],
-    ids=["loader-has-changed", "unique-context-id-not-found"],
+    [
+        _webview_switch_race_exc,
+        _webview_switch_race_exc_unique_context_id,
+        _webview_switch_race_exc_no_such_context,
+    ],
+    ids=["loader-has-changed", "unique-context-id-not-found", "no-such-context-found"],
 )
 def test_in_webview_retries_and_recovers_from_race_signature(exc_factory):
     assert _WEBVIEW_SWITCH_RACE_RETRIES >= 3, "проба рассчитана на бюджет >=3 попыток"
@@ -178,8 +191,9 @@ def test_in_webview_retries_and_recovers_from_race_signature(exc_factory):
     [
         (_webview_switch_race_exc, "loader has changed while resolving nodes"),
         (_webview_switch_race_exc_unique_context_id, "uniqueContextId not found"),
+        (_webview_switch_race_exc_no_such_context, "No such context found."),
     ],
-    ids=["loader-has-changed", "unique-context-id-not-found"],
+    ids=["loader-has-changed", "unique-context-id-not-found", "no-such-context-found"],
 )
 def test_in_webview_race_retry_bounded_reraises_after_exhaustion(exc_factory, expected_signature):
     driver = _FakeContextRacingDriver(

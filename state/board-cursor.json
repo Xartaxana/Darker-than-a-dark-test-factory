@@ -1666,8 +1666,8 @@
   },
   "AT-BUG-084": {
     "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
+    "artifact_status": "Verified",
+    "board_status": "Verified"
   },
   "AT-BUG-085": {
     "itype": "bug",

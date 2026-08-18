@@ -2489,7 +2489,7 @@ vs env) — решение Lead: остаётся state-first (state отраж�
   TC-131/TC-137) сам по себе НЕ тронут и НЕ почален этим ходом — вне
   мандата текущего B4-лока (`AT-BUG-070`).
 - Статус: open (эта запись — не resolved, ждёт решения координатора/Lead).
-- [2026-08-16T20:00:02Z] **FACTORY-STALLED** [resolved:factory-watchdog-recovered] [factory:stalled] — восстановлено 2026-08-17T10:00:02Z
+- [2026-08-16T20:00:02Z] **FACTORY-STALLED** [factory:stalled] — mode активный ('active'), лок есть, тишина 90.0 мин (порог 90 мин); зафиксировано 2026-08-17T12:00:02Z; вариант снятия лока — `python scripts/loop_lock.py release --force`
 - [2026-08-17T02:46:22Z] **QAREADY-SYNC-RACE-BUG-019** — BUG-019: gitlab_sync собрался снять ярлык qa-status::QAready (внутренний статус Reopened — Open|Reopened, сигнал ещё не сведён) — вероятная гонка с gitlab_inbound (ярлык поставлен разработчиком, ещё не обработан). Ярлык СОХРАНЁН, снятие пропущено; разберитесь и пометьте [resolved:<task_id>] после проверки.
 
 ## ESC-035 — AT-BUG-082, эскалация правила 6 (poll_until_stable структурно не сходится)
@@ -2519,3 +2519,4 @@ vs env) — решение Lead: остаётся state-first (state отраж�
   `logs/routing-log.jsonl` (`rejected` `2026-08-17T09:56:37`, `escalated`
   тем же ходом).
 - Статус: open (ждёт разбора полного Lead/оператора).
+- [2026-08-17T16:00:02Z] **HEARTBEAT-CHILD-DEATH** [heartbeat:child-death] — 4 быстрых смертей подряд, окно 2026-08-17T14:30:09Z..2026-08-17T22:30:13Z, последний rc=1, runtime=8.2с; первые строки причины — logs/fallback-20260817.log; причину чинит оператор/Lead — сбросит сторож при живом прогрессе окна ИЛИ пробный запуск через 6ч (спека: docs/tasks/factory-visible-window.md §Д п.6 «Единый стартовый гейт»; реализация — factory_watchdog._series_blocked)

@@ -7571,7 +7571,7 @@
     "epicPath": null,
     "summary": "in_webview choke point 2 (AT-BUG-047, Verified) рвётся НОВОЙ сигнатурой 'No such context found.' — не входит в _WEBVIEW_SWITCH_RACE_SIGNATURES, ретрай обрывается на 2-й попытке",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -7579,8 +7579,8 @@
       "test_case:TC-112",
       "sev:major"
     ],
-    "updated": "2026-08-17T06:12:28Z",
-    "resolution": null,
+    "updated": "2026-08-18T05:20:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
