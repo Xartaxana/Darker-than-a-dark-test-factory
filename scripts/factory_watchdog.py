@@ -127,6 +127,19 @@ UNKNOWN_STREAK_TOAST = 3
 FALLBACK_BROKEN_KEY = "FACTORY-FALLBACK-BROKEN"
 FALLBACK_BROKEN_TAG = "factory:fallback-broken"
 
+# --- v8: окно лимита подписки (2026-08-18, слово оператора) ----------------
+# Пока лимит не сброшен, НИКТО проехать не может: ни окно (его цепочка
+# ScheduleWakeup порвана сорванным ходом), ни резерв (ребёнок умрёт за
+# секунды). Поэтому в лимитном окне сторож: (1) НЕ спавнит резерв,
+# (2) МОЛЧИТ всеми тревожными классами тостов, (3) даёт РОВНО ОДИН тост на
+# вход в окно и РОВНО ОДИН на возврат лимитов.
+# Возврат отдаёт приоритет ЖИВОМУ окну на полном ярусе: `LIMIT_GRACE_MIN`
+# минут после сброса резерв не стартует — это время оператора толкнуть
+# окно. Не пришёл — дальше прежние правила ночного резерва.
+LIMIT_GRACE_MIN_DEFAULT = 45.0
+FACTORY_LIMIT_KEY = "FACTORY-USAGE-LIMIT"
+FACTORY_LIMIT_TAG = "factory:usage-limit"
+
 
 # --------------------------------------------------------------------------
 # время / парсинг ts
@@ -675,6 +688,7 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
             cooldown_hours: float = TOAST_COOLDOWN_HOURS_DEFAULT,
             fallback_delay_min: float | None = None,
             fallback_block_threshold: int | None = None,
+            limit_grace_min: float | None = None,
             toast_fn=show_toast,
             reserve_runner=_run_reserve_pass) -> int:
     """Один тик сторожа. Возвращает 0 ВСЕГДА."""
@@ -692,6 +706,8 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
                           else fallback_delay_min)
     fallback_block_threshold = (FALLBACK_BLOCK_THRESHOLD_DEFAULT
                                 if fallback_block_threshold is None else fallback_block_threshold)
+    limit_grace_min = (LIMIT_GRACE_MIN_DEFAULT if limit_grace_min is None
+                       else limit_grace_min)
     ttl_hours = sla_utils.load_loop_lock_ttl_hours(sla_file)
 
     # --- п.0: классификация битости трёх файлов, накопитель notes -------
@@ -742,6 +758,10 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
             "fallback_runs_24h_ts": [],
             "self_write_snapshot": None,
             "fallback_holder": None,
+            "usage_limit_until": None,
+            "usage_limit_raw": None,
+            "usage_limit_toast_ts": None,
+            "usage_limit_grace_until": None,
         })
         return 0
 
@@ -768,6 +788,10 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
     fallback_runs_24h_ts = watchdog_data.get("fallback_runs_24h_ts") or []
     self_write_snapshot = watchdog_data.get("self_write_snapshot")
     fallback_holder = watchdog_data.get("fallback_holder")
+    usage_limit_until = _parse_ts(watchdog_data.get("usage_limit_until"))
+    usage_limit_raw = watchdog_data.get("usage_limit_raw")
+    usage_limit_toast_ts = _parse_ts(watchdog_data.get("usage_limit_toast_ts"))
+    usage_limit_grace_until = _parse_ts(watchdog_data.get("usage_limit_grace_until"))
 
     changed = (lock_snap != prev_lock_snap) or (mode_snap != prev_mode_snap)
     progress_ts = now if (changed or prev_progress_ts is None) else prev_progress_ts
@@ -803,6 +827,13 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
     # ПОСЛЕ решения о резервном проходе, если он в этом тике случится).
     episode_closed_by_window = (not mode_active_alarm) and (prev_stalled_since is not None)
     if episode_closed_by_window:
+        # v8: живой прогресс окна закрывает и лимитное окно — кто-то (чаще
+        # всего оператор по возвратному тосту) фабрику толкнул, ждать
+        # больше нечего. Иначе протухший `usage_limit_until` глушил бы
+        # резерв уже после того, как всё поехало.
+        usage_limit_until = None
+        usage_limit_raw = None
+        usage_limit_grace_until = None
         empty_streak = 0
         slowdeath_streak = 0
         slowdeath_last_ts = None
@@ -844,7 +875,47 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
         budget_ok = (not mode_numeric_corrupt
                     and ((budget_total is None) or (passes_done_current < budget_total)))
 
-        if night_fallback_value == "off":
+        # --- v8: лимитное окно — САМЫЙ ВЕРХНИЙ гейт --------------------
+        # Стоит выше night_fallback/бюджета/поломочных серий намеренно:
+        # это не «нельзя запускать по политике», а «запуск физически не
+        # доедет». Возвратный тост тоже здесь — он нужен ровно тогда,
+        # когда окно мертво (иначе будить оператора незачем).
+        limit_active = (usage_limit_until is not None and now < usage_limit_until)
+        if (usage_limit_until is not None and not limit_active
+                and usage_limit_grace_until is None):
+            # момент сброса наступил — РОВНО ОДИН возвратный тост, дальше
+            # grace-окно приоритета живого окна над резервом
+            usage_limit_grace_until = now + datetime.timedelta(minutes=limit_grace_min)
+            shown, _detail = toast_fn(
+                "[factory:limit-back]",
+                f"лимиты вернулись — толкни окно (/factory). Резерв ждёт "
+                f"{limit_grace_min:.0f} мин, потом поедет сам")
+            _append_orchestrator_line(
+                orchestrator_log, _rel_path(state_file),
+                f"usage-limit: сброс наступил ({_fmt_ts(usage_limit_until)}), "
+                f"возвратный тост {'показан' if shown else 'НЕ показан'}, "
+                f"резерв придержан до {_fmt_ts(usage_limit_grace_until)}", now)
+            usage_limit_until = None
+            usage_limit_raw = None
+            usage_limit_toast_ts = None
+
+        grace_active = (usage_limit_grace_until is not None
+                       and now < usage_limit_grace_until)
+        if grace_active:
+            night_fallback_notes.append(
+                f"лимиты вернулись — приоритет живому окну, резерв придержан до "
+                f"{_fmt_ts(usage_limit_grace_until)}")
+        elif usage_limit_grace_until is not None:
+            usage_limit_grace_until = None       # grace истёк — прежние правила
+
+        if limit_active:
+            limit_reason = usage_limit_raw or "причина в logs/fallback-*.log"
+            night_fallback_notes.append(
+                f"лимиты подписки исчерпаны ({limit_reason}) — резерв спит до "
+                f"{_fmt_ts(usage_limit_until)}, тревоги подавлены")
+        elif grace_active:
+            pass                                  # нота уже добавлена выше
+        elif night_fallback_value == "off":
             night_fallback_notes.append("резерв выключен (night_fallback=off)")
         elif mode_numeric_corrupt:
             night_fallback_notes.append(
@@ -893,6 +964,10 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
                     "fallback_runs_24h_ts": fallback_runs_24h_ts,
                     "self_write_snapshot": self_write_snapshot,
                     "fallback_holder": fallback_holder,
+                    "usage_limit_until": _fmt_ts(usage_limit_until),
+                    "usage_limit_raw": usage_limit_raw,
+                    "usage_limit_toast_ts": _fmt_ts(usage_limit_toast_ts),
+                    "usage_limit_grace_until": _fmt_ts(usage_limit_grace_until),
                 })   # Д п.1: state-файл пишется ДО спавна (чек 3б не дрейфует на длинном тике)
 
                 reserve_outcome = reserve_runner(
@@ -925,6 +1000,40 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
                 self_write_snapshot = rr.get("mode_write")
                 fallback_holder = rr.get("holder")
 
+                # --- v8: ребёнок умер от лимита подписки ----------------
+                # heartbeat_wrap уже откатил свой fastdeath-инкремент; здесь
+                # заводим окно сна и даём РОВНО ОДИН тост-объяснение. Ни
+                # [factory:fallback], ни [factory:child-death], ни
+                # [factory:stalled] в этом окне больше не звучат.
+                detected_limit = rr.get("usage_limit")
+                if detected_limit:
+                    reset_ts = detected_limit.get("reset_ts")
+                    if reset_ts is None:
+                        reset_ts = now + datetime.timedelta(
+                            hours=hw.USAGE_LIMIT_DEFAULT_SLEEP_H)
+                        reset_txt = (f"{_fmt_ts(reset_ts)} (время сброса не "
+                                    f"распознано: {detected_limit.get('note')})")
+                    else:
+                        reset_txt = _fmt_ts(reset_ts)
+                    usage_limit_until = reset_ts
+                    usage_limit_raw = detected_limit.get("raw")
+                    usage_limit_grace_until = None
+                    night_fallback_notes.append(
+                        f"резерв умер от лимита подписки ({usage_limit_raw}) — "
+                        f"окно сна до {reset_txt}")
+                    _write_generic_singleton_escalation(
+                        escalations_file, FACTORY_LIMIT_KEY, FACTORY_LIMIT_TAG,
+                        f"лимиты подписки исчерпаны ({usage_limit_raw}); резерв и "
+                        f"тревоги молчат до {reset_txt}; окно-фабрика после сброса "
+                        "требует РУЧНОГО толчка (цепочка ScheduleWakeup порвана "
+                        "сорванным ходом — самовосстановления у окна нет)", now)
+                    shown, _detail = toast_fn(
+                        "[factory:usage-limit]",
+                        f"лимиты подписки кончились — фабрика спит до "
+                        f"{detected_limit.get('reset_hint') or reset_txt}")
+                    if shown:
+                        usage_limit_toast_ts = now
+
                 outcome_kind = rr["outcome"]
                 if outcome_kind == "spawned" and rr["child_rc"] == 0:
                     # результативный проход — сбрасывает ОБЕ поломочные серии
@@ -942,9 +1051,15 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
                         unknown_streak += 1
                         night_fallback_notes.append(
                             "канал last-pass-summary неизвестен (битый/протухший/отсутствует)")
-                elif outcome_kind == "timeout_kill" or (outcome_kind == "spawned"
-                                                        and rr["child_rc"] not in (0, None)
-                                                        and not rr["fast_death"]):
+                elif not detected_limit and (
+                        outcome_kind == "timeout_kill" or (outcome_kind == "spawned"
+                                                           and rr["child_rc"] not in (0, None)
+                                                           and not rr["fast_death"])):
+                    # v8: `not detected_limit` — ОБЯЗАТЕЛЕН. Смерть от лимита
+                    # приходит сюда с fast_death=False (обёртка откатила свой
+                    # инкремент), и без этого условия она копила бы
+                    # slowdeath-серию, то есть ровно ту «поломку», от
+                    # ложного объявления которой механизм и заводится.
                     slowdeath_streak += 1
                     slowdeath_last_ts = now
                     if slowdeath_streak >= fallback_block_threshold and not slowdeath_stopped:
@@ -1001,14 +1116,25 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
                 # диагностическая метка «когда был последний» (анти-
                 # дребезг на случай будущего повторного вызова В ПРЕДЕЛАХ
                 # ОДНОГО запуска — не расходует и не гейтит НИЧЕГО здесь).
-                shown, _detail = toast_fn(
-                    "[factory:fallback]", f"окно молчит — резервный проход ({outcome_kind})")
-                if shown:
-                    last_fallback_toast_ts = now
+                # v8: при распознанном лимите тост запуска НЕ звучит — про
+                # этот запуск оператору уже сказано тостом [factory:usage-
+                # limit], и сказано ПРИЧИНОЙ, а не «резервный проход
+                # (spawned)».
+                if not detected_limit:
+                    shown, _detail = toast_fn(
+                        "[factory:fallback]", f"окно молчит — резервный проход ({outcome_kind})")
+                    if shown:
+                        last_fallback_toast_ts = now
 
     notes_now.extend(night_fallback_notes)
 
     # --- ветка 4: транзиции (тревога) --------------------------------------
+    # v8: `limit_quiet` глушит ТОЛЬКО тост. Запись в escalations.md и строку
+    # orchestrator-log оставляем всегда — это след, а не оповещение: разбор
+    # постфактум обязан видеть, что окно стояло.
+    limit_quiet = ((usage_limit_until is not None and now < usage_limit_until)
+                  or (usage_limit_grace_until is not None
+                      and now < usage_limit_grace_until))
     if new_state_label == "stalled" and prev_state_label != "stalled":
         _write_singleton_escalation(
             escalations_file,
@@ -1019,7 +1145,10 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
                                   f"ok->stalled: {detail}", now)
         toast_due = (prev_alert_ts is None or
                     (now - prev_alert_ts).total_seconds() / 3600.0 >= cooldown_hours)
-        if toast_due:
+        if limit_quiet:
+            notes_now.append("тревога STALLED подавлена: лимитное окно "
+                            "(фабрика не может поехать — будить незачем)")
+        elif toast_due:
             shown, toast_detail = toast_fn("[factory:stalled]", detail)
             if shown:
                 prev_alert_ts = now
@@ -1068,6 +1197,10 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
         "fallback_runs_24h_ts": fallback_runs_24h_ts,
         "self_write_snapshot": self_write_snapshot,
         "fallback_holder": fallback_holder,
+        "usage_limit_until": _fmt_ts(usage_limit_until),
+        "usage_limit_raw": usage_limit_raw,
+        "usage_limit_toast_ts": _fmt_ts(usage_limit_toast_ts),
+        "usage_limit_grace_until": _fmt_ts(usage_limit_grace_until),
     })
     return 0
 
@@ -1095,6 +1228,7 @@ def main(argv: list[str] | None = None) -> int:
     fallback_delay_min = _env_float("AO3_FACTORY_FALLBACK_DELAY_MIN", FALLBACK_DELAY_MIN_DEFAULT)
     fallback_block_threshold = int(_env_float(
         "AO3_FACTORY_FALLBACK_BLOCK_THRESHOLD", FALLBACK_BLOCK_THRESHOLD_DEFAULT))
+    limit_grace_min = _env_float("AO3_FACTORY_LIMIT_GRACE_MIN", LIMIT_GRACE_MIN_DEFAULT)
     no_toast = args.no_toast or os.environ.get("AO3_FACTORY_NO_TOAST") == "1"
     toast_fn = (lambda title, message: (False, "AO3_FACTORY_NO_TOAST/--no-toast: подавлен")
                ) if no_toast else show_toast
@@ -1107,7 +1241,8 @@ def main(argv: list[str] | None = None) -> int:
             orchestrator_log=Path(args.orchestrator_log),
             now=now, stall_no_lock_min=stall_no_lock_min, stall_inpass_min=stall_inpass_min,
             fallback_delay_min=fallback_delay_min,
-            fallback_block_threshold=fallback_block_threshold, toast_fn=toast_fn)
+            fallback_block_threshold=fallback_block_threshold,
+            limit_grace_min=limit_grace_min, toast_fn=toast_fn)
     except Exception as e:                    # non-throwing catch-all (спека К3)
         print(f"factory_watchdog: непойманная ошибка тика (не должна была случиться): {e}")
         return 0

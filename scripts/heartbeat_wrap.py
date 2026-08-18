@@ -286,6 +286,143 @@ FAST_DEATH_ESCALATE_AT = 3
 HEARTBEAT_CHILD_DEATH_KEY = "HEARTBEAT-CHILD-DEATH"
 HEARTBEAT_CHILD_DEATH_TAG = "heartbeat:child-death"
 
+# --- лимиты подписки (spec-factory-window v8, 2026-08-18) -----------------
+# ОТДЕЛЬНЫЙ класс исхода, НЕ fastdeath: ребёнок умирает за секунды с rc=1 и
+# единственной строкой вида "You've hit your weekly limit · resets 2am
+# (Europe/Paris)". Это НЕ поломка (чинить нечего) и НЕ повод будить
+# оператора тревогой — до сброса ни окно, ни резерв проехать не могут
+# ФИЗИЧЕСКИ, поэтому и спавнить резерв бессмысленно (эпизод 2026-08-17:
+# 4 запуска в лимитное окно, 7 тостов, ни один не назвал причину).
+#
+# Носитель факта — вывод ребёнка в logs/fallback-*.log: PIPE не
+# используется by construction (класс B4, внуки держали бы хэндлы и wait()
+# висел бы мимо таймаута), поэтому детект читает ХВОСТ файла по смещению,
+# снятому ДО спавна. Нет log_path (тестовый/CLI-путь) — детекта нет,
+# поведение прежнее байт-в-байт.
+USAGE_LIMIT_RE = re.compile(
+    r"you'?ve\s+hit\s+your\s+(?P<span>\w+)\s+limit"
+    r"(?:[^\r\n]*?resets\s+(?P<reset>[^\r\n]*))?",
+    re.IGNORECASE)
+# «2am (Europe/Paris)», «11:30pm (Europe/Paris)», «2am» — час/минуты/
+# am-pm/зона; всё, кроме часа, опционально (формулировка вендора может
+# смениться — тогда reset_ts=None и потребитель берёт консервативный
+# дефолт, но КЛАСС исхода всё равно распознан).
+_RESET_CLOCK_RE = re.compile(
+    r"(?P<hour>\d{1,2})(?::(?P<minute>\d{2}))?\s*(?P<ampm>am|pm)?"
+    r"(?:[^(\r\n]*\((?P<tz>[A-Za-z_]+/[A-Za-z_]+)\))?",
+    re.IGNORECASE)
+USAGE_LIMIT_TAIL_BYTES = 8192
+# Сброса не распознали — сколько спать до следующей пробы. Совпадает с
+# прежним слепым probe-окном fastdeath-серии (_series_blocked, 6ч): при
+# нераспознанном формате поведение НЕ хуже прежнего.
+USAGE_LIMIT_DEFAULT_SLEEP_H = 6.0
+HEARTBEAT_USAGE_LIMIT_KEY = "HEARTBEAT-USAGE-LIMIT"
+HEARTBEAT_USAGE_LIMIT_TAG = "heartbeat:usage-limit"
+
+
+def _parse_reset_ts(reset_text: str, now: datetime.datetime) -> tuple:
+    """«2am (Europe/Paris)» -> ближайший БУДУЩИЙ момент этого локального
+    времени в UTC. Возвращает `(datetime|None, note)`.
+
+    Зона без tzdata (голый Windows-хост без пакета `tzdata` — зависимость
+    НЕ объявлена в framework/requirements.txt намеренно: механизм обязан
+    работать и без неё) -> `(None, "<причина>")`; потребитель берёт
+    консервативный дефолт. Класс E-негатива: отсутствие зоны — не факт
+    «лимита нет», а неизвестность ВРЕМЕНИ."""
+    m = _RESET_CLOCK_RE.search(reset_text or "")
+    if not m:
+        return None, "время сброса не распознано"
+
+    hour = int(m.group("hour"))
+    minute = int(m.group("minute") or 0)
+    ampm = (m.group("ampm") or "").lower()
+    if ampm == "pm" and hour < 12:
+        hour += 12
+    elif ampm == "am" and hour == 12:
+        hour = 0
+    if not (0 <= hour <= 23 and 0 <= minute <= 59):
+        return None, f"время сброса вне диапазона: {reset_text!r}"
+
+    tz_name = m.group("tz")
+    tzinfo = datetime.timezone.utc
+    note = "зона не названа — трактована как UTC"
+    if tz_name:
+        try:
+            from zoneinfo import ZoneInfo          # локальный импорт: см. докстринг
+            tzinfo = ZoneInfo(tz_name)
+            note = ""
+        except Exception as e:                      # ZoneInfoNotFoundError и родня
+            return None, f"зона {tz_name} недоступна ({e.__class__.__name__})"
+
+    local_now = now.astimezone(tzinfo)
+    target = local_now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    if target <= local_now:
+        target += datetime.timedelta(days=1)
+    return target.astimezone(datetime.timezone.utc), note
+
+
+def parse_usage_limit(text: str, now: datetime.datetime) -> dict | None:
+    """Распознаёт в тексте сообщение о лимите подписки.
+
+    Возвращает `None` (не лимит) либо dict: `raw` (сама строка),
+    `span` ("weekly"/"5-hour"/...), `reset_ts` (datetime UTC|None),
+    `reset_hint` (сырой хвост «2am (Europe/Paris)»|None), `note`
+    (почему `reset_ts` пуст, если пуст)."""
+    if not text:
+        return None
+    m = USAGE_LIMIT_RE.search(text)
+    if not m:
+        return None
+    raw = m.group(0).strip()
+    reset_hint = (m.group("reset") or "").strip() or None
+    reset_ts, note = (None, "строка без части «resets»")
+    if reset_hint:
+        reset_ts, note = _parse_reset_ts(reset_hint, now)
+    return {"raw": raw, "span": (m.group("span") or "").lower(),
+            "reset_ts": reset_ts, "reset_hint": reset_hint, "note": note}
+
+
+def read_usage_limit(log_path, offset: int, now: datetime.datetime) -> dict | None:
+    """Читает ХВОСТ лог-файла ребёнка с байтового `offset` (снят ДО спавна)
+    и отдаёт `parse_usage_limit` по нему. Non-throwing (BL-4): нечитаемый
+    файл/битая кодировка -> None (детекта нет, поведение прежнее)."""
+    if log_path is None:
+        return None
+    try:
+        with Path(log_path).open("rb") as fh:
+            fh.seek(max(0, int(offset or 0)))
+            chunk = fh.read(USAGE_LIMIT_TAIL_BYTES)
+    except (OSError, ValueError) as e:
+        print(f"usage-limit детект: хвост лога не прочитан ({e}) — детекта нет")
+        return None
+    return parse_usage_limit(chunk.decode("utf-8", errors="replace"), now)
+
+
+def _fastdeath_revert_one(fastdeath_path: Path) -> str:
+    """Откатывает РОВНО ОДИН инкремент, сделанный текущим вызовом (исход
+    переклассифицирован в usage_limit — смерть от лимита поломкой НЕ
+    является и серию поломок копить не должна).
+
+    НЕ сбрасывает счётчик в 0: прежние инкременты могли быть настоящими
+    отказами, их история — не наша (класс «чини экземпляр, который сам
+    создал»). Non-throwing (BL-4)."""
+    try:
+        data = _read_fastdeath(fastdeath_path)
+        count = int(data.get("count") or 0)
+        if count <= 0:
+            return ""
+        count -= 1
+        _write_fastdeath(fastdeath_path, {
+            "count": count,
+            "first_ts": data.get("first_ts") if count else None,
+            "last_ts": data.get("last_ts") if count else None,
+            "last_rc": data.get("last_rc") if count else None,
+        })
+        return f" fastdeath-откат={count}"
+    except Exception as e:                          # non-throwing (BL-4)
+        print(f"usage-limit: откат fastdeath не удался: {e}")
+        return ""
+
 # --- ночной резерв (Д1, консолидированная секция spec-factory-window v7) --
 DEFAULT_FALLBACK_CHILD_ARGS = ["-p", "/qa-loop 5", "--model", "sonnet"]
 DEFAULT_FALLBACK_LOG_DIR = REPO / "logs"
@@ -311,6 +448,16 @@ def _fallback_artifact_rel(now: datetime.datetime) -> str:
 
 def _utcnow() -> datetime.datetime:
     return datetime.datetime.now(datetime.timezone.utc)
+
+
+def _fmt_ts_utc(dt: datetime.datetime | None) -> str:
+    """ISO-Z из aware/naive datetime (naive — трактуется как UTC, тот же
+    образец, что вся ts-запись модуля). None -> пустая строка."""
+    if dt is None:
+        return ""
+    if dt.tzinfo is not None:
+        dt = dt.astimezone(datetime.timezone.utc)
+    return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _new_holder(now: datetime.datetime | None = None) -> str:
@@ -1103,9 +1250,17 @@ def run_fallback_pass(*, child_args: list[str] | None = None, budget_enabled: bo
             mode_write_box["value"] = on_pass_done(rc, runtime)
 
     log_fh = None
+    log_offset = 0
     if log_path is not None:
         log_path = Path(log_path)
         log_path.parent.mkdir(parents=True, exist_ok=True)
+        # смещение ДО спавна — граница «наш вывод» для usage-limit детекта
+        # (v8). Берём размером файла, а не log_fh.tell(): у файла,
+        # открытого в "ab", позиция до первой записи платформозависима.
+        try:
+            log_offset = log_path.stat().st_size if log_path.exists() else 0
+        except OSError:
+            log_offset = 0
         log_fh = log_path.open("ab")
 
     try:
@@ -1124,6 +1279,15 @@ def run_fallback_pass(*, child_args: list[str] | None = None, budget_enabled: bo
         print(line)
     for line in r["print_lines"]:
         print(line)
+
+    # --- v8: лимит подписки — ПЕРЕКЛАССИФИКАЦИЯ исхода до M4-строки -------
+    # Смерть от лимита выглядит как fastdeath (rc!=0, секунды), но поломкой
+    # НЕ является: серию поломок не копит, тревогу не поднимает, а несёт
+    # ВРЕМЯ СБРОСА — единственный факт, по которому сторож знает, когда
+    # снова есть смысл будить кого-либо.
+    usage_limit = None
+    if r["outcome"] == "spawned" and r["child_rc"] not in (0, None):
+        usage_limit = read_usage_limit(log_path, log_offset, now)
 
     # --- Б1 (критик-раунд Д1): M4-строка НА ВСЕХ исходах ------------------
     fast_death = r["fast_death"]
@@ -1161,6 +1325,14 @@ def run_fallback_pass(*, child_args: list[str] | None = None, budget_enabled: bo
                          else "timeout-kill release=ok")
         elif r["wait_exception"] is not None:
             m4_outcome = f"exit=error:{r['wait_exception']}"
+        elif usage_limit is not None:
+            reset_txt = (_fmt_ts_utc(usage_limit["reset_ts"]) if usage_limit["reset_ts"]
+                        else f"неизвестно ({usage_limit['note']})")
+            m4_outcome = (f"usage-limit ({usage_limit['span'] or 'подписка'}) "
+                         f"reset={reset_txt}")
+            if fast_death:
+                m4_outcome += _fastdeath_revert_one(fastdeath_path)
+                fast_death = False
         else:
             m4_outcome = f"exit={r['child_rc']}" + r["fastdeath_suffix"]
 
@@ -1182,6 +1354,9 @@ def run_fallback_pass(*, child_args: list[str] | None = None, budget_enabled: bo
         "fast_death": fast_death,
         "holder": holder,
         "mode_write": mode_write_box["value"],
+        # v8: None (лимита нет) либо dict parse_usage_limit — сторож берёт
+        # отсюда `reset_ts` и молчит до него.
+        "usage_limit": usage_limit,
     }
 
 
