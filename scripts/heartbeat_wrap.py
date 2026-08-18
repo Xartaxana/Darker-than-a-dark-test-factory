@@ -299,10 +299,22 @@ HEARTBEAT_CHILD_DEATH_TAG = "heartbeat:child-death"
 # висел бы мимо таймаута), поэтому детект читает ХВОСТ файла по смещению,
 # снятому ДО спавна. Нет log_path (тестовый/CLI-путь) — детекта нет,
 # поведение прежнее байт-в-байт.
-USAGE_LIMIT_RE = re.compile(
-    r"you'?ve\s+hit\s+your\s+(?P<span>\w+)\s+limit"
-    r"(?:[^\r\n]*?resets\s+(?P<reset>[^\r\n]*))?",
-    re.IGNORECASE)
+# Критик-раунд v8.1 (блокер Б2): `\w+` НЕ матчит дефисный span — «5-hour
+# limit» проваливался целиком, а докстринг ниже объявлял его поддержанным.
+# Промах регекса ОТКАТЫВАЕТ поведение к до-v8 (ложные тосты «поломка»), то
+# есть класс не деградирует мягко — он исчезает. Поэтому: (а) `[\w-]+`;
+# (б) ВТОРАЯ альтернатива под формулировку «usage limit reached … reset at».
+# Список формулировок вендора эмпирически НЕ исчерпан (воспроизвести лимит
+# со стенда нельзя, F-30) — при появлении новой строки чинится добавлением
+# паттерна сюда, юнит на вариант обязателен.
+USAGE_LIMIT_PATTERNS = (
+    re.compile(r"you'?ve\s+hit\s+your\s+(?P<span>[\w-]+)\s+limit"
+               r"(?:[^\r\n]*?resets?(?:\s+at)?\s+(?P<reset>[^\r\n]*))?",
+               re.IGNORECASE),
+    re.compile(r"(?:claude\s+)?usage\s+limit\s+reached"
+               r"(?:[^\r\n]*?reset(?:s|\s+at|\s+\w+\s+at)?\s+(?P<reset>[^\r\n]*))?",
+               re.IGNORECASE),
+)
 # «2am (Europe/Paris)», «11:30pm (Europe/Paris)», «2am» — час/минуты/
 # am-pm/зона; всё, кроме часа, опционально (формулировка вендора может
 # смениться — тогда reset_ts=None и потребитель берёт консервативный
@@ -312,6 +324,10 @@ _RESET_CLOCK_RE = re.compile(
     r"(?:[^(\r\n]*\((?P<tz>[A-Za-z_]+/[A-Za-z_]+)\))?",
     re.IGNORECASE)
 USAGE_LIMIT_TAIL_BYTES = 8192
+# Н4 (критик v8.1): сколько ПОСЛЕДНИХ непустых строк среза считать зоной
+# «причина смерти». Фраза вендора живёт и в самом репо — без сужения любое
+# её эхо в выводе ребёнка при rc!=0 открывало бы окно тишины на часы.
+USAGE_LIMIT_TAIL_LINES = 40
 # Сброса не распознали — сколько спать до следующей пробы. Совпадает с
 # прежним слепым probe-окном fastdeath-серии (_series_blocked, 6ч): при
 # нераспознанном формате поведение НЕ хуже прежнего.
@@ -370,47 +386,91 @@ def parse_usage_limit(text: str, now: datetime.datetime) -> dict | None:
     (почему `reset_ts` пуст, если пуст)."""
     if not text:
         return None
-    m = USAGE_LIMIT_RE.search(text)
-    if not m:
+    # ПОСЛЕДНЕЕ совпадение по ВСЕМ паттернам: в срезе может лежать эхо
+    # прошлой строки, актуальна самая свежая.
+    m = None
+    for pattern in USAGE_LIMIT_PATTERNS:
+        for candidate in pattern.finditer(text):
+            if m is None or candidate.start() >= m.start():
+                m = candidate
+    if m is None:
         return None
+    groups = m.groupdict()                     # у второго паттерна нет span
     raw = m.group(0).strip()
-    reset_hint = (m.group("reset") or "").strip() or None
+    reset_hint = (groups.get("reset") or "").strip() or None
     reset_ts, note = (None, "строка без части «resets»")
     if reset_hint:
         reset_ts, note = _parse_reset_ts(reset_hint, now)
-    return {"raw": raw, "span": (m.group("span") or "").lower(),
+    return {"raw": raw, "span": (groups.get("span") or "").lower(),
             "reset_ts": reset_ts, "reset_hint": reset_hint, "note": note}
 
 
-def read_usage_limit(log_path, offset: int, now: datetime.datetime) -> dict | None:
-    """Читает ХВОСТ лог-файла ребёнка с байтового `offset` (снят ДО спавна)
-    и отдаёт `parse_usage_limit` по нему. Non-throwing (BL-4): нечитаемый
-    файл/битая кодировка -> None (детекта нет, поведение прежнее)."""
+def read_usage_limit(log_path, offset: int, now: datetime.datetime,
+                     tail_bytes: int = USAGE_LIMIT_TAIL_BYTES,
+                     tail_lines: int = USAGE_LIMIT_TAIL_LINES) -> dict | None:
+    """Читает НАСТОЯЩИЙ ХВОСТ нашего среза лога ребёнка и отдаёт
+    `parse_usage_limit` по нему.
+
+    Критик-раунд v8.1 (блокер Б1): прежняя версия делала `seek(offset)` +
+    `read(8192)`, то есть читала ГОЛОВУ среза, а не хвост, вопреки
+    собственному докстрингу. Замер критика: лимит после 8КБ вывода — детект
+    ЕСТЬ, после 9КБ — НЕТ, молча; реальный лог успешного прохода
+    (`logs/fallback-20260818.log`) весит 6580 байт, то есть 80% окна, а
+    stderr ребёнка слит в тот же дескриптор. Отказ был не гипотетическим:
+    ребёнок, поработавший и упёршийся в лимит ПОСРЕДИ прохода, откатывал всё
+    поведение к до-v8 (ложные тосты «поломка», слепой 6ч-probe).
+
+    Нижняя граница чтения = `max(offset, size - tail_bytes)`: наш срез
+    (никогда не читаем чужой вывод до спавна) И его хвост.
+
+    `tail_lines` (Н4) сужает поверхность ложноположительного детекта: фраза
+    вендора встречается и в самом репо (этот файл, тесты), а любой её вывод
+    ребёнка при rc!=0 открывал бы многочасовое окно тишины. Ищем только в
+    последних непустых строках — там, где живёт причина смерти.
+
+    Non-throwing (BL-4): нечитаемый файл/битая кодировка -> None."""
     if log_path is None:
         return None
     try:
-        with Path(log_path).open("rb") as fh:
-            fh.seek(max(0, int(offset or 0)))
-            chunk = fh.read(USAGE_LIMIT_TAIL_BYTES)
+        path = Path(log_path)
+        size = path.stat().st_size
+        start = max(0, int(offset or 0), size - max(0, int(tail_bytes)))
+        with path.open("rb") as fh:
+            fh.seek(start)
+            chunk = fh.read()
     except (OSError, ValueError) as e:
         print(f"usage-limit детект: хвост лога не прочитан ({e}) — детекта нет")
         return None
-    return parse_usage_limit(chunk.decode("utf-8", errors="replace"), now)
+    text = chunk.decode("utf-8", errors="replace")
+    lines = [ln for ln in text.splitlines() if ln.strip()]
+    if tail_lines and tail_lines > 0:
+        lines = lines[-tail_lines:]
+    return parse_usage_limit("\n".join(lines), now)
 
 
-def _fastdeath_revert_one(fastdeath_path: Path) -> str:
+def _fastdeath_revert_one(fastdeath_path: Path, escalations_path: Path | None = None,
+                          now: datetime.datetime | None = None) -> str:
     """Откатывает РОВНО ОДИН инкремент, сделанный текущим вызовом (исход
     переклассифицирован в usage_limit — смерть от лимита поломкой НЕ
     является и серию поломок копить не должна).
 
     НЕ сбрасывает счётчик в 0: прежние инкременты могли быть настоящими
     отказами, их история — не наша (класс «чини экземпляр, который сам
-    создал»). Non-throwing (BL-4)."""
+    создал»).
+
+    Н1 (критик v8.1): откат счётчика ОБЯЗАН откатывать и эскалацию, которую
+    этот счётчик успел поднять. `_fastdeath_increment` пишет singleton
+    `HEARTBEAT-CHILD-DEATH` при достижении порога ДО того, как мы узнаём
+    причину; без переписывания в человеко-читаемом файле оставалась ложная
+    «поломка» при чистом реестре — реестр и эскалация расходились (замер
+    критика: count=2 + смерть от лимита -> реестр 2, а в escalations.md
+    «3 быстрых смертей подряд»). Non-throwing (BL-4)."""
     try:
         data = _read_fastdeath(fastdeath_path)
         count = int(data.get("count") or 0)
         if count <= 0:
             return ""
+        was_escalated = count >= FAST_DEATH_ESCALATE_AT
         count -= 1
         _write_fastdeath(fastdeath_path, {
             "count": count,
@@ -418,6 +478,15 @@ def _fastdeath_revert_one(fastdeath_path: Path) -> str:
             "last_ts": data.get("last_ts") if count else None,
             "last_rc": data.get("last_rc") if count else None,
         })
+        if was_escalated and count < FAST_DEATH_ESCALATE_AT and escalations_path is not None:
+            _write_singleton_escalation(
+                Path(escalations_path), HEARTBEAT_CHILD_DEATH_KEY,
+                HEARTBEAT_CHILD_DEATH_TAG,
+                "ПЕРЕКЛАССИФИЦИРОВАНО: последняя смерть — лимит подписки, не "
+                f"поломка; серия откачена до {count} (порог {FAST_DEATH_ESCALATE_AT}). "
+                "Человеку чинить нечего: резерв ждёт сброса лимита. См. "
+                "logs/fallback-*.log",
+                now or _utcnow())
         return f" fastdeath-откат={count}"
     except Exception as e:                          # non-throwing (BL-4)
         print(f"usage-limit: откат fastdeath не удался: {e}")
@@ -1331,7 +1400,7 @@ def run_fallback_pass(*, child_args: list[str] | None = None, budget_enabled: bo
             m4_outcome = (f"usage-limit ({usage_limit['span'] or 'подписка'}) "
                          f"reset={reset_txt}")
             if fast_death:
-                m4_outcome += _fastdeath_revert_one(fastdeath_path)
+                m4_outcome += _fastdeath_revert_one(fastdeath_path, escalations_path, now)
                 fast_death = False
         else:
             m4_outcome = f"exit={r['child_rc']}" + r["fastdeath_suffix"]

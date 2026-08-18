@@ -145,6 +145,10 @@ LIMIT_GRACE_MIN_DEFAULT = 45.0
 LIMIT_RETURN_TOAST_MAX_LAG_H = 3.0
 FACTORY_LIMIT_KEY = "FACTORY-USAGE-LIMIT"
 FACTORY_LIMIT_TAG = "factory:usage-limit"
+# Б3: тег возврата — тоже КОНСТАНТА и тоже печатается в orchestrator-log
+# литералом, чтобы детектор F-11(в) был исполнимым грепом, а не прозой.
+FACTORY_LIMIT_BACK_TAG = "factory:limit-back"
+GENERIC_RESOLVED_MARKER = "[resolved:factory-watchdog]"
 
 
 # --------------------------------------------------------------------------
@@ -340,32 +344,44 @@ _GENERIC_ESCALATION_LINE_RE_CACHE: dict[str, re.Pattern] = {}
 
 
 def _write_generic_singleton_escalation(escalations_path: Path, key: str, tag: str,
-                                        message: str, now: datetime.datetime) -> None:
+                                        message: str, now: datetime.datetime,
+                                        resolved: bool = False) -> None:
     """Singleton-эскалация ОБЩЕГО вида (Д п.6: `[factory:fallback-broken]`)
     — тот же приём, что `_write_singleton_escalation`/`heartbeat_wrap.
     _write_singleton_escalation`, но `key`/`tag` параметризованы (не только
-    `FACTORY-STALLED`). Non-throwing (BL-4)."""
+    `FACTORY-STALLED`).
+
+    Н2 (критик v8.1): `resolved` добавлен, потому что без него
+    `FACTORY-USAGE-LIMIT` не гасился НИКОГДА — состояние самоизлечивается за
+    часы (сброс лимита), а строка «активный варнинг, требующий человека»
+    оставалась навсегда и попадала в сверку чека 3 session-handoff. Момент
+    снятия механизму известен точно, гасить есть чем. Маркер — тот же
+    приём, что у `FACTORY-STALLED`. Non-throwing (BL-4)."""
     try:
         line_re = _GENERIC_ESCALATION_LINE_RE_CACHE.get(key + "|" + tag)
         if line_re is None:
             line_re = re.compile(
                 r"(?m)^- \[(?P<ts>[^\]]+)\] \*\*" + re.escape(key) +
-                r"\*\* \[" + re.escape(tag) + r"\] — [^\r\n]*")
+                r"\*\*(?:\s*\[resolved:[^\]]*\])?\s*\[" + re.escape(tag) +
+                r"\] — [^\r\n]*")
             _GENERIC_ESCALATION_LINE_RE_CACHE[key + "|" + tag] = line_re
         stamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+        resolved_part = f" {GENERIC_RESOLVED_MARKER}" if resolved else ""
         text = escalations_path.read_bytes().decode("utf-8") if escalations_path.exists() else ""
         eol = "\r\n" if "\r\n" in text else "\n"
 
         m = line_re.search(text)
         if m:
-            new_line = f"- [{m.group('ts')}] **{key}** [{tag}] — {message}"
+            new_line = (f"- [{m.group('ts')}] **{key}**{resolved_part} "
+                        f"[{tag}] — {message}")
             new_text = text[:m.start()] + new_line + text[m.end():]
         else:
             if not text:
                 text = ll.ESCALATIONS_HEADER
             elif not text.endswith("\n"):
                 text += eol
-            new_text = text + f"- [{stamp}] **{key}** [{tag}] — {message}{eol}"
+            new_text = (text + f"- [{stamp}] **{key}**{resolved_part} "
+                        f"[{tag}] — {message}{eol}")
 
         escalations_path.parent.mkdir(parents=True, exist_ok=True)
         tmp = escalations_path.with_name(escalations_path.name + ".tmp")
@@ -895,8 +911,14 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
             # протухшее окно (сброс наступил, пока фабрика стояла) —
             # гасим МОЛЧА, без тоста и без grace
             night_fallback_notes.append(
-                f"лимитное окно протухло (сброс {_fmt_ts(usage_limit_until)}, "
-                f"давность {limit_return_lag_h:.1f}ч) — снято молча")
+                f"[{FACTORY_LIMIT_BACK_TAG}] лимитное окно протухло (сброс "
+                f"{_fmt_ts(usage_limit_until)}, давность "
+                f"{limit_return_lag_h:.1f}ч) — снято молча")
+            _write_generic_singleton_escalation(
+                escalations_file, FACTORY_LIMIT_KEY, FACTORY_LIMIT_TAG,
+                f"лимитное окно снято {_fmt_ts(now)} (протухло: сброс был "
+                f"{_fmt_ts(usage_limit_until)}, давность {limit_return_lag_h:.1f}ч). "
+                "Человеку делать нечего.", now, resolved=True)
             usage_limit_until = None
             usage_limit_raw = None
             usage_limit_toast_ts = None
@@ -909,11 +931,23 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
                 "[factory:limit-back]",
                 f"лимиты вернулись — толкни окно (/factory). Резерв ждёт "
                 f"{limit_grace_min:.0f} мин, потом поедет сам")
+            # Б3 (критик v8.1): тег печатается ЛИТЕРАЛОМ. Прежний детектор
+            # F-11(в) грепал `[factory:limit-back]` по orchestrator-log, где
+            # этой строки не было никогда (счётный греп критика с позитивным
+            # контролем: `factory:stalled` = 0 при `stalled` = 12) — то есть
+            # механизм был без работающего детектора, ровно «пожелание».
             _append_orchestrator_line(
                 orchestrator_log, _rel_path(state_file),
-                f"usage-limit: сброс наступил ({_fmt_ts(usage_limit_until)}), "
-                f"возвратный тост {'показан' if shown else 'НЕ показан'}, "
-                f"резерв придержан до {_fmt_ts(usage_limit_grace_until)}", now)
+                f"[{FACTORY_LIMIT_BACK_TAG}] сброс наступил "
+                f"({_fmt_ts(usage_limit_until)}), возвратный тост "
+                f"{'показан' if shown else 'НЕ показан'}, резерв придержан до "
+                f"{_fmt_ts(usage_limit_grace_until)}", now)
+            _write_generic_singleton_escalation(
+                escalations_file, FACTORY_LIMIT_KEY, FACTORY_LIMIT_TAG,
+                f"лимиты вернулись {_fmt_ts(now)} (сброс "
+                f"{_fmt_ts(usage_limit_until)}); окно требует ручного толчка, "
+                f"резерв поедет сам после {_fmt_ts(usage_limit_grace_until)}",
+                now, resolved=True)
             usage_limit_until = None
             usage_limit_raw = None
             usage_limit_toast_ts = None
@@ -1038,7 +1072,8 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
                     usage_limit_raw = detected_limit.get("raw")
                     usage_limit_grace_until = None
                     night_fallback_notes.append(
-                        f"резерв умер от лимита подписки ({usage_limit_raw}) — "
+                        f"[{FACTORY_LIMIT_TAG}] резерв умер от лимита "
+                        f"подписки ({usage_limit_raw}) — "
                         f"окно сна до {reset_txt}")
                     _write_generic_singleton_escalation(
                         escalations_file, FACTORY_LIMIT_KEY, FACTORY_LIMIT_TAG,

@@ -135,6 +135,81 @@ def test_read_usage_limit_reads_only_tail_after_offset(tmp_path):
     assert hw.read_usage_limit(log, 0, NOW) is not None           # с нуля — виден
 
 
+# --- критик-раунд v8.1: блокер Б1 (голова вместо хвоста) ------------------
+
+@pytest.mark.parametrize("prefix_kb", [1, 8, 9, 64, 512])
+def test_limit_after_large_output_is_still_detected(tmp_path, prefix_kb):
+    """M6-граница окна чтения. Прежняя версия делала seek(offset)+read(8192),
+    то есть читала ГОЛОВУ среза: замер критика — 8КБ вывода до строки лимита
+    детектились, 9КБ уже НЕТ, молча. Реальный лог успешного прохода весит
+    6580 байт (80% окна), stderr ребёнка слит в тот же дескриптор, так что
+    «ребёнок поработал и упёрся в лимит» — рядовой сценарий, а не край."""
+    log = tmp_path / "fallback.log"
+    log.write_bytes(b"")
+    offset = 0
+    with log.open("ab") as fh:
+        fh.write((("x" * 1023 + "\n") * prefix_kb).encode("utf-8"))
+        fh.write(REAL_LINE.encode("utf-8"))
+
+    got = hw.read_usage_limit(log, offset, NOW)
+    assert got is not None, f"лимит после {prefix_kb}КБ вывода не распознан"
+    assert got["span"] == "weekly"
+
+
+def test_window_is_anchored_to_the_tail_not_the_head(tmp_path):
+    """Решающий пин «хвост vs голова»: с ЗАДАННЫМ маленьким окном строка в
+    КОНЦЕ обязана находиться, а такая же строка в НАЧАЛЕ того же файла —
+    нет. Прежняя реализация (seek(offset)+read(N)) даёт ровно обратное, и
+    именно этим тестом отличается починка от маскировки безлимитным чтением
+    (первая версия этих тестов проходила при обеих реализациях — красная
+    проба это вскрыла)."""
+    tail = tmp_path / "tail.log"
+    tail.write_bytes(b"noise\n" * 2000 + REAL_LINE.encode("utf-8"))
+    assert hw.read_usage_limit(tail, 0, NOW, tail_bytes=200) is not None
+
+    head = tmp_path / "head.log"
+    head.write_bytes(REAL_LINE.encode("utf-8") + b"noise\n" * 2000)
+    assert hw.read_usage_limit(head, 0, NOW, tail_bytes=200) is None
+
+
+def test_limit_phrase_outside_tail_lines_is_ignored(tmp_path):
+    """Н4: сужение поверхности. Фраза вендора живёт и в самом репо; её эхо
+    в НАЧАЛЕ вывода не должно открывать многочасовое окно тишины — уликой
+    считается только причина смерти, то есть последние строки."""
+    log = tmp_path / "fallback.log"
+    log.write_bytes(REAL_LINE.encode("utf-8")
+                    + b"".join(b"pass line %d\n" % i for i in range(200)))
+    assert hw.read_usage_limit(log, 0, NOW) is None
+
+
+def test_offset_still_bounds_the_read_from_below(tmp_path):
+    """Хвост не должен «съесть» границу среза: строка ДО offset — чужая
+    (вывод прошлого запуска), уликой этого прохода не является."""
+    log = tmp_path / "fallback.log"
+    log.write_bytes(REAL_LINE.encode("utf-8"))
+    offset = log.stat().st_size
+    with log.open("ab") as fh:
+        fh.write(b"pass summary: triggered=1\n")
+    assert hw.read_usage_limit(log, offset, NOW) is None
+
+
+# --- критик-раунд v8.1: блокер Б2 (класс строки вендора) ------------------
+
+@pytest.mark.parametrize("line,span", [
+    ("You've hit your weekly limit · resets 2am (Europe/Paris)", "weekly"),
+    ("You've hit your 5-hour limit · resets 3pm (Europe/Paris)", "5-hour"),
+    ("Claude usage limit reached. Your limit will reset at 2pm (Europe/Paris)", ""),
+    ("usage limit reached", ""),
+])
+def test_vendor_phrasings_are_recognized(line, span):
+    """`\\w+` не матчил дефисный span — «5-hour limit» проваливался ЦЕЛИКОМ,
+    хотя докстринг объявлял его поддержанным. Промах регекса не деградирует
+    мягко: класс исчезает и возвращаются ложные тосты «поломка»."""
+    got = hw.parse_usage_limit(line, NOW)
+    assert got is not None, f"не распознано: {line!r}"
+    assert got["span"] == span
+
+
 def test_read_usage_limit_missing_file_is_non_throwing(tmp_path):
     assert hw.read_usage_limit(tmp_path / "нет.log", 0, NOW) is None
     assert hw.read_usage_limit(None, 0, NOW) is None
@@ -300,6 +375,59 @@ def test_return_toast_fires_once_not_every_tick(tmp_path):
                 reserve_runner=_runner([], _limit_result()), **p)
 
     assert [t for t, _ in toast.calls] == ["[factory:limit-back]"]
+
+
+def test_limit_death_rewrites_the_false_breakage_escalation(tmp_path, _isolate_log_append,
+                                                            monkeypatch):
+    """Н1: откат счётчика обязан откатывать и эскалацию, которую тот поднял.
+    Замер критика: реестр возвращался к 2, а в escalations.md оставалась
+    строка «3 быстрых смертей подряд» — человеку показывали поломку, которой
+    нет."""
+    p = _hw_paths(tmp_path)
+    hw._write_fastdeath(p["fastdeath_path"],
+                        {"count": 2, "first_ts": "2026-08-17T10:00:00Z",
+                         "last_ts": "2026-08-17T12:00:00Z", "last_rc": 1})
+    _limit_child(monkeypatch)
+
+    hw.run_fallback_pass(log_path=tmp_path / "logs" / "f.log", now=NOW, **p)
+
+    esc = p["escalations_path"].read_text(encoding="utf-8")
+    assert "HEARTBEAT-CHILD-DEATH" in esc
+    assert "ПЕРЕКЛАССИФИЦИРОВАНО" in esc, "ложная «поломка» осталась в escalations.md"
+    assert hw._read_fastdeath(p["fastdeath_path"])["count"] == 2
+
+
+def test_detector_tags_are_written_literally_to_orchestrator_log(tmp_path):
+    """Б3: детектор F-11(в) грепает `[factory:limit-back]` по
+    orchestrator-log. Счётный греп критика показал: этих строк код не писал
+    НИКОГДА (`factory:stalled` = 0 при позитивном контроле `stalled` = 12),
+    то есть механизм оставался без работающего детектора отказа."""
+    p = _paths(tmp_path)
+    after_reset = RESET + datetime.timedelta(minutes=1)
+    _stalled_setup(p, stalled_since_minutes_ago=600,
+                   extra_state={"usage_limit_until": fw._fmt_ts(RESET)})
+
+    fw.run_tick(now=after_reset, toast_fn=_NoToast(),
+                reserve_runner=_runner([], _limit_result()), **p)
+
+    orch = p["orchestrator_log"].read_text(encoding="utf-8")
+    assert f"[{fw.FACTORY_LIMIT_BACK_TAG}]" in orch
+    esc = p["escalations_file"].read_text(encoding="utf-8")
+    assert fw.GENERIC_RESOLVED_MARKER in esc, "лимитная эскалация не погашена (Н2)"
+
+
+def test_limit_escalation_carries_current_ts(tmp_path):
+    """Н2: «Факты п.8» той же спеки требуют текущий ts в singleton-строке —
+    соседи (FACTORY-STALLED / FALLBACK-BROKEN) его несут."""
+    p = _paths(tmp_path)
+    _stalled_setup(p, stalled_since_minutes_ago=20)
+
+    fw.run_tick(now=NOW, toast_fn=_NoToast(),
+                reserve_runner=_runner([], _limit_result(RESET)), **p)
+
+    esc = p["escalations_file"].read_text(encoding="utf-8")
+    assert fw.FACTORY_LIMIT_KEY in esc
+    assert fw._fmt_ts(RESET) in esc
 
 
 def test_stale_limit_window_is_cleared_silently_without_return_toast(tmp_path):
