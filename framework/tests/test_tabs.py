@@ -296,7 +296,18 @@ def test_long_press_link_opens_background_tab_without_switching(replay, clean_ap
     # координаты/офсет контейнера WebView.
     browser_steps.long_press_work_link(driver, first_work.title)
 
-    # Then появляется новая вкладка в strip (TabStrip виден только когда tabs>1)
+    # Then снекбар «Opened in background» показывает дословно «(1 tab)» —
+    # это единственное фоновое открытие в этом burst'е (MainActivity.kt:344
+    # `plural = if (signal.openedCount == 1) "tab" else "tabs"`). Дверь (б)
+    # BUG-059 (long-press ссылки в WebView, `BrowserScreen.kt:718`) до этого
+    # ассерта наблюдаемо не проверяла ТЕКСТ снекбара вовсе (AT-BUG-078) —
+    # примитив переиспользован из TC-176
+    # (`test_background_open_snackbar_counts_background_opens_not_total`),
+    # которая покрывает дверь (а).
+    browser_steps.assert_opened_in_background_snackbar_text(
+        driver, "Opened in background (1 tab)")
+
+    # And появляется новая вкладка в strip (TabStrip виден только когда tabs>1)
     browser_steps.assert_tab_strip_visible(driver, timeout=10)
 
     # And активной остаётся исходная вкладка (листинг) — контент экрана не

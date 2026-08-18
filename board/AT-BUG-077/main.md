@@ -2,7 +2,7 @@
 key: "AT-BUG-077"
 project: "AO3"
 issueType: "bug"
-status: "bug-open"
+status: "bug-fixed"
 priority: "p2"
 summary: "test_heartbeat_wrap.py::test_happy_path_order_and_child_env падает детерминированно, когда `python -m pytest scripts/tests` запущен ИЗ сессии, уже несущей AO3_LOOP_HOLDER (вложенный heartbeat)"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-15T20:45:00Z"
-updated: "2026-08-15T20:45:00Z"
+created: "2026-08-18T07:40:00Z"
+updated: "2026-08-18T07:40:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # test_heartbeat_wrap.py::test_happy_path_order_and_child_env падает детерминированно, когда `python -m pytest scripts/tests` запущен ИЗ сессии, уже несущей AO3_LOOP_HOLDER (вложенный heartbeat)
 
 _Спроецировано из `bugs/AT-BUG-077.md` (источник правды).
-Статус в нашей машине: **Open**._
+Статус в нашей машине: **Fixed**._
 
 # AT-BUG-077 — `test_happy_path_order_and_child_env` не изолирован от ambient `AO3_LOOP_HOLDER`, ложно падает под вложенным heartbeat
 
@@ -109,8 +109,54 @@ QA-агентов регулярно запускаются как дети hear
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-08-18 | device-free (scripts/) | — (нет test_cases, device-free debt) | `test_happy_path_order_and_child_env` зелёный ОБОИМИ способами (с ambient `AO3_LOOP_HOLDER` и без); `python -m pytest scripts/tests -q` — 1494 passed, 1 skipped, 0 failed; `python scripts/arch_check.py` — ошибок 0 (5 предупреждений, все известные allowlist-исключения, не новые) | Fixed |
 
 ## Обсуждение
+
+**2026-08-18 — test-maintainer (B4, устранение test_debt), фикс.**
+Причина: `without_extra` вычёркивал `AO3_LOOP_HOLDER` только из ЛЕВОЙ части
+сравнения (`captured["env"]`), правая часть (`dict(os.environ)`) сохраняла
+ключ как есть — при вложенном запуске (тестовый процесс сам несёт
+`AO3_LOOP_HOLDER` от объемлющего heartbeat-цикла) правая часть оставалась
+на 1 элемент больше, `assert` падал детерминированно. Фикс (по критерию
+готовности, вариант «вычеркнуть из ОБЕИХ частей»): построен `ambient_env =
+{k: v for k, v in os.environ.items() if k != "AO3_LOOP_HOLDER"}`, сравнение
+теперь `without_extra == ambient_env` — корректно независимо от того, несёт
+ли объемлющий процесс свой holder.
+
+Красная проба (по критерию готовности):
+```
+$ $env:AO3_LOOP_HOLDER='heartbeat:2026-08-18T07:40:00Z:test077probe'
+$ python -m pytest scripts/tests/test_heartbeat_wrap.py::test_happy_path_order_and_child_env -q
+1 passed in 0.26s
+PYTEST_EXIT=0
+
+$ Remove-Item Env:AO3_LOOP_HOLDER
+$ python -m pytest scripts/tests/test_heartbeat_wrap.py::test_happy_path_order_and_child_env -q
+1 passed in 5.99s
+PYTEST_EXIT=0
+```
+(pre-fix на этом же дереве: сценарий (а) детерминированно падал с «Right
+contains 1 more item: AO3_LOOP_HOLDER», как воспроизведено в теле бага —
+post-fix оба сценария зелёные.)
+
+Полный регресс:
+```
+$ python -m pytest scripts/tests -q
+1494 passed, 1 skipped in 36.91s
+PYTEST_EXIT=0
+```
+
+`python scripts/arch_check.py`: `ошибок 0, предупреждений 5` — все 5
+известные allowlist-исключения (test-debt в `framework/tests/*` и
+`rule3` про TC-176), не новые, `scripts/arch_check.py` этой сессией не
+менялся (предсуществующая незакоммиченная правка вне owns, не тронута).
+
+Изменён только `scripts/tests/test_heartbeat_wrap.py` (строки ~154-161,
+метод сравнения в `test_happy_path_order_and_child_env`). `app-under-test/`
+не тронут.
+
+status: Open → Fixed.
 
 **2026-08-16 — builder (sonnet), примечание (spec-factory-window v6,
 К5е — не чинил, вне owns этого диспатча).** Архитектура сменилась

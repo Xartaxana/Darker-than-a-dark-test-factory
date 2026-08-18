@@ -21,7 +21,7 @@ resolution: ""
 resolution_comment: ""
 known_issue: "false"
 blocked_reason: ""
-lock: "test-maintainer:2026-08-18T07:50:00Z"
+lock: ""
 gitlab_issue: ""
 ---
 

@@ -4,7 +4,7 @@ title: "Нет автоматизационного примитива нажа�
 type: test_debt
 debt_kind: missing_fixture
 severity: major
-status: Fixed
+status: Verified
 found_in: "test-designer, дизайн области «reading-UX: листание страниц кнопками громкости» (docs/01-test-strategy.md §9, needs-design заведена test-strategist 2026-08-15 по QAREADY-38)"
 fixed_in: "framework (test-only, без сборки приложения) — commit 9656fee (хвост убитого утреннего прохода): framework/core/adb.py (volume_dialog_visible), framework/steps/app_steps.py (press_volume_key, assert_no_volume_dialog_appears), framework/steps/browser_steps.py (assert_volume_page_scroll_delta), framework/steps/settings_steps.py + framework/screens/settings_screen.py (enable/disable_volume_button_scroll, assert_volume_button_scroll_enabled), framework/data/recording_builder.py (LISTING_PAGINATED_*), framework/tests/test_volume_paging.py (TC-252) — верификация и Open→Fixed переход этим ходом (test-maintainer, B4)"
 last_seen_in: ""
@@ -12,8 +12,8 @@ test_cases: ["TC-252", "TC-253", "TC-254", "TC-255"]
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-08-18T07:10:00Z"
-updated: "2026-08-18T07:10:00Z"
+status_since: "2026-08-18T07:52:00Z"
+updated: "2026-08-18T07:52:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -75,8 +75,40 @@ TC-253 (off-инвариант — клавиши при выключенной 
 |---|---|---|---|---|
 | — | — | — | — | Open, ждёт разбора |
 | 2026-08-18T07:10:00Z | framework (test-only, `type: test_debt` — код уже был в рабочем дереве/HEAD с commit 9656fee, хвост убитого утреннего прохода; `app-under-test` не менялся, source_commit `app-under-test.yaml` не трогался) | `test_volume_paging.py::test_volume_buttons_page_browse_listing` (TC-252) x3 изолированно подряд + красная проба (no-op keyevent вместо `KEYCODE_VOLUME_DOWN/UP`, временная правка, откачена `git checkout` — porcelain был пуст до правки) x1 + смок относящейся области: `test_reading_ux.py` + `test_infinite_scroll.py` + `test_settings.py` + `test_volume_paging.py` целиком | TC-252 изолированно: **PASSED/PASSED/PASSED**, 53.85s/52.03s/49.69s, `PYTEST_EXIT=0` каждый раз. Красная проба: **FAILED** — `TimeoutError: клавиша громкости KEYCODE_VOLUME_DOWN не произвела наблюдаемого эффекта за 5с — похоже на тихо не сработавшее нажатие (adb.shell глотает returncode, см. AT-BUG-072) (after 5s)`, `PYTEST_EXIT=1`; откат подтверждён `git status --porcelain` (пусто) + побайтовым `diff` со scratchpad-копией. Смок области: **19 passed, 1 skipped in 1181.84s (0:19:41)**, `PYTEST_EXIT=0` (1 skip — предсуществующий, `test_debug_copy_url_toggle_both_directions_without_overlap`, TC-188-automate rework attempt2, не связан с этим ходом). `Get-Device` до серии → `emulator-5554` (DEVICE, позитивная сверка) | **Open → Fixed** (test-maintainer, критерий готовности выполнен: примитив `press_volume_key` с наблюдаемым оракулом, TC-252 зелёный 3x подряд, красная проба различает успех/тихий отказ нажатия, смок области без регресса) |
+| 2026-08-18T07:52:00Z | framework (test-only, HEAD не менялся этим ходом; commit `0f56b9c` — предыдущий Open→Fixed переход test-maintainer поверх коммита кода `9656fee`; `app-under-test` не затронут) | Независимый живой прогон: `test_volume_paging.py::test_volume_buttons_page_browse_listing[listing_paginated.mitm]` (TC-252) x1 изолированно. Device-free unit-регресс тронутой области: `test_recording_builder_unit.py` (покрывает `LISTING_PAGINATED_*`, тронутый этим фиксом фикстурный код) — весь файл. `Get-Device` до прогона → `emulator-5554` (DEVICE, позитивная сверка). TC-253/254/255 (из `test_cases` бага) — `automated_by: ""` в `test-cases/browser/TC-253.md`, `test-cases/browser/TC-254.md`, `test-cases/library/TC-255.md` (сверено чтением): прогон невозможен, не автоматизированы; это ОЖИДАЕМО по критерию готовности (минимум TC-252) и явно названо в `## Обсуждение` test-maintainer'ом — не регресс этого хода. Красная проба уже приложена test-maintainer в строке выше (независимо не повторялась — уже дословно приложена, различает успех/тихий отказ нажатия) | TC-252: **PASSED**, 57.10s, `PYTEST_EXIT=0`. `test_recording_builder_unit.py`: **64 passed in 0.34s**, `PYTEST_EXIT=0` | **Fixed → Verified**: независимый живой прогон TC-252 воспроизвёл зелёный на текущей сборке (device-free unit тронутой области тоже зелёный); критерий готовности (примитив + минимум один зелёный кейс + smoke без регресса) выполнен и подтверждён вторым, независимым прогоном |
 
 ## Обсуждение
+
+**2026-08-18T07:52:00Z — fix-verifier, D1: Fixed → Verified.** Прочитан
+артефакт целиком (Критерий готовности/Верификация/Обсуждение). Независимо
+(не полагаясь только на прогоны test-maintainer) прогнан живой TC-252
+(`test_volume_paging.py::test_volume_buttons_page_browse_listing`) на
+текущей сборке — **PASSED**, `PYTEST_EXIT=0` (см. таблицу). Дополнительно
+прогнан device-free unit-регресс `test_recording_builder_unit.py` (64
+теста, покрывает `LISTING_PAGINATED_*` — фикстурный код, тронутый этим
+фиксом) — **64 passed**, `PYTEST_EXIT=0`. `Get-Device` до прогона —
+`emulator-5554` (позитивная сверка присутствия устройства).
+
+Судьба остальных id из `test_cases`: TC-253/254/255 — `automated_by: ""`
+в соответствующих `test-cases/*.md` файлах (сверено чтением), прогон
+невозможен — не автоматизированы; критерий готовности требовал минимум
+ОДИН зелёный кейс (TC-252, что и выполнено), остальные явно вне скоупа
+этого B4-хода по записи test-maintainer выше — не регресс верификации.
+
+Мелкое расхождение замечено (не блокирует вердикт, для сведения):
+`## Обсуждение` test-maintainer называет TC-253/254/255 «остаются
+`status: Review`», но фактический статус в `test-cases/browser/TC-253.md`,
+`TC-254.md`, `test-cases/library/TC-255.md` и на борде — `Approved`
+(`tc-approved`) — статусы этим ходом не менялись ни тем воркером, ни этим;
+расхождение чисто текстовое (формулировка отчёта), не дефект кейсов.
+Также `test-cases/browser/TC-252.md::automated_by` пуст, хотя
+`framework/tests/test_volume_paging.py` несёт `@allure.id("TC-252")` —
+связка есть через allure-id, но метаданные TC-кейса не проставлены;
+это F1-территория (test-reviewer), докладываю как аналог рядом (D-0043),
+scope не расширяю.
+
+`app-under-test/` не затронут. Аналогов класса рядом с самим примитивом
+не замечено сверх уже названного.
 
 **2026-08-18T07:10:00Z — test-maintainer, B4: Open → Fixed.** Задача пришла
 как rework поверх `rejected/tooling` (routing-log `AT-BUG-072-B4-debt-

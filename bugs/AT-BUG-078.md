@@ -4,16 +4,16 @@ title: "TC-026 (long-press ссылки в WebView) не ассертирует 
 type: test_debt
 debt_kind: missing_evidence
 severity: minor
-status: Open
+status: Fixed
 found_in: "fix-verifier, D1-верификация BUG-059 (task RUN-D1-BUG-059-verify), 2026-08-15"
-fixed_in: ""
+fixed_in: "framework/tests/test_tabs.py (test-maintainer, B4, 2026-08-18)"
 last_seen_in: ""
 test_cases: ["TC-026"]
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-08-15T21:19:00Z"
-updated: "2026-08-15T21:19:00Z"
+status_since: "2026-08-18T08:20:00Z"
+updated: "2026-08-18T08:20:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -101,6 +101,7 @@ through openTab, so one counter covers both» — дословно из commit m
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-08-18 | dev-local 12 (без пересборки — правка только тестового кода) | TC-026 (`test_long_press_link_opens_background_tab_without_switching`) | 4× PASSED подряд (см. witness ниже); красная проба AssertionError на новом ассерте, откат байтовой копией подтверждён `git status --porcelain` пуст-до/пуст-после для чистого diff; `arch_check.py` — 0 ошибок (5 предзнак. warning не связаны); `python -m pytest scripts/tests -q` — 1494 passed, 1 skipped | test-maintainer: работа готова к верификации fix-verifier |
 
 ## Обсуждение
 
@@ -115,6 +116,51 @@ device-witness двери (а) через TC-176 и (ii) код-эмпирики
 `openTab`-пути для двери (б) — остаточный риск двери (б) полностью
 переносится в этот долг, отдельно не блокирует верификацию продуктового
 бага.
+
+**2026-08-18 — test-maintainer, B4 fix.** Добавлен вызов
+`browser_steps.assert_opened_in_background_snackbar_text(driver, "Opened
+in background (1 tab)")` в `test_long_press_link_opens_background_tab_without_switching`
+(`framework/tests/test_tabs.py:299-308`), сразу после `long_press_work_link`
+и до `assert_tab_strip_visible`/переключения на фоновую вкладку — примитив
+переиспользован без дублирования (используется также в TC-176). Текст
+"(1 tab)" (единственное число) подтверждён по `MainActivity.kt:344-345`
+(`plural = if (signal.openedCount == 1) "tab" else "tabs"`) — в этом
+сценарии ровно ОДНО фоновое открытие за burst, в отличие от TC-176 (2
+открытия, "(2 tabs)").
+
+Живой прогон на текущей сборке (dev-local 12, без пересборки — правка
+только тестового кода): 3× PASSED подряд ДО красной пробы + 1× PASSED
+ПОСЛЕ отката красной пробы (итого 4× зелёных). Witness (дословный хвост
+последнего прогона):
+```
+tests/test_tabs.py::test_long_press_link_opens_background_tab_without_switching[listing_basic.mitm] PASSED [100%]
+AT-BUG-026 device-liveness guard: recoveries this session = 0/2
+============================= 1 passed in 34.41s ==============================
+PYTEST_EXIT=0
+```
+
+Красная проба: временно подменил ожидаемый текст на `"Opened in
+background (2 tabs)"` (тестовый код, `app-under-test/` не трогал — правка
+продуктового счётчика недоступна агенту test-maintainer по границам
+роли). Прогон дал `FAILED`, AssertionError ИМЕННО на новом ассерте:
+`AssertionError: текст snackbar не совпадает дословно: 'Opened in
+background (1 tab)' != 'Opened in background (2 tabs)'`
+(`steps\browser_steps.py:2375`, вызван из `tests\test_tabs.py:307`) —
+подтверждает различающую силу ассерта отдельно от двери (а). Откат —
+байтовой копией (`scratchpad/test_tabs.py.AT-BUG-078.pre-redprobe.bak`,
+снятой ДО порчи с уже применённым фиксом): `git status --porcelain --
+framework/tests/test_tabs.py` до порчи и после отката — одинаковый
+результат `M framework/tests/test_tabs.py` (тот же чистый diff фикса,
+diff байтовых копий — `IDENTICAL`).
+
+`arch_check.py`: 0 ошибок, 5 предсуществующих warning (2 allowlisted
+tests-import исключения, 1 rule3-warning на TC-176 — не связаны с этой
+правкой). `python -m pytest scripts/tests -q`: 1494 passed, 1 skipped —
+без регресса.
+
+Статус переведён `Open → Fixed` (guard-переход B4). Верификация —
+fix-verifier (сборку приложения ждать не нужно, продуктовый код не
+менялся).
 
 ## Чек-лист качества
 - [x] Проверены дубликаты: grep `bugs/` по `TC-026`/`assert_opened_in_background_snackbar_text` — единственное упоминание отсутствия ассерта до этого файла.

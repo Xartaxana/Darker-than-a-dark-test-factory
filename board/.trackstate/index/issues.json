@@ -7284,7 +7284,7 @@
     "epicPath": null,
     "summary": "Нет автоматизационного примитива нажатия клавиш громкости (KEYCODE_VOLUME_UP/DOWN) — блокирует листание страниц кнопками громкости",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -7295,8 +7295,8 @@
       "test_case:TC-255",
       "sev:major"
     ],
-    "updated": "2026-08-15T00:10:14Z",
-    "resolution": null,
+    "updated": "2026-08-18T07:52:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -7419,14 +7419,14 @@
     "epicPath": null,
     "summary": "test_heartbeat_wrap.py::test_happy_path_order_and_child_env падает детерминированно, когда `python -m pytest scripts/tests` запущен ИЗ сессии, уже несущей AO3_LOOP_HOLDER (вложенный heartbeat)",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-08-15T20:45:00Z",
+    "updated": "2026-08-18T07:40:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -7440,7 +7440,7 @@
     "epicPath": null,
     "summary": "TC-026 (long-press ссылки в WebView) не ассертирует ТЕКСТ снекбара «Opened in background (N tabs)» — дверь (б) BUG-059 наблюдаемо не покрыта",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -7448,7 +7448,7 @@
       "test_case:TC-026",
       "sev:minor"
     ],
-    "updated": "2026-08-15T21:19:00Z",
+    "updated": "2026-08-18T08:20:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -7462,14 +7462,14 @@
     "epicPath": null,
     "summary": "Квотирование shell-команд в adb.py неполное: run_as_file_or_raise и push_app_file интерполируют пути БЕЗ защиты",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-08-16T00:15:00Z",
+    "updated": "2026-08-18T07:58:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -7528,7 +7528,7 @@
     "epicPath": null,
     "summary": "TC-112 (test_favorite_rating_does_not_download_when_auto_download_off) падает на assert_work_not_in_files_tab при прогоне ВСЕГО test_downloads.py, но 1/1 зелёный в изолированном перезапуске — order/state-зависимый флейк, не трогает Settings/find_row_sibling код",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -7536,8 +7536,8 @@
       "test_case:TC-112",
       "sev:major"
     ],
-    "updated": "2026-08-17T08:25:19Z",
-    "resolution": null,
+    "updated": "2026-08-18T06:18:06Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -7667,7 +7667,7 @@
       "test_case:TC-020",
       "sev:minor"
     ],
-    "updated": "2026-08-16T02:20:00Z",
+    "updated": "2026-08-18T06:22:30Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -7688,7 +7688,7 @@
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-08-16T22:01:29Z",
+    "updated": "2026-08-18T06:45:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -8825,7 +8825,7 @@
     "labels": [
       "stage:story-automation",
       "регресс сборки: smoke RUN-20260816-1758 49/49 · чисто · regression RUN-20260816-1831 289/290 · разобрано · новых багов в прогоне: 1",
-      "багов на кейсах стори: 1"
+      "багов на кейсах стори: 0"
     ],
     "updated": "2026-08-14T23:12:35Z",
     "resolution": null,

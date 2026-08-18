@@ -155,8 +155,14 @@ def test_happy_path_order_and_child_env(tmp_path, orch_log, monkeypatch):
     # целиком (как в test_build_watch.py::test_fetch_env_extra_preserves_
     # os_environ), не только одного ключа PATH — env-надбавка МИНУС
     # AO3_LOOP_HOLDER обязана байт-в-байт совпасть с os.environ.
+    # AT-BUG-077 фикс: AO3_LOOP_HOLDER вычёркивается из ОБЕИХ частей —
+    # если тестовый процесс сам является дочерним процессом активного
+    # heartbeat-цикла (вложенный запуск), os.environ уже несёт унаследо-
+    # ванный AO3_LOOP_HOLDER внешнего цикла; вычёркивание только слева
+    # ложно ломало сравнение в этом сценарии.
     without_extra = {k: v for k, v in captured["env"].items() if k != "AO3_LOOP_HOLDER"}
-    assert without_extra == dict(os.environ)
+    ambient_env = {k: v for k, v in os.environ.items() if k != "AO3_LOOP_HOLDER"}
+    assert without_extra == ambient_env
     text = _read_orch(orch_log)
     assert "exit=0" in text
 
