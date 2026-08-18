@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import re
+import shlex
 import subprocess
 import sys
 import time
@@ -390,10 +391,36 @@ def run_as_file_or_raise(path: str, timeout: float = settings.ADB_SHELL_TIMEOUT)
       с непустым содержимым — подозрительная смесь) -> `RuntimeError` с сырым
       выводом. Раньше (AT-BUG-055) такой вход молча превращался в `""`, и
       вызывающий код (`_parse_persisted_tabs`) штатно трактовал нечитаемый
-      ответ как «0 вкладок» — неотличимо от реального пустого состояния."""
+      ответ как «0 вкладок» — неотличимо от реального пустого состояния.
+
+    AT-BUG-079 (симметричный B4-фикс класса AT-BUG-069, «Чини класс, а не
+    экземпляр»): `path` раньше интерполировался БЕЗ кавычек вовсе. В отличие
+    от `pull_app_file` (единственный явный `sh -c` уровень — argv передаётся
+    ОТДЕЛЬНЫМИ элементами напрямую в `subprocess.run`, adb сам восстанавливает
+    границы аргументов на удалённой стороне), эта функция идёт через `shell()`
+    — ОДНА pre-joined python-строка, отправляемая `adb shell <строка>` ОДНИМ
+    argv-элементом: `adbd` парсит её implicit-remote-shell'ом РАЗ (извлекая
+    аргумент `-c` для явного ВНУТРЕННЕГО `sh -c`), а затем ВНУТРЕННИЙ `sh -c`
+    парсит СВОЙ аргумент ЕЩЁ РАЗ как отдельную команду — путь проходит ДВА
+    shell-парсинга, не один. Поэтому кавычек вокруг `path` (защита только
+    внутреннего уровня) недостаточно самой по себе: собранная `-c`-строка
+    целиком дополнительно квотируется `shlex.quote()` для ВНЕШНЕГО уровня —
+    это гарантирует, что implicit remote shell доставит её ВНУТРЕННЕМУ `sh -c`
+    буквально (включая наши ручные кавычки вокруг `path`), не разбив на
+    отдельные аргументы по пробелам. Одинарная кавычка ВНУТРИ `path` отклоняется
+    `ValueError` ДО похода на устройство — тот же fail-closed приём, что
+    `pull_app_file` (AT-BUG-069 rework attempt 2): она сломала бы само
+    квотирование внутреннего уровня."""
+    if "'" in path:
+        raise ValueError(
+            f"run_as_file_or_raise: path содержит одинарную кавычку "
+            f"({path!r}) — небезопасно для квотирования в remote sh -c "
+            "'...'; ожидается module-level константа без кавычек "
+            "(AT-BUG-079, по образцу AT-BUG-069 rework attempt 2)."
+        )
+    inner_script = f"cat '{path}' 2>/dev/null; echo {_RUN_AS_FILE_RC_SENTINEL}$?"
     out = shell(
-        f"run-as {_PKG} sh -c 'cat {path} 2>/dev/null; "
-        f"echo {_RUN_AS_FILE_RC_SENTINEL}$?'",
+        f"run-as {_PKG} sh -c {shlex.quote(inner_script)}",
         timeout=timeout,
     )
     lines = out.splitlines()
@@ -558,8 +585,30 @@ def push_app_file(src: Path, rel_path: str) -> None:
     (уборка временного файла в /data/local/tmp) — best-effort: его отказ не
     искажает засеянные данные (файл уже скопирован в песочницу шагом выше),
     только оставляет мусор в /data/local/tmp, не критично для целостности
-    теста, поэтому оставлен как раньше (через `shell()`, без проверки)."""
+    теста, поэтому оставлен как раньше (через `shell()`, без проверки).
+
+    AT-BUG-079 (симметричный B4-фикс класса AT-BUG-069): `tmp`/`rel_path`
+    раньше интерполировались в remote `cp`-команду БЕЗ кавычек. В отличие от
+    `run_as_file_or_raise` здесь ТОЛЬКО ОДИН уровень удалённого shell-парсинга
+    — `run-as PKG cp SRC DST` эксекает `cp` НАПРЯМУЮ (без явного `sh -c`
+    внутри), аргументы `SRC`/`DST` уже разобраны implicit-remote-shell'ом
+    `adb shell <строка>` ДО того, как run-as их увидит — так что одиночного
+    квотирования одинарными кавычками (как и в `pull_app_file`) достаточно, не
+    нужен `shlex.quote()`-слой `run_as_file_or_raise`. Одинарная кавычка
+    ВНУТРИ `tmp`/`rel_path` отклоняется `ValueError` ДО похода на устройство
+    (тот же fail-closed приём, что `pull_app_file`/`run_as_file_or_raise`) —
+    проверяется ДО первого `_run()`, чтобы невалидный вход не оставил
+    частичное состояние (файл уже запушенный в /data/local/tmp, но не
+    скопированный в песочницу)."""
     tmp = f"/data/local/tmp/{src.name}"
+    if "'" in tmp or "'" in rel_path:
+        raise ValueError(
+            f"push_app_file: путь содержит одинарную кавычку (tmp={tmp!r}, "
+            f"rel_path={rel_path!r}) — небезопасно для квотирования в remote "
+            "shell-команде; ожидается module-level константа/безопасное имя "
+            "файла без кавычек (AT-BUG-079, по образцу AT-BUG-069 rework "
+            "attempt 2)."
+        )
     cp_push = _run(
         ["-s", settings.DEVICE_NAME, "push", str(src), tmp],
         timeout=settings.ADB_TRANSFER_TIMEOUT,
@@ -570,7 +619,7 @@ def push_app_file(src: Path, rel_path: str) -> None:
             "(AT-BUG-026 N3) — устройство недоступно/офлайн, сидинг-файл НЕ "
             f"попал на устройство. stdout={cp_push.stdout!r} stderr={cp_push.stderr!r}"
         )
-    cp_copy = _run(["-s", settings.DEVICE_NAME, "shell", f"run-as {_PKG} cp {tmp} {rel_path}"])
+    cp_copy = _run(["-s", settings.DEVICE_NAME, "shell", f"run-as {_PKG} cp '{tmp}' '{rel_path}'"])
     if cp_copy.returncode != 0:
         raise RuntimeError(
             f"run-as {_PKG} cp {tmp} {rel_path} завершился "
@@ -578,7 +627,7 @@ def push_app_file(src: Path, rel_path: str) -> None:
             f"попал в песочницу приложения. stdout={cp_copy.stdout!r} "
             f"stderr={cp_copy.stderr!r}"
         )
-    shell(f"rm -f {tmp}")
+    shell(f"rm -f '{tmp}'")
 
 
 # --- Разбор вывода adb-команд для нефункциональных замеров (TC-096/TC-099,
