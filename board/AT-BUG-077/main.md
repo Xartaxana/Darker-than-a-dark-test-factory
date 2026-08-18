@@ -2,7 +2,7 @@
 key: "AT-BUG-077"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p2"
 summary: "test_heartbeat_wrap.py::test_happy_path_order_and_child_env падает детерминированно, когда `python -m pytest scripts/tests` запущен ИЗ сессии, уже несущей AO3_LOOP_HOLDER (вложенный heartbeat)"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-18T07:40:00Z"
-updated: "2026-08-18T07:40:00Z"
+created: "2026-08-18T08:44:00Z"
+updated: "2026-08-18T08:44:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # test_heartbeat_wrap.py::test_happy_path_order_and_child_env падает детерминированно, когда `python -m pytest scripts/tests` запущен ИЗ сессии, уже несущей AO3_LOOP_HOLDER (вложенный heartbeat)
 
 _Спроецировано из `bugs/AT-BUG-077.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # AT-BUG-077 — `test_happy_path_order_and_child_env` не изолирован от ambient `AO3_LOOP_HOLDER`, ложно падает под вложенным heartbeat
 
@@ -110,8 +110,28 @@ QA-агентов регулярно запускаются как дети hear
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
 | 2026-08-18 | device-free (scripts/) | — (нет test_cases, device-free debt) | `test_happy_path_order_and_child_env` зелёный ОБОИМИ способами (с ambient `AO3_LOOP_HOLDER` и без); `python -m pytest scripts/tests -q` — 1494 passed, 1 skipped, 0 failed; `python scripts/arch_check.py` — ошибок 0 (5 предупреждений, все известные allowlist-исключения, не новые) | Fixed |
+| 2026-08-18 | framework, без сборки приложения | н/п, test_cases: [] carve-out, демонстрация — `python -m pytest scripts/tests -q` | fix-verifier (D1, mode=verify): моя ТЕКУЩАЯ headless-сессия САМА является дочерним процессом активного heartbeat-цикла — `echo $AO3_LOOP_HOLDER` → `heartbeat:2026-08-18T08:30:02Z:a349ffc6` (натуральная, не синтетическая проба на вложенность). Полный прогон `python -m pytest scripts/tests -q` из корня, с этим ambient-holder в env на всём протяжении: `1494 passed, 1 skipped in 34.65s`, `PYTEST_EXIT=0`. Точечно `python -m pytest scripts/tests/test_heartbeat_wrap.py::test_happy_path_order_and_child_env -v`: `PASSED`, `1 passed in 0.08s`, `PYTEST_EXIT=0`. Ни одного failed. `app-under-test/` не тронут. | Verified |
 
 ## Обсуждение
+
+**2026-08-18 — fix-verifier (D1, mode=verify), Fixed → Verified.**
+Carve-out применён: `type: test_debt`, `debt_kind: broken_environment`,
+`test_cases: []` — device-прогон продуктовых TC не применим по построению,
+подтверждающая замена — буквальное живое исполнение DoD-демонстрации из
+found_in (`python -m pytest scripts/tests -q`), не чтение диффа фикса.
+Дополнительно повезло с natural repro: эта headless-сессия САМА
+диспетчирована ПОД активным heartbeat-циклом — `AO3_LOOP_HOLDER` присутствовал
+в моём `os.environ` ВЕСЬ прогон (`heartbeat:2026-08-18T08:30:02Z:a349ffc6`),
+т.е. это не синтетическая проба через `$env:AO3_LOOP_HOLDER=...`, а тот же
+органический ambient-сценарий, что породил баг 2026-08-15. Результат —
+`1494 passed, 1 skipped, 0 failed`, точечно
+`test_happy_path_order_and_child_env` — `PASSED`. Обе стороны критерия
+готовности (регресс с ambient-холдером и без — без него тоже штатно
+проходит, т.к. я не размонтировала переменную ради чистоты — это уже
+демонстрировано test-maintainer'ом в предыдущей записи «Обсуждения» синтети-
+чески, здесь дополнительно подтверждён именно ambient-путь) выполнены.
+`status: Fixed → Verified`, `known_issue` уже `"false"` — не трогала.
+Изменений в `app-under-test/` и вне `bugs/AT-BUG-077.md` не вносила.
 
 **2026-08-18 — test-maintainer (B4, устранение test_debt), фикс.**
 Причина: `without_extra` вычёркивал `AO3_LOOP_HOLDER` только из ЛЕВОЙ части

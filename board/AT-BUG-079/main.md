@@ -2,7 +2,7 @@
 key: "AT-BUG-079"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p2"
 summary: "Квотирование shell-команд в adb.py неполное: run_as_file_or_raise и push_app_file интерполируют пути БЕЗ защиты"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-18T07:58:00Z"
-updated: "2026-08-18T07:58:00Z"
+created: "2026-08-18T08:41:00Z"
+updated: "2026-08-18T08:41:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Квотирование shell-команд в adb.py неполное: run_as_file_or_raise и push_app_file интерполируют пути БЕЗ защиты
 
 _Спроецировано из `bugs/AT-BUG-079.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # AT-BUG-079 — Asymmetric shell-quotation: run_as_file_or_raise и push_app_file БЕЗ кавычек
 
@@ -116,8 +116,45 @@ cp_copy = _run(["-s", settings.DEVICE_NAME, "shell",
 |---|---|---|---|
 | — | — | — | Open, ждёт разбора |
 | 2026-08-18T07:58:00Z | Device-free unit (не device-класс, латентный долг — критерий готовности не требует live-регресса): `framework/tests/test_adb_bug079_shell_quoting_unit.py` (новый, 7 тестов: 2× argv-quoted-space-path для `run_as_file_or_raise`/`push_app_file`, 2× красная проба «незаквоченная форма реально разбивает путь с пробелом», 3× ValueError fail-closed на embedded кавычку) + сиблинги того же файла (`test_adb_run_as_file_or_raise_unit.py` 14, `test_pull_app_file_fail_closed_unit.py` 13, `test_adb_install_package_wait_unit.py` 3, `test_subprocess_timeout_unit.py` 8) — 45 тестов, прогнано 3 раза подряд. Отдельно: `Invoke-Pytest tests/ --collect-only -q` — 511 тестов собраны без ошибок импорта (весь framework/tests/, не только adb-файлы). `python scripts/arch_check.py` — 0 ошибок, 5 WARN (все — предсуществующие известные исключения ALLOWLIST/rule3, не новые) | 45 passed x3 подряд (`PYTEST_EXIT=0` каждый раз, 3.50s/3.45s/0.62s). Collect-only: `511 tests collected in 0.32s`, `PYTEST_EXIT=0`. arch_check: `ошибок 0, предупреждений 5` (без изменений состава по сравнению с ДО правки) | **Open → Fixed**: критерий (обе функции симметрично квотированы по классу AT-BUG-069, красная проба различает квотированную/неквотированную форму, весь relevant test-файл(ы) зелёные 3x подряд, arch_check чист, ни одной правки в app-under-test/) выполнен |
+| 2026-08-18T08:41:00Z | framework, без сборки приложения (test_debt, `debt_kind: broken_environment`); TC: н/п, `test_cases: []` carve-out (устройственного предмета нет — квотирование внутри framework/core/adb.py, device-прогон не может исполнить проверяемое поведение иначе, чем device-free юнитом); демонстрация — `framework/tests/test_adb_bug079_shell_quoting_unit.py`, 7 device-free тестов | Канонической формой `Invoke-Pytest tests/test_adb_bug079_shell_quoting_unit.py -v` (путь относительно `framework/`, первая попытка `framework/tests/...` дала `ERROR: file or directory not found` — tooling-промах, не факт о тестах): `collected 7 items`, все 7 PASSED (`test_run_as_file_or_raise_path_with_space_survives_both_shell_layers`, `test_unquoted_form_would_split_space_path_into_two_tokens`, `test_run_as_file_or_raise_path_with_single_quote_rejected`, `test_push_app_file_paths_with_space_survive_single_shell_layer`, `test_push_app_file_unquoted_form_would_split_space_path`, `test_push_app_file_rel_path_with_single_quote_rejected`, `test_push_app_file_tmp_with_single_quote_rejected`), `7 passed in 0.07s`, `PYTEST_EXIT=0`. Структурная сверка `framework/core/adb.py` (прочитан целиком в релевантных диапазонах): `run_as_file_or_raise` (строки 421-425) строит `inner_script = f"cat '{path}' 2>/dev/null; echo {_RUN_AS_FILE_RC_SENTINEL}$?"` и отправляет `shell(f"run-as {_PKG} sh -c {shlex.quote(inner_script)}", ...)` — двухслойное квотирование (одинарные кавычки внутреннего уровня + `shlex.quote()` внешнего) на месте; ValueError-guard на `"'" in path` строки 414-420 ДО построения команды. `push_app_file` (строка 622) строит `f"run-as {_PKG} cp '{tmp}' '{rel_path}'"` — одинарные кавычки на месте; ValueError-guard на `"'" in tmp or "'" in rel_path` строки 604-611 ДО первого `_run()`. Оба совпадают с `fixed_in`-описанием дословно | **Fixed → Verified**: 7/7 зелёных на канонической форме, структурная сверка кода подтверждает описанное двухслойное/одинарное квотирование и fail-closed guard'ы в точности как заявлено в `fixed_in`; `test_cases: []` carve-out (test_debt/broken_environment без device-прогона) применён по правилу «Границы»; ни одного изменения в `app-under-test/` |
 
 ## Обсуждение
+
+**[fix-verifier @ 2026-08-18T08:41:00Z] D1: Fixed → Verified.**
+
+Carve-out применён (обоснование замены прогона): `type: test_debt`,
+`debt_kind: broken_environment`, `test_cases: []` — устройственного предмета
+у долга нет (квотирование remote-shell-команд внутри `framework/core/adb.py`,
+device-прогон не исполняет ничего сверх того, что исполняет device-free
+юнит); замена — фактическое исполнение (не чтение/парсинг) нового тестового
+файла `framework/tests/test_adb_bug079_shell_quoting_unit.py`, заявленного в
+`fixed_in` как DoD-демонстрация.
+
+Прогон канонической формой (`Invoke-Pytest`, путь относительно `framework/`
+— `tests/test_adb_bug079_shell_quoting_unit.py`; первая попытка с префиксом
+`framework/` дала `ERROR: file or directory not found`, это промах вызова,
+исправлен и не влияет на вердикт): 7 collected, 7 passed, `PYTEST_EXIT=0`.
+
+Структурно прочитан `framework/core/adb.py` в местах, названных в
+`fixed_in`: `run_as_file_or_raise` (строки 414-425) — guard `if "'" in path:
+raise ValueError(...)` ДО построения команды, затем `inner_script =
+f"cat '{path}' 2>/dev/null; echo {_RUN_AS_FILE_RC_SENTINEL}$?"` и
+`shell(f"run-as {_PKG} sh -c {shlex.quote(inner_script)}", ...)` — ровно
+двухслойное квотирование (одинарные кавычки внутреннего `sh -c` +
+`shlex.quote()` внешнего implicit remote shell), как описано в `fixed_in`.
+`push_app_file` (строки 604-622) — guard `if "'" in tmp or "'" in rel_path:
+raise ValueError(...)` ДО первого `_run()`, затем `f"run-as {_PKG} cp
+'{tmp}' '{rel_path}'"` — одинарные кавычки, один shell-слой, как описано.
+Оба места совпадают с текстом `fixed_in` дословно — не только докстринг
+функций в коде это подтверждает независимо от таблицы теста.
+
+Дефектов-собратьев не замечено (класс уже был закрыт полностью самим B4:
+весь `adb.py` прочитан test-maintainer'ом в предыдущей записи, остальные
+`run_as("sh -c '...'")`-вызовы используют только module-константы).
+
+`app-under-test/` не тронут. status: Fixed → Verified, `known_issue`
+остаётся `"false"` (был `"false"` уже на Fixed — верно, долг не «известная
+проблема»).
 
 **[test-maintainer @ 2026-08-18T07:58:00Z] B4: Open → Fixed.**
 

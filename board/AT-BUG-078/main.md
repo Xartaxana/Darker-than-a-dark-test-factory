@@ -2,7 +2,7 @@
 key: "AT-BUG-078"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p2"
 summary: "TC-026 (long-press ссылки в WebView) не ассертирует ТЕКСТ снекбара «Opened in background (N tabs)» — дверь (б) BUG-059 наблюдаемо не покрыта"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-18T08:20:00Z"
-updated: "2026-08-18T08:20:00Z"
+created: "2026-08-18T09:05:00Z"
+updated: "2026-08-18T09:05:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # TC-026 (long-press ссылки в WebView) не ассертирует ТЕКСТ снекбара «Opened in background (N tabs)» — дверь (б) BUG-059 наблюдаемо не покрыта
 
 _Спроецировано из `bugs/AT-BUG-078.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # AT-BUG-078 — `test_long_press_link_opens_background_tab_without_switching` (TC-026) не проверяет текст снекбара фонового открытия
 
@@ -101,6 +101,7 @@ through openTab, so one counter covers both» — дословно из commit m
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
 | 2026-08-18 | dev-local 12 (без пересборки — правка только тестового кода) | TC-026 (`test_long_press_link_opens_background_tab_without_switching`) | 4× PASSED подряд (см. witness ниже); красная проба AssertionError на новом ассерте, откат байтовой копией подтверждён `git status --porcelain` пуст-до/пуст-после для чистого diff; `arch_check.py` — 0 ошибок (5 предзнак. warning не связаны); `python -m pytest scripts/tests -q` — 1494 passed, 1 skipped | test-maintainer: работа готова к верификации fix-verifier |
+| 2026-08-18 | dev-local 12, source_commit `aa377e0ec9664fcd5439fec9391638fabf94f448` (без пересборки — верификация долга тестового кода, продукт не менялся; `state/app-under-test.yaml` built_at 2026-08-16T17:53:45Z) | TC-026 (`test_long_press_link_opens_background_tab_without_switching`) | Независимый живой прогон fix-verifier (`Invoke-Pytest tests/test_tabs.py::test_long_press_link_opens_background_tab_without_switching -v`): `tests/test_tabs.py::test_long_press_link_opens_background_tab_without_switching[listing_basic.mitm] PASSED [100%]`, `AT-BUG-026 device-liveness guard: recoveries this session = 0/2`, `1 passed in 35.01s`, `PYTEST_EXIT=0`. Чтением исходника подтверждён вызов `browser_steps.assert_opened_in_background_snackbar_text(driver, "Opened in background (1 tab)")` на `tests/test_tabs.py:307-308`, сразу после `long_press_work_link` (строка 297) и до `assert_tab_strip_visible` (строка 311) — ассерт из «Критерия готовности» действительно исполняется в этом прогоне, не только присутствует в диффе | **Verified** |
 
 ## Обсуждение
 
@@ -160,6 +161,27 @@ tests-import исключения, 1 rule3-warning на TC-176 — не связ
 Статус переведён `Open → Fixed` (guard-переход B4). Верификация —
 fix-verifier (сборку приложения ждать не нужно, продуктовый код не
 менялся).
+
+**2026-08-18 — fix-verifier, D1.** Независимый живой прогон (не reuse-witness
+test-maintainer'а) той же командой из DoD: `Invoke-Pytest
+tests/test_tabs.py::test_long_press_link_opens_background_tab_without_switching
+-v` — `PASSED`, `PYTEST_EXIT=0`, полный вывод в таблице выше. Сверено чтением
+`tests/test_tabs.py:299-308`: вызов `assert_opened_in_background_snackbar_text`
+с дословным ожидаемым текстом `"Opened in background (1 tab)"` присутствует и
+исполнен именно ЗА тем прогоном, что дал PASSED (не только в диффе фикса).
+Продуктовая сборка не менялась (`state/app-under-test.yaml`, source_commit
+`aa377e0e`, built_at 2026-08-16) — это ожидаемо для `test_debt`-долга: критерий
+D1 «сборка новее found_in» здесь не применим буквально (found_in —
+verify-сессия BUG-059 от 2026-08-15 на этой же сборке; сама сборка не
+менялась ни там, ни здесь, менялся только тестовый код framework/tests) —
+DoD диспатча явно предписал прогон на текущей сборке без ожидания
+пересборки, это и сделано. `status: Fixed → Verified`, `known_issue`
+остаётся `"false"` (был `"false"` уже до этого — не «известная проблема»,
+это закрытый тестовый долг). Лок снят.
+
+**Дефекты-собратья (D-0043):** аналог не замечен — область (снекбар фонового
+открытия вкладки) исчерпана двумя дверьми (а)/(б), обе теперь наблюдаемо
+покрыты (TC-176 и TC-026 соответственно).
 
 ## Чек-лист качества
 - [x] Проверены дубликаты: grep `bugs/` по `TC-026`/`assert_opened_in_background_snackbar_text` — единственное упоминание отсутствия ассерта до этого файла.

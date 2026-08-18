@@ -7419,15 +7419,15 @@
     "epicPath": null,
     "summary": "test_heartbeat_wrap.py::test_happy_path_order_and_child_env падает детерминированно, когда `python -m pytest scripts/tests` запущен ИЗ сессии, уже несущей AO3_LOOP_HOLDER (вложенный heartbeat)",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-08-18T07:40:00Z",
-    "resolution": null,
+    "updated": "2026-08-18T08:44:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -7440,7 +7440,7 @@
     "epicPath": null,
     "summary": "TC-026 (long-press ссылки в WebView) не ассертирует ТЕКСТ снекбара «Opened in background (N tabs)» — дверь (б) BUG-059 наблюдаемо не покрыта",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -7448,8 +7448,8 @@
       "test_case:TC-026",
       "sev:minor"
     ],
-    "updated": "2026-08-18T08:20:00Z",
-    "resolution": null,
+    "updated": "2026-08-18T09:05:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -7462,15 +7462,15 @@
     "epicPath": null,
     "summary": "Квотирование shell-команд в adb.py неполное: run_as_file_or_raise и push_app_file интерполируют пути БЕЗ защиты",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-08-18T07:58:00Z",
-    "resolution": null,
+    "updated": "2026-08-18T08:41:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },

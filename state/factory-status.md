@@ -1,15 +1,15 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-18T08:00:26Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-18T10:36:21Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
 - Сборка: dev-local (versionCode 12), commit `aa377e0e`, built_at 2026-08-16T17:53:45Z
-- smoke: Closed · smoke_freshness_hours: **37.6** (RUN-20260816-1758)
-- regression: Triaged · regression_freshness_hours: **35.1** (RUN-20260816-1831)
-- canary: Triaged · canary_freshness_hours: **332.3** (RUN-20260804-1317)
+- smoke: Closed · smoke_freshness_hours: **40.2** (RUN-20260816-1758)
+- regression: Triaged · regression_freshness_hours: **37.7** (RUN-20260816-1831)
+- canary: Triaged · canary_freshness_hours: **334.9** (RUN-20260804-1317)
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **2**
 - p0_automation_coverage: **100%** (37/37)
@@ -70,15 +70,12 @@ story-карточки: стадии см. docs/05-board.md §Story
 - BUG-012 [minor] Intended — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
 - BUG-013 [minor] Intended — Смена темы, затем немедленный kill процесса (<100 мс) теряет theme_mode — выбор темы не персистится
 
-## Test debt (9)
+## Test debt (6)
 
 - AT-BUG-068 [broken_environment] Blocked — navigator.clipboard.writeText() отклоняется DOMException 'Write permission denied' в тестовом WebView — блокирует Then «Copied!» TC-188
 - AT-BUG-073 [missing_fixture] Open — Нет автоматизационной инфраструктуры для области sync: мок GitLab-сниппета (/api/v4/snippets), сидер sync_tombstones, возврат id профиля из seed_filter_profiles, перехват исходящего тела публикации
 - AT-BUG-075 [flaky_test] Open — TC-176 burst-окно: натуральный запас tap1->tap2 ~0.7-0.85с даже после классовой правки open_in_background_via_overlay — ниже критик-ориентира ≥1с, дальнейшее ужатие требует правок вне манифеста rework attempt2
 - AT-BUG-076 [missing_fixture] Open — Методическая норма Data Setup «auto_apply_filter материализуется только фактическим переключением тумблера» жила только прозой закрытого CH-010 — не была зафиксирована постоянным носителем, читаемым будущими test-designer-сессиями
-- AT-BUG-077 [broken_environment] Fixed — test_heartbeat_wrap.py::test_happy_path_order_and_child_env падает детерминированно, когда `python -m pytest scripts/tests` запущен ИЗ сессии, уже несущей AO3_LOOP_HOLDER (вложенный heartbeat)
-- AT-BUG-078 [missing_evidence] Fixed — TC-026 (long-press ссылки в WebView) не ассертирует ТЕКСТ снекбара «Opened in background (N tabs)» — дверь (б) BUG-059 наблюдаемо не покрыта
-- AT-BUG-079 [broken_environment] Fixed — Квотирование shell-команд в adb.py неполное: run_as_file_or_raise и push_app_file интерполируют пути БЕЗ защиты
 - AT-BUG-083 [flaky_test] Open — assert_work_not_in_tab гонится с анимацией HorizontalPager Library (тот же класс, что AT-BUG-082, но на ЛЮБОЙ вкладке, не только FILES) — не почин, только заведён (D-0043 queued follow-up)
 - AT-BUG-085 [flaky_test] Open — assert_comment_collapsed_with_text читает RatingOverlay.comment_expanded() сразу после save_note() без settle — TC-115 красный в полном test_downloads.py (структурно не связан с AT-BUG-082 fix)
 
@@ -125,6 +122,6 @@ story-карточки: стадии см. docs/05-board.md §Story
 - [2026-08-16T00:12:38Z] **QAREADY-SYNC-RACE-BUG-065** [resolved:lead-gitlab-race-0816] — ЗАКРЫТО 2026-08-16 полным Lead (Opus), тот же корень и та же проверка, что у `QAREADY-SYNC-RACE-BUG-058` (см. строку выше): нота `[gitlab:dyakagreen @ 2026-08-15T23:08:38Z]` втянута, label-событие применено → **BUG-065 Open → Fixed, `awaiting: qa`**; `gitlab_sync --check` → «все BUG-* синхронизированы». Скрипт сохранил ярлык вместо затирания сигнала разработчика — штатное поведение. BUG-065 — кандидат D1 следующего прохода. Исходный текст — история: BUG-065: gitlab_sync собрался снять ярлык qa-status::QAready (внутренний статус Open — Open|Reopened, сигнал ещё не сведён) — вероятная гонка с gitlab_inbound (ярлык поставлен разработчиком, ещё не обработан). Ярлык СОХРАНЁН, снятие пропущено; разберитесь и пометьте [resolved:<task_id>] после проверки.
 - [2026-08-16T05:30:32Z] **BUG-068** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-14T03:49:31Z | нужно: ответить в ## Обсуждение
 - [2026-08-16T05:30:32Z] **BUG-070** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-14T03:49:31Z | нужно: ответить в ## Обсуждение
-- [2026-08-16T20:00:02Z] **FACTORY-STALLED** [factory:stalled] — mode активный ('active'), лок есть, тишина 90.0 мин (порог 90 мин); зафиксировано 2026-08-17T12:00:02Z; вариант снятия лока — `python scripts/loop_lock.py release --force`
+- [2026-08-16T20:00:02Z] **FACTORY-STALLED** [resolved:factory-watchdog-recovered] [factory:stalled] — восстановлено 2026-08-18T10:30:02Z
 - [2026-08-17T02:46:22Z] **QAREADY-SYNC-RACE-BUG-019** — BUG-019: gitlab_sync собрался снять ярлык qa-status::QAready (внутренний статус Reopened — Open|Reopened, сигнал ещё не сведён) — вероятная гонка с gitlab_inbound (ярлык поставлен разработчиком, ещё не обработан). Ярлык СОХРАНЁН, снятие пропущено; разберитесь и пометьте [resolved:<task_id>] после проверки.
 - [2026-08-17T16:00:02Z] **HEARTBEAT-CHILD-DEATH** [heartbeat:child-death] — 4 быстрых смертей подряд, окно 2026-08-17T14:30:09Z..2026-08-17T22:30:13Z, последний rc=1, runtime=8.2с; первые строки причины — logs/fallback-20260817.log; причину чинит оператор/Lead — сбросит сторож при живом прогрессе окна ИЛИ пробный запуск через 6ч (спека: docs/tasks/factory-visible-window.md §Д п.6 «Единый стартовый гейт»; реализация — factory_watchdog._series_blocked)
