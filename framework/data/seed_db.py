@@ -512,14 +512,22 @@ def read_filter_profiles() -> list[dict]:
         shutil.rmtree(tmp, ignore_errors=True)
 
 
-def seed_filter_profiles(profiles: list[tuple[str, str]]) -> None:
+def seed_filter_profiles(profiles: list[tuple[str, str]]) -> list[str]:
     """Заливает список `(name, queryString)` в таблицу `filter_profiles` — аналог
     `seed()` для `work_ratings`, но для сохранённых фильтр-профилей (TC-041/TC-042).
-    `id` (PK, TEXT) и `timestamp` генерируются автоматически (uuid4 / now-ms):
-    вызывающему коду (кейсам) они не нужны — сверка идёт по URL query-параметрам и
-    видимости профиля по имени в списке, не по внутреннему id. Если понадобится
-    детерминированный `id` (например, для точечного теста INSERT OR REPLACE),
-    используйте `_insert_rows_filter_profiles` напрямую.
+    `timestamp` генерируется автоматически (now-ms, ОДИН на весь список — тот же
+    приём, что `_insert_rows`).
+
+    AT-BUG-073 (критерий готовности п.3): возвращает список сгенерированных `id`
+    В ТОМ ЖЕ ПОРЯДКЕ, что `profiles` — нужен кейсам области `sync` (TC-212/213 и
+    т.п.), которым нужно адресовать remote-сторону (мок GitLab-снимка,
+    `gitlab_snippet_mock.py`) ПО ТОМУ ЖЕ `id`, что реально получила локальная
+    строка (иначе слияние LWW/надгробие не найдёт совпадения по `id`). Раньше
+    функция возвращала `None` — расширение сигнатуры backward-compatible: ВСЕ
+    существующие вызывающие (`app_steps.seed_filter_profiles`,
+    `conftest.py::filter_profile_applied_seeded`/`two_filter_profiles_seeded`)
+    зовут её как statement, возврат не читают. Если нужен ДЕТЕРМИНИРОВАННЫЙ (не
+    сгенерированный) `id` — используйте `_insert_rows_filter_profiles` напрямую.
     Приложение должно быть остановлено; после вызова стартуйте его заново (Room
     прочитает свежий файл) — тот же контракт, что у `seed()`."""
     adb.force_stop()
@@ -528,10 +536,92 @@ def seed_filter_profiles(profiles: list[tuple[str, str]]) -> None:
     try:
         db = _pull_baseline(tmp)
         now = int(time.time() * 1000)
-        rows = [(str(uuid.uuid4()), name, query_string, now) for name, query_string in profiles]
+        ids = [str(uuid.uuid4()) for _ in profiles]
+        rows = [
+            (profile_id, name, query_string, now)
+            for profile_id, (name, query_string) in zip(ids, profiles)
+        ]
         _insert_rows_filter_profiles(db, rows)
         adb.run_as(f"rm -f {_WAL} {_SHM}")
         adb.push_app_file(db, _DB_REL)
+        return ids
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+# --- Сидинг/чтение `sync_tombstones` (AT-BUG-073, критерий готовности п.2) ---
+# Схема: `app-under-test/.../data/model/SyncTombstone.kt` (Entity) —
+#   kind TEXT NOT NULL, id TEXT NOT NULL, deletedAt INTEGER NOT NULL,
+#   PRIMARY KEY(kind, id)
+# `kind` — `"work"`/`"profile"` (`SyncTombstone.KIND_WORK`/`KIND_PROFILE`). Нужна
+# кейсам, воспроизводящим «работа/профиль уже удалены ранее» БЕЗ прохода через UI
+# (TC-211: "работа Z несёт надгробие... прямой сидинг в Room, минуя UI") — по
+# образцу `_insert_rows_filter_profiles`/`seed_filter_profiles`, найденному
+# отсутствующим диагнозом AT-BUG-073 (`grep -rn "sync_tombstones" framework/`
+# пуст ДО этого изменения — сверено `seed_db.py:515-524`/пустым grep перед
+# началом работы над тикетом).
+
+
+def _insert_rows_sync_tombstones(db: Path, rows: list[tuple[str, str, int]]) -> None:
+    """rows: (kind, id, deletedAt). INSERT OR REPLACE по составному PK (kind, id) —
+    тот же паттерн, что `_insert_rows_filter_profiles`: повторный сидинг с тем же
+    (kind, id) заменяет надгробие (не дублирует, не падает на конфликте PK)."""
+    con = sqlite3.connect(db)
+    cur = con.cursor()
+    for kind, entity_id, deleted_at in rows:
+        cur.execute(
+            """INSERT OR REPLACE INTO sync_tombstones (kind, id, deletedAt)
+               VALUES (?,?,?)""",
+            (kind, entity_id, deleted_at),
+        )
+    con.commit()
+    con.close()
+
+
+def seed_sync_tombstones(rows: list[tuple[str, str, int]]) -> None:
+    """Заливает список `(kind, id, deletedAt)` напрямую в `sync_tombstones`,
+    минуя UI — аналог `seed_filter_profiles`, но для надгробий. `kind` —
+    `"work"`/`"profile"` (используйте `SYNC_TOMBSTONE_KIND_WORK`/`_PROFILE`
+    константы этого модуля, а не хардкод строк на стороне вызывающего теста).
+    Приложение должно быть остановлено; после вызова стартуйте его заново (Room
+    прочитает свежий файл) — тот же контракт, что у `seed()`/`seed_filter_profiles`."""
+    adb.force_stop()
+    ensure_db_initialized()
+    tmp = Path(tempfile.mkdtemp(prefix="ao3seed_"))
+    try:
+        db = _pull_baseline(tmp)
+        _insert_rows_sync_tombstones(db, rows)
+        adb.run_as(f"rm -f {_WAL} {_SHM}")
+        adb.push_app_file(db, _DB_REL)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+SYNC_TOMBSTONE_KIND_WORK = "work"
+SYNC_TOMBSTONE_KIND_PROFILE = "profile"
+
+
+def read_sync_tombstones() -> list[dict]:
+    """Пуллит ТЕКУЩУЮ БД приложения (без записи/сидинга) и читает
+    kind/id/deletedAt по каждой строке `sync_tombstones` — различающий оракул
+    TC-211 Then («надгробие Z ФИЗИЧЕСКИ снято... прямое чтение таблицы
+    sync_tombstones на устройстве не даёт строки для Z»), симметрично
+    `read_filter_profiles()`/`read_work_ratings()`.
+
+    Не требует остановленного приложения перед вызовом (только чтение) — тот же
+    контракт, что у `read_filter_profiles()`."""
+    tmp = Path(tempfile.mkdtemp(prefix="ao3read_"))
+    try:
+        db = _pull_baseline(tmp)
+        con = sqlite3.connect(db)
+        con.row_factory = sqlite3.Row
+        cur = con.execute("SELECT kind, id, deletedAt FROM sync_tombstones")
+        rows = [
+            {"kind": row["kind"], "id": row["id"], "deletedAt": row["deletedAt"]}
+            for row in cur
+        ]
+        con.close()
+        return rows
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

@@ -867,3 +867,56 @@ def assert_debug_copy_url_enabled(driver, expected: bool = True):
     assert actual == expected, (
         f"тумблер «Show copy-URL button» показывает {actual}, ожидали {expected}"
     )
+
+
+# --- Sync section (SettingsScreen.kt:1180-1280, AT-BUG-073: мок GitLab Snippet
+# API + инфраструктура области `sync`, см. `framework/data/gitlab_snippet_mock.py`) ---
+
+@allure.step("Given в Settings настроена синхронизация (instance={instance_url!r}, token={token!r}, snippet_id={snippet_id!r})")
+def configure_sync(driver, instance_url: str = "", token: str = "glpat-test-token",
+                   snippet_id: str = ""):
+    """Заполняет три поля секции Sync — запись в SharedPreferences немедленная
+    (см. `SettingsScreen.set_sync_config`), отдельного подтверждения не требует."""
+    SettingsScreen(driver).set_sync_config(instance_url, token, snippet_id)
+
+
+@allure.step("When пользователь нажимает «Sync» (Sync now)")
+def tap_sync_now(driver):
+    SettingsScreen(driver).tap_sync_now()
+
+
+@allure.step("Then появляется диалог «{title}»")
+def assert_sync_result_dialog(driver, title: str = "Sync complete", timeout: int | None = None):
+    assert SettingsScreen(driver).sync_result_dialog_visible(title, timeout=timeout), (
+        f"диалог «{title}» не появился после «Sync»"
+    )
+
+
+@allure.step("Then текст диалога результата синка содержит «{text}»")
+def assert_sync_result_dialog_contains(driver, text: str, timeout: int | None = None):
+    assert SettingsScreen(driver).sync_result_dialog_body_contains(text, timeout=timeout), (
+        f"текст диалога результата синка не содержит «{text}»"
+    )
+
+
+@allure.step("When диалог результата синка закрыт (OK)")
+def dismiss_sync_result_dialog(driver):
+    SettingsScreen(driver).dismiss_sync_result_dialog()
+
+
+@allure.step("Then надгробие sync_tombstones для {kind}/{entity_id} отсутствует")
+def assert_no_sync_tombstone(kind: str, entity_id: str, timeout: float | None = None):
+    """TC-211: различающий оракул «надгробие ФИЗИЧЕСКИ снято» (прямое чтение
+    `sync_tombstones`, `seed_db.read_sync_tombstones()`, AT-BUG-073) — опрашивает,
+    а не одноразовый снимок: `upsertWorkRating`/`upsertFilterProfile`
+    (`RatingRepository.kt`) пишут Room АСИНХРОННО относительно возврата UI-тапа
+    (`viewModelScope.launch`, тот же класс гонки, что `_poll_ratings_marker`
+    описывает для `work_ratings`)."""
+    def _absent() -> bool:
+        tombstones = seed_db.read_sync_tombstones()
+        return not any(t["kind"] == kind and t["id"] == entity_id for t in tombstones)
+
+    wait_for(
+        _absent, timeout=timeout,
+        message=f"надгробие {kind}/{entity_id} всё ещё присутствует в sync_tombstones",
+    )

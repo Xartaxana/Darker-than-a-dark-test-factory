@@ -4,6 +4,7 @@ from __future__ import annotations
 import allure
 from appium.webdriver.common.appiumby import AppiumBy
 
+from framework.config import settings
 from framework.core import waits as _waits
 from framework.core.waits import poll_for
 from framework.screens.base_screen import BaseScreen
@@ -522,6 +523,101 @@ class SettingsScreen(BaseScreen):
 
     def tap_stop_metadata_fetch(self):
         self.tap(self._METADATA_STOP_BUTTON)
+        return self
+
+    # --- Sync section (SettingsScreen.kt:1180-1280, AT-BUG-073) — три
+    # `InputField` (GitLab instance/Access token/Snippet ID) РЕНДЕРЯТСЯ native
+    # `android.widget.EditText` (тот же класс компонента, что `_RENAME_NAME_FIELD`/
+    # `browser_screen._FILTER_NAME_FIELD` — BasicTextField-обёртка) — на ГЛАВНОМ
+    # (не диалоговом) экране Settings это ЕДИНСТВЕННЫЕ три EditText в дереве
+    # (сверено с исходником: единственный ЧЕТВЁРТЫЙ EditText — поле диалога
+    # "Rename filter" — существует только при ОТКРЫТОМ диалоге, не конфликтует),
+    # ВСЕГДА в document order instance -> token -> snippetId (порядок композиции
+    # 1194 -> 1211 -> 1240) — та же disambiguation-стратегия "порядок среди
+    # заведомо единственных кандидатов", что уже используют `_RENAME_NAME_FIELD`
+    # (единственный EditText на экране в момент вызова). Settings — обычный
+    # прокручиваемый `Column` (verticalScroll), НЕ `LazyColumn` — все дети
+    # присутствуют в композиции независимо от текущей позиции скролла (тот же
+    # инвариант, на который полагается `swipe_to_text`/`UiScrollable` во ВСЁМ
+    # остальном файле), `find_elements` находит все три поля даже БЕЗ
+    # предварительного скролла к разделу "Sync" — `swipe_to_text` вызывается
+    # только чтобы получить диагностируемый assert при регрессии разметки.
+    _SYNC_EDIT_TEXTS = (AppiumBy.ANDROID_UIAUTOMATOR,
+                        'new UiSelector().className("android.widget.EditText")')
+    _SYNC_BUTTON_LOCATOR = (AppiumBy.XPATH, '//*[@text="Sync"]/..')
+
+    def set_sync_config(self, instance_url: str = "", token: str = "", snippet_id: str = "",
+                        timeout: int | None = None):
+        """Заполняет три поля секции Sync (пустая строка — оставить как есть
+        ПОСЛЕ `clear()`, т.е. реально ОЧИЩАЕТ поле — `instance_url=""` даёт
+        приложению использовать `SyncRepository.DEFAULT_INSTANCE`, см.
+        `SyncViewModel`/`SyncRepository.kt:62-63`: пустая/blank
+        `sync_gitlab_url` трактуется как «использовать дефолт»). Каждое поле —
+        `onValueChange` пишет в `SharedPreferences` СРАЗУ (`prefs.edit()...
+        apply()`, `SettingsViewModel.setSyncInstanceUrl/setSyncToken/
+        setSyncSnippetId`) — отдельной кнопки «Save» нет, ввод самодостаточен.
+
+        AT-BUG-073 (живая красная проба, rework attempt 2 — attempt 1's `poll_for`
+        НЕ закрыл гонку, тот же провал СТАБИЛЬНО держался весь бюджет
+        `settings.DEFAULT_TIMEOUT`, не транзиент): корень — якорь свайпа
+        `swipe_to_text("GitLab instance")` СТАВИТ заголовок секции у САМОЙ
+        НИЖНЕЙ кромки вьюпорта (settle-логика `_swipe_search`/
+        `_settle_clipped_anchor`, `check_bottom_edge=True` — свайп ОСТАНАВЛИВАЕТСЯ,
+        как только якорь стал виден, не продолжает дальше) — три поля секции
+        рендерятся НИЖЕ заголовка и физически не помещаются в оставшуюся часть
+        вьюпорта; Compose ОБРЕЗАЕТ (не просто визуально прячет — исключает из
+        accessibility-дерева) семантические узлы, целиком лежащие за клип-границей
+        `Modifier.verticalScroll`-контейнера, поэтому `find_elements` стабильно не
+        находит нижние поля, сколько ни опрашивай С ЭТОЙ позиции скролла. Якорь
+        `"Snippet ID"` (текст-подпись ТРЕТЬЕГО, последнего поля секции, СРАЗУ
+        предшествующий его `EditText` в document order) settle'ится у той же
+        нижней кромки, но геометрически это ставит ВСЮ группу из 3 полей ВЫШЕ
+        этой кромки (поля 1/2 идут раньше в потоке, всегда ближе к уже
+        просмотренной верхней части вьюпорта) — весь набор попадает в кадр
+        одновременно. `poll_for` остаётся (defence-in-depth на случай
+        recomposition-задержки ПОСЛЕ верного скролла), но корневая причина —
+        геометрия якоря, не гонка времени."""
+        assert self.swipe_to_text("Snippet ID"), (
+            "строка «Snippet ID» (Sync) не найдена прокруткой"
+        )
+        state: dict = {"fields": []}
+
+        def _all_fields_present() -> bool:
+            state["fields"] = self.driver.find_elements(*self._SYNC_EDIT_TEXTS)
+            return len(state["fields"]) >= 3
+
+        found = poll_for(_all_fields_present,
+                         timeout=timeout if timeout is not None else settings.DEFAULT_TIMEOUT)
+        assert found, (
+            f"ожидали 3 текстовых поля секции Sync (instance/token/snippetId), "
+            f"нашли {len(state['fields'])} — разметка секции могла измениться"
+        )
+        for field, value in zip(state["fields"][:3], (instance_url, token, snippet_id)):
+            field.clear()
+            if value:
+                field.send_keys(value)
+        return self
+
+    def sync_button_enabled(self, timeout: int | None = None) -> bool:
+        assert self.swipe_to_text("Sync now"), "строка «Sync now» не найдена прокруткой"
+        el = self.find(self._SYNC_BUTTON_LOCATOR, timeout=timeout)
+        return el.get_attribute("enabled") == "true"
+
+    def tap_sync_now(self):
+        assert self.swipe_to_text("Sync now"), "строка «Sync now» не найдена прокруткой"
+        self.tap(self._SYNC_BUTTON_LOCATOR)
+        return self
+
+    def sync_result_dialog_visible(self, title: str = "Sync complete", timeout: int | None = None) -> bool:
+        """`title` — «Sync complete» (`SyncState.Done`) или «Sync failed»
+        (`SyncState.Error`), SettingsScreen.kt:1436-1478."""
+        return self.is_present(self.by_text(title), timeout=timeout if timeout is not None else 15)
+
+    def sync_result_dialog_body_contains(self, text: str, timeout: int | None = None) -> bool:
+        return self.is_present(self.by_text_contains(text), timeout=timeout if timeout is not None else 5)
+
+    def dismiss_sync_result_dialog(self):
+        self.tap(self.by_text("OK"))
         return self
 
     # --- Show copy-URL button toggle (секция "Debug", SettingsScreen.kt:1064-1069,

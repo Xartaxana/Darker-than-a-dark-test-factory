@@ -28,7 +28,7 @@ from urllib.parse import urlparse
 
 from mitmproxy import connection, http
 from mitmproxy.connection import ConnectionState
-from mitmproxy.io import FlowWriter
+from mitmproxy.io import FlowReader, FlowWriter
 from mitmproxy.proxy.mode_specs import ProxyMode
 
 from framework.data.works import Work
@@ -286,12 +286,51 @@ def make_html_get_flow(url: str, body: str, status: int = 200) -> http.HTTPFlow:
     return flow
 
 
+def make_json_flow(
+    method: str, url: str, body: bytes, status: int = 200,
+    content_type: str = "application/json; charset=utf-8",
+) -> http.HTTPFlow:
+    """Обобщение `make_html_get_flow` на ПРОИЗВОЛЬНЫЙ метод/content-type (AT-BUG-073):
+    GitLab Snippet API мок (`framework/data/gitlab_snippet_mock.py`) бьёт GET
+    `.../raw`, POST `/api/v4/snippets`, PUT `/api/v4/snippets/{id}` — не только
+    GET и не HTML-тело, в отличие от `make_html_get_flow` (WebView-страницы).
+
+    Матчинг server-replay — тот же (scheme+method+path+query+host+port, см.
+    модульный докстринг), включая МЕТОД (в отличие от `make_html_get_flow`,
+    который всегда `GET`, здесь метод — параметр и участвует в матчинге).
+    Детерминированные id/таймстемпы — тот же приём, что `make_html_get_flow`
+    (без него `.mitm` менялся бы байт-в-байт при каждой перегенерации)."""
+    host = urlparse(url).hostname or "archiveofourown.org"
+    flow = http.HTTPFlow(_client_conn(url), _server_conn(host, url))
+    flow.id = _deterministic_id("flow", method, url)
+    flow.timestamp_created = 0
+    flow.request = http.Request.make(method, url, b"")
+    flow.request.timestamp_start = 0
+    flow.request.timestamp_end = 0
+    flow.response = http.Response.make(status, body, {"Content-Type": content_type})
+    flow.response.timestamp_start = 0
+    flow.response.timestamp_end = 0
+    return flow
+
+
 def write_flows(path: Path, flows: list[http.HTTPFlow]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "wb") as fo:
         writer = FlowWriter(fo)
         for f in flows:
             writer.add(f)
+
+
+def read_flows(path: Path) -> list[http.HTTPFlow]:
+    """Читает уже записанный `.mitm`-файл обратно в список flow (AT-BUG-073) —
+    нужен тестам области `sync`, которым приходится СОЧЕТАТЬ уже существующую
+    WebView-фикстуру (например `listing_basic.mitm` — тест одновременно
+    навигирует листинг И бьёт GitLab Snippet API) с динамически построенными
+    flow'ами GitLab-мока (`gitlab_snippet_mock.py`) в ОДНОМ `.mitm`-файле (один
+    mitmdump-процесс на тест — `framework/core/mitm.py::start_replay` принимает
+    ровно один `--server-replay` файл)."""
+    with open(path, "rb") as fo:
+        return list(FlowReader(fo).stream())
 
 
 # --- Разметка блёрба листинга — сверено с проверенными паттернами AO3 (см. модульный

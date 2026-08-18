@@ -977,6 +977,57 @@ def replay(request):
             mitm.clear_device_proxy()
 
 
+@pytest.fixture()
+def sync_replay():
+    """Фабрика ДИНАМИЧЕСКОГО replay для области `sync` (AT-BUG-073) — в отличие
+    от `replay` (indirect-параметризация СТАТИЧНЫМ именем файла из
+    `framework/data/recordings/`, известным на этапе collection), содержимое
+    мока GitLab-снимка (`gitlab_snippet_mock.py`) обычно зависит от ЛОКАЛЬНОГО
+    состояния, засеянного ВНУТРИ теста (например, `timestamp`, реально
+    выставленный `seed()`, должен совпасть/сравниться с удалённым значением) —
+    поэтому `.mitm`-файл строится ВНУТРИ тела теста, не может быть параметром
+    `@pytest.mark.parametrize(..., indirect=True)`.
+
+    Возвращает callable `start(flows_path)`, поднимающий ТОТ ЖЕ стек
+    device-proxy/mitmdump, что и `replay` (переиспользует те же приватные
+    хелперы модуля — `_ensure_replay_ca`/`_ensure_upstream_fast`/
+    `_proxy_reachable_timeout` — НЕ дублирует их логику, только точку, откуда
+    берётся сам flows-файл). Требует `@pytest.mark.replay` на тесте (тот же
+    marker, что `replay`) — окружение (CA/апстрим) то же самое.
+
+    Тест обязан вызвать `start(...)` РОВНО один раз (после того как построил
+    `.mitm` нужным ему содержимым, обычно ПОСЛЕ сидинга локального состояния,
+    т.к. содержимому мока часто нужен реально выставленный timestamp сидинга)
+    — teardown (`mitm.stop()`/`clear_device_proxy()`, тот же `try/finally`, что
+    у `replay`) срабатывает независимо от того, был ли `start()` вызван,
+    симметрично тому, что `replay`'s `finally` покрывает ЛЮБую точку отказа
+    setup'а."""
+    _ensure_replay_ca()
+    _ensure_upstream_fast()
+    proxy_reachable_timeout = _proxy_reachable_timeout()
+    started = {"value": False}
+
+    def _start(flows_path) -> None:
+        # ignore_content=True (AT-BUG-073, см. докстринг `mitm.start_replay`):
+        # GitLab Snippet API мок несёт POST/PUT с непредсказуемым (мерженным)
+        # телом запроса — без опции server-replay матчил бы ТОЛЬКО пустое
+        # тело GET (fetchRemote сработал бы), но PUT/POST publish уходил бы в
+        # live forward на реальный gitlab.com.
+        mitm.set_device_proxy()
+        mitm.start_replay(flows_path, ignore_content=True)
+        mitm.wait_device_proxy_reachable(timeout=proxy_reachable_timeout)
+        started["value"] = True
+
+    try:
+        yield _start
+    finally:
+        if started["value"]:
+            try:
+                mitm.stop()
+            finally:
+                mitm.clear_device_proxy()
+
+
 # --- download_oracle: глобальный инвариант-оракул скачиваний (BUG-014) ---
 # `DownloadRepository.downloadWork` (app-under-test) пишет файл в
 # `context.getExternalFilesDir("ao3_downloads")`, когда пользователь НЕ выбрал

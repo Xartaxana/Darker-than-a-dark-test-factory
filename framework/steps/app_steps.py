@@ -58,10 +58,13 @@ def seed_with_comment_ordered(rows: list[tuple[Work, str | None, str | None, str
 
 
 @allure.step("Given засеян(ы) filter-профиль(и): {profiles}")
-def seed_filter_profiles(profiles: list[tuple[str, str]]):
+def seed_filter_profiles(profiles: list[tuple[str, str]]) -> list[str]:
     """profiles: список (name, queryString) — сохранённые фильтр-поиски
-    (TC-021 round-trip filterProfiles; TC-041/TC-042)."""
-    seed_db.seed_filter_profiles(profiles)
+    (TC-021 round-trip filterProfiles; TC-041/TC-042). Возвращает сгенерированные
+    `id` в том же порядке (AT-BUG-073 критерий готовности п.3, см.
+    `seed_db.seed_filter_profiles`) — существующие вызывающие игнорируют возврат,
+    новые (область `sync`) могут его использовать."""
+    return seed_db.seed_filter_profiles(profiles)
 
 
 @allure.step("Given работа {work.title} засеяна с рейтингом {rating} и скачанным файлом")

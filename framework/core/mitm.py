@@ -376,7 +376,7 @@ def _spawn_and_wait_listening(args: list[str], ready_timeout: int) -> subprocess
         time.sleep(_START_RETRY_BACKOFF)
 
 
-def start_replay(flows_file: Path) -> None:
+def start_replay(flows_file: Path, ignore_content: bool = False) -> None:
     """Поднимает mitmdump, отдавая записанные флоу приложению. Блокируется до тех
     пор, пока порт не начнёт слушаться (см. `_spawn_and_wait_listening` —
     AT-BUG-043).
@@ -387,16 +387,39 @@ def start_replay(flows_file: Path) -> None:
       server_replay_extra=forward — незаписанные запросы уходят на живой сервер
         (без него они падают 404 и ломают загрузку);
       connection_strategy=lazy — не открывать соединение к серверу, пока не понадобится.
-    """
+
+    `ignore_content=False` (по умолчанию, байт-в-байт прежнее поведение ВСЕХ
+    существующих вызывающих без явного аргумента) — AT-BUG-073, живая находка:
+    `mitmproxy.addons.serverplayback._hash` матчит запрос ПО УМОЛЧАНИЮ ПО
+    `str(r.raw_content)` В ТОМ ЧИСЛЕ (`server_replay_ignore_content` option,
+    дефолт `False`) — модульный докстринг `recording_builder.py` («без
+    заголовков») это опускал, но для ВСЕГО существующего корпуса `.mitm`
+    (100% GET-запросы БЕЗ тела) это было безобидно: `b""` рекорда всегда
+    тривиально совпадает с `b""` живого GET. GitLab Snippet API мок
+    (`gitlab_snippet_mock.py`) первым в репозитории несёт POST/PUT с
+    НЕПРЕДСКАЗУЕМЫМ телом (мерженный JSON библиотеки, зависящий от состояния
+    устройства) — без `ignore_content=True` PUT/POST никогда бы не совпал с
+    записанным flow (записанное тело — плейсхолдер `b""`) и уходил бы в live
+    forward (живой воспроизведённый провал: `updateSnippet` -> реальный
+    gitlab.com -> HTTP 401 на фиктивный токен -> «Sync failed» вместо «Sync
+    complete»). `sync_replay` (conftest.py) зовёт ЭТУ функцию с
+    `ignore_content=True` — GET (fetchRemote) матчинг не меняется (пустое
+    тело и без опции матчилось тривиально), PUT/POST теперь матчит ТОЛЬКО по
+    scheme+method+path+query+host+port, как и предполагал докстринг
+    `recording_builder.py` (без опции это было НЕВЕРНО для тел с содержимым —
+    докстринг там тоже уточнён)."""
     global _proc
-    _proc = _spawn_and_wait_listening([
+    args = [
         *_mitmdump(), "--listen-host", "0.0.0.0", "--listen-port", _PORT,
         "--server-replay", str(flows_file),
         "--set", "server_replay_reuse=true",
         "--set", "server_replay_extra=forward",
         "--set", "connection_strategy=lazy",
-        "-q",
-    ], _READY_TIMEOUT)
+    ]
+    if ignore_content:
+        args += ["--set", "server_replay_ignore_content=true"]
+    args.append("-q")
+    _proc = _spawn_and_wait_listening(args, _READY_TIMEOUT)
     _assert_own_listener()
 
 
