@@ -117,6 +117,14 @@ ALLOWLIST: set[tuple[str, str]] = {
     # тот же случай, что AT-BUG-059/test_swipe_to_text_settle_unit.py выше;
     # перенос вне tests/ выпал бы из штатного прогона — тот же инвариант).
     ("tests/test_rename_name_verification_unit.py", "locators"),
+    # AT-BUG-082 (test-maintainer rework attempt 2, критик-вход opus,
+    # 2026-08-17): device-free юнит-проба `library_steps._poll_files_tab_absent`/
+    # `assert_work_not_in_files_tab` мокает `LibraryScreen.has_work` НА УРОВНЕ
+    # КЛАССА (не сам новый хелпер) — импорт `LibraryScreen` по существу
+    # необходим для мока конкретно ЭТОГО класса screens-слоя, тот же случай,
+    # что AT-BUG-059/AT-BUG-062 выше; перенос вне tests/ выпал бы из штатного
+    # прогона (тот же инвариант — сканер зеркалит pytest testpaths).
+    ("tests/test_library_files_tab_settle_unit.py", "locators"),
 }
 
 
