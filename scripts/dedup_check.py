@@ -69,64 +69,70 @@ STOPWORDS = set("""
 кейс тест works work это того чтобы если когда после перед
 """.split())
 
-# BASELINE — пары, УЖЕ существовавшие на момент введения детектора
-# (2026-08-18). Считаются, но не кричат: разбор существующего корпуса — работа
-# Lead по spec-p1-dedup, а не повод глушить сигнал о НОВЫХ дублях.
-# Формат: frozenset({id_a, id_b}).
-# Снят механически по фактическому корпусу на 2026-08-18 (49 пар). Пары НЕ
-# «признаны легитимными» — они признаны СУЩЕСТВУЮЩИМИ; каждая либо уйдёт в
-# Merged проходом Lead, либо будет объявлена не-дублем с обоснованием.
-# Удаление пары отсюда без разбора = молчаливое сокрытие, а не починка.
-BASELINE: set[frozenset] = {
-    frozenset({"TC-008", "TC-151"}),
-    frozenset({"TC-010", "TC-011"}),
-    frozenset({"TC-030", "TC-063"}),
-    frozenset({"TC-049", "TC-059"}),
-    frozenset({"TC-066", "TC-067"}),
-    frozenset({"TC-068", "TC-069"}),
-    frozenset({"TC-070", "TC-071"}),
-    frozenset({"TC-070", "TC-074"}),
-    frozenset({"TC-070", "TC-075"}),
-    frozenset({"TC-070", "TC-076"}),
-    frozenset({"TC-071", "TC-074"}),
-    frozenset({"TC-071", "TC-075"}),
-    frozenset({"TC-071", "TC-077"}),
-    frozenset({"TC-072", "TC-073"}),
-    frozenset({"TC-074", "TC-075"}),
-    frozenset({"TC-074", "TC-076"}),
-    frozenset({"TC-075", "TC-077"}),
-    frozenset({"TC-076", "TC-077"}),
-    frozenset({"TC-078", "TC-079"}),
-    frozenset({"TC-078", "TC-080"}),
-    frozenset({"TC-078", "TC-081"}),
-    frozenset({"TC-079", "TC-080"}),
-    frozenset({"TC-079", "TC-081"}),
-    frozenset({"TC-080", "TC-081"}),
-    frozenset({"TC-082", "TC-083"}),
-    frozenset({"TC-114", "TC-115"}),
-    frozenset({"TC-116", "TC-117"}),
-    frozenset({"TC-119", "TC-120"}),
-    frozenset({"TC-119", "TC-121"}),
-    frozenset({"TC-119", "TC-122"}),
-    frozenset({"TC-126", "TC-127"}),
-    frozenset({"TC-133", "TC-134"}),
-    frozenset({"TC-138", "TC-140"}),
-    frozenset({"TC-138", "TC-142"}),
-    frozenset({"TC-138", "TC-143"}),
-    frozenset({"TC-139", "TC-141"}),
-    frozenset({"TC-140", "TC-142"}),
-    frozenset({"TC-140", "TC-143"}),
-    frozenset({"TC-142", "TC-143"}),
-    frozenset({"TC-151", "TC-152"}),
-    frozenset({"TC-157", "TC-158"}),
-    frozenset({"TC-167", "TC-168"}),
-    frozenset({"TC-197", "TC-199"}),
-    frozenset({"TC-197", "TC-200"}),
-    frozenset({"TC-199", "TC-200"}),
-    frozenset({"TC-200", "TC-201"}),
-    frozenset({"TC-207", "TC-212"}),
-    frozenset({"TC-224", "TC-225"}),
-    frozenset({"TC-242", "TC-243"}),
+# BASELINE — пары, известные детектору. Считаются, но не кричат; кричат
+# ТОЛЬКО новые. Удаление пары отсюда без разбора = молчаливое сокрытие.
+#
+# ВЕРДИКТ У КАЖДОЙ ПАРЫ (проход Lead 2026-08-19,
+# docs/tasks/p1-dedup-lead-pass.md Р-4). Пара без вердикта — незакрытый
+# вопрос; пара с вердиктом «не дубль» закрыта по СУЩЕСТВУ и снова
+# «кандидатом» не считается. Восемь пар прохода 2026-08-18 из списка ушли:
+# их кейсы слиты и из сравнения выбыли (Merged не сравнивается).
+#
+# Критерий разбора: дубль = ОДНА ЦЕЛЬ + ОДНА ПОВЕРХНОСТЬ + различие только в
+# значении параметра. Различие поверхности (панель против оверлея, нативный
+# экран против WebView, живой сайт против replay) дублем НЕ является —
+# это независимые пути кода, и слияние прячет, ГДЕ сломалось.
+VERDICT_NOT_DUP_CANARY = "не дубль: canary live/replay — цели противоположны"
+VERDICT_NOT_DUP_GUARD = "не дубль: разные правила одного guard'а"
+VERDICT_NOT_DUP_SURFACE = "не дубль: разные поверхности/подсистемы/события"
+VERDICT_MERGE_DEFERRED = "кандидат: слияние отложено (цена > выгоды, после ESC-035)"
+
+BASELINE: dict[frozenset, str] = {
+    # canary: live против replay — детектор дрейфа сайта против нашей регрессии
+    frozenset({"TC-066", "TC-067"}): VERDICT_NOT_DUP_CANARY,
+    frozenset({"TC-068", "TC-069"}): VERDICT_NOT_DUP_CANARY,
+    frozenset({"TC-070", "TC-071"}): VERDICT_NOT_DUP_CANARY,
+    frozenset({"TC-070", "TC-074"}): VERDICT_NOT_DUP_CANARY,
+    frozenset({"TC-070", "TC-075"}): VERDICT_NOT_DUP_CANARY,
+    frozenset({"TC-070", "TC-076"}): VERDICT_NOT_DUP_CANARY,
+    frozenset({"TC-071", "TC-074"}): VERDICT_NOT_DUP_CANARY,
+    frozenset({"TC-071", "TC-075"}): VERDICT_NOT_DUP_CANARY,
+    frozenset({"TC-071", "TC-077"}): VERDICT_NOT_DUP_CANARY,
+    frozenset({"TC-072", "TC-073"}): VERDICT_NOT_DUP_CANARY,
+    frozenset({"TC-074", "TC-075"}): VERDICT_NOT_DUP_CANARY,
+    frozenset({"TC-074", "TC-076"}): VERDICT_NOT_DUP_CANARY,
+    frozenset({"TC-075", "TC-077"}): VERDICT_NOT_DUP_CANARY,
+    frozenset({"TC-076", "TC-077"}): VERDICT_NOT_DUP_CANARY,
+    frozenset({"TC-078", "TC-079"}): VERDICT_NOT_DUP_CANARY,
+    frozenset({"TC-078", "TC-080"}): VERDICT_NOT_DUP_CANARY,
+    frozenset({"TC-078", "TC-081"}): VERDICT_NOT_DUP_CANARY,
+    frozenset({"TC-079", "TC-080"}): VERDICT_NOT_DUP_CANARY,
+    frozenset({"TC-079", "TC-081"}): VERDICT_NOT_DUP_CANARY,
+    frozenset({"TC-080", "TC-081"}): VERDICT_NOT_DUP_CANARY,
+    frozenset({"TC-082", "TC-083"}): VERDICT_NOT_DUP_CANARY,
+    # guard тап-зон: четыре разных правила одного механизма
+    frozenset({"TC-119", "TC-120"}): VERDICT_NOT_DUP_GUARD,
+    frozenset({"TC-119", "TC-121"}): VERDICT_NOT_DUP_GUARD,
+    frozenset({"TC-119", "TC-122"}): VERDICT_NOT_DUP_GUARD,
+    # разные поверхности / подсистемы / события жизненного цикла
+    frozenset({"TC-008", "TC-151"}): VERDICT_NOT_DUP_SURFACE,
+    frozenset({"TC-010", "TC-011"}): VERDICT_NOT_DUP_SURFACE,
+    frozenset({"TC-049", "TC-059"}): VERDICT_NOT_DUP_SURFACE,
+    frozenset({"TC-114", "TC-115"}): VERDICT_NOT_DUP_SURFACE,
+    frozenset({"TC-133", "TC-134"}): VERDICT_NOT_DUP_SURFACE,
+    frozenset({"TC-139", "TC-141"}): VERDICT_NOT_DUP_SURFACE,
+    frozenset({"TC-151", "TC-152"}): VERDICT_NOT_DUP_SURFACE,
+    frozenset({"TC-207", "TC-212"}): VERDICT_NOT_DUP_SURFACE,
+    # одна цель и одна поверхность — слияние обосновано, но отложено
+    frozenset({"TC-030", "TC-063"}): VERDICT_MERGE_DEFERRED,
+    frozenset({"TC-116", "TC-117"}): VERDICT_MERGE_DEFERRED,
+    frozenset({"TC-126", "TC-127"}): VERDICT_MERGE_DEFERRED,
+    frozenset({"TC-138", "TC-140"}): VERDICT_MERGE_DEFERRED,
+    frozenset({"TC-138", "TC-142"}): VERDICT_MERGE_DEFERRED,
+    frozenset({"TC-138", "TC-143"}): VERDICT_MERGE_DEFERRED,
+    frozenset({"TC-140", "TC-142"}): VERDICT_MERGE_DEFERRED,
+    frozenset({"TC-140", "TC-143"}): VERDICT_MERGE_DEFERRED,
+    frozenset({"TC-142", "TC-143"}): VERDICT_MERGE_DEFERRED,
 }
 
 
@@ -328,8 +334,17 @@ def main(argv: list[str] | None = None) -> int:
         print("         Если это варианты ОДНОГО механизма — параметризуй "
               "существующий кейс вместо нового (слово оператора 2026-08-18).")
 
-    print(f"dedup_check: новых кандидатов: {len(fresh)}, известных "
-          f"(BASELINE, разбор за Lead по spec-p1-dedup): {len(known)}")
+    # Сводка по ВЕРДИКТАМ, а не по факту: разобранная пара («не дубль») и
+    # незакрытый кандидат — разные вещи, и печатать их одним числом значит
+    # потерять смысл прохода Lead 2026-08-19.
+    by_verdict: dict[str, int] = {}
+    for pair in known:
+        verdict = BASELINE.get(pair["key"], "без вердикта") if isinstance(BASELINE, dict) \
+            else "без вердикта"
+        by_verdict[verdict] = by_verdict.get(verdict, 0) + 1
+    print(f"dedup_check: новых кандидатов: {len(fresh)}, известных: {len(known)}")
+    for verdict, count in sorted(by_verdict.items()):
+        print(f"    {count:>3} — {verdict}")
     return 1 if (fresh and args.strict) else 0
 
 
