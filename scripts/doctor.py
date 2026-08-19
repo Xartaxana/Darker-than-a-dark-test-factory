@@ -575,15 +575,26 @@ def run_checks() -> list[Check]:
 
 
 def _append_escalation(reason: str) -> None:
-    existing = ESCALATIONS_PATH.read_text(encoding="utf-8") if ESCALATIONS_PATH.exists() else ""
+    # AT-BUG-041 остаток (п.(в), батч): read_bytes/decode вместо read_text
+    # (universal newlines на чтении иначе стёр бы CRLF-сигнал ДО того, как
+    # мы успели бы определить eol файла) + open("a", newline="") вместо
+    # голого "a" (os.linesep-трансляция независимо от стиля файла). Тот же
+    # образец, что build_watch._append_escalation/board_inbound.
+    # _append_escalation.
+    existing = ESCALATIONS_PATH.read_bytes().decode("utf-8") if ESCALATIONS_PATH.exists() else ""
     if reason in existing:
         return  # дедуп: уже поднято, не плодим
+    eol = "\r\n" if "\r\n" in existing else "\n"
+    # Дозаказ п.2: файл существует, но не кончается EOL -> добивка перед
+    # новой строкой (тот же приём, что build_watch/loop_lock).
+    pad = eol if (existing and not existing.endswith("\n")) else ""
     stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     header = "" if existing else (
         "# Эскалации фабрики\n\nАктивные варнинги, требующие человека "
-        "(docs/06 §4). Строку удаляет человек по разрешении.\n\n")
-    with ESCALATIONS_PATH.open("a", encoding="utf-8") as f:
-        f.write(header + f"- [{stamp}] **DOCTOR** — {reason}\n")
+        "(docs/06 §4). Строку удаляет человек по разрешении.\n\n").replace("\n", eol)
+    line = f"- [{stamp}] **DOCTOR** — {reason}{eol}"
+    with ESCALATIONS_PATH.open("a", encoding="utf-8", newline="") as f:
+        f.write(header + pad + line)
 
 
 def main(argv: list[str] | None = None) -> int:

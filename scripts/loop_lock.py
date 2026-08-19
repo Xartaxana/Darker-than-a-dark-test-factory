@@ -217,8 +217,10 @@ def _reset_reap_counter(reaps_path: Path) -> None:
     _save_reaps(reaps_path, {"count": 0, "last_ts": None, "holders": []})
 
 
-def _write_loop_escalation(escalations_path: Path, count: int, now: datetime.datetime) -> str:
-    """Дописывает/обновляет ОДНУ открытую LOOP-эскалацию. Возвращает её ключ.
+def _write_loop_escalation(escalations_path: Path, count: int,
+                            now: datetime.datetime) -> str | None:
+    """Дописывает/обновляет ОДНУ открытую LOOP-эскалацию. Возвращает её ключ,
+    либо None при отказе записи (см. ниже).
 
     AT-BUG-041 (класс 1 — EOL-перегон): чтение read_bytes/decode вместо
     read_text — text-режим на чтении уже транслирует CRLF -> LF
@@ -231,29 +233,47 @@ def _write_loop_escalation(escalations_path: Path, count: int, now: datetime.dat
     обязан брать EOL-стиль САМОГО файла по факту, не хардкод '\\n' — тот же
     образец и аргумент, что sla_sweep.rewrite_registry / board_inbound.
     _file_eol (AT-BUG-038); ветка «обновление УЖЕ существующей LOOP-N-строки
-    на месте» (m matched) EOL не трогает вовсе — уже верно."""
-    stamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
-    text = escalations_path.read_bytes().decode("utf-8") if escalations_path.exists() else ""
-    eol = "\r\n" if "\r\n" in text else "\n"
-    msg = (f"{count} проходов подряд умерли с локом — фабрика систематически "
-           f"падает, нужен разбор человеком")
+    на месте» (m matched) EOL не трогает вовсе — уже верно.
 
-    m = LOOP_LINE_RE.search(text)
-    if m:
-        new_line = f"- [{m.group('ts')}] **{m.group('key')}** [loop:reaped] — {msg}"
-        new_text = text[:m.start()] + new_line + text[m.end():]
-        key = m.group("key")
-    else:
-        nums = [int(x) for x in LOOP_KEY_RE.findall(text)]
-        key = f"LOOP-{max(nums) + 1 if nums else 1}"
-        if not text:
-            text = ESCALATIONS_HEADER
-        elif not text.endswith("\n"):
-            text += eol
-        new_text = text + f"- [{stamp}] **{key}** [loop:reaped] — {msg}{eol}"
+    AT-BUG-041 остаток (п.1, батч): вызывается из acquire() ПОСЛЕ того, как
+    новый loop.lock уже записан — раньше отказ ЛЮБОГО I/O здесь (не-UTF8
+    escalations.md -> UnicodeDecodeError ⊂ ValueError на decode(), или
+    PermissionError ⊂ OSError из os.replace в _atomic_write_text, напр.
+    файл открыт редактором) пробрасывался НАРУЖУ мимо acquire — CLI падал
+    трейсбеком, свежевзятый лок оставался сиротой до TTL (класс BL-4,
+    образец guard'а — heartbeat_wrap._write_singleton_escalation, докстринг
+    «Rework attempt 2»). Тело обёрнуто целиком: отказ печатается
+    `ESCALATION write failed: <e>` и возвращает None — вызывающий acquire()
+    получает свой ACQUIRED/REAP-STREAK как обычно, только без ESCALATION-
+    строки в выводе (сама LOOP-запись теряется молча в этом одном проходе —
+    счётчик подряд снятых уже инкрементирован, следующий порог её
+    перепишет)."""
+    try:
+        stamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+        text = escalations_path.read_bytes().decode("utf-8") if escalations_path.exists() else ""
+        eol = "\r\n" if "\r\n" in text else "\n"
+        msg = (f"{count} проходов подряд умерли с локом — фабрика систематически "
+               f"падает, нужен разбор человеком")
 
-    _atomic_write_text(escalations_path, new_text)
-    return key
+        m = LOOP_LINE_RE.search(text)
+        if m:
+            new_line = f"- [{m.group('ts')}] **{m.group('key')}** [loop:reaped] — {msg}"
+            new_text = text[:m.start()] + new_line + text[m.end():]
+            key = m.group("key")
+        else:
+            nums = [int(x) for x in LOOP_KEY_RE.findall(text)]
+            key = f"LOOP-{max(nums) + 1 if nums else 1}"
+            if not text:
+                text = ESCALATIONS_HEADER
+            elif not text.endswith("\n"):
+                text += eol
+            new_text = text + f"- [{stamp}] **{key}** [loop:reaped] — {msg}{eol}"
+
+        _atomic_write_text(escalations_path, new_text)
+        return key
+    except (OSError, ValueError) as e:   # ValueError ⊃ UnicodeDecodeError: не-utf8 escalations.md
+        print(f"ESCALATION write failed: {e}")
+        return None
 
 
 def acquire(*, lock_file: Path, holder: str, reaps_path: Path, escalations_path: Path,
@@ -304,7 +324,10 @@ def acquire(*, lock_file: Path, holder: str, reaps_path: Path, escalations_path:
         lines.append(f"REAP-STREAK: подряд снятых={reaps['count']}")
         if reaps["count"] >= REAP_ESCALATION_THRESHOLD:
             key = _write_loop_escalation(escalations_path, reaps["count"], now)
-            lines.append(f"ESCALATION: {key} — фабрика систематически умирает")
+            if key is None:
+                lines.append("ESCALATION write failed (см. вывод)")
+            else:
+                lines.append(f"ESCALATION: {key} — фабрика систематически умирает")
 
     return 0, lines
 

@@ -133,17 +133,23 @@ def _clear_lock(src: Path, *, dry: bool) -> bool:
 
 
 def _append_orch_log(artifact_rel: str, outcome: str, *, dry: bool) -> None:
+    # AT-BUG-041 остаток (дозаказ, п.1/п.2): newline="" + EOL-стиль файла
+    # по факту + добивка перед новой строкой (тот же образец, что
+    # build_watch/doctor/board_inbound/sla_sweep).
     if dry:
         return
     stamp = _utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
-    line = f"| {stamp} | pre_step stale_locks | stale_locks.py | {artifact_rel} | {outcome} |\n"
+    text = ORCH_LOG.read_bytes().decode("utf-8") if ORCH_LOG.exists() else ""
+    eol = "\r\n" if "\r\n" in text else "\n"
+    pad = eol if (text and not text.endswith("\n")) else ""
+    line = f"| {stamp} | pre_step stale_locks | stale_locks.py | {artifact_rel} | {outcome} |{eol}"
     header = "" if ORCH_LOG.exists() else (
         "# Журнал оркестратора\n\n| Время | Правило | Агент | Артефакт | Исход |\n|---|---|---|---|---|\n"
-    )
-    with ORCH_LOG.open("a", encoding="utf-8") as f:
+    ).replace("\n", eol)
+    with ORCH_LOG.open("a", encoding="utf-8", newline="") as f:
         if header:
             f.write(header)
-        f.write(line)
+        f.write(pad + line)
 
 
 def sweep(*, now: datetime.datetime | None = None, dry: bool = False) -> list[str]:

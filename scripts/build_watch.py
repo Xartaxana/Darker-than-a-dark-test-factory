@@ -169,8 +169,19 @@ def _rewrite_field(text: str, field: str, value: str) -> str:
     завершающий '\\r' строки в тело матча и терял его при замене на строке БЕЗ
     хвостового комментария (доказано эмпирически: 'version_code: 11\\r\\n' ->
     'version_code: 99\\n' на старом паттерне). Тот же образец границы, что уже
-    закрыт в board_sync.py/board_inbound.py/gitlab_sync.py/stale_locks.py."""
-    pattern = re.compile(rf'(?m)^{field}:\s*[^#\r\n]*(?P<comment>#[^\r\n]*)?(?=\r?\n|$)')
+    закрыт в board_sync.py/board_inbound.py/gitlab_sync.py/stale_locks.py.
+
+    AT-BUG-041 остаток (п.(а), батч): разделитель между 'field:' и значением —
+    [ \\t]* (только горизонтальные пробел/таб), НЕ \\s* — '\\s' в Python re
+    матчит и '\\n'/'\\r' (не только пробел/таб), так что на поле с ПУСТЫМ
+    значением ('field:' без хвоста на своей строке) старый \\s* пересекал
+    перевод строки и продолжал жадно съедать пробельные символы дальше,
+    поглощая НАЧАЛО следующей строки в тело замены (доказано эмпирически:
+    'coalesced_commits:\\nversion_code: 11\\n' с заменой 'coalesced_commits'
+    -> '[]' стирало строку version_code целиком). [ \\t]* останавливается на
+    границе строки — [^#\\r\\n]*/lookahead ниже уже эту границу удерживают
+    для остальной части значения."""
+    pattern = re.compile(rf'(?m)^{field}:[ \t]*[^#\r\n]*(?P<comment>#[^\r\n]*)?(?=\r?\n|$)')
     m = pattern.search(text)
     if m:
         comment = f"   {m.group('comment')}" if m.group("comment") else ""
@@ -278,7 +289,11 @@ def detect_new_commits() -> dict | None:
         print(f"  [WARN] rev-parse FETCH_HEAD: {tip.strip()[:200]}")
         return None
     tip = tip.strip()
-    current = _read_field(AUT_PATH.read_text(encoding="utf-8"), "source_commit") or ""
+    # AT-BUG-041 остаток (п.(г), батч): read_bytes/decode вместо read_text —
+    # унификация класса (последний читатель модуля через text-режим);
+    # поведенчески нейтрально — результат сразу проходит _read_field's
+    # .strip(), CRLF/LF-разница не наблюдаема вызывающим кодом.
+    current = _read_field(AUT_PATH.read_bytes().decode("utf-8"), "source_commit") or ""
     if tip == current:
         return {"tip": tip, "new": []}
     rc, lst = _run(["git", "-C", str(APP), "rev-list", "--reverse", f"{current}..{tip}"])
@@ -329,20 +344,53 @@ def _sha256(path: Path) -> str:
     return h.hexdigest()
 
 
+def _read_and_eol(path: Path) -> tuple[str, str]:
+    """(текст файла, EOL-стиль по факту) — '' / '\\n', если файла нет/
+    нечитаем. AT-BUG-041 остаток (п.(в), батч): текст нужен ДВАЖДЫ —
+    определить eol И добить перевод строки перед append, если файл
+    существует, но не кончается EOL (дозаказ, п.2 — тот же приём, что
+    loop_lock._write_loop_escalation: `elif not text.endswith('\\n'):
+    text += eol`). Тот же образец, что board_inbound._file_eol
+    (AT-BUG-038)."""
+    if not path.exists():
+        return "", "\n"
+    try:
+        text = path.read_bytes().decode("utf-8", errors="replace")
+    except OSError:
+        return "", "\n"
+    return text, ("\r\n" if "\r\n" in text else "\n")
+
+
 def _append_escalation(reason: str) -> None:
+    # AT-BUG-041 остаток (п.(в), батч): open("a", encoding="utf-8") БЕЗ
+    # newline="" писал os.linesep (CRLF на Windows) независимо от стиля
+    # файла — образец правильной формы: log_append.py::_append_line
+    # (newline="\n"/"" — обе отключают трансляцию на запись, см. докстринг
+    # той функции). newline="" + явный eol в строке ниже держат байты
+    # ровно такими, каких мы просим. `pad` (дозаказ, п.2) — файл
+    # существует, но не кончается EOL -> добивка перед новой строкой, не
+    # слияние с последней существующей.
+    text, eol = _read_and_eol(ESCALATIONS_PATH)
     header = "" if ESCALATIONS_PATH.exists() else (
         "# Эскалации фабрики\n\nАктивные варнинги, требующие человека "
-        "(docs/06 §4). Строку удаляет человек по разрешении.\n\n")
-    with ESCALATIONS_PATH.open("a", encoding="utf-8") as f:
-        f.write(header + f"- [{_utcnow_s()}] **BUILD** — {reason}\n")
+        "(docs/06 §4). Строку удаляет человек по разрешении.\n\n").replace("\n", eol)
+    pad = eol if (text and not text.endswith("\n")) else ""
+    line = f"- [{_utcnow_s()}] **BUILD** — {reason}{eol}"
+    with ESCALATIONS_PATH.open("a", encoding="utf-8", newline="") as f:
+        f.write(header + pad + line)
 
 
 def _append_orch_log(outcome: str) -> None:
+    # AT-BUG-041 остаток (п.(в), батч) — см. _append_escalation; pad — дозаказ п.2.
+    text, eol = _read_and_eol(ORCH_LOG)
     header = "" if ORCH_LOG.exists() else (
-        "# Журнал оркестратора\n\n| Время | Правило | Агент | Артефакт | Исход |\n|---|---|---|---|---|\n")
-    with ORCH_LOG.open("a", encoding="utf-8") as f:
-        f.write(header + f"| {_utcnow_s()} | pre_step build_watch | build_watch.py | "
-                         f"state/app-under-test.yaml | {outcome} |\n")
+        "# Журнал оркестратора\n\n| Время | Правило | Агент | Артефакт | Исход |\n|---|---|---|---|---|\n"
+    ).replace("\n", eol)
+    pad = eol if (text and not text.endswith("\n")) else ""
+    line = (f"| {_utcnow_s()} | pre_step build_watch | build_watch.py | "
+            f"state/app-under-test.yaml | {outcome} |{eol}")
+    with ORCH_LOG.open("a", encoding="utf-8", newline="") as f:
+        f.write(header + pad + line)
 
 
 def _apply_version_fields(text: str, vname: str | None, vcode: str | None, *, context: str) -> str:
@@ -476,9 +524,13 @@ def _parse_provided_ref(ref: str, flag_name: str = "--provided") -> tuple[str, i
 def _repo_url() -> str:
     """Локальная копия gs.read_repo_url(), но читает СВОЙ (монкипатчащийся
     тестами через bw.AUT_PATH) путь — НЕ gs.AUT_PATH (независимый модульный
-    атрибут, `repo` тестовая фикстура патчит только bw.*)."""
+    атрибут, `repo` тестовая фикстура патчит только bw.*).
+
+    AT-BUG-041 остаток (п.(г)-аналог, дозаказ): read_bytes/decode вместо
+    read_text — унификация класса читателей этого модуля; поведение
+    yaml.safe_load не меняется (CRLF/LF-разница не наблюдаема парсером)."""
     import yaml
-    data = yaml.safe_load(AUT_PATH.read_text(encoding="utf-8")) or {}
+    data = yaml.safe_load(AUT_PATH.read_bytes().decode("utf-8")) or {}
     repo = data.get("repo")
     if not repo:
         raise SystemExit(f"build_watch: {AUT_PATH} — поле 'repo:' отсутствует или пусто")

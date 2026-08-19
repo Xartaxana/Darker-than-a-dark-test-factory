@@ -460,6 +460,14 @@ def rewrite_registry(wanted: dict, now: datetime.datetime, *, dry: bool) -> tupl
     content = "".join(kept) if kept else header
     if kept and not any(l.startswith("#") for l in kept):
         content = header + content
+    # AT-BUG-041 остаток (п.(б), батч): файл существует, но НЕ заканчивается
+    # хвостовым EOL (последняя kept-строка без переноса — splitlines(keepends)
+    # не приписывает его к последнему сегменту без него в исходнике) — без
+    # добивки новая строка сливалась бы с последней существующей (тот же
+    # приём, что loop_lock._write_loop_escalation: `elif not text.endswith
+    # ("\n"): text += eol`).
+    if new_lines and content and not content.endswith("\n"):
+        content += eol
     content += "".join(new_lines)
     if not dry:
         ESCALATIONS_PATH.write_bytes(content.encode("utf-8"))
@@ -467,16 +475,23 @@ def rewrite_registry(wanted: dict, now: datetime.datetime, *, dry: bool) -> tupl
 
 
 def _append_orch_log(outcome: str, now: datetime.datetime, *, dry: bool) -> None:
+    # AT-BUG-041 остаток (дозаказ, п.1/п.2): newline="" + EOL-стиль файла
+    # по факту + добивка перед новой строкой (тот же класс, что уже
+    # закрыт в rewrite_registry этого же модуля выше).
     if dry:
         return
     stamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
-    line = f"| {stamp} | pre_step sla_sweep | sla_sweep.py | state/escalations.md | {outcome} |\n"
+    text = ORCH_LOG.read_bytes().decode("utf-8") if ORCH_LOG.exists() else ""
+    eol = "\r\n" if "\r\n" in text else "\n"
+    pad = eol if (text and not text.endswith("\n")) else ""
+    line = f"| {stamp} | pre_step sla_sweep | sla_sweep.py | state/escalations.md | {outcome} |{eol}"
     header = "" if ORCH_LOG.exists() else (
-        "# Журнал оркестратора\n\n| Время | Правило | Агент | Артефакт | Исход |\n|---|---|---|---|---|\n")
-    with ORCH_LOG.open("a", encoding="utf-8") as f:
+        "# Журнал оркестратора\n\n| Время | Правило | Агент | Артефакт | Исход |\n|---|---|---|---|---|\n"
+    ).replace("\n", eol)
+    with ORCH_LOG.open("a", encoding="utf-8", newline="") as f:
         if header:
             f.write(header)
-        f.write(line)
+        f.write(pad + line)
 
 
 def sweep(*, now: datetime.datetime | None = None, dry: bool = False) -> list[str]:

@@ -465,17 +465,25 @@ def _escalation_key_already_pending(key: str) -> bool:
 
 
 def _append_escalation(key: str, reason: str) -> None:
+    # AT-BUG-041 остаток (дозаказ, п.1/п.2): newline="" + EOL-стиль файла
+    # по факту вместо голого "a" (та же os.linesep-трансляция, что у
+    # build_watch/doctor/board_inbound), плюс добивка перед новой строкой,
+    # если файл существует, но не кончается EOL.
     import datetime
     stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    text = ESCALATIONS_PATH.read_bytes().decode("utf-8") if ESCALATIONS_PATH.exists() else ""
+    eol = "\r\n" if "\r\n" in text else "\n"
+    pad = eol if (text and not text.endswith("\n")) else ""
     header = "" if ESCALATIONS_PATH.exists() else (
         "# Эскалации фабрики\n\nАктивные варнинги, требующие человека "
         "(docs/06 §4). Живёт до разрешения; запись не удаляется, а "
-        "помечается resolved при закрытии.\n\n")
+        "помечается resolved при закрытии.\n\n").replace("\n", eol)
+    line = f"- [{stamp}] **{key}** — {reason}{eol}"
     ESCALATIONS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with ESCALATIONS_PATH.open("a", encoding="utf-8") as f:
+    with ESCALATIONS_PATH.open("a", encoding="utf-8", newline="") as f:
         if header:
             f.write(header)
-        f.write(f"- [{stamp}] **{key}** — {reason}\n")
+        f.write(pad + line)
 
 
 QAREADY_SAFEGUARD_STATUSES = ("Open", "Reopened")

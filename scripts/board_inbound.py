@@ -341,17 +341,27 @@ def apply_conflict(action: Action, ts_board: str, ts_agent: str, *, dry: bool) -
 
 
 def _append_escalation(key: str, reason: str) -> None:
+    # AT-BUG-041 остаток (п.(в), батч): read_bytes/decode (не read_text —
+    # universal newlines стёр бы CRLF-сигнал ДО _file_eol) + open("a",
+    # newline="") вместо голого "a" (та же os.linesep-трансляция, что у
+    # build_watch/doctor). _file_eol уже существует в этом модуле
+    # (AT-BUG-038) — переиспользуем.
     stamp = _utcnow()
-    line = f"- [{stamp}] **{key}** — {reason}\n"
-    header = "" if ESCALATIONS_PATH.exists() else (
+    text = ESCALATIONS_PATH.read_bytes().decode("utf-8") if ESCALATIONS_PATH.exists() else ""
+    eol = _file_eol(text)
+    # Дозаказ п.2: файл существует, но не кончается EOL -> добивка перед
+    # новой строкой (тот же приём, что build_watch/loop_lock).
+    pad = eol if (text and not text.endswith("\n")) else ""
+    line = f"- [{stamp}] **{key}** — {reason}{eol}"
+    header = "" if text else (
         "# Эскалации фабрики\n\nАктивные варнинги, требующие человека "
         "(docs/06 §4). Живёт до разрешения; запись не удаляется, а "
         "помечается resolved при закрытии.\n\n"
-    )
-    with ESCALATIONS_PATH.open("a", encoding="utf-8") as f:
+    ).replace("\n", eol)
+    with ESCALATIONS_PATH.open("a", encoding="utf-8", newline="") as f:
         if header:
             f.write(header)
-        f.write(line)
+        f.write(pad + line)
 
 
 # --- Синхронизация комментариев борда ↔ ## Обсуждение (обвязка, docs/07 §5) ----

@@ -302,14 +302,29 @@ def _mode_snapshot(mode_data: dict | None) -> dict:
 
 def _append_orchestrator_line(path: Path, artifact: str, outcome: str,
                               now: datetime.datetime) -> None:
+    """AT-BUG-041 остаток (дозаказ, п.1/п.2): newline="" + EOL-стиль файла
+    ПО ФАКТУ вместо голого "a" (тот же класс, что build_watch/doctor/
+    board_inbound — os.linesep-трансляция независимо от стиля файла), плюс
+    добивка перевода строки перед append, если файл существует, но не
+    кончается EOL. Санитайзинг полей (`.replace("\\r", " ")` и т.д.) —
+    ЛОГИКА сторожа, НЕ трогается: он уже гарантирует, что сами ЗНАЧЕНИЯ
+    полей не несут '\\r'/'\\n' — этот фикс касается только точки I/O
+    (какой EOL завершает строку и предшествует ей). except расширен с
+    OSError до (OSError, ValueError): чтение файла для определения eol
+    может упасть UnicodeDecodeError (⊂ ValueError) на не-utf8 файле — та
+    же гарантия «никогда не бросает наружу» (класс BL-4), что и раньше,
+    только теперь укрывает и новую точку чтения, а не только запись."""
     safe = [c.replace("|", "\\|").replace("\r", " ").replace("\n", " ").strip()
             for c in (RULE, AGENT, artifact, outcome)]
-    line = "| " + " | ".join([_fmt_ts(now)] + safe) + " |\n"
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
-        with path.open("a", encoding="utf-8") as f:
+        text = path.read_bytes().decode("utf-8") if path.exists() else ""
+        eol = "\r\n" if "\r\n" in text else "\n"
+        pad = eol if (text and not text.endswith("\n")) else ""
+        line = pad + "| " + " | ".join([_fmt_ts(now)] + safe) + " |" + eol
+        with path.open("a", encoding="utf-8", newline="") as f:
             f.write(line)
-    except OSError as e:
+    except (OSError, ValueError) as e:   # ValueError ⊃ UnicodeDecodeError
         print(f"ORCHESTRATOR-LOG write failed: {e}")
 
 
