@@ -2,7 +2,7 @@
 key: "TC-158"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-merged"
 priority: "p1"
 summary: "Гейт infinite-scroll на границе навигации: OFF→ON→Next — новая страница загружается С подпиской (номерная пагинация скрыта, скролл подгружает с эвикцией)"
 assignee: "qa-agents"
@@ -16,13 +16,13 @@ epic: null
 created: "2026-08-10T13:55:51Z"
 updated: "2026-08-10T13:55:51Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Гейт infinite-scroll на границе навигации: OFF→ON→Next — новая страница загружается С подпиской (номерная пагинация скрыта, скролл подгружает с эвикцией)
 
 _Спроецировано из `test-cases/browser/TC-158.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Merged**._
 
 # TC-158 — OFF→ON→Next: новая страница листинга загружается С подпиской infinite-scroll
 

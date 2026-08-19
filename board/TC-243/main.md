@@ -2,7 +2,7 @@
 key: "TC-243"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-merged"
 priority: "p1"
 summary: "Оценка Favorite/Kudosed из Library НЕ отправляет kudos, если ни одна вкладка с этой работой не открыта"
 assignee: "qa-agents"
@@ -16,13 +16,13 @@ epic: null
 created: "2026-08-15T23:03:49Z"
 updated: "2026-08-15T23:03:49Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Оценка Favorite/Kudosed из Library НЕ отправляет kudos, если ни одна вкладка с этой работой не открыта
 
 _Спроецировано из `test-cases/library/TC-243.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Merged**._
 
 # TC-243 — Kudos из Library НЕ отправляется без открытой вкладки работы
 

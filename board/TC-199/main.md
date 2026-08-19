@@ -2,7 +2,7 @@
 key: "TC-199"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-merged"
 priority: "p1"
 summary: "Баннер над листингом сообщает только об активном AO3-фильтре текстом «Some works may be hidden by the active AO3 filter» (ratedHidden=false, filterActive=true)"
 assignee: "qa-agents"
@@ -16,13 +16,13 @@ epic: null
 created: "2026-08-15T23:03:49Z"
 updated: "2026-08-15T23:03:49Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Баннер над листингом сообщает только об активном AO3-фильтре текстом «Some works may be hidden by the active AO3 filter» (ratedHidden=false, filterActive=true)
 
 _Спроецировано из `test-cases/browser/TC-199.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Merged**._
 
 # TC-199 — Баннер: только активный AO3-фильтр → «…by the active AO3 filter»
 

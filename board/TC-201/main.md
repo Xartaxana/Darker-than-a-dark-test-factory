@@ -2,7 +2,7 @@
 key: "TC-201"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-merged"
 priority: "p1"
 summary: "Баннер над листингом НЕ появляется, когда ни visibility-скрытие, ни AO3-фильтр не активны"
 assignee: "qa-agents"
@@ -16,13 +16,13 @@ epic: null
 created: "2026-08-15T23:03:49Z"
 updated: "2026-08-15T23:03:49Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Баннер над листингом НЕ появляется, когда ни visibility-скрытие, ни AO3-фильтр не активны
 
 _Спроецировано из `test-cases/browser/TC-201.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Merged**._
 
 # TC-201 — Баннер отсутствует при обоих флагах false (off-инвариант)
 

@@ -1,20 +1,20 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-18T10:36:21Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-19T14:47:13Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
 - Сборка: dev-local (versionCode 12), commit `aa377e0e`, built_at 2026-08-16T17:53:45Z
-- smoke: Closed · smoke_freshness_hours: **40.2** (RUN-20260816-1758)
-- regression: Triaged · regression_freshness_hours: **37.7** (RUN-20260816-1831)
-- canary: Triaged · canary_freshness_hours: **334.9** (RUN-20260804-1317)
+- smoke: Closed · smoke_freshness_hours: **68.3** (RUN-20260816-1758)
+- regression: Triaged · regression_freshness_hours: **65.9** (RUN-20260816-1831)
+- canary: Triaged · canary_freshness_hours: **363.1** (RUN-20260804-1317)
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **2**
 - p0_automation_coverage: **100%** (37/37)
-- p1_automation_coverage: **51%** (84/165)
-- Test debt открыт: **5** — AT-BUG-073, AT-BUG-075, AT-BUG-076, AT-BUG-083, AT-BUG-085
+- p1_automation_coverage: **51%** (84/166)
+- Test debt открыт: **4** — AT-BUG-075, AT-BUG-076, AT-BUG-083, AT-BUG-085
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
 - Untriaged: **0** · untriaged_failure_age: **0**
@@ -24,34 +24,34 @@ story-карточки: стадии см. docs/05-board.md §Story
 - dev-local (versionCode 12), commit `aa377e0e`, built_at 2026-08-16T17:53:45Z
 - smoke: passed · regression: failed
 
-## Тест-кейсы (257)
+## Тест-кейсы (265)
 
-- Draft: **1** · Approved: **103** · Automated: **150** · Merged: **3**
+- Draft: **1** · Review: **8** · Approved: **96** · Automated: **150** · Merged: **10**
 - автотесты (B3): active: **150**
 
 | Область | Draft | Review | Approved | Automated | Merged | Blocked |
 |---|---|---|---|---|---|---|
 | accessibility |  |  | 3 | 3 |  |  |
-| backup |  |  | 6 | 1 |  |  |
-| browser |  |  | 21 | 13 |  |  |
+| backup |  |  | 5 | 1 | 1 |  |
+| browser |  | 7 | 17 | 13 | 4 |  |
 | canary |  |  | 2 | 23 |  |  |
 | compatibility |  |  |  | 3 |  |  |
 | downloads |  |  | 10 | 11 | 3 |  |
 | errors |  |  |  | 1 |  |  |
 | filter-profiles |  |  | 7 | 5 |  |  |
-| library | 1 |  | 6 | 25 |  |  |
+| library | 1 |  | 5 | 25 | 1 |  |
 | performance |  |  |  | 4 |  |  |
 | rating |  |  | 8 | 21 |  |  |
 | security |  |  | 3 | 6 |  |  |
 | settings |  |  | 12 | 11 |  |  |
 | smoke |  |  |  | 5 |  |  |
-| sync |  |  | 25 |  |  |  |
-| tabs |  |  |  | 12 |  |  |
+| sync |  |  | 24 |  | 1 |  |
+| tabs |  | 1 |  | 12 |  |  |
 | visibility |  |  |  | 6 |  |  |
 
-## Баги (34)
+## Баги (39)
 
-- Open: **11** · Reopened: **1** · Verified: **20** · Intended: **2**
+- Open: **16** · Reopened: **1** · Verified: **20** · Intended: **2**
 - BUG-011 [major] Open — Restore from backup пропускает работы молча, если файл с тем же ao3Id уже лежит в папке загрузок
 - BUG-017 [major] Open — Быстрое закрытие вкладок → долгий парад снекбаров; подозрение на потерю Undo-токенов при задержке показа
 - BUG-019 [major] Reopened — Back после автопрыжка плотности не выводит назад — ловушка + рост истории
@@ -64,6 +64,11 @@ story-карточки: стадии см. docs/05-board.md §Story
 - BUG-070 [major] Open — ON + deep-link в новую вкладку: FilterPanel продолжает показывать профиль активным, хотя URL/содержимое вкладки НЕфильтрованы
 - BUG-072 [minor] Open — restoreClosedTab UI-недостижим второй раз: BrowserViewModel.kt KDoc и PROJECT.md обещают повторный Undo после отказа на потолке, но единственный вызов потребляется тем же снекбаром — вкладка остаётся безвозвратно потерянной
 - BUG-073 [major] Open — Тумблер «Hide Disliked works» (Settings) вызывает ту же незапрошенную live-push навигацию, что BUG-020 — гейт __ao3LiveRatingPush защищает только broadcastRatingChange, не setHiddenRatings
+- BUG-074 [major] Open — Автоматическая синхронизация молчит об ошибках; пользователь не узнает об отказах или удалениях работ
+- BUG-075 [minor] Open — Open in background tab на .epub-файле уводит из приложения; подпись обещает открыть без выхода
+- BUG-076 [minor] Open — Перехват кнопок громкости для листания работает даже при перекрытом Browse (overlay/диалог/панель); нет сообщения о перехвате
+- BUG-077 [major] Open — Прогресс чтения не хранится и не синхронизируется между устройствами; нарушает требование R-18
+- BUG-078 [major] Open — Файл, скачанный на одном устройстве, не докачивается на других; downloadPath намеренно не путешествует; нарушает требование R-18
 
 ## Известные проблемы, known_issue (2)
 
@@ -73,7 +78,7 @@ story-карточки: стадии см. docs/05-board.md §Story
 ## Test debt (6)
 
 - AT-BUG-068 [broken_environment] Blocked — navigator.clipboard.writeText() отклоняется DOMException 'Write permission denied' в тестовом WebView — блокирует Then «Copied!» TC-188
-- AT-BUG-073 [missing_fixture] Open — Нет автоматизационной инфраструктуры для области sync: мок GitLab-сниппета (/api/v4/snippets), сидер sync_tombstones, возврат id профиля из seed_filter_profiles, перехват исходящего тела публикации
+- AT-BUG-073 [missing_fixture] Fixed — Нет автоматизационной инфраструктуры для области sync: мок GitLab-сниппета (/api/v4/snippets), сидер sync_tombstones, возврат id профиля из seed_filter_profiles, перехват исходящего тела публикации
 - AT-BUG-075 [flaky_test] Open — TC-176 burst-окно: натуральный запас tap1->tap2 ~0.7-0.85с даже после классовой правки open_in_background_via_overlay — ниже критик-ориентира ≥1с, дальнейшее ужатие требует правок вне манифеста rework attempt2
 - AT-BUG-076 [missing_fixture] Open — Методическая норма Data Setup «auto_apply_filter материализуется только фактическим переключением тумблера» жила только прозой закрытого CH-010 — не была зафиксирована постоянным носителем, читаемым будущими test-designer-сессиями
 - AT-BUG-083 [flaky_test] Open — assert_work_not_in_tab гонится с анимацией HorizontalPager Library (тот же класс, что AT-BUG-082, но на ЛЮБОЙ вкладке, не только FILES) — не почин, только заведён (D-0043 queued follow-up)
@@ -94,7 +99,7 @@ story-карточки: стадии см. docs/05-board.md §Story
 
 - нет
 
-## Эскалации (29)
+## Эскалации (32)
 
 - [2026-07-24T05:10:04Z] **BUG-011** [sla:bug_open_major] — major-баг open с 2026-07-15T14:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
 - [2026-08-01T16:01:07Z] **BUG-017** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-30T00:00:00Z | нужно: ответить в ## Обсуждение
@@ -123,5 +128,8 @@ story-карточки: стадии см. docs/05-board.md §Story
 - [2026-08-16T05:30:32Z] **BUG-068** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-14T03:49:31Z | нужно: ответить в ## Обсуждение
 - [2026-08-16T05:30:32Z] **BUG-070** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-14T03:49:31Z | нужно: ответить в ## Обсуждение
 - [2026-08-16T20:00:02Z] **FACTORY-STALLED** [resolved:factory-watchdog-recovered] [factory:stalled] — восстановлено 2026-08-18T10:30:02Z
-- [2026-08-17T02:46:22Z] **QAREADY-SYNC-RACE-BUG-019** — BUG-019: gitlab_sync собрался снять ярлык qa-status::QAready (внутренний статус Reopened — Open|Reopened, сигнал ещё не сведён) — вероятная гонка с gitlab_inbound (ярлык поставлен разработчиком, ещё не обработан). Ярлык СОХРАНЁН, снятие пропущено; разберитесь и пометьте [resolved:<task_id>] после проверки.
+- [2026-08-17T02:46:22Z] **QAREADY-SYNC-RACE-BUG-019** [resolved:lead-gitlab-race-bug019-0819] — ЗАКРЫТО 2026-08-19 полным Lead (Fable), причина установлена ИЗМЕРЕНИЕМ: гонки НЕТ, случай ИНОЙ, чем прецеденты BUG-058/065. Add-событие QAready по issue 10 было законно съедено курсором ДО reopen (state/gitlab-label-cursor.json: BUG-019=544722277 — оно и дало Open→Fixed 2026-08-17); после reopen (02:24:53Z, D1) новых label-событий НЕТ: живой прогон `gitlab_inbound` 2026-08-19 → «label-события: 0 применено» при статусе Reopened (будь событие — применился бы Fixed). Ярлык на issue 10 — ПРОТУХШИЙ остаток до-reopen цикла, не сигнал разработчика; снятие ЛЕГИТИМНО. Снятие отложено (причина: инструментальный отказ — permission-классификатор заблокировал точечный API-вызов; канал снятия — штатный gitlab_sync после классового фикса ниже). ВРЕДА НЕТ: E7 фильтрует наши iid, M-D переспрашивает события точечно от курсора; при ответе разработчика (повторный QAready) экземпляр саморассасывается штатным Reopened→Fixed. КЛАССОВЫЙ ОСТАТОК (D-0043, в батч мелочей): safeguard gitlab_sync не сверяется с label-курсором — «сигнал ещё не сведён» у него всегда презумпция; фикс = при живом клиенте свериться с событиями новее курсора и при их отсутствии разрешить снятие. Исходный текст — история: BUG-019: gitlab_sync собрался снять ярлык qa-status::QAready (внутренний статус Reopened — Open|Reopened, сигнал ещё не сведён) — вероятная гонка с gitlab_inbound (ярлык поставлен разработчиком, ещё не обработан). Ярлык СОХРАНЁН, снятие пропущено.
 - [2026-08-17T16:00:02Z] **HEARTBEAT-CHILD-DEATH** [heartbeat:child-death] — 4 быстрых смертей подряд, окно 2026-08-17T14:30:09Z..2026-08-17T22:30:13Z, последний rc=1, runtime=8.2с; первые строки причины — logs/fallback-20260817.log; причину чинит оператор/Lead — сбросит сторож при живом прогрессе окна ИЛИ пробный запуск через 6ч (спека: docs/tasks/factory-visible-window.md §Д п.6 «Единый стартовый гейт»; реализация — factory_watchdog._series_blocked)
+- [2026-08-19T12:44:29Z] **BUG-013** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-16T18:00:00Z | нужно: ответить в ## Обсуждение
+- [2026-08-19T12:44:29Z] **BUG-019** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-17T02:24:53Z | нужно: ответить в ## Обсуждение
+- [2026-08-19T13:11:16Z] **QAREADY-SYNC-RACE-BUG-019** — BUG-019: gitlab_sync собрался снять ярлык qa-status::QAready (внутренний статус Reopened — Open|Reopened, сигнал ещё не сведён) — вероятная гонка с gitlab_inbound (ярлык поставлен разработчиком, ещё не обработан). Ярлык СОХРАНЁН, снятие пропущено; разберитесь и пометьте [resolved:<task_id>] после проверки.

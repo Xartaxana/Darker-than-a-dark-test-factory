@@ -2,7 +2,7 @@
 key: "TC-225"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-merged"
 priority: "p1"
 summary: "Ручной прогон с отклонённым токеном показывает «GitLab rejected the token» и не меняет локальные данные"
 assignee: "qa-agents"
@@ -16,13 +16,13 @@ epic: null
 created: "2026-08-15T23:03:49Z"
 updated: "2026-08-15T23:03:49Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Ручной прогон с отклонённым токеном показывает «GitLab rejected the token» и не меняет локальные данные
 
 _Спроецировано из `test-cases/sync/TC-225.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Merged**._
 
 # TC-225 — Ошибка 401/403: токен без нужного scope
 

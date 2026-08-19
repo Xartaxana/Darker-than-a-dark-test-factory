@@ -208,7 +208,7 @@
     "epic": null,
     "parentPath": null,
     "epicPath": null,
-    "summary": "Restore не-JSON файла показывает «Restore failed» и НЕ изменяет данные (полусостояния нет)",
+    "summary": "Restore битого файла (не-JSON ИЛИ пустой) показывает «Restore failed» с текстом ПРИЧИНЫ и НЕ изменяет данные (полусостояния нет)",
     "issueType": "test-case",
     "status": "tc-approved",
     "priority": "p3",
@@ -218,7 +218,7 @@
       "area:backup",
       "risk:R-01"
     ],
-    "updated": "2026-08-10T14:20:00Z",
+    "updated": "2026-08-18T23:24:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -232,7 +232,7 @@
     "epicPath": null,
     "summary": "Restore пустого файла показывает «Restore failed» с текстом, отличным от не-JSON случая, и НЕ изменяет данные",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-merged",
     "priority": "p3",
     "assignee": "qa-agents",
     "labels": [
@@ -241,7 +241,7 @@
       "risk:R-01"
     ],
     "updated": "2026-08-10T14:20:00Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -595,7 +595,7 @@
     "epic": null,
     "parentPath": null,
     "epicPath": null,
-    "summary": "Гейт infinite-scroll на границе навигации: ON→append→OFF→Next — новая страница загружается БЕЗ подписки (номерная пагинация видима, дальнейший скролл не подгружает)",
+    "summary": "Гейт infinite-scroll на границе навигации пересчитывается на КАЖДОЙ полной загрузке страницы независимо от направления переключения (ON→OFF→Next: пагинация видима/скролл не подгружает; OFF→ON→Next: пагинация скрыта/скролл подгружает)",
     "issueType": "test-case",
     "status": "tc-approved",
     "priority": "p1",
@@ -605,7 +605,7 @@
       "area:browser",
       "risk:R-11"
     ],
-    "updated": "2026-08-10T13:55:46Z",
+    "updated": "2026-08-18T23:24:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -619,7 +619,7 @@
     "epicPath": null,
     "summary": "Гейт infinite-scroll на границе навигации: OFF→ON→Next — новая страница загружается С подпиской (номерная пагинация скрыта, скролл подгружает с эвикцией)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-merged",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -628,7 +628,7 @@
       "risk:R-11"
     ],
     "updated": "2026-08-10T13:55:51Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -727,7 +727,7 @@
     "epic": null,
     "parentPath": null,
     "epicPath": null,
-    "summary": "Баннер над листингом сообщает о visibility-скрытии текстом «Some works may be hidden by your visibility settings» (ratedHidden=true, filterActive=false)",
+    "summary": "Баннер над листингом отражает РОВНО причину скрытия по паре флагов (ratedHidden × filterActive): дословный текст на каждую комбинацию, узла нет при обеих false",
     "issueType": "test-case",
     "status": "tc-approved",
     "priority": "p1",
@@ -737,7 +737,7 @@
       "area:browser",
       "risk:R-06"
     ],
-    "updated": "2026-08-15T23:03:49Z",
+    "updated": "2026-08-18T23:24:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -773,7 +773,7 @@
     "epicPath": null,
     "summary": "Баннер над листингом сообщает только об активном AO3-фильтре текстом «Some works may be hidden by the active AO3 filter» (ratedHidden=false, filterActive=true)",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-merged",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -782,7 +782,7 @@
       "risk:R-06"
     ],
     "updated": "2026-08-15T23:03:49Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -795,7 +795,7 @@
     "epicPath": null,
     "summary": "Баннер над листингом сообщает ОБЕ причины разом текстом «Some works may be hidden by visibility settings and active AO3 filter», когда активны и visibility-скрытие, и AO3-фильтр",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-merged",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -804,7 +804,7 @@
       "risk:R-06"
     ],
     "updated": "2026-08-15T23:03:49Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -817,7 +817,7 @@
     "epicPath": null,
     "summary": "Баннер над листингом НЕ появляется, когда ни visibility-скрытие, ни AO3-фильтр не активны",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-merged",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -826,7 +826,7 @@
       "risk:R-06"
     ],
     "updated": "2026-08-15T23:03:49Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -1046,6 +1046,160 @@
       "risk:R-16"
     ],
     "updated": "2026-08-15T23:03:49Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-259",
+    "path": "board/TC-259/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Ссылка «Next» под infinite scroll всегда ведёт на ещё НЕ показанную страницу и скрывается, когда страниц больше нет",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-02"
+    ],
+    "updated": "2026-08-19T13:26:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-260",
+    "path": "board/TC-260/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Живой пуш рейтинга не уводит пользователя со страницы — автопрыжок плотности срабатывает ТОЛЬКО от загрузки, не от живой оценки",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-16"
+    ],
+    "updated": "2026-08-19T13:26:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-261",
+    "path": "board/TC-261/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Системный Back в Browse ходит по СОБСТВЕННОЙ истории активной вкладки — на первой записи выходит из приложения",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-08"
+    ],
+    "updated": "2026-08-19T13:26:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-262",
+    "path": "board/TC-262/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Back на вкладках Library/Settings не закрывает приложение — переводит нижнюю навигацию на Browse",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-08"
+    ],
+    "updated": "2026-08-19T13:26:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-263",
+    "path": "board/TC-263/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Автопрыжок с опустошённой страницы использует замену записи истории (location.replace), не добавление новой",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-16"
+    ],
+    "updated": "2026-08-19T13:26:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-264",
+    "path": "board/TC-264/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Back после автопрыжка плотности возвращает пользователя на страницу, с которой автопрыжок начался",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-16"
+    ],
+    "updated": "2026-08-19T13:26:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-265",
+    "path": "board/TC-265/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Copy URL на странице без Clipboard API не молчит — срабатывает execCommand-фолбэк с видимой подписью Copied!/Copy failed",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-02"
+    ],
+    "updated": "2026-08-19T13:26:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3148,7 +3302,7 @@
     "epic": null,
     "parentPath": null,
     "epicPath": null,
-    "summary": "Оценка Favorite/Kudosed из Library отправляет kudos на AO3, если среди вкладок открыта страница этой работы",
+    "summary": "Оценка Favorite/Kudosed из Library отправляет kudos на AO3 ТОГДА И ТОЛЬКО ТОГДА, когда среди вкладок открыта страница этой работы",
     "issueType": "test-case",
     "status": "tc-approved",
     "priority": "p1",
@@ -3158,7 +3312,7 @@
       "area:library",
       "risk:R-17"
     ],
-    "updated": "2026-08-15T23:03:49Z",
+    "updated": "2026-08-18T23:24:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3172,7 +3326,7 @@
     "epicPath": null,
     "summary": "Оценка Favorite/Kudosed из Library НЕ отправляет kudos, если ни одна вкладка с этой работой не открыта",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-merged",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -3181,7 +3335,7 @@
       "risk:R-17"
     ],
     "updated": "2026-08-15T23:03:49Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -5217,7 +5371,7 @@
     "epic": null,
     "parentPath": null,
     "epicPath": null,
-    "summary": "Ручной прогон с несуществующим Snippet ID показывает «Snippet не найден» и не меняет локальные данные",
+    "summary": "Ручной прогон sync с ошибкой (несуществующий Snippet ID ИЛИ отклонённый токен) показывает соответствующий дословный диалог и НЕ меняет локальные данные",
     "issueType": "test-case",
     "status": "tc-approved",
     "priority": "p1",
@@ -5227,7 +5381,7 @@
       "area:sync",
       "risk:R-16"
     ],
-    "updated": "2026-08-15T23:03:49Z",
+    "updated": "2026-08-18T23:24:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5241,7 +5395,7 @@
     "epicPath": null,
     "summary": "Ручной прогон с отклонённым токеном показывает «GitLab rejected the token» и не меняет локальные данные",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-merged",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5250,7 +5404,7 @@
       "risk:R-16"
     ],
     "updated": "2026-08-15T23:03:49Z",
-    "resolution": null,
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -5659,6 +5813,28 @@
     ],
     "updated": "2026-08-15T15:31:00Z",
     "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-258",
+    "path": "board/TC-258/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Undo закрытия вкладки на потолке MAX_TABS не теряет вкладку молча — показывается диалог лимита вместо тишины",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:tabs",
+      "risk:R-08"
+    ],
+    "updated": "2026-08-19T13:26:00Z",
+    "resolution": null,
     "children": [],
     "archived": false
   },
@@ -7309,7 +7485,7 @@
     "epicPath": null,
     "summary": "Нет автоматизационной инфраструктуры для области sync: мок GitLab-сниппета (/api/v4/snippets), сидер sync_tombstones, возврат id профиля из seed_filter_profiles, перехват исходящего тела публикации",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -7340,7 +7516,7 @@
       "test_case:TC-234",
       "sev:major"
     ],
-    "updated": "2026-08-15T00:29:49Z",
+    "updated": "2026-08-19T14:46:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -8359,6 +8535,111 @@
       "sev:major"
     ],
     "updated": "2026-08-17T03:33:29Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-074",
+    "path": "board/BUG-074/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Автоматическая синхронизация молчит об ошибках; пользователь не узнает об отказах или удалениях работ",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:major"
+    ],
+    "updated": "2026-08-19T13:45:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-075",
+    "path": "board/BUG-075/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Open in background tab на .epub-файле уводит из приложения; подпись обещает открыть без выхода",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:minor"
+    ],
+    "updated": "2026-08-19T13:45:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-076",
+    "path": "board/BUG-076/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Перехват кнопок громкости для листания работает даже при перекрытом Browse (overlay/диалог/панель); нет сообщения о перехвате",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:minor"
+    ],
+    "updated": "2026-08-19T13:45:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-077",
+    "path": "board/BUG-077/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Прогресс чтения не хранится и не синхронизируется между устройствами; нарушает требование R-18",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:major"
+    ],
+    "updated": "2026-08-19T13:45:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-078",
+    "path": "board/BUG-078/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Файл, скачанный на одном устройстве, не докачивается на других; downloadPath намеренно не путешествует; нарушает требование R-18",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:major"
+    ],
+    "updated": "2026-08-19T13:45:00Z",
     "resolution": null,
     "children": [],
     "archived": false

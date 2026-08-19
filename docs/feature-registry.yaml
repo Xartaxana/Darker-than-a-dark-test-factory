@@ -222,7 +222,80 @@
 #     ONYX») по СМЫСЛУ тоже относится к e-ink-ридеру, но привязка к QAREADY-42
 #     кодом/айтемом НЕ подтверждена — `story:` этим записям НЕ проставлен,
 #     развилка вынесена владельцу в docs/01 §10 (щ) п.4.
-inventoried_at_commit: "59be96c6398786d33c878dbce33cb1ecde269374"
+# ПЕРЕИНВЕНТАРИЗАЦИЯ 2026-08-19 (test-strategist; вход — триггер rules.yaml
+# «реестр протух»: реестр стоял на 59be96c6, сборка aa377e0e,
+# built_at 2026-08-16T17:53:45Z, `coalesced_commits: []`). Инвентаризация
+# сделана ПО КОДУ (`app/src/main/**` + `assets/ao3_bridge.js`); PROJECT.md —
+# только оглавление. `inventoried_at_commit` поднят до aa377e0e — НОВЫЙ build.
+#
+# СОСТАВ ДИАПАЗОНА 59be96c6..aa377e0e — РОВНО ДВА коммита:
+#   1. `27d5cfd1` «Correct two PROJECT.md claims that contradict the code»
+#      (BUG-058/BUG-065) — изменён ТОЛЬКО `PROJECT.md` (7 insertions, 3
+#      deletions), прикладного кода дифф не касается ⇒ записей не порождает.
+#   2. `aa377e0` «Fix undo-at-ceiling, infinite-scroll navigation traps, and
+#      copy-URL guard» (BUG-016/018/019/020/071; issues #7/#9/#10/#11/#43) —
+#      `PROJECT.md` (1), `app/src/main/assets/ao3_bridge.js` (77),
+#      `ui/browser/BrowserViewModel.kt` (24).
+#
+# ОГРАНИЧЕНИЕ СЛЕДА (называю явно): Bash у роли нет, своего `git log/diff` в
+# этой сессии не было. Состав диапазона и `--stat` выше — ДОСЛОВНЫЙ вывод
+# git из отчётов прогонов, снятый на устройстве координатором/test-runner:
+# `runs/RUN-20260816-0332.md:106-125` и `runs/RUN-20260816-0334.md:31-68`
+# (диапазон 59be96c6..27d5cfd1), `runs/RUN-20260816-1831.md:144-172` и
+# `:389-404` (диапазон 27d5cfd1..aa377e0e, включая
+# `git merge-base --is-ancestor 59be96c6… aa377e0e… EXIT=0`). Классификация
+# «дельта сборки» vs «пробел реестра» опирается на (1) чтение текущего кода,
+# (2) прежние код-якоря самого реестра, (3) этот git-след, (4) описания фиксов
+# разработчика в bugs/BUG-0{16,18,19,20,71}.md. Где опор не хватило — сомнение
+# записано строкой, а не спрятано.
+#
+# ЭТО «ТОЛЬКО БАГФИКСЫ», НО НЕ «ДЕЛЬТЫ НЕТ» (прецедент 2026-08-11): пять
+# фиксов одного коммита породили ПЯТЬ новых наблюдаемых поведений, ни одно из
+# которых не покрыто ни одним кейсом.
+#
+# ДЕЛЬТА:
+#  A. Новые записи по НОВОМУ поведению сборки (все — следствия фиксов aa377e0;
+#     у всех 0 кейсов; Then каждого наблюдаемо отличается от соседей, поэтому
+#     дописывание в title существующих записей запрещено правилом шапки —
+#     у browse-tab-close-undo / browse-infinite-scroll / settings-debug-copy-
+#     url-toggle кейсы ЕСТЬ, и дописывание зачло бы непокрытую грань покрытой):
+#     + browse-tab-undo-at-ceiling-keeps-snapshot   (BUG-016)
+#     + bridge-infinite-scroll-next-link-sync       (BUG-018)
+#     + bridge-empty-page-auto-advance-replaces-history (BUG-019 — фикс
+#                                                    ЧАСТИЧЕН, см. запись)
+#     + bridge-live-rating-push-no-auto-advance     (BUG-020)
+#     + bridge-copy-url-clipboard-fallback          (BUG-071)
+#  B. Пробелы САМОГО РЕЕСТРА, вскрытые этим проходом (код существовал и на
+#     59be96c6 — диффом сборки не затронут; фича жила без записи и потому не
+#     могла попасть даже в секцию «Фичи без единого кейса»):
+#     + browse-back-per-tab-history        — Back в Browse идёт по СОБСТВЕННОМУ
+#       стеку вкладки (`TabNavHistory`), а не по истории WebView
+#     + browse-back-nonbrowse-tab-to-browse — Back на Library/Settings
+#       возвращает на Browse (`MainActivity.kt:365-367`)
+#     Обе — 0 кейсов; во ВСЕХ 258 кейсах слово «Back» встречается 8 раз и ни
+#     разу как проверяемое действие (Grep по test-cases/: TC-021/104/159/160/
+#     165/171/172/206 — везде это Back-кнопка SAF-диалога либо оговорка «этот
+#     кейс Back не ассертит»).
+#  C. Изменённые формулировки существующих записей: НЕТ. Ни один title не
+#     переписан — фиксы не сузили и не расширили Then существующих записей, а
+#     добавили СОСЕДНИЕ ветки. Добавлены комментарии-примечания (без правки
+#     title) к browse-tab-close-undo, browse-infinite-scroll,
+#     settings-debug-copy-url-toggle — каждый указывает на вынесенную грань.
+#  D. Удалённых/переименованных фич не найдено: код-якоря всех затронутых
+#     записей на месте (`restoreClosedTab`/`closeTab` — BrowserViewModel.kt
+#     :331/:365; инфинити-скролл — ao3_bridge.js:531-689; кнопка Copy URL —
+#     :1113-1160). Ре-теггинг кейсов НЕ требуется: ни одна существующая запись
+#     не раздроблена, id стабильны.
+#  E. `story:`-полей проход не добавляет: QAready-айтемов на эту сборку в
+#     `state/escalations.md` нет (последние — QAREADY-38/42, резолвлены
+#     переинвентаризацией 59be96c6), вся пачка — багфиксы.
+#  F. НЕ подтверждено кодом (докладываю как расхождение комментария с кодом,
+#     класс BUG-001, записи не завожу): `MainActivity.kt:368` утверждает «Back
+#     in Browse is handled by BrowserScreen directly (reads WebView.canGoBack()
+#     at press time)», тогда как `BrowserScreen.kt:261-268` читает НЕ
+#     `WebView.canGoBack()`, а `viewModel.goBack(tabId)` поверх `TabNavHistory`
+#     — ровно то расхождение, на которое напоролась верификация BUG-019.
+inventoried_at_commit: "aa377e0ec9664fcd5439fec9391638fabf94f448"
 
 features:
   # ── Browse/WebView ──────────────────────────────────────────────────────
@@ -267,8 +340,35 @@ features:
     title: "Достижение лимита MAX_TABS=10 блокирует создание новой вкладки (openTab возвращает false, activeTab не меняется)"
     screen: browse
     source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt"
+  # Примечание покрытия (test-strategist 2026-08-19, сборка aa377e0e): у этой
+  # записи ПОЯВИЛАСЬ соседняя ветка отказа — Undo на потолке MAX_TABS. Она
+  # вынесена ОТДЕЛЬНОЙ записью ниже, а не дописана в этот title: TC-023
+  # (единственный кейс записи, Automated) ассертит успешное восстановление и
+  # ветку отказа не проходит — дописав её сюда, мы зачли бы непокрытую грань
+  # покрытой (урок hide/dim). Прецедент обратного решения
+  # (`browse-deep-link-new-tab`, где ветка отказа осталась в title) здесь
+  # неприменим ровно потому, что та запись была с 0 кейсов.
   - id: browse-tab-close-undo
     title: "Swipe-up закрывает вкладку; Undo из snackbar восстанавливает её на исходной позиции с тем же URL и скроллом"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt"
+  # НОВАЯ запись (test-strategist 2026-08-19; коммит aa377e0, фикс BUG-016).
+  # Наблюдаемо различимое поведение — ВЕТКА ОТКАЗА Undo, которой до этой сборки
+  # не существовало как поведения вовсе (раньше был молчаливый провал):
+  # `BrowserViewModel.restoreClosedTab:365-371` проверяет `state.tabs.size >=
+  # MAX_TABS` ДО `closedTabSnapshots.remove(token)` (:372) ⇒ на потолке
+  # (а) поднимается ТОТ ЖЕ `showTabLimitWarning`, что у `openTab:273-275`, то
+  # есть пользователь видит диалог «Tab limit reached / You have 10 tabs open…»
+  # (`MainActivity.kt`), (б) снапшот НЕ сжигается и токен остаётся валидным.
+  # Третья, самая ценная грань Then: закрыв любую вкладку, пользователь может
+  # ПОВТОРИТЬ Undo — и вкладка вернётся (пока жив снекбар; ограничение по
+  # времени жизни снекбара — предусловие, измеренное CH-005: 2.0-2.7 с уже
+  # поздно). Границы для дизайна: токен по-прежнему вытесняется правилом «не
+  # более 5 снапшотов» (`closeTab:353-355`, запись
+  # `browse-tab-undo-history-limit`), и `restoreClosedTab` на неизвестном
+  # токене — тихий no-op (:366).
+  - id: browse-tab-undo-at-ceiling-keeps-snapshot
+    title: "Undo закрытия вкладки на потолке MAX_TABS не теряет вкладку молча: показывается тот же диалог лимита, что при открытии 11-й, снапшот сохраняется, и после закрытия любой вкладки повторный Undo восстанавливает её"
     screen: browse
     source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt"
   - id: browse-tab-undo-history-limit
@@ -376,6 +476,50 @@ features:
     title: "Восстановление позиции скролла вкладки после рестарта приложения"
     screen: browse
     source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt"
+  # ПРОБЕЛ РЕЕСТРА (test-strategist 2026-08-19; код существовал и на 59be96c6 —
+  # диффом сборки не затронут). Базовая браузерная функция, у которой не было
+  # ни записи, ни кейса: Back в Browse идёт по СОБСТВЕННОМУ стеку вкладки, а не
+  # по истории WebView. `BrowserScreen.kt:258-268` — `BackHandler(enabled =
+  # isActive)` → `viewModel.goBack(tabId)` → `webViews[tabId]?.loadUrl(url)`;
+  # стек — `TabNavHistory` (`BrowserViewModel.kt:37-70`, `tabHistories:143`),
+  # наполняется `recordPageLoad` на КАЖДОЙ полной загрузке
+  # (`BrowserScreen.kt:663`) плюс `Android.onHistoryNavigation()` из bridge на
+  # pushState/replaceState AO3. Наблюдаемые грани: (1) Back возвращает вкладку
+  # на предыдущий URL ЕЁ истории (у каждой вкладки своя); (2) на первой записи
+  # Back выходит из приложения (`onRequestExit`, :266-267); (3) индикатор
+  # `canGoBack` вкладки (`updateTabCanGoBack:387-390`). Параллельный путь
+  # `requestActiveTabGoBack()`→`webView.goBack()` в коде есть, но НЕ вызывается
+  # ниоткуда (мёртвый код — установлено верификацией BUG-019 2026-08-17) ⇒
+  # поведение приложения не зависит от истории WebView, и `location.replace`
+  # в bridge на него не влияет. Ровно этот разрыв держит BUG-019 открытым.
+  - id: browse-back-per-tab-history
+    title: "Системный Back в Browse ведёт активную вкладку по ЕЁ собственному стеку истории (TabNavHistory, а не истории WebView); на первой записи стека Back выходит из приложения"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserScreen.kt"
+  # ПРОБЕЛ РЕЕСТРА (test-strategist 2026-08-19; код существовал и на 59be96c6).
+  # `MainActivity.kt:365-367`: `BackHandler(enabled = selectedTab !=
+  # AppTab.BROWSE)` — с Library и Settings Back не выходит из приложения и не
+  # возвращает на предыдущий экран, а переводит на Browse. Then наблюдаемо
+  # отличается от записи выше (там — навигация ВНУТРИ вкладки Browse), поэтому
+  # запись своя. 0 кейсов.
+  - id: browse-back-nonbrowse-tab-to-browse
+    title: "Back на вкладках Library/Settings не закрывает приложение, а переводит нижнюю навигацию на Browse"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/MainActivity.kt"
+  # Примечание покрытия (test-strategist 2026-08-19, сборка aa377e0e): у этой
+  # зонтичной записи 6 кейсов (TC-130 — подгрузка по скроллу, TC-157/158 — гейт
+  # тумблера на границе навигации, TC-159/160/161 — автопрыжок плотности,
+  # TC-162 — эвикция окна PAGE_WINDOW), и именно поэтому ТРИ новые грани
+  # сборки aa377e0e вынесены отдельными записями (`bridge-infinite-scroll-
+  # next-link-sync`, `bridge-empty-page-auto-advance-replaces-history`,
+  # `bridge-live-rating-push-no-auto-advance`), а не дописаны в этот title:
+  # ни один из шести кейсов их не ассертит (проверено чтением: TC-157/158
+  # смотрят ВИДИМОСТЬ пагинации, а не адрес ссылки Next; TC-159 явной строкой
+  # («Инвариант», :54-59) выводит Back-ловушку BUG-019 и живой пуш рейтинга
+  # BUG-020 ЗА свои границы). Сама запись остаётся зонтичной и кандидатом на
+  # дробление по правилу шапки — маркер налицо (шесть кейсов с разными Then);
+  # дробление в этом проходе НЕ делаю: оно потребует ре-теггинга шести кейсов,
+  # это отдельная работа с приёмкой, а не побочный эффект переинвентаризации.
   - id: browse-infinite-scroll
     title: "Бесконечная подгрузка следующих страниц листинга при скролле"
     screen: browse
@@ -1102,6 +1246,12 @@ features:
   # `location.href` в буфер и меняющая подпись на «Copied!» на 1.5 с.
   # Смежность: пересечение с интерактивом страницы — тот же класс, что
   # `nf-a11y-interactive-overlap`.
+  # Примечание покрытия (test-strategist 2026-08-19, сборка aa377e0e): ПОВЕДЕНИЕ
+  # САМОГО КОПИРОВАНИЯ (что происходит, когда Clipboard API недоступен) вынесено
+  # отдельной записью `bridge-copy-url-clipboard-fallback` — TC-188
+  # (единственный кейс этой записи) проверяет видимость кнопки и неперекрытие
+  # интерактива, а не исход копирования; строки кода кнопки сместились
+  # (`ao3_bridge.js:1113-1160`, было :1055-1074).
   - id: settings-debug-copy-url-toggle
     title: "Отладочный тумблер «Show copy-URL button»: включает в каждой AO3-странице плавающую кнопку Copy URL (копирует адрес страницы, подпись меняется на Copied!), выключение её прячет"
     screen: settings
@@ -1419,6 +1569,88 @@ features:
   # в replay.
   - id: bridge-tap-zone-guard
     title: "Guard тап-зон: тап по интерактивному узлу страницы работы (a/button/input/select/textarea/label/summary/[role=button] или их потомку) не запускает зональное действие"
+    screen: ao3-bridge
+    source: "app/src/main/assets/ao3_bridge.js"
+
+  # ── Навигация листинга под infinite scroll (сборка aa377e0e) ──────────────
+  # ЧЕТЫРЕ записи ниже — новые наблюдаемые поведения коммита aa377e0 (фиксы
+  # BUG-018/019/020/071), заведены test-strategist 2026-08-19. У всех 0 кейсов.
+  # Все четыре — ЧИСТАЯ логика bridge над DOM/навигацией, то есть прямые
+  # кандидаты на слой L2 (device-free jsdom, docs/01 §«Политика слоёв»); одно
+  # исключение названо в самой записи (Back — не L2).
+  #
+  # НОВАЯ запись (коммит aa377e0, фикс BUG-018). Пока infinite scroll
+  # доклеивает страницы в DOM, ВИДИМАЯ ссылка «Next →» переписывается на
+  # следующую ЕЩЁ НЕ ЗАГРУЖЕННУЮ страницу: `_effectiveNextUrl`
+  # (`ao3_bridge.js:558-561`, обновляется из ответа fetch :638-642) +
+  # `syncNextLinks()` (:572-582, вызывается после каждого append :643).
+  # Then наблюдаемо различим и двусторонен: (а) тап по Next после N подгрузок
+  # ведёт ВПЕРЁД (на страницу N+2), а не обратно на уже показанный контент
+  # (это и был дефект); (б) когда следующей страницы больше нет
+  # (`_effectiveNextUrl === null`), весь `li.next` СКРЫВАЕТСЯ (:578-580).
+  # Соседи, которые сюда НЕ входят: номерные ссылки пагинации прячутся
+  # безусловно при включённом режиме (:596-600), а `li.previous` остаётся
+  # НЕТРОНУТОЙ нативной ссылкой AO3 (грубый прыжок назад полной загрузкой).
+  # Контракт с чужим DOM (∩ R-02): мы ПИШЕМ в разметку AO3 по селектору
+  # `ol.pagination li.next, .pagination li.next` — смена этой разметки тихо
+  # возвращает дефект BUG-018.
+  - id: bridge-infinite-scroll-next-link-sync
+    title: "Ссылка «Next» на листинге под infinite scroll всегда указывает на следующую ЕЩЁ НЕ подгруженную страницу (переписывается после каждой подгрузки) и полностью скрывается, когда следующей страницы больше нет"
+    screen: ao3-bridge
+    source: "app/src/main/assets/ao3_bridge.js"
+  # НОВАЯ запись (коммит aa377e0, фикс BUG-019 — ФИКС ЧАСТИЧЕН, см. ниже).
+  # Автопрыжок с полностью отфильтрованной страницы делается через
+  # `navigateEffective()` (`ao3_bridge.js:563-568`) — `window.location.replace`,
+  # а НЕ `location.href`: покинутая пустая страница не попадает в историю
+  # WebView. Then этой записи — ровно про историю: `history.length` не растёт
+  # на автопрыжке, и путь `webView.goBack()` мимо пустой страницы не возвращает.
+  # ЧЕСТНАЯ ГРАНИЦА (иначе запись обещала бы то, чего нет): пользовательская
+  # кнопка Back в приложении этим НЕ чинится — она идёт по `TabNavHistory`
+  # (см. `browse-back-per-tab-history`), которую `location.replace` не
+  # затрагивает; верификация на этой же сборке дала Reopened
+  # (`bugs/BUG-019.md`, fix-verifier 2026-08-17: пользователь остаётся на
+  # landed-странице, рост истории замедлился +2→+1 на нажатие). То есть у
+  # записи есть измеримая зелёная грань (история WebView) и живой открытый
+  # дефект на соседней (Back пользователя) — не L2-кандидат целиком: JS-часть
+  # проверяема в jsdom, пользовательский Back требует устройства.
+  - id: bridge-empty-page-auto-advance-replaces-history
+    title: "Автопрыжок с опустошённой фильтром страницы листинга выполняется заменой записи истории (location.replace), поэтому пустая страница не остаётся в истории WebView и не создаёт петлю перезагрузки"
+    screen: ao3-bridge
+    source: "app/src/main/assets/ao3_bridge.js"
+  # НОВАЯ запись (коммит aa377e0, фикс BUG-020). Правило-реакция с ЯВНЫМ
+  # подавлением: `checkPageDensity` выходит первым делом, если поднят флаг
+  # `window.__ao3LiveRatingPush` (`ao3_bridge.js:673-678`), который
+  # `broadcastRatingChange` поднимает и снимает вокруг СВОЕГО вызова
+  # `applyRatings` (`BrowserViewModel.kt:833-840`, try/finally). Then: оценка
+  # последней видимой работы листинга (в т.ч. DISLIKE при hide-режиме) НЕ
+  # уводит пользователя на следующую страницу из-под открытого rating-sheet —
+  # страница остаётся, пустое состояние объясняет баннер
+  # (`bridge-hidden-works-banner`). Контрастная грань, ради которой запись
+  # отдельная: тот же `checkPageDensity` на ПЕРВИЧНОЙ загрузке страницы
+  # прыгать по-прежнему обязан (запись `browse-infinite-scroll`, кейсы
+  # TC-159/160) — то есть проверяется не «прыжка нет», а «прыжок зависит от
+  # ИСТОЧНИКА применения фильтров». Прямой L2-кандидат: оба состояния флага
+  # воспроизводимы в jsdom без устройства.
+  - id: bridge-live-rating-push-no-auto-advance
+    title: "Живой пуш рейтинга (broadcastRatingChange) никогда не вызывает автопрыжок плотности: оценка последней видимой работы оставляет пользователя на странице с открытым rating-sheet, а не уводит на следующую"
+    screen: ao3-bridge
+    source: "app/src/main/assets/ao3_bridge.js"
+  # НОВАЯ запись (коммит aa377e0, фикс BUG-071; сиблинг BUG-069, чинившийся в
+  # прошлой сборке). Кнопка Copy URL (отладочная, см.
+  # `settings-debug-copy-url-toggle`) больше не разыменовывает
+  # `navigator.clipboard.writeText` вслепую: guard `if (navigator.clipboard &&
+  # navigator.clipboard.writeText)` (`ao3_bridge.js:1145`), иначе и на реджект
+  # промиса — `execCommandFallback()` (:1129-1141, textarea + execCommand).
+  # Then: на origin БЕЗ Clipboard API (любая `file://`-страница скачанной
+  # работы — штатная конфигурация приложения) кнопка всё равно даёт обратную
+  # связь — «Copied!» либо «Copy failed» на 1.5 с, — а не молчит. Отдельная
+  # запись, а не строка в тумблере: у тумблера единственный кейс TC-188
+  # (Approved) ассертит переключение видимости кнопки и неперекрытие
+  # интерактива, ветку отсутствующего API он не проходит. Прямой L2-кандидат
+  # (jsdom: `navigator.clipboard` удаляется/подменяется, `execCommand`
+  # мокается; устройство не нужно).
+  - id: bridge-copy-url-clipboard-fallback
+    title: "Кнопка Copy URL на странице без Clipboard API (file:// и прочие небезопасные origin) не падает молча: срабатывает execCommand-fallback и подпись меняется на «Copied!» либо «Copy failed»"
     screen: ao3-bridge
     source: "app/src/main/assets/ao3_bridge.js"
 

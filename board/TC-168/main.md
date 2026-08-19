@@ -2,7 +2,7 @@
 key: "TC-168"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-merged"
 priority: "p3"
 summary: "Restore пустого файла показывает «Restore failed» с текстом, отличным от не-JSON случая, и НЕ изменяет данные"
 assignee: "qa-agents"
@@ -16,13 +16,13 @@ epic: null
 created: "2026-08-10T14:20:00Z"
 updated: "2026-08-10T14:20:00Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # Restore пустого файла показывает «Restore failed» с текстом, отличным от не-JSON случая, и НЕ изменяет данные
 
 _Спроецировано из `test-cases/backup/TC-168.md` (источник правды).
-Статус в нашей машине: **Approved**._
+Статус в нашей машине: **Merged**._
 
 # TC-168 — Restore пустого файла: «Restore failed» с отдельным текстом, данные не изменились
 

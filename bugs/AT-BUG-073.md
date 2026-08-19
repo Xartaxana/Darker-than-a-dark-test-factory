@@ -17,7 +17,7 @@ updated: "2026-08-19T14:46:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
-lock: ""
+lock: "fix-verifier:2026-08-19T14:50:00Z"
 ---
 
 # AT-BUG-073 — Автоматизация области sync заблокирована: нет мока GitLab-сниппета, сидера надгробий, id профиля и перехвата исходящего тела

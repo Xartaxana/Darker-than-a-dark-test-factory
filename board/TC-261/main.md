@@ -1,0 +1,121 @@
+---
+key: "TC-261"
+project: "AO3"
+issueType: "test-case"
+status: "tc-review"
+priority: "p1"
+summary: "Системный Back в Browse ходит по СОБСТВЕННОЙ истории активной вкладки — на первой записи выходит из приложения"
+assignee: "qa-agents"
+reporter: "qa-agents"
+labels: ["test-case", "area:browser", "risk:R-08"]
+components: []
+fixVersions: []
+watchers: []
+parent: null
+epic: null
+created: "2026-08-19T13:26:00Z"
+updated: "2026-08-19T13:26:00Z"
+archived: false
+resolution: null
+---
+
+# Системный Back в Browse ходит по СОБСТВЕННОЙ истории активной вкладки — на первой записи выходит из приложения
+
+_Спроецировано из `test-cases/browser/TC-261.md` (источник правды).
+Статус в нашей машине: **Review**._
+
+# TC-261 — Back в Browse: своя история на вкладку, чужой стек не трогает, выход из приложения на дне СВОЕГО стека
+
+## Предусловия
+- Приложение запущено с чистыми данными (`clean_app`).
+- Replay-режим, фикстура `tab_markers.mitm`.
+- Почему не L2: реальная системная кнопка/жест Back и Kotlin-стек
+  `TabNavHistory` — не JS-слой бриджа, устройство обязательно (Appium
+  `driver.back()` в NATIVE_APP-контексте, не `window.history.back()`).
+
+## Сценарий (Given-When-Then)
+
+**Given** вкладка 0 (Home, активна) навигирована ВНУТРИ СЕБЯ на marker1
+(renderer-initiated навигация, реальный `onPageFinished` — история вкладки
+0: [Home, marker1], index=1); вкладка 1 открыта ОТДЕЛЬНО через deep-link на
+marker2 (своя, независимая история: [marker2], index=0), фокус явно
+возвращён на вкладку 0
+
+**When** пользователь на активной вкладке 0 нажимает системный Back (реальная
+кнопка/жест, `contexts.to_native` + `driver.back()`, не JS)
+
+**Then** вкладка 0 переходит на Home (её СОБСТВЕННАЯ предыдущая запись,
+`index` 1→0), вкладка 0 остаётся активной, число вкладок не меняется (2)
+
+**And** (проверка независимости стеков, ДО следующего Back) пользователь
+переключается на вкладку 1 — её URL по-прежнему marker2, НЕ затронут Back'ом
+на вкладке 0 (свой стек, `tabHistories` — отдельная запись на `tabId`);
+пользователь возвращается на вкладку 0
+
+**When** на активной вкладке 0 (сейчас на Home, `index=0`, `canGoBack=false`)
+пользователь нажимает системный Back повторно
+
+**Then** приложение уходит в фон/завершается (`goBack` вернул null →
+`onRequestExit()`) — наблюдаемо через `driver.query_app_state(APP_PACKAGE) <
+4` (тот же приём, что `send_app_to_background`, `app_steps.py:271-293`), НЕ
+переключение на вкладку 1 и не переход на предыдущую страницу вкладки 0
+(её у Home на дне стека нет)
+
+**Инвариант:** каждая вкладка ходит по СВОЕМУ независимому стеку истории —
+Back на активной вкладке никогда не читает и не изменяет `TabNavHistory`
+другой вкладки; на дне СВОЕГО стека Back выходит из приложения независимо
+от того, сколько записей накоплено в стеках остальных вкладок.
+
+## Проверяемые данные
+| Параметр | Значение |
+|---|---|
+| Вкладка 0 история | [Home, marker1], index=1 → 1×Back → [Home, marker1], index=0 |
+| Вкладка 1 история | [marker2], index=0, НЕ меняется Back'ом вкладки 0 |
+| 2-й Back на вкладке 0 | `query_app_state(APP_PACKAGE) < 4` (фон/завершение) |
+
+## Заметки для автоматизации
+- Навигация вкладки 0 ВНУТРИ себя (Home→marker1) — по образцу
+  `browser_steps.navigate_listing_via_page_js`/`navigate_tab_via_page_js_to`
+  (renderer-initiated `window.location.href=...` в webview-контексте
+  вкладки 0 — она же chromedriver-sticky вкладка, см. докстринг
+  `tab_chip_locator`/приём TC-023), либо host-initiated
+  `driver.execute_script`; ЛЮБОЙ реальный page load триггерит
+  `onPageFinished`→`recordPageLoad` независимо от способа — блокера нет.
+  Подтверждение загрузки — нативный заголовок чипа (`assert_tab_title_at_
+  position`, TC-131/TC-204), НЕ требует захода в WEBVIEW-контекст вкладки.
+- Вкладка 1 — `app_steps.open_deep_link` ПОСЛЕ канонического guard'а
+  `wait_home_ready_for_deep_link` (гонка deep-link/onPageLoad, тот же класс,
+  что закрыт в TC-131/TC-204); возврат фокуса на вкладку 0 —
+  `browser_steps.switch_to_tab(driver, 0)`.
+- Системный Back — `contexts.to_native(driver)` + `driver.back()` (НЕ
+  `window.history.back()` из webview-контекста) — приём уже проверен живым
+  прогоном fix-verifier BUG-019 (`bugs/BUG-019.md`, таблица «Верификация»,
+  scratch `test_bug019_verify.py`, НЕ закоммичен, но метод задокументирован
+  дословно) — тот же примитив, что `library_screen.py::close_sort_menu`
+  использует для `BackHandler`/`dismissOnBackPress`.
+- URL/заголовок вкладки после Back — `assert_tab_title_at_position`/
+  `assert_active_tab_url` (существующие степы TC-131/TC-204).
+- Фон/завершение после 2-го Back — `driver.query_app_state(settings.
+  APP_PACKAGE) < 4`, тот же паттерн опроса, что `app_steps.
+  send_app_to_background:271-293` (`RUNNING_IN_FOREGROUND=4` — меньше
+  этого значения означает уход из foreground); НЕ требует нового
+  примитива — обёртка над существующим `query_app_state`, не test_debt.
+- Блокера автоматизации нет — все использованные приёмы либо уже есть
+  (deep-link/guard/switch_to_tab/title-assert/query_app_state), либо
+  ординарная композиция существующих (renderer-initiated navigate внутри
+  chromedriver-sticky вкладки 0).
+
+## Чек-лист качества (test-designer проходит перед `Review`)
+- [x] Один сценарий — один кейс; нет «и ещё проверить...»
+- [x] Given описывает полное состояние, воспроизводимое фикстурами
+- [x] Then проверяет наблюдаемое поведение (URL/заголовок/app_state), а не
+      реализацию
+- [x] Заголовок сформулирован от ожидаемого поведения
+- [x] Указаны приоритет (P1), область (browser) и источник требования (R-08)
+- [x] Кейс независим от порядка выполнения других кейсов
+- [x] Блокер автоматизации из заметок — блокера нет
+- [x] Слой L3, строка «почему не L2» дана явно (реальный системный Back +
+      Kotlin-стек, устройство обязательно)
+- [x] Строка `Инвариант:` добавлена (кейс комбинаторной области — состояние
+      нескольких независимых стеков вкладок; инвариант называет свойство
+      независимости, не единичный пример)
