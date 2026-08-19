@@ -2,7 +2,7 @@
 key: "BUG-072"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p2"
 summary: "restoreClosedTab UI-недостижим второй раз: BrowserViewModel.kt KDoc и PROJECT.md обещают повторный Undo после отказа на потолке, но единственный вызов потребляется тем же снекбаром — вкладка остаётся безвозвратно потерянной"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-19T18:12:00Z"
-updated: "2026-08-19T18:12:00Z"
+created: "2026-08-19T21:12:55Z"
+updated: "2026-08-19T21:12:55Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # restoreClosedTab UI-недостижим второй раз: BrowserViewModel.kt KDoc и PROJECT.md обещают повторный Undo после отказа на потолке, но единственный вызов потребляется тем же снекбаром — вкладка остаётся безвозвратно потерянной
 
 _Спроецировано из `bugs/BUG-072.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # BUG-072 — обещание «retry Undo после отказа на потолке» не реализуемо в UI
 
@@ -87,6 +87,7 @@ QA не занимает позицию по выбору — баг завед�
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-08-19 | source_commit `fdd3f72884105d1453448e0c9a7f2b109588b182` (`state/app-under-test.yaml`), versionName `dev-local`, versionCode 12 (`output-metadata.json`), built_at `2026-08-19T17:47:59Z`, apk_sha256 `6bc924f9e3536615b1bcbb5f9533ea9dde0a38e6e31372e39e290c1b68b8b179`; несёт `36cda8ef` — `git merge-base --is-ancestor aa377e0e fdd3f728` → EXIT=0 (предок), `git log --oneline aa377e0e..fdd3f728` содержит `36cda8e` | `test_cases: []` — постоянного TC на этот сценарий нет; carve-out D1 (app_bug без TC, живой прогон вместо чтения кода) — live scratch pytest в `framework/tests/` (session-scratch, НЕ закоммичен, удалён по завершении: `test_zzz_scratch_bug_batch_verify.py::test_bug072_verify_undo_dismissed_on_new_tab`). Сценарий: 10 вкладок (MAX_TABS, `open_deep_link`+8×`open_new_tab`, лимит не преждевременный на каждом шаге — `assert_tab_limit_dialog_not_shown`), `swipe_close_tab(1)` закрывает вкладку (9 вкладок, снекбар «Tab closed»/Undo ожидаемо появляется), затем **вместо тапа Undo** — `open_new_tab()` (рефилл до 10) — по обещанию фикса `LaunchedEffect(tabOpenSeq)` обязан закрыть устаревший снекбар. Control «Undo вообще работает без открытия новой вкладки» не дублировался живым прогоном этой записи — покрыт TC-023 регрессии **на этой же сборке** (461/461, RUN-20260819-2012, `state/app-under-test.yaml`) | **GREEN** (allure attachment «BUG-072: snackbar state before/after new tab», дословно): `undo snackbar visible BEFORE opening new tab: True; undo snackbar visible AFTER opening new tab: False` — снекбар реально появился и реально исчез после открытия новой вкладки. **Критик-поправка (2026-08-19, критик-вход приёмки батча D1):** этот прогон САМ ПО СЕБЕ не является различающей пробой — `MainActivity.kt:323` несёт `duration = SnackbarDuration.Short` (~4с), а `browser_screen.py:408` `undo_snackbar_visible(timeout=5)` возвращает `False` только после 5-секундного опроса; тот же исход (`AFTER=False`) был бы получен и при полностью отсутствующем фиксе за счёт штатного авто-скрытия снекбара, эксклюзивный контроль («подождать столько же БЕЗ открытия вкладки — снекбар всё ещё виден») этим прогоном не поставлен | **Verified, основание — дифф, не различающий прогон.** `LaunchedEffect(uiState.tabOpenSeq)` (`MainActivity.kt`, коммит `36cda8e`): `snackbarHostState.currentSnackbarData?.takeIf { it.visuals.message == tabClosedMessage }?.dismiss()` — структурно действительно закрывает снекбар «Tab closed» при пользовательском `openTab`, устраняя саму ситуацию, в которой Undo мог упереться в занятый потолок. Живой прогон СОГЛАСУЕТСЯ с этим (BEFORE=True/AFTER=False), но альтернативное объяснение (штатное 4с-авто-скрытие Compose Snackbar, не действие фикса) им не исключено — вердикт Verified опирается на диф, не на «доказано прогоном». Соответствует выбранному разработчиком третьему варианту решения (не retry, а снятие предложения). **Фикс без замка:** `test_cases: []` — postoянного TC нет. `next_rules`: test-designer/test-automator — материализовать TC на «открытие новой вкладки закрывает снекбар Undo „Tab closed“» (Given: 10 вкладок; When: закрыть одну, затем открыть новую БЕЗ тапа Undo; Then: снекбар Undo отсутствует) для зоны tabs/undo-snackbar, регрессия иначе не ловится |
 
 ## Обсуждение
 
@@ -123,3 +124,9 @@ QA не занимает позицию по выбору — баг завед�
 - `PROJECT.md:31` — обещание про retry удалено, описано новое поведение: «Opening a new tab while the snackbar is visible dismisses it; as a defensive guard, Undo at the 10-tab ceiling still shows the tab-limit dialog and keeps the snapshot» ✓
 
 Решение — третий вариант: убрана сама ситуация, в которой retry нужен. Снекбар Undo теперь закрывается при открытии пользователем новой вкладки, что чётко сигнализирует об отмене попытки восстановления. Защитная ветка потолка в `restoreClosedTab` оставлена (снапшот не сжигается), но из UI она недостижима. Фикс достаточен для закрытия дефекта: обещания приведены в соответствие с кодом, поведение документировано. awaiting: dev
+
+**[fix-verifier @ 2026-08-19T21:12:55Z]** Верифицировано на `fdd3f72884105d1453448e0c9a7f2b109588b182` (versionCode 12, built_at 2026-08-19T17:47:59Z) — **Verified**. Полные данные и дословный witness — таблица «Верификация» выше.
+
+Живой прогон: 10 вкладок, закрыл одну (снекбар Undo реально появился), открыл новую вкладку ВМЕСТО тапа Undo — снекбар реально исчез. Ровно то поведение, которое разработчик описал (`LaunchedEffect(tabOpenSeq)` гасит снекбар «Tab closed» на пользовательском `openTab`) — ситуация «Undo встречает занятый потолок и остаётся недостижимым» больше не возникает, потому что устаревшее предложение снимается раньше, чем пользователь успевает наткнуться на потолок через него.
+
+**Фикс без замка:** `test_cases: []` — постоянного TC нет. `next_rules`: test-designer/test-automator — материализовать TC на этот сценарий для зоны tabs/undo-snackbar.
