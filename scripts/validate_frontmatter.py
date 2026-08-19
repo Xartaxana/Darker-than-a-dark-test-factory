@@ -298,6 +298,29 @@ def check_cross_field(meta: dict, schema: dict, rel: str) -> list[str]:
     return errors
 
 
+def check_merged_into_referential(tc_status_by_id: dict[str, str],
+                                   merged_refs: list[tuple[str, str, str]]) -> list[str]:
+    """Батч мелочей п.2: `merged_into` — WARN-ярус referential-проверка,
+    ПОСЛЕ полного скана test-cases/ (цель может быть выше/ниже по файлам).
+    Цель обязана существовать в test-cases/ И сама не быть `Merged` (цепочка
+    Merged->Merged протухает — дубль слился на уже поглощённого дубля).
+    `merged_refs`: (rel, own_id, target_id) для кейсов со `status: Merged`
+    и непустым `merged_into` (ERROR-ярус check_cross_field уже гарантирует
+    их совместность, здесь — только referential-часть по КАРТЕ всех id)."""
+    warns: list[str] = []
+    for rel, own_id, target_id in merged_refs:
+        target_status = tc_status_by_id.get(target_id)
+        if target_status is None:
+            warns.append(
+                f"{rel}: `merged_into: {target_id}` ссылается на несуществующий "
+                f"test-case (цель не найдена в test-cases/)")
+        elif target_status == "Merged":
+            warns.append(
+                f"{rel}: `merged_into: {target_id}` ссылается на кейс, который "
+                f"сам `status: Merged` (цепочка слияний — цель протухла)")
+    return warns
+
+
 def check_cross_field_warn(meta: dict, schema: dict, rel: str) -> list[str]:
     """WARN-уровень: недозаполненность, не ломающая конвейер (B2/B3/B4/B5)."""
     warns: list[str] = []
@@ -423,6 +446,11 @@ def validate() -> tuple[list[str], list[str]]:
     warns: list[str] = []
     seen_ids: dict[str, str] = {}
     registry_ids = load_feature_registry()
+    # Батч мелочей п.2: карта id->status test-case'ов + список merged_into-ссылок,
+    # собираются в основном проходе, referential-проверка — постфактум (цель
+    # может физически идти позже ссылающегося файла в порядке скана).
+    tc_status_by_id: dict[str, str] = {}
+    merged_refs: list[tuple[str, str, str]] = []
 
     for area, itype in AREAS:
         base = REPO / area
@@ -472,6 +500,11 @@ def validate() -> tuple[list[str], list[str]]:
                     errors.append(f"{rel}: дубль id `{key}` (уже в {seen_ids[key]})")
                 else:
                     seen_ids[key] = rel
+            if itype == "test-case" and key:
+                tc_status_by_id[key] = _s(meta.get("status"))
+                merged_into_val = _s(meta.get("merged_into")).strip()
+                if _s(meta.get("status")) == "Merged" and merged_into_val:
+                    merged_refs.append((rel, key, merged_into_val))
             e, w = check_meta(meta, schema, rel)
             errors += e
             warns += w
@@ -480,6 +513,7 @@ def validate() -> tuple[list[str], list[str]]:
             fe, fw = check_feature_ids(meta, schema, rel, registry_ids)
             errors += fe
             warns += fw
+    warns += check_merged_into_referential(tc_status_by_id, merged_refs)
     return errors, warns
 
 

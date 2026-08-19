@@ -480,6 +480,25 @@ def test_m4_writer_oserror_does_not_raise_and_pass_completes(tmp_path, orch_log,
     assert not p["lock_file"].exists()               # release состоялся
 
 
+def test_m4_writer_oserror_leaves_diagnosable_trace(tmp_path, orch_log, monkeypatch, capsys):
+    """Батч мелочей п.3: не только «не роняет» (см. тест выше) — отказ
+    M4-писателя обязан оставить диагностируемый след, а не уйти молча."""
+    p = _paths(tmp_path)
+    monkeypatch.setattr(hw, "_popen", lambda args, **kw: FakeProc(pid=1, wait_plan=[0]),
+                        raising=True)
+    monkeypatch.setattr(hw.time, "monotonic", _mono([0.0, 1.0]), raising=True)
+
+    def _boom(fields):
+        raise OSError("журнал занят")
+    monkeypatch.setattr(hw.la, "append_orchestrator", _boom, raising=True)
+
+    r = hw.run_fallback_pass(now=NOW, **p)
+
+    assert r["outcome"] == "spawned"
+    out = capsys.readouterr().out
+    assert "M4 write failed" in out and "журнал занят" in out
+
+
 def test_m4_writer_systemexit_swallowed_named_class(tmp_path, orch_log, monkeypatch):
     """SystemExit из la._verify_environment (репо не распознан) — второй
     named-класс: раньше пролетал мимо catch-all main() (except Exception)

@@ -223,6 +223,21 @@ def test_orchestrator_requires_exactly_four_cells(logs):
         la.append_orchestrator(["только", "три", "ячейки"])
 
 
+def test_orchestrator_sanitizes_bare_cr_and_crlf(logs):
+    # Батч мелочей п.1: голый \r (и \r\n) в ячейке раньше не санировался —
+    # splitlines() у читателей (см. этот же тест: он читает файл именно
+    # так) режет \r как отдельный разделитель строк, что ломало
+    # построчную markdown-таблицу лишними «строками».
+    _, orch = logs
+    la.append_orchestrator(["a\rb", "аг\r\nент", "х", "строка"])
+    lines = orch.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 1
+    line = lines[0]
+    assert "\r" not in line
+    assert "a b" in line
+    assert "аг ент" in line
+
+
 # D-0060/F-23: две параллельные сессии выдали один task_id (t-008) двум
 # разным задачам в append-only журнале. Новый task_id обязан быть
 # max(существующих t-NNN)+1; повторный delegated на уже accepted task_id —

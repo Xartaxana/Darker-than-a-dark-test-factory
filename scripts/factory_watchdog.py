@@ -302,7 +302,7 @@ def _mode_snapshot(mode_data: dict | None) -> dict:
 
 def _append_orchestrator_line(path: Path, artifact: str, outcome: str,
                               now: datetime.datetime) -> None:
-    safe = [c.replace("|", "\\|").replace("\n", " ").strip()
+    safe = [c.replace("|", "\\|").replace("\r", " ").replace("\n", " ").strip()
             for c in (RULE, AGENT, artifact, outcome)]
     line = "| " + " | ".join([_fmt_ts(now)] + safe) + " |\n"
     try:

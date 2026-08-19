@@ -587,6 +587,55 @@ def test_merged_into_bad_pattern_is_error(repo, schemas):
     assert any("TC-206" in e and "merged_into" in e for e in errors)
 
 
+# --- Батч мелочей п.2: referential-проверка merged_into (WARN-ярус) ---------
+
+def test_merged_into_target_exists_and_not_merged_is_clean(repo, schemas):
+    """Happy path: цель существует и сама не Merged — ни ERROR, ни referential
+    WARN про merged_into."""
+    repo.test_case("TC-210", "Merged", extra=(
+        'automated_by: ""\n'
+        'automation_status: ""\n'
+        'merged_into: TC-211\n'
+    ))
+    repo.test_case("TC-211", "Approved")
+
+    errors, warns = vf.validate()
+    assert errors == []
+    assert not any("TC-210" in w and "merged_into" in w for w in warns)
+
+
+def test_merged_into_target_missing_is_warn(repo, schemas):
+    """Цель НЕ существует в test-cases/ — WARN (не ERROR: не блокирует конвейер)."""
+    repo.test_case("TC-212", "Merged", extra=(
+        'automated_by: ""\n'
+        'automation_status: ""\n'
+        'merged_into: TC-999\n'
+    ))
+
+    errors, warns = vf.validate()
+    assert not any("TC-212" in e for e in errors)
+    assert any("TC-212" in w and "TC-999" in w and "merged_into" in w for w in warns)
+
+
+def test_merged_into_target_itself_merged_is_warn(repo, schemas):
+    """Цепочка Merged->Merged: цель сама `status: Merged` — цель протухла, WARN."""
+    repo.test_case("TC-213", "Merged", extra=(
+        'automated_by: ""\n'
+        'automation_status: ""\n'
+        'merged_into: TC-214\n'
+    ))
+    repo.test_case("TC-214", "Merged", extra=(
+        'automated_by: ""\n'
+        'automation_status: ""\n'
+        'merged_into: TC-211\n'
+    ))
+    repo.test_case("TC-211", "Approved")
+
+    errors, warns = vf.validate()
+    assert not any("TC-213" in e for e in errors)
+    assert any("TC-213" in w and "TC-214" in w and "merged_into" in w for w in warns)
+
+
 # --- П2 Р1 (spec-p2-pyramid v4): поле `layer` — старые кейсы не краснеют ----
 
 def test_layer_empty_is_clean(repo, schemas):

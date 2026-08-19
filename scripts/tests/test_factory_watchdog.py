@@ -141,6 +141,37 @@ def test_bootstrap_corrupt_state_file_treated_as_no_snapshots(tmp_path):
     assert "bootstrap" in orch and "factory-watchdog.json" in orch
 
 
+def test_orchestrator_log_write_failure_does_not_kill_tick_and_leaves_diagnosable_trace(
+        tmp_path, capsys):
+    """Батч мелочей п.3: `_append_orchestrator_line` (M4-писатель сторожа)
+    отказывает (каталог лога недоступен — тут: родитель существует как
+    ФАЙЛ, mkdir(parents=True, exist_ok=True) бьёт OSError'ом) — тик обязан
+    отработать штатно (code==0, state-файл записан валидно), а отказ
+    записи — оставить диагностируемый след (печать), не уйти молча."""
+    p = _paths(tmp_path)
+    _write_sla(p)
+    # orchestrator_log лежит ПОД файлом (не каталогом) — mkdir родителя
+    # структурно не может выполниться.
+    blocker = tmp_path / "state" / "blocked-orch"
+    blocker.parent.mkdir(parents=True, exist_ok=True)
+    blocker.write_text("не каталог", encoding="utf-8")
+    p["orchestrator_log"] = blocker / "orchestrator-log.md"
+    # bootstrap-ветка (нет state-файла) с notes_now непустым: битый
+    # mode-файл добавляет заметку -> код доходит до _append_orchestrator_line.
+    p["mode_file"].parent.mkdir(parents=True, exist_ok=True)
+    p["mode_file"].write_text("{not valid json", encoding="utf-8")
+    toast = _NoToast()
+
+    code = fw.run_tick(now=NOW, toast_fn=toast, **p)
+
+    assert code == 0                                  # тик не упал
+    state = _read_state(p)
+    assert state["last_state"] == "ok"                 # state всё равно записан
+    assert not p["orchestrator_log"].exists()           # запись физически не состоялась
+    out = capsys.readouterr().out
+    assert "ORCHESTRATOR-LOG write failed" in out        # диагностируемый след
+
+
 # --- п.0: битые mode/lock (bootstrap НЕ активен — state-файл валиден) ------
 
 def test_corrupt_mode_file_treated_as_missing_with_orchestrator_note(tmp_path):

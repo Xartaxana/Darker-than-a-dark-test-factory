@@ -79,7 +79,14 @@ def resolve_automated_by(automated_by: str, repo: Path) -> tuple[bool, str]:
     parts = automated_by.split("::")
     if len(parts) < 2:
         return False, f"нет разделителя `::` в `{automated_by}`"
-    rel_path, func_name = parts[0], parts[-1]
+    rel_path, func_name_raw = parts[0], parts[-1]
+    # Батч мелочей п.4: `func[param]`-суффикс параметризации (pytest node id)
+    # раньше не отделялся — regex искал буквальное `def func[param](`,
+    # которого в исходнике никогда нет (параметризованный тест определён
+    # как `def func(`), поэтому ЛЮБОЙ параметризованный `automated_by` был
+    # ложным MISMATCH. Тот же приём, что `arch_check._split_automated_by`
+    # (`.split("[", 1)[0]`).
+    func_name = func_name_raw.split("[", 1)[0]
     file_path = repo / rel_path
     if not file_path.is_file():
         return False, f"файл не существует: {rel_path}"
@@ -171,6 +178,42 @@ def test_resolve_automated_by_finds_async_and_indented_def(tmp_path):
     ok_async, _ = resolve_automated_by("test_fake2.py::test_async_thing", tmp_path)
     assert ok_method
     assert ok_async
+
+
+# --- Батч мелочей п.4: func[param]-суффикс параметризации -------------------
+
+def test_resolve_automated_by_strips_param_suffix_for_existing_function(tmp_path):
+    """Граница «с параметром»: `func[param]` резолвится в `def func(` —
+    без санации суффикса это был бы ложный MISMATCH (класс найден при
+    разборе item 4)."""
+    fake_file = tmp_path / "test_param.py"
+    fake_file.write_text(
+        "import pytest\n\n@pytest.mark.parametrize('x', ['a', 'b'])\n"
+        "def test_thing(x):\n    pass\n",
+        encoding="utf-8",
+    )
+    ok, reason = resolve_automated_by("test_param.py::test_thing[a]", tmp_path)
+    assert ok, f"параметризованный automated_by должен резолвиться: {reason}"
+
+
+def test_resolve_automated_by_no_param_suffix_still_resolves(tmp_path):
+    """Граница «без параметра»: обычный `func` (без `[...]`) — поведение не
+    меняется санацией суффикса."""
+    fake_file = tmp_path / "test_noparam.py"
+    fake_file.write_text("def test_plain():\n    pass\n", encoding="utf-8")
+    ok, reason = resolve_automated_by("test_noparam.py::test_plain", tmp_path)
+    assert ok, f"обычный (непараметризованный) automated_by должен резолвиться: {reason}"
+
+
+def test_resolve_automated_by_missing_function_with_param_suffix_is_mismatch(tmp_path):
+    """Граница «за пределами» — несуществующая функция с `[param]`-суффиксом
+    остаётся MISMATCH (санация суффикса не маскирует реальный дрейф)."""
+    fake_file = tmp_path / "test_ghost_param.py"
+    fake_file.write_text("def test_other():\n    pass\n", encoding="utf-8")
+    ok, reason = resolve_automated_by(
+        "test_ghost_param.py::test_ghost_function[a]", tmp_path)
+    assert not ok
+    assert "не найдено" in reason
 
 
 def test_resolve_automated_by_shadowed_duplicate_def_is_mismatch(tmp_path):

@@ -480,8 +480,65 @@ def _append_escalation(key: str, reason: str) -> None:
 
 QAREADY_SAFEGUARD_STATUSES = ("Open", "Reopened")
 
+# Батч мелочей п.6 (resolved-блок QAREADY-SYNC-RACE-BUG-019, state/escalations.md
+# 2026-08-19): курсор-сверка safeguard'а. Носитель курсора —
+# state/gitlab-label-cursor.json (плоская `{bug_id: max_event_id}`, ПИШЕТ его
+# только gitlab_inbound.py — этот модуль ТОЛЬКО ЧИТАЕТ, никогда не пишет).
+# ЛОКАЛЬНАЯ копия ридера/фетчера, НЕ импорт gitlab_inbound: тот модуль на
+# своём верхнем уровне делает `import gitlab_sync as gs` — обратный импорт
+# создал бы цикл (либо, при CLI-запуске `python scripts/gitlab_sync.py` как
+# __main__, повторный импорт-под-собственным-именем удвоил бы top-level код
+# модуля). Тот же приём, что write_frontmatter_field в gitlab_inbound.py
+# (докстринг там же явно называет причину).
+QAREADY_LABEL_CURSOR_PATH = REPO / "state" / "gitlab-label-cursor.json"
+QAREADY_LABEL_EVENTS_PER_PAGE = 100
+QAREADY_LABEL_EVENTS_MAX_PAGES = 3
 
-def _qaready_removal_safeguard(bug_id: str, status: str, remove_labels: list[str]) -> list[str]:
+
+def _qaready_label_cursor(bug_id: str) -> int | None:
+    """max_event_id, уже обработанный gitlab_inbound для этого бага, либо
+    None — курсора нет (файла нет/бага нет в курсоре/файл нечитаем)."""
+    if not QAREADY_LABEL_CURSOR_PATH.exists():
+        return None
+    try:
+        cursor = json.loads(QAREADY_LABEL_CURSOR_PATH.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+    value = cursor.get(bug_id) if isinstance(cursor, dict) else None
+    return value if isinstance(value, int) else None
+
+
+def _qaready_has_unprocessed_label_events(client: "GitLabClient", iid: int,
+                                          cursor_id: int | None) -> bool | None:
+    """True — есть label-событие СТРОЖЕ курсора (ярлык ещё не сведён
+    inbound-курсором, снятие НЕ легитимно); False — новых событий нет
+    (курсор актуален, снятие легитимно); None — проверка не удалась (сеть/
+    кап страниц QAREADY_LABEL_EVENTS_MAX_PAGES) — вызывающая сторона
+    трактует None как fail-safe (то же самое, что True)."""
+    page = 1
+    while page <= QAREADY_LABEL_EVENTS_MAX_PAGES:
+        try:
+            _status, events = client.get(
+                f"/issues/{iid}/resource_label_events",
+                params={"per_page": QAREADY_LABEL_EVENTS_PER_PAGE, "page": page})
+        except GitLabHTTPError:
+            return None
+        events = events or []
+        if not events:
+            return False
+        for ev in events:
+            eid = ev.get("id") if isinstance(ev, dict) else None
+            if eid is not None and (cursor_id is None or eid > cursor_id):
+                return True
+        if len(events) < QAREADY_LABEL_EVENTS_PER_PAGE:
+            return False
+        page += 1
+    return None  # кап страниц пройден без исчерпания выдачи — не проверено
+
+
+def _qaready_removal_safeguard(bug_id: str, status: str, remove_labels: list[str],
+                                *, client: "GitLabClient | None" = None,
+                                iid: int | None = None) -> list[str]:
     """D4/E4 (v4.1, разбор живого прогона builder-смока 2026-08-10): remove
     qa-status::QAready — skip ЭТОЙ метки ТОЛЬКО на Open|Reopened (сигнал
     разработчика ещё НЕ сведён внутренним статусом). Границу «НЕ-Fixed»
@@ -490,9 +547,22 @@ def _qaready_removal_safeguard(bug_id: str, status: str, remove_labels: list[str
     ушла дальше (issue закрыт), снятие qa-status::QAready легитимно и
     обязано проходить, иначе ярлык-сирота остаётся рядом с закрытым issue
     навсегда. Персистентная эскалация (дедуп по ключу) + [WARN] — только
-    для реального срабатывания guard'а. Прочие remove_labels не трогаются."""
+    для реального срабатывания guard'а. Прочие remove_labels не трогаются.
+
+    Курсор-сверка (батч мелочей п.6): при живом `client`/`iid` — если
+    label-событий СТРОЖЕ курсора `state/gitlab-label-cursor.json` нет
+    (ярлык, чьё выставление УЖЕ обработано gitlab_inbound, ярлык-сирота
+    протух), снятие проходит МОЛЧА — без WARN/эскалации (класс BUG-019,
+    resolved-блок QAREADY-SYNC-RACE-BUG-019 2026-08-19: гонки нет, ярлык
+    протухший). Без client/iid ИЛИ при неуспехе проверки — прежний
+    fail-safe (WARN + пропуск снятия): необработанное остаётся под охраной."""
     if QAREADY_LABEL not in remove_labels or status not in QAREADY_SAFEGUARD_STATUSES:
         return remove_labels
+    if client is not None and iid is not None:
+        cursor_id = _qaready_label_cursor(bug_id)
+        unprocessed = _qaready_has_unprocessed_label_events(client, iid, cursor_id)
+        if unprocessed is False:
+            return remove_labels               # курсор актуален — снятие штатно
     key = f"QAREADY-SYNC-RACE-{bug_id}"
     if not _escalation_key_already_pending(key):
         _append_escalation(
@@ -517,7 +587,8 @@ def _diff_and_update(client: GitLabClient, iid: int, issue: dict, *,
     current_state = issue.get("state", "")
 
     add_labels, remove_labels = _label_changes(current_labels, labels)
-    remove_labels = _qaready_removal_safeguard(bug_id, status, remove_labels)
+    remove_labels = _qaready_removal_safeguard(bug_id, status, remove_labels,
+                                               client=client, iid=iid)
 
     changes: dict = {}
     if current_title != title:

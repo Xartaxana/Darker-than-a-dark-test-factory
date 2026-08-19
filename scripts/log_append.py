@@ -1114,7 +1114,11 @@ def append_routing(event: str, agent: str, *, model: str = "",
 def append_orchestrator(cells: list[str]) -> str:
     if len(cells) != 4:
         raise SystemExit("orchestrator ожидает ровно 4 ячейки: правило, агент, артефакт, исход")
-    safe = [c.replace("|", "\\|").replace("\n", " ").strip() for c in cells]
+    # \r-санация (батч мелочей п.1): голый CR (или CRLF) в ячейке не ловится
+    # `.replace("\n", " ")`, но str.splitlines() у читателей (см. тест ниже)
+    # трактует \r как отдельный разделитель строк — без санации CR ломает
+    # построчную структуру markdown-таблицы state/orchestrator-log.md.
+    safe = [re.sub(r"[\r\n]+", " ", c).replace("|", "\\|").strip() for c in cells]
     line = "| " + " | ".join([_now_iso(suffix_z=True)] + safe) + " |"
     ok, env_msg = _verify_environment(require_dir=ORCH_LOG.parent)
     if not ok:

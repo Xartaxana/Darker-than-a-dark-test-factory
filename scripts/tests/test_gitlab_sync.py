@@ -53,6 +53,13 @@ def bugs_dir(tmp_path, monkeypatch):
     # найденный при построении test_gitlab_inbound.py).
     monkeypatch.setattr(gs, "ESCALATIONS_PATH", tmp_path / "state" / "escalations.md",
                         raising=True)
+    # Батч мелочей п.6: курсор label-событий — ОТДЕЛЬНЫЙ tmp-путь (класс
+    # LABEL_CURSOR_PATH бага выше — реальный state/gitlab-label-cursor.json
+    # репозитория не должен читаться тестами). Файл по умолчанию отсутствует
+    # -> _qaready_label_cursor() возвращает None везде, где тест его не пишет
+    # явно (сохраняет старое поведение guard'а без явного мока событий).
+    monkeypatch.setattr(gs, "QAREADY_LABEL_CURSOR_PATH",
+                        tmp_path / "state" / "gitlab-label-cursor.json", raising=True)
     return d
 
 
@@ -565,6 +572,10 @@ def test_qaready_removal_safeguard_skips_label_on_open_bug(bugs_dir, capsys):
     }
     client, transport = _client([
         (200, remote_issue),   # GET /issues/950
+        # Батч мелочей п.6: курсор отсутствует (bugs_dir не пишет его) ->
+        # cursor_id=None -> ЛЮБОЕ событие трактуется как "строже курсора" ->
+        # fail-safe сохраняет прежнее поведение guard'а (WARN + пропуск).
+        (200, [{"id": 1, "action": "add"}]),  # GET .../resource_label_events
         # add_labels qa-status::Open (desired), никакого remove — PUT всё же
         # нужен ради add_labels.
         (200, {}),
@@ -618,7 +629,11 @@ def test_qaready_removal_safeguard_reopened_bug_is_also_guarded(bugs_dir, capsys
         "labels": ["qa-factory", "severity::major", "qa-status::QAready"],
         "state": "opened",
     }
-    client, transport = _client([(200, remote_issue), (200, {})])
+    client, transport = _client([
+        (200, remote_issue),
+        (200, [{"id": 1, "action": "add"}]),  # курсор-сверка, fail-safe (см. тест выше)
+        (200, {}),
+    ])
 
     gs.sync_bug(client, p, {**meta, "gitlab_issue": 954}, body)
 
@@ -666,7 +681,11 @@ def test_qaready_removal_safeguard_other_own_labels_still_removed(bugs_dir):
         "labels": ["qa-factory", "severity::minor", "qa-status::QAready"],
         "state": "opened",
     }
-    client, transport = _client([(200, remote_issue), (200, {})])
+    client, transport = _client([
+        (200, remote_issue),
+        (200, [{"id": 1, "action": "add"}]),  # курсор-сверка, fail-safe
+        (200, {}),
+    ])
 
     gs.sync_bug(client, p, {**meta, "gitlab_issue": 952}, body)
 
@@ -687,9 +706,10 @@ def test_qaready_removal_safeguard_escalation_deduped_across_runs(bugs_dir):
         "state": "opened",
     }
 
-    client1, _t1 = _client([(200, remote_issue), (200, {})])
+    events_resp = (200, [{"id": 1, "action": "add"}])  # курсор-сверка, fail-safe
+    client1, _t1 = _client([(200, remote_issue), events_resp, (200, {})])
     gs.sync_bug(client1, p, {**meta, "gitlab_issue": 953}, body)
-    client2, _t2 = _client([(200, remote_issue), (200, {})])
+    client2, _t2 = _client([(200, remote_issue), events_resp, (200, {})])
     gs.sync_bug(client2, p, {**meta, "gitlab_issue": 953}, body)
 
     esc = gs.ESCALATIONS_PATH.read_text(encoding="utf-8")
@@ -718,6 +738,123 @@ def test_qaready_removal_safeguard_helper_unit_boundary(bugs_dir):
             "BUG-X", status, ["qa-status::QAready"]) == ["qa-status::QAready"], status
     assert gs._qaready_removal_safeguard(
         "BUG-X", "Open", ["severity::minor"]) == ["severity::minor"]
+
+
+# =============================================================================
+# Батч мелочей п.6: курсор-сверка safeguard'а (resolved-блок
+# QAREADY-SYNC-RACE-BUG-019, state/escalations.md 2026-08-19)
+# =============================================================================
+
+def test_qaready_removal_safeguard_cursor_caught_up_removes_silently(bugs_dir, capsys):
+    """Ярлык, чьё выставление УЖЕ обработано gitlab_inbound (курсор >= id
+    ЛЮБОГО существующего label-события) — снятие ПРОХОДИТ, БЕЗ WARN и БЕЗ
+    эскалации (класс BUG-019: гонки нет, ярлык-сирота протух)."""
+    p = _write_bug(bugs_dir, "BUG-200", status="Open")
+    meta, body = gs.load_bug(p)
+    remote_issue = {
+        "iid": 960, "title": gs.build_title("BUG-200", meta["title"]),
+        "description": gs.build_description(meta, body),
+        "labels": ["qa-factory", "severity::major", "qa-status::QAready"],
+        "state": "opened",
+    }
+    gs.QAREADY_LABEL_CURSOR_PATH.parent.mkdir(parents=True, exist_ok=True)
+    gs.QAREADY_LABEL_CURSOR_PATH.write_text(
+        json.dumps({"BUG-200": 5}), encoding="utf-8")
+    client, transport = _client([
+        (200, remote_issue),                     # GET /issues/960
+        (200, [{"id": 5, "action": "add"}]),      # GET .../resource_label_events, <= курсора
+        (200, {}),                                # PUT
+    ])
+
+    gs.sync_bug(client, p, {**meta, "gitlab_issue": 960}, body)
+
+    put_json = next(c["json"] for c in transport.calls if c["method"] == "PUT")
+    assert "qa-status::QAready" in put_json.get("remove_labels", "")
+    out = capsys.readouterr().out
+    assert "[WARN]" not in out
+    assert not gs.ESCALATIONS_PATH.exists()
+
+
+def test_qaready_removal_safeguard_cursor_behind_keeps_failsafe(bugs_dir, capsys):
+    """Курсор ЗА событием (событие СТРОЖЕ курсора — необработанное) — прежний
+    fail-safe: WARN + эскалация + снятие пропущено."""
+    p = _write_bug(bugs_dir, "BUG-201", status="Open")
+    meta, body = gs.load_bug(p)
+    remote_issue = {
+        "iid": 961, "title": gs.build_title("BUG-201", meta["title"]),
+        "description": gs.build_description(meta, body),
+        "labels": ["qa-factory", "severity::major", "qa-status::QAready"],
+        "state": "opened",
+    }
+    gs.QAREADY_LABEL_CURSOR_PATH.parent.mkdir(parents=True, exist_ok=True)
+    gs.QAREADY_LABEL_CURSOR_PATH.write_text(
+        json.dumps({"BUG-201": 5}), encoding="utf-8")
+    client, transport = _client([
+        (200, remote_issue),
+        (200, [{"id": 5, "action": "add"}, {"id": 6, "action": "add"}]),  # 6 > курсора 5
+        (200, {}),
+    ])
+
+    gs.sync_bug(client, p, {**meta, "gitlab_issue": 961}, body)
+
+    put_json = next(c["json"] for c in transport.calls if c["method"] == "PUT")
+    assert "qa-status::QAready" not in put_json.get("remove_labels", "")
+    out = capsys.readouterr().out
+    assert "[WARN]" in out
+    esc = gs.ESCALATIONS_PATH.read_text(encoding="utf-8")
+    assert "QAREADY-SYNC-RACE-BUG-201" in esc
+
+
+def test_qaready_has_unprocessed_label_events_cursor_exact_boundary():
+    """Граница: событие id РОВНО НА курсоре — уже обработано (не строже),
+    id курсор+1 — строже (не обработано)."""
+    client, _t = _client([(200, [{"id": 5, "action": "add"}])])
+    assert gs._qaready_has_unprocessed_label_events(client, 1, 5) is False
+
+    client2, _t2 = _client([(200, [{"id": 6, "action": "add"}])])
+    assert gs._qaready_has_unprocessed_label_events(client2, 1, 5) is True
+
+
+def test_qaready_has_unprocessed_label_events_pagination_cap_is_unverified(monkeypatch):
+    """Граница ЗА пределом: QAREADY_LABEL_EVENTS_MAX_PAGES страниц пройдено
+    без исчерпания выдачи — не проверено (None), вызывающая сторона трактует
+    как fail-safe (тот же класс, что fetch_new_notes [R1])."""
+    monkeypatch.setattr(gs, "QAREADY_LABEL_EVENTS_PER_PAGE", 1, raising=True)
+    monkeypatch.setattr(gs, "QAREADY_LABEL_EVENTS_MAX_PAGES", 2, raising=True)
+    # Обе страницы полны (по 1 событию = per_page), ВСЕ события <= курсора
+    # (иначе первое же "строже курсора" событие вернуло бы True раньше, чем
+    # кап успеет сработать) -> кап пройден без исчерпания выдачи -> None.
+    client, _t = _client([
+        (200, [{"id": 1, "action": "add"}]),
+        (200, [{"id": 2, "action": "add"}]),
+    ])
+    assert gs._qaready_has_unprocessed_label_events(client, 1, 100) is None
+
+
+def test_qaready_has_unprocessed_label_events_empty_is_false():
+    """Граница «пусто с первой страницы» — нет событий вовсе, не строже
+    курсора (False), не None."""
+    client, _t = _client([(200, [])])
+    assert gs._qaready_has_unprocessed_label_events(client, 1, None) is False
+
+
+def test_qaready_label_cursor_missing_file_is_none(bugs_dir):
+    assert gs._qaready_label_cursor("BUG-ANY") is None
+
+
+def test_qaready_label_cursor_corrupt_file_is_none(bugs_dir):
+    gs.QAREADY_LABEL_CURSOR_PATH.parent.mkdir(parents=True, exist_ok=True)
+    gs.QAREADY_LABEL_CURSOR_PATH.write_text("not json", encoding="utf-8")
+    assert gs._qaready_label_cursor("BUG-ANY") is None
+
+
+def test_qaready_removal_safeguard_without_client_or_iid_is_failsafe(bugs_dir):
+    """Без client/iid (прежний вызов, напр. прямой юнит на функцию) — курсор-
+    сверка НЕ выполняется вовсе, guard ведёт себя как раньше (fail-safe)."""
+    assert gs._qaready_removal_safeguard(
+        "BUG-X", "Open", ["qa-status::QAready"]) == []
+    assert gs._qaready_removal_safeguard(
+        "BUG-X", "Open", ["qa-status::QAready"], client=object()) == []  # iid=None
 
 
 # --- Адверсариальная батарея -----------------------------------------------
