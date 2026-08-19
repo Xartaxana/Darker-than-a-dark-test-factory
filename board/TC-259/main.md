@@ -114,8 +114,8 @@ fail-open путь `window.dispatchEvent(new Event('scroll'))` — см. зам�
   jsdom-документ на весь запрос), не три отдельных вызова — дешевле и
   соответствует «один сценарий — один кейс».
 - `render_pagination_html(prev_url, current_page, next_url=None)` —
-  готовый примитив для «последней страницы без Next» (`recording_
-  builder.py:469-499`), не нужно городить HTML руками.
+  готовый примитив для «последней страницы без Next»
+  (`recording_builder.py:469-499`), не нужно городить HTML руками.
 
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...»

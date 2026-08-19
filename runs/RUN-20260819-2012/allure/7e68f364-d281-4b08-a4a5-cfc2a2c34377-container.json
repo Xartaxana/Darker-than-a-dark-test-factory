@@ -1,0 +1,1 @@
+{"uuid": "3906537e-ac41-4b32-a0a0-e5ce54b63404", "children": ["29c2df29-3710-497f-a6b0-e71daaffd102"], "befores": [{"name": "bridge_call", "status": "passed", "start": 1787164089117, "stop": 1787164089117}], "afters": [{"name": "bridge_call::<lambda>", "start": 1787164090348}], "start": 1787164089117, "stop": 1787164090348}

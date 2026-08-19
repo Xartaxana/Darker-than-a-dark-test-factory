@@ -1,0 +1,1 @@
+WARNING  framework.steps.library_steps:library_steps.py:180 AT-BUG-082 Б1/Б4 (library_steps._poll_files_tab_absent): работа «A Loved Test Work» вновь появилась во вкладке FILES во время hold-окна наблюдения (после 1 settle-чтени(й/е)) — ПОЗДНЯЯ регрессия, пойманная hold-фазой (старый settle-only код Б1 пропустил бы её)

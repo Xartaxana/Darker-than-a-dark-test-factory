@@ -1,15 +1,15 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-19T17:38:06Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-19T20:30:44Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
-- Сборка: dev-local (versionCode 12), commit `aa377e0e`, built_at 2026-08-16T17:53:45Z
-- smoke: Closed · smoke_freshness_hours: **71.2** (RUN-20260816-1758)
-- regression: Triaged · regression_freshness_hours: **68.8** (RUN-20260816-1831)
-- canary: Triaged · canary_freshness_hours: **365.9** (RUN-20260804-1317)
+- Сборка: dev-local (versionCode 12), commit `fdd3f728`, built_at 2026-08-19T17:47:59Z
+- smoke: Closed · smoke_freshness_hours: **2.2** (RUN-20260819-1818)
+- regression: Closed · regression_freshness_hours: **0.3** (RUN-20260819-2012)
+- canary: Triaged · canary_freshness_hours: **368.8** (RUN-20260804-1317)
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **2**
 - p0_automation_coverage: **100%** (37/37)
@@ -21,8 +21,8 @@ story-карточки: стадии см. docs/05-board.md §Story
 
 ## Сборка под тестом
 
-- dev-local (versionCode 12), commit `aa377e0e`, built_at 2026-08-16T17:53:45Z
-- smoke: passed · regression: failed
+- dev-local (versionCode 12), commit `fdd3f728`, built_at 2026-08-19T17:47:59Z
+- smoke: passed · regression: passed
 
 ## Тест-кейсы (265)
 
@@ -79,9 +79,9 @@ story-карточки: стадии см. docs/05-board.md §Story
 - AT-BUG-083 [flaky_test] Open — assert_work_not_in_tab гонится с анимацией HorizontalPager Library (тот же класс, что AT-BUG-082, но на ЛЮБОЙ вкладке, не только FILES) — не почин, только заведён (D-0043 queued follow-up)
 - AT-BUG-085 [flaky_test] Open — assert_comment_collapsed_with_text читает RatingOverlay.comment_expanded() сразу после save_note() без settle — TC-115 красный в полном test_downloads.py (структурно не связан с AT-BUG-082 fix)
 
-## Прогоны (20)
+## Прогоны (22)
 
-- Triaged: **9** · Closed: **10** · Blocked: **1**
+- Triaged: **9** · Closed: **12** · Blocked: **1**
 
 ## Exploratory
 
@@ -94,7 +94,7 @@ story-карточки: стадии см. docs/05-board.md §Story
 
 - нет
 
-## Эскалации (32)
+## Эскалации (33)
 
 - [2026-07-24T05:10:04Z] **BUG-011** [sla:bug_open_major] — major-баг open с 2026-07-15T14:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
 - [2026-08-01T16:01:07Z] **BUG-017** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-30T00:00:00Z | нужно: ответить в ## Обсуждение
@@ -122,9 +122,10 @@ story-карточки: стадии см. docs/05-board.md §Story
 - [2026-08-16T00:12:38Z] **QAREADY-SYNC-RACE-BUG-065** [resolved:lead-gitlab-race-0816] — ЗАКРЫТО 2026-08-16 полным Lead (Opus), тот же корень и та же проверка, что у `QAREADY-SYNC-RACE-BUG-058` (см. строку выше): нота `[gitlab:dyakagreen @ 2026-08-15T23:08:38Z]` втянута, label-событие применено → **BUG-065 Open → Fixed, `awaiting: qa`**; `gitlab_sync --check` → «все BUG-* синхронизированы». Скрипт сохранил ярлык вместо затирания сигнала разработчика — штатное поведение. BUG-065 — кандидат D1 следующего прохода. Исходный текст — история: BUG-065: gitlab_sync собрался снять ярлык qa-status::QAready (внутренний статус Open — Open|Reopened, сигнал ещё не сведён) — вероятная гонка с gitlab_inbound (ярлык поставлен разработчиком, ещё не обработан). Ярлык СОХРАНЁН, снятие пропущено; разберитесь и пометьте [resolved:<task_id>] после проверки.
 - [2026-08-16T05:30:32Z] **BUG-068** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-14T03:49:31Z | нужно: ответить в ## Обсуждение
 - [2026-08-16T05:30:32Z] **BUG-070** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-14T03:49:31Z | нужно: ответить в ## Обсуждение
-- [2026-08-16T20:00:02Z] **FACTORY-STALLED** [resolved:factory-watchdog-recovered] [factory:stalled] — восстановлено 2026-08-18T10:30:02Z
+- [2026-08-16T20:00:02Z] **FACTORY-STALLED** [resolved:factory-watchdog-recovered] [factory:stalled] — восстановлено 2026-08-19T20:30:02Z
 - [2026-08-17T02:46:22Z] **QAREADY-SYNC-RACE-BUG-019** [resolved:lead-gitlab-race-bug019-0819] — ЗАКРЫТО 2026-08-19 полным Lead (Fable), причина установлена ИЗМЕРЕНИЕМ: гонки НЕТ, случай ИНОЙ, чем прецеденты BUG-058/065. Add-событие QAready по issue 10 было законно съедено курсором ДО reopen (state/gitlab-label-cursor.json: BUG-019=544722277 — оно и дало Open→Fixed 2026-08-17); после reopen (02:24:53Z, D1) новых label-событий НЕТ: живой прогон `gitlab_inbound` 2026-08-19 → «label-события: 0 применено» при статусе Reopened (будь событие — применился бы Fixed). Ярлык на issue 10 — ПРОТУХШИЙ остаток до-reopen цикла, не сигнал разработчика; снятие ЛЕГИТИМНО. Снятие отложено (причина: инструментальный отказ — permission-классификатор заблокировал точечный API-вызов; канал снятия — штатный gitlab_sync после классового фикса ниже). ВРЕДА НЕТ: E7 фильтрует наши iid, M-D переспрашивает события точечно от курсора; при ответе разработчика (повторный QAready) экземпляр саморассасывается штатным Reopened→Fixed. КЛАССОВЫЙ ОСТАТОК (D-0043, в батч мелочей): safeguard gitlab_sync не сверяется с label-курсором — «сигнал ещё не сведён» у него всегда презумпция; фикс = при живом клиенте свериться с событиями новее курсора и при их отсутствии разрешить снятие. Исходный текст — история: BUG-019: gitlab_sync собрался снять ярлык qa-status::QAready (внутренний статус Reopened — Open|Reopened, сигнал ещё не сведён) — вероятная гонка с gitlab_inbound (ярлык поставлен разработчиком, ещё не обработан). Ярлык СОХРАНЁН, снятие пропущено.
 - [2026-08-17T16:00:02Z] **HEARTBEAT-CHILD-DEATH** [heartbeat:child-death] — 4 быстрых смертей подряд, окно 2026-08-17T14:30:09Z..2026-08-17T22:30:13Z, последний rc=1, runtime=8.2с; первые строки причины — logs/fallback-20260817.log; причину чинит оператор/Lead — сбросит сторож при живом прогрессе окна ИЛИ пробный запуск через 6ч (спека: docs/tasks/factory-visible-window.md §Д п.6 «Единый стартовый гейт»; реализация — factory_watchdog._series_blocked)
 - [2026-08-19T12:44:29Z] **BUG-013** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-16T18:00:00Z | нужно: ответить в ## Обсуждение
-- [2026-08-19T12:44:29Z] **BUG-019** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-17T02:24:53Z | нужно: ответить в ## Обсуждение
 - [2026-08-19T13:11:16Z] **QAREADY-SYNC-RACE-BUG-019** [resolved:lead-gitlab-race-bug019-0819] — ЗАКРЫТО 2026-08-19 (Fable): повторный экземпляр УЖЕ разобранного случая (см. запись 2026-08-17 выше с тем же ключом и task_id) — прогон 13:11 шёл ДО посадки классового фикса «safeguard сверяется с label-курсором» (батч мелочей D-0081, коммит 6b6b6fd); после посадки прогон gitlab_sync 16:42 снял протухший ярлык ШТАТНО (label-события issue 10 сверены live: add QAready 08-16T10:56 < Reopened 08-17, новых нет). Исходный текст — история: BUG-019: gitlab_sync собрался снять ярлык qa-status::QAready (внутренний статус Reopened — Open|Reopened, сигнал ещё не сведён) — вероятная гонка с gitlab_inbound. Ярлык СОХРАНЁН, снятие пропущено.
+- [2026-08-19T20:28:36Z] **ENV-BASH-DOLLAR-EXPANSION** [queued:lead] — критик-вход приёмки build-fdd3f728 (task_id critic-review-build-fdd3f728) измерил 4-й экземпляр класса: Bash-тул схлопывает `$env:VAR` в пустую переменную ДО передачи строки в `powershell -Command "..."` (даже в double-quoted), несмотря на то что предыдущие экземпляры (runs/RUN-20260804-1317.md, runs/RUN-20260811-0405.md:71-78, runs/RUN-20260816-1831.md:453-457) уже задокументированы прозой — AT-BUG/мех-артефакта на класс нет. В этом экземпляре (RUN-20260819-1818) эффект измерен как функционально инертный (AO3_MODE читается один раз в settings.py:46, is_replay/is_live — 0 вызовов во всём репо, статическая недостижимость), но экземпляр 2026-08-11 из-за той же причины ОТБРОСИЛ целый прогон 49/49 как недостоверный — цена класса неоднородна. Нужно от Lead: завести классовый AT-BUG (permission-hygiene/tooling) на «Bash-тул vs `$env:` в -Command строках» ИЛИ явно решить, что фиксировать нечего (конвенция — не использовать `$env:` в Bash-вызовах tasks.ps1, только PowerShell-тул) и закрыть находку.
+- [2026-08-19T20:28:36Z] **APP-UNDER-TEST-YAML-COHERENCE-GATE** [queued:lead] — тот же критик-вход (task_id critic-review-build-fdd3f728): `state/app-under-test.yaml` не имеет машинного детектора когерентности (не в `AREAS` validate_frontmatter.py, нет schemas/-схемы) — блокер «smoke_status/regression_status оставлены not_run при Closed зелёных прогонах в комментарии той же строки» прошёл мимо ВСЕХ гейтов преflight и был пойман только человеческим (критик) чтением. Пробел F-11(в) на существующем механизме (build_watch.py пишет / queue_snapshot.py читает / test-runner.md несёт обязанность обновлять, но код-гейта нет). Нужно от Lead: решить, заводить ли код-гейт (например: validate_frontmatter добавляет проверку "status != not_run, если source_commit совпадает с Closed run в комментарии/runs/") или принять риск явно.

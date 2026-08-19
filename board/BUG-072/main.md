@@ -2,7 +2,7 @@
 key: "BUG-072"
 project: "AO3"
 issueType: "bug"
-status: "bug-open"
+status: "bug-fixed"
 priority: "p2"
 summary: "restoreClosedTab UI-недостижим второй раз: BrowserViewModel.kt KDoc и PROJECT.md обещают повторный Undo после отказа на потолке, но единственный вызов потребляется тем же снекбаром — вкладка остаётся безвозвратно потерянной"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-16T21:21:06Z"
-updated: "2026-08-16T21:21:06Z"
+created: "2026-08-19T18:12:00Z"
+updated: "2026-08-19T18:12:00Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # restoreClosedTab UI-недостижим второй раз: BrowserViewModel.kt KDoc и PROJECT.md обещают повторный Undo после отказа на потолке, но единственный вызов потребляется тем же снекбаром — вкладка остаётся безвозвратно потерянной
 
 _Спроецировано из `bugs/BUG-072.md` (источник правды).
-Статус в нашей машине: **Open**._
+Статус в нашей машине: **Fixed**._
 
 # BUG-072 — обещание «retry Undo после отказа на потолке» не реализуемо в UI
 
@@ -96,3 +96,30 @@ QA не занимает позицию по выбору — баг завед�
 она реализована; но заявленная фиксом возможность retry — нет. Заведено
 отдельным докладом-кандидатом по правилу 9 CLAUDE.md (докладывать
 аналог, не расширяя scope текущей задачи).
+
+**[gitlab:dyakagreen @ 2026-08-19T17:21:40.958Z]** > **Исправлено в `36cda8e`** (main).
+> 
+> Выбран третий вариант — не «реализовать retry» и не «поправить обещание», а убрать саму ситуацию, в которой retry нужен: снекбар «Tab closed» теперь **скрывается при открытии новой вкладки**. Открытие вкладки — явный сигнал, что пользователь ушёл от отмены, поэтому предложение Undo снимается, и устаревший Undo больше не может встретить занятый потолок.
+> 
+> Как сделано:
+> 
+> - `BrowserUiState.tabOpenSeq` инкрементируется на каждом пользовательском `openTab`; `LaunchedEffect(tabOpenSeq)` в `MainActivity` закрывает видимый снекбар, если его текст — «Tab closed» (другие снекбары, например «Opened in background», не трогаются).
+> - Внутренний `openTab` (домашняя вкладка, заменяющая закрытую последнюю) помечен `userInitiated = false` и снекбар не гасит.
+> - Ветка потолка в `restoreClosedTab` оставлена как защитная: снапшот по-прежнему не сжигается, но дойти до неё из UI больше нельзя.
+> 
+> KDoc `restoreClosedTab` и `PROJECT.md` переписаны под фактическое поведение — обещания «retry Undo» там больше нет.
+> 
+> Проверено на эмуляторе с контролем по времени (снекбар живёт ~4 с, а один `uiautomator dump` стоит ~2.4 с, поэтому в каждой пробе ровно один дамп на одинаковом смещении): контроль — снекбар виден на T+0.7 с; проба — на том же T+0.7 с после открытия вкладки снекбара уже нет. Undo без открытия вкладки по-прежнему восстанавливает вкладку.
+> 
+> Побочное наблюдение: закрыть **последнюю** вкладку из UI нельзя — `TabStrip` рендерится только при `tabs.size > 1`, а `restoreClosedTab` вызывается только из обработчика снекбара. Так что ветка `userInitiated = false` защитная, а не рабочая.
+
+**[gitlab:dyakagreen @ 2026-08-19T17:21:41.837Z]** Метка `qa-status::QAready` выставлена на GitLab issue — переход Open→Fixed зафиксирован автоматически (второй канал, docs/06 §3а, gitlab-label).
+
+**[qa @ 2026-08-19T18:12:00Z]** Фикс принят. Проверено по артефактам:
+- `BrowserViewModel.kt:134` — `tabOpenSeq: Long = 0L` добавлен в `BrowserUiState` ✓
+- `BrowserViewModel.kt:313-320` — инкрементирование `tabOpenSeq` при пользовательском `openTab(userInitiated=true)` ✓
+- `MainActivity.kt:315,358-362` — `LaunchedEffect(uiState.tabOpenSeq)` закрывает видимый снекбар текста "Tab closed" ✓
+- `BrowserViewModel.kt:393-413` — KDoc `restoreClosedTab` переписан: «defensive guard: opening a new tab dismisses the Undo snackbar (via [BrowserUiState.tabOpenSeq]), so a stale Undo can no longer race a refilled slot» ✓
+- `PROJECT.md:31` — обещание про retry удалено, описано новое поведение: «Opening a new tab while the snackbar is visible dismisses it; as a defensive guard, Undo at the 10-tab ceiling still shows the tab-limit dialog and keeps the snapshot» ✓
+
+Решение — третий вариант: убрана сама ситуация, в которой retry нужен. Снекбар Undo теперь закрывается при открытии пользователем новой вкладки, что чётко сигнализирует об отмене попытки восстановления. Защитная ветка потолка в `restoreClosedTab` оставлена (снапшот не сжигается), но из UI она недостижима. Фикс достаточен для закрытия дефекта: обещания приведены в соответствие с кодом, поведение документировано. awaiting: dev

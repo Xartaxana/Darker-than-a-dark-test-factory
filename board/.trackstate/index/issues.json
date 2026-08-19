@@ -8000,14 +8000,14 @@
     "epicPath": null,
     "summary": "Back после автопрыжка плотности не выводит назад — ловушка + рост истории",
     "issueType": "bug",
-    "status": "bug-reopened",
+    "status": "bug-fixed",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:major"
     ],
-    "updated": "2026-08-17T02:24:53Z",
+    "updated": "2026-08-19T18:03:45Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -8506,14 +8506,14 @@
     "epicPath": null,
     "summary": "restoreClosedTab UI-недостижим второй раз: BrowserViewModel.kt KDoc и PROJECT.md обещают повторный Undo после отказа на потолке, но единственный вызов потребляется тем же снекбаром — вкладка остаётся безвозвратно потерянной",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-08-16T21:21:06Z",
+    "updated": "2026-08-19T18:12:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -8527,14 +8527,14 @@
     "epicPath": null,
     "summary": "Тумблер «Hide Disliked works» (Settings) вызывает ту же незапрошенную live-push навигацию, что BUG-020 — гейт __ao3LiveRatingPush защищает только broadcastRatingChange, не setHiddenRatings",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:major"
     ],
-    "updated": "2026-08-17T03:33:29Z",
+    "updated": "2026-08-19T18:15:22Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -8611,14 +8611,14 @@
     "epicPath": null,
     "summary": "Прогресс чтения не хранится и не синхронизируется между устройствами; нарушает требование R-18",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:major"
     ],
-    "updated": "2026-08-19T13:45:00Z",
+    "updated": "2026-08-19T18:00:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -8632,6 +8632,27 @@
     "epicPath": null,
     "summary": "Файл, скачанный на одном устройстве, не докачивается на других; downloadPath намеренно не путешествует; нарушает требование R-18",
     "issueType": "bug",
+    "status": "bug-fixed",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:major"
+    ],
+    "updated": "2026-08-19T17:37:36Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-079",
+    "path": "board/BUG-079/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Приложение хранит персональный GitLab-токен в открытых SharedPreferences под android:allowBackup=true; backup_rules.xml пуст; выгрузка библиотеки не ограничена по хосту",
+    "issueType": "bug",
     "status": "bug-open",
     "priority": "p1",
     "assignee": "qa-agents",
@@ -8639,7 +8660,7 @@
       "bug",
       "sev:major"
     ],
-    "updated": "2026-08-19T13:45:00Z",
+    "updated": "2026-08-19T16:30:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -9045,6 +9066,46 @@
     "archived": false
   },
   {
+    "key": "RUN-20260819-1818",
+    "path": "board/RUN-20260819-1818/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "RUN-20260819-1818",
+    "issueType": "run",
+    "status": "run-closed",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "run"
+    ],
+    "updated": "2026-08-19T18:18:00Z",
+    "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "RUN-20260819-2012",
+    "path": "board/RUN-20260819-2012/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "RUN-20260819-2012",
+    "issueType": "run",
+    "status": "run-closed",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "run"
+    ],
+    "updated": "2026-08-19T20:15:00Z",
+    "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "story-26",
     "path": "board/story-26/main.md",
     "parent": null,
@@ -9058,7 +9119,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-writing-cases",
-      "регресс сборки: smoke RUN-20260816-1758 49/49 · чисто · regression RUN-20260816-1831 289/290 · разобрано · новых багов в прогоне: 1",
+      "регресс сборки: smoke RUN-20260819-1818 49/49 · чисто · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 0",
       "фич без кейсов: 0/2",
       "черновиков: 1",
       "багов на кейсах стори: 3"
@@ -9082,8 +9143,8 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-covered",
-      "регресс сборки: smoke RUN-20260816-1758 49/49 · чисто · regression RUN-20260816-1831 289/290 · разобрано · новых багов в прогоне: 1",
-      "зелёные в RUN-20260816-1831: 5/5",
+      "регресс сборки: smoke RUN-20260819-1818 49/49 · чисто · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 0",
+      "зелёные в RUN-20260819-2012: 5/5",
       "багов на кейсах стори: 0"
     ],
     "updated": "2026-08-09T23:04:10Z",
@@ -9105,7 +9166,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-automation",
-      "регресс сборки: smoke RUN-20260816-1758 49/49 · чисто · regression RUN-20260816-1831 289/290 · разобрано · новых багов в прогоне: 1",
+      "регресс сборки: smoke RUN-20260819-1818 49/49 · чисто · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 0",
       "багов на кейсах стори: 0"
     ],
     "updated": "2026-08-14T23:12:35Z",
@@ -9127,7 +9188,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-writing-cases",
-      "регресс сборки: smoke RUN-20260816-1758 49/49 · чисто · regression RUN-20260816-1831 289/290 · разобрано · новых багов в прогоне: 1",
+      "регресс сборки: smoke RUN-20260819-1818 49/49 · чисто · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 0",
       "фич без кейсов: 5/8",
       "багов на кейсах стори: 0"
     ],

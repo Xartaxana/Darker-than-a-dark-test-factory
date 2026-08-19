@@ -1,0 +1,1 @@
+WARNING  framework.steps.library_steps:library_steps.py:159 AT-BUG-082 Б4 (library_steps._poll_files_tab_absent): транзитный стейл-позитив «A Loved Test Work» на вкладке FILES проглочен settle-фазой за 3 чтени(й/е) — расследуй, если повторяется часто (может означать, что анимация Pager'а систематически шире _FILES_TAB_SETTLE_TIMEOUT=0.6s)

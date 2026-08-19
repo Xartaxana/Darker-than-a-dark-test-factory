@@ -1,0 +1,1 @@
+AT-BUG-066 WARNING: adb shell cmd uimode night (запрос) вернул код 1 -- stderr: 'error: device offline' -- get_night_mode() не может определить текущий режим, возвращаю None; не бросаю, чтобы не ронять сессию.

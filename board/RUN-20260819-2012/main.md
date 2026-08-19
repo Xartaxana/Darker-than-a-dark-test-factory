@@ -1,0 +1,271 @@
+---
+key: "RUN-20260819-2012"
+project: "AO3"
+issueType: "run"
+status: "run-closed"
+priority: "p2"
+summary: "RUN-20260819-2012"
+assignee: "qa-agents"
+reporter: "qa-agents"
+labels: ["run"]
+components: []
+fixVersions: []
+watchers: []
+parent: null
+epic: null
+created: "2026-08-19T20:15:00Z"
+updated: "2026-08-19T20:15:00Z"
+archived: false
+resolution: "done"
+---
+
+# RUN-20260819-2012
+
+_Спроецировано из `runs/RUN-20260819-2012.md` (источник правды).
+Статус в нашей машине: **Closed**._
+
+# RUN-20260819-2012 — regression (replay) на dev-local (12)
+
+## Контекст запуска
+
+Триггер: тот же `state/app-under-test.yaml` (`source_commit
+fdd3f72884105d1453448e0c9a7f2b109588b182`), правило rules.yaml 1, шаг 2
+после зелёного smoke (`RUN-20260819-1818`). Окружение переиспользовано из
+smoke-хода (эмулятор/Appium/APK уже подняты этим же ходом, device не
+освобождался между сегментами и между smoke/regression).
+
+## Селекция (D1, `scripts/impact_select.py`)
+
+```
+python scripts/impact_select.py
+Диапазон: aa377e0ec9664fcd5439fec9391638fabf94f448..fdd3f72884105d1453448e0c9a7f2b109588b182 (app-under-test/)
+Файлов изменено: 18
+
+## ignore
+- CLAUDE.md
+- DESIGN.md
+- PROJECT.md
+- testing/README.md
+
+## wide_impact
+- app/src/main/assets/ao3_bridge.js
+- app/src/main/java/com/example/ao3_wrapper/MainActivity.kt
+- app/src/main/java/com/example/ao3_wrapper/data/db/AppDatabase.kt
+- app/src/main/java/com/example/ao3_wrapper/data/model/WorkRating.kt
+
+## rules (области)
+- .../ui/browser/BrowserScreen.kt → browser, tabs, rating, downloads
+- .../ui/browser/BrowserViewModel.kt → browser, tabs, rating, visibility, filter-profiles, downloads, library
+- .../ui/library/LibraryScreen.kt → library, rating, visibility, downloads, filter-profiles
+- .../ui/library/LibraryViewModel.kt → library, rating, visibility, downloads, filter-profiles
+- .../ui/settings/SettingsScreen.kt → settings, backup, downloads, browser, library
+
+## unknown (вне карты)
+- app/src/main/java/com/example/ao3_wrapper/data/sync/LibraryJson.kt
+- app/src/main/java/com/example/ao3_wrapper/data/sync/SyncRepository.kt
+- testing/.gitignore
+- testing/load-fixture.sh
+- testing/make-fixtures.sh
+
+## Решение
+**FULL REGRESSION** (wide_impact: 4 файла; unknown (карта протухла/неполна):
+5 файлов, включая новый пакет data/sync/ — не отражённый в
+state/impact-map.yaml)
+```
+
+Диапазон по умолчанию (`coalesced_commits: [36cda8ef, 4f9feb33, 494a356d,
+994a3128, 33918fef]` в `state/app-under-test.yaml` → родитель ПЕРВОГО
+коалесцированного коммита) разрешился в `aa377e0e..fdd3f728` — те же 6
+коммитов, что видны в `git log` (см. отчёт smoke `RUN-20260819-1818`).
+
+И `wide_impact`, И `unknown` сработали одновременно (новый модуль
+`data/sync/` — за пределами карты) → fail-safe **FULL REGRESSION** по
+правилу skip-инструкции («карта не сужает прогон молча»). `selection.mode:
+full`.
+
+## Исполнение (сегментация, проактивная — известный класс убийства
+харнессом длинных фоновых pytest-процессов ~45-60 мин, см. `RUN-20260815-0337`
+и предшественники)
+
+Dry-run `--collect-only -q` (`pytest tests -m "(p0 or p1) and not live"`)
+подтвердил **461 selected / 667 collected** (206 deselected) ДО старта.
+Набор вырос относительно прошлого regression-прогона (290 selected на
+предыдущей сборке) — framework приобрёл новые `tests/bridge/*` (контракт
+селекторов ao3_bridge.js) и юнит-тесты для новых механизмов
+(`test_poll_until_stable_unit.py`, `test_seed_sync_tombstones_unit.py`,
+`test_sync.py`, `test_library_files_tab_settle_unit.py`,
+`test_capture_addon_unit.py`, `test_adb_bug079_shell_quoting_unit.py`,
+`test_mitm_capture_read_unit.py`, `test_mitm_start_replay_capture_unit.py`).
+
+Разбит на 3 сегмента по границам файлов (сумма 144 + 150 + 167 = 461,
+проверено скриптом — witness ниже), каждый сегмент дошёл до `sessionfinish`
+штатно:
+
+**Сегмент 1** (bridge-контракт + canary + пара unit, 144 selected из 154
+collected):
+```
+pytest tests/bridge/test_badges.py tests/bridge/test_clipboard.py
+  tests/bridge/test_contract_pages_carry_declared_selectors.py
+  tests/bridge/test_contract_selectors_in_bridge_source.py tests/bridge/test_filters.py
+  tests/bridge/test_get_work_data.py tests/bridge/test_layout_fail_open_canary.py
+  tests/bridge/test_main_pairing_persistence.py tests/bridge/test_protocol_cyrillic_canary.py
+  tests/bridge/test_subprocess_boundary.py tests/canary/test_ao3_selectors.py
+  tests/canary/test_bridge_init_retry.py tests/canary/test_tap_zone_guard.py
+  tests/test_adb_bug079_shell_quoting_unit.py -m "(p0 or p1) and not live"
+```
+Дословный хвост:
+```
+tests\canary\test_tap_zone_guard.py ....                                 [ 95%]
+tests\test_adb_bug079_shell_quoting_unit.py .......                      [100%]
+
+AT-BUG-026 device-liveness guard: recoveries this session = 0/2
+=============== 144 passed, 10 deselected in 546.56s (0:09:06) ================
+PYTEST_EXIT=0
+```
+
+**Сегмент 2** (adb/env/device-liveness/downloads/library-юниты, 150
+selected из 167 collected):
+```
+pytest tests/test_adb_run_as_file_or_raise_unit.py tests/test_backup_restore.py
+  tests/test_capture_addon_unit.py tests/test_default_env_state_guard_unit.py
+  tests/test_device_liveness_guard_unit.py tests/test_downloads.py
+  tests/test_filter_profiles.py tests/test_infinite_scroll.py tests/test_library.py
+  tests/test_library_background_open.py tests/test_library_files_tab_settle_unit.py
+  tests/test_library_filters.py tests/test_library_tab_scroll_state.py
+  tests/test_mitm_capture_read_unit.py tests/test_mitm_port_race_unit.py
+  -m "(p0 or p1) and not live"
+```
+Дословный хвост:
+```
+tests\test_library_tab_scroll_state.py ....                              [ 90%]
+tests\test_mitm_capture_read_unit.py ....                                [ 92%]
+tests\test_mitm_port_race_unit.py ...........                            [100%]
+
+============================== warnings summary ===============================
+tests/test_default_env_state_guard_unit.py::test_hook_rechecks_default_env_state_after_recovery
+tests/test_device_liveness_guard_unit.py::test_hook_calls_guard_when_driver_in_fixturenames
+  D:\AO3_tests\framework\tests\conftest.py:254: UserWarning: AT-BUG-026 device-liveness guard: ...
+    warnings.warn(_pending_recovery_warning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+AT-BUG-026 device-liveness guard: recoveries this session = 0/2
+========= 150 passed, 17 deselected, 2 warnings in 2562.20s (0:42:42) =========
+PYTEST_EXIT=0
+```
+(2 warnings — та же синтетическая природа, что в прошлых прогонах:
+unit-тесты сами проверяют механизм предупреждения guard'а, не реальный
+device-recovery; `recoveries this session = 0/2` печатается ПОСЛЕ и является
+источником истины.)
+
+**Сегмент 3** (mitm-replay/perf/rating/reading-ux/rename/replay/
+residual-proxy/saf/security/seed/settings/sync/tabs/visibility/volume, 167
+selected из 209 collected):
+```
+pytest tests/test_mitm_start_replay_capture_unit.py tests/test_mitm_upstream_guard_unit.py
+  tests/test_parse_persisted_tabs_unit.py tests/test_performance.py
+  tests/test_poll_until_stable_unit.py tests/test_pull_app_file_fail_closed_unit.py
+  tests/test_rating.py tests/test_rating_listing.py tests/test_reading_ux.py
+  tests/test_rename_name_verification_unit.py tests/test_replay_ca_check_unit.py
+  tests/test_replay_infra_probe.py tests/test_residual_proxy_guard_unit.py
+  tests/test_saf_infra_probe.py tests/test_security_backup_privacy.py
+  tests/test_security_file_access.py tests/test_security_manifest.py
+  tests/test_seed_db_schema_race_unit.py tests/test_seed_sync_tombstones_unit.py
+  tests/test_settings.py tests/test_settings_ratings_fail_closed_unit.py
+  tests/test_side_panel.py tests/test_smoke.py tests/test_swipe_to_text_settle_unit.py
+  tests/test_sync.py tests/test_tabs.py tests/test_visibility.py
+  tests/test_volume_paging.py -m "(p0 or p1) and not live"
+```
+Дословный хвост:
+```
+tests\test_tabs.py ............                                          [ 95%]
+tests\test_visibility.py ......                                          [ 99%]
+tests\test_volume_paging.py .                                            [100%]
+
+============================== warnings summary ===============================
+tests/test_residual_proxy_guard_unit.py::test_hook_rechecks_residual_proxy_after_recovery
+  D:\AO3_tests\framework\tests\conftest.py:254: UserWarning: AT-BUG-026 device-liveness guard: ...
+    warnings.warn(_pending_recovery_warning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+AT-BUG-026 device-liveness guard: recoveries this session = 0/2
+========= 167 passed, 42 deselected, 1 warning in 2939.58s (0:48:59) ==========
+PYTEST_EXIT=0
+```
+
+Все три сегмента `PYTEST_EXIT=0`, все дошли до `sessionfinish` штатно,
+`recoveries this session = 0/2` в КАЖДОМ сегменте, `ENV_ISSUE`-токена нет ни
+разу. Суммарная длительность самих pytest-прогонов: 546.56 + 2562.20 +
+2939.58 = 6048.34s ≈ 101 мин.
+
+## Слияние allure-результатов
+
+Три сегмента исполняли НЕПЕРЕСЕКАЮЩИЕСЯ множества файлов (проактивный сплит
+по границам файлов, разбиение подтверждено скриптом ДО старта: 144+150+167
+покрывают все 55 файлов из dry-run ровно по одному разу, без пропусков и
+задвоений). Witness слияния (дословный вывод скрипта-анализа):
+```
+total result files: 461
+duplicate historyIds (overlap between segments): 0
+status counts: Counter({'passed': 461})
+```
+`461` совпадает с `461 selected` полного набора (dry-run `--collect-only`
+ДО старта). `runs/RUN-20260819-2012/allure/` содержит объединённые сырые
+файлы всех трёх сегментов (2294 файла).
+
+`tc_results` во frontmatter отфильтрован до строгого `TC-\d+` (116 меток) —
+внутренние `AT-BUG-xxx`/`ESC-xxx`/`bridge-*` regression-lock unit-тесты и
+`TC-183-premise-...` не являются кейсами `test-cases/` и не входят в
+`tc_results` (тот же принцип, что в `RUN-20260816-1831`).
+
+## Падения
+
+Нет — все 461 selected тестов зелёные. Ничего для триажа не остаётся.
+
+## Сверка с baseline (владелец — test-runner, правило 4а CLAUDE.md)
+
+Последний Triaged regression-прогон с полем `source_commit` в frontmatter —
+`RUN-20260816-1831` (`source_commit:
+aa377e0ec9664fcd5439fec9391638fabf94f448`). Проверка предковости ЭТИМ
+ходом:
+
+```
+cd D:\AO3_tests\app-under-test
+git merge-base --is-ancestor aa377e0ec9664fcd5439fec9391638fabf94f448 fdd3f72884105d1453448e0c9a7f2b109588b182
+EXIT=0
+```
+
+`EXIT=0` → baseline **ЯВЛЯЕТСЯ предком** текущей сборки, валиден (не
+force-push).
+
+Красно-зелёная дельта (сверено скриптом, дословный diff множеств `TC-xxx`
+между frontmatter `RUN-20260816-1831` и этим прогоном):
+- **TC-004: failed → passed.** В baseline-прогоне `TC-004`
+  (`test_clear_all_ratings`) получил вердикт **TEST_BUG** (`AT-BUG-080`,
+  долг на `test-maintainer` — усилить критерий успеха `swipe_to_text`).
+  Здесь тест зелёный — согласуется с ожиданием, что фикс долга снял
+  нестабильность landing-совпадения (сам этот прогон не устанавливает
+  причину, только факт red→green).
+- **TC-207, TC-211, TC-215 — новые метки** (отсутствовали в baseline,
+  здесь `passed`) — согласуется с ростом коллекции framework (461 selected
+  против 290 в baseline) на новые фичи сборки (sync/reading-progress).
+- Остальные 112 меток из baseline (`TC-002`…`TC-256`, за вычетом TC-004)
+  зелёные и там, и здесь — регрессии не привнесено.
+
+## Дефекты-собратья (D-0043)
+
+Ничего нового сверх уже задокументированного класса (device-liveness/
+webview-race AT-BUG-026/AT-BUG-047) не замечено — `recoveries 0/2` во всех
+трёх сегментах, `ENV_ISSUE`-токена нет. См. также «Дефекты-собратья» отчёта
+`RUN-20260819-1818` (smoke этой же сборки) — там зафиксировано наблюдение,
+что `AO3_MODE`/`is_replay()`/`is_live()` не имеют функциональных
+потребителей в фреймворке (проверено `grep`); это наблюдение относится и к
+этому прогону (те же исходники), повторно не дублирую детали.
+
+## Условия закрытия прогона (Closed)
+- [x] Падений нет — триажить нечего, вердикты не требуются.
+- [x] Baseline-сверка выполнена (ancestor, EXIT=0; TC-004 red→green,
+  3 новые метки зелёные, остальное без изменений).
+- [x] `tc_results` заполнен из объединённых allure-results всех трёх
+  сегментов (только `TC-xxx`).
+- [x] `selection` зафиксирован (full, wide_impact + unknown причина,
+  диапазон явно указан).

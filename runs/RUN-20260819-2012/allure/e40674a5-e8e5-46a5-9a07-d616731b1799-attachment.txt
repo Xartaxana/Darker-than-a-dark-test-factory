@@ -1,0 +1,2 @@
+AT-BUG-063 recovery: WARNING: gpu='' из state-файла ОТБРОШЕН (не в белом списке ['angle_indirect', 'host', 'swiftshader_indirect']) — GPU-предпосылка прогона этим recovery НЕ восстанавливается.
+AT-BUG-063 recovery: перезапуск эмулятора: gpu=<tasks.ps1 default> (source: default), avd=<tasks.ps1 default> (source: default); возраст state неизвестен (updated_utc отсутствует); state-файл: C:\Users\user\AppData\Local\Temp\pytest-of-user\pytest-3679\test_f3_gpu_adversarial_batter3\emulator-session.json

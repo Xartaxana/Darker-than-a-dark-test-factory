@@ -2,7 +2,7 @@
 key: "BUG-073"
 project: "AO3"
 issueType: "bug"
-status: "bug-open"
+status: "bug-fixed"
 priority: "p1"
 summary: "Тумблер «Hide Disliked works» (Settings) вызывает ту же незапрошенную live-push навигацию, что BUG-020 — гейт __ao3LiveRatingPush защищает только broadcastRatingChange, не setHiddenRatings"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-17T03:33:29Z"
-updated: "2026-08-17T03:33:29Z"
+created: "2026-08-19T18:15:22Z"
+updated: "2026-08-19T18:15:22Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Тумблер «Hide Disliked works» (Settings) вызывает ту же незапрошенную live-push навигацию, что BUG-020 — гейт __ao3LiveRatingPush защищает только broadcastRatingChange, не setHiddenRatings
 
 _Спроецировано из `bugs/BUG-073.md` (источник правды).
-Статус в нашей машине: **Open**._
+Статус в нашей машине: **Fixed**._
 
 # BUG-073 — «Hide Disliked works» уводит пользователя со страницы тем же live-push механизмом, что BUG-020
 
@@ -121,3 +121,34 @@ only» (`ao3_bridge.js:768`).
 CLAUDE.md («докладывать аналог, не расширяя scope текущей задачи»).
 Не чинил (app-under-test/ не тронут), не расширял верификацию BUG-020
 починкой.
+
+**[gitlab:dyakagreen @ 2026-08-19T17:21:47.859Z]** > **Исправлено в `4f9feb3`** (main).
+> 
+> Гейт обобщён, как и рекомендовалось. Вместо флага, который выставлял только `broadcastRatingChange`, в `ao3_bridge.js` появился `withLivePush(live, fn)`: он выставляет `window.__ao3LivePush` на время вызова, а `checkPageDensity` проверяет его первым делом. Через него теперь проходят все live-push источники:
+> 
+> - простановка рейтинга (`broadcastRatingChange`);
+> - тумблеры «Hide … works» (`setHiddenRatings(..., live)`) — вход из этого бага;
+> - режим отображения Hide/Dim (`setFilterMode(..., live)`) — вторая дыра того же класса, в баге не заявленная.
+> 
+> Ключевая деталь, из-за которой гейт сделан **параметром вызова**, а не общим правилом внутри функции: `setHiddenRatings` вызывается ещё и на загрузке страницы (`onWorksFoundInternal`), где автопрыжок как раз легитимен. Страничные вызовы аргумент `live` не передают и автопрыжок сохраняют.
+> 
+> Про третьего кандидата из вашей рекомендации — чекбокс «Main pairing only»: правка не требуется. Его `applyAllFilters()` выполняется внутри `injectMainPairingCheckbox` на инициализации страницы, то есть это page-load-контекст, а не live-push.
+> 
+> Проверено на эмуляторе, на локальной фикстуре (реальная разметка листинга AO3, но без обращения к сайту):
+> 
+> - контроль — свежая загрузка листинга при включённом hide и всех работах DISLIKE: автопрыжок срабатывает, page 1 → page 2, то есть механизм жив и проба способна упасть;
+> - проба — тот же листинг уже открыт, тумблер переключается на лету: работы скрываются, появляется плашка «some works may be hidden by your visibility settings», URL не меняется.
+
+**[gitlab:dyakagreen @ 2026-08-19T17:21:48.858Z]** Метка `qa-status::QAready` выставлена на GitLab issue — переход Open→Fixed зафиксирован автоматически (второй канал, docs/06 §3а, gitlab-label).
+
+**[qa @ 2026-08-19T18:15:22Z]** Принято. Архитектура фикса проверена по коду:
+- `withLivePush(live, fn)` установлена в ao3_bridge.js:163, выставляет флаг `window.__ao3LivePush`
+- `checkPageDensity` проверяет флаг первым делом (ao3_bridge.js:697), пропускает автопрыжок для live-push контекстов
+- `setHiddenRatings(ratings, live)` и `setFilterMode(mode, live)` оба вызывают `withLivePush(live, applyAllFilters)` (строки 490, 495)
+- Параметр `live` = ложь → гейт не применяется, функция выполняется сразу (строка 164); это сохраняет автопрыжок на page-load (e.g. `onWorksFoundInternal`)
+
+Про третьего кандидата (чекбокс «Main pairing only»): согласен, что его `applyAllFilters()` вызывается внутри `injectMainPairingCheckbox` на инициализации, это page-load-контекст, не live-push — включение в гейт не требуется.
+
+Вторая найденная дыра (`setFilterMode(..., live)`) закрыта тем же гейтом, что входит в scope этого бага. Фикс готов к верификации D1 (fix-verifier).
+
+awaiting: dev

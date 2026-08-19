@@ -617,3 +617,23 @@ qa-orchestrator. Скрипты pre_steps (stale_locks и др.) тоже пиш
 | 2026-08-19T13:45:16Z | решения владельца (щ) п.3 + рамка R-18 | bug-reporter | BUG-074..BUG-078 | success: 5 багов заведены и опубликованы (issues 46-50), все awaiting: dev; дубликат BUG-058 не создан |
 | 2026-08-19T14:47:02Z | B4: инфраструктурный test_debt | test-maintainer | bugs/AT-BUG-073.md + framework/core+tests | success (attempt 4): Open->Fixed, 4 примитива sync + 17 юнит-проб; критик-вход: 2 блокера найдены и закрыты ретраем |
 | 2026-08-19T15:02:57Z | D1: верификация Fixed | fix-verifier | bugs/AT-BUG-073.md | success: Verified (5/5 device + 17/17 unit, независимый прогон) |
+| 2026-08-19T17:46:02Z | pre_step sla_sweep | sla_sweep.py | state/escalations.md | эскалации: +0 (—), -1 (BUG-019(question_unanswered)) |
+| 2026-08-19T17:47:59Z | pre_step build_watch | build_watch.py | state/app-under-test.yaml | OK: собрана сборка fdd3f728, coalesced 5 |
+| 2026-08-19T17:49:21Z | Новая сборка -> smoke, затем regression | test-runner | runs/ (в работе) | delegated: build fdd3f728, фоновый диспатч (device-class, run_in_background) |
+| 2026-08-19T17:51:54Z | D6: Ответить на вопрос разработчика | bug-reporter | bugs/BUG-019.md | delegated: документный класс, параллельно с device-прогоном |
+| 2026-08-19T17:51:55Z | D6: Ответить на вопрос разработчика | bug-reporter | bugs/BUG-072.md | delegated: документный класс, параллельно с device-прогоном |
+| 2026-08-19T17:51:55Z | D6: Ответить на вопрос разработчика | bug-reporter | bugs/BUG-073.md | delegated: документный класс, параллельно с device-прогоном |
+| 2026-08-19T17:51:55Z | D6: Ответить на вопрос разработчика | bug-reporter | bugs/BUG-077.md | delegated: документный класс, параллельно с device-прогоном |
+| 2026-08-19T17:52:10Z | D6: Ответить на вопрос разработчика | — | bugs/BUG-078.md | отложено: лимит прохода (max_triggered_workflows=5 этого прохода уже исчерпан) |
+| 2026-08-19T18:15:22Z | D6: Ответить на вопрос разработчика | bug-reporter | bugs/BUG-073.md | success: withLivePush-гейт сверен по коду, awaiting: dev |
+| 2026-08-19T18:12:00Z | D6: Ответить на вопрос разработчика | bug-reporter | bugs/BUG-072.md | success: tabOpenSeq/LaunchedEffect сверен по коду, awaiting: dev |
+| 2026-08-19T18:03:45Z | D6: Ответить на вопрос разработчика | bug-reporter | bugs/BUG-019.md | success: коммит 994a312 сверен по коду, фикс принят полностью, awaiting снят |
+| 2026-08-19T~18:xx | D6: Ответить на вопрос разработчика | bug-reporter | bugs/BUG-077.md | success: readProgress*-механизм сверен по коду, awaiting: dev |
+| 2026-08-19T20:12:xx | Новая сборка -> smoke, затем regression | test-runner | runs/RUN-20260819-1818.md + RUN-20260819-2012.md | success: smoke 49/49, regression 461/461 (full, impact fail-safe), 0 recoveries, оба Closed |
+| 2026-08-19T20:14:24Z | Критик-вход приёмки (sonnet-класс test-runner) | critic | runs/RUN-20260819-1818.md + RUN-20260819-2012.md + state/app-under-test.yaml | ДОРАБОТАТЬ (1 блокер: status-поля not_run при Closed) + 4 неблокирующих находки в очередь Lead |
+| 2026-08-19T20:28:24Z | (dispatch_skipped) Lead-tier фикс блокера критика | lead(координатор) | state/app-under-test.yaml | smoke_status/regression_status: not_run -> passed; validate_frontmatter 0/0 |
+| 2026-08-19T20:28:29Z | Новая сборка -> smoke, затем regression (приёмка) | test-runner | runs/RUN-20260819-1818.md + RUN-20260819-2012.md | accepted (basis=critic) |
+| 2026-08-19T20:28:36Z | Критик-вход приёмки (приёмка вердикта) | critic | critic-review-build-fdd3f728 | accepted (basis=queued-to-lead); 2 находки поставлены в state/escalations.md (ENV-BASH-DOLLAR-EXPANSION, APP-UNDER-TEST-YAML-COHERENCE-GATE) |
+| 2026-08-19T19:30:07Z | factory-watchdog | factory_watchdog | state\factory-mode.json | ok->stalled: mode активный ('active'), лок есть, тишина 90.1 мин (порог 90 мин) |
+| 2026-08-19T20:00:02Z | heartbeat-обёртка | heartbeat_wrap | logs/fallback-20260819.log | BUSY, резервный проход не запускался |
+| 2026-08-19T20:30:02Z | factory-watchdog | factory_watchdog | state\factory-mode.json | stalled->ok: восстановлено в 2026-08-19T20:30:02Z |

@@ -1,0 +1,1 @@
+{"uuid": "964ccf7f-24f0-4572-a020-d728b43be604", "children": ["c1afea42-ba3c-4dce-8156-5a3b40ea6ddf"], "befores": [{"name": "_fast_settle_poll", "status": "passed", "start": 1787166326747, "stop": 1787166326747}], "afters": [{"name": "_fast_settle_poll::<lambda>", "start": 1787166328096}], "start": 1787166326747, "stop": 1787166328096}

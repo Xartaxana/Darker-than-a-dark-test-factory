@@ -2,17 +2,17 @@
 # изменение этого файла = триггер для test-runner (см. docs/03 §3, правило 1).
 app: ao3-wrapper
 repo: https://gitlab.com/dyakagreen-group/ao3-wrapper
-source_commit: aa377e0ec9664fcd5439fec9391638fabf94f448   # 2026-06-28
+source_commit: fdd3f72884105d1453448e0c9a7f2b109588b182   # 2026-06-28
 race_note: ""
 provided_ref: ""
 build_source: local
-coalesced_commits: []
+coalesced_commits: [36cda8ef, 4f9feb33, 494a356d, 994a3128, 33918fef]
 version_name: "dev-local"
 version_code: 12
 build_type: debug
 apk_path: app-under-test/app/build/outputs/apk/debug/app-debug.apk
-apk_sha256: "34e2abced39e3754b037919efdcfc819a599ac5f4228cc5a2157faac2a92ce32"
-built_at: "2026-08-16T17:53:45Z"
-smoke_status: passed   # RUN-20260816-1758 (Closed): 49/49 passed на dev-local (12), source_commit aa377e0e. Полный p0-набор (49 selected / 489 collected), env поднято с нуля (Start-Emulator -WritableSystem, CA visible in apex store: OK, apk_sha256 сверен фактом). device-liveness guard recoveries 0/2 (ENV_ISSUE-токена нет), sessionfinish достигнут штатно, PYTEST_EXIT=0. Падений нет — триажить нечего. Baseline-сверка: последний Closed smoke с source_commit — RUN-20260816-0332 (27d5cfd1) — git merge-base --is-ancestor → EXIT=0, ЯВЛЯЕТСЯ предком; те же 37 TC-меток зелёные и здесь.
-regression_status: failed   # RUN-20260816-1831 (NeedsTriage): 289 passed / 1 failed (290 selected, полный (p0 or p1) and not live) на dev-local (12), source_commit aa377e0e. selection: full (wide_impact: app/src/main/assets/ao3_bridge.js), диапазон 27d5cfd193b3e..aa377e0ec966. Проактивная сегментация 150+140 (класс «харнесс убивает фоновый pytest ~45-60 мин») — оба сегмента дошли до sessionfinish штатно, recoveries 0/2 в обоих, ENV_ISSUE-токена нет, 0 пересечений historyId. Падение: TC-004 (test_clear_all_ratings, p0) — assert "кнопка «Clear…» не найдена" после swipe; тот же тест зелёный в соседнем smoke-прогоне этой же сборки (RUN-20260816-1758) и в baseline — факт для failure-analyst, вердикт не вынесен. Baseline-сверка: последний Closed regression с source_commit — RUN-20260816-0334 (27d5cfd1) — git merge-base --is-ancestor → EXIT=0, ЯВЛЯЕТСЯ предком (тот прогон сам 0 тестов не гонял, impact areas:[]); TC-154/TC-176 (падения RUN-20260815-0337) здесь зелёные.
+apk_sha256: "6bc924f9e3536615b1bcbb5f9533ea9dde0a38e6e31372e39e290c1b68b8b179"
+built_at: "2026-08-19T17:47:59Z"
+smoke_status: passed   # RUN-20260819-1818 (Closed): 49/49 passed на dev-local (12), source_commit fdd3f728. Полный p0-набор (49 selected / 667 collected), env поднято с нуля (Start-Emulator -WritableSystem, CA visible in apex store: OK, apk_sha256 сверен фактом 6bc924f9...). device-liveness guard recoveries 0/2 (ENV_ISSUE-токена нет), sessionfinish достигнут штатно, PYTEST_EXIT=0. Падений нет — триажить нечего. Baseline-сверка: последний Closed smoke с source_commit — RUN-20260816-1758 (aa377e0e) — git merge-base --is-ancestor → EXIT=0, ЯВЛЯЕТСЯ предком; те же 37 TC-меток зелёные и здесь.
+regression_status: passed   # RUN-20260819-2012 (Closed): 461/461 passed (461 selected / 667 collected, полный (p0 or p1) and not live) на dev-local (12), source_commit fdd3f728. selection: full (wide_impact: ao3_bridge.js/MainActivity.kt/AppDatabase.kt/WorkRating.kt; unknown вне карты: data/sync/LibraryJson.kt, data/sync/SyncRepository.kt + testing/*), диапазон aa377e0e..fdd3f728. Проактивная сегментация 144+150+167 (класс «харнесс убивает фоновый pytest ~45-60 мин») — все три сегмента дошли до sessionfinish штатно, recoveries 0/2 во всех трёх, ENV_ISSUE-токена нет, 0 пересечений historyId. Падений нет. Baseline-сверка: последний Triaged regression с source_commit — RUN-20260816-1831 (aa377e0e) — git merge-base --is-ancestor → EXIT=0, ЯВЛЯЕТСЯ предком; TC-004 (test_clear_all_ratings) red→green (был TEST_BUG/AT-BUG-080, теперь зелёный), TC-207/TC-211/TC-215 — новые метки (зелёные), остальные 112 меток без изменений.
 canary_status: passed    # RUN-20260814-0605 (Closed): 10/10 passed live под предписанной TC-078 конфигурацией (hw.gpu.mode=host, сверено фактом в hardware-qemu.ini), scope -m live (канон RUN-20260804-1355). Canary-каталог вырос 23→25 collected items (2 новых в deselected, не live) — состав -m live (10) не изменился. recoveries 0/2. Предыдущий: RUN-20260810-1529 (Closed) 10/10.
