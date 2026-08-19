@@ -240,12 +240,16 @@ schema.yaml + scripts/validate_frontmatter.py (+тесты) + docs/02 —
   framework/pytest.ini (маркер bridge), пилотные тесты (бейджи,
   фильтры, getWorkData, clipboard-стаб, localStorage main-pairing) +
   обе канарейки + красные пробы. Критик-вход обязателен.
-- **N6 контракт-слой** — builder (исполнитель назван), критик-вход
-  обязателен, **строго ПОСЛЕ N5, не параллельно** (общие
-  bridge_selectors.py и framework/tests/bridge/). Owns:
-  framework/tests/bridge/test_contract_*.py (тот же дом bridge/ с
-  локальным conftest), framework/data/bridge_selectors.py (доводка
-  реестра под записанные страницы). Маркеры: **p1 + bridge**.
+- **N6 контракт-слой** — **done/accepted 2026-08-19** (критик-вход:
+  2 блокера адверсариальными мутациями — экранирование code_token,
+  сырой #id-токен — → ретрай attempt 2 → независимые зонды Lead,
+  принят; итог пакета bridge/ = 122 теста). Остатки в N7 явной
+  строкой: пофлоуная гранулярность теста 2 (листинг может «оплатить»
+  work-page-заявку при дрейфе), красная проба класса «токен нашёлся
+  не в той конструкции», приватный импорт _bridge_call_raw из
+  conftest. Owns были: framework/tests/bridge/test_contract_*.py,
+  framework/data/bridge_selectors.py (структурные поля
+  source/code_token — решение Lead 2026-08-19T12:14:13Z).
 - N7 раскатка переносов — designer/automator конвейерно; метрика:
   протокол Р5.
 - N8 приёмка — Lead: журнал, HANDOFF, очередь «аудит L1 unit-слоя»,
