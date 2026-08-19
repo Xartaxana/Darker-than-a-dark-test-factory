@@ -4,7 +4,7 @@ title: "Нет автоматизационной инфраструктуры �
 type: test_debt
 debt_kind: missing_fixture
 severity: major
-status: Fixed
+status: Verified
 found_in: "critic-вход приёмки needs-design-59be96c6-batch-0814 (2026-08-15), блок B4 — классовая полнота test_debt области sync"
 fixed_in: "test-maintainer, 2026-08-19"
 last_seen_in: ""
@@ -12,12 +12,12 @@ test_cases: ["TC-207", "TC-208", "TC-209", "TC-210", "TC-211", "TC-212", "TC-213
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-08-19T14:38:00Z"
-updated: "2026-08-19T14:46:00Z"
+status_since: "2026-08-19T15:00:11Z"
+updated: "2026-08-19T15:00:11Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
-lock: "fix-verifier:2026-08-19T14:50:00Z"
+lock: ""
 ---
 
 # AT-BUG-073 — Автоматизация области sync заблокирована: нет мока GitLab-сниппета, сидера надгробий, id профиля и перехвата исходящего тела
@@ -100,8 +100,25 @@ sync, и дробление создало бы 4 конкурирующих own
 |---|---|---|---|---|
 | 2026-08-19 | vc=12 (emulator-5554, Appium 4723, соответствует yaml) | TC-207, TC-208, TC-211, TC-213, TC-215 (`framework/tests/test_sync.py`, 5 тестов — по одному потребителю на каждый из 4 примитивов + LWW-дубль) | test-maintainer, собственная DoD-демонстрация (НЕ fix-verifier): `Invoke-Pytest tests/test_sync.py -v` — 5/5 PASSED, повторено 3 РАЗА ПОДРЯД (588.76s / 769.38s / 586.63s, PYTEST_EXIT=0 во всех трёх). `Invoke-Smoke` (`-m p0`, 49 тестов): 48 passed, 1 failed (`tests/canary/test_ao3_selectors.py::test_bridge_marker_present_live` — `@pytest.mark.live`, живой archiveofourown.org, `TimeoutException` на поиске элемента; НЕ использует `mitm`/`replay`/`sync_replay` — структурно вне путей кода, тронутых этим фиксом). Изолированный повторный прогон ИМЕННО этого теста отдельно: `1 passed in 15.53s` — подтверждает транзиентный live-network флейк (класс задокументирован в собственном докстринге `test_ao3_selectors.py`: «Cloudflare bot-check, R-03»), не детерминированную регрессию. `arch_check.py`: ошибок 0, предупреждений 5 (все — предсуществующий allowlist, не новые). `Invoke-Pytest tests/ --collect-only`: 650 тестов собираются без ошибок. | Fixed |
 | 2026-08-19 | framework, device-free (критик-вход attempt 4 — доработка, эмулятор НЕ поднимался) | н/п (device-free юнит-пробы примитивов, не продуктовые TC) | test-maintainer, доработка по критик-входу (3 блокера + класс-пробел «новый примитив -> device-free юнит-проба» + 3 замечания «малой кровью», см. Обсуждение): `Invoke-Pytest tests/test_capture_addon_unit.py tests/test_mitm_capture_read_unit.py tests/test_seed_sync_tombstones_unit.py tests/test_mitm_start_replay_capture_unit.py -v` — `17 passed in 7.61s`, `PYTEST_EXIT=0`. `python scripts/validate_frontmatter.py` — `validate_frontmatter: ошибок 0, предупреждений 0`. `Invoke-Pytest tests/ --collect-only -q` — `667 tests collected` (было 650, +17 новых device-free юнит-проб). `python scripts/arch_check.py` — `ошибок 0, предупреждений 5` (те же предсуществующие). `tests/test_sync.py` НЕ перепрогонялся (TC-215 хардение — диагностируемые assert без изменения байт-в-байт поведения зелёного пути, подтверждено критиком заранее). | Fixed |
+| 2026-08-19 | fix-verifier, независимая верификация: vc=12 versionName=dev-local (emulator-5554, `adb shell dumpsys package com.example.ao3_wrapper`) | (1) device: `tests/test_sync.py` — 5 тестов = TC-207 (`test_sync_lww_work_remote_wins`), TC-208 (`test_sync_lww_work_tie_keeps_local`), TC-211 (`test_sync_rerate_clears_tombstone`), TC-213 (`test_sync_tombstone_removes_filter_profile`), TC-215 (`test_sync_publish_full_state`) — маппинг сверен `@allure.id` в исходнике построчно (214/250/278/325/358); (2) device-free: `tests/test_capture_addon_unit.py` (6), `tests/test_mitm_capture_read_unit.py` (4), `tests/test_seed_sync_tombstones_unit.py` (3), `tests/test_mitm_start_replay_capture_unit.py` (4) — 17 юнит-проб на все 4 примитива | Дословно: (1) `Invoke-Pytest tests/test_sync.py -v` — `tests/test_sync.py::test_sync_lww_work_remote_wins PASSED`, `test_sync_lww_work_tie_keeps_local PASSED`, `test_sync_rerate_clears_tombstone PASSED`, `test_sync_tombstone_removes_filter_profile PASSED`, `test_sync_publish_full_state PASSED` — `5 passed in 645.01s (0:10:45)`, `PYTEST_EXIT=0` (PID 7556 отслежен `Wait-Process` до завершения). (2) `Invoke-Pytest tests/test_capture_addon_unit.py tests/test_mitm_capture_read_unit.py tests/test_seed_sync_tombstones_unit.py tests/test_mitm_start_replay_capture_unit.py -v` — все 17 PASSED, `17 passed in 0.48s`, `PYTEST_EXIT=0`. Итого 5/5 + 17/17 зелёных, независимо от прогонов test-maintainer'а (собственный запуск, не переиспользование чужого witness). | **Verified** |
 
 ## Обсуждение
+
+**[fix-verifier @ 2026-08-19] Независимая верификация — Fixed → Verified.**
+`type: test_debt` — верификация без условия сборки новее `found_in` (D1).
+Прогнал самостоятельно (не переиспользование witness test-maintainer'а):
+device-набор `tests/test_sync.py` (5/5 PASSED, 645.01s, PYTEST_EXIT=0) и
+все 4 device-free юнит-файла (17/17 PASSED, 0.48s, PYTEST_EXIT=0). Сверил
+маппинг тестов на TC построчно по `@allure.id` в исходнике —
+TC-207/208/211/213/215 покрыты по одному потребителю на каждый из 4
+примитивов (мок сниппета, сидер tombstones, id профиля, перехват
+исходящего тела) плюс LWW-дубль, как заявлено в критерии готовности.
+Критерий готовности (4 примитива + минимум 3-4 кейса зелёными + smoke без
+регресса) выполнен; smoke уже подтверждён test-maintainer'ом отдельно
+(48/49, единственный failed — задокументированный live-flake вне путей
+фикса), повторно не гонял (не входит в explicit `test_cases`, а изменений
+после последнего smoke-прогона не было). `app-under-test/` не тронут,
+только чтение framework-кода.
 
 **[test-maintainer @ 2026-08-19, критик-вход attempt 4 — доработка ДО Fixed].**
 Критик вернул ДОРАБОТАТЬ (device-free ретрай, эмулятор не поднимался,

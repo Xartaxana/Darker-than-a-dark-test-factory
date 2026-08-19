@@ -7485,7 +7485,7 @@
     "epicPath": null,
     "summary": "Нет автоматизационной инфраструктуры для области sync: мок GitLab-сниппета (/api/v4/snippets), сидер sync_tombstones, возврат id профиля из seed_filter_profiles, перехват исходящего тела публикации",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -7516,8 +7516,8 @@
       "test_case:TC-234",
       "sev:major"
     ],
-    "updated": "2026-08-19T14:46:00Z",
-    "resolution": null,
+    "updated": "2026-08-19T15:00:11Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },

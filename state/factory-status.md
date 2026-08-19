@@ -1,15 +1,15 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-19T14:47:13Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-19T15:02:57Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
 - Сборка: dev-local (versionCode 12), commit `aa377e0e`, built_at 2026-08-16T17:53:45Z
-- smoke: Closed · smoke_freshness_hours: **68.3** (RUN-20260816-1758)
-- regression: Triaged · regression_freshness_hours: **65.9** (RUN-20260816-1831)
-- canary: Triaged · canary_freshness_hours: **363.1** (RUN-20260804-1317)
+- smoke: Closed · smoke_freshness_hours: **68.6** (RUN-20260816-1758)
+- regression: Triaged · regression_freshness_hours: **66.2** (RUN-20260816-1831)
+- canary: Triaged · canary_freshness_hours: **363.3** (RUN-20260804-1317)
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **2**
 - p0_automation_coverage: **100%** (37/37)
@@ -75,10 +75,9 @@ story-карточки: стадии см. docs/05-board.md §Story
 - BUG-012 [minor] Intended — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
 - BUG-013 [minor] Intended — Смена темы, затем немедленный kill процесса (<100 мс) теряет theme_mode — выбор темы не персистится
 
-## Test debt (6)
+## Test debt (5)
 
 - AT-BUG-068 [broken_environment] Blocked — navigator.clipboard.writeText() отклоняется DOMException 'Write permission denied' в тестовом WebView — блокирует Then «Copied!» TC-188
-- AT-BUG-073 [missing_fixture] Fixed — Нет автоматизационной инфраструктуры для области sync: мок GitLab-сниппета (/api/v4/snippets), сидер sync_tombstones, возврат id профиля из seed_filter_profiles, перехват исходящего тела публикации
 - AT-BUG-075 [flaky_test] Open — TC-176 burst-окно: натуральный запас tap1->tap2 ~0.7-0.85с даже после классовой правки open_in_background_via_overlay — ниже критик-ориентира ≥1с, дальнейшее ужатие требует правок вне манифеста rework attempt2
 - AT-BUG-076 [missing_fixture] Open — Методическая норма Data Setup «auto_apply_filter материализуется только фактическим переключением тумблера» жила только прозой закрытого CH-010 — не была зафиксирована постоянным носителем, читаемым будущими test-designer-сессиями
 - AT-BUG-083 [flaky_test] Open — assert_work_not_in_tab гонится с анимацией HorizontalPager Library (тот же класс, что AT-BUG-082, но на ЛЮБОЙ вкладке, не только FILES) — не почин, только заведён (D-0043 queued follow-up)

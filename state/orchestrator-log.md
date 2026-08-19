@@ -616,3 +616,4 @@ qa-orchestrator. Скрипты pre_steps (stale_locks и др.) тоже пиш
 | 2026-08-19T13:26:18Z | Спроектировать кейсы для области без покрытия | test-designer | TC-258..TC-265 + docs/01 §9 | success: 8 кейсов по 3 областям (э), 3 метки сняты; приёмка Fable с правкой 9 формальных дефектов (updated-в-будущем, red_lock до F1, статус TC-265) |
 | 2026-08-19T13:45:16Z | решения владельца (щ) п.3 + рамка R-18 | bug-reporter | BUG-074..BUG-078 | success: 5 багов заведены и опубликованы (issues 46-50), все awaiting: dev; дубликат BUG-058 не создан |
 | 2026-08-19T14:47:02Z | B4: инфраструктурный test_debt | test-maintainer | bugs/AT-BUG-073.md + framework/core+tests | success (attempt 4): Open->Fixed, 4 примитива sync + 17 юнит-проб; критик-вход: 2 блокера найдены и закрыты ретраем |
+| 2026-08-19T15:02:57Z | D1: верификация Fixed | fix-verifier | bugs/AT-BUG-073.md | success: Verified (5/5 device + 17/17 unit, независимый прогон) |
