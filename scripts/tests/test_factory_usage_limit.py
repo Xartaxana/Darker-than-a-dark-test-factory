@@ -118,6 +118,224 @@ def test_reset_ts_is_always_in_the_future():
 
 
 # ===========================================================================
+# A1b. Дата в подсказке сброса (Н3, docs/HANDOFF.md §7а, 2026-08-19)
+#
+# Баг: `span` (имя регекс-группы дня/часа) захватывался, но не использовался,
+# чтобы ОТЛИЧИТЬ день месяца от часа — «resets Aug 20 2am» читалось как
+# «час=20» (взятый из «20» дня), дата пропадала БЕЗ следа: «Aug 20 2am» в
+# 14:30 UTC 2026-08-17 превращалось в «сегодня в 20:00Z» вместо «через 3 дня
+# в 02:00Z». Таблица «вход -> расчётный момент сброса» — в отчёте builder.
+# ===========================================================================
+
+def test_date_in_hint_is_recognized_not_swallowed_as_hour():
+    """Пин основного бага: дата РАСПОЗНАНА и участвует в расчёте, не читается
+    как час."""
+    got = hw.parse_usage_limit(
+        "You've hit your weekly limit · resets Aug 20 2am", NOW)
+    assert got["reset_ts"] == datetime.datetime(2026, 8, 20, 2, 0,
+                                                tzinfo=datetime.timezone.utc)
+    # Старое (ошибочное) поведение дало бы 2026-08-17T20:00:00Z (сегодня,
+    # час=20 из «20» дня месяца) — явный негативный контроль.
+    assert got["reset_ts"] != datetime.datetime(2026, 8, 17, 20, 0,
+                                                 tzinfo=datetime.timezone.utc)
+
+
+def test_date_order_day_then_month_is_also_recognized():
+    """«20 Aug 2am» (день перед месяцем) — тот же результат, что «Aug 20 2am»."""
+    got = hw.parse_usage_limit(
+        "You've hit your weekly limit · resets 20 Aug 2am", NOW)
+    assert got["reset_ts"] == datetime.datetime(2026, 8, 20, 2, 0,
+                                                tzinfo=datetime.timezone.utc)
+
+
+@needs_tz
+def test_date_with_timezone_crossing_midnight():
+    """«за полночь»: полночь Парижа (CEST=UTC+2) 20 августа — это ЕЩЁ 19
+    августа по UTC (календарная дата сдвигается зоной)."""
+    got = hw.parse_usage_limit(
+        "You've hit your weekly limit · resets Aug 20 12am (Europe/Paris)", NOW)
+    assert got["reset_ts"] == datetime.datetime(2026, 8, 19, 22, 0,
+                                                tzinfo=datetime.timezone.utc)
+
+
+def test_hint_without_date_is_unchanged_by_the_fix():
+    """Регресс-щит: подсказка БЕЗ даты (старый формат) даёт БАЙТ-В-БАЙТ
+    прежний результат — фикс не должен трогать этот путь."""
+    got = hw.parse_usage_limit(
+        "You've hit your weekly limit · resets 2am (Europe/Paris)"
+        if _tz_available() else "You've hit your weekly limit · resets 2am", NOW)
+    assert got["reset_ts"] is not None
+    assert got["reset_ts"] > NOW
+
+
+def test_empty_reset_hint_is_conservative_not_a_crash():
+    """Пустая строка (граница «за ней» самой строки) — не крашится, тот же
+    консервативный «не распознано», что был всегда."""
+    got = hw.parse_usage_limit("You've hit your weekly limit · resets ", NOW)
+    assert got is not None
+    assert got["reset_ts"] is None
+
+
+@pytest.mark.parametrize("hint", [
+    "Aug 20 2am (немного текста по-русски рядом)",
+    "(сброс лимита скоро) Aug 20 2am",
+])
+def test_cyrillic_nearby_does_not_break_date_or_hour_parsing(hint):
+    """«кириллица рядом»: посторонний текст на кириллице до/после токена не
+    мешает найти ни дату, ни час (только IANA-зона `Region/City` в скобках
+    матчит tz — кириллица без «/» её не изображает, трактуется как UTC)."""
+    got = hw.parse_usage_limit(f"You've hit your weekly limit · resets {hint}", NOW)
+    assert got["reset_ts"] == datetime.datetime(2026, 8, 20, 2, 0,
+                                                tzinfo=datetime.timezone.utc)
+
+
+@pytest.mark.parametrize("hint", [
+    "Aug 32 2am",     # день вне 1-31 — дата-подобный токен невалиден
+    "Feb 30 2am",     # день в 1-31, но календарно невозможен (нет 29/30 февраля)
+])
+def test_broken_date_falls_back_conservatively_hour_not_rescued(hint, capsys):
+    """Б-1е: ОБА класса битой даты сведены к ОДНОМУ правилу — `reset_ts`
+    ЦЕЛИКОМ `None`, час (2am) НЕ «спасает» результат отдельно от невалидной
+    даты (раньше «Aug 32» теряло дату молча и «2am» из остатка строки
+    правдоподобно, но ошибочно превращалось в «сегодня/завтра 2am»)."""
+    got = hw.parse_usage_limit(f"You've hit your weekly limit · resets {hint}", NOW)
+    assert got is not None                          # КЛАСС (лимит) всё равно распознан
+    assert got["reset_ts"] is None                  # ВРЕМЯ — консервативный фолбэк, час не спасён
+    out = capsys.readouterr().out
+    assert "usage-limit:" in out                    # НЕ молча — строка в лог
+
+
+def test_broken_date_without_any_hour_is_also_conservative(capsys):
+    """Регресс-щит: дата без часа вообще (старый пин) — тот же консервативный
+    фолбэк, НЕ крашится."""
+    got = hw.parse_usage_limit("You've hit your weekly limit · resets Aug 32", NOW)
+    assert got is not None and got["reset_ts"] is None
+    out = capsys.readouterr().out
+    assert "usage-limit:" in out
+
+
+def test_reset_moment_boundary_at_the_instant_is_treated_as_passed(capsys):
+    """M6-граница + Б-1а (критик rework attempt 2, 2026-08-19): дата+час
+    РОВНО совпадает с `now` -> момент уже прошёл -> `reset_ts=None`
+    (НЕ откат на следующий год, как было раньше)."""
+    now_at_target = datetime.datetime(2026, 8, 20, 2, 0, 0, tzinfo=datetime.timezone.utc)
+    got = hw.parse_usage_limit(
+        "You've hit your weekly limit · resets Aug 20 2am", now_at_target)
+    assert got["reset_ts"] is None
+    assert "уже прошёл" in got["note"]
+    out = capsys.readouterr().out
+    assert "usage-limit:" in out
+
+
+def test_reset_moment_boundary_one_second_before_is_valid_this_year():
+    """Та же граница, на СЕКУНДУ раньше (момент ещё в будущем) — `reset_ts`
+    валиден, остаётся ЭТОТ год."""
+    just_before = datetime.datetime(2026, 8, 20, 1, 59, 59, tzinfo=datetime.timezone.utc)
+    got = hw.parse_usage_limit(
+        "You've hit your weekly limit · resets Aug 20 2am", just_before)
+    assert got["reset_ts"] == datetime.datetime(2026, 8, 20, 2, 0,
+                                                tzinfo=datetime.timezone.utc)
+
+
+# ===========================================================================
+# Б-1г (критик rework attempt 2, 2026-08-19): дата — только ДО часа / в той
+# же клаузе, не первый дата-подобный токен всего хвоста
+# ===========================================================================
+
+@needs_tz
+def test_date_after_em_dash_is_not_used():
+    """Витнес-кейс критика: «...2am (Europe/Paris) — plan renewed Aug 3» —
+    «Aug 3» относится к СОСЕДНЕЙ мысли (после эм-даша), не к моменту сброса.
+    Ожидание: время близко к 2am Paris (~9.5ч от NOW=14:30 UTC), НЕ 3 августа."""
+    got = hw.parse_usage_limit(
+        "You've hit your weekly limit · resets 2am (Europe/Paris) — "
+        "plan renewed Aug 3", NOW)
+    assert got["reset_ts"] is not None
+    # 2am Paris следующих суток (CEST=UTC+2) = 2026-08-18T00:00Z — та же
+    # арифметика, что REAL_LINE выше, дата "Aug 3" её не подменяет.
+    assert got["reset_ts"] == datetime.datetime(2026, 8, 18, 0, 0,
+                                                tzinfo=datetime.timezone.utc)
+    assert got["reset_ts"].day != 3
+
+
+def test_date_after_semicolon_is_not_used():
+    """Витнес-кейс критика: «...2am; see changelog May 1 for details» —
+    «May 1» после точки с запятой не относится к моменту сброса."""
+    got = hw.parse_usage_limit(
+        "You've hit your weekly limit · resets 2am; see changelog May 1 "
+        "for details", NOW)
+    assert got["reset_ts"] is not None
+    assert not (got["reset_ts"].month == 5 and got["reset_ts"].day == 1)
+
+
+@needs_tz
+def test_date_after_square_bracket_is_not_used():
+    """Витнес-кейс критика: «resets at 3pm (Europe/Paris) [ref 12 Mar
+    incident]» — «12 Mar»/«Mar 12» из квадратной скобки не должна
+    подставляться (круглые скобки зоны — НЕ разделитель клаузы, остаются
+    рабочими)."""
+    got = hw.parse_usage_limit(
+        "You've hit your weekly limit · resets at 3pm (Europe/Paris) "
+        "[ref 12 Mar incident]", NOW)
+    assert got["reset_ts"] is not None
+    assert not (got["reset_ts"].month == 3 and got["reset_ts"].day == 12)
+    assert got["reset_ts"].hour == 13   # 15:00 CEST (Paris, UTC+2) -> 13:00Z
+
+
+def test_date_before_hour_in_same_clause_is_still_used():
+    """Регресс-щит: дата В ТОЙ ЖЕ клаузе (без разделителей) — по-прежнему
+    используется (Б-1г не должен ломать штатный формат «Aug 20 2am»)."""
+    got = hw.parse_usage_limit(
+        "You've hit your weekly limit · resets Aug 20 2am", NOW)
+    assert got["reset_ts"] == datetime.datetime(2026, 8, 20, 2, 0,
+                                                tzinfo=datetime.timezone.utc)
+
+
+# ===========================================================================
+# Б-1б (критик rework attempt 2, 2026-08-19): горизонт вменяемости reset_ts
+# ===========================================================================
+
+def test_horizon_hours_mapping():
+    assert hw._usage_limit_horizon_hours("weekly") == 8 * 24
+    assert hw._usage_limit_horizon_hours("5-hour") == 24
+    assert hw._usage_limit_horizon_hours("") == 8 * 24
+    assert hw._usage_limit_horizon_hours("some-other-span") == 8 * 24
+
+
+@pytest.mark.parametrize("span,horizon_h", [("weekly", 8 * 24.0), ("5-hour", 24.0)])
+def test_reset_ts_exactly_at_horizon_is_kept(monkeypatch, span, horizon_h):
+    """M6-граница: РОВНО на горизонте — ещё валиден (≤ 8/1 суток)."""
+    at_boundary = NOW + datetime.timedelta(hours=horizon_h)
+    monkeypatch.setattr(hw, "_parse_reset_ts", lambda text, now: (at_boundary, ""),
+                        raising=True)
+    got = hw.parse_usage_limit(f"You've hit your {span} limit · resets whatever", NOW)
+    assert got["reset_ts"] == at_boundary
+
+
+@pytest.mark.parametrize("span,horizon_h", [("weekly", 8 * 24.0), ("5-hour", 24.0)])
+def test_reset_ts_one_second_past_horizon_is_rejected(monkeypatch, span, horizon_h, capsys):
+    """M6-граница ЗА ней: на секунду дальше горизонта — консервативный
+    фолбэк, момент дальше горизонта почти наверняка ошибка парсера."""
+    beyond = NOW + datetime.timedelta(hours=horizon_h, seconds=1)
+    monkeypatch.setattr(hw, "_parse_reset_ts", lambda text, now: (beyond, ""),
+                        raising=True)
+    got = hw.parse_usage_limit(f"You've hit your {span} limit · resets whatever", NOW)
+    assert got["reset_ts"] is None
+    assert "горизонт" in got["note"]
+    out = capsys.readouterr().out
+    assert "usage-limit:" in out
+
+
+def test_reset_ts_unknown_span_uses_default_horizon(monkeypatch, capsys):
+    beyond = NOW + datetime.timedelta(hours=8 * 24.0, seconds=1)
+    monkeypatch.setattr(hw, "_parse_reset_ts", lambda text, now: (beyond, ""),
+                        raising=True)
+    got = hw.parse_usage_limit("usage limit reached · resets whatever", NOW)
+    assert got["span"] == ""
+    assert got["reset_ts"] is None
+
+
+# ===========================================================================
 # A2. Чтение хвоста лога по смещению
 # ===========================================================================
 
@@ -527,3 +745,57 @@ def test_unparsed_reset_falls_back_to_conservative_sleep(tmp_path):
     expected = fw._fmt_ts(NOW + datetime.timedelta(hours=hw.USAGE_LIMIT_DEFAULT_SLEEP_H))
     assert st["usage_limit_until"] == expected
     assert [t for t, _ in toast.calls] == ["[factory:usage-limit]"]
+
+
+# ===========================================================================
+# Б-1в (критик rework attempt 2, 2026-08-19): пояс у ПОТРЕБИТЕЛЯ —
+# usage_limit_until = min(reset_ts, now + MAX_LIMIT_SLEEP_H)
+# ===========================================================================
+
+def test_reset_ts_within_belt_is_kept_as_is(tmp_path):
+    p = _paths(tmp_path)
+    _stalled_setup(p, stalled_since_minutes_ago=20)
+    within = NOW + datetime.timedelta(hours=fw.MAX_LIMIT_SLEEP_H)   # M6: РОВНО на поясе
+
+    fw.run_tick(now=NOW, toast_fn=_NoToast(),
+                reserve_runner=_runner([], _limit_result(within)), **p)
+
+    st = _read_state(p)
+    assert st["usage_limit_until"] == fw._fmt_ts(within)
+
+
+def test_reset_ts_beyond_belt_is_capped(tmp_path):
+    """M6-граница ЗА поясом: дальше `MAX_LIMIT_SLEEP_H` — срезается ровно до
+    пояса, а НЕ до сырого (ошибочного) значения парсера. Это ВТОРАЯ,
+    независимая линия обороны — работает даже если бы Б-1а/б почему-то не
+    сработали (напр. будущая ошибка парсера, которую эти правила не ловят)."""
+    p = _paths(tmp_path)
+    _stalled_setup(p, stalled_since_minutes_ago=20)
+    way_beyond = NOW + datetime.timedelta(hours=fw.MAX_LIMIT_SLEEP_H, seconds=1)
+    cap = NOW + datetime.timedelta(hours=fw.MAX_LIMIT_SLEEP_H)
+
+    fw.run_tick(now=NOW, toast_fn=_NoToast(),
+                reserve_runner=_runner([], _limit_result(way_beyond)), **p)
+
+    st = _read_state(p)
+    assert st["usage_limit_until"] == fw._fmt_ts(cap)
+    assert any("срезано поясом" in n for n in st["notes"])
+
+
+def test_toast_names_the_computed_moment_not_the_raw_hint(tmp_path):
+    """Б-1д: тост несёт ВЫЧИСЛЕННЫЙ момент (ISO UTC), не сырой `reset_hint` —
+    показательно на СРЕЗАННОМ поясом случае, где сырой reset_hint («2am
+    (Europe/Paris)», см. `_limit_result` дефолт) и реально применённый
+    момент (срезанный) РАСХОДЯТСЯ."""
+    p = _paths(tmp_path)
+    _stalled_setup(p, stalled_since_minutes_ago=20)
+    way_beyond = NOW + datetime.timedelta(hours=fw.MAX_LIMIT_SLEEP_H, seconds=1)
+    cap = NOW + datetime.timedelta(hours=fw.MAX_LIMIT_SLEEP_H)
+    toast = _NoToast()
+
+    fw.run_tick(now=NOW, toast_fn=toast,
+                reserve_runner=_runner([], _limit_result(way_beyond)), **p)
+
+    msg = dict(toast.calls)["[factory:usage-limit]"]
+    assert fw._fmt_ts(cap) in msg
+    assert "2am (Europe/Paris)" not in msg

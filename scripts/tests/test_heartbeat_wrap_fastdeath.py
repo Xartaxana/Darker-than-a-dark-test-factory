@@ -539,6 +539,31 @@ def test_threshold_boundary_count_2_no_escalation_count_3_escalates(
 # Пин 14: порядок — счётчик записан ДО попытки записи эскалации
 # ---------------------------------------------------------------------------
 
+def test_fastdeath_increment_own_escalation_message_is_verbatim(tmp_path, monkeypatch):
+    """Н-1 (критик rework attempt 2, 2026-08-19): дословный пин на текст,
+    который пишет `_fastdeath_increment` САМ ПО СЕБЕ — не через
+    `run_fallback_pass` (где `_fastdeath_annotate_reason` почти всегда
+    ПЕРЕЗАПИСЫВАЕТ ту же singleton-строку сразу следом, когда fast_death).
+    Прежде witness покрывал только переписанную копию
+    (test_fastdeath_escalation_message_verbatim_..., ниже) — сам писатель
+    оставался без прямого свидетеля."""
+    p = _paths(tmp_path, fastdeath=json.dumps(
+        {"count": 2, "first_ts": "2026-08-15T10:00:00Z",
+         "last_ts": "2026-08-15T10:00:00Z", "last_rc": 1}))
+    death_moment = datetime.datetime(2026, 8, 15, 12, 5, 0, tzinfo=datetime.timezone.utc)
+    monkeypatch.setattr(hw, "_utcnow", lambda: death_moment, raising=True)
+
+    hw._fastdeath_increment(p["fastdeath_path"], p["escalations_path"], NOW, 1, 7.3,
+                            log_hint="logs/fallback-20260815.log")
+
+    esc = p["escalations_path"].read_text(encoding="utf-8")
+    assert "HEARTBEAT-CHILD-DEATH" in esc
+    assert "3 быстрых смертей подряд" in esc
+    assert "runtime=7.3с" in esc
+    assert "logs/fallback-20260815.log" in esc
+    assert "сбросит сторож при живом прогрессе окна ИЛИ пробный запуск через 6ч" in esc
+
+
 def test_fastdeath_increment_writes_counter_before_escalation_attempt(tmp_path, monkeypatch):
     p = _paths(tmp_path, fastdeath=json.dumps(
         {"count": 2, "first_ts": "2026-08-15T10:00:00Z",

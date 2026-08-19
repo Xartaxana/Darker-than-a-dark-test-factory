@@ -335,18 +335,152 @@ USAGE_LIMIT_DEFAULT_SLEEP_H = 6.0
 HEARTBEAT_USAGE_LIMIT_KEY = "HEARTBEAT-USAGE-LIMIT"
 HEARTBEAT_USAGE_LIMIT_TAG = "heartbeat:usage-limit"
 
+# --- Б-1б (критик rework attempt 2, 2026-08-19): горизонт вменяемости
+# reset_ts ------------------------------------------------------------------
+# `reset_ts`, посчитанный ДАЛЬШЕ горизонта — почти наверняка ошибка парсера
+# (сорванная зона/дата), а не реальный лимит вендора: `weekly` — реальный
+# класс лимита длится максимум ~неделю (запас до 8 суток — под дрейф
+# часовых поясов у границы недели), `5-hour` — на порядок короче (запас до
+# суток), неизвестный/иной span — консервативный дефолт (не ýже weekly).
+# Горизонт применяется В `parse_usage_limit` (после `_parse_reset_ts`) — он
+# не может жить в `_parse_reset_ts` самой (та не знает span).
+USAGE_LIMIT_HORIZON_WEEKLY_DAYS = 8.0
+USAGE_LIMIT_HORIZON_5HOUR_DAYS = 1.0
+USAGE_LIMIT_HORIZON_DEFAULT_DAYS = 8.0
+
+
+def _usage_limit_horizon_hours(span: str) -> float:
+    """span (уже .lower()) -> горизонт вменяемости в часах. Пустой/
+    незнакомый span -> дефолт (8 суток, не ýже weekly)."""
+    s = (span or "").lower()
+    if s == "5-hour":
+        return USAGE_LIMIT_HORIZON_5HOUR_DAYS * 24.0
+    if s == "weekly":
+        return USAGE_LIMIT_HORIZON_WEEKLY_DAYS * 24.0
+    return USAGE_LIMIT_HORIZON_DEFAULT_DAYS * 24.0
+
+# --- Н3 (критик-хвост v8, docs/HANDOFF.md §7а, 2026-08-19): дата в подсказке
+# сброса --------------------------------------------------------------------
+# Баг ДО этой правки: `_RESET_CLOCK_RE` искало ЛЮБЫЕ 1-2 цифры как час —
+# «resets Aug 20 2am» отдавало час=20 (взятый из «20» дня месяца), а «2am»
+# и сама дата пропадали без следа: «resets Aug 20 2am» в 10:00Z читалось
+# как «сегодня в 20:00Z» вместо «завтра в 02:00Z». Молчаливо — ни один
+# note/print не называл дату замеченной-и-отброшенной. Починка: дата
+# ищется и ВЫРЕЗАЕТСЯ из строки ДО поиска часа — её цифры больше не могут
+# попасть в часовой регекс.
+_MONTH_NUMS = {"jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
+              "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12}
+_MONTH_PART = (r"jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|"
+              r"jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|"
+              r"dec(?:ember)?")
+# «Aug 20», «August 20th», «20 Aug» — месяц ТЕКСТОМ (числовые даты вида
+# «08/20» вендор пока не присылал, F-30 — список форм не исчерпан) в любом
+# порядке относительно дня. Месяц — явный список (не `[a-z]*`-обвес вокруг
+# аббревиатуры): открытый `[a-z]*` матчил бы «novel 20» как «nov»+«el» и
+# давал ложную дату там, где её нет.
+_RESET_DATE_RE = re.compile(
+    r"\b(?:(?P<month1>" + _MONTH_PART + r")\.?\s+(?P<day1>\d{1,2})(?:st|nd|rd|th)?\b"
+    r"|(?P<day2>\d{1,2})(?:st|nd|rd|th)?\s+(?P<month2>" + _MONTH_PART + r")\.?\b)",
+    re.IGNORECASE)
+
+# --- Б-1г (критик rework attempt 2, 2026-08-19): дата — только ДО часа / в
+# ТОЙ ЖЕ клаузе -----------------------------------------------------------
+# Баг ДО этой правки: `_RESET_DATE_RE.search` искал ПЕРВЫЙ дата-подобный
+# токен во ВСЁМ хвосте подсказки сброса, даже если он относился к СОСЕДНЕЙ
+# мысли, не к моменту сброса. Витнес-кейсы критика: «resets 2am
+# (Europe/Paris) — plan renewed Aug 3» (дата после эм-даша — посторонняя
+# заметка), «resets 2am; see changelog May 1 for details» (после точки с
+# запятой), «resets at 3pm (Europe/Paris) [ref 12 Mar incident]» (после
+# квадратной скобки) — во всех трёх «дата» на самом деле не про сброс, но
+# старый код подставлял её. Круглые скобки — НЕ разделитель клаузы: именно в
+# них живёт IANA-зона («2am (Europe/Paris)»), обрезать по ним нельзя.
+_CLAUSE_BREAK_RE = re.compile(r"[—–;\[]")
+
+
+def _clause_text(reset_text: str) -> str:
+    """Урезает подсказку сброса до конца ПЕРВОЙ клаузы (см. докстринг
+    `_CLAUSE_BREAK_RE`) — дата и час ищутся только в этой клаузе, не во всём
+    хвосте строки. Разделителей нет -> строка не меняется (регресс-щит для
+    прежних форматов вендора, где хвост — это ровно момент сброса)."""
+    text = reset_text or ""
+    m = _CLAUSE_BREAK_RE.search(text)
+    return text[:m.start()] if m else text
+
+
+def _extract_reset_date(reset_text: str) -> tuple:
+    """Ищет дату («Aug 20»/«20 Aug»-подобный токен) в подсказке сброса —
+    ДО поиска часа. Возвращает `(month, day, rest, warn)`:
+      - `month`/`day` — int|None (None — дата не найдена ИЛИ найдена, но
+        синтаксически невалидна: несуществующий месяц/день вне 1-31);
+      - `rest` — `reset_text` С ВЫРЕЗАННЫМ токеном даты (даже при невалидной
+        дате: её цифры НЕ должны достаться часовому регексу — консервативный
+        фолбэк, не молчаливая порча часа);
+      - `warn` — диагностика для НЕ-МОЛЧАЛИВОГО лога (печатает вызывающий),
+        если токен похож на дату, но не проходит валидацию."""
+    m = _RESET_DATE_RE.search(reset_text or "")
+    if not m:
+        return None, None, (reset_text or ""), None
+    month_name = (m.group("month1") or m.group("month2") or "")[:3].lower()
+    day_raw = m.group("day1") or m.group("day2")
+    rest = reset_text[:m.start()] + " " + reset_text[m.end():]
+    month = _MONTH_NUMS.get(month_name)
+    try:
+        day = int(day_raw)
+    except (TypeError, ValueError):
+        return None, None, rest, f"день не распознан в дате {m.group(0)!r}"
+    if month is None or not (1 <= day <= 31):
+        return None, None, rest, f"дата вне диапазона/не распознана: {m.group(0)!r}"
+    return month, day, rest, None
+
 
 def _parse_reset_ts(reset_text: str, now: datetime.datetime) -> tuple:
-    """«2am (Europe/Paris)» -> ближайший БУДУЩИЙ момент этого локального
-    времени в UTC. Возвращает `(datetime|None, note)`.
+    """«2am (Europe/Paris)» / «Aug 20 2am (Europe/Paris)» -> ближайший
+    БУДУЩИЙ момент этого локального времени (и, если дата названа, ЭТОЙ
+    даты) в UTC. Возвращает `(datetime|None, note)`.
+
+    Н3 (2026-08-19): дата ищется `_extract_reset_date` ПЕРВОЙ и вырезается
+    из текста — час ищется по остатку, так что дата больше НЕ маскируется
+    под час (см. докстринг `_RESET_DATE_RE`). Б-1г (критик rework attempt 2,
+    2026-08-19): поиск ведётся только в ПЕРВОЙ клаузе подсказки (см.
+    `_clause_text`) — дата/час из СОСЕДНЕЙ мысли (после эм-даша/точки с
+    запятой/квадратной скобки) больше не подставляется.
+
+    Б-1е (критик rework attempt 2, 2026-08-19): дата-подобный, но
+    СИНТАКСИЧЕСКИ невалидный токен (день вне 1-31) и дата, невалидная
+    КАЛЕНДАРНО (29/30 февраля и т.п.) — ОДНО правило: `reset_ts=None`
+    ЦЕЛИКОМ, час НЕ «спасается» отдельно от даты (раньше день вне 1-31 терял
+    дату молча и час из остатка строки давал правдоподобный, но
+    сфабрикованный результат — «Aug 32 2am» превращалось в «сегодня/завтра
+    2am», хотя намерение сообщения было разбито; календарно-невозможная
+    дата уже давала None по построению — теперь оба класса дают его
+    одинаково). Дата без распознаваемого часа — тот же консервативный
+    фолбэк. Всё — с диагностической строкой в лог (`print`, класс BL-4), а
+    не молчаливым угадыванием.
 
     Зона без tzdata (голый Windows-хост без пакета `tzdata` — зависимость
     НЕ объявлена в framework/requirements.txt намеренно: механизм обязан
     работать и без неё) -> `(None, "<причина>")`; потребитель берёт
     консервативный дефолт. Класс E-негатива: отсутствие зоны — не факт
     «лимита нет», а неизвестность ВРЕМЕНИ."""
-    m = _RESET_CLOCK_RE.search(reset_text or "")
+    clause = _clause_text(reset_text or "")
+    month, day, clock_text, date_warn = _extract_reset_date(clause)
+    if date_warn:
+        # Б-1е: НЕ продолжаем к поиску часа — дата-подобный невалидный токен
+        # обнуляет ВЕСЬ момент сброса, час из остатка строки не «спасает»
+        # результат отдельно от битой даты.
+        print(f"usage-limit: подсказка {reset_text!r} несёт похожий на дату "
+              f"токен, но {date_warn} — момент сброса неизвестен ЦЕЛИКОМ "
+              "(консервативный фолбэк, час НЕ восстанавливается отдельно "
+              "от невалидной даты)")
+        return None, f"дата-подобный токен невалиден: {reset_text!r}"
+
+    m = _RESET_CLOCK_RE.search(clock_text or "")
     if not m:
+        if month is not None:
+            print(f"usage-limit: подсказка {reset_text!r} несёт дату "
+                  f"{month:02d}-{day:02d}, но без распознаваемого часа — "
+                  "момент сброса неизвестен (консервативный фолбэк)")
+            return None, f"дата без часа: {reset_text!r}"
         return None, "время сброса не распознано"
 
     hour = int(m.group("hour"))
@@ -371,9 +505,34 @@ def _parse_reset_ts(reset_text: str, now: datetime.datetime) -> tuple:
             return None, f"зона {tz_name} недоступна ({e.__class__.__name__})"
 
     local_now = now.astimezone(tzinfo)
-    target = local_now.replace(hour=hour, minute=minute, second=0, microsecond=0)
-    if target <= local_now:
-        target += datetime.timedelta(days=1)
+    if month is not None:
+        try:
+            target = local_now.replace(month=month, day=day, hour=hour, minute=minute,
+                                       second=0, microsecond=0)
+        except ValueError as e:
+            print(f"usage-limit: дата {month:02d}-{day:02d} невалидна для года "
+                  f"{local_now.year} ({e}) — момент сброса неизвестен "
+                  "(консервативный фолбэк)")
+            return None, f"дата невалидна для года {local_now.year}: {reset_text!r}"
+        if target <= local_now:
+            # Б-1а (критик rework attempt 2, 2026-08-19): раньше здесь был
+            # откат на СЛЕДУЮЩИЙ ГОД (`target.replace(year=target.year+1)`).
+            # Вендор НИКОГДА не называет год в подсказке — если названный
+            # момент (месяц+день+час) уже в прошлом относительно `now`, это
+            # почти наверняка НЕ «через год», а устаревшее/битое сообщение
+            # (эхо старого лога, сдвиг часов на сервере и т.п.). Откат на год
+            # вперёд превращал такую путаницу в правдоподобную, но
+            # ФАБРИКОВАННУЮ дату — консервативный фолбэк честнее: момент
+            # сброса неизвестен, потребитель берёт USAGE_LIMIT_DEFAULT_SLEEP_H.
+            print(f"usage-limit: названный момент {month:02d}-{day:02d} "
+                  f"{hour:02d}:{minute:02d} уже прошёл относительно "
+                  f"{local_now.isoformat()} — момент сброса неизвестен "
+                  "(консервативный фолбэк, БЕЗ отката на следующий год)")
+            return None, f"названный момент уже прошёл: {reset_text!r}"
+    else:
+        target = local_now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+        if target <= local_now:
+            target += datetime.timedelta(days=1)
     return target.astimezone(datetime.timezone.utc), note
 
 
@@ -383,7 +542,13 @@ def parse_usage_limit(text: str, now: datetime.datetime) -> dict | None:
     Возвращает `None` (не лимит) либо dict: `raw` (сама строка),
     `span` ("weekly"/"5-hour"/...), `reset_ts` (datetime UTC|None),
     `reset_hint` (сырой хвост «2am (Europe/Paris)»|None), `note`
-    (почему `reset_ts` пуст, если пуст)."""
+    (почему `reset_ts` пуст, если пуст).
+
+    Б-1б (критик rework attempt 2, 2026-08-19): `reset_ts`, посчитанный
+    ДАЛЬШЕ горизонта вменяемости (`_usage_limit_horizon_hours(span)`),
+    отбрасывается тем же консервативным фолбэком (`reset_ts=None` +
+    диагностика в `print`/`note`) — момент дальше горизонта почти наверняка
+    ошибка парсера, не реальный лимит вендора."""
     if not text:
         return None
     # ПОСЛЕДНЕЕ совпадение по ВСЕМ паттернам: в срезе может лежать эхо
@@ -397,11 +562,23 @@ def parse_usage_limit(text: str, now: datetime.datetime) -> dict | None:
         return None
     groups = m.groupdict()                     # у второго паттерна нет span
     raw = m.group(0).strip()
+    span = (groups.get("span") or "").lower()
     reset_hint = (groups.get("reset") or "").strip() or None
     reset_ts, note = (None, "строка без части «resets»")
     if reset_hint:
         reset_ts, note = _parse_reset_ts(reset_hint, now)
-    return {"raw": raw, "span": (groups.get("span") or "").lower(),
+    if reset_ts is not None:
+        horizon_h = _usage_limit_horizon_hours(span)
+        delta_h = (reset_ts - now).total_seconds() / 3600.0
+        if delta_h > horizon_h:
+            print(f"usage-limit: reset_ts {reset_ts.isoformat()} "
+                  f"({delta_h:.1f}ч от now) дальше горизонта вменяемости "
+                  f"({horizon_h:.0f}ч, span={span!r}) — момент сброса "
+                  "неизвестен (консервативный фолбэк)")
+            note = (f"reset_ts за горизонтом вменяемости ({horizon_h:.0f}ч "
+                    f"для span={span!r}): было {reset_ts.isoformat()}")
+            reset_ts = None
+    return {"raw": raw, "span": span,
             "reset_ts": reset_ts, "reset_hint": reset_hint, "note": note}
 
 
@@ -428,7 +605,28 @@ def read_usage_limit(log_path, offset: int, now: datetime.datetime,
     ребёнка при rc!=0 открывал бы многочасовое окно тишины. Ищем только в
     последних непустых строках — там, где живёт причина смерти.
 
-    Non-throwing (BL-4): нечитаемый файл/битая кодировка -> None."""
+    Non-throwing (BL-4): нечитаемый файл/битая кодировка -> None.
+
+    Н-собрат (2026-08-19): чтение хвоста вынесено в `_read_log_tail` — тот
+    же читатель кормит и `classify_death_reason` (auth/network/unknown), не
+    только лимит подписки (D-0043: одна реализация чтения хвоста)."""
+    text = _read_log_tail(log_path, offset, tail_bytes, tail_lines)
+    if text is None:
+        return None
+    return parse_usage_limit(text, now)
+
+
+def _read_log_tail(log_path, offset: int, tail_bytes: int, tail_lines: int) -> str | None:
+    """Читает НАСТОЯЩИЙ ХВОСТ среза лога (offset..EOF, максимум `tail_bytes`
+    с конца файла), последние `tail_lines` непустых строк — общий читатель
+    для usage-limit-детекта (`read_usage_limit`) И классификатора причины
+    смерти (`classify_death_reason`, ниже). Нижняя граница чтения =
+    `max(offset, size - tail_bytes)` — то же правило, что было в
+    `read_usage_limit` (см. её докстринг, критик-раунд v8.1 Б1/Н4).
+
+    `log_path=None` (тестовый/CLI-путь без файла) -> `None` (детекта нет).
+    Non-throwing (BL-4): нечитаемый файл/битая кодировка -> `None`, не
+    исключение наружу."""
     if log_path is None:
         return None
     try:
@@ -439,13 +637,113 @@ def read_usage_limit(log_path, offset: int, now: datetime.datetime,
             fh.seek(start)
             chunk = fh.read()
     except (OSError, ValueError) as e:
-        print(f"usage-limit детект: хвост лога не прочитан ({e}) — детекта нет")
+        print(f"log-tail: хвост лога не прочитан ({e}) — детекта нет")
         return None
     text = chunk.decode("utf-8", errors="replace")
     lines = [ln for ln in text.splitlines() if ln.strip()]
     if tail_lines and tail_lines > 0:
         lines = lines[-tail_lines:]
-    return parse_usage_limit("\n".join(lines), now)
+    return "\n".join(lines)
+
+
+# --- Н-собрат критик-входа v8 (docs/HANDOFF.md §7а, D-0043, 2026-08-19) -----
+# «Внешняя невозможность, трактованная как поломка исполнителя» — не только
+# лимит подписки. Протухший OAuth/разлогин (прецедент HEARTBEAT-AUTH,
+# закрыт перелогином оператора 2026-08-15 — реальная строка вывода,
+# logs/heartbeat.log:146, "Failed to authenticate: OAuth session expired
+# and could not be refreshed") и обрыв сети/5xx дают РОВНО ТУ ЖЕ немую
+# жалобу «N быстрых смертей подряд — см. logs/fallback-*.log», от которой
+# заводился v8-детектор лимита. Механизм чтения хвоста лога (_read_log_tail
+# выше) уже стоит на пути исполнения — здесь распознавание расширено ещё
+# двумя классами + явным unknown-фолбэком (класс E-негатива: канал сломан/
+# причина нераспознана — НЕ факт «поломки без причины», а неизвестность
+# причины).
+DEATH_REASON_LIMIT = "limit"
+DEATH_REASON_AUTH = "auth"
+DEATH_REASON_NETWORK = "network"
+DEATH_REASON_UNKNOWN = "unknown"
+
+DEATH_REASON_LABELS = {
+    DEATH_REASON_LIMIT: "лимит подписки",
+    DEATH_REASON_AUTH: "логин/авторизация протухли",
+    DEATH_REASON_NETWORK: "сеть/сервер недоступны",
+    DEATH_REASON_UNKNOWN: "причина не распознана",
+}
+
+# --- Н-2 (критик rework attempt 2, 2026-08-19): сужение регексов ----------
+# Три отдельных промаха, обнаруженных на ревью:
+#   (а) голый `\b401\b` матчил ЛЮБОЕ число 401 (номер батча, хэш коммита,
+#       строку лога) как «протухшая авторизация» — сужено до HTTP-контекста:
+#       401 засчитывается ТОЛЬКО в ОДНОЙ строке текста с «http»/«status»/
+#       «unauthorized» (см. `_auth_401_in_http_context`).
+#   (б) «Internal Server Error» матчила и ВНУТРИ Python-трейсбека, где это
+#       часто имя ИСКЛЮЧЕНИЯ приложения («InternalServerError: ...»), не
+#       сетевой отказ — вынесена в отдельный regex, не срабатывающий при
+#       наличии маркера `Traceback (most recent call last)`.
+#   (в) «429 Too Many Requests» — rate-limit ОТ САМОГО API, не сетевой сбой
+#       (сеть/сервер ДОСТУПНЫ, просто отказали по квоте) — убрана из
+#       network-класса целиком. Выбор: `unknown` (не `network`) — влияния на
+#       поток управления это НЕ имеет (slowdeath/fastdeath серии копятся
+#       одинаково для network/unknown), заводить отдельный DEATH_REASON_*
+#       ради одной фразы без потребителя избыточно; при появлении
+#       потребителя (напр. отдельный cooldown для rate-limit) — новый класс
+#       заводится тогда.
+_AUTH_REASON_RE = re.compile(
+    r"failed to authenticate|oauth|unauthorized|"
+    r"(?:invalid|expired|revoked)\s+(?:api[- ]?key|token|credential|session)|"
+    r"not\s+logged\s+in|please\s+(?:log|sign)\s*in|re-?authenticate|"
+    r"credentials?\s+(?:invalid|missing|not\s+found)",
+    re.IGNORECASE)
+
+_BARE_401_RE = re.compile(r"\b401\b")
+_HTTP_CONTEXT_WORDS_RE = re.compile(r"https?|status|unauthorized", re.IGNORECASE)
+
+
+def _auth_401_in_http_context(text: str) -> bool:
+    """Н-2(а): голый `401` засчитывается как auth ТОЛЬКО если та же СТРОКА
+    текста несёт `http`/`status`/`unauthorized` — номер батча/хэш коммита/
+    произвольное число не должны ложно срабатывать."""
+    for line in (text or "").splitlines():
+        if _BARE_401_RE.search(line) and _HTTP_CONTEXT_WORDS_RE.search(line):
+            return True
+    return False
+
+
+_NETWORK_REASON_RE = re.compile(
+    r"econnrefused|econnreset|etimedout|enotfound|eai_again|getaddrinfo|"
+    r"socket hang up|connection refused|connection reset|"
+    r"network\s+(?:error|is\s+unreachable|unreachable)|fetch failed|"
+    r"dns\s+(?:resolution|lookup)\s+failed|bad gateway|service unavailable|"
+    r"gateway timeout",
+    re.IGNORECASE)
+
+_TRACEBACK_MARKER_RE = re.compile(r"Traceback \(most recent call last\)", re.IGNORECASE)
+_INTERNAL_SERVER_ERROR_RE = re.compile(r"internal server error", re.IGNORECASE)
+
+
+def classify_death_reason(tail_text: str | None) -> str:
+    """Классифицирует ХВОСТ лога ребёнка (см. `_read_log_tail`) по причине
+    быстрой смерти: `auth`/`network`/`unknown`. `limit` сюда НЕ входит — его
+    распознаёт `parse_usage_limit`; вызывающий код (`run_fallback_pass`)
+    проверяет лимит ПЕРВЫМ (он специфичнее — несёт момент сброса) и зовёт
+    эту функцию только для остатка. Пустой/`None`/нечитаемый хвост ->
+    `unknown` (канал сломан ≠ причина известна).
+
+    Н-2 (2026-08-19): «Internal Server Error» НЕ засчитывается внутри
+    Python-трейсбека (см. `_TRACEBACK_MARKER_RE`); «429 Too Many Requests» —
+    НЕ `network` вовсе (rate-limit API, не сбой сети/сервера) -> `unknown`;
+    голый `401` — только в HTTP-контексте той же строки (см.
+    `_auth_401_in_http_context`)."""
+    if not tail_text:
+        return DEATH_REASON_UNKNOWN
+    if _AUTH_REASON_RE.search(tail_text) or _auth_401_in_http_context(tail_text):
+        return DEATH_REASON_AUTH
+    if _NETWORK_REASON_RE.search(tail_text):
+        return DEATH_REASON_NETWORK
+    if (not _TRACEBACK_MARKER_RE.search(tail_text)
+            and _INTERNAL_SERVER_ERROR_RE.search(tail_text)):
+        return DEATH_REASON_NETWORK
+    return DEATH_REASON_UNKNOWN
 
 
 def _fastdeath_revert_one(fastdeath_path: Path, escalations_path: Path | None = None,
@@ -491,6 +789,56 @@ def _fastdeath_revert_one(fastdeath_path: Path, escalations_path: Path | None = 
     except Exception as e:                          # non-throwing (BL-4)
         print(f"usage-limit: откат fastdeath не удался: {e}")
         return ""
+
+
+def _fastdeath_annotate_reason(fastdeath_path: Path, escalations_path: Path,
+                               reason: str | None, now: datetime.datetime, *,
+                               runtime: float | None = None,
+                               log_hint: str = "logs/fallback-*.log") -> None:
+    """Н-собрат (2026-08-19): дописывает класс причины (`auth`/`network`/
+    `unknown`) в реестр серии ПОСЛЕ инкремента. Инкремент сам (внутри
+    `_fastdeath_after_spawn`, вызванного `_run_child` СРАЗУ по получении
+    `rc`) причины не знает — хвост лога читает только `run_fallback_pass`,
+    ПОСЛЕ `_run_child` вернул управление. Если серия УЖЕ эскалирована
+    (`HEARTBEAT-CHILD-DEATH` уже написан БЕЗ причины) — переписывает ТУ ЖЕ
+    singleton-строку, ДОБАВЛЯЯ класс причины К прежнему формату сообщения
+    `_fastdeath_increment` (тот же `log_hint`-артефакт и spec-указатель —
+    регресс-щит: прежний текст называл КОНКРЕТНЫЙ `logs/fallback-
+    YYYYMMDD.log`, переписывание не смеет заменить его безымянной
+    звёздочкой, см. test_fastdeath_escalation_message_verbatim_*).
+
+    Н-1 (критик rework attempt 2, 2026-08-19): `runtime` — та же величина,
+    что несёт исходное сообщение `_fastdeath_increment` (`r["runtime"]`
+    вызывающего `run_fallback_pass`); ПЕРЕЗАПИСАННОЕ этой функцией
+    сообщение раньше теряло `runtime=` целиком — регресс относительно
+    исходного текста, который эта функция замещает.
+
+    `reason=None` — no-op (ветка usage_limit: свой класс, эту функцию не
+    зовут). Non-throwing (BL-4)."""
+    if reason is None:
+        return
+    try:
+        data = _read_fastdeath(fastdeath_path)
+        if data["count"] == 0:
+            return
+        data["last_reason"] = reason
+        _write_fastdeath(fastdeath_path, data)
+        if data["count"] >= FAST_DEATH_ESCALATE_AT:
+            label = DEATH_REASON_LABELS.get(reason, reason)
+            runtime_txt = f"{runtime:.1f}с" if runtime is not None else "мгновенно (spawn-failed)"
+            message = (
+                f"{data['count']} быстрых смертей подряд, класс причины: "
+                f"{label} [{reason}], окно {data.get('first_ts')}.."
+                f"{data.get('last_ts')}, последний rc={data.get('last_rc')}, "
+                f"runtime={runtime_txt}; первые строки причины — {log_hint}; "
+                "причину чинит оператор/Lead — сбросит сторож при живом "
+                "прогрессе окна ИЛИ пробный запуск через 6ч (спека: "
+                "docs/tasks/factory-visible-window.md §Д п.6 «Единый "
+                "стартовый гейт»; реализация — factory_watchdog._series_blocked)")
+            _write_singleton_escalation(escalations_path, HEARTBEAT_CHILD_DEATH_KEY,
+                                        HEARTBEAT_CHILD_DEATH_TAG, message, now)
+    except Exception as e:                          # non-throwing (BL-4)
+        print(f"FASTDEATH reason-annotate failed (non-throwing): {e}")
 
 # --- ночной резерв (Д1, консолидированная секция spec-factory-window v7) --
 DEFAULT_FALLBACK_CHILD_ARGS = ["-p", "/qa-loop 5", "--model", "sonnet"]
@@ -746,7 +1094,12 @@ def _read_fastdeath(fastdeath_path: Path) -> dict:
     самовосстановление (спека п.2, В ОТЛИЧИЕ от budget, где corrupt =
     непонятное намерение оператора и fail loud: этот файл пишется/
     читается ТОЛЬКО механизмом, оператор его не редактирует)."""
-    default = {"count": 0, "first_ts": None, "last_ts": None, "last_rc": None}
+    # Н-собрат (2026-08-19): "last_reason" — класс причины (auth/network/
+    # unknown), дописывается ПОСЛЕ инкремента (_fastdeath_annotate_reason,
+    # см. её докстринг) — старые файлы без ключа получают None из default,
+    # обратная совместимость (merge через out.update(data) ниже).
+    default = {"count": 0, "first_ts": None, "last_ts": None, "last_rc": None,
+              "last_reason": None}
     if not fastdeath_path.exists():
         return dict(default)
     try:
@@ -1354,9 +1707,18 @@ def run_fallback_pass(*, child_args: list[str] | None = None, budget_enabled: bo
     # НЕ является: серию поломок не копит, тревогу не поднимает, а несёт
     # ВРЕМЯ СБРОСА — единственный факт, по которому сторож знает, когда
     # снова есть смысл будить кого-либо.
+    # Н-собрат (2026-08-19): хвост читается ОДИН раз здесь и кормит ОБА
+    # распознавателя — лимит (специфичнее, несёт момент сброса) и, если
+    # лимита нет, класс auth/network/unknown (см. classify_death_reason).
     usage_limit = None
+    death_reason = None
+    _tail_text = None
     if r["outcome"] == "spawned" and r["child_rc"] not in (0, None):
-        usage_limit = read_usage_limit(log_path, log_offset, now)
+        _tail_text = _read_log_tail(log_path, log_offset, USAGE_LIMIT_TAIL_BYTES,
+                                    USAGE_LIMIT_TAIL_LINES)
+        usage_limit = parse_usage_limit(_tail_text, now) if _tail_text else None
+        if usage_limit is not None:
+            death_reason = DEATH_REASON_LIMIT
 
     # --- Б1 (критик-раунд Д1): M4-строка НА ВСЕХ исходах ------------------
     fast_death = r["fast_death"]
@@ -1404,6 +1766,30 @@ def run_fallback_pass(*, child_args: list[str] | None = None, budget_enabled: bo
                 fast_death = False
         else:
             m4_outcome = f"exit={r['child_rc']}" + r["fastdeath_suffix"]
+            # Д-2 (критик rework attempt 2, 2026-08-19): причина
+            # классифицируется для ЛЮБОГО rc != 0, не только для
+            # fastdeath-серии — slowdeath (домен factory_watchdog.py,
+            # НЕ пишет heartbeat-fastdeath.json/эскалацию
+            # HEARTBEAT-CHILD-DEATH — это другой регистр) тоже нуждается
+            # в классе причины для своей ноты/тоста. Прежде классификация
+            # жила ПОД `if fast_death:` — медленный отказ (rc!=0,
+            # runtime>=FAST_DEATH_SEC) молча уходил в «unknown» на стороне
+            # сторожа, хотя хвост лога уже был прочитан и мог назвать
+            # auth/network честно.
+            if r["child_rc"] not in (0, None):
+                death_reason = classify_death_reason(_tail_text)
+                m4_outcome += f" reason={death_reason}"
+            if fast_death:
+                # Н-собрат: та же жалоба «N быстрых смертей подряд» — если
+                # тайл называет auth/network, реестр и эскалация дожны
+                # назвать причину, не просто считать смерти (unknown —
+                # честный фолбэк, не «поломка без причины»). Регистр
+                # HEARTBEAT-CHILD-DEATH — ТОЛЬКО серия быстрых смертей;
+                # slowdeath получает класс через возврат `death_reason`
+                # ВЫШЕ (не пишет сюда).
+                _fastdeath_annotate_reason(fastdeath_path, escalations_path,
+                                           death_reason, now,
+                                           runtime=r["runtime"], log_hint=artifact)
 
         for line in r["release_lines"]:
             print(line)
@@ -1426,6 +1812,10 @@ def run_fallback_pass(*, child_args: list[str] | None = None, budget_enabled: bo
         # v8: None (лимита нет) либо dict parse_usage_limit — сторож берёт
         # отсюда `reset_ts` и молчит до него.
         "usage_limit": usage_limit,
+        # Н-собрат: "limit"/"auth"/"network"/"unknown"|None (None — рано
+        # классифицировать: rc==0/busy/spawn_failed/timeout_kill/
+        # wait_exception — не этот класс исхода вовсе).
+        "death_reason": death_reason,
     }
 
 

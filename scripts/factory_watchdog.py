@@ -150,6 +150,17 @@ FACTORY_LIMIT_TAG = "factory:usage-limit"
 FACTORY_LIMIT_BACK_TAG = "factory:limit-back"
 GENERIC_RESOLVED_MARKER = "[resolved:factory-watchdog]"
 
+# Б-1в (критик rework attempt 2, 2026-08-19): пояс у ПОТРЕБИТЕЛЯ —
+# `usage_limit_until = min(reset_ts, now + MAX_LIMIT_SLEEP_H)`. Защита от
+# ЛЮБОЙ будущей ошибки парсера heartbeat_wrap (не только уже названных
+# классов Б-1а/б), НЕ убирается даже после их починки — вторая независимая
+# линия обороны. Значение = горизонту вменяемости `parse_usage_limit`
+# (`hw.USAGE_LIMIT_HORIZON_WEEKLY_DAYS` * 24) — намеренно НЕ импортируется
+# как алиас: если heartbeat_wrap когда-нибудь передвинет свой горизонт,
+# пояс сторожа не должен молча сдвинуться вместе с ним (независимость линий
+# обороны).
+MAX_LIMIT_SLEEP_H = 8.0 * 24.0
+
 
 # --------------------------------------------------------------------------
 # время / парсинг ts
@@ -1061,16 +1072,33 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
                 detected_limit = rr.get("usage_limit")
                 if detected_limit:
                     reset_ts = detected_limit.get("reset_ts")
+                    reset_unknown_note = None
                     if reset_ts is None:
                         reset_ts = now + datetime.timedelta(
                             hours=hw.USAGE_LIMIT_DEFAULT_SLEEP_H)
-                        reset_txt = (f"{_fmt_ts(reset_ts)} (время сброса не "
-                                    f"распознано: {detected_limit.get('note')})")
-                    else:
-                        reset_txt = _fmt_ts(reset_ts)
+                        reset_unknown_note = (
+                            f"время сброса не распознано: {detected_limit.get('note')}")
+                    # Б-1в (критик rework attempt 2, 2026-08-19): пояс у
+                    # ПОТРЕБИТЕЛЯ — защита от ЛЮБОЙ будущей ошибки парсера
+                    # heartbeat_wrap (не только уже названных классов Б-1а/б),
+                    # не убирается даже после их починки: вторая независимая
+                    # линия обороны, не дубль первой.
+                    belt_cap = now + datetime.timedelta(hours=MAX_LIMIT_SLEEP_H)
+                    capped = reset_ts > belt_cap
+                    if capped:
+                        reset_ts = belt_cap
                     usage_limit_until = reset_ts
                     usage_limit_raw = detected_limit.get("raw")
                     usage_limit_grace_until = None
+                    # Б-1д: нота/эскалация несут ВЫЧИСЛЕННЫЙ момент (ISO UTC),
+                    # не сырой `reset_hint` — человеко-видимый детектор класса.
+                    reset_txt = _fmt_ts(usage_limit_until)
+                    if reset_unknown_note:
+                        reset_txt += f" ({reset_unknown_note})"
+                    if capped:
+                        reset_txt += (f" [срезано поясом {MAX_LIMIT_SLEEP_H:.0f}ч, "
+                                      f"исходный reset_ts был "
+                                      f"{_fmt_ts(detected_limit.get('reset_ts'))}]")
                     night_fallback_notes.append(
                         f"[{FACTORY_LIMIT_TAG}] резерв умер от лимита "
                         f"подписки ({usage_limit_raw}) — "
@@ -1081,10 +1109,15 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
                         f"тревоги молчат до {reset_txt}; окно-фабрика после сброса "
                         "требует РУЧНОГО толчка (цепочка ScheduleWakeup порвана "
                         "сорванным ходом — самовосстановления у окна нет)", now)
+                    # Б-1д: тост тоже несёт ВЫЧИСЛЕННЫЙ момент, не
+                    # `detected_limit.get('reset_hint')` (сырую подсказку
+                    # вендора) — сырой хвост мог быть НЕ тем моментом, что
+                    # реально применён (Б-1а/б/в все МОГУТ отклонить/срезать
+                    # его), тост не должен называть время, которого не будет.
                     shown, _detail = toast_fn(
                         "[factory:usage-limit]",
                         f"лимиты подписки кончились — фабрика спит до "
-                        f"{detected_limit.get('reset_hint') or reset_txt}")
+                        f"{_fmt_ts(usage_limit_until)}")
                     if shown:
                         usage_limit_toast_ts = now
 
@@ -1118,12 +1151,26 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
                     slowdeath_last_ts = now
                     if slowdeath_streak >= fallback_block_threshold and not slowdeath_stopped:
                         slowdeath_stopped = True
+                        # Д-2 (критик rework attempt 2, 2026-08-19):
+                        # heartbeat_wrap классифицирует причину для ЛЮБОГО
+                        # rc != 0, не только для fastdeath-серии (см. её
+                        # докстринг «Д-2» в run_fallback_pass) — та же немая
+                        # жалоба «N отказов подряд», от которой заводился
+                        # auth/network-детектор, актуальна и для slowdeath.
+                        # `timeout_kill` не несёт rc вовсе (ребёнка убили, не
+                        # дождались) — `death_reason` там `None` по
+                        # построению, честный unknown-фолбэк, не пустая
+                        # строка.
+                        reason = rr.get("death_reason") or hw.DEATH_REASON_UNKNOWN
+                        reason_label = hw.DEATH_REASON_LABELS.get(reason, reason)
                         night_fallback_notes.append(
-                            f"{slowdeath_streak} медленных отказов резерва подряд — поломка, "
+                            f"{slowdeath_streak} медленных отказов резерва подряд "
+                            f"(причина: {reason_label} [{reason}]) — поломка, "
                             "см. logs/fallback-*.log")
                         _write_generic_singleton_escalation(
                             escalations_file, FALLBACK_BROKEN_KEY, FALLBACK_BROKEN_TAG,
-                            f"{slowdeath_streak} медленных отказов резерва подряд, "
+                            f"{slowdeath_streak} медленных отказов резерва подряд "
+                            f"(причина: {reason_label} [{reason}]), "
                             f"зафиксировано {_fmt_ts(now)}; см. logs/fallback-*.log", now)
                         toast_due = (last_slowdeath_toast_ts is None or
                                     (now - last_slowdeath_toast_ts).total_seconds() / 3600.0
@@ -1131,8 +1178,8 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
                         if toast_due:
                             shown, _detail = toast_fn(
                                 "[factory:fallback-broken]",
-                                f"{slowdeath_streak} прохода подряд безрезультатны — "
-                                "поломка, см. logs/fallback-*.log")
+                                f"{slowdeath_streak} прохода подряд безрезультатны "
+                                f"({reason_label}) — поломка, см. logs/fallback-*.log")
                             if shown:
                                 last_slowdeath_toast_ts = now
                 # fast_death (spawn_failed/быстрая смерть) — fastdeath уже учтён
@@ -1142,8 +1189,18 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
                     fd_after = hw._read_fastdeath(fastdeath_file)
                     fd_count_after = int(fd_after.get("count") or 0)
                     if fd_count_after >= fallback_block_threshold:
+                        # Н-собрат (2026-08-19, docs/HANDOFF.md §7а): auth/
+                        # network — та же немая жалоба, что раньше маскировала
+                        # лимит подписки; `rr["death_reason"]` — АВТОРИТЕТНОЕ
+                        # значение ЭТОГО спавна, `fd_after["last_reason"]` —
+                        # фолбэк (тестовый reserve_runner может не заполнить
+                        # первое поле).
+                        reason = (rr.get("death_reason") or fd_after.get("last_reason")
+                                 or hw.DEATH_REASON_UNKNOWN)
+                        reason_label = hw.DEATH_REASON_LABELS.get(reason, reason)
                         night_fallback_notes.append(
-                            f"{fd_count_after} быстрых смертей резерва подряд — см. "
+                            f"{fd_count_after} быстрых смертей резерва подряд "
+                            f"(причина: {reason_label} [{reason}]) — см. "
                             "logs/fallback-*.log")
                         toast_due = (last_fastdeath_toast_ts is None or
                                     (now - last_fastdeath_toast_ts).total_seconds() / 3600.0
@@ -1151,8 +1208,8 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
                         if toast_due:
                             shown, _detail = toast_fn(
                                 "[factory:child-death]",
-                                f"{fd_count_after} быстрых смертей резерва подряд — "
-                                "см. logs/fallback-*.log")
+                                f"{fd_count_after} быстрых смертей резерва подряд "
+                                f"({reason_label}) — см. logs/fallback-*.log")
                             if shown:
                                 last_fastdeath_toast_ts = now
 
