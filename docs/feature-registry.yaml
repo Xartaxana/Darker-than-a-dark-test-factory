@@ -368,7 +368,7 @@ features:
   # `browse-tab-undo-history-limit`), и `restoreClosedTab` на неизвестном
   # токене — тихий no-op (:366).
   - id: browse-tab-undo-at-ceiling-keeps-snapshot
-    title: "Undo закрытия вкладки на потолке MAX_TABS не теряет вкладку молча: показывается тот же диалог лимита, что при открытии 11-й, снапшот сохраняется, и после закрытия любой вкладки повторный Undo восстанавливает её"
+    title: "Undo закрытия вкладки на потолке MAX_TABS не теряет вкладку молча: показывается тот же диалог лимита, что при открытии 11-й, и снапшот сохраняется (не сжигается впустую) — НО грань не заявляется: UI-пути повторно вызвать Undo для этого снапшота нет, токен потребляется тем же снекбаром (bugs/BUG-072.md, open)"
     screen: browse
     source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt"
   - id: browse-tab-undo-history-limit
