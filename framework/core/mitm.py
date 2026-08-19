@@ -14,6 +14,7 @@ record→replay HTTPS-трафика WebView приложения. Ключев�
 """
 from __future__ import annotations
 
+import json
 import os
 import socket
 import subprocess
@@ -26,6 +27,7 @@ from framework.config import settings
 _proc: subprocess.Popen | None = None
 _PORT = "8080"
 _READY_TIMEOUT = 15  # сек — ждать, пока mitmdump реально слушает порт
+_CAPTURE_ADDON_PATH = Path(__file__).parent / "capture_addon.py"
 
 # --- AT-BUG-011: fail-fast проверка mitm-CA в системном APEX-сторе доверия ---
 
@@ -376,7 +378,8 @@ def _spawn_and_wait_listening(args: list[str], ready_timeout: int) -> subprocess
         time.sleep(_START_RETRY_BACKOFF)
 
 
-def start_replay(flows_file: Path, ignore_content: bool = False) -> None:
+def start_replay(flows_file: Path, ignore_content: bool = False,
+                  capture_out: Path | None = None, capture_url_substr: str = "") -> None:
     """Поднимает mitmdump, отдавая записанные флоу приложению. Блокируется до тех
     пор, пока порт не начнёт слушаться (см. `_spawn_and_wait_listening` —
     AT-BUG-043).
@@ -407,8 +410,31 @@ def start_replay(flows_file: Path, ignore_content: bool = False) -> None:
     тело и без опции матчилось тривиально), PUT/POST теперь матчит ТОЛЬКО по
     scheme+method+path+query+host+port, как и предполагал докстринг
     `recording_builder.py` (без опции это было НЕВЕРНО для тел с содержимым —
-    докстринг там тоже уточнён)."""
+    докстринг там тоже уточнён).
+
+    `capture_out`/`capture_url_substr` (по умолчанию `None`/`""` — неактивны,
+    прежнее поведение существующих вызывающих не меняется): включает
+    `framework/core/capture_addon.py` (AT-BUG-073, критерий готовности п.4) —
+    перехват тела ИСХОДЯЩЕГО POST/PUT/PATCH-запроса, чей `pretty_url`
+    содержит `capture_url_substr` (пустая строка — перехватывать ВСЕ, см.
+    докстринг `capture_addon.py`), дописывается JSONL-строкой в файл
+    `capture_out`. Читать результат — `read_captured_requests()` ниже.
+
+    `capture_url_substr`, заданная БЕЗ `capture_out` (`None`) — несогласованная
+    пара (критик-вход attempt 4, блокер 2): раньше молча НЕ грузила addon
+    вовсе (условие ниже — `if capture_out is not None`), т.е. вызывающий код,
+    ожидавший фильтрованный перехват, тихо не получал перехвата вообще, без
+    диагностики. Теперь — явный fail-fast `ValueError` ДО спавна mitmdump."""
     global _proc
+    if capture_url_substr and capture_out is None:
+        raise ValueError(
+            "start_replay: capture_url_substr задан без capture_out — "
+            "несогласованная пара (AT-BUG-073, критик-вход attempt 4, "
+            "блокер 2). capture_url_substr бессмыслен без пути capture_out: "
+            "либо передайте оба, либо ни одного."
+        )
+    if capture_out is not None:
+        Path(capture_out).unlink(missing_ok=True)
     args = [
         *_mitmdump(), "--listen-host", "0.0.0.0", "--listen-port", _PORT,
         "--server-replay", str(flows_file),
@@ -418,9 +444,58 @@ def start_replay(flows_file: Path, ignore_content: bool = False) -> None:
     ]
     if ignore_content:
         args += ["--set", "server_replay_ignore_content=true"]
+    if capture_out is not None:
+        args += [
+            "-s", str(_CAPTURE_ADDON_PATH),
+            "--set", f"capture_out={capture_out}",
+            "--set", f"capture_url_substr={capture_url_substr}",
+        ]
     args.append("-q")
     _proc = _spawn_and_wait_listening(args, _READY_TIMEOUT)
     _assert_own_listener()
+
+
+def read_captured_requests(path: Path, timeout: float = 5.0) -> list[dict]:
+    """Читает JSONL, записанный `capture_addon.py` (AT-BUG-073, критерий
+    готовности п.4 «перехват исходящего тела запроса публикации») — ОПРАШИВАЕТ
+    `path` до `timeout` (addon пишет из процесса mitmdump, отдельного от
+    процесса теста; запись обычно опережает возврат `syncNow()`/появление
+    диалога результата на устройстве, но не гарантированно мгновенно видна на
+    диске в момент, когда тест доходит до чтения — тот же класс гонки, что
+    `settings_steps.assert_no_sync_tombstone` описывает для Room-записи).
+    Возвращает `[]`, если файла нет/он пуст после исчерпания `timeout`
+    (вызывающий код формулирует диагностируемый assert сам, а не получает
+    здесь голое исключение).
+
+    Битая/оборванная СТРОКА (критик-вход attempt 4, замечание 5 — теоретическая
+    гонка чтения ровно в момент, когда addon ещё не завершил `write()` строки:
+    на практике маловероятно, addon пишет ОДНИМ `write()` под `with open(...)`
+    на строку, но не исключено по конструкции) — ПРОПУСКАЕТСЯ (не роняет всю
+    функцию голым `JSONDecodeError`), с предупреждением в stderr; РЕЗУЛЬТАТ
+    несёт только успешно распарсенные записи. Вызывающий код, которому важна
+    полнота (не только валидность), сверяет длину возврата сам."""
+    deadline = time.time() + timeout
+    while True:
+        if path.exists():
+            text = path.read_text(encoding="utf-8")
+            if text.strip():
+                records = []
+                for line in text.splitlines():
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        records.append(json.loads(line))
+                    except json.JSONDecodeError as exc:
+                        print(
+                            f"AT-BUG-073 WARNING: read_captured_requests пропустил "
+                            f"нераспарсиваемую строку в {path} ({exc}): {line!r}",
+                            file=sys.stderr,
+                        )
+                return records
+        if time.time() >= deadline:
+            return []
+        time.sleep(0.2)
 
 
 def wait_device_proxy_reachable(timeout: float | None = None) -> None:

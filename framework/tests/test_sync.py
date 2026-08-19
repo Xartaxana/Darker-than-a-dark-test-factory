@@ -1,5 +1,6 @@
 """Тесты области `sync` (AT-BUG-073 закрытие test_debt — мок GitLab Snippet API,
-сидер `sync_tombstones`, `id` фильтр-профиля из `seed_filter_profiles`).
+сидер `sync_tombstones`, `id` фильтр-профиля из `seed_filter_profiles`, перехват
+исходящего тела публикации).
 
 Инфраструктура: `framework/data/gitlab_snippet_mock.py` (мок `/api/v4/snippets`,
 интегрирован в СУЩЕСТВУЮЩИЙ mitm/replay-механизм — `SyncRepository.kt` бьёт по
@@ -9,17 +10,19 @@
 `replay` — содержимое мока строится ВНУТРИ теста, зависит от реально
 засеянного локального `timestamp`, не может быть статичным indirect-параметром
 `@pytest.mark.parametrize`), `seed_db.seed_sync_tombstones`/`read_sync_tombstones`
-(прямой сидинг/чтение таблицы надгробий, минуя UI).
+(прямой сидинг/чтение таблицы надгробий, минуя UI), `framework/core/
+capture_addon.py` + `mitm.read_captured_requests` (перехват тела ИСХОДЯЩЕГО
+POST/PUT-запроса публикации).
 
 Доказано ЭТИМ инкрементом (доказательство пригодности минимум одним
-потребителем — критерий готовности AT-BUG-073):
-  - GitLab Snippet API мок (GET raw + PUT update) — ВСЕ три теста ниже.
+потребителем каждого из 4 пробелов — критерий готовности AT-BUG-073):
+  - GitLab Snippet API мок (GET raw + PUT update) — ВСЕ пять тестов ниже.
   - Сидер/чтение `sync_tombstones` — TC-211 (прямой сидинг Given + чтение Then).
-
-НЕ доказано этим инкрементом (остаток — см. `bugs/AT-BUG-073.md` «Обсуждение»):
-  - `seed_filter_profiles` возвращает `id` (код готов, TC-212/213 не
-    реализованы — нет потребителя).
-  - Перехват исходящего тела запроса публикации (не реализовано вовсе).
+  - `seed_filter_profiles` возвращает `id` — TC-213 (`id` профиля подставлен в
+    надгробие мок-снимка, чтобы синк адресовал ТУ ЖЕ локальную строку).
+  - Перехват исходящего тела публикации — TC-215 (`capture_addon.py` снимает
+    PUT-тело, тест разбирает GitLab-конверт -> вложенный `content` -> JSON
+    снимка библиотеки).
 
 Настройка синхронизации — через РЕАЛЬНЫЙ UI (`SettingsScreen.set_sync_config`/
 `settings_steps.configure_sync`), не прямой сидинг SharedPreferences: три поля
@@ -37,6 +40,7 @@ import allure
 import pytest
 
 from framework.config import settings
+from framework.core import mitm
 from framework.data import gitlab_snippet_mock as gsm
 from framework.data import recording_builder as rb
 from framework.data import seed_db
@@ -60,6 +64,8 @@ _WORK_207 = Work("900000207", "TC-207 LWW Full Replace Work", "seed_author_sync_
                  "Fandom Sync207", 1000)
 _WORK_208 = Work("900000208", "TC-208 LWW Tie Work", "seed_author_sync_208",
                  "Fandom Sync208", 1000)
+_WORK_215 = Work("900000215", "TC-215 Publish Full State Work", "seed_author_sync_215",
+                 "Fandom Sync215", 1000)
 
 
 def _write_snippet_mock(tmp_path: Path, name: str, remote_content: str,
@@ -149,6 +155,58 @@ def sync_tombstone_undelete_seeded(tmp_path):
     listing_flows = rb.read_flows(settings.RECORDINGS_DIR / rb.LISTING_BASIC_FILENAME)
     flows_path = _write_snippet_mock(tmp_path, "tc211.mitm", remote, extra_flows=listing_flows)
     return W.LOVED, flows_path
+
+
+@pytest.fixture()
+def sync_tombstone_removes_profile_seeded(tmp_path):
+    """TC-213: локальный фильтр-профиль Q засеян через `app_steps.seed_filter_
+    profiles` — сидер возвращает СГЕНЕРИРОВАННЫЙ `id` (AT-BUG-073 критерий
+    готовности п.3, единственный потребитель этого возврата во всём
+    фреймворке на момент написания), который подставляется в `id` надгробия
+    удалённого мок-снимка: БЕЗ совпадения `id` синк не нашёл бы, какую
+    локальную строку удалять (`SyncRepository.kt:181` матчит по `id` в
+    объединении ключей local/remote карт).
+
+    `t_delete` берётся ПОСЛЕ вызова `seed_filter_profiles` с запасом (60с) —
+    `timestamp` профиля назначается ВНУТРИ сидера в момент вызова (`now =
+    int(time.time()*1000)`), так что любое `t`, взятое строго позже с
+    запасом, гарантированно больше — не требует читать `timestamp` обратно
+    (`read_filter_profiles()` его вообще не отдаёт, см. её докстринг: сверка
+    там идёт по (name, queryString), а не по `id`/`timestamp`).
+
+    `.mitm` СЛИВАЕТ `listing_basic.mitm` (нужна для открытия листинга и
+    фильтр-панели Browse в Then) с GitLab-моком — тот же приём, что TC-211."""
+    app_steps.clean_state()
+    name = "TC-213 profile Q"
+    [profile_id] = app_steps.seed_filter_profiles([
+        (name, "work_search%5Bquery%5D=tc213-query"),
+    ])
+    t_delete = int(time.time() * 1000) + 60_000
+    remote = gsm.remote_snapshot_content(tombstones=[
+        gsm.tombstone_json(seed_db.SYNC_TOMBSTONE_KIND_PROFILE, profile_id, t_delete),
+    ])
+    listing_flows = rb.read_flows(settings.RECORDINGS_DIR / rb.LISTING_BASIC_FILENAME)
+    flows_path = _write_snippet_mock(tmp_path, "tc213.mitm", remote, extra_flows=listing_flows)
+    return name, flows_path
+
+
+@pytest.fixture()
+def sync_publish_seeded(tmp_path):
+    """TC-215: локально есть 1 оценённая работа (`_WORK_215`) и 1 фильтр-профиль
+    — удалённый снимок ПУСТ (`remote_snapshot_content()` без аргументов),
+    заведомо отличается от локально рассчитанного `outText`
+    (`SyncRepository.kt:218 outText != remoteRaw`), поэтому синк ОБЯЗАН
+    опубликовать (PUT, снипет уже "существует" — `_SNIPPET_ID` преднастроен,
+    сценарий create вне области этого инкремента, см. модульный комментарий
+    у `_SNIPPET_ID`)."""
+    app_steps.clean_state()
+    seed_db.seed([(_WORK_215, "LIKE")])
+    app_steps.seed_filter_profiles([
+        ("TC-215 profile", "work_search%5Bquery%5D=tc215-query"),
+    ])
+    remote = gsm.remote_snapshot_content()
+    flows_path = _write_snippet_mock(tmp_path, "tc215.mitm", remote)
+    return flows_path
 
 
 @pytest.mark.p1
@@ -260,3 +318,112 @@ def test_sync_rerate_clears_tombstone(sync_tombstone_undelete_seeded, driver, sy
 
     # And надгробие Z по-прежнему отсутствует ПОСЛЕ синка
     settings_steps.assert_no_sync_tombstone(seed_db.SYNC_TOMBSTONE_KIND_WORK, work.ao3_id)
+
+
+@pytest.mark.p2
+@pytest.mark.replay
+@allure.id("TC-213")
+@allure.title("Входящее надгробие удаляет фильтр-профиль с обеих поверхностей")
+def test_sync_tombstone_removes_filter_profile(sync_tombstone_removes_profile_seeded, driver, sync_replay):
+    name, flows_path = sync_tombstone_removes_profile_seeded
+
+    # Given синхронизация настроена; профиль Q сохранён локально (Settings
+    # видит его ДО синка — иначе Then «исчез» ничего не доказывал бы)
+    sync_replay(flows_path)
+    app_steps.wait_ui_ready(driver)
+    app_steps.open_tab(driver, "Settings")
+    settings_steps.assert_filter_profile_listed(driver, name)
+    settings_steps.configure_sync(driver, token=_TOKEN, snippet_id=_SNIPPET_ID)
+
+    # When пользователь запускает «Sync now» (удалённый снимок несёт более
+    # свежее надгробие kind="profile" для ТОГО ЖЕ id, что реально получил Q)
+    settings_steps.tap_sync_now(driver)
+    settings_steps.assert_sync_result_dialog(driver, "Sync complete")
+    settings_steps.dismiss_sync_result_dialog(driver)
+
+    # Then профиль Q исчезает из списка Settings
+    settings_steps.assert_filter_profile_not_listed(driver, name)
+
+    # And профиль Q исчезает из выпадашки фильтра на листинге Browse (вторая
+    # UI-поверхность — тот же инвариант распространения, что TC-042 для
+    # УДАЛЕНИЯ ИЗ UI, здесь удаление пришло СИНКОМ, не прямым тапом)
+    app_steps.open_tab(driver, "Browse")
+    browser_steps.open_listing(driver, rb.LISTING_BASIC_URL)
+    browser_steps.open_filter_dropdown(driver)
+    browser_steps.assert_filter_not_offered(driver, name)
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-215")
+@allure.title("После слияния устройство публикует полное состояние (works + filterProfiles + tombstones) в сниппет")
+def test_sync_publish_full_state(sync_publish_seeded, driver, sync_replay, tmp_path):
+    flows_path = sync_publish_seeded
+    capture_path = tmp_path / "tc215_capture.jsonl"
+
+    # Given локально есть работа + фильтр-профиль, удалённый снимок пуст
+    # (заведомо отличается -> публикация обязана произойти); перехват
+    # исходящего тела включён на URL-подстроке `/api/v4/snippets` (AT-BUG-073
+    # критерий готовности п.4, `capture_addon.py`)
+    sync_replay(flows_path, capture_out=capture_path, capture_url_substr="/api/v4/snippets")
+    app_steps.wait_ui_ready(driver)
+    app_steps.open_tab(driver, "Settings")
+    settings_steps.configure_sync(driver, token=_TOKEN, snippet_id=_SNIPPET_ID)
+
+    # When пользователь запускает «Sync now»
+    settings_steps.tap_sync_now(driver)
+    settings_steps.assert_sync_result_dialog(driver, "Sync complete")
+    settings_steps.dismiss_sync_result_dialog(driver)
+
+    # Then перехвачен ХОТЯ БЫ один PUT/POST на /api/v4/snippets (updateSnippet
+    # — снипет уже "существовал", createSnippet не вызывается)
+    records = mitm.read_captured_requests(capture_path)
+    publishes = [r for r in records if r["method"] in ("PUT", "POST")]
+    assert publishes, (
+        f"ни одного PUT/POST на /api/v4/snippets не перехвачено — "
+        f"перехваченные записи: {records}"
+    )
+
+    # And тело запроса — GitLab-конверт `updateSnippet` ({"file_name":...,
+    # "content": "<JSON снимка библиотеки СТРОКОЙ>"}, SyncRepository.kt:286-294:
+    # `body.put("content", content)`, где `content` — СЕРИАЛИЗОВАННЫЙ текст, не
+    # вложенный объект) — сначала разбираем внешний конверт, затем `content`
+    # ВТОРЫМ проходом `json.loads`. Критик-вход (attempt 4, замечание 7):
+    # каждый шаг разбора — диагностируемый `assert` ДО следующего обращения,
+    # не голый `TypeError`/`KeyError`, который указывал бы на файл/строку
+    # `json.loads`, а не на СУТЬ (что именно в перехваченной записи не так).
+    raw_body = publishes[-1]["body"]
+    assert raw_body is not None, (
+        f"перехваченная публикация без тела (body=None) — "
+        f"перехваченная запись целиком: {publishes[-1]}"
+    )
+    envelope = json.loads(raw_body)
+    assert isinstance(envelope, dict) and "content" in envelope, (
+        f"GitLab-конверт без поля content (ожидали {{'file_name':..., "
+        f"'content':...}}): {envelope}"
+    )
+    raw_content = envelope["content"]
+    assert isinstance(raw_content, str), (
+        f"GitLab-конверт несёт content НЕ строкой (ожидали сериализованный "
+        f"JSON-текст, SyncRepository.kt:286-294): {raw_content!r}"
+    )
+    snapshot = json.loads(raw_content)
+    assert isinstance(snapshot, dict), f"content распарсился НЕ в объект: {snapshot!r}"
+
+    # And сам снимок несёт version:3 и три массива, все локальные сущности
+    # представлены (works/filterProfiles непусты, tombstones — список,
+    # присутствует как ключ, даже если в этом сценарии пуст)
+    assert snapshot.get("version") == 3, f"снимок без version:3: {snapshot}"
+    assert isinstance(snapshot.get("tombstones"), list), (
+        f"снимок без списка tombstones (ключ отсутствует/не список): {snapshot}"
+    )
+    works = snapshot.get("works")
+    assert isinstance(works, list), f"снимок без списка works: {snapshot}"
+    assert any(w.get("ao3Id") == _WORK_215.ao3_id for w in works), (
+        f"опубликованный works не несёт {_WORK_215.ao3_id}: {works}"
+    )
+    profiles = snapshot.get("filterProfiles")
+    assert isinstance(profiles, list), f"снимок без списка filterProfiles: {snapshot}"
+    assert any(p.get("name") == "TC-215 profile" for p in profiles), (
+        f"опубликованный filterProfiles не несёт «TC-215 profile»: {profiles}"
+    )

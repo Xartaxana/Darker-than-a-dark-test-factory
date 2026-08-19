@@ -988,12 +988,18 @@ def sync_replay():
     поэтому `.mitm`-файл строится ВНУТРИ тела теста, не может быть параметром
     `@pytest.mark.parametrize(..., indirect=True)`.
 
-    Возвращает callable `start(flows_path)`, поднимающий ТОТ ЖЕ стек
-    device-proxy/mitmdump, что и `replay` (переиспользует те же приватные
-    хелперы модуля — `_ensure_replay_ca`/`_ensure_upstream_fast`/
-    `_proxy_reachable_timeout` — НЕ дублирует их логику, только точку, откуда
-    берётся сам flows-файл). Требует `@pytest.mark.replay` на тесте (тот же
-    marker, что `replay`) — окружение (CA/апстрим) то же самое.
+    Возвращает callable `start(flows_path, capture_out=None,
+    capture_url_substr="")`, поднимающий ТОТ ЖЕ стек device-proxy/mitmdump,
+    что и `replay` (переиспользует те же приватные хелперы модуля —
+    `_ensure_replay_ca`/`_ensure_upstream_fast`/`_proxy_reachable_timeout` —
+    НЕ дублирует их логику, только точку, откуда берётся сам flows-файл).
+    Требует `@pytest.mark.replay` на тесте (тот же marker, что `replay`) —
+    окружение (CA/апстрим) то же самое.
+
+    `capture_out`/`capture_url_substr` (AT-BUG-073, критерий готовности п.4)
+    — опциональный проброс в `mitm.start_replay`: когда `capture_out` задан,
+    тест может позже прочитать перехваченное тело исходящей публикации через
+    `mitm.read_captured_requests(capture_out)` (см. `test_sync.py::TC-215`).
 
     Тест обязан вызвать `start(...)` РОВНО один раз (после того как построил
     `.mitm` нужным ему содержимым, обычно ПОСЛЕ сидинга локального состояния,
@@ -1007,14 +1013,27 @@ def sync_replay():
     proxy_reachable_timeout = _proxy_reachable_timeout()
     started = {"value": False}
 
-    def _start(flows_path) -> None:
+    def _start(flows_path, capture_out=None, capture_url_substr: str = "") -> None:
+        # Критик-вход (attempt 4, замечание 6): повторный вызов `start(...)` на
+        # ТОЙ ЖЕ фикстуре перезаписал бы модульный `mitm._proc` вторым
+        # `start_replay()`, ОСИРОТИВ первый mitmdump на порту 8080 (AT-BUG-043
+        # класс — teardown этой фикстуры знает только про ОДИН `mitm.stop()`,
+        # второй живой процесс на 8080 никто не остановит) — `started["value"]`
+        # уже существовал для teardown, здесь он же ограждает setup.
+        assert not started["value"], (
+            "sync_replay: start(...) вызван повторно на одной и той же "
+            "фикстуре — докстринг требует РОВНО один вызов; повторный вызов "
+            "осиротил бы первый mitmdump-процесс на порту 8080 (класс "
+            "AT-BUG-043, teardown знает только про ПОСЛЕДНИЙ _proc)"
+        )
         # ignore_content=True (AT-BUG-073, см. докстринг `mitm.start_replay`):
         # GitLab Snippet API мок несёт POST/PUT с непредсказуемым (мерженным)
         # телом запроса — без опции server-replay матчил бы ТОЛЬКО пустое
         # тело GET (fetchRemote сработал бы), но PUT/POST publish уходил бы в
         # live forward на реальный gitlab.com.
         mitm.set_device_proxy()
-        mitm.start_replay(flows_path, ignore_content=True)
+        mitm.start_replay(flows_path, ignore_content=True,
+                          capture_out=capture_out, capture_url_substr=capture_url_substr)
         mitm.wait_device_proxy_reachable(timeout=proxy_reachable_timeout)
         started["value"] = True
 
