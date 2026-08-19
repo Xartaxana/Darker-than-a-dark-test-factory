@@ -1,15 +1,15 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-19T15:02:57Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-19T17:38:06Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
 - Сборка: dev-local (versionCode 12), commit `aa377e0e`, built_at 2026-08-16T17:53:45Z
-- smoke: Closed · smoke_freshness_hours: **68.6** (RUN-20260816-1758)
-- regression: Triaged · regression_freshness_hours: **66.2** (RUN-20260816-1831)
-- canary: Triaged · canary_freshness_hours: **363.3** (RUN-20260804-1317)
+- smoke: Closed · smoke_freshness_hours: **71.2** (RUN-20260816-1758)
+- regression: Triaged · regression_freshness_hours: **68.8** (RUN-20260816-1831)
+- canary: Triaged · canary_freshness_hours: **365.9** (RUN-20260804-1317)
 - Открытые blocker/critical: **0**
 - Известные проблемы (known_issue): **2**
 - p0_automation_coverage: **100%** (37/37)
@@ -49,12 +49,11 @@ story-карточки: стадии см. docs/05-board.md §Story
 | tabs |  | 1 |  | 12 |  |  |
 | visibility |  |  |  | 6 |  |  |
 
-## Баги (39)
+## Баги (40)
 
-- Open: **16** · Reopened: **1** · Verified: **20** · Intended: **2**
+- Open: **13** · Fixed: **5** · Verified: **20** · Intended: **2**
 - BUG-011 [major] Open — Restore from backup пропускает работы молча, если файл с тем же ao3Id уже лежит в папке загрузок
 - BUG-017 [major] Open — Быстрое закрытие вкладок → долгий парад снекбаров; подозрение на потерю Undo-токенов при задержке показа
-- BUG-019 [major] Reopened — Back после автопрыжка плотности не выводит назад — ловушка + рост истории
 - BUG-049 [minor] Open [wontfix] — Снекбар «Tab closed» перекрывает нижнюю навигацию на узких экранах — кнопка Undo и таб Library недоступны одновременно
 - BUG-050 [minor] Open [accepted_risk] — Длинный заголовок работы в снекбаре Undo обрезается без многоточия — конец слова просто исчезает
 - BUG-051 [minor] Open [wontfix] — Поиск в Library принимает чисто пробельный запрос — список мигает пустой выдачей вместо игнорирования
@@ -62,13 +61,10 @@ story-карточки: стадии см. docs/05-board.md §Story
 - BUG-060 [minor] Open — Фоновая вкладка на удалённый локальный файл вечна: после релонча показывает ERR_FILE_NOT_FOUND, Retry не работает, чип деградирует
 - BUG-068 [major] Open — Фильтр-профиль (OFF) снимается загрузкой ЧУЖОЙ/фоновой вкладки, пока пользователь стоит на другом экране — ни одного сообщения об этом
 - BUG-070 [major] Open — ON + deep-link в новую вкладку: FilterPanel продолжает показывать профиль активным, хотя URL/содержимое вкладки НЕфильтрованы
-- BUG-072 [minor] Open — restoreClosedTab UI-недостижим второй раз: BrowserViewModel.kt KDoc и PROJECT.md обещают повторный Undo после отказа на потолке, но единственный вызов потребляется тем же снекбаром — вкладка остаётся безвозвратно потерянной
-- BUG-073 [major] Open — Тумблер «Hide Disliked works» (Settings) вызывает ту же незапрошенную live-push навигацию, что BUG-020 — гейт __ao3LiveRatingPush защищает только broadcastRatingChange, не setHiddenRatings
 - BUG-074 [major] Open — Автоматическая синхронизация молчит об ошибках; пользователь не узнает об отказах или удалениях работ
 - BUG-075 [minor] Open — Open in background tab на .epub-файле уводит из приложения; подпись обещает открыть без выхода
 - BUG-076 [minor] Open — Перехват кнопок громкости для листания работает даже при перекрытом Browse (overlay/диалог/панель); нет сообщения о перехвате
-- BUG-077 [major] Open — Прогресс чтения не хранится и не синхронизируется между устройствами; нарушает требование R-18
-- BUG-078 [major] Open — Файл, скачанный на одном устройстве, не докачивается на других; downloadPath намеренно не путешествует; нарушает требование R-18
+- BUG-079 [major] Open — Приложение хранит персональный GitLab-токен в открытых SharedPreferences под android:allowBackup=true; backup_rules.xml пуст; выгрузка библиотеки не ограничена по хосту
 
 ## Известные проблемы, known_issue (2)
 
@@ -131,4 +127,4 @@ story-карточки: стадии см. docs/05-board.md §Story
 - [2026-08-17T16:00:02Z] **HEARTBEAT-CHILD-DEATH** [heartbeat:child-death] — 4 быстрых смертей подряд, окно 2026-08-17T14:30:09Z..2026-08-17T22:30:13Z, последний rc=1, runtime=8.2с; первые строки причины — logs/fallback-20260817.log; причину чинит оператор/Lead — сбросит сторож при живом прогрессе окна ИЛИ пробный запуск через 6ч (спека: docs/tasks/factory-visible-window.md §Д п.6 «Единый стартовый гейт»; реализация — factory_watchdog._series_blocked)
 - [2026-08-19T12:44:29Z] **BUG-013** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-16T18:00:00Z | нужно: ответить в ## Обсуждение
 - [2026-08-19T12:44:29Z] **BUG-019** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-17T02:24:53Z | нужно: ответить в ## Обсуждение
-- [2026-08-19T13:11:16Z] **QAREADY-SYNC-RACE-BUG-019** — BUG-019: gitlab_sync собрался снять ярлык qa-status::QAready (внутренний статус Reopened — Open|Reopened, сигнал ещё не сведён) — вероятная гонка с gitlab_inbound (ярлык поставлен разработчиком, ещё не обработан). Ярлык СОХРАНЁН, снятие пропущено; разберитесь и пометьте [resolved:<task_id>] после проверки.
+- [2026-08-19T13:11:16Z] **QAREADY-SYNC-RACE-BUG-019** [resolved:lead-gitlab-race-bug019-0819] — ЗАКРЫТО 2026-08-19 (Fable): повторный экземпляр УЖЕ разобранного случая (см. запись 2026-08-17 выше с тем же ключом и task_id) — прогон 13:11 шёл ДО посадки классового фикса «safeguard сверяется с label-курсором» (батч мелочей D-0081, коммит 6b6b6fd); после посадки прогон gitlab_sync 16:42 снял протухший ярлык ШТАТНО (label-события issue 10 сверены live: add QAready 08-16T10:56 < Reopened 08-17, новых нет). Исходный текст — история: BUG-019: gitlab_sync собрался снять ярлык qa-status::QAready (внутренний статус Reopened — Open|Reopened, сигнал ещё не сведён) — вероятная гонка с gitlab_inbound. Ярлык СОХРАНЁН, снятие пропущено.
