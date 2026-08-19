@@ -135,6 +135,11 @@ data — используется tests/steps; никого не импорти�
   `make smoke`, `make regression`, `make canary`, `make report`.
 - Прогон = одна команда → exit code + Allure-каталог + машиночитаемый
   `runs/RUN-<timestamp>/results.json` (для агентов).
+- L2 bridge-слой (`framework/tests/bridge/`, device-free, docs/tasks/
+  p2-pyramid-bridge.md Р3) — окружение ставится `Ensure-BridgeHarness`
+  (`scripts/tasks.ps1`): `npm ci` в `framework/bridge_harness/` (Node +
+  jsdom, единственная прод-зависимость), проверяется/ставится ОДИН раз на
+  клон, шаг онбординга — не часть каждого прогона.
 
 ## 6. Точки расширения
 

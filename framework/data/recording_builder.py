@@ -659,6 +659,23 @@ def render_reading_ux_filler_html(min_height_px: int = WORK_PAGE_READING_UX_FILL
 # обеих функций), чтобы не трогать байт-в-байт вывод `render_work_metadata_
 # page_html` (regression-инвариант `test_work_metadata_fetch_markup_matches_
 # generator`, AT-BUG-061).
+#
+# N5 (spec-p2-pyramid-bridge Р3, докстринг `render_work_page_html` ниже):
+# `dd.relationship`/`dd.freeform` — `onWorkPageInfo` (`ao3_bridge.js:944-945`,
+# `document.querySelectorAll('dd.relationship a.tag')`/`'dd.freeform a.tag'`)
+# скрейпит ИМЕННО эти узлы; их отсутствие в фикстуре — остаток класса
+# AT-BUG-074 (`onWorkPageInfo` отдавал `"[]","[]"`, факт 4 recon
+# `docs/tasks/p2-pyramid-bridge.md`). У `Work` (`works.py`) НЕТ полей
+# relationship/freeform (`works.py` НЕ трогать, Р3) — значения ЛИТЕРАЛАМИ, ТЕ ЖЕ
+# строки/href, что уже несёт КАЖДЫЙ блёрб листинга (`_blurb_html` выше,
+# `li.relationships`/`li.freeforms`) — один литерал на весь модуль, вручную не
+# рассинхронизируется.
+WORK_PAGE_RELATIONSHIP_TAG = "Test Ship/Other Ship"
+_WORK_PAGE_RELATIONSHIP_HREF = "/tags/Test%20Ship*s*Other%20Ship/works"
+WORK_PAGE_FREEFORM_TAG = "Fluff"
+_WORK_PAGE_FREEFORM_HREF = "/tags/Fluff/works"
+
+
 def _work_meta_group_and_stats_html(fandom: str, word_count: int | None) -> str:
     word_count = word_count if word_count is not None else 0
     return f"""<dl class="work meta group">
@@ -666,6 +683,18 @@ def _work_meta_group_and_stats_html(fandom: str, word_count: int | None) -> str:
       <dd class="fandom tags">
         <ul class="commas">
           <li><a class="tag" href="/tags/{fandom}/works">{fandom}</a></li>
+        </ul>
+      </dd>
+      <dt class="relationship tags">Relationship:</dt>
+      <dd class="relationship tags">
+        <ul class="commas">
+          <li><a class="tag" href="{_WORK_PAGE_RELATIONSHIP_HREF}">{WORK_PAGE_RELATIONSHIP_TAG}</a></li>
+        </ul>
+      </dd>
+      <dt class="freeform tags">Additional Tags:</dt>
+      <dd class="freeform tags">
+        <ul class="commas">
+          <li><a class="tag" href="{_WORK_PAGE_FREEFORM_HREF}">{WORK_PAGE_FREEFORM_TAG}</a></li>
         </ul>
       </dd>
     </dl>
@@ -732,7 +761,15 @@ def render_work_page_html(work: Work, include_epub: bool = True) -> str:
     порядок ul/kudo/wrapper regression-инварианта AT-BUG-035 выше — kudo_start
     по-прежнему СТРОГО между `</ul>` и `<div class="wrapper">`). `#chapters`
     (`_chapters_html`) — СНАРУЖИ `#workskin`/`#main`, буквально последний узел
-    `<body>` (см. докстринг `_chapters_html` про геометрию scroll-to-bottom)."""
+    `<body>` (см. докстринг `_chapters_html` про геометрию scroll-to-bottom).
+
+    N5 (spec-p2-pyramid-bridge Р3): `_work_meta_group_and_stats_html` ТЕПЕРЬ
+    несёт ещё `dd.relationship`/`dd.freeform` внутри того же `<dl class="work
+    meta group">` (СИБЛИНГИ `dd.fandom`, ПЕРЕД закрывающим `</dl>`) — закрывает
+    остаток AT-BUG-074 (`onWorkPageInfo` отдавал `"[]","[]"`, см. докстринг
+    `_work_meta_group_and_stats_html`). Позиция `<dl class="work meta group">`
+    (`meta_start` в regression-тестах) не сдвигается — контент добавлен ВНУТРИ
+    существующего блока, порядковый инвариант AT-BUG-035 выше не задет."""
     title = html.escape(work.title)
     author = html.escape(work.author)
     fandom = html.escape(work.fandom)

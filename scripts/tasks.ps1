@@ -324,6 +324,51 @@ function Install-MitmCA {
     if ($code -ne 0) { throw "install-mitm-ca.sh завершился с кодом $code" }
 }
 
+function Ensure-BridgeHarness {
+    # spec-p2-pyramid-bridge N5 (docs/tasks/p2-pyramid-bridge.md Р3, B7):
+    # bootstrap харнесса L2 bridge (framework/bridge_harness/ — device-free
+    # jsdom контракт-тесты ao3_bridge.js, framework/tests/bridge/). Дом
+    # версионируется (package.json + package-lock.json коммитятся,
+    # node_modules/ в .gitignore, B1 — tools/ в .gitignore не годится, класс
+    # t-155) — эта функция ставит зависимости (`npm ci`, детерминированный
+    # install из lock-файла) ТОЛЬКО когда node_modules отсутствует, идемпотентна
+    # при повторных вызовах.
+    #
+    # Отсутствие node в PATH — явный отказ с инструкцией, НЕ молчаливый skip
+    # (DoD N5: "Отсутствие node/jsdom при p1-прогоне = ЖЁСТКИЙ отказ с
+    # сообщением-инструкцией"): этой же диагностике вторит conftest.py
+    # framework/tests/bridge/ на случай, если харнесс НЕ был поднят перед
+    # прогоном (вызов этой функции пропущен) — двойная страховка одного факта,
+    # не дублирование логики (PS печатает инструкцию, Python поднимает
+    # RuntimeError на пути прогона теста).
+    $harnessDir = "$root\framework\bridge_harness"
+    if (-not (Test-Path $harnessDir)) {
+        throw "Ensure-BridgeHarness: $harnessDir не найден - дерево репозитория повреждено или framework/bridge_harness/ не склонирован."
+    }
+    $node = Get-Command node -ErrorAction SilentlyContinue
+    if (-not $node) {
+        throw "Ensure-BridgeHarness: node не найден в PATH - bridge-harness (L2, docs/tasks/p2-pyramid-bridge.md) требует Node.js. Установи Node.js (https://nodejs.org/) и повтори."
+    }
+    $jsdomMarker = "$harnessDir\node_modules\jsdom\package.json"
+    if (Test-Path $jsdomMarker) {
+        Write-Host "Bridge harness: node_modules/jsdom уже установлен (Ensure-BridgeHarness no-op)." -ForegroundColor Green
+        return
+    }
+    Write-Host "Bridge harness: node_modules отсутствует - выполняю npm ci в $harnessDir..." -ForegroundColor Cyan
+    Push-Location $harnessDir
+    try {
+        & npm ci
+        $code = $LASTEXITCODE
+        if ($code -ne 0) { throw "Ensure-BridgeHarness: npm ci завершился с кодом $code в $harnessDir." }
+    } finally {
+        Pop-Location
+    }
+    if (-not (Test-Path $jsdomMarker)) {
+        throw "Ensure-BridgeHarness: npm ci завершился успешно, но $jsdomMarker всё ещё отсутствует - проверь вывод npm выше."
+    }
+    Write-Host "Bridge harness: jsdom установлен." -ForegroundColor Green
+}
+
 function Start-Appium {
     param([int]$TimeoutSeconds = 60)
     Push-Location "$root\tools\appium"
@@ -376,7 +421,23 @@ function Stop-NodeProcesses {
         throw "Stop-NodeProcesses: `$root пуст или недействителен ('$root') - отказ убивать node-процессы вслепую (AT-BUG-031: [regex]::Escape('') заматчил бы ЛЮБУЮ командную строку)."
     }
     $allNode = Get-CimInstance Win32_Process -Filter "Name='node.exe'" -ErrorAction SilentlyContinue
-    $owned = @($allNode | Where-Object { $_.CommandLine -and $_.CommandLine -match [regex]::Escape($root) })
+    $rootMatched = @($allNode | Where-Object { $_.CommandLine -and $_.CommandLine -match [regex]::Escape($root) })
+    # spec-p2-pyramid-bridge N5 (docs/tasks/p2-pyramid-bridge.md Р3/Р5, B7):
+    # framework/bridge_harness/run_bridge.js лежит ПОД $root, поэтому подпроцесс
+    # харнесса (по одному short-lived вызову на каждый bridge-тест,
+    # framework/tests/bridge/conftest.py::_bridge_call_raw) МАТЧИТ $root тем же
+    # regex'ом, что appium-воркер, и убивался бы этой функцией без явного
+    # исключения — гоняющийся `Invoke-Pytest -m bridge` параллельно с
+    # Stop-NodeProcesses (например, из другого шага конвейера) терял бы
+    # результат теста. Исключаем по подстроке "bridge_harness" в CommandLine
+    # (узкая, не общий "node_modules" и т.п. — не задевает appium-воркер).
+    $owned = @($rootMatched | Where-Object { $_.CommandLine -notmatch 'bridge_harness' })
+    $bridgeExcluded = @($rootMatched | Where-Object { $_.CommandLine -match 'bridge_harness' })
+    if ($bridgeExcluded.Count -gt 0) {
+        foreach ($p in $bridgeExcluded) {
+            Write-Host "Skipping bridge-harness node process (PID $($p.ProcessId), N5 exclusion): $($p.CommandLine)" -ForegroundColor Cyan
+        }
+    }
     # Батч мелочей D-0081 (2026-07-29): раньше при 0 owned печатались ОБА
     # сообщения ("No AO3 node processes found..." И "Stopped 0 AO3 node
     # process(es)." следом) - одно сообщение на исход (if/else), функция и
@@ -495,4 +556,4 @@ function Get-Device {
     else { Write-Host "NO DEVICE" }
 }
 
-Write-Host "Tasks loaded: Start-Emulator, Install-MitmCA, Start-Appium, Stop-NodeProcesses, Install-App, Invoke-Smoke, Invoke-Suite, Invoke-Pytest, Show-Report, Get-Device" -ForegroundColor Green
+Write-Host "Tasks loaded: Start-Emulator, Install-MitmCA, Start-Appium, Stop-NodeProcesses, Ensure-BridgeHarness, Install-App, Invoke-Smoke, Invoke-Suite, Invoke-Pytest, Show-Report, Get-Device" -ForegroundColor Green

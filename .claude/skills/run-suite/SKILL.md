@@ -10,7 +10,12 @@ description: Прогнать набор тестов (smoke/regression/canary) 
 Разбор `$ARGUMENTS`:
 - `smoke` (по умолчанию) → `pytest -m p0`, режим live.
 - `regression` → `pytest -m "p0 or p1"`, режим replay (при доступности; иначе live с
-  предупреждением).
+  предупреждением). Включает L2 bridge-тесты (маркер `bridge`, всегда несут
+  `p1`, device-free, docs/tasks/p2-pyramid-bridge.md Р3). **Device-метрики
+  времени** (сравнение длительности прогонов между собой) считаются
+  ОТДЕЛЬНЫМ фильтром `-m "(p0 or p1) and not bridge"` — bridge не грузит
+  эмулятор, включать его в базу счёта device-времени нельзя (docs/tasks/
+  p2-pyramid-bridge.md Р5).
 - `canary` → `pytest -m live` (canary/tests), режим live — минимально, AO3 сторонний.
 - допускается `--mode live|replay`.
 

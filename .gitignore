@@ -12,6 +12,14 @@ framework/**/__pycache__/
 **/__pycache__/
 *.pyc
 
+# spec-p2-pyramid-bridge N5 (docs/tasks/p2-pyramid-bridge.md Р3, B1): дом
+# bridge-harness (framework/bridge_harness/) ВЕРСИОНИРУЕТСЯ (package.json +
+# package-lock.json коммитятся, в отличие от tools/ — класс t-155), только
+# node_modules/ не версионируется. Bare-паттерн (не полный путь) — матчит на
+# ЛЮБОЙ глубине по семантике .gitignore, дом здесь: N4 от этой строки
+# отказался (r3-блокер 1), дом — N5.
+node_modules/
+
 # Временные результаты прогонов (Allure/скриншоты); сами отчёты runs/*.md версионируем
 framework/**/.pytest_cache/
 

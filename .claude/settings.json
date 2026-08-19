@@ -38,6 +38,7 @@
       "Bash(powershell -NoProfile -Command 'try { (Invoke-WebRequest -Uri http://127.0.0.1:4723/status*)",
       "Bash(powershell -NoProfile -Command 'Get-Process | Where-Object { $_.ProcessName -match *)",
       "Bash(powershell -NoProfile -ExecutionPolicy Bypass -Command \". D:\\AO3_tests\\scripts\\env.ps1; . D:\\AO3_tests\\scripts\\tasks.ps1; Stop-NodeProcesses\")",
+      "Bash(powershell -NoProfile -ExecutionPolicy Bypass -Command \". D:\\AO3_tests\\scripts\\tasks.ps1; Ensure-BridgeHarness\")",
       "PowerShell(Get-Process | Where-Object { $_.ProcessName -match *)",
       "PowerShell(Get-CimInstance Win32_Process -Filter *)",
       "PowerShell(Get-Date*)",

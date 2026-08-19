@@ -608,7 +608,7 @@
 </div>
 </body>
 </html>
-,7:headers;78:44:12:Content-Type,24:text/html; charset=utf-8,]26:14:content-length,5:10262,]]12:http_version;8:HTTP/1.1,}7:request;292:4:path;53:/works?ao3_companion_fixture=listing_paginated&page=5,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:dd120c94-7220-3a8f-34a4-dc91938c8221;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:67b6524f-22fc-4851-f4d2-0c2271a785d9;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:54692d85-0308-04da-23e6-884f7c9af3e2;4:type;4:http;7:version;2:21#}9314:9:websocket;0:~8:response;7938:6:reason;2:OK,11:status_code;3:200#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;7711:<!DOCTYPE html>
+,7:headers;78:44:12:Content-Type,24:text/html; charset=utf-8,]26:14:content-length,5:10262,]]12:http_version;8:HTTP/1.1,}7:request;292:4:path;53:/works?ao3_companion_fixture=listing_paginated&page=5,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:dd120c94-7220-3a8f-34a4-dc91938c8221;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:67b6524f-22fc-4851-f4d2-0c2271a785d9;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:54692d85-0308-04da-23e6-884f7c9af3e2;4:type;4:http;7:version;2:21#}9775:9:websocket;0:~8:response;8399:6:reason;2:OK,11:status_code;3:200#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;8172:<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><title>A Loved Test Work | Archive of Our Own</title></head>
 <body>
@@ -637,6 +637,18 @@
       <dd class="fandom tags">
         <ul class="commas">
           <li><a class="tag" href="/tags/Fandom Alpha/works">Fandom Alpha</a></li>
+        </ul>
+      </dd>
+      <dt class="relationship tags">Relationship:</dt>
+      <dd class="relationship tags">
+        <ul class="commas">
+          <li><a class="tag" href="/tags/Test%20Ship*s*Other%20Ship/works">Test Ship/Other Ship</a></li>
+        </ul>
+      </dd>
+      <dt class="freeform tags">Additional Tags:</dt>
+      <dd class="freeform tags">
+        <ul class="commas">
+          <li><a class="tag" href="/tags/Fluff/works">Fluff</a></li>
         </ul>
       </dd>
     </dl>
@@ -709,7 +721,7 @@
 <div id="chapters"><div class="userstuff module"><p>Chapter content for auto-mark-as-read fixture (AT-BUG-074).</p></div></div>
 </body>
 </html>
-,7:headers;77:44:12:Content-Type,24:text/html; charset=utf-8,]25:14:content-length,4:7711,]]12:http_version;8:HTTP/1.1,}7:request;255:4:path;16:/works/900000001,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:c8837619-ef41-abcc-f98e-89235728c4d2;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:5f7ca42d-2366-bba3-b259-66ea62abedcd;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:74e1d1e5-c15f-1184-f4d4-fa7806f645c2;4:type;4:http;7:version;2:21#}9322:9:websocket;0:~8:response;7946:6:reason;2:OK,11:status_code;3:200#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;7719:<!DOCTYPE html>
+,7:headers;77:44:12:Content-Type,24:text/html; charset=utf-8,]25:14:content-length,4:8172,]]12:http_version;8:HTTP/1.1,}7:request;255:4:path;16:/works/900000001,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:c8837619-ef41-abcc-f98e-89235728c4d2;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:5f7ca42d-2366-bba3-b259-66ea62abedcd;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:74e1d1e5-c15f-1184-f4d4-fa7806f645c2;4:type;4:http;7:version;2:21#}9783:9:websocket;0:~8:response;8407:6:reason;2:OK,11:status_code;3:200#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;8180:<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><title>A Kudosed Test Work | Archive of Our Own</title></head>
 <body>
@@ -738,6 +750,18 @@
       <dd class="fandom tags">
         <ul class="commas">
           <li><a class="tag" href="/tags/Fandom Beta/works">Fandom Beta</a></li>
+        </ul>
+      </dd>
+      <dt class="relationship tags">Relationship:</dt>
+      <dd class="relationship tags">
+        <ul class="commas">
+          <li><a class="tag" href="/tags/Test%20Ship*s*Other%20Ship/works">Test Ship/Other Ship</a></li>
+        </ul>
+      </dd>
+      <dt class="freeform tags">Additional Tags:</dt>
+      <dd class="freeform tags">
+        <ul class="commas">
+          <li><a class="tag" href="/tags/Fluff/works">Fluff</a></li>
         </ul>
       </dd>
     </dl>
@@ -810,7 +834,7 @@
 <div id="chapters"><div class="userstuff module"><p>Chapter content for auto-mark-as-read fixture (AT-BUG-074).</p></div></div>
 </body>
 </html>
-,7:headers;77:44:12:Content-Type,24:text/html; charset=utf-8,]25:14:content-length,4:7719,]]12:http_version;8:HTTP/1.1,}7:request;255:4:path;16:/works/900000002,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:0a1a2db6-729d-089f-3199-874c2d22038e;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:d75bd08a-4368-1a6c-c270-c820ebdc6f25;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:e16b00b9-514b-6c09-b1d9-f533ac35449c;4:type;4:http;7:version;2:21#}9306:9:websocket;0:~8:response;7930:6:reason;2:OK,11:status_code;3:200#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;7703:<!DOCTYPE html>
+,7:headers;77:44:12:Content-Type,24:text/html; charset=utf-8,]25:14:content-length,4:8180,]]12:http_version;8:HTTP/1.1,}7:request;255:4:path;16:/works/900000002,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:0a1a2db6-729d-089f-3199-874c2d22038e;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:d75bd08a-4368-1a6c-c270-c820ebdc6f25;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:e16b00b9-514b-6c09-b1d9-f533ac35449c;4:type;4:http;7:version;2:21#}9767:9:websocket;0:~8:response;8391:6:reason;2:OK,11:status_code;3:200#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;8164:<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><title>A Read Test Work | Archive of Our Own</title></head>
 <body>
@@ -839,6 +863,18 @@
       <dd class="fandom tags">
         <ul class="commas">
           <li><a class="tag" href="/tags/Fandom Gamma/works">Fandom Gamma</a></li>
+        </ul>
+      </dd>
+      <dt class="relationship tags">Relationship:</dt>
+      <dd class="relationship tags">
+        <ul class="commas">
+          <li><a class="tag" href="/tags/Test%20Ship*s*Other%20Ship/works">Test Ship/Other Ship</a></li>
+        </ul>
+      </dd>
+      <dt class="freeform tags">Additional Tags:</dt>
+      <dd class="freeform tags">
+        <ul class="commas">
+          <li><a class="tag" href="/tags/Fluff/works">Fluff</a></li>
         </ul>
       </dd>
     </dl>
@@ -911,7 +947,7 @@
 <div id="chapters"><div class="userstuff module"><p>Chapter content for auto-mark-as-read fixture (AT-BUG-074).</p></div></div>
 </body>
 </html>
-,7:headers;77:44:12:Content-Type,24:text/html; charset=utf-8,]25:14:content-length,4:7703,]]12:http_version;8:HTTP/1.1,}7:request;255:4:path;16:/works/900000003,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:981ceb4a-c54d-c28b-9c5e-8739be17bb2f;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:3076cb20-ee66-d026-4a41-e817b596ea91;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:ffbc103b-a42e-f35a-09bb-b64b57134d76;4:type;4:http;7:version;2:21#}9328:9:websocket;0:~8:response;7952:6:reason;2:OK,11:status_code;3:200#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;7725:<!DOCTYPE html>
+,7:headers;77:44:12:Content-Type,24:text/html; charset=utf-8,]25:14:content-length,4:8164,]]12:http_version;8:HTTP/1.1,}7:request;255:4:path;16:/works/900000003,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:981ceb4a-c54d-c28b-9c5e-8739be17bb2f;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:3076cb20-ee66-d026-4a41-e817b596ea91;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:ffbc103b-a42e-f35a-09bb-b64b57134d76;4:type;4:http;7:version;2:21#}9789:9:websocket;0:~8:response;8413:6:reason;2:OK,11:status_code;3:200#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;8186:<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><title>A Pending Test Work | Archive of Our Own</title></head>
 <body>
@@ -940,6 +976,18 @@
       <dd class="fandom tags">
         <ul class="commas">
           <li><a class="tag" href="/tags/Fandom Delta/works">Fandom Delta</a></li>
+        </ul>
+      </dd>
+      <dt class="relationship tags">Relationship:</dt>
+      <dd class="relationship tags">
+        <ul class="commas">
+          <li><a class="tag" href="/tags/Test%20Ship*s*Other%20Ship/works">Test Ship/Other Ship</a></li>
+        </ul>
+      </dd>
+      <dt class="freeform tags">Additional Tags:</dt>
+      <dd class="freeform tags">
+        <ul class="commas">
+          <li><a class="tag" href="/tags/Fluff/works">Fluff</a></li>
         </ul>
       </dd>
     </dl>
@@ -1012,7 +1060,7 @@
 <div id="chapters"><div class="userstuff module"><p>Chapter content for auto-mark-as-read fixture (AT-BUG-074).</p></div></div>
 </body>
 </html>
-,7:headers;77:44:12:Content-Type,24:text/html; charset=utf-8,]25:14:content-length,4:7725,]]12:http_version;8:HTTP/1.1,}7:request;255:4:path;16:/works/900000004,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:ff825a2e-4b97-ed2a-aef1-52ed6c01d1c4;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:f8bbf843-9e76-c92a-ccb0-6b5f27a57b7a;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:664f35f9-820d-6995-a20a-63a0fa7360a9;4:type;4:http;7:version;2:21#}9322:9:websocket;0:~8:response;7946:6:reason;2:OK,11:status_code;3:200#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;7719:<!DOCTYPE html>
+,7:headers;77:44:12:Content-Type,24:text/html; charset=utf-8,]25:14:content-length,4:8186,]]12:http_version;8:HTTP/1.1,}7:request;255:4:path;16:/works/900000004,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:ff825a2e-4b97-ed2a-aef1-52ed6c01d1c4;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:f8bbf843-9e76-c92a-ccb0-6b5f27a57b7a;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:664f35f9-820d-6995-a20a-63a0fa7360a9;4:type;4:http;7:version;2:21#}9783:9:websocket;0:~8:response;8407:6:reason;2:OK,11:status_code;3:200#13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;8180:<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><title>A Disliked Test Work | Archive of Our Own</title></head>
 <body>
@@ -1041,6 +1089,18 @@
       <dd class="fandom tags">
         <ul class="commas">
           <li><a class="tag" href="/tags/Fandom Eps/works">Fandom Eps</a></li>
+        </ul>
+      </dd>
+      <dt class="relationship tags">Relationship:</dt>
+      <dd class="relationship tags">
+        <ul class="commas">
+          <li><a class="tag" href="/tags/Test%20Ship*s*Other%20Ship/works">Test Ship/Other Ship</a></li>
+        </ul>
+      </dd>
+      <dt class="freeform tags">Additional Tags:</dt>
+      <dd class="freeform tags">
+        <ul class="commas">
+          <li><a class="tag" href="/tags/Fluff/works">Fluff</a></li>
         </ul>
       </dd>
     </dl>
@@ -1113,4 +1173,4 @@
 <div id="chapters"><div class="userstuff module"><p>Chapter content for auto-mark-as-read fixture (AT-BUG-074).</p></div></div>
 </body>
 </html>
-,7:headers;77:44:12:Content-Type,24:text/html; charset=utf-8,]25:14:content-length,4:7719,]]12:http_version;8:HTTP/1.1,}7:request;255:4:path;16:/works/900000005,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:a9d91fa9-34b6-d662-fb6e-a8f7e5e48e00;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:94c8b93d-490e-9b76-d0a5-d5738a9b44ff;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:cde560fe-2be5-9e2f-d982-888546df3067;4:type;4:http;7:version;2:21#}
+,7:headers;77:44:12:Content-Type,24:text/html; charset=utf-8,]25:14:content-length,4:8180,]]12:http_version;8:HTTP/1.1,}7:request;255:4:path;16:/works/900000005,9:authority;0:,6:scheme;5:https,6:method;3:GET,4:port;3:443#4:host;19:archiveofourown.org;13:timestamp_end;1:0#15:timestamp_start;1:0#8:trailers;0:~7:content;0:,7:headers;26:22:14:content-length,1:0,]]12:http_version;8:HTTP/1.1,}6:backup;0:~17:timestamp_created;1:0#7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;465:3:via;0:~19:timestamp_tcp_setup;3:0.0^7:address;29:19:archiveofourown.org;3:443#]19:timestamp_tls_setup;3:0.0^13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;19:archiveofourown.org;11:tls_version;7:TLSv1.2;11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;4:true!5:error;0:~18:transport_protocol;3:tcp;2:id;36:a9d91fa9-34b6-d662-fb6e-a8f7e5e48e00;8:sockname;29:19:archiveofourown.org;3:443#]8:peername;16:7:0.0.0.0;3:443#]}11:client_conn;370:10:proxy_mode;7:regular;8:mitmcert;0:~19:timestamp_tls_setup;0:~13:timestamp_end;3:0.0^15:timestamp_start;3:0.0^3:sni;0:~11:tls_version;0:~11:cipher_list;0:]6:cipher;0:~11:alpn_offers;0:]4:alpn;0:~16:certificate_list;0:]3:tls;5:false!5:error;0:~18:transport_protocol;3:tcp;2:id;36:94c8b93d-490e-9b76-d0a5-d5738a9b44ff;8:sockname;7:0:;1:0#]8:peername;16:9:127.0.0.1;1:0#]}5:error;0:~2:id;36:cde560fe-2be5-9e2f-d982-888546df3067;4:type;4:http;7:version;2:21#}

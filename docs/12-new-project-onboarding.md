@@ -151,6 +151,13 @@ docs/09-improvement-plan.md Часть I (пройдена AO3 целиком 20
   `tasks.ps1`-функцию и это всплывёт первым же `command not found`.
 - **`scripts/board.ps1`** — механизм (`Sync-Board`, `scripts/board.ps1:8-15`)
   переносим; проектный только `$root`.
+- **`Ensure-BridgeHarness`** (`scripts/tasks.ps1:327`) — bootstrap L2
+  bridge-слоя (device-free jsdom-харнесс, `framework/bridge_harness/`,
+  docs/tasks/p2-pyramid-bridge.md Р3): `npm ci`, если `node_modules/jsdom`
+  отсутствует. Шаг онбординга новой машины/клона (не Android-специфичен —
+  Node-зависимость), запускается перед первым `regression`-прогоном; при
+  переносе на новый проект переносим ПАТТЕРН (bridge-слой для WebView-гибрида),
+  сам харнесс — SUT-специфичен (жёстко завязан на `ao3_bridge.js`).
 
 ### doctor-проверки (13 штук, `scripts/doctor.py:82-164`)
 

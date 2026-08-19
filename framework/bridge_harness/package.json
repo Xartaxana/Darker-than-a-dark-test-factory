@@ -1,0 +1,13 @@
+{
+  "name": "ao3-bridge-harness",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Device-free jsdom harness for ao3_bridge.js contract tests (spec-p2-pyramid-bridge N5). Invoked as a subprocess by framework/tests/bridge/ pytest tests — not a standalone CLI tool. Единственная прод-зависимость — jsdom (docs/tasks/p2-pyramid-bridge.md Р3).",
+  "main": "run_bridge.js",
+  "scripts": {
+    "test": "echo \"no JS test runner here — contract tests live in framework/tests/bridge/ (pytest)\" && exit 0"
+  },
+  "dependencies": {
+    "jsdom": "29.1.1"
+  }
+}
