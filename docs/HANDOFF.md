@@ -280,11 +280,37 @@ AT-BUG-069/070/071/072/073/074/075; F1 остаток x9 (TC-153/154/181-185/
 186/187); ~26 Approved автоматизация (TC-188 отдельно — Blocked
 AT-BUG-068); needs-design e-ink-оракулы (P2); CH-010 followup x2
 (методическая правка Data setup — test-designer; R-09 severity —
-test-strategist); ежедневный canary. **Очередь Lead (не фабрики):**
-loop_lock._write_loop_escalation:218 — тот же decode-под-локом класс,
-что чинился в heartbeat_wrap (критик-вход mech-heartbeat-fastdeath);
-EOL-остаток doctor/build_watch (AT-BUG-041); N-5 бюджета (смок
-disable/enable живой задачи, по слову оператора). **Владельцу:**
+test-strategist); ежедневный canary; p1-dedup исполнение 4
+MERGE_DEFERRED-групп (TC-126/127, TC-030/063, TC-116/117,
+TC-138/140/142/143 → параметризация, красная проба, F1, замер
+device-слоя до/после — разблокировано 2026-08-19, см.
+docs/tasks/p1-dedup-lead-pass.md). **Очередь Lead (не фабрики) — разобрана 2026-08-19 (Fable, слово
+оператора «доделай очередь лида»):** decode-под-локом loop_lock +
+EOL-остатки (а)-(г) AT-BUG-041 — builder-батч (см. журнал
+eol-leftovers-lock-guard-batch); минимальный линтер якорей file:line —
+builder anchor-lint-minimal-v1; **N-5 бюджета СНЯТ как протухший
+(измерено, F-30):** production-путь v7 (heartbeat.cmd →
+factory_watchdog) budget-ветку heartbeat_wrap не вызывает
+(budget_enabled=False жёстко, budget_enabled=True =
+NotImplementedError, файла state/heartbeat-budget.txt нет), а живой
+бюджет сторожа (passes_done/budget_total) самоотключения schtasks не
+имеет вовсе — смок мёртвой ветки ничего не измерил бы; вернётся
+ТОЛЬКО вместе с реализацией budget_enabled=True, если headless-бюджет
+когда-либо реанимируют. Три промпт-механизма посажены (дельта-скан
+стратега перечислением; «фикс без замка» fix-verifier + детектор в
+lead-review шаге 5; конвенция перечислений в шапке реестра).
+p1-dedup: MERGE_DEFERRED разблокирован (ESC-035 закрыт AT-BUG-082
+Verified) — исполнение 4 групп в очередь фабрики (device: слияние +
+красная проба + F1 + замер до/после); детектор отказа слияний Р-2/Р-3
+сверен — все 5 поглощающих выросли. П2 wide_impact: решение —
+НЕ сужать до завершения L2-раскатки (запись в p2-pyramid-bridge.md
+Р5); П3 — за П2, заблокирован конструкцией. Дробление 5 записей
+реестра с перечислением в title — очередь test-strategist со
+следующим касанием реестра. **Хозяйство:** в корне репо лежит
+`scratchpad/` с мусором сессий 08-14..08-18 (зонды критиков, спеки,
+логи; спеки spec-heartbeat-* исторические — окно v7 их SUPERSEDED) —
+нарушение housekeeping-нормы, разбор (перенос спек в docs/tasks либо
+снос) — кандидат в батч мелочей. **Владельцу:**
 ~~BUG-052~~ — строка протухла: закрыт wontfix ещё 2026-08-09 (сеяный
 артефакт репетиции, разбор в самом баге); снята 2026-08-19. 6 вопросов
 awaiting:dev — канал разработчиков, не владельца. Boot-бюджет: см. сообщение handoff-коммита.
