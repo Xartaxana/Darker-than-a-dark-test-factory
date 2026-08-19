@@ -6,6 +6,7 @@ Favorite | Kudosed | Read | Pending | Disliked | Files.
 """
 from __future__ import annotations
 
+import hashlib
 import logging
 
 from appium.webdriver.common.appiumby import AppiumBy
@@ -44,19 +45,15 @@ FILES_TAB = "FILES"
 #     the pager to have stopped moving before its own settle-phase reads are
 #     meaningful.
 #
-# `open_tab` now waits for the visible-text fingerprint (`_scroll_fingerprint`,
-# same primitive already validated for `_settle_clipped_anchor`,
-# AT-BUG-048/080) to stop changing across `_TAB_SWITCH_SETTLE_STABLE_READS`
-# consecutive polls before returning. No dedicated "pager idle"/`selected`
-# UI signal is used — not verified reliable on this Compose `Tab` on the
-# live tree within this rework's time budget; the fingerprint-stabilize
-# primitive is proven and already lives in the codebase for the structurally
-# identical problem (list settle after a swipe). Best-effort/bounded
-# (`_TAB_SWITCH_SETTLE_TIMEOUT`): does not raise if it never converges (same
-# spirit as `_settle_clipped_anchor` — an unmeasurable/slower-than-budget
-# settle must not block the caller) — logs a diagnostic warning instead, so a
-# caller that reads a still-transitioning tree afterwards leaves a paper
-# trail rather than failing silently (Б4).
+# `open_tab` now waits for a settle fingerprint to stop changing across
+# `_TAB_SWITCH_SETTLE_STABLE_READS` consecutive polls before returning. No
+# dedicated "pager idle"/`selected` UI signal is used — not verified reliable
+# on this Compose `Tab` on the live tree within this rework's time budget.
+# Best-effort/bounded (`_TAB_SWITCH_SETTLE_TIMEOUT`): does not raise if it
+# never converges (same spirit as `_settle_clipped_anchor` — an
+# unmeasurable/slower-than-budget settle must not block the caller) — logs a
+# diagnostic warning instead, so a caller that reads a still-transitioning
+# tree afterwards leaves a paper trail rather than failing silently (Б4).
 #
 # ALL FIVE existing readers that go through `open_tab`/`open_tab_for_rating`
 # (`library_steps.assert_work_in_tab`, `assert_work_not_in_tab` — AT-BUG-083
@@ -64,7 +61,83 @@ FILES_TAB = "FILES"
 # `assert_work_in_files_tab`) get this settle "for free" — the fix lives at
 # the ONE place all of them share (D-0043: chini class, not instance;
 # AT-BUG-082 Б3 критик-вход).
-_TAB_SWITCH_SETTLE_TIMEOUT = 2.0
+#
+# --- ESC-035 (AT-BUG-082 эскалация правила 6, Lead-решение 2026-08-18T10:25Z,
+# `state/escalations.md`) — signal replaced, `_scroll_fingerprint` removed
+# from this call site: ---
+# `_scroll_fingerprint` (`BaseScreen`) was labelled "дешёвый" — true in its
+# ORIGINAL context (`_settle_clipped_anchor`, Settings, ≤3 calls) but never
+# re-verified when reused here: it does `find_elements(textMatches(".+"))`
+# THEN `get_attribute("text")` on EVERY matched node — N+1 Appium round-trips
+# PER CALL, executed on EVERY tab switch on a card-rich Library screen.
+#
+# **Критик-вход round3 (2026-08-19) Б2 — ПЕРВЫЙ замер builder'а был снят на
+# ПУСТОЙ вкладке, не нагруженной** (замер вызывался сразу после `open_tab
+# (driver, "Library")`, БЕЗ явного перехода на PENDING — дефолтная вкладка,
+# оставшаяся пустой у `library_all_one_rating_seeded`, читалась вместо
+# нагруженной). Перезамерено ЯВНО на ОБОИХ режимах (emulator-5554,
+# `library_all_one_rating_seeded`, 8 чтений/режим после разогрева, покой —
+# не mid-transition):
+#   - FAVORITE (ПУСТАЯ, N=11 текстовых узлов): `_scroll_fingerprint` avg
+#     0.619s/read (min 0.592s, max 0.683s); `page_source`-хэш avg 0.335s
+#     (min 0.310s, max 0.353s).
+#   - PENDING (НАГРУЖЕННАЯ, 5 карточек, N=25 текстовых узлов):
+#     `_scroll_fingerprint` avg 1.329s/read (min 1.258s, max 1.357s);
+#     `page_source`-хэш avg 0.488s (min 0.448s, max 0.524s) — **~2.7x
+#     дешевле на РЕАЛИСТИЧНОЙ (нагруженной) вкладке**, не ~1.7x, как ошибочно
+#     показал первый (дефектный) замер на пустой вкладке.
+# Независимый перезамер критика на ТОЙ ЖЕ фикстуре/вкладке (PENDING, покой,
+# 4 чтения): `_scroll_fingerprint` 1.545/1.582/1.711/1.892s — тот же порядок
+# величины (~1.3-1.9s), расхождение с моими 1.258-1.357s объяснимо
+# вариативностью среды/нагрузки между прогонами, не оспаривается.
+#
+# **Вывод по гипотезе «эскалационные 1.99-3.51s = mid-transition» — СНЯТА,
+# не подтверждена:** диапазон 1.99-3.51s/read из `state/escalations.md`
+# воспроизводится (тот же порядок величины) уже в ПОКОЕ на нагруженной
+# вкладке (без единого переключения в процессе) — объясняющий фактор
+# оказался N (число текстовых узлов на экране = число round-trip'ов), а НЕ
+# транзитное удвоение дерева во время анимации `HorizontalPager`. Прежняя
+# формулировка про mid-transition снята как неподтверждённая гипотеза.
+#
+# Replacement: `_tab_content_fingerprint` below — a SHA1 hash of
+# `driver.page_source`, ONE Appium round-trip returning the WHOLE
+# accessibility-tree XML dump in a single call. **Критик-вход round3 Б5 —
+# формулировка «same information content» была НЕВЕРНОЙ:** `page_source`
+# несёт СТРОГО БОЛЬШЕ, чем `_scroll_fingerprint`'s text-only scan — bounds,
+# class, порядок узлов и т.д. — то есть сигнал СТРОЖЕ (чувствительнее), не
+# эквивалентен. Живое доказательство (positive control, critic + builder):
+# на 6 вкладках `page_source`-хэш дал 6 РАЗНЫХ хэшей, а старый
+# `_scroll_fingerprint` — только 2 РАЗЛИЧНЫХ отпечатка из 6 (FAVORITE и
+# FILES были буквально НЕОТЛИЧИМЫ старым сигналом — оба пустые, оба дают
+# `('Browse','DISLIKED','FAVORITE','FILES','KUDOSED','Library','Library',
+# 'Nothing here yet','PENDING','READ','Settings')`; так же совпадали
+# KUDOSED/READ/DISLIKED). Класс цены этой большей чувствительности: ЛЮБОЙ
+# волатильный атрибут в дереве (не только текст) способен удержать
+# `converged=False` дольше ожидаемого — если у Library когда-нибудь
+# появится узел с меняющимся между кадрами атрибутом, не относящимся к
+# смыслу settle (например, случайный `resource-id` рендера), сигнал будет
+# ложно считать экран «не устаканившимся»; сейчас такого узла на этом
+# экране не обнаружено (positive control выше подтверждает 6/6 стабильных
+# РАЗЛИЧНЫХ хэшей, не флапающих между чтениями одной и той же вкладки).
+#
+# `_TAB_SWITCH_SETTLE_TIMEOUT` budget check (классовая норма D-0043,
+# `poll_until_stable` докстринг + `docs/08-external-architecture-review.md`
+# §C6) — **критик-вход round3 неблокер #4: пересчитано от `stable_reads x
+# read_cost + interval`, не от одного чтения.** На нагруженной вкладке
+# (реалистичный случай — большинство rating-вкладок содержат карточки):
+# минимально необходимое время = `stable_reads(2) x read_cost(~0.49s avg,
+# ~0.52s observed max) + interval(0.2s) = ~1.18-1.24s`. Бюджет поднят
+# `2.0s -> 4.0s` (было безопасно поднять ТОЛЬКО после do-while-фикса
+# `poll_until_stable` — до него подъём таймаута удваивал бы гарантированную
+# цену НЕконвергенции, что и было отвергнуто Lead в исходном решении
+# ESC-035; после фикса таймаут больше не умножает цену, он только
+# ограничивает число ДОПОЛНИТЕЛЬНЫХ попыток сверх гарантированного
+# минимума). `4.0s / ~1.2s ≈ 3.3x` — кратный запас, не «1.0-1.2x» второго
+# порядка, как было при исходном (некорректном) расчёте от одного чтения.
+# Re-measure and adjust this comment + the constant together if this
+# primitive is ever reused in a THIRD context — do not carry the "дешёвый"
+# label forward on trust again.
+_TAB_SWITCH_SETTLE_TIMEOUT = 4.0
 _TAB_SWITCH_SETTLE_INTERVAL = 0.2
 _TAB_SWITCH_SETTLE_STABLE_READS = 2
 
@@ -75,10 +148,19 @@ class LibraryScreen(BaseScreen):
         self._settle_tab_switch(label)
         return self
 
+    def _tab_content_fingerprint(self) -> str:
+        """Дешёвый ОДИН-round-trip settle-сигнал (ESC-035, замена
+        `BaseScreen._scroll_fingerprint` в ЭТОМ call site — см. блок-
+        комментарий у констант выше для замеренных чисел и обоснования):
+        SHA1 `driver.page_source` — единственный Appium-вызов, отдающий XML
+        всего accessibility-дерева, вместо `find_elements` + N x
+        `get_attribute` (N+1 round-trip)."""
+        return hashlib.sha1(self.driver.page_source.encode("utf-8")).hexdigest()
+
     def _settle_tab_switch(self, label: str) -> None:
-        """AT-BUG-082 Б2/Б3 — см. блок-комментарий у констант выше."""
+        """AT-BUG-082 Б2/Б3 / ESC-035 — см. блок-комментарий у констант выше."""
         _, converged = poll_until_stable(
-            self._scroll_fingerprint,
+            self._tab_content_fingerprint,
             stable_reads=_TAB_SWITCH_SETTLE_STABLE_READS,
             timeout=_TAB_SWITCH_SETTLE_TIMEOUT,
             interval=_TAB_SWITCH_SETTLE_INTERVAL,
