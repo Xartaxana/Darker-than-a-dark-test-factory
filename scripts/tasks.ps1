@@ -3,7 +3,11 @@
 #   Start-Emulator ; Start-Appium ; Invoke-Smoke
 # Требует предварительно: . D:\AO3_tests\scripts\env.ps1 (для JAVA_HOME/ANDROID_HOME/PATH)
 $ErrorActionPreference = "Stop"
-$root = "D:\AO3_tests"
+# $root — от местоположения ЭТОГО файла (родитель scripts\), а не литералом:
+# литерал D:\AO3_tests заставлял копию из git-worktree молча исполнять главный
+# чекаут (Push-Location в чужой framework\ => witness воркера недействителен).
+# Фолбэк на литерал — только для экзотики без $PSScriptRoot (вставка в консоль).
+$root = if ($PSScriptRoot) { Split-Path -Parent $PSScriptRoot } else { "D:\AO3_tests" }
 . "$root\scripts\env.ps1"
 $venv = "$root\framework\.venv\Scripts"
 

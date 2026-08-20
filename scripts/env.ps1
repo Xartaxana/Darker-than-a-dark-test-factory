@@ -1,5 +1,7 @@
 # Настройка окружения тестового стенда. Использование: . D:\AO3_tests\scripts\env.ps1
-$root = "D:\AO3_tests"
+# $root — от местоположения файла (см. пояснение в tasks.ps1): worktree-копия
+# должна указывать на СВОЙ корень, не на главный чекаут.
+$root = if ($PSScriptRoot) { Split-Path -Parent $PSScriptRoot } else { "D:\AO3_tests" }
 $env:JAVA_HOME        = "$root\tools\jdk-21.0.11+10"
 $env:ANDROID_HOME     = "$root\tools\android-sdk"
 $env:ANDROID_SDK_ROOT = $env:ANDROID_HOME
