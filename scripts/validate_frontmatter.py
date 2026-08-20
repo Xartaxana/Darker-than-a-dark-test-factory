@@ -838,6 +838,16 @@ def validate() -> tuple[list[str], list[str]]:
             if itype == "run" and (md.name.upper().startswith("REHEARSAL-")
                                    or md.parent.name.upper().startswith("REHEARSAL-")):
                 continue
+            # Протоколы узлов программы П3 (runs/N<n>-p3-*.md, DAG
+            # docs/tasks/p3-second-emulator.md) — тот же класс, что
+            # REHEARSAL-*: свободная форма эмпирической пробы, НЕ
+            # RUN-артефакт конвейера (нет suite/totals — принуждение к
+            # run-схеме дало бы фиктивные значения). Решение Lead
+            # 2026-08-20 (эскалация RUNS-N0-P3-MISSING-FRONTMATTER);
+            # первый экземпляр — N0-p3-two-device-probe-2026-08-20.md
+            # (коммит 380fb637). Узость паттерна намеренна (D-0063).
+            if itype == "run" and re.match(r"(?i)N\d+-p3-", md.name):
+                continue
             rel = md.relative_to(REPO).as_posix()
             text = md.read_text(encoding="utf-8", errors="replace")
             meta, body = bs._parse_frontmatter(text)
