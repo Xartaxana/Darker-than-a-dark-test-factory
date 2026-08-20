@@ -4,13 +4,20 @@
 явно тестовыми модулями, которым нужно дот-сорсить tasks.ps1 РЕАЛЬНЫМ PowerShell
 и вызвать конкретную функцию изолированно.
 
-Дисциплина: `$root` внутри tasks.ps1 задан ЛИТЕРАЛОМ `"D:\\AO3_tests"` (строка 6) -
-дот-сорсинг ЭТОГО (worktree) файла НЕ меняет резолюцию `$root` (эмпирически
-проверено builder-сессией p3-second-emulator N1, 2026-08-20: dot-source
-worktree-копии tasks.ps1 всё равно даёт `$root=D:\\AO3_tests`). Поэтому КАЖДЫЙ
-вызов, который может тронуть диск через `$root` (Set-EmulatorSessionState,
-Start-Emulator), переопределяет `$root` СРАЗУ ПОСЛЕ дот-сорсинга на tmp_path -
-тот же приём, что пинованный `framework/tests/test_device_liveness_guard_unit.py::
+Дисциплина `$root`: ИСТОРИЧЕСКИ (до критик-раунда 2026-08-20, коммит
+mech(harness) dd0f15ce на master) `$root` внутри tasks.ps1 был задан ЛИТЕРАЛОМ
+`"D:\\AO3_tests"` - дот-сорсинг ЭТОЙ (worktree) копии всё равно давал
+`$root=D:\\AO3_tests` (главный чекаут), НЕ путь worktree. Этот класс-дефект
+закрыт по слову оператора В master (`$root` теперь от `$PSScriptRoot`,
+родитель `scripts\\`) - дот-сорс worktree-копии ТЕПЕРЬ честно резолвит
+worktree-путь (проверено эмпирически ПОСЛЕ rebase на master этой сессией:
+`root=<путь этого worktree>`). Несмотря на починку, каждый вызов, который
+может тронуть диск через `$root` (Set-EmulatorSessionState, Start-Emulator),
+по-прежнему ЯВНО переопределяет `$root` на `tmp_path` СРАЗУ ПОСЛЕ
+дот-сорсинга (`dot_source_prefix(fake_root=...)`) - не для обхода стейл-
+резолюции (её больше нет), а чтобы КАЖДЫЙ тест был device-free и не писал в
+общий каталог между параллельными прогонами, тот же приём, что пинованный
+`framework/tests/test_device_liveness_guard_unit.py::
 test_tasks_ps1_set_emulator_session_state_writes_resolved_params`. Дот-сорсится
 именно WORKTREE-копия (по пути `__file__`), чтобы упражнять КОД ЭТОЙ правки, а не
 main-репо.
