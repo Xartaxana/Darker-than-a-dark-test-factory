@@ -2,7 +2,7 @@
 key: "TC-265"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p2"
 summary: "Copy URL на странице без Clipboard API не молчит — срабатывает execCommand-фолбэк с видимой подписью Copied!/Copy failed"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-19T13:26:00Z"
-updated: "2026-08-19T13:26:00Z"
+created: "2026-08-20T14:53:33Z"
+updated: "2026-08-20T14:53:33Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Copy URL на странице без Clipboard API не молчит — срабатывает execCommand-фолбэк с видимой подписью Copied!/Copy failed
 
 _Спроецировано из `test-cases/browser/TC-265.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-265 — execCommand-фолбэк Copy URL: reject Clipboard API не оставляет кнопку немой
 

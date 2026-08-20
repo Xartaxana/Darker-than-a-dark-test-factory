@@ -2,7 +2,7 @@
 key: "TC-259"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Ссылка «Next» под infinite scroll всегда ведёт на ещё НЕ показанную страницу и скрывается, когда страниц больше нет"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-19T13:26:00Z"
-updated: "2026-08-19T13:26:00Z"
+created: "2026-08-20T14:53:23Z"
+updated: "2026-08-20T14:53:23Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Ссылка «Next» под infinite scroll всегда ведёт на ещё НЕ показанную страницу и скрывается, когда страниц больше нет
 
 _Спроецировано из `test-cases/browser/TC-259.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-259 — syncNextLinks: Next всегда указывает вперёд на непоказанное, li.previous нетронута, Next скрыт на последней странице
 

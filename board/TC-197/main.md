@@ -2,7 +2,7 @@
 key: "TC-197"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Баннер над листингом отражает РОВНО причину скрытия по паре флагов (ratedHidden × filterActive): дословный текст на каждую комбинацию, узла нет при обеих false"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-18T23:24:00Z"
-updated: "2026-08-18T23:24:00Z"
+created: "2026-08-20T16:45:00Z"
+updated: "2026-08-20T16:45:00Z"
 archived: false
 resolution: null
 ---
@@ -48,7 +48,7 @@ _Спроецировано из `test-cases/browser/TC-197.md` (источни�
 ## Сценарий (Given-When-Then)
 
 Таблица истинности по паре булевых флагов `(ratedHidden, filterActive)`
-(`ao3_bridge.js:477-487`); четыре варианта ниже проверяют все четыре ячейки.
+(`ao3_bridge.js:509-510,515-519`, было `:477-487` — критик-гейт прохода 10 сверил с HEAD); четыре варианта ниже проверяют все четыре ячейки.
 
 ### Вариант A — только visibility-скрытие (ratedHidden=true, filterActive=false) — родной сценарий TC-197
 
@@ -59,7 +59,7 @@ _Спроецировано из `test-cases/browser/TC-197.md` (источни�
 
 **Then** над `ol.work.index.group` присутствует узел `#ao3-companion-hidden-notice`
 с ДОСЛОВНЫМ текстом **"Some works may be hidden by your visibility settings"**
-(`ao3_bridge.js:485-486`)
+(`ao3_bridge.js:518`, было `:485-486`)
 **And** блёрб работы DISLIKED на этой же странице реально скрыт (`display:none`) —
 сообщение и факт скрытия согласованы, баннер не «сирота»
 
@@ -75,7 +75,7 @@ _Спроецировано из `test-cases/browser/TC-197.md` (источни�
 **Then** страница обновляется на `rb.LISTING_FILTERED_URL` (тот же URL, что TC-041)
 **And** над `ol.work.index.group` на ЭТОЙ (отфильтрованной) странице появляется
 узел `#ao3-companion-hidden-notice` с ДОСЛОВНЫМ текстом
-**"Some works may be hidden by the active AO3 filter"** (`ao3_bridge.js:487`)
+**"Some works may be hidden by the active AO3 filter"** (`ao3_bridge.js:519`, было `:487`)
 **And** ни один блёрб на странице не скрыт по visibility-фильтрации
 (`hiddenRatings` пуст, в т.ч. блёрб DISLIKED виден) — сообщение говорит именно
 и только о фильтре, не о visibility-настройках
@@ -92,7 +92,7 @@ search", открыт базовый листинг без применённо�
 **And** над `ol.work.index.group` появляется узел `#ao3-companion-hidden-notice`
 с ДОСЛОВНЫМ текстом
 **"Some works may be hidden by visibility settings and active AO3 filter"**
-(`ao3_bridge.js:484`)
+(`ao3_bridge.js:516`, было `:484`)
 **And** блёрб работы DISLIKED на этой же (отфильтрованной) странице скрыт
 (`display:none`) — оба механизма одновременно активны и согласованы с текстом
 сообщения
@@ -106,13 +106,13 @@ search", открыт базовый листинг без применённо�
 эталонных работ
 
 **Then** узел `#ao3-companion-hidden-notice` ОТСУТСТВУЕТ в DOM — гейт создания
-`ratedHidden || filterActive` (`ao3_bridge.js:479`) ложен при обоих флагах false
+`ratedHidden || filterActive` (`ao3_bridge.js:511-514`, было `:479`) ложен при обоих флагах false
 **And** ни один блёрб (в т.ч. DISLIKED) не скрыт и не затемнён — `display`/`opacity`
 не изменены фильтрацией
 
 **Инвариант (мастер-мэппинг всех четырёх вариантов):** текст/присутствие узла
 `#ao3-companion-hidden-notice` — чистая функция ПАРЫ булевых флагов
-`(ratedHidden, filterActive)` по таблице `ao3_bridge.js:479-487`:
+`(ratedHidden, filterActive)` по таблице `ao3_bridge.js:511-519`, было `:479-487`:
 - `(false, false)` → узла нет (вариант D);
 - `(true, false)` → «…your visibility settings» (вариант A);
 - `(false, true)` → «…the active AO3 filter» (вариант B);
@@ -199,3 +199,149 @@ search", открыт базовый листинг без применённо�
 - [x] Батарея правил-реакций оценена по всем вариантам (propagation — TC-204)
 - [x] Поглощение явно названо: TC-199, TC-200, TC-201 (см. заголовок секции
       «Сценарий» и построчные пометки у каждого варианта)
+- [x] Слой L3, строка «почему не L2» дана явно (координатор, 2026-08-20,
+      ратификация обоснования F1-ревьюера ниже, независимо проверенного
+      критик-гейтом): device-free L2-гарнизон (`framework/tests/bridge/
+      test_filters.py`, jsdom) покрыл бы ТОЛЬКО таблицу истинности внутри
+      `ao3_bridge.js::updateHiddenBanner`, но НЕ цепочку вычисления/инъекции
+      исходных флагов из Kotlin (`MainActivity.kt:384-386` считает
+      `ratedWorksHidden`/`ao3FilterActive`, `BrowserScreen.kt:676-677`
+      инжектит их в WebView на `onPageFinished`) — именно там баг сломался бы
+      незаметно для L2. L3 оправдан целостностью проверяемой цепочки, не
+      инерцией уже написанного device-теста.
+
+## Ревью автотеста
+
+**test-reviewer, 2026-08-20T16:22:25Z — `changes_requested`.** Дефектов в
+ТЕСТОВОМ КОДЕ не найдено: чек-листы 1-7, 9, 11 пройдены (витнесы ниже —
+зелёный прогон 4/4 и красная проба ОБЕИХ ветвей ассерта уже сняты, повторять
+их незачем). Единственный блокер — отсутствующее поле `layer` (чек-лист
+п.10): кейс ПЕРЕРАБОТАН 2026-08-19 (коммит `dbed3510`, поглощение
+TC-199/200/201, сценарий 4→18 шагов) — то есть уже ПОСЛЕ введения политики
+слоёв 2026-08-16, а решение о слое не принято.
+
+### Блокер 1 — нет поля `layer` у переработанного кейса (чек-лист п.10, П2 spec-p2-pyramid v4)
+
+`test-cases/browser/TC-197.md:1-19` (frontmatter) — ключа `layer` нет вовсе.
+Схема (`schemas/test-case.schema.yaml:17`) держит `layer` ОПЦИОНАЛЬНЫМ
+намеренно (старые 256 кейсов не краснеют), поэтому `validate_frontmatter`
+молчит — гейт «непусто И в enum + для L3/L4 строка «почему не L2»» держит
+F1, см. `docs/01-test-strategy.md:268-274`.
+
+Почему это не формальность именно здесь: таблица истинности баннера —
+ЧИСТАЯ функция двух `window`-флагов внутри `ao3_bridge.js`
+(`updateHiddenBanner`, :503-535: гейт `:511`, три текста `:515-519`), а
+device-free L2-гарнизон уже существует и уже проверяет РОДСТВЕННУЮ ветку
+того же бриджа (`framework/tests/bridge/test_filters.py::test_hide_mode_
+sets_display_none_for_hidden_rating`, jsdom, `framework/bridge_harness/`).
+Четыре инстанса нынешнего теста стоят ~8 мин устройства (замер ниже).
+Контраргумент за L3 тоже есть и он содержательный: L2 НЕ покрывает цепочку
+инъекции флагов из Kotlin (`MainActivity.kt:384-386` считает
+`ratedWorksHidden`/`ao3FilterActive`, `BrowserScreen.kt:676-677` инжектит их
+в `onPageFinished` ДО bridge-скрипта) — именно она и ломается в проде
+незаметно. Ветка L2 «не гейтирована layout'ом» (чек-лист п.11, docs/02 §2а:
+infinite-scroll/`scrollY`/scroll-restore) — баннер к этому списку не
+относится, так что jsdom-зелёный там был бы содержательным.
+
+**Что сделать:** проставить `layer:` из enum {L2, L3, L4, L5} и, если L3
+(ожидаемо — ради цепочки инъекции флагов), добавить в кейс строку «почему
+не L2» (дешевле и быстрее устройства — docs/01 §3), назвав ЯВНО, что именно
+L2 доказать не может. Решение о слое — за автором кейса/дизайнером, не за
+ревьюером: сам гейт существует ровно затем, чтобы этот выбор был сделан
+письменно, поэтому поле не заполняется ревьюером «за автора».
+
+### Витнес зелёного прогона (чек-лист п.6, воспроизведён независимо)
+
+Команда: `powershell -NoProfile -ExecutionPolicy Bypass -Command
+". D:\AO3_tests\scripts\tasks.ps1; Invoke-Pytest -k
+test_hidden_banner_matches_flag_combination -v"` (устройство сверено ДО
+прогона: `Get-Device` → `DEVICE: emulator-5554`).
+
+```
+tests/test_hidden_banner.py::...[listing_basic.mitm-A-rated-hidden-only] PASSED [ 25%]
+tests/test_hidden_banner.py::...[listing_basic.mitm-B-filter-active-only] PASSED [ 50%]
+tests/test_hidden_banner.py::...[listing_basic.mitm-C-both-causes] PASSED [ 75%]
+tests/test_hidden_banner.py::...[listing_basic.mitm-D-neither-cause] PASSED [100%]
+================ 4 passed, 703 deselected in 494.34s (0:08:14) ================
+PYTEST_EXIT=0
+```
+
+### Витнес красной пробы (чек-лист п.7) — тест УМЕЕТ падать обеими ветвями
+
+Порча (одна, на уровне СОСТОЯНИЯ приложения, а не оракула — сдвиг ячеек
+таблицы истинности на строку): временная замена списка `parametrize`
+в `framework/tests/test_hidden_banner.py:57-62` на две пробы —
+`(False, False, _BANNER_VISIBILITY_ONLY)` (флаги выключены, оракул ждёт
+текст) и `(True, False, None)` (флаг включён, оракул ждёт отсутствия узла).
+Порча выбрана так, чтобы бить в СОДЕРЖАТЕЛЬНЫЙ ассерт Then обеих ветвей
+`if expected_banner is None` — включая негативную (класс 3 ложно-зелёных
+негативов).
+
+```
+tests/test_hidden_banner.py::...[RED-A-flags-off-expect-text] FAILED [ 50%]
+tests/test_hidden_banner.py::...[RED-D-flag-on-expect-absent] FAILED [100%]
+...
+E  selenium.common.exceptions.TimeoutException: Message: узел баннера скрытых
+   работ не показал ожидаемый дословный текст 'Some works may be hidden by your
+   visibility settings'          (steps/browser_steps.py:1739, ветка позитива)
+E  AssertionError: узел баннера скрытых работ #ao3-companion-hidden-notice
+   неожиданно присутствует в DOM (оба флага ratedHidden/filterActive должны быть
+   false)                        (core/waits.py:90 ← browser_steps.py:1765,
+                                  ветка негатива, assert_holds_for)
+================ 2 failed, 703 deselected in 251.30s (0:04:11) ================
+PYTEST_EXIT=1
+```
+
+Оба падения — на содержательных ассертах Then, текст падения называет суть
+порчи (не таймаут-мусор инфраструктуры). Негативная ветка (`assert_hidden_
+banner_absent`, переписанная критик-гейтом на `assert_holds_for`) доказанно
+НЕ вакуумна: при реально созданном узле она падает на первом же опросе.
+
+**Откат порчи — по байтовой копии** (CLAUDE.md «Дисциплина команд» п.8):
+`git status --porcelain -- framework/tests/test_hidden_banner.py` ДО порчи —
+ПУСТО; копия файла снята в scratchpad (`md5 = 68680a0efe3d0ed56b27891ba731f58b`).
+После восстановления копии — сверка дословно:
+
+```
+$ md5sum framework/tests/test_hidden_banner.py
+68680a0efe3d0ed56b27891ba731f58b *framework/tests/test_hidden_banner.py
+$ git status --porcelain -- framework/tests/test_hidden_banner.py
+(пусто)
+$ git diff --stat -- framework/tests/test_hidden_banner.py
+(пусто)
+```
+
+### Пройдено (для следующего круга — перепроверяется заново, но находок не было)
+
+- **п.1 архитектура:** `python scripts/arch_check.py` → `ошибок 0`; ни одного
+  WARN на `framework/tests/test_hidden_banner.py` / `test-cases/browser/TC-197.md`
+  (26 WARN — чужой бейзлайн/ALLOWLIST, адресат — батч test-maintainer).
+  Локаторов/драйвера в тесте нет (`HIDDEN_NOTICE_ID` — в `web/selectors.py:61`,
+  чтение — в `web/listing_page.py:183-195`, шаги — в `steps/browser_steps.py`),
+  `sleep` только внутри `core/waits.py::assert_holds_for`.
+- **п.2 traceability:** `@allure.id("TC-197")` == id кейса; `@pytest.mark.p1` ==
+  `priority: P1`; `@pytest.mark.replay` соответствует `listing_basic.mitm`;
+  `automated_by` указывает на существующую функцию.
+- **п.3 соответствие по смыслу + инвариант:** параметризация покрывает ВСЕ
+  4 ячейки таблицы (свойство, а не единичный пример), дословные строки теста
+  (`:43-45`) побайтово совпадают с `ao3_bridge.js:516/518/519`; And-ассерты
+  `assert_blurb_hidden`/`assert_blurb_visible` держат согласованность
+  «баннер не сирота» из каждого варианта.
+- **п.4 фикстуры:** `library_and_filter_profile_seeded` объявлена ДО `driver`
+  в сигнатуре (`:66`) — сидинг выполняется до создания Appium-сессии;
+  `clean_state()` внутри фикстуры чистит состояние; `driver` — function-scope,
+  зависимости от порядка тестов нет; дефолты `autoApplyFilter=true`
+  (`SettingsScreen.kt:82/207`) и `filterDisplayMode="hide"` (`:73-74`)
+  восстанавливаются `clean_state`, так что Given каждого варианта полон.
+- **п.5 flake-риск:** все три ассерта Then — опрашивающие (`wait_until` /
+  `assert_holds_for`), одноразовых чтений DOM после WebView round-trip нет;
+  `open_filter_dropdown`/`assert_active_filter_shown` берут
+  `BottomNav.ensure_visible()` (гонка с `AnimatedVisibility` панели закрыта);
+  живого AO3 нет — весь трафик из replay-записи.
+- **п.8 дубль-Given:** обоснование поглощения объявлено явно (шапка «Сценарий»,
+  П1 Р2), общий дорогой Given переиспользуется намеренно — не находка.
+- **п.9 проба на чекпойнт:** кейс не journey (явная строка в «Заметках»:
+  «варианты НЕ образуют journey/чекпойнты»), требование отдельных `- проба:`
+  на чекпойнт неприменимо; фактически проба снята на обе ветви ассерта.
+- **п.11 bridge/layout-гейт:** неприменимо (не `layer: L2`, нет
+  `@pytest.mark.bridge`).

@@ -181,7 +181,7 @@ work_ratings` при следующей вставке.
 - Новый device-free юнит-тест
   `framework/tests/test_pull_app_file_fail_closed_unit.py` — 10 кейсов
   (матрица + регресс-замок), GREEN после фикса; тот же регресс-замок
-  проверен и вручную (`scratchpad/red_green_pull_app_file.py`) против
+  проверен и вручную (`runs/reference/red_green_pull_app_file.py`) против
   ДОСЛОВНОЙ старой ветки логики из `git show HEAD` — RED (старый код
   возвращал `True` и писал текст ошибки как байты файла) до фикса,
   GREEN после.

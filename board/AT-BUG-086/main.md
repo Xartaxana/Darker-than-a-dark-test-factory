@@ -2,7 +2,7 @@
 key: "AT-BUG-086"
 project: "AO3"
 issueType: "bug"
-status: "bug-fixed"
+status: "bug-verified"
 priority: "p2"
 summary: "assert_theme_mode_pref читает SharedPreferences без settle сразу после select_theme (гонка воспроизводится уже на ОДНОМ тапе) — TC-005 (test_theme_toggle_stable) красный в test_smoke.py (структурно не связан с AT-BUG-083 fix); пофикшено settle-poll'ом"
 assignee: "qa-agents"
@@ -13,16 +13,16 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-20T05:36:44Z"
-updated: "2026-08-20T05:36:44Z"
+created: "2026-08-20T06:06:49Z"
+updated: "2026-08-20T06:06:49Z"
 archived: false
-resolution: null
+resolution: "done"
 ---
 
 # assert_theme_mode_pref читает SharedPreferences без settle сразу после select_theme (гонка воспроизводится уже на ОДНОМ тапе) — TC-005 (test_theme_toggle_stable) красный в test_smoke.py (структурно не связан с AT-BUG-083 fix); пофикшено settle-poll'ом
 
 _Спроецировано из `bugs/AT-BUG-086.md` (источник правды).
-Статус в нашей машине: **Fixed**._
+Статус в нашей машине: **Verified**._
 
 # AT-BUG-086 — `assert_theme_mode_pref` гонится с асинхронной записью SharedPreferences уже на одном `select_theme`, TC-005 красный в `test_smoke.py`
 
@@ -133,7 +133,28 @@ Room, не Pager-анимация, не comment-collapse превью — см. 
       44.24s` / `1 passed in 44.40s`), полный `test_smoke.py` 2/2 (`9 passed
       in 651.61s` / `9 passed in 589.69s`).
 
+## Верификация (заполняет fix-verifier)
+
+| Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
+|---|---|---|---|---|
+| 2026-08-20T06:06:49Z | app dev-local, version_code 12 (source_commit fdd3f72884105d1453448e0c9a7f2b109588b182, apk_sha256 6bc924f9…, built_at 2026-08-19T17:47:59Z, state/app-under-test.yaml — фикс целиком в `framework/`, сборка приложения совпадает с `fixed_in`); framework: коммит `ec45f161` (settle-poll фикс `settings_steps._poll_settings_prefs`) | TC-005 (`tests/test_smoke.py::test_theme_toggle_stable`) — единственный связанный кейс из `test_cases` | `Invoke-Pytest tests/test_smoke.py::test_theme_toggle_stable -q` → `1 passed in 47.53s`, `PYTEST_EXIT=0`, `AT-BUG-026 device-liveness guard: recoveries this session = 0/2` — независимый живой прогон (мой собственный, не переиспользование witness'а test-maintainer'а из «Обсуждение») | Fixed → Verified |
+
 ## Обсуждение
+
+**[fix-verifier @ 2026-08-20T06:06:49Z]** Независимая верификация (mode=verify,
+D1). Прочитан весь файл и witness test-maintainer'а (локализация race на
+одном тапе, settle-poll фикс `_poll_settings_prefs`, сиблинг-аудит на оба
+соседних хелпера, красная проба на pre-fix коде + 5/5 unit, 2/2+2/2 живых
+прогонов у test-maintainer'а). Сам прогнал `Invoke-Pytest
+tests/test_smoke.py::test_theme_toggle_stable -q` на актуальной сборке
+(dev-local 12, source_commit fdd3f728…, тот же билд, что `fixed_in`) —
+`1 passed in 47.53s`, `PYTEST_EXIT=0`, device-liveness guard recoveries
+0/2 — зелёный, дословный вывод в таблице выше. `test_cases: ["TC-005"]` —
+единственный кейс, прогнан. Реплики о смежных находках/аналогах нет — этот
+баг сиблинг-аудит уже закрыл сам (см. «Фикс», D-0043).
+
+`status: Fixed → Verified`. `known_issue` уже `"false"` — не трогаю.
+`lock` снят. `app-under-test/` не трогал.
 
 **[test-maintainer @ 2026-08-20T00:51:21Z]** Заведён ПОПУТНО при живом
 регрессе `AT-BUG-083` (`tests/test_smoke.py`, 1 из 6 файлов-потребителей

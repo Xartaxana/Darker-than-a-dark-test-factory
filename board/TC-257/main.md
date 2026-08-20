@@ -2,7 +2,7 @@
 key: "TC-257"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p1"
 summary: "Journey «скачанный файл»: открытие стилизует, удаление файла сохраняет рейтинг, удаление работы убирает всё"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-16T15:40:04Z"
-updated: "2026-08-16T15:40:04Z"
+created: "2026-08-20T18:25:00Z"
+updated: "2026-08-20T18:25:00Z"
 archived: false
 resolution: null
 ---
@@ -75,10 +75,13 @@ long-press overlay удаляет файл, затем в overlay удаляет
 
 ## Заметки для автоматизации
 - Разделение локаторов overlay критично (унаследовано из TC-035/036):
-  «Delete downloaded file» (`library_screen.py:66-68`, точный `.text()`) —
-  ТОЛЬКО файл; «Delete work» (`library_screen.py:62-64`) — файл И строка
-  `WorkRating` целиком. Перепутать — значит проверить не тот Then на не том
-  чекпойнте.
+  «Delete downloaded file» (`tap_delete_downloaded_file`,
+  `library_screen.py:325-327`, точный `.text()`) — ТОЛЬКО файл; «Delete
+  work» (`tap_delete_work`, `library_screen.py:321-323`) — файл И строка
+  `WorkRating` целиком. Было указано `:66-68`/`:62-64` — устаревшие
+  координаты (методы сдвинулись в файле); исправлено
+  TC-257-BODY-STALE-LOCATOR-LINES 2026-08-20, сверено Read'ом HEAD.
+  Перепутать — значит проверить не тот Then на не том чекпойнте.
 - Пересидинг между чекпойнтами 2 и 3 — НЕ новая Appium-сессия: чекпойнт 3
   стартует с того же экрана Library той же сессии, но Room-состояние под
   капотом пересобирается сидом (см. `docs/tasks/p1-e2e-dedup.md` Р1 —

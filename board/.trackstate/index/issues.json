@@ -77,15 +77,16 @@
     "epicPath": null,
     "summary": "Интерактивные цели нативного хрома (панели, тумблеры, чипы TabStrip, кнопки диалогов) не меньше 48dp по bounds accessibility-дерева",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:accessibility",
-      "risk:R-13"
+      "risk:R-13",
+      "review:changes_requested"
     ],
-    "updated": "2026-08-04T12:28:48Z",
+    "updated": "2026-08-20T13:36:28Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -107,7 +108,7 @@
       "area:accessibility",
       "risk:R-13"
     ],
-    "updated": "2026-08-10T14:20:00Z",
+    "updated": "2026-08-20T12:17:10Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -218,7 +219,7 @@
       "area:backup",
       "risk:R-01"
     ],
-    "updated": "2026-08-18T23:24:00Z",
+    "updated": "2026-08-20T18:25:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -605,7 +606,7 @@
       "area:browser",
       "risk:R-11"
     ],
-    "updated": "2026-08-18T23:24:00Z",
+    "updated": "2026-08-20T18:25:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -729,7 +730,7 @@
     "epicPath": null,
     "summary": "Баннер над листингом отражает РОВНО причину скрытия по паре флагов (ratedHidden × filterActive): дословный текст на каждую комбинацию, узла нет при обеих false",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -737,7 +738,7 @@
       "area:browser",
       "risk:R-06"
     ],
-    "updated": "2026-08-18T23:24:00Z",
+    "updated": "2026-08-20T16:45:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -993,7 +994,7 @@
     "epicPath": null,
     "summary": "Кнопки громкости листают Browse (Down — вперёд, Up — назад) без появления системного индикатора",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1001,7 +1002,7 @@
       "area:browser",
       "risk:R-16"
     ],
-    "updated": "2026-08-15T23:03:49Z",
+    "updated": "2026-08-20T18:15:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1059,7 +1060,7 @@
     "epicPath": null,
     "summary": "Ссылка «Next» под infinite scroll всегда ведёт на ещё НЕ показанную страницу и скрывается, когда страниц больше нет",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1067,7 +1068,7 @@
       "area:browser",
       "risk:R-02"
     ],
-    "updated": "2026-08-19T13:26:00Z",
+    "updated": "2026-08-20T14:53:23Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1081,7 +1082,7 @@
     "epicPath": null,
     "summary": "Живой пуш рейтинга не уводит пользователя со страницы — автопрыжок плотности срабатывает ТОЛЬКО от загрузки, не от живой оценки",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1089,7 +1090,7 @@
       "area:browser",
       "risk:R-16"
     ],
-    "updated": "2026-08-19T13:26:00Z",
+    "updated": "2026-08-20T14:53:24Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1103,7 +1104,7 @@
     "epicPath": null,
     "summary": "Системный Back в Browse ходит по СОБСТВЕННОЙ истории активной вкладки — на первой записи выходит из приложения",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1111,7 +1112,7 @@
       "area:browser",
       "risk:R-08"
     ],
-    "updated": "2026-08-19T13:26:00Z",
+    "updated": "2026-08-20T14:53:26Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1125,7 +1126,7 @@
     "epicPath": null,
     "summary": "Back на вкладках Library/Settings не закрывает приложение — переводит нижнюю навигацию на Browse",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1133,7 +1134,7 @@
       "area:browser",
       "risk:R-08"
     ],
-    "updated": "2026-08-19T13:26:00Z",
+    "updated": "2026-08-20T14:53:27Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1147,7 +1148,7 @@
     "epicPath": null,
     "summary": "Автопрыжок с опустошённой страницы использует замену записи истории (location.replace), не добавление новой",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1155,7 +1156,7 @@
       "area:browser",
       "risk:R-16"
     ],
-    "updated": "2026-08-19T13:26:00Z",
+    "updated": "2026-08-20T14:53:28Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1169,7 +1170,7 @@
     "epicPath": null,
     "summary": "Back после автопрыжка плотности возвращает пользователя на страницу, с которой автопрыжок начался",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -1177,7 +1178,7 @@
       "area:browser",
       "risk:R-16"
     ],
-    "updated": "2026-08-19T13:26:00Z",
+    "updated": "2026-08-20T14:53:32Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -1191,7 +1192,7 @@
     "epicPath": null,
     "summary": "Copy URL на странице без Clipboard API не молчит — срабатывает execCommand-фолбэк с видимой подписью Copied!/Copy failed",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -1199,7 +1200,117 @@
       "area:browser",
       "risk:R-02"
     ],
-    "updated": "2026-08-19T13:26:00Z",
+    "updated": "2026-08-20T14:53:33Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-266",
+    "path": "board/TC-266/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "FAB «Scroll to top» появляется сразу при возврате на глубоко прокрученную вкладку (switchTab), без необходимости коснуться экрана",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-08"
+    ],
+    "updated": "2026-08-20T14:53:34Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-267",
+    "path": "board/TC-267/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Индикатор прогресса чтения (полоска+%) следует за АКТИВНОЙ вкладкой персонально и скрывается вне страниц работ",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-08"
+    ],
+    "updated": "2026-08-20T14:53:36Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-269",
+    "path": "board/TC-269/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "FAB «Scroll to top» отражает состояние ВОССТАНОВЛЕННОЙ вкладки после Undo, а не остаётся зависшим над соседней вкладкой сразу после закрытия",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-08"
+    ],
+    "updated": "2026-08-20T14:56:59Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-270",
+    "path": "board/TC-270/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "FAB «Scroll to top» отражает позицию ТОЛЬКО ЧТО открытой активной вкладки после deep-link, а не унаследованную от прежней активной вкладки; фоновое открытие индикатор не трогает вовсе",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-08"
+    ],
+    "updated": "2026-08-20T14:57:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-271",
+    "path": "board/TC-271/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "FAB «Scroll to top» появляется тогда и только тогда, когда ИСТИННЫ ВСЕ ПЯТЬ условий гейта одновременно, и тап по ней реально прокручивает содержимое активной вкладки к началу (не только скрывает кнопку)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-08"
+    ],
+    "updated": "2026-08-20T14:57:02Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -2372,7 +2483,7 @@
     "epicPath": null,
     "summary": "Journey «скачанный файл»: открытие стилизует, удаление файла сохраняет рейтинг, удаление работы убирает всё",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -2380,7 +2491,7 @@
       "area:downloads",
       "risk:R-05"
     ],
-    "updated": "2026-08-16T15:40:04Z",
+    "updated": "2026-08-20T18:25:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -3312,7 +3423,7 @@
       "area:library",
       "risk:R-17"
     ],
-    "updated": "2026-08-18T23:24:00Z",
+    "updated": "2026-08-20T18:25:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -4999,7 +5110,7 @@
     "epicPath": null,
     "summary": "Слияние работы: более свежая удалённая версия замещает локальную целиком, кроме downloadPath",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5007,7 +5118,7 @@
       "area:sync",
       "risk:R-01"
     ],
-    "updated": "2026-08-15T23:03:49Z",
+    "updated": "2026-08-20T18:15:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5021,7 +5132,7 @@
     "epicPath": null,
     "summary": "Слияние работы: при равном timestamp побеждает локальная версия",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -5029,7 +5140,7 @@
       "area:sync",
       "risk:R-01"
     ],
-    "updated": "2026-08-15T23:03:49Z",
+    "updated": "2026-08-20T18:15:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5087,7 +5198,7 @@
     "epicPath": null,
     "summary": "Повторная оценка ранее удалённой работы снимает надгробие и защищает от повторного удаления синком",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5095,7 +5206,7 @@
       "area:sync",
       "risk:R-01"
     ],
-    "updated": "2026-08-15T23:03:49Z",
+    "updated": "2026-08-20T18:15:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5131,7 +5242,7 @@
     "epicPath": null,
     "summary": "Входящее надгробие удаляет фильтр-профиль с обеих поверхностей",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -5139,7 +5250,7 @@
       "area:sync",
       "risk:R-09"
     ],
-    "updated": "2026-08-15T23:03:49Z",
+    "updated": "2026-08-20T18:15:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5175,7 +5286,7 @@
     "epicPath": null,
     "summary": "После слияния устройство публикует полное состояние (works + filterProfiles + tombstones) в сниппет",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5183,7 +5294,7 @@
       "area:sync",
       "risk:R-01"
     ],
-    "updated": "2026-08-15T23:03:49Z",
+    "updated": "2026-08-20T18:15:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5373,16 +5484,17 @@
     "epicPath": null,
     "summary": "Ручной прогон sync с ошибкой (несуществующий Snippet ID ИЛИ отклонённый токен) показывает соответствующий дословный диалог и НЕ меняет локальные данные",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-automated",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
       "test-case",
       "area:sync",
-      "risk:R-16"
+      "risk:R-16",
+      "automation:active"
     ],
-    "updated": "2026-08-18T23:24:00Z",
-    "resolution": null,
+    "updated": "2026-08-20T16:55:09Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -5403,7 +5515,7 @@
       "area:sync",
       "risk:R-16"
     ],
-    "updated": "2026-08-15T23:03:49Z",
+    "updated": "2026-08-20T18:25:00Z",
     "resolution": "done",
     "children": [],
     "archived": false
@@ -5536,6 +5648,28 @@
       "risk:R-01"
     ],
     "updated": "2026-08-15T23:03:49Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-272",
+    "path": "board/TC-272/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Сбой ПУБЛИКАЦИИ sync (после успешного чтения/слияния ИЛИ на первом устройстве) показывает дословный диалог ошибки; данные, уже слитые с remote ДО сбоя публикации, остаются слитыми — retry не блокирован",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:sync",
+      "risk:R-16"
+    ],
+    "updated": "2026-08-20T18:32:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5825,7 +5959,7 @@
     "epicPath": null,
     "summary": "Undo закрытия вкладки на потолке MAX_TABS не теряет вкладку молча — показывается диалог лимита вместо тишины",
     "issueType": "test-case",
-    "status": "tc-review",
+    "status": "tc-approved",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -5833,7 +5967,29 @@
       "area:tabs",
       "risk:R-08"
     ],
-    "updated": "2026-08-19T13:26:00Z",
+    "updated": "2026-08-20T14:57:05Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-268",
+    "path": "board/TC-268/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Холодный старт вкладки с infinite-scroll-листингом восстанавливает СОХРАНЁННУЮ позицию скролла без касания экрана (не уезжает)",
+    "issueType": "test-case",
+    "status": "tc-approved",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:tabs",
+      "risk:R-08"
+    ],
+    "updated": "2026-08-20T14:57:06Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -7560,7 +7716,7 @@
       "test_case:TC-176",
       "sev:minor"
     ],
-    "updated": "2026-08-20T01:29:52Z",
+    "updated": "2026-08-20T11:48:18Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -7791,7 +7947,7 @@
     "epicPath": null,
     "summary": "assert_theme_mode_pref читает SharedPreferences без settle сразу после select_theme (гонка воспроизводится уже на ОДНОМ тапе) — TC-005 (test_theme_toggle_stable) красный в test_smoke.py (структурно не связан с AT-BUG-083 fix); пофикшено settle-poll'ом",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -7799,8 +7955,8 @@
       "test_case:TC-005",
       "sev:minor"
     ],
-    "updated": "2026-08-20T05:36:44Z",
-    "resolution": null,
+    "updated": "2026-08-20T06:06:49Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -7811,9 +7967,9 @@
     "epic": null,
     "parentPath": null,
     "epicPath": null,
-    "summary": "TC-135 (test_cold_start_deep_link_reuses_single_home_tab) TimeoutError на wait_tabs_persisted(timeout=20) — воспроизводимо 2/2 в изоляции на резидентной сессии; исключающим прогоном разделено — (б) деградация среды, не регрессия приложения",
+    "summary": "TC-135 (test_cold_start_deep_link_reuses_single_home_tab) TimeoutError на wait_tabs_persisted(timeout=20) — гонка ActivityManager remove-task после pm clear убивает cold-start процесс до init; фикс детектирует killedByAm=true и ретраит, НО детектор не покрывает все логкэт-варианты того же кила — D1-верификация 2026-08-20T07:44:07Z: 1 red из 2 живых прогонов на одной измеренно свежей сессии, пинг-понг reopen_count=2=sla.reopened_pingpong, Blocked",
     "issueType": "bug",
-    "status": "bug-fixed",
+    "status": "bug-blocked",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -7821,7 +7977,7 @@
       "test_case:TC-135",
       "sev:major"
     ],
-    "updated": "2026-08-20T04:56:04Z",
+    "updated": "2026-08-20T12:56:31Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -7833,9 +7989,9 @@
     "epic": null,
     "parentPath": null,
     "epicPath": null,
-    "summary": "Три settings-prefs Then-хелпера (assert_theme_mode_pref/assert_auto_apply_filter_pref/assert_font_size_step_pref) читают через голый adb.run_as — rc/stderr отбрасываются, отказ adb неотличим от несовпадения значения (AT-BUG-055 класс, живой remnant после AT-BUG-086)",
+    "summary": "Три settings-prefs Then-хелпера (assert_theme_mode_pref/assert_auto_apply_filter_pref/assert_font_size_step_pref) читали через голый adb.run_as — rc/stderr отбрасывались, отказ adb был неотличим от несовпадения значения (AT-BUG-055 класс, remnant после AT-BUG-086); пофикшено переводом _poll_settings_prefs на adb.run_as_file_or_raise, Verified",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -7846,7 +8002,76 @@
       "test_case:TC-051",
       "sev:minor"
     ],
-    "updated": "2026-08-20T06:00:00Z",
+    "updated": "2026-08-20T11:25:29Z",
+    "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-089",
+    "path": "board/AT-BUG-089/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Ветка подписи «Ch N/M» (readingChapterTotal>1) была недостижима корпусом (до фикса 2026-08-20) — work-страница фикстур не рендерила select#selected_id",
+    "issueType": "bug",
+    "status": "bug-verified",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "run:CH-011",
+      "sev:minor"
+    ],
+    "updated": "2026-08-20T13:11:00Z",
+    "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-090",
+    "path": "board/AT-BUG-090/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "assert_chip_absent — негативный Then сразу после tap_selected_chip/reopen_listing_overlay без settle/hold (4-й член класса AT-BUG-081/082/083/085), TC-091 — превентивный тикет",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-091",
+      "sev:minor"
+    ],
+    "updated": "2026-08-20T11:52:04Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-091",
+    "path": "board/AT-BUG-091/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Bash-тул схлопывает $env:VAR в пустоту ДО передачи powershell -Command \"...\" — env-зависимый вызов молча уезжает с пустой переменной (классовый tooling-тикет, 4 измеренных экземпляра)",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "run:RUN-20260804-1317",
+      "run:RUN-20260811-0405",
+      "run:RUN-20260816-1831",
+      "run:RUN-20260819-1818",
+      "sev:minor"
+    ],
+    "updated": "2026-08-20T11:52:04Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -8735,6 +8960,118 @@
     "archived": false
   },
   {
+    "key": "BUG-080",
+    "path": "board/BUG-080/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Глобальный индикатор _activeScrollY рассинхронизирован на дверях смены активной вкладки — FAB «Scroll to top» отсутствует либо висит без действия",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-266",
+      "test_case:TC-269",
+      "test_case:TC-270",
+      "sev:major"
+    ],
+    "updated": "2026-08-20T10:05:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-081",
+    "path": "board/BUG-081/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Дрейф сохранённой позиции на холодном старте вкладки с infinite-scroll-листингом",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-268",
+      "run:CH-011",
+      "sev:major"
+    ],
+    "updated": "2026-08-20T10:15:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-082",
+    "path": "board/BUG-082/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Снекбар «Continue reading at N%?» предъявляется поверх чужой вкладки/экрана, его действие невидимо",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:major"
+    ],
+    "updated": "2026-08-20T09:51:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-083",
+    "path": "board/BUG-083/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "В e-ink режиме FAB «Scroll to top» перехватывает тап по правой page-turn кнопке; в тёмной теме кнопка вообще не видна под FAB",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p0",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-249",
+      "sev:critical"
+    ],
+    "updated": "2026-08-20T00:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "BUG-084",
+    "path": "board/BUG-084/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Пять интерактивных целей в side panel и TabStrip меньше 48dp (accessibility guideline нарушен): handle, New tab, переключатель темы, A-/A+",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-148",
+      "sev:minor"
+    ],
+    "updated": "2026-08-20T13:36:28Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "RUN-20260702-0300",
     "path": "board/RUN-20260702-0300/main.md",
     "parent": null,
@@ -9188,7 +9525,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-writing-cases",
-      "регресс сборки: smoke RUN-20260819-1818 49/49 · чисто · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 0",
+      "регресс сборки: smoke RUN-20260819-1818 49/49 · чисто · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 1",
       "фич без кейсов: 0/2",
       "черновиков: 1",
       "багов на кейсах стори: 3"
@@ -9212,7 +9549,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-covered",
-      "регресс сборки: smoke RUN-20260819-1818 49/49 · чисто · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 0",
+      "регресс сборки: smoke RUN-20260819-1818 49/49 · чисто · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 1",
       "зелёные в RUN-20260819-2012: 5/5",
       "багов на кейсах стори: 0"
     ],
@@ -9235,7 +9572,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-automation",
-      "регресс сборки: smoke RUN-20260819-1818 49/49 · чисто · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 0",
+      "регресс сборки: smoke RUN-20260819-1818 49/49 · чисто · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 1",
       "багов на кейсах стори: 0"
     ],
     "updated": "2026-08-14T23:12:35Z",
@@ -9257,9 +9594,9 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-writing-cases",
-      "регресс сборки: smoke RUN-20260819-1818 49/49 · чисто · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 0",
+      "регресс сборки: smoke RUN-20260819-1818 49/49 · чисто · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 1",
       "фич без кейсов: 5/8",
-      "багов на кейсах стори: 0"
+      "багов на кейсах стори: 1"
     ],
     "updated": "2026-08-14T23:12:35Z",
     "resolution": null,

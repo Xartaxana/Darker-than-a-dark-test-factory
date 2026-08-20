@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-10T14:20:00Z"
-updated: "2026-08-10T14:20:00Z"
+created: "2026-08-20T12:17:10Z"
+updated: "2026-08-20T12:17:10Z"
 archived: false
 resolution: null
 ---
@@ -74,7 +74,8 @@ bridge-элементы + наши фикстурные узлы) И для ОБ
   протоколе CH-005; переключение темы и скриншот-примитивы уже используются
   TC-047..049/TC-059/TC-108 — новой инфраструктуры не требуется.
 - Инжектированные элементы задают цвет ИНЛАЙНОВЫМ `style.cssText`
-  (`ao3_bridge.js:148-151,248-252`), не через внешний stylesheet/CSS custom
+  (`ao3_bridge.js:191-193,291-292`, сверено с HEAD fdd3f728, было
+  148-151/248-252), не через внешний stylesheet/CSS custom
   properties — `getComputedStyle` резолвит их без дополнительных шагов;
   явных селекторов для контраст-проверки НЕ хватает — они уже есть
   (`data-ao3-rate-btn`/`data-ao3-note-btn` — атрибуты, назначенные при
@@ -107,7 +108,31 @@ bridge-элементы + наши фикстурные узлы) И для ОБ
   Динамические состояния (открытый диалог/оверлей, живой снекбар) — вне
   scope, страница работы в обычном (не fullscreen, без открытых оверлеев)
   состоянии.
-
+- **БЛОКЕР (test-automator, 2026-08-20, не test_debt — премиса кейса
+  расходится с кодом, не отсутствие фикстуры/тулинга): Given этого кейса
+  физически недостижим ОДНИМ открытием страницы.** `data-ao3-rate-btn`/
+  `data-ao3-note-btn` инжектируются `ao3_bridge.js` ТОЛЬКО в узлы
+  `li[id^="work_"].work.blurb` (см. «Initial injection» :930-955 и
+  `fetchAndAppend` :630-654 — оба прохода фильтруют строго по этому
+  селектору) — то есть ТОЛЬКО на LISTING-страницах
+  (`recording_builder._blurb_html`). Одиночная work-страница
+  (`/works/{id}`, `render_work_page_html`) НЕ содержит `li.work.blurb` и
+  НЕ получает ни одной инжектированной кнопки ни от JS-бриджа, ни от
+  Kotlin-стороны (grep по `app-under-test/.../java` на `data-ao3-rate-btn`/
+  `makeRateButton` — 0 совпадений); рейтинг на work-странице отражён
+  ТОЛЬКО нативной Compose-панелью (`BrowserViewModel.savePanelRating`,
+  см. `app-under-test/CLAUDE.md` «work-page embedded panel»), не WebView
+  DOM. Одновременно `h2.title.heading`/`.wrapper p` (WORK_PAGE_CONTENT_
+  MARKERS) существуют ТОЛЬКО в `render_work_page_html`, НЕ в `_blurb_html`
+  (там заголовок — `h4.heading`). Given требует ОБА набора маркеров на
+  ОДНОЙ открытой странице — структурно невозможно при текущей разметке
+  фикстур/bridge (сверено чтением `ao3_bridge.js`/`recording_builder.py`
+  на HEAD fdd3f728, не только гипотеза). Требуется решение test-designer/
+  координатора: либо Given переписывается на ДВЕ точки маршрута (listing
+  с блёрбом работы W — Rate/Note-контраст; work-страница — title/body-
+  контраст) в рамках одной темы, либо оракул сужается. Test-automator не
+  решает это самостоятельно (недоопределённое требование, п.11а
+  routing) — TC оставлен `Approved`, `automated_by` пуст.
 ## Чек-лист качества (test-designer проходит перед `Review`)
 - [x] Один сценарий — один кейс; нет «и ещё проверить...» (одна инспекция
   набора узлов, повторённая для двух состояний темы-переменной)

@@ -2,7 +2,7 @@
 key: "TC-261"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Системный Back в Browse ходит по СОБСТВЕННОЙ истории активной вкладки — на первой записи выходит из приложения"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-19T13:26:00Z"
-updated: "2026-08-19T13:26:00Z"
+created: "2026-08-20T14:53:26Z"
+updated: "2026-08-20T14:53:26Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Системный Back в Browse ходит по СОБСТВЕННОЙ истории активной вкладки — на первой записи выходит из приложения
 
 _Спроецировано из `test-cases/browser/TC-261.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-261 — Back в Browse: своя история на вкладку, чужой стек не трогает, выход из приложения на дне СВОЕГО стека
 

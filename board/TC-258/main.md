@@ -2,7 +2,7 @@
 key: "TC-258"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Undo закрытия вкладки на потолке MAX_TABS не теряет вкладку молча — показывается диалог лимита вместо тишины"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-19T13:26:00Z"
-updated: "2026-08-19T13:26:00Z"
+created: "2026-08-20T14:57:05Z"
+updated: "2026-08-20T14:57:05Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Undo закрытия вкладки на потолке MAX_TABS не теряет вкладку молча — показывается диалог лимита вместо тишины
 
 _Спроецировано из `test-cases/tabs/TC-258.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-258 — Undo на потолке MAX_TABS: диалог лимита вместо молчания, счёт вкладок не портится
 

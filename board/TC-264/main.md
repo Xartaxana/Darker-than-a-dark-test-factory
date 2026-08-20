@@ -2,7 +2,7 @@
 key: "TC-264"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Back после автопрыжка плотности возвращает пользователя на страницу, с которой автопрыжок начался"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-19T13:26:00Z"
-updated: "2026-08-19T13:26:00Z"
+created: "2026-08-20T14:53:32Z"
+updated: "2026-08-20T14:53:32Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Back после автопрыжка плотности возвращает пользователя на страницу, с которой автопрыжок начался
 
 _Спроецировано из `test-cases/browser/TC-264.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-264 — регресс-замок BUG-019 (Reopened): Back после автопрыжка ДОЛЖЕН вернуть на страницу-источник (сейчас — красный)
 

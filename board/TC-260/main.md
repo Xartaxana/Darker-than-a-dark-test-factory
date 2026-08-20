@@ -2,7 +2,7 @@
 key: "TC-260"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Живой пуш рейтинга не уводит пользователя со страницы — автопрыжок плотности срабатывает ТОЛЬКО от загрузки, не от живой оценки"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-19T13:26:00Z"
-updated: "2026-08-19T13:26:00Z"
+created: "2026-08-20T14:53:24Z"
+updated: "2026-08-20T14:53:24Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Живой пуш рейтинга не уводит пользователя со страницы — автопрыжок плотности срабатывает ТОЛЬКО от загрузки, не от живой оценки
 
 _Спроецировано из `test-cases/browser/TC-260.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-260 — checkPageDensity игнорирует опустошение страницы, вызванное живым пушем рейтинга, но не игнорирует опустошение при загрузке
 

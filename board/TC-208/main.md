@@ -2,7 +2,7 @@
 key: "TC-208"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p2"
 summary: "Слияние работы: при равном timestamp побеждает локальная версия"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-15T23:03:49Z"
-updated: "2026-08-15T23:03:49Z"
+created: "2026-08-20T18:15:00Z"
+updated: "2026-08-20T18:15:00Z"
 archived: false
 resolution: null
 ---

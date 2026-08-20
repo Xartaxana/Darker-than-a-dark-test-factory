@@ -2,7 +2,7 @@
 key: "TC-262"
 project: "AO3"
 issueType: "test-case"
-status: "tc-review"
+status: "tc-approved"
 priority: "p1"
 summary: "Back на вкладках Library/Settings не закрывает приложение — переводит нижнюю навигацию на Browse"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-19T13:26:00Z"
-updated: "2026-08-19T13:26:00Z"
+created: "2026-08-20T14:53:27Z"
+updated: "2026-08-20T14:53:27Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # Back на вкладках Library/Settings не закрывает приложение — переводит нижнюю навигацию на Browse
 
 _Спроецировано из `test-cases/browser/TC-262.md` (источник правды).
-Статус в нашей машине: **Review**._
+Статус в нашей машине: **Approved**._
 
 # TC-262 — Back на Library и на Settings переводит на Browse, не выходит из приложения
 
