@@ -2660,3 +2660,12 @@ vs env) — решение Lead: остаётся state-first (state отраж�
   `ad6b3535-…-attachment.txt`, читаны СРАЗУ после прогона до перезаписи
   `--clean-alluredir`).
 - Статус: open.
+- [2026-08-20T10:11:20Z] **CH-011:followup_tc#0** [sla:charter_followup_unprocessed] — followup_tc[0] без id-токена: «Кейсы на `browse-scroll-to-top-fab` (0 кейсов сегодня, state/coverage-map.md:185…» | нужно: test-designer заводит TC-NNN
+- [2026-08-20T10:11:20Z] **CH-011:followup_tc#1** [sla:charter_followup_unprocessed] — followup_tc[1] без id-токена: «Кейсы на видимую половину `bridge-scroll-reporting` (0 кейсов, coverage-map:187)…» | нужно: test-designer заводит TC-NNN
+- [2026-08-20T10:11:20Z] **CH-011:followup_tc#2** [sla:charter_followup_unprocessed] — followup_tc[2] без id-токена: «Кейс-красный-замок на находку 2 (дрейф позиции): холодный старт вкладки с infini…» | нужно: test-designer заводит TC-NNN
+- [2026-08-20T10:11:20Z] **CH-011:followup_tc#3** [sla:charter_followup_unprocessed] — followup_tc[3] без id-токена: «Запрос ФИКСТУРЫ (адресат test-automator/владелец recording_builder): ветка подпи…» | нужно: test-designer заводит TC-NNN
+- [2026-08-20T10:11:20Z] **CH-011:found_bugs#0** [sla:charter_followup_unprocessed] — found_bugs[0] без id-токена: «(major, R-08+R-16) Глобальный индикатор `_activeScrollY` не поддерживается ни на…» | нужно: bug-reporter заводит BUG-NNN
+- [2026-08-20T10:11:20Z] **CH-011:found_bugs#1** [sla:charter_followup_unprocessed] — found_bugs[1] без id-токена: «(major, R-08) Дрейф сохранённой позиции: на холодном старте вкладки с infinite-s…» | нужно: bug-reporter заводит BUG-NNN
+- [2026-08-20T10:11:20Z] **CH-011:found_bugs#2** [sla:charter_followup_unprocessed] — found_bugs[2] без id-токена: «(major, R-08+R-16) Оффер «Continue reading at N%?» (четвёртый носитель позиции —…» | нужно: bug-reporter заводит BUG-NNN
+- [2026-08-20T10:11:20Z] **CH-011:found_bugs#3** [sla:charter_followup_unprocessed] — found_bugs[3] без id-токена: «(класс оценить bug-reporter'у) В e-ink-режиме FAB «Scroll to top» перехватывает …» | нужно: bug-reporter заводит BUG-NNN
+- [2026-08-20T10:11:20Z] **CH-011:new_risks** [sla:charter_followup_unprocessed] — new_risks предложен (2 запис.), но в docs/01-test-strategy.md нет маркера «Пересмотр по чартеру CH-011» | нужно: test-strategist доносит риск до §10
