@@ -1801,11 +1801,16 @@ features:
   # Отдельная запись, а не ветка предыдущей: Then противоположен (данные НЕ
   # синхронизированы, показан текст ошибки), и именно эта ветка отличает
   # «не настроено» от «настроено неверно». Дословные сообщения —
-  # `SyncRepository.kt:250-256` (404: «Snippet <id> not found. Check the snippet
-  # ID, or clear it to create a new one.»; 401/403: «GitLab rejected the token
-  # (HTTP <code>). It needs the 'api' scope.»; прочее: «GitLab returned HTTP
-  # <code> reading the snippet» / «… creating the snippet» / «… updating the
-  # snippet»), `:110` («No GitLab token configured»), `:282` («GitLab did not
+  # `SyncRepository.kt:361-367` (`fetchRemote`, 404: «Snippet <id> not found.
+  # Check the snippet ID, or clear it to create a new one.»; 401/403: «GitLab
+  # rejected the token (HTTP <code>). It needs the 'api' scope.»; прочее:
+  # «GitLab returned HTTP <code> reading the snippet»), `:387-390`
+  # (`createSnippet`, тот же 401/403-текст + «… creating the snippet»),
+  # `:408-414` (`updateSnippet`, тот же 404/401/403-текст + «… updating the
+  # snippet») — было указано одной устаревшей ссылкой `:250-256` (блок
+  # публикации сдвинулся дальше в файле; исправлено
+  # STALE-SYNCREPOSITORY-250-256-REFS 2026-08-20, сверено Read'ом HEAD),
+  # `:110` («No GitLab token configured»), `:282` («GitLab did not
   # return a snippet ID»); диалог — `SettingsScreen.kt:1467-1477` («Sync failed»).
   # КЛЮЧЕВАЯ асимметрия для дизайна (грань R-16): текст ошибки виден ТОЛЬКО у
   # ручного прогона — автоматический путь падает молча в Log
