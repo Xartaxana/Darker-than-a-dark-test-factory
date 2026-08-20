@@ -32,9 +32,25 @@ framework/.venv и framework/allure-*, чтобы не матчить site-packa
 покрывает всю обвязку (тестовый фреймворк И скрипты конвейера), не только
 код приложения (решение координатора).
 
+ДОПОЛНИТЕЛЬНЫЕ ИСТОЧНИКИ (решение Lead, эскалация
+ANCHOR-LINT-SCOPE-AND-SEMANTIC-DRIFT-GAP, скоуп-часть, 2026-08-20).
+Ровно ДВА носителя живых норм добавлены в скоуп сверх test-cases/:
+`docs/01-test-strategy.md` (единственный живой стратегический документ,
+на него ссылаются якорями типа `ao3_bridge.js:1155`) и
+`exploratory-charters/*.md` (акты обследования с якорями на реальный код).
+docs/ ЦЕЛИКОМ НЕ берётся — `docs/09-history.md` и другие исторические
+архивы протухают ЛЕГИТИМНО (архив фиксирует, что было, а не что есть),
+их включение обнулило бы детектор шумом собственных решений. У этих
+источников нет статуса теркейса (`Merged`/`Deprecated`) — docs/01 вообще
+без frontmatter `status`, у чартеров свой словарь жизненного цикла
+(`Done`/…), не пересекающийся с test-case-терминальностью — оба
+источника сканируются ЦЕЛИКОМ, без статусного фильтра.
+
 Запуск: python scripts/anchor_lint.py [--strict] [--cases-dir DIR]
                                        [--app-dir DIR] [--framework-dir DIR]
                                        [--scripts-dir DIR]
+                                       [--docs-strategy-file FILE]
+                                       [--charters-dir DIR]
 Коды выхода: 0 — ВСЕГДА (WARN-ярус); 1 — есть битые якоря И задан --strict
 (флаг реализован, но НИГДЕ не включён — продвижение WARN -> ERROR идёт по
 evidence, D-0063, не ради симметрии).
@@ -56,6 +72,11 @@ CASES_DIR = REPO / "test-cases"
 APP_DIR = REPO / "app-under-test"
 FRAMEWORK_DIR = REPO / "framework"
 SCRIPTS_DIR = REPO / "scripts"
+# Ровно два носителя живых норм сверх test-cases/ — решение Lead, докстринг
+# модуля «ДОПОЛНИТЕЛЬНЫЕ ИСТОЧНИКИ». НЕ вся docs/ — исторические архивы
+# (docs/09-history.md и т.п.) протухают легитимно.
+DOCS_STRATEGY_FILE = REPO / "docs" / "01-test-strategy.md"
+CHARTERS_DIR = REPO / "exploratory-charters"
 
 # Каталоги, которые НЕ обходим внутри корней поиска — site-packages в .venv
 # и allure-* (сгенерированные отчёты) дают чужие/дублирующие basename'ы, шум
@@ -149,6 +170,32 @@ def collect_cases(cases_dir: Path = CASES_DIR) -> list[dict]:
     return found
 
 
+def collect_extra_sources(docs_strategy_file: Path = DOCS_STRATEGY_FILE,
+                          charters_dir: Path = CHARTERS_DIR) -> list[dict]:
+    """Живые нормы вне test-cases/: docs/01-test-strategy.md (один файл) +
+    exploratory-charters/*.md (ВЕСЬ каталог, не рекурсивно — чартеры плоские).
+
+    Никакой статусной фильтрации (см. докстринг модуля «ДОПОЛНИТЕЛЬНЫЕ
+    ИСТОЧНИКИ») — оба источника сканируются целиком. `id` берётся из
+    frontmatter, если есть (чартеры); иначе — имя файла (docs/01 без
+    frontmatter `id`)."""
+    found: list[dict] = []
+    paths: list[Path] = []
+    if docs_strategy_file.is_file():
+        paths.append(docs_strategy_file)
+    if charters_dir.is_dir():
+        paths.extend(sorted(charters_dir.glob("*.md")))
+    for path in paths:
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        case_id = _frontmatter_value(text, "id") or path.name
+        found.append({"id": case_id, "status": "?", "path": path,
+                      "anchors": extract_anchors(text)})
+    return found
+
+
 def check_anchor(fname: str, line: int,
                   index: dict[str, list[Path]],
                   _cache: dict[Path, int]) -> tuple[bool, str | None]:
@@ -169,7 +216,9 @@ def check_anchor(fname: str, line: int,
 
 def run(cases_dir: Path = CASES_DIR, app_dir: Path = APP_DIR,
         framework_dir: Path = FRAMEWORK_DIR,
-        scripts_dir: Path = SCRIPTS_DIR) -> tuple[list[dict], int]:
+        scripts_dir: Path = SCRIPTS_DIR,
+        docs_strategy_file: Path = DOCS_STRATEGY_FILE,
+        charters_dir: Path = CHARTERS_DIR) -> tuple[list[dict], int]:
     """Возвращает (список_битых, всего_якорей).
 
     Каждый элемент битых: {case_id, path, file, line, reason}."""
@@ -177,7 +226,9 @@ def run(cases_dir: Path = CASES_DIR, app_dir: Path = APP_DIR,
     line_cache: dict[Path, int] = {}
     broken: list[dict] = []
     total = 0
-    for case in collect_cases(cases_dir):
+    all_sources = collect_cases(cases_dir) + \
+        collect_extra_sources(docs_strategy_file, charters_dir)
+    for case in all_sources:
         for fname, line in case["anchors"]:
             total += 1
             ok, reason = check_anchor(fname, line, index, line_cache)
@@ -199,10 +250,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--app-dir", default=str(APP_DIR))
     parser.add_argument("--framework-dir", default=str(FRAMEWORK_DIR))
     parser.add_argument("--scripts-dir", default=str(SCRIPTS_DIR))
+    parser.add_argument("--docs-strategy-file", default=str(DOCS_STRATEGY_FILE))
+    parser.add_argument("--charters-dir", default=str(CHARTERS_DIR))
     args = parser.parse_args(argv)
 
     broken, total = run(Path(args.cases_dir), Path(args.app_dir),
-                        Path(args.framework_dir), Path(args.scripts_dir))
+                        Path(args.framework_dir), Path(args.scripts_dir),
+                        Path(args.docs_strategy_file), Path(args.charters_dir))
 
     for item in broken:
         anchor = f"{item['file']}:{item['line']}"
