@@ -790,3 +790,555 @@ def test_future_status_since_is_error(repo, schemas):
 
     errors, _warns = vf.validate()
     assert any("BUG-103" in e and "status_since" in e and "будущем" in e for e in errors)
+
+
+# --- C1 (spec-C-v2, state/escalations.md CLASS-MECHANISM-STALE-TEXT-AFTER-
+# STATUS-TRANSITION): stale-text WARN правило («словарь маркеров») ---------
+
+def _bug_custom(root: Path, key: str, status: str, *, title: str, h1: str,
+                 extra: str = "") -> Path:
+    """Пишет bug-файл напрямую с УПРАВЛЯЕМЫМИ title/H1 — Repo.bug фиксирует
+    оба (title='Тестовый баг {key}', H1='# {key}') и не даёт их переопределить."""
+    text = (
+        f"---\nid: {key}\ntitle: {title}\nseverity: major\nstatus: {status}\n"
+        f"{extra}updated: \"2026-07-01T00:00:00Z\"\nlock: \"\"\n---\n\n# {h1}\n\nтело\n"
+    )
+    p = root / "bugs" / f"{key}.md"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(text, encoding="utf-8")
+    return p
+
+
+def test_stale_text_marker_in_h1_at_fixed_warns(repo, schemas):
+    """Дословная цитата эскалации (рецидив 6, AT-BUG-088): H1 держит
+    додиагностический маркер при status Fixed без маркера снятия."""
+    _bug_custom(repo.root, "AT-BUG-200", "Fixed",
+                title="AT-BUG-200 test debt", extra="type: test_debt\n",
+                h1="AT-BUG-200: Then-хелперы слепы к отказу adb")
+
+    _errors, warns = vf.validate()
+    assert any("AT-BUG-200" in w and "слепы к" in w for w in warns)
+
+
+def test_stale_text_with_snyato_qualifier_clears(repo, schemas):
+    """Квалификатор снятия ОБЯЗАТЕЛЕН как часть правила: «(СНЯТО ...)» в
+    ТОЙ ЖЕ строке выключает WARN."""
+    _bug_custom(repo.root, "AT-BUG-201", "Fixed",
+                title="AT-BUG-201 test debt", extra="type: test_debt\n",
+                h1="AT-BUG-201: Then-хелперы слепы к отказу adb (СНЯТО 2026-08-20T10:00:00Z)")
+
+    _errors, warns = vf.validate()
+    assert not any("AT-BUG-201" in w and "слепы к" in w for w in warns)
+
+
+def test_stale_text_with_byli_qualifier_clears(repo, schemas):
+    _bug_custom(repo.root, "AT-BUG-202", "Fixed",
+                title="AT-BUG-202 test debt", extra="type: test_debt\n",
+                h1="AT-BUG-202: Then-хелперы БЫЛИ слепы к отказу adb")
+
+    _errors, warns = vf.validate()
+    assert not any("AT-BUG-202" in w and "слепы к" in w for w in warns)
+
+
+def test_stale_text_with_lowercase_byli_qualifier_clears(repo, schemas):
+    """C2-F2 (критик-раунд): регистронезависимость — исходная реализация
+    матчила ТОЛЬКО заглавную форму «БЫЛИ», строчная «были слепы к» была
+    ложным срабатыванием."""
+    _bug_custom(repo.root, "AT-BUG-210", "Fixed",
+                title="AT-BUG-210 test debt", extra="type: test_debt\n",
+                h1="AT-BUG-210: Then-хелперы были слепы к отказу adb")
+
+    _errors, warns = vf.validate()
+    assert not any("AT-BUG-210" in w and "слепы к" in w for w in warns)
+
+
+def test_stale_text_with_byla_qualifier_clears(repo, schemas):
+    """C2-F2: словоформа «была» (не только «были»)."""
+    _bug_custom(repo.root, "AT-BUG-211", "Fixed",
+                title="AT-BUG-211: она была не разделено", extra="type: test_debt\n",
+                h1="AT-BUG-211")
+
+    _errors, warns = vf.validate()
+    assert not any("AT-BUG-211" in w and "не разделено" in w for w in warns)
+
+
+def test_stale_text_with_ustraneno_qualifier_clears(repo, schemas):
+    """C2-F2: новое слово словаря снятия — «устранено»."""
+    _bug_custom(repo.root, "AT-BUG-212", "Fixed",
+                title="AT-BUG-212 test debt", extra="type: test_debt\n",
+                h1="AT-BUG-212: слепы к отказу adb, устранено")
+
+    _errors, warns = vf.validate()
+    assert not any("AT-BUG-212" in w and "слепы к" in w for w in warns)
+
+
+def test_stale_text_with_ispravleno_qualifier_clears(repo, schemas):
+    """C2-F2: новое слово словаря снятия — «исправлено»."""
+    _bug_custom(repo.root, "AT-BUG-213", "Fixed",
+                title="AT-BUG-213 test debt", extra="type: test_debt\n",
+                h1="AT-BUG-213: не разделено, исправлено")
+
+    _errors, warns = vf.validate()
+    assert not any("AT-BUG-213" in w and "не разделено" in w for w in warns)
+
+
+def test_stale_text_with_pofikshcheno_qualifier_clears(repo, schemas):
+    """C2-F2: новое слово словаря снятия — «пофикшено»."""
+    _bug_custom(repo.root, "AT-BUG-214", "Fixed",
+                title="AT-BUG-214 test debt", extra="type: test_debt\n",
+                h1="AT-BUG-214: слепы к отказу adb, пофикшено")
+
+    _errors, warns = vf.validate()
+    assert not any("AT-BUG-214" in w and "слепы к" in w for w in warns)
+
+
+def test_stale_text_ne_reshayu_marker_warns(repo, schemas):
+    """C2-B3 (критик-раунд): восстановленный маркер словаря «не решаю»
+    (сужен молча в первой реализации — восстановлен без сужения)."""
+    _bug_custom(repo.root, "AT-BUG-215", "Fixed",
+                title="AT-BUG-215: не решаю проблему гонки", extra="type: test_debt\n",
+                h1="AT-BUG-215")
+
+    _errors, warns = vf.validate()
+    assert any("AT-BUG-215" in w and "не решаю" in w for w in warns)
+
+
+def test_stale_text_zhivoy_remnant_marker_warns(repo, schemas):
+    """C2-B3 (критик-раунд): восстановленный маркер словаря «живой
+    remnant» (дословная цитата эскалации, рецидив 6/AT-BUG-088)."""
+    _bug_custom(repo.root, "AT-BUG-216", "Fixed",
+                title="AT-BUG-216 test debt", extra="type: test_debt\n",
+                h1="AT-BUG-216: живой remnant AT-BUG-055")
+
+    _errors, warns = vf.validate()
+    assert any("AT-BUG-216" in w and "живой remnant" in w for w in warns)
+
+
+def test_stale_text_byl_substring_inside_unrelated_word_does_not_clear(repo, schemas):
+    """Граница `\\b`: «был» ВНУТРИ несвязанного слова («приБЫЛ») — НЕ
+    квалификатор снятия (короткая подстрока без границ слова матчила бы
+    ложно)."""
+    _bug_custom(repo.root, "AT-BUG-218", "Fixed",
+                title="AT-BUG-218 test debt", extra="type: test_debt\n",
+                h1="AT-BUG-218: слепы к отказу adb, файл прибыл с сервера")
+
+    _errors, warns = vf.validate()
+    assert any("AT-BUG-218" in w and "слепы к" in w for w in warns)
+
+
+def test_stale_text_chitayut_cherez_without_goliy_still_warns(repo, schemas):
+    """C2-B3: маркер расширен «читают через голый» -> «читают через» (БЕЗ
+    слова «голый» вовсе — маркер шире, не уже)."""
+    _bug_custom(repo.root, "AT-BUG-217", "Fixed",
+                title="AT-BUG-217 test debt", extra="type: test_debt\n",
+                h1="AT-BUG-217: хелперы читают через adb напрямую")
+
+    _errors, warns = vf.validate()
+    assert any("AT-BUG-217" in w and "читают через" in w for w in warns)
+
+
+def test_stale_text_bare_date_no_longer_clears(repo, schemas):
+    """C2-F3 (критик-раунд): голая дата БЕЗ слова снятия рядом — НЕ
+    квалификатор (сужено против первой реализации задачи, где дата САМА
+    ПО СЕБЕ гасила WARN — «дата в поле — не снятие»)."""
+    _bug_custom(repo.root, "AT-BUG-203", "Fixed",
+                title="AT-BUG-203 test debt", extra="type: test_debt\n",
+                h1="AT-BUG-203: слепы к отказу adb (2026-08-20)")
+
+    _errors, warns = vf.validate()
+    assert any("AT-BUG-203" in w and "слепы к" in w for w in warns)
+
+
+def test_stale_text_date_near_snyato_still_clears(repo, schemas):
+    """Дата РЯДОМ со словом снятия по-прежнему легальна — снятие несёт
+    слово «СНЯТО», дата просто сопровождает его (не самостоятельный
+    квалификатор)."""
+    _bug_custom(repo.root, "AT-BUG-209", "Fixed",
+                title="AT-BUG-209 test debt", extra="type: test_debt\n",
+                h1="AT-BUG-209: слепы к отказу adb (СНЯТО, 2026-08-20)")
+
+    _errors, warns = vf.validate()
+    assert not any("AT-BUG-209" in w and "слепы к" in w for w in warns)
+
+
+def test_stale_text_marker_in_title_at_verified_warns(repo, schemas):
+    _bug_custom(repo.root, "AT-BUG-204", "Verified",
+                title="AT-BUG-204: не разделено два сценария",
+                extra="type: test_debt\n", h1="AT-BUG-204")
+
+    _errors, warns = vf.validate()
+    assert any("AT-BUG-204" in w and "не разделено" in w for w in warns)
+
+
+def test_stale_text_third_marker_raw_adb(repo, schemas):
+    """Третий маркер словаря («читают через голый»), дословная цитата
+    эскалации (рецидив 6, AT-BUG-088)."""
+    _bug_custom(repo.root, "AT-BUG-205", "Fixed",
+                title="AT-BUG-205 test debt", extra="type: test_debt\n",
+                h1="AT-BUG-205: хелперы читают через голый adb.run_as")
+
+    _errors, warns = vf.validate()
+    assert any("AT-BUG-205" in w and "читают через голый" in w for w in warns)
+
+
+def test_stale_text_marker_on_open_bug_is_silent(repo, schemas):
+    """Гард по статусу: Open — не терминальный статус этого правила."""
+    _bug_custom(repo.root, "AT-BUG-206", "Open",
+                title="AT-BUG-206: слепы к отказу adb", h1="AT-BUG-206")
+
+    _errors, warns = vf.validate()
+    assert not any("AT-BUG-206" in w and "слепы к" in w for w in warns)
+
+
+def test_stale_text_no_marker_at_fixed_is_silent(repo, schemas):
+    _bug_custom(repo.root, "AT-BUG-207", "Fixed",
+                title="AT-BUG-207 test debt", extra="type: test_debt\n",
+                h1="AT-BUG-207: фикс закатан")
+
+    _errors, warns = vf.validate()
+    assert not any("AT-BUG-207" in w and "stale-text" in w for w in warns)
+
+
+def test_stale_text_non_bug_area_is_not_scanned(repo, schemas):
+    """Правило — только для bugs/ (schema.get('type') == 'bug')."""
+    repo.test_case("TC-208", "Approved", extra='title: "слепы к отказу adb"\n')
+
+    _errors, warns = vf.validate()
+    assert not any("stale-text" in w or "додиагностический маркер" in w for w in warns)
+
+
+def test_real_repo_stale_text_baseline():
+    """C1: пин на живом репо. В корпусе/git-истории истинных экземпляров
+    НЕТ на момент задачи (все чинились ДО коммита, см. state/escalations.md
+    CLASS-MECHANISM-STALE-TEXT-AFTER-STATUS-TRANSITION) — множество WARN
+    правила stale_text ПУСТО. Дрейф множества — сигнал: рецидив (разобрать)
+    либо ложное срабатывание (сузить маркер/охват)."""
+    _errors, warns = vf.validate()
+    hits = [w for w in warns if "додиагностический маркер" in w]
+    assert hits == [], "\n".join(hits)
+
+
+# --- C3 (spec-C-v2, ESC APP-UNDER-TEST-YAML-COHERENCE-GATE): AUT<->runs ---
+
+def _aut(root: Path, *, source_commit: str | None = None,
+         smoke: str = "not_run", regression: str = "not_run",
+         canary: str = "not_run") -> Path:
+    lines = ["app: ao3-wrapper\n"]
+    if source_commit is not None:
+        lines.append(f"source_commit: {source_commit}\n")
+    lines.append(f"smoke_status: {smoke}\n")
+    lines.append(f"regression_status: {regression}\n")
+    lines.append(f"canary_status: {canary}\n")
+    p = root / "state" / "app-under-test.yaml"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text("".join(lines), encoding="utf-8")
+    return p
+
+
+FULL_COMMIT = "fdd3f72884105d1453448e0c9a7f2b109588b182"
+SHORT_COMMIT = "fdd3f728"
+OTHER_COMMIT = "aa377e0ec9664fcd5439fec9391638fabf94f448"
+
+
+def test_aut_coherence_confirmed_by_matching_closed_run_is_clean(repo, schemas):
+    _aut(repo.root, source_commit=FULL_COMMIT, smoke="passed")
+    repo.run("RUN-20260819-1818", "Closed",
+              extra=f'suite: smoke\nsource_commit: "{FULL_COMMIT}"\n')
+
+    _errors, warns = vf.validate()
+    assert not any("AUT<->runs" in w for w in warns)
+
+
+def test_aut_coherence_missing_confirming_run_warns(repo, schemas):
+    _aut(repo.root, source_commit=FULL_COMMIT, smoke="passed")
+
+    _errors, warns = vf.validate()
+    assert any("smoke_status" in w and "AUT<->runs" in w for w in warns)
+
+
+def test_aut_coherence_short_hash_prefix_matches(repo, schemas):
+    """Короткий хэш в run, полный — в AUT: сравнение по префиксу."""
+    _aut(repo.root, source_commit=FULL_COMMIT, smoke="passed")
+    repo.run("RUN-20260819-1819", "Closed",
+              extra=f'suite: smoke\nsource_commit: "{SHORT_COMMIT}"\n')
+
+    _errors, warns = vf.validate()
+    assert not any("AUT<->runs" in w for w in warns)
+
+
+def test_aut_coherence_short_hash_in_aut_matches_full_in_run(repo, schemas):
+    """Обратное направление: короткий хэш в AUT, полный — в run."""
+    _aut(repo.root, source_commit=SHORT_COMMIT, smoke="passed")
+    repo.run("RUN-20260819-1820", "Closed",
+              extra=f'suite: smoke\nsource_commit: "{FULL_COMMIT}"\n')
+
+    _errors, warns = vf.validate()
+    assert not any("AUT<->runs" in w for w in warns)
+
+
+def test_aut_coherence_run_without_source_commit_not_counted(repo, schemas):
+    """Прогон БЕЗ source_commit — пропускается явно, не считается совпавшим
+    (8 таких в корпусе)."""
+    _aut(repo.root, source_commit=FULL_COMMIT, smoke="passed")
+    repo.run("RUN-20260819-1821", "Closed", extra="suite: smoke\n")
+
+    _errors, warns = vf.validate()
+    assert any("smoke_status" in w and "AUT<->runs" in w for w in warns)
+
+
+def test_aut_coherence_non_closed_run_does_not_confirm(repo, schemas):
+    """Triaged, не Closed — не подтверждает."""
+    _aut(repo.root, source_commit=FULL_COMMIT, smoke="passed")
+    repo.run("RUN-20260819-1822", "Triaged",
+              extra=f'suite: smoke\nsource_commit: "{FULL_COMMIT}"\n')
+
+    _errors, warns = vf.validate()
+    assert any("smoke_status" in w and "AUT<->runs" in w for w in warns)
+
+
+def test_aut_coherence_wrong_suite_does_not_confirm(repo, schemas):
+    """Тот же коммит, тот же статус Closed, но ДРУГОЙ suite — не подтверждает."""
+    _aut(repo.root, source_commit=FULL_COMMIT, smoke="passed")
+    repo.run("RUN-20260819-1823", "Closed",
+              extra=f'suite: regression\nsource_commit: "{FULL_COMMIT}"\n')
+
+    _errors, warns = vf.validate()
+    assert any("smoke_status" in w and "AUT<->runs" in w for w in warns)
+
+
+def test_aut_coherence_not_run_status_is_silent(repo, schemas):
+    """not_run — нечего сверять."""
+    _aut(repo.root, source_commit=FULL_COMMIT, smoke="not_run")
+
+    _errors, warns = vf.validate()
+    assert not any("AUT<->runs" in w for w in warns)
+
+
+def test_aut_coherence_mismatched_commit_warns(repo, schemas):
+    _aut(repo.root, source_commit=FULL_COMMIT, smoke="passed")
+    repo.run("RUN-20260819-1824", "Closed",
+              extra=f'suite: smoke\nsource_commit: "{OTHER_COMMIT}"\n')
+
+    _errors, warns = vf.validate()
+    assert any("smoke_status" in w and "AUT<->runs" in w for w in warns)
+
+
+def test_aut_coherence_missing_aut_file_is_silent(repo, schemas):
+    """Нет state/app-under-test.yaml вовсе — тишина, не падение."""
+    repo.run("RUN-20260819-1825", "Closed", extra="suite: smoke\n")
+
+    _errors, warns = vf.validate()
+    assert not any("AUT<->runs" in w for w in warns)
+
+
+def test_aut_coherence_missing_source_commit_field_is_silent(repo, schemas):
+    """AUT без поля source_commit вовсе — нечего сверять (не ERROR/WARN)."""
+    _aut(repo.root, source_commit=None, smoke="passed")
+
+    _errors, warns = vf.validate()
+    assert not any("AUT<->runs" in w for w in warns)
+
+
+# --- C2-B2 (критик-раунд): canary — оракул СВЕЖЕСТИ, не commit-оракул ---
+
+def _run_custom(root: Path, key: str, status: str, *, suite: str,
+                 source_commit: str | None = None,
+                 updated: str | None = None) -> Path:
+    """Пишет run-файл напрямую (`Repo.run` жёстко фиксирует `updated` —
+    не даёт управлять им, а именно `updated` управляет canary-свежестью
+    в этих тестах)."""
+    lines = [f"---\nid: {key}\ntitle: Прогон {key}\nstatus: {status}\nsuite: {suite}\n"]
+    if source_commit is not None:
+        lines.append(f'source_commit: "{source_commit}"\n')
+    if updated is not None:
+        lines.append(f'updated: "{updated}"\n')
+    lines.append('lock: ""\n---\n\n# {}\n\nтело\n'.format(key))
+    p = root / "runs" / f"{key}.md"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text("".join(lines), encoding="utf-8")
+    return p
+
+
+def _iso_days_ago(days: int) -> str:
+    value = dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=days)
+    return _iso(value)
+
+
+def test_aut_coherence_canary_not_matched_by_commit(repo, schemas):
+    """C2-B2: canary НЕ проверяется по source_commit — Closed canary-прогон
+    с ЧУЖИМ коммитом, но свежий по времени, не даёт WARN (в отличие от
+    smoke/regression, где чужой коммит = WARN)."""
+    _aut(repo.root, source_commit=FULL_COMMIT, canary="passed")
+    _run_custom(repo.root, "RUN-20260819-0100", "Closed", suite="canary",
+                source_commit=OTHER_COMMIT, updated=_iso_days_ago(1))
+
+    _errors, warns = vf.validate()
+    assert not any("AUT<->runs" in w for w in warns)
+
+
+def test_aut_coherence_canary_fresh_is_clean(repo, schemas):
+    _aut(repo.root, canary="passed")
+    _run_custom(repo.root, "RUN-20260819-0101", "Closed", suite="canary",
+                updated=_iso_days_ago(1))
+
+    _errors, warns = vf.validate()
+    assert not any("AUT<->runs" in w for w in warns)
+
+
+def test_aut_coherence_canary_stale_warns(repo, schemas):
+    """ЗА границей: новейший Closed canary-прогон старше 14д (15д) — WARN."""
+    _aut(repo.root, canary="passed")
+    _run_custom(repo.root, "RUN-20260801-0100", "Closed", suite="canary",
+                updated=_iso_days_ago(15))
+
+    _errors, warns = vf.validate()
+    assert any("canary_status" in w and "AUT<->runs" in w for w in warns)
+
+
+def test_aut_coherence_canary_at_boundary_is_clean(repo, schemas):
+    """НА границе: ровно 14д — ещё легально (`>`, не `>=`)."""
+    _aut(repo.root, canary="passed")
+    _run_custom(repo.root, "RUN-20260806-0100", "Closed", suite="canary",
+                updated=_iso_days_ago(14))
+
+    _errors, warns = vf.validate()
+    assert not any("AUT<->runs" in w for w in warns)
+
+
+def test_aut_coherence_canary_no_closed_run_at_all_warns(repo, schemas):
+    _aut(repo.root, canary="passed")
+
+    _errors, warns = vf.validate()
+    assert any("canary_status" in w and "AUT<->runs" in w for w in warns)
+
+
+def test_aut_coherence_canary_falls_back_to_id_date(repo, schemas):
+    """Легаси-прогон БЕЗ `updated` вовсе (реальный корпусный случай,
+    RUN-20260814-0605) — дата из id-конвенции `RUN-YYYYMMDD-HHMM`."""
+    old_id = "RUN-" + (dt.datetime.now(dt.timezone.utc)
+                        - dt.timedelta(days=1)).strftime("%Y%m%d-%H%M")
+    _aut(repo.root, canary="passed")
+    _run_custom(repo.root, old_id, "Closed", suite="canary", updated=None)
+
+    _errors, warns = vf.validate()
+    assert not any("AUT<->runs" in w for w in warns)
+
+
+def test_aut_coherence_canary_not_run_status_is_silent(repo, schemas):
+    _aut(repo.root, canary="not_run")
+
+    _errors, warns = vf.validate()
+    assert not any("AUT<->runs" in w for w in warns)
+
+
+def test_aut_coherence_canary_open_run_does_not_count(repo, schemas):
+    """Triaged (не Closed) canary-прогон, даже свежий, не подтверждает свежесть."""
+    _aut(repo.root, canary="passed")
+    _run_custom(repo.root, "RUN-20260819-0102", "Triaged", suite="canary",
+                updated=_iso_days_ago(1))
+
+    _errors, warns = vf.validate()
+    assert any("canary_status" in w and "AUT<->runs" in w for w in warns)
+
+
+# --- C2-F5 (критик-раунд): минимальная длина префикса хэша 7 -------------
+
+def test_aut_coherence_short_commit_prefix_warns(repo, schemas):
+    """ЗА границей: `source_commit` короче 7 символов — WARN о подозрительно
+    коротком хэше, C3-сверка smoke/regression по префиксу пропущена."""
+    _aut(repo.root, source_commit="fdd3f72", smoke="passed")  # 7 (граница — см. ниже)
+    _run_custom(repo.root, "RUN-20260819-0103", "Closed", suite="smoke",
+                source_commit="fd")  # RUN несёт короткий (< 7) commit
+
+    _errors, warns = vf.validate()
+    # AUT commit сам по себе (7 симв.) валиден по длине — сверка идёт,
+    # но подтверждающего прогона с ДЛИНОЙ >= 7 нет (RUN-овский короче).
+    assert any("smoke_status" in w and "AUT<->runs" in w for w in warns)
+
+
+def test_aut_coherence_aut_commit_below_min_len_warns_distinctly(repo, schemas):
+    """ЗА границей: сам `source_commit` AUT короче 7 — отдельный WARN
+    («подозрительно короткий хэш»), sverка smoke/regression пропускается
+    целиком (не 3 разных WARN)."""
+    _aut(repo.root, source_commit="fdd3f7", smoke="passed", regression="passed")  # 6 < 7
+
+    _errors, warns = vf.validate()
+    hits = [w for w in warns if "AUT<->runs" in w or "короткий хэш" in w]
+    assert len(hits) == 1
+    assert "короткий хэш" in hits[0]
+
+
+def test_aut_coherence_commit_prefix_exactly_min_len_matches(repo, schemas):
+    """НА границе: ровно 7 символов с обеих сторон — совпадение легально."""
+    _aut(repo.root, source_commit=FULL_COMMIT[:7], smoke="passed")
+    _run_custom(repo.root, "RUN-20260819-0104", "Closed", suite="smoke",
+                source_commit=FULL_COMMIT[:7])
+
+    _errors, warns = vf.validate()
+    assert not any("AUT<->runs" in w for w in warns)
+
+
+def test_real_repo_aut_coherence_baseline():
+    """C3: пин ТОЧНОГО множества WARN на живом репо — критик-раунд подтвердил
+    0 WARN (canary теперь сверяется оракулом свежести, не commit-оракулом;
+    RUN-20260814-0605 моложе 14д на момент задачи)."""
+    _errors, warns = vf.validate()
+    hits = [w for w in warns if "AUT<->runs" in w or "короткий хэш" in w]
+    assert hits == [], "\n".join(hits)
+
+
+# --- Батч C v2 (критик C-B5): WARN-информатор untracked Approved test-case ---
+
+def _git(root: Path, *args: str) -> None:
+    import subprocess
+    subprocess.run(["git", *args], cwd=root, check=True,
+                    capture_output=True, text=True, encoding="utf-8")
+
+
+def _git_init(root: Path) -> None:
+    _git(root, "init", "-q")
+    _git(root, "config", "user.email", "t@test.local")
+    _git(root, "config", "user.name", "t")
+
+
+def _git_commit_all(root: Path, msg: str = "init") -> None:
+    _git(root, "add", "-A")
+    _git(root, "commit", "-q", "-m", msg)
+
+
+def test_untracked_approved_test_case_warns(repo, schemas):
+    _git_init(repo.root)
+    repo.test_case("TC-300", "Draft")
+    _git_commit_all(repo.root)
+    # untracked: на диске, но не закоммичен
+    repo.test_case("TC-301", "Approved")
+
+    _errors, warns = vf.validate()
+    assert any("TC-301" in w and "untracked" in w and "Approved" in w for w in warns)
+
+
+def test_tracked_approved_test_case_no_untracked_warn(repo, schemas):
+    """Уже закоммиченный Approved-кейс — не untracked, информатор молчит
+    (штатный путь: аппрув СУЩЕСТВУЮЩЕГО файла human/qa-loop после коммита)."""
+    _git_init(repo.root)
+    repo.test_case("TC-302", "Approved")
+    _git_commit_all(repo.root)
+
+    _errors, warns = vf.validate()
+    assert not any("TC-302" in w and "untracked" in w for w in warns)
+
+
+def test_untracked_draft_test_case_no_warn(repo, schemas):
+    _git_init(repo.root)
+    repo.test_case("TC-303", "Draft")
+
+    _errors, warns = vf.validate()
+    assert not any("TC-303" in w and "untracked" in w for w in warns)
+
+
+def test_no_git_repo_untracked_check_degrades_to_silence(repo, schemas):
+    """Нет .git вовсе — git ls-tree отказывает, информатор молчит (fail-quiet)."""
+    repo.test_case("TC-304", "Approved")
+
+    _errors, warns = vf.validate()
+    assert not any("TC-304" in w and "untracked" in w for w in warns)

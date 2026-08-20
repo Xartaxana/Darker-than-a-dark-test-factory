@@ -1,4 +1,13 @@
 #!/bin/sh
+# C2-B1 (критик-раунд C v2, регресс этого диффа): `sh` без `set -e`
+# возвращает как код всего хука ТОЛЬКО код ПОСЛЕДНЕЙ команды — любая
+# команда выше (escape_check.py, а с этого диффа и enforcement_probe.py)
+# может упасть с rc=1, но если следующая по списку команда завершится
+# rc=0, git всё равно примет коммит: сбой fail-closed стража молча
+# проглатывается. `set -e` первой строкой — хук останавливается и
+# возвращает ненулевой код на ПЕРВОЙ же упавшей команде (git видит её
+# rc, а не rc случайно оказавшейся последней команды).
+set -e
 # task os-port-0722: cross-repo escape-allowlist check (adaptation of
 # D:\Improving_AI\Operating-System-for-LLMs tools/escape_check.py).
 python scripts/escape_check.py
@@ -8,3 +17,7 @@ python scripts/escape_check.py
 # тупика: наблюдатель читает РАБОЧЕЕ дерево — почини его там, и коммит
 # разблокируется (докстринг scripts/enforcement_probe.py).
 python scripts/enforcement_probe.py
+# spec-C-v2 C2: нелегальная инициализация статуса нового test-case (не
+# Draft/Review) — информатор-гейт, деградирует в WARN+rc0 при отказе git
+# (докстринг scripts/new_case_status_gate.py).
+python scripts/new_case_status_gate.py

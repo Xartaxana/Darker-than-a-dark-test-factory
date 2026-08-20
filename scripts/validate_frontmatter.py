@@ -10,7 +10,14 @@
 - id соответствует id_pattern своего типа;
 - enum/pattern полей из схемы (PyYAML-коэрция дат учитывается: datetime → ISO);
 - id уникален в пределах репозитория;
-- поле не из схемы — [WARN], не ошибка (шаблоны эволюционируют).
+- поле не из схемы — [WARN], не ошибка (шаблоны эволюционируют);
+- C1: title/H1 бага в терминальном статусе с додиагностическим маркером
+  без снятия — [WARN] (state/escalations.md CLASS-MECHANISM-STALE-TEXT-
+  AFTER-STATUS-TRANSITION);
+- C3: state/app-under-test.yaml <-> runs/ — заявленный passed/failed без
+  подтверждающего Closed-прогона того же suite/source_commit — [WARN];
+- untracked test-case со status: Approved — [WARN]-информатор (гейт —
+  scripts/new_case_status_gate.py, pre-commit).
 
 Запуск: python scripts/validate_frontmatter.py
 Коды выхода: 0 — чисто (WARN допустимы); 1 — есть ошибки (список в stdout).
@@ -20,6 +27,7 @@ from __future__ import annotations
 import argparse
 import datetime
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -352,6 +360,113 @@ def check_cross_field_warn(meta: dict, schema: dict, rel: str) -> list[str]:
     return warns
 
 
+# --- C1 (spec-C-v2, state/escalations.md CLASS-MECHANISM-STALE-TEXT-AFTER-
+# STATUS-TRANSITION, ~строка 2594): додиагностическая формулировка в
+# title/H1 бага, дожившая до терминального статуса — WARN. Единственный
+# вариант из трёх, рассмотренных планом и утверждённый критик-раундом
+# Lead («словарь маркеров»); варианты «имя чужого статуса» и «чекбоксы»
+# ОТКЛОНЕНЫ решением Lead — измеренная точность 0 (рецидив 6/AT-BUG-088:
+# додиагностическая формулировка шла через ПРЕДИКАТ настоящего времени, не
+# через слово чужого статуса/незакрытый чекбокс — см. запись эскалации
+# «критик round1... N5»).
+#
+# ОХВАТ (намеренно узкий, докстринг обязателен по спеке): title/H1
+# ТОЛЬКО. Секции тела («## Обнаружено» и т.п.), докстринги кода рядом с
+# фиксом и свободнотекстовые frontmatter-поля (`last_seen_in`) — НЕ
+# покрыты (рецидивы 7/8 эскалации жили именно там) — очередь Lead, не
+# эта задача.
+STALE_TEXT_MARKERS = (
+    "слепы к",
+    "не разделено",
+    "читают через",
+    "не решаю",
+    "живой remnant",
+)  # расширяемый словарь-константа — новые маркеры добавляются сюда по
+   # мере находок (та же дисциплина, что STALE_TEXT_BASELINE ниже).
+   # Критик-раунд C v2 восстановил полный словарь спеки (был молча сужен
+   # до трёх маркеров в первой реализации — F-33/п.1 нарушение: спека НЕ
+   # авторизовала сужение) и расширил «читают через голый» до «читают
+   # через» (без сужения на слово «голый»): замер критика — полный
+   # словарь по-прежнему даёт 0 срабатываний на живом корпусе.
+# Спека C v2 называет три статуса буквально ("Fixed/Verified/Closed").
+# "Closed" НЕ входит в enum machines.bug schemas/bug.schema.yaml (реальные
+# статусы бага: Open/Reopened/Fixed/Verified/Rejected/Intended/Blocked) —
+# для bugs/ это недостижимая ветка. Оставлена дословно по требованию
+# спеки (расхождение спека/схема — см. отчёт задачи C v2, builder не
+# сузил список без слова координатора).
+STALE_TEXT_STATUSES = {"Fixed", "Verified", "Closed"}
+# Критик-фикс C2-F2/F3: регистронезависимо (re.I — «были слепы к» строчными
+# был ложным срабатыванием: исходный `БЫЛИ` матчил только заглавную форму),
+# расширенный словарь снятия («был»/«была»/«было»/«были» одним классом
+# `был[аои]?`, плюс «устранено»/«исправлено»/«пофикшено»). Голая дата БЕЗ
+# слова снятия УБРАНА как самостоятельный квалификатор (C2-F3, «дата в
+# поле — не снятие»): слова снято/закрыто уже матчатся регистронезависимо
+# И БЕЗ требования даты рядом — добавлять отдельную ветку «дата рядом со
+# СНЯТО/ЗАКРЫТО» было бы функционально недостижимо (словесная ветка уже
+# покрывает любой текст с этими словами независимо от даты), поэтому
+# сужение реализовано как ПОЛНОЕ удаление голой даты из альтернатив, а не
+# как избыточная date-proximity-ветка. `\b`-границы вокруг альтернатив:
+# без них короткое «был» матчилось бы ВНУТРИ несвязанных слов (например
+# «приБЫЛ», «заБЫЛа») — то самое ложное срабатывание, которого правило
+# обязано избегать (builder-находка при доработке, до коммита).
+_STALE_TEXT_CLEAR_RE = re.compile(
+    r"\b(?:снято|закрыто|был[аои]?|устранено|исправлено|пофикшено)\b",
+    re.IGNORECASE,
+)
+_H1_RE = re.compile(r"(?m)^#\s+(.+)$")
+
+# Бейзлайн-вердикт (образец scripts/dedup_check.py:72-90 BASELINE): ключ
+# несёт НОРМАЛИЗОВАННЫЙ ФРАГМЕНТ текста (не только файл) — переписанный
+# заголовок того же файла на НОВУЮ формулировку обязан зажечься заново,
+# а не молчать под старой записью (AT-BUG-087 рецидивировал так 3 раза,
+# AT-BUG-088 — 2, см. эскалацию). На момент задачи корпус/git-история не
+# содержат ни одного истинного экземпляра (все чинились ДО коммита) —
+# словарь пуст; легитимные исключения (если найдутся) добавляются сюда
+# вердиктом, как в dedup_check.BASELINE.
+STALE_TEXT_BASELINE: dict[tuple[str, str, str], str] = {}
+
+
+def _stale_text_normalize(text: str) -> str:
+    return " ".join(text.strip().lower().split())
+
+
+def check_stale_text(meta: dict, schema: dict, body: str, rel: str) -> list[str]:
+    """C1: title/H1 бага в терминальном статусе несёт додиагностическую
+    формулировку БЕЗ соседнего маркера снятия (снято/закрыто/был|-а|-о|-и/
+    устранено/исправлено/пофикшено, регистронезависимо) В ТОЙ ЖЕ строке/
+    заголовке — квалификатор снятия обязателен как часть правила, снятие
+    в другом месте файла не считается. Голая дата БЕЗ слова снятия — НЕ
+    квалификатор (C2-F3)."""
+    if schema.get("type") != "bug":
+        return []
+    status = _s(meta.get("status"))
+    if status not in STALE_TEXT_STATUSES:
+        return []
+    warns: list[str] = []
+    h1_match = _H1_RE.search(body)
+    fields = (
+        ("title", _s(meta.get("title"))),
+        ("H1", h1_match.group(1) if h1_match else ""),
+    )
+    for label, text in fields:
+        if not text or _STALE_TEXT_CLEAR_RE.search(text):
+            continue
+        for marker in STALE_TEXT_MARKERS:
+            if marker not in text:
+                continue
+            key = (rel, "stale_text", _stale_text_normalize(text))
+            if key in STALE_TEXT_BASELINE:
+                break
+            warns.append(
+                f"{rel}: `{label}` несёт додиагностический маркер `{marker}` при "
+                f"status `{status}` без соседнего маркера снятия (снято/закрыто/"
+                f"был-а-о-и/устранено/исправлено/пофикшено) — возможен stale-text "
+                f"рецидив (state/escalations.md "
+                f"CLASS-MECHANISM-STALE-TEXT-AFTER-STATUS-TRANSITION): `{text}`")
+            break
+    return warns
+
+
 # --- П1 Р3 (spec-p1-dedup v7): машинный детектор проб на journey-чекпойнты ---
 #
 # Машинная форма (r3/r4, Н1 критик-диффа: ПРЕФИКС-матч обоих заголовков —
@@ -441,6 +556,241 @@ def check_feature_ids(meta: dict, schema: dict, rel: str,
     return errors, warns
 
 
+# --- C3 (spec-C-v2, ESC APP-UNDER-TEST-YAML-COHERENCE-GATE): когерентность
+# state/app-under-test.yaml <-> runs/. Мотив — блокер прошёл мимо ВСЕХ
+# преflight-гейтов и был пойман только человеком (критик-вход
+# critic-review-build-fdd3f728): smoke_status/regression_status оставлены
+# not_run при существующем Closed зелёном прогоне того же source_commit.
+#
+# Цена (критик замерил 2.5s на прогон validate_frontmatter): НИКАКИХ
+# git-вызовов внутри цикла по файлам — (source_commit, suite, status,
+# updated) собираются ОДНИМ проходом по runs/ основного цикла validate()
+# (см. `run_records` в validate()), не вторым rglob.
+#
+# C2-B2 (критик-раунд): canary_status ИСКЛЮЧЁН из source_commit-оракула
+# ниже (`_confirm_by_commit`) — структурная причина, не вкусовщина.
+# `grep smoke_status\|regression_status\|canary_status
+# scripts/build_watch.py` даёт 4 совпадения, ВСЕ на smoke/regression
+# (`_rewrite_field(text, "smoke_status", "not_run")` /
+# `_rewrite_field(text, "regression_status", "not_run")`,
+# build_watch.py:435-436 и :849-850) — 0 совпадений на canary_status:
+# новая сборка (смена source_commit) НЕ сбрасывает canary_status вовсе,
+# он живёт по своей каденции (проверка внешнего live-сайта, не билда).
+# Git-история (12 коммитов app-under-test.yaml) подтверждает: canary_status
+# пережил 8 смен source_commit без изменений. Оракул «тот же
+# source_commit» на canary систематически горел бы на КАЖДОЙ новой
+# сборке НАВСЕГДА (structural false positive, не единичный случай) —
+# вместо него для canary отдельный оракул СВЕЖЕСТИ
+# (`_check_canary_freshness`): WARN, если новейший Closed canary-прогон
+# старше `CANARY_FRESHNESS_DAYS`.
+COMMIT_MATCHED_SUITES = ("smoke", "regression")  # canary — freshness-оракул, не commit-оракул
+# Порог по каденции canary в rules.yaml — уточняется по evidence (пока нет
+# отдельного SLA-поля под canary; 14д — консервативная стартовая оценка,
+# критик-раунд C v2).
+CANARY_FRESHNESS_DAYS = 14
+# C2-F5 (критик-раунд): короче 7 символов — не хэш-префикс, а шум
+# (случайное совпадение первых N символов двух разных коммитов на таком
+# коротком префиксе статистически вероятно; git по умолчанию печатает
+# короткие SHA от 7 символов — та же граница).
+MIN_COMMIT_PREFIX_LEN = 7
+
+
+def _strip_yaml_comment(value: str) -> str:
+    """Хвостовой `# ...` комментарий. PyYAML сам режет комментарий из
+    НЕкавыченного скаляра при штатном `safe_load` (проверено эмпирически:
+    `source_commit: fdd3f728... # 2026-06-28` парсится в чистую строку без
+    хвоста) — эта функция только страхует форму значения на входе, лишней
+    не будет."""
+    return value.split("#", 1)[0].strip()
+
+
+def _commit_prefix_match(a: str, b: str) -> bool:
+    """Полный/короткий хэш коммита — совпадение по ПРЕФИКСУ (короче —
+    префикс длиннее), регистронезависимо. Пустая строка ни с чем не
+    матчится. C2-F5: короче `MIN_COMMIT_PREFIX_LEN` (7) — тоже НЕ матч
+    (подозрительно короткий префикс, WARN о нём — на вызывающей стороне,
+    см. `check_aut_runs_coherence`)."""
+    a = a.strip().lower()
+    b = b.strip().lower()
+    if not a or not b:
+        return False
+    shorter, longer = (a, b) if len(a) <= len(b) else (b, a)
+    if len(shorter) < MIN_COMMIT_PREFIX_LEN:
+        return False
+    return longer.startswith(shorter)
+
+
+def load_app_under_test() -> dict | None:
+    """None — файла нет (репозиторий без построенного билда — не пробел
+    этой задачи) ИЛИ YAML не парсится (fail-quiet, битый файл ловится
+    другими механизмами, не этим WARN-правилом)."""
+    p = REPO / "state" / "app-under-test.yaml"
+    if not p.exists():
+        return None
+    import yaml
+    try:
+        data = yaml.safe_load(p.read_text(encoding="utf-8", errors="replace"))
+    except Exception:
+        return None
+    return data or {}
+
+
+# `updated`/`status_since` НЕ в `required` схемы run (schemas/run.schema.yaml)
+# — легаси-прогоны до 2026-08-10ish (в т.ч. позитивный контроль
+# RUN-20260814-0605, канарейка) физически не несут этих полей (эмпирически
+# проверено на живом репо: 0 полей `updated`/`status_since` в этом файле).
+# Единственное ВСЕГДА присутствующее машинно-читаемое время — сам id
+# (`RUN-YYYYMMDD-HHMM`, конвенция имени, required-поле схемы) — фолбэк.
+_RUN_ID_DATE_RE = re.compile(r"^RUN-(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})$")
+
+
+def _run_date(run_id, updated_raw) -> datetime.datetime | None:
+    """`updated` если парсится (свежее/точное), иначе дата из id-конвенции
+    `RUN-YYYYMMDD-HHMM` (легаси-прогоны без `updated` — большинство canary-
+    прогонов на момент задачи)."""
+    dt = _parse_iso_dt(updated_raw)
+    if dt is not None:
+        return dt
+    m = _RUN_ID_DATE_RE.match(_s(run_id))
+    if not m:
+        return None
+    y, mo, d, h, mi = (int(g) for g in m.groups())
+    try:
+        return datetime.datetime(y, mo, d, h, mi, tzinfo=datetime.timezone.utc)
+    except ValueError:
+        return None
+
+
+def _check_canary_freshness(run_records: list[tuple], claimed: str) -> list[str]:
+    """C2-B2: canary не привязан к source_commit (см. докстринг блока выше)
+    — вместо commit-матча оракул СВЕЖЕСТИ: берём самый свежий `updated`
+    (фолбэк — дата из id) среди Closed canary-прогонов, WARN если старше
+    `CANARY_FRESHNESS_DAYS` либо такого прогона нет вовсе (0 Closed
+    canary-записей с распознанной датой — тоже недоказанная свежесть)."""
+    now = datetime.datetime.now(datetime.timezone.utc)
+    newest: datetime.datetime | None = None
+    for (_r_commit, r_suite, r_status, r_updated, r_id) in run_records:
+        if _s(r_suite) != "canary" or _s(r_status) != "Closed":
+            continue
+        dt = _run_date(r_id, r_updated)
+        if dt is None:
+            continue
+        if newest is None or dt > newest:
+            newest = dt
+    if newest is None:
+        return [
+            f"state/app-under-test.yaml: `canary_status: {claimed}` — ни один "
+            f"Closed canary-прогон в runs/ не несёт распознаваемой даты "
+            f"`updated` — свежесть не подтверждена (когерентность AUT<->runs, "
+            f"ESC APP-UNDER-TEST-YAML-COHERENCE-GATE)"]
+    age_days = (now - newest).days
+    if age_days > CANARY_FRESHNESS_DAYS:
+        return [
+            f"state/app-under-test.yaml: `canary_status: {claimed}` — новейший "
+            f"Closed canary-прогон ({newest.date().isoformat()}) старше "
+            f"{CANARY_FRESHNESS_DAYS}д (возраст {age_days}д) — свежесть не "
+            f"подтверждена (когерентность AUT<->runs, ESC "
+            f"APP-UNDER-TEST-YAML-COHERENCE-GATE)"]
+    return []
+
+
+def check_aut_runs_coherence(run_records: list[tuple]) -> list[str]:
+    """smoke_status/regression_status/canary_status app-under-test.yaml
+    заявляют passed/failed. smoke/regression обязаны иметь подтверждающий
+    Closed-прогон СВОЕГО suite с ТЕМ ЖЕ source_commit (полный/короткий
+    хэш — сравнение по префиксу, минимум `MIN_COMMIT_PREFIX_LEN` символов);
+    canary сверяется ОТДЕЛЬНЫМ оракулом свежести (`_check_canary_freshness`,
+    C2-B2 — canary НЕ привязан к source_commit структурно, см. докстринг
+    блока выше). `run_records`: (source_commit, suite, status, updated, id)
+    каждого run-файла, собранные ОДНИМ проходом validate() по runs/
+    (включая записи БЕЗ source_commit — передаются как None/пустая строка
+    и естественно не матчатся ни с чем, это и есть требуемое «пропускать
+    явно, не считать совпавшими» — 8 таких прогонов в корпусе на момент
+    задачи).
+
+    `not_run`/отсутствующее значение поля — нечего сверять, не WARN."""
+    aut = load_app_under_test()
+    if not aut:
+        return []
+
+    warns: list[str] = []
+    canary_claimed = _s(aut.get("canary_status")).strip()
+    if canary_claimed in ("passed", "failed"):
+        warns += _check_canary_freshness(run_records, canary_claimed)
+
+    aut_commit_raw = aut.get("source_commit")
+    if aut_commit_raw is None:
+        return warns
+    aut_commit = _strip_yaml_comment(str(aut_commit_raw))
+    if not aut_commit:
+        return warns
+    if len(aut_commit) < MIN_COMMIT_PREFIX_LEN:
+        warns.append(
+            f"state/app-under-test.yaml: `source_commit: {aut_commit}` короче "
+            f"{MIN_COMMIT_PREFIX_LEN} символов — подозрительно короткий хэш, "
+            f"C3-сверка по префиксу для smoke/regression пропущена (ложные "
+            f"совпадения на слишком коротком префиксе)")
+        return warns
+
+    for suite in COMMIT_MATCHED_SUITES:
+        field = f"{suite}_status"
+        claimed = _s(aut.get(field)).strip()
+        if claimed not in ("passed", "failed"):
+            continue
+        confirmed = any(
+            _s(r_suite) == suite and _s(r_status) == "Closed" and r_commit
+            and _commit_prefix_match(aut_commit, str(r_commit))
+            for (r_commit, r_suite, r_status, _r_updated, _r_id) in run_records
+        )
+        if not confirmed:
+            warns.append(
+                f"state/app-under-test.yaml: `{field}: {claimed}` для source_commit "
+                f"`{aut_commit}` не подтверждён Closed-прогоном suite={suite} с тем же "
+                f"source_commit в runs/ (когерентность AUT<->runs, ESC "
+                f"APP-UNDER-TEST-YAML-COHERENCE-GATE)")
+    return warns
+
+
+# --- Батч C v2 (критик C-B5): validate_frontmatter НЕ становится вторым
+# гейтом на нелегальную инициализацию статуса (то окно закрыто
+# new_case_status_gate.py в pre-commit) — здесь только WARN-информатор
+# для файла, который на диске уже несёт status: Approved, но ЕЩЁ НЕ
+# закоммичен (untracked/новый) — pre-commit-гейт его пока физически не
+# видел. Один git-вызов (`ls-tree`), деградация отказа git — в тишину
+# (вторичный информатор, основной гейт живёт в pre-commit).
+def check_untracked_approved_test_cases() -> list[str]:
+    base = REPO / "test-cases"
+    if not base.exists():
+        return []
+    try:
+        proc = subprocess.run(
+            ["git", "ls-tree", "-r", "--name-only", "HEAD", "--", "test-cases"],
+            cwd=REPO, capture_output=True, text=True, encoding="utf-8",
+            errors="replace", timeout=10,
+        )
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return []
+    if proc.returncode != 0:
+        return []
+    tracked = set(proc.stdout.splitlines())
+
+    warns: list[str] = []
+    for md in sorted(base.rglob("*.md")):
+        rel = md.relative_to(REPO).as_posix()
+        if rel in tracked:
+            continue
+        text = md.read_text(encoding="utf-8", errors="replace")
+        meta, _body = bs._parse_frontmatter(text)
+        if not meta:
+            continue
+        if _s(meta.get("status")) == "Approved":
+            warns.append(
+                f"{rel}: untracked test-case со status: Approved — нелегальная "
+                f"инициализация статуса (гейт — pre-commit, "
+                f"scripts/new_case_status_gate.py)")
+    return warns
+
+
 def validate() -> tuple[list[str], list[str]]:
     errors: list[str] = []
     warns: list[str] = []
@@ -451,6 +801,9 @@ def validate() -> tuple[list[str], list[str]]:
     # может физически идти позже ссылающегося файла в порядке скана).
     tc_status_by_id: dict[str, str] = {}
     merged_refs: list[tuple[str, str, str]] = []
+    # C3: (source_commit, suite, status, updated, id) каждого run-файла —
+    # ОДИН проход (этот же основной цикл), не второй rglob по runs/.
+    run_records: list[tuple] = []
 
     for area, itype in AREAS:
         base = REPO / area
@@ -510,10 +863,17 @@ def validate() -> tuple[list[str], list[str]]:
             warns += w
             errors += check_checkpoint_probes(meta, schema, body, rel)
             warns += check_cross_field_warn(meta, schema, rel)
+            warns += check_stale_text(meta, schema, body, rel)
             fe, fw = check_feature_ids(meta, schema, rel, registry_ids)
             errors += fe
             warns += fw
+            if itype == "run":
+                run_records.append((meta.get("source_commit"), meta.get("suite"),
+                                     _s(meta.get("status")), meta.get("updated"),
+                                     meta.get("id")))
     warns += check_merged_into_referential(tc_status_by_id, merged_refs)
+    warns += check_aut_runs_coherence(run_records)
+    warns += check_untracked_approved_test_cases()
     return errors, warns
 
 
