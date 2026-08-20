@@ -144,7 +144,7 @@ state-файл первым же действием Start-Emulator (tasks.ps1:22
 «state-файл сверен после пробы» — в handoff-чек сессии.
 Закрывает премиссы B2/B3/B6/B9 эмпирикой ДО написания кода N1.
 
-### N1 — параметризация обвязки (builder, БЕЗ live-прогона) — Status: Planned, after N0
+### N1 — параметризация обвязки (builder, БЕЗ live-прогона) — Status: **Done 2026-08-20** (мерж-коммит mech(p3-n1) в окно паузы фабрики; исполнение: builder ×2 + эскалация Lead по B5-якорю жнеца; критик ×3, финал ПРИНЯТЬ; постмерж: канон main 1924 passed/0 failed, живой смок — жнец-WhatIf ровно 1 кандидат, резидентная ветка узнала фабричный Appium. Остаточные риски → DoD N2: живой -Restart на 4725, witness жнеца «кандидатов ровно 1», шум CIM-WhatIf в выводах)
 owns: scripts/tasks.ps1, scripts/tests/**, framework/config/settings.py,
 framework/config/capabilities.py, framework/pytest.ini,
 framework/core/driver_factory.py (ключ state),
