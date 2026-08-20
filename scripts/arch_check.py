@@ -125,6 +125,20 @@ ALLOWLIST: set[tuple[str, str]] = {
     # что AT-BUG-059/AT-BUG-062 выше; перенос вне tests/ выпал бы из штатного
     # прогона (тот же инвариант — сканер зеркалит pytest testpaths).
     ("tests/test_library_files_tab_settle_unit.py", "locators"),
+    # AT-BUG-083 (test-maintainer, 2026-08-19): прямой аналог записи выше —
+    # device-free юнит-проба `library_steps._poll_tab_absent`/`assert_work_
+    # not_in_tab` (обобщение `_poll_files_tab_absent` на произвольную
+    # rating-вкладку) мокает `LibraryScreen.has_work` НА УРОВНЕ КЛАССА — тот
+    # же case, тот же инвариант (сканер зеркалит pytest testpaths, перенос
+    # вне tests/ выпал бы из штатного прогона).
+    ("tests/test_library_tab_settle_unit.py", "locators"),
+    # AT-BUG-085 (test-maintainer, 2026-08-20): прямой аналог двух записей
+    # выше, ДРУГОЙ модуль/screens-класс — device-free юнит-проба
+    # `rating_steps._poll_comment_collapsed`/`assert_comment_collapsed_
+    # with_text` мокает `RatingOverlay.comment_expanded` НА УРОВНЕ КЛАССА —
+    # тот же case, тот же инвариант (сканер зеркалит pytest testpaths,
+    # перенос вне tests/ выпал бы из штатного прогона).
+    ("tests/test_rating_comment_collapse_settle_unit.py", "locators"),
 }
 
 
