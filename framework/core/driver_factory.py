@@ -133,8 +133,29 @@ def _read_emulator_session_state() -> dict[str, str]:
             "применяется фолбэк (env/дефолт tasks.ps1)."
         )
         return {}
+
+    # spec-p3-second-emulator N1 (констрейнт 3в): `tasks.ps1::Set-EmulatorSessionState`
+    # ТЕПЕРЬ дополнительно ключует запись по серийнику (`by_serial[emulator-$Port]`)
+    # рядом с ФЛЭТ top-level полями (gpu/avd_name/updated_utc — «последний
+    # записавший стек», НЕИЗМЕННЫЙ формат ради обратной совместимости с
+    # AT-BUG-063 пинами, которые пишут/читают ТОЛЬКО флэт-поля и никогда не
+    # видят/не заполняют `by_serial`). Recovery ЭТОЙ функции предпочитает
+    # запись СВОЕГО серийника (`settings.DEVICE_NAME`) из `by_serial`, если
+    # она есть — иначе (legacy-файл до этой правки, серийник ещё не
+    # писавшийся через by_serial, либо `by_serial` вовсе отсутствует)
+    # молча откатывается на флэт top-level поля, тем самым не отличаясь от
+    # поведения ДО этой правки для ЛЮБОГО существующего вызывающего кода/пробы.
+    own_serial = settings.DEVICE_NAME
+    by_serial = data.get("by_serial")
+    own_entry = None
+    if isinstance(by_serial, dict):
+        candidate = by_serial.get(own_serial)
+        if isinstance(candidate, dict):
+            own_entry = candidate
+    source = own_entry if own_entry is not None else data
+
     result: dict[str, str] = {}
-    gpu = data.get("gpu")
+    gpu = source.get("gpu")
     if isinstance(gpu, str) and gpu in _VALID_GPU_BACKENDS:
         result["gpu"] = gpu
     elif gpu is not None:
@@ -143,7 +164,7 @@ def _read_emulator_session_state() -> dict[str, str]:
             f"{sorted(_VALID_GPU_BACKENDS)}) — GPU-предпосылка прогона этим "
             "recovery НЕ восстанавливается."
         )
-    avd_name = data.get("avd_name")
+    avd_name = source.get("avd_name")
     if isinstance(avd_name, str) and _AVD_NAME_RE.match(avd_name):
         result["avd_name"] = avd_name
     elif avd_name is not None:
@@ -156,7 +177,7 @@ def _read_emulator_session_state() -> dict[str, str]:
     # никем — теперь он попадает в диагностику (возраст state). TTL/отсечка
     # НЕ вводится (это меняло бы поведение ядра, которое эта итерация не
     # переделывает) — см. «Остаточные риски» в bugs/AT-BUG-063.md.
-    updated_utc = data.get("updated_utc")
+    updated_utc = source.get("updated_utc")
     if isinstance(updated_utc, str):
         result["updated_utc"] = updated_utc
     return result

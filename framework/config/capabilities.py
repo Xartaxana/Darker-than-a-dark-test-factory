@@ -41,6 +41,15 @@ def build_options(no_reset: bool = True) -> UiAutomator2Options:
     opts.set_capability("appium:ensureWebviewsHavePages", True)
     opts.set_capability("appium:nativeWebScreenshot", True)
 
+    # spec-p3-second-emulator N1 (констрейнт 2): systemPort ТОЛЬКО при явном
+    # значении settings.SYSTEM_PORT — незаданный/мусорный/вне-диапазона
+    # AO3_SYSTEM_PORT даёт settings.SYSTEM_PORT is None (см. settings.py
+    # _parse_system_port), capability не выставляется вовсе, UiAutomator2
+    # сам аллоцирует из 8200-8299 под lock-guard (параллельные device-стеки
+    # не коллидируют без явного координирования).
+    if settings.SYSTEM_PORT is not None:
+        opts.set_capability("appium:systemPort", settings.SYSTEM_PORT)
+
     # Стабильность
     opts.set_capability("appium:disableWindowAnimation", True)
     opts.set_capability("appium:ignoreHiddenApiPolicyError", True)

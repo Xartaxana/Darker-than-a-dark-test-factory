@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import json
+import os
 import warnings
 
 import pytest
@@ -32,6 +33,24 @@ def pytest_configure(config):
         "файла в download-директорию приложения — download_oracle не считает "
         "результат незапрошенным (класс BUG-014)",
     )
+    # spec-p3-second-emulator N1 (констрейнт 3г/B19): allure-изоляция ПЕР-СТЕК
+    # без правки addopts/pytest.ini (--clean-alluredir остаётся, аргумент
+    # обратной совместимости B15) - override `config.option.allure_report_dir`
+    # (то же поле, что читает `allure_pytest.plugin.pytest_configure`,
+    # `--alluredir`/dest=`allure_report_dir`) значением `settings.ALLURE_RESULTS`
+    # (уже читает `ALLURE_RESULTS` env, framework/config/settings.py — дефолт
+    # прежний `framework/allure-results`, обратная совместимость стека 1 без
+    # правок). Работает ТОЛЬКО если этот хук вызывается ДО
+    # `allure_pytest.plugin.pytest_configure` (порядок регистрации плагинов —
+    # witness DoD, не чтение, см. runs/).
+    #
+    # Совет критика (критик-раунд, 2026-08-20): override ТОЛЬКО когда
+    # ALLURE_RESULTS явно стоит в os.environ - иначе ручной `--alluredir
+    # <путь>` (CLI-флаг, тот же config.option.allure_report_dir) тихо
+    # проглатывался бы дефолтом settings.ALLURE_RESULTS даже без всякого
+    # намерения стек-изоляции.
+    if os.environ.get("ALLURE_RESULTS"):
+        config.option.allure_report_dir = str(settings.ALLURE_RESULTS)
 
 
 def _ensure_no_residual_device_proxy() -> None:
