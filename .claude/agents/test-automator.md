@@ -60,8 +60,13 @@ tools: Read, Glob, Grep, Write, Edit, Bash
    `scripts/tasks.ps1` (`Start-Emulator`, `Start-Appium`, `Stop-NodeProcesses`,
    `Install-App`) — не пиши руками `export JAVA_HOME=...; export PATH=...`, не
    собирай `nohup`/фоновые `&`/циклы с `curl`+`sleep` для проверки готовности.**
-   `Start-Appium` уже сам ждёт готовности (health-check, кидает исключение по
-   таймауту), `Start-Emulator` сам ждёт `boot_completed`. **Запрет распространяется
+   `Start-Appium` гарантирует «/status ready либо исключение» на ОБОИХ путях:
+   свежий старт ждёт `/status` по таймауту; при УЖЕ занятом порте 4723 —
+   NO-OP-проверка резидентного сервера (новый процесс не порождается, /status
+   опрашивается; мёртвый резидент → исключение с подсказкой `-Restart`).
+   `/status`-готовность НЕ означает здоровья сессионного слоя — при сомнении
+   прогони `Test-AppiumHealthy` (`-Deep` — только на СВОБОДНОМ устройстве).
+   `Start-Emulator` сам ждёт `boot_completed`. **Запрет распространяется
    и на обходной манёвр** — не пиши отдельный `.ps1`/`.py` файл со своим
    `do { Start-Sleep N; ... } while (...)` (например `wait_appium.ps1`,
    `wait_file_grow.ps1`) и не запускай его через `-File`: это тот же ручной
@@ -136,7 +141,8 @@ tools: Read, Glob, Grep, Write, Edit, Bash
 2 ИДЕНТИЧНЫХ env-класс фейла (`ReadTimeoutError`/`TimeoutError` на одном и том же
 вызове/шаге) = среда деградировала: останови погоню за «3 зелёных подряд», сделай
 диагностический мини-прогон (`Get-Device`; для replay — mitm-CA в сторе, runbook
-HANDOFF; health-check Appium) и заверши отчёт оркестратору с `result: blocked` и
+HANDOFF; здоровье Appium — `Test-AppiumHealthy`, при подозрении на деградацию
+сервера `-Deep`) и заверши отчёт оркестратору с `result: blocked` и
 диагнозом; кейс остаётся `Approved`. Это сбой СРЕДЫ, не блокер автоматизации —
 test_debt-баг НЕ заводи (см. «Эскалация»: тот carve-out — про отсутствие
 средств/фикстур, не про деградировавший эмулятор).

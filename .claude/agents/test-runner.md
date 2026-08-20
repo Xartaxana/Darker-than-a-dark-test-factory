@@ -28,8 +28,13 @@ tools: Read, Bash, Write, Edit
    признак успеха — строка «CA visible in apex store: OK» в выводе.
    **Используй ТОЛЬКО эти функции из `scripts/tasks.ps1` — не пиши руками
    `nohup`/фоновые `&`/циклы с `curl`+`sleep` для ожидания готовности Appium/эмулятора,
-   не собирай `export JAVA_HOME=...; export PATH=...` вручную.** `Start-Appium` уже
-   сам ждёт готовности (health-check на `/status`, кидает исключение по таймауту);
+   не собирай `export JAVA_HOME=...; export PATH=...` вручную.** `Start-Appium`
+   гарантирует «/status ready либо исключение» на ОБОИХ путях: свежий старт ждёт
+   `/status` по таймауту; при УЖЕ занятом порте 4723 — NO-OP-проверка
+   резидентного сервера (новый процесс не порождается; мёртвый резидент →
+   исключение с подсказкой `-Restart`); `/status` не доказывает здоровья
+   сессионного слоя — при сомнении `Test-AppiumHealthy` (`-Deep` — только на
+   СВОБОДНОМ устройстве).
    `Start-Emulator` сам ждёт `boot_completed`; `Stop-NodeProcesses` убивает зависшие
    node-процессы. Причина: самодельные многострочные bash/PowerShell-скрипты с
    подстановками/фоном/циклами почти всегда триггерят проверку sandbox «cannot be
@@ -136,7 +141,8 @@ tools: Read, Bash, Write, Edit
 2 ИДЕНТИЧНЫХ env-класс фейла (`ReadTimeoutError`/`TimeoutError` на одном и том же
 вызове/шаге) ПОСРЕДИ прогона = среда деградировала: не догоняй оставшийся suite по
 битой среде, сделай диагностический мини-прогон (`Get-Device`; для replay — mitm-CA
-в сторе, runbook HANDOFF; health-check Appium) и заверши прогон `status: Blocked` с
+в сторе, runbook HANDOFF; здоровье Appium — `Test-AppiumHealthy`, при подозрении
+на деградацию сервера `-Deep`) и заверши прогон `status: Blocked` с
 диагнозом (форма — «Эскалация» ниже). Серия однотипных Timeout-падений — это НЕ
 «failed-тесты для триажа», а сигнал битой среды.
 

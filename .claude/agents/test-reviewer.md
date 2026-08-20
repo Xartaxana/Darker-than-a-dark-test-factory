@@ -185,7 +185,8 @@ Win32_Process`) и блокируйся `Wait-Process -Id <PID> -Timeout 500` п
 2 ИДЕНТИЧНЫХ env-класс фейла (`ReadTimeoutError`/`TimeoutError` на одном и том же
 вызове/шаге) при воспроизведении (п.6) или красной пробе (п.7) = среда
 деградировала: не повторяй прогоны, сделай диагностический мини-прогон
-(`Get-Device`; для replay — mitm-CA в сторе, runbook HANDOFF; health-check Appium)
+(`Get-Device`; для replay — mitm-CA в сторе, runbook HANDOFF; здоровье Appium —
+`Test-AppiumHealthy`, при подозрении на деградацию сервера `-Deep`)
 и уйди в ту же эскалацию, что «среда недоступна» (`blocked_reason: environment`),
 приложив диагноз. Не выжигай попытки ревью по битой среде.
 

@@ -370,7 +370,76 @@ function Ensure-BridgeHarness {
 }
 
 function Start-Appium {
-    param([int]$TimeoutSeconds = 60)
+    # F1 (spec F v2, критик-фиксы норматив): резидентный guard — на :4723 может уже
+    # жить чужой/долгоживущий Appium (фабрика). Порт занят -> NO-OP по умолчанию,
+    # печать диагностики владельца, новый процесс НЕ стартуем. -Restart гасит
+    # ТОЛЬКО процесс, чей CommandLine содержит $root (зеркало проверки владения
+    # Stop-NodeProcesses выше, урок AT-BUG-031) - чужой владелец не гасится.
+    param([int]$TimeoutSeconds = 60, [switch]$Restart)
+
+    # Первым шагом - однозначный владелец порта. -State Listen обязателен: без
+    # него Get-NetTCPConnection на :4723 отдаёт 2+ строк (Established и т.п.) и
+    # ломает WQL-фильтр ниже (критик-замер). Имя переменной - $ownerPid, НЕ $pid
+    # ($pid - read-only automatic variable, присваивание падает под
+    # $ErrorActionPreference='Stop').
+    $ownerPid = Get-NetTCPConnection -LocalPort 4723 -State Listen -ErrorAction SilentlyContinue |
+        Select-Object -First 1 -ExpandProperty OwningProcess
+
+    if ($ownerPid) {
+        $ownerProc = Get-CimInstance Win32_Process -Filter "ProcessId=$ownerPid" -ErrorAction SilentlyContinue
+
+        if ($Restart) {
+            if ($ownerProc -and $ownerProc.CommandLine -and $ownerProc.CommandLine -match [regex]::Escape($root)) {
+                $killedPid = $ownerPid
+                $killedCommandLine = $ownerProc.CommandLine
+                Write-Host "Start-Appium -Restart: останавливаю владельца :4723 (PID $killedPid, наш процесс)..." -ForegroundColor Yellow
+                # F2-B1 (критик-вход): БЕЗ -ErrorAction SilentlyContinue - под глобальным
+                # $ErrorActionPreference='Stop' (строка 5) отказ Stop-Process (нет прав,
+                # процесс уже не тот PID и т.п.) обязан прервать функцию, не потеряться.
+                Stop-Process -Id $killedPid -Force
+                # Не верим килу на слово Start-Sleep'ом фиксированной длины - опрашиваем
+                # владельца порта до пустоты с дедлайном. Закрывает невидимый EADDRINUSE
+                # свежего npx, если процесс не успел освободить сокет (F2-F4).
+                $killDeadline = (Get-Date).AddSeconds(15)
+                do {
+                    Start-Sleep -Milliseconds 500
+                    $stillOwner = Get-NetTCPConnection -LocalPort 4723 -State Listen -ErrorAction SilentlyContinue |
+                        Select-Object -First 1 -ExpandProperty OwningProcess
+                } while ($stillOwner -and (Get-Date) -lt $killDeadline)
+                if ($stillOwner) {
+                    throw "Start-Appium -Restart: PID $killedPid ($killedCommandLine) не отпустил :4723 за 15с после Stop-Process - порт всё ещё занят."
+                }
+                $ownerPid = $null
+                # падает сквозь if в свежий старт ниже
+            } else {
+                throw "владелец :4723 не наш (CommandLine не содержит `$root) - гасить отказываюсь."
+            }
+        } else {
+            if ($ownerProc) {
+                $uptime = (Get-Date) - $ownerProc.CreationDate
+                Write-Host ("Appium уже слушает :4723 - PID $ownerPid, запущен $($ownerProc.CreationDate), " +
+                    "uptime $uptime") -ForegroundColor Yellow
+            } else {
+                Write-Host "порт 4723 занят, владелец не резолвится (чужой/проброшенный сервер)" -ForegroundColor Yellow
+            }
+            # F2-B2 (критик-вход): восстанавливаем контракт функции "/status ready либо
+            # throw" на резидентном пути тоже - один inline shallow-опрос (НЕ -Deep -
+            # деградировавший резидент не трогаем сессиями чужого прогона).
+            try {
+                $residentReady = (Invoke-WebRequest -Uri "http://127.0.0.1:4723/status" -UseBasicParsing -TimeoutSec 5).Content -match '"ready":true'
+            } catch {
+                $residentReady = $false
+            }
+            if ($residentReady) {
+                Write-Host "резидентный, /status ready" -ForegroundColor Green
+                return
+            } else {
+                throw "резидентный, /status НЕ отвечает - процесс жив, сервер мёртв; перезапуск: Start-Appium -Restart"
+            }
+        }
+    }
+
+    # Свежий старт (порт свободен, либо -Restart легально освободил его выше).
     Push-Location "$root\tools\appium"
     # "npx" (без расширения) через Start-Process на некоторых машинах резолвится не в
     # npx.cmd, а в постороннюю ShellExecute-ассоциацию (наблюдалось: открывался Notepad).
@@ -385,7 +454,159 @@ function Start-Appium {
         try { $ready = (Invoke-WebRequest -Uri "http://127.0.0.1:4723/status" -UseBasicParsing -TimeoutSec 3).Content -match '"ready":true' } catch { $ready = $false }
     } while (-not $ready -and (Get-Date) -lt $deadline)
     if (-not $ready) { throw "Appium not ready after ${TimeoutSeconds}s (http://127.0.0.1:4723/status)" }
-    Write-Host "Appium started and ready on :4723" -ForegroundColor Green
+    # /status отвечает и у деградировавшего сервера (класс AT-BUG-064/NoSuchDriverError) -
+    # "ready" здесь означает только HTTP-готовность, НЕ здоровье сессии.
+    Write-Host "Appium started, /status ready (здоровье НЕ проверено - Test-AppiumHealthy -Deep)" -ForegroundColor Green
+}
+
+function Get-DeviceSerials {
+    # F2-F2 (критик-вход): общий оракул присутствия устройства - раньше дословно
+    # дублировался в Get-Device и Test-AppiumHealthy -Deep. Полный путь к adb.exe -
+    # НЕ зависит от PATH. Возвращает массив серийников в состоянии `device` (может
+    # быть пустым массивом) - НЕ печатает ничего, форму вывода решает вызывающий код.
+    # F2-F1: try/catch - под глобальным $ErrorActionPreference='Stop' отсутствие
+    # adb.exe (нативная команда не резолвится) кидает терминирующее исключение, а
+    # не даёт пустой $lines - без catch это ломает контракт "пустой массив = нет
+    # устройств" у ОБОИХ вызывающих (Get-Device и Test-AppiumHealthy -Deep).
+    try {
+        $lines = & "$env:ANDROID_HOME\platform-tools\adb.exe" devices
+    } catch {
+        Write-Warning "Get-DeviceSerials: вызов adb devices упал ($_) - ANDROID_HOME/adb.exe недоступен?"
+        return @()
+    }
+    return @($lines | Select-Object -Skip 1 |
+        Where-Object { $_ -match '\sdevice$' } |
+        ForEach-Object { ($_ -split '\s+')[0] })
+}
+
+function Test-AppiumHealthy {
+    # F2 (spec F v2, критик-фиксы норматив): двухслойная проверка здоровья
+    # Appium-сервера.
+    # (а) shallow - HTTP GET /status: код 200 и value.ready=true. Достаточно
+    #     часто (дёшево), но НЕ ловит класс AT-BUG-064/NoSuchDriverError -
+    #     сервер отвечает ready=true, а реальная сессия падает.
+    # (б) -Deep - создаёт и тут же удаляет РЕАЛЬНУЮ сессию (минимальные caps
+    #     платформы Android/UiAutomator2, зеркало framework/config/capabilities.py
+    #     и framework/config/settings.py DEVICE_NAME/PLATFORM_VERSION дефолтов -
+    #     без app_package/app_activity). Deep требует живого устройства - без
+    #     него ловить нечего, поэтому при NO DEVICE deep-слой пропускается явно
+    #     (НЕ тихо считается провалом).
+    #     F2-B5 (критик-вход): -Deep ТРЕБУЕТ СВОБОДНОГО устройства - на нём НЕ
+    #     должна идти чужая сессия/сьют. Ответственность за это - на ВЫЗЫВАЮЩЕМ
+    #     коде, функция это НЕ проверяет и проверить не может (никакого способа
+    #     отличить "устройство свободно" от "чужая UIA2-сессия сейчас активна"
+    #     через ADB). Вторая UIA2-сессия на занятом устройстве рвёт чужой прогон
+    #     (правило 4 CLAUDE.md, общий ресурс с глобальным побочным эффектом).
+    #     Утверждение "ничего не запускает на устройстве, только присоединяется"
+    #     из ПРЕДЫДУЩЕЙ редакции СНЯТО как непроверенное: создание UIA2-сессии
+    #     без app-capability поднимает io.appium.settings / UIA2-сервер на
+    #     устройстве - это ОЦЕНКА, не проверено живым замером (владение :4723
+    #     у фабрики, live-Deep на приёмке Lead).
+    # F2-B3/B4 (критик-вход): POST /session - таймаут $SessionTimeoutSec (дефолт
+    #     120с, зеркало settings.APPIUM_HTTP_TIMEOUT: холодная докачка
+    #     chromedriver/создание сессии по дефолтам занимает 60-90с) + ОДНА
+    #     повторная попытка с backoff $backoffSec между попытками (см. ниже) -
+    #     первая попытка легитимно может упасть settle-классом (AT-BUG-026,
+    #     `Appium Settings app is not running after 30000ms` сразу после
+    #     recovery/раннего старта устройства) - отказ ПЕРВОЙ попытки НЕ вердикт,
+    #     отказ ОБЕИХ попыток - вердикт FAILED.
+    # Возвращает $true/$false; диагностика - в вывод (Write-Host/Write-Warning),
+    # не только в возврат - вызывающий код видит причину без доп. запросов.
+    param([switch]$Deep, [string]$AppiumUrl = "http://127.0.0.1:4723", [int]$SessionTimeoutSec = 120)
+
+    $shallowOk = $false
+    try {
+        $resp = Invoke-WebRequest -Uri "$AppiumUrl/status" -UseBasicParsing -TimeoutSec 5
+        $json = $resp.Content | ConvertFrom-Json
+        $shallowOk = ($resp.StatusCode -eq 200) -and ($json.value.ready -eq $true)
+    } catch {
+        Write-Warning "Test-AppiumHealthy: /status запрос не удался ($_)."
+        $shallowOk = $false
+    }
+
+    if (-not $shallowOk) {
+        Write-Host "Test-AppiumHealthy: FAILED (shallow, /status не ready)" -ForegroundColor Red
+        return $false
+    }
+
+    if (-not $Deep) {
+        Write-Host "Test-AppiumHealthy: OK (shallow, /status ready=true)" -ForegroundColor Green
+        return $true
+    }
+
+    $serials = Get-DeviceSerials
+    if ($serials.Count -eq 0) {
+        Write-Host "Test-AppiumHealthy: deep-слой пропущен: NO DEVICE (shallow OK)" -ForegroundColor Yellow
+        return $true
+    }
+
+    # Мин. caps - зеркало framework/config/settings.py (DEVICE_NAME дефолт
+    # "emulator-5554", PLATFORM_VERSION="" = любой) без обращения к Python.
+    $deviceName = if ($env:AO3_DEVICE) { $env:AO3_DEVICE } else { "emulator-5554" }
+    $platformVersion = $env:AO3_PLATFORM_VERSION
+    $caps = [ordered]@{
+        platformName             = "Android"
+        "appium:automationName"  = "UiAutomator2"
+        "appium:deviceName"      = $deviceName
+        "appium:newCommandTimeout" = 30
+    }
+    if ($platformVersion) { $caps["appium:platformVersion"] = $platformVersion }
+    $body = @{ capabilities = @{ alwaysMatch = $caps; firstMatch = @(@{}) } } | ConvertTo-Json -Depth 6
+
+    # F2-B4: backoff зеркалит framework/core/driver_factory.py::_SETTLE_RETRY_BACKOFF
+    # (реальное значение константы - 15.0с, не приблизительная цифра из устной
+    # спеки; сверено чтением driver_factory.py по правилу builder-роли п.3 -
+    # реальность/эмпирика приоритетнее устного приближения).
+    $backoffSec = 15
+    $maxAttempts = 2
+    $sessionId = $null
+    $created = $false
+    $lastCreateErr = $null
+    for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+        try {
+            $createResp = Invoke-WebRequest -Uri "$AppiumUrl/session" -Method Post -Body $body `
+                -ContentType "application/json" -TimeoutSec $SessionTimeoutSec -UseBasicParsing
+            $createJson = $createResp.Content | ConvertFrom-Json
+            $sessionId = $createJson.value.sessionId
+            if (-not $sessionId) { $sessionId = $createJson.sessionId }
+            if ($sessionId) {
+                $created = $true
+                Write-Host "Test-AppiumHealthy: deep-слой - сессия создана (id $sessionId, попытка $attempt/$maxAttempts)" -ForegroundColor Green
+                break
+            }
+            $lastCreateErr = "сессия создана, но sessionId в ответе не найден"
+        } catch {
+            $lastCreateErr = $_
+        }
+        if ($attempt -lt $maxAttempts) {
+            Write-Warning ("Test-AppiumHealthy: deep-слой - попытка $attempt/$maxAttempts POST /session не удалась " +
+                "($lastCreateErr) - settle-класс (AT-BUG-026), повтор через ${backoffSec}с...")
+            Start-Sleep -Seconds $backoffSec
+        }
+    }
+    if (-not $created) {
+        Write-Warning "Test-AppiumHealthy: deep-слой FAILED - POST /session не удался за $maxAttempts попытки(у) ($lastCreateErr)."
+        return $false
+    }
+
+    $deleted = $false
+    try {
+        Invoke-WebRequest -Uri "$AppiumUrl/session/$sessionId" -Method Delete -TimeoutSec 10 -UseBasicParsing | Out-Null
+        $deleted = $true
+        Write-Host "Test-AppiumHealthy: deep-слой - сессия $sessionId удалена" -ForegroundColor Green
+    } catch {
+        # F2-F3 (критик-вход): это НЕ "сервер нездоров" - сессия УЖЕ доказала
+        # работоспособность (создание прошло). Отдельный, менее тревожный вердикт:
+        # утечка сессии на очистке, не провал самого health-check'а сервера.
+        Write-Warning ("Test-AppiumHealthy: deep-слой - сессия $sessionId создана (сервер работоспособен), " +
+            "но DELETE не подтвердился ($_) - возможна утечка сессии, это НЕ вердикт 'сервер нездоров'.")
+    }
+
+    if ($created -and $deleted) {
+        Write-Host "Test-AppiumHealthy: OK (deep, сессия создана и удалена)" -ForegroundColor Green
+        return $true
+    }
+    return $false
 }
 
 function Stop-NodeProcesses {
@@ -548,12 +769,11 @@ function Get-Device {
     # "NO DEVICE". ВАЖНО (CLAUDE.md permission-hygiene п.6): пустой/ошибочный вывод
     # голого `adb` вне PATH НЕЛЬЗЯ принимать за «устройства нет» — эта функция даёт
     # однозначный сигнал, используй её для любого вывода о присутствии устройства.
-    $lines = & "$env:ANDROID_HOME\platform-tools\adb.exe" devices
-    $serials = @($lines | Select-Object -Skip 1 |
-        Where-Object { $_ -match '\sdevice$' } |
-        ForEach-Object { ($_ -split '\s+')[0] })
+    # F2-F2 (критик-вход): оракул серийников вынесен в Get-DeviceSerials (общий с
+    # Test-AppiumHealthy -Deep) - раньше дублировался здесь дословно.
+    $serials = Get-DeviceSerials
     if ($serials.Count -gt 0) { foreach ($s in $serials) { Write-Host "DEVICE: $s" } }
     else { Write-Host "NO DEVICE" }
 }
 
-Write-Host "Tasks loaded: Start-Emulator, Install-MitmCA, Start-Appium, Stop-NodeProcesses, Ensure-BridgeHarness, Install-App, Invoke-Smoke, Invoke-Suite, Invoke-Pytest, Show-Report, Get-Device" -ForegroundColor Green
+Write-Host "Tasks loaded: Start-Emulator, Install-MitmCA, Start-Appium, Test-AppiumHealthy, Get-DeviceSerials, Stop-NodeProcesses, Ensure-BridgeHarness, Install-App, Invoke-Smoke, Invoke-Suite, Invoke-Pytest, Show-Report, Get-Device" -ForegroundColor Green
