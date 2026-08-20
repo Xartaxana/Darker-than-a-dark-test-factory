@@ -175,3 +175,13 @@ DEBUG_COPY_URL_BUTTON = "body > button"
 # 2026-07-30, не взят из критик-отчёта как данность (`#workskin`/`div.work`
 # из черновика критик-отчёта в ao3_bridge.js НЕ встречаются — не использованы).
 WORK_PAGE_CONTENT_MARKERS = "h2.title.heading, h3.byline, dd.fandom, dd.words"
+
+# TC-149: узлы work-страницы для WCAG-контраст-свипа (`getComputedStyle`) —
+# заголовок и ПЕРВЫЙ абзац тела ФИКСТУРЫ (`recording_builder.py::render_work_
+# page_html`). `.wrapper > p` матчит РОВНО один узел: единственный прямой
+# `<p>`-потомок `.wrapper` — `_tap_zone_guard_nodes_html()` добавляет
+# `<button>`/`<div>` (не `<p>`), `render_reading_ux_filler_html()` кладёт свои
+# 40 филлерных `<p>` ВНУТРИ вложенного `<div>` (не прямые потомки `.wrapper`) —
+# сверено чтением `recording_builder.py` при написании этого кейса.
+WORK_PAGE_TITLE = "h2.title.heading"
+WORK_PAGE_BODY_PARAGRAPH = ".wrapper > p"

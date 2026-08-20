@@ -770,6 +770,22 @@ def disliked_work_with_comment_seeded():
 
 
 @pytest.fixture()
+def loved_work_rated_and_commented_seeded():
+    """TC-149: работа `works.LOVED` (единственная, чья work-страница записана в
+    `listing_basic.mitm`, см. `build_replay_recordings.py::build_listing_basic`)
+    засеяна рейтингом SAVE и непустым комментарием ДО первого рендера — на её
+    блёрбе в листинге отрисованы закрашенный Rate-бейдж (`data-ao3-rate-btn`,
+    `BADGE.SAVE`, непрозрачный `background-color`, см. `ListingPage.badge_for`)
+    И Note-кнопка (`data-ao3-note-btn`, инжектируется только при непустом
+    `comment`, тот же контракт, что `disliked_work_with_comment_seeded`/TC-075,
+    здесь — на LOVED вместо DISLIKED, потому что именно LOVED несёт work-page
+    flow в этой фикстуре)."""
+    app_steps.clean_state()
+    app_steps.seed_with_comment([(W.LOVED, "SAVE", "TC-149 seeded comment", None)])
+    yield W.LOVED
+
+
+@pytest.fixture()
 def disliked_work_with_custom_tag_seeded():
     """TC-077: работа `works.DISLIKED` засеяна с рейтингом DISLIKE и личным тегом
     "tc077-custom-tag", заведомо отсутствующим среди AO3-тегов карточки в

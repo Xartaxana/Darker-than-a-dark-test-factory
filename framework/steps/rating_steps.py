@@ -492,8 +492,81 @@ def assert_chip_visible(driver, tag: str, timeout: int = 6):
     )
 
 
+# --- AT-BUG-090 (4-й член класса AT-BUG-081/082/083/085): settle+hold опрос
+# для негативного Then сразу после стейт-меняющего действия
+# (`tap_selected_chip` — удаление тега; `reopen_listing_overlay` — закрытие+
+# переоткрытие bottom-sheet) — прямой аналог `_poll_comment_collapsed`
+# (AT-BUG-085, тот же файл, тот же composable-семья `RatingOverlay`), только
+# для `chip_visible` вместо `comment_expanded`. См. блок-комментарий у
+# `_poll_comment_collapsed` (выше в этом файле) за полным разбором механизма
+# гонки: `BaseScreen.is_present` (и построенный на нём `chip_visible`) ждёт
+# ПОЯВЛЕНИЯ узла до `timeout`, но возвращает `True` НЕМЕДЛЕННО на первом же
+# снимке, если узел ещё присутствует — не ждёт его ИСЧЕЗНОВЕНИЯ. Старая
+# реализация (`not chip_visible(...)` одним снимком сразу после
+# `tap_selected_chip`/`reopen_listing_overlay`) могла поймать стейл-позитив
+# (чип ещё не ушёл из дерева на момент чтения) и упасть без единого шанса на
+# устаканивание — тот же класс, что TC-115 (AT-BUG-085).
+#
+# Бюджеты позаимствованы у `_COMMENT_COLLAPSE_*` без отдельного замера под
+# D-0043 (см. предупреждение критик-гейта О2 AT-BUG-085 у тех же констант) —
+# унаследованы для другого чтения (`chip_visible`) БЕЗ живой калибровки на
+# ЭТОМ конкретном экране; направление отказа безопасное (ложный красный, не
+# ложный зелёный) — остаточный риск, не блокер (тот же trade-off, что там).
+_CHIP_ABSENT_SETTLE_TIMEOUT = 3.0
+_CHIP_ABSENT_SETTLE_INTERVAL = 0.3
+_CHIP_ABSENT_SETTLE_READ_TIMEOUT = 1
+_CHIP_ABSENT_HOLD_BUDGET = 4.0
+_CHIP_ABSENT_HOLD_INTERVAL = 0.3
+
+
+def _poll_chip_absent(overlay: RatingOverlay, tag: str) -> bool:
+    """Возвращает `True`, если чип `tag` settled на ОТСУТСТВУЮЩЕМ виде (фаза 1,
+    `_CHIP_ABSENT_SETTLE_TIMEOUT`) И остаётся отсутствующим весь
+    `_CHIP_ABSENT_HOLD_BUDGET` (фаза 2) — см. блок-комментарий выше за полным
+    разбором класса гонки (AT-BUG-090, 4-й член класса AT-BUG-081/082/083/085)."""
+    deadline = time.monotonic() + _CHIP_ABSENT_SETTLE_TIMEOUT
+    visible = overlay.chip_visible(tag, timeout=_CHIP_ABSENT_SETTLE_READ_TIMEOUT)
+    settle_reads = 1
+    while visible and time.monotonic() < deadline:
+        time.sleep(_CHIP_ABSENT_SETTLE_INTERVAL)
+        visible = overlay.chip_visible(tag, timeout=_CHIP_ABSENT_SETTLE_READ_TIMEOUT)
+        settle_reads += 1
+    if visible:
+        # Никогда не сходилось к отсутствующему виду за весь settle-бюджет —
+        # persistent-регрессия (чип реально не исчез), не транзитный артефакт
+        # recomposition-лага.
+        return False
+    if settle_reads > 1:
+        logger.warning(
+            "AT-BUG-090 (rating_steps._poll_chip_absent): транзитный "
+            "стейл-позитив чипа «%s» проглочен settle-фазой за %d "
+            "чтени(й/е) — расследуй, если повторяется часто (может означать, "
+            "что recomposition/layout систематически шире "
+            "_CHIP_ABSENT_SETTLE_TIMEOUT=%.1fs)",
+            tag, settle_reads, _CHIP_ABSENT_SETTLE_TIMEOUT,
+        )
+    try:
+        assert_holds_for(
+            lambda: not overlay.chip_visible(tag, timeout=_CHIP_ABSENT_SETTLE_READ_TIMEOUT),
+            budget_s=_CHIP_ABSENT_HOLD_BUDGET,
+            interval_s=_CHIP_ABSENT_HOLD_INTERVAL,
+            msg=f"чип «{tag}» вновь появился во время hold-окна наблюдения",
+        )
+    except AssertionError:
+        logger.warning(
+            "AT-BUG-090 (rating_steps._poll_chip_absent): чип «%s» вновь "
+            "появился во время hold-окна наблюдения (после %d settle-чтени(й/е)) "
+            "— ПОЗДНЯЯ регрессия, пойманная hold-фазой (старый одноразовый код "
+            "пропустил бы её)",
+            tag, settle_reads,
+        )
+        return False
+    return True
+
+
 @allure.step("Then чип «{tag}» отсутствует среди тегов overlay")
-def assert_chip_absent(driver, tag: str, timeout: int = 3):
-    assert not RatingOverlay(driver).chip_visible(tag, timeout=timeout), (
+def assert_chip_absent(driver, tag: str):
+    overlay = RatingOverlay(driver)
+    assert _poll_chip_absent(overlay, tag), (
         f"чип «{tag}» неожиданно присутствует среди тегов overlay"
     )

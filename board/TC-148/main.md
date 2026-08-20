@@ -7,14 +7,14 @@ priority: "p2"
 summary: "Интерактивные цели нативного хрома (панели, тумблеры, чипы TabStrip, кнопки диалогов) не меньше 48dp по bounds accessibility-дерева"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["test-case", "area:accessibility", "risk:R-13", "review:changes_requested"]
+labels: ["test-case", "area:accessibility", "risk:R-13"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-20T13:36:28Z"
-updated: "2026-08-20T13:36:28Z"
+created: "2026-08-20T21:23:00Z"
+updated: "2026-08-20T21:23:00Z"
 archived: false
 resolution: null
 ---
@@ -121,12 +121,50 @@ Settings пройден один раз, `TabStrip` виден с >=2 вклад
 - [x] Кейс независим от порядка выполнения других кейсов
 - [x] Область комбинаторная (свойство должно быть верно для ВСЕГО
   поимённого списка целей) — инвариант назван строкой `Инвариант:` выше
+- [x] Слой **L4**, строка «почему не L2» дана явно (координатор,
+  2026-08-20, критик-гейт поправил первоначальный выбор test-automator'а
+  с L3 на L4 — тест несёт `@pytest.mark.live` и физически ходит на живой
+  AO3 (`app_steps.open_deep_link(browser_steps.HOME_URL)`), replay-записи
+  нет; `docs/01-test-strategy.md` определяет L3 как e2e-**replay**, L4 —
+  как e2e-**live**, граница L3/L4 здесь именно по этому признаку, не по
+  цене исполнения): оракул — реальные `bounds` accessibility-дерева,
+  читаемые UiAutomator2 (`page_source`/`find_elements` по
+  `AppiumBy.ANDROID_UIAUTOMATOR`/XPath) на живом устройстве/эмуляторе —
+  Compose-layout, density-масштаб и touch-target-расширение
+  (`Modifier.minimumInteractiveComponentSize`) вычисляются рендер-движком
+  Android, которого в device-free L2-гарнизоне (jsdom) физически нет:
+  jsdom не строит accessibility-дерево и не знает про Compose-разметку/
+  плотность экрана, значит не может произвести `bounds` для сравнения с
+  порогом. L2 неприменим структурно, не по цене.
 
 ## Ревью автотеста
 
 **test-reviewer, 2026-08-20T13:36:28Z — `changes_requested`.** Дефектов в
 тестовом коде НЕ найдено; блокер — процессный (кейс пришёл в F1 без
 `red_lock`, при том что тест красный ПО ЗАМЫСЛУ кейса).
+
+**Координатор, 2026-08-20T21:55Z — Замечание 4 закрыто.** Докстринг
+`measure_side_panel_expanded_controls` (`framework/steps/a11y_steps.py`)
+утверждал, что bounds темы снимаются «с ВНЕШНЕГО IconButton(36dp)» —
+неточно: измеряемый узел `63x126px` (`24.0x48.0dp`) не квадратный
+36dp-IconButton, а touch-target-расширенный по высоте и ОБРЕЗАННЫЙ по
+ширине перекрытием соседнего узла хэндла «Collapse panel» (см.
+`bugs/BUG-084.md` находка 3). Докстринг поправлен тем же ходом
+(критик-гейт TC-148, 2026-08-20), тестовый код (assert'ы/локаторы) не
+менялся — правка чисто текстовая.
+
+**Координатор, 2026-08-20T21:55Z — известное расхождение красноты
+(ESC-038).** На 2026-08-20 живой прогон `test_native_chrome_touch_
+targets_at_least_48dp` детерминированно падает РАНЬШЕ целевых
+touch-target-ассертов — на `browser_steps.assert_tab_strip_visible`
+после `app_steps.open_deep_link` (`steps/browser_steps.py:239`), трижды
+независимо воспроизведено (`state/escalations.md` ESC-038, возможная
+связь с `AT-BUG-087`). `red_lock: "BUG-084"` держит регресс-замок по
+ЗАЯВЛЕННОЙ причине (5/26 touch-target целей) — фактическая текущая
+краснота ЕЁ НЕ подтверждает и не опровергает, тест не доходит до этих
+ассертов. Разбор — за Lead/failure-analyst (ESC-038); D1-верификация
+BUG-084 после Fixed должна учитывать это расхождение, не считать
+красный прогон автоматическим «не исправлено».
 
 ### Блокер 1 — тест детерминированно КРАСНЫЙ, `red_lock` пуст (чек-лист п.6 + ветка «регрессионный замок»)
 

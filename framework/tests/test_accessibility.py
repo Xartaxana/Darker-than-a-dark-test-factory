@@ -1,12 +1,15 @@
 """Область accessibility (test-cases/accessibility/, docs/01-test-strategy.md §9
 area E1): TC-106 (content-desc/text на ключевых контролах), TC-107 (font scaling
-1.3x), TC-108 (contrast sanity dark/light), TC-148 (touch-target >= 48dp свип).
+1.3x), TC-108 (contrast sanity dark/light), TC-148 (touch-target >= 48dp свип),
+TC-150 (свип попарных пересечений bounds интерактивных узлов), TC-149 (свип
+вычисленного WCAG-контраста DOM-контента WebView).
 """
 from __future__ import annotations
 
 import allure
 import pytest
 
+from framework.data import recording_builder as rb
 from framework.data import works as W
 from framework.steps import (
     a11y_steps,
@@ -222,3 +225,112 @@ def test_native_chrome_touch_targets_at_least_48dp(placeholder_seeded_work, driv
     # СВОЙСТВО одновременно для всего списка (см. «Инвариант» TC-148.md), не
     # как отдельные примеры по одной цели.
     a11y_steps.assert_touch_targets_at_least_48dp(measurements, density)
+
+
+@pytest.mark.p2
+@pytest.mark.live
+@allure.id("TC-150")
+@allure.title("Свип перекрытий: bounding-rect'ы нативных интерактивных элементов не пересекаются")
+@pytest.mark.parametrize("placeholder_seeded_work", [W.LOVED], indirect=True)
+def test_no_interactive_bounds_overlap(placeholder_seeded_work, driver):
+    work = placeholder_seeded_work
+    # Given маршрут Library -> Browse (work page, side panel свёрнут) ->
+    # Browse (side panel раскрыт) -> Settings пройден один раз, TabStrip
+    # виден с >=2 вкладками — тот же поимённый маршрут и тот же приём
+    # открытия второй вкладки, что TC-148 (rating_steps.open_work_page +
+    # deep-link на Home + переключение обратно на вкладку-0).
+    app_steps.wait_app_ready(driver)
+    rating_steps.open_work_page(driver, work.ao3_id)
+    app_steps.open_deep_link(browser_steps.HOME_URL)
+    browser_steps.assert_tab_strip_visible(driver, timeout=10)
+    browser_steps.switch_to_tab(driver, 0)
+
+    findings: list[tuple[str, object]] = []
+
+    # When на КАЖДОЙ точке маршрута accessibility-дерево читается напрямую
+    # через UiAutomator2 (без взаимодействия с элементами — переключение
+    # вкладок/раскрытие панелей готовит состояние Given, не часть этого
+    # When), из него извлекаются bounds ВСЕХ интерактивных узлов и
+    # вычисляется попарное пересечение прямоугольников `bounds` (кроме
+    # parent-child, см. `framework.core.a11y_tree`).
+    app_steps.open_tab(driver, "Library")
+    library_steps.assert_library_loaded(driver)
+    findings += a11y_steps.collect_interactive_overlaps(driver, "Library")
+
+    # `open_tab` сбрасывает `navExpanded=false` при ЛЮБОМ переключении нижней
+    # навигации (см. докстринг TC-148 в этом же файле) — возврат на Browse
+    # гарантированно заново свёрнут (side panel свёрнута).
+    app_steps.open_tab(driver, "Browse")
+    findings += a11y_steps.collect_interactive_overlaps(driver, "Browse (side panel свёрнут, TabStrip)")
+
+    side_panel_steps.expand(driver)
+    findings += a11y_steps.collect_interactive_overlaps(driver, "Browse (side panel раскрыт)")
+    # Сворачиваем панель ПЕРЕД переходом на Settings — тот же приём, что
+    # TC-148 (раскрытая панель рисует scrim, перекрывающий BottomNav).
+    side_panel_steps.collapse(driver)
+
+    app_steps.open_tab(driver, "Settings")
+    settings_steps.assert_settings_loaded(driver)
+    findings += a11y_steps.collect_interactive_overlaps(driver, "Settings")
+
+    # Then ни для одной пары РАЗНЫХ (не parent-child) интерактивных узлов ни
+    # на одной точке маршрута пересечение bounds не найдено — проверяется КАК
+    # СВОЙСТВО одновременно для ВСЕХ точек (см. «Инвариант» TC-150.md).
+    a11y_steps.assert_no_overlapping_interactive_targets(findings)
+
+
+@pytest.mark.p2
+@pytest.mark.replay
+@allure.id("TC-149")
+@allure.title(
+    "Вычисленный контраст DOM-контента WebView (инжектированные Rate/Note-кнопки + "
+    "фикстурные узлы work-страницы) держит WCAG-порог 4.5:1/3:1 в light и dark"
+)
+@pytest.mark.parametrize("replay", [rb.LISTING_BASIC_FILENAME], indirect=True)
+def test_computed_contrast_holds_wcag_threshold_light_and_dark(
+    loved_work_rated_and_commented_seeded, replay, driver
+):
+    work = loved_work_rated_and_commented_seeded
+    measurements: list[a11y_steps.Contrast] = []
+
+    # Given приложение открыто в replay-режиме на листинговой странице
+    # (`listing_basic.mitm`, Light-тема); на блёрбе засеянной работы LOVED видны
+    # закрашенный Rate-бейдж (`data-ao3-rate-btn`, BADGE.SAVE) и Note-кнопка
+    # (`data-ao3-note-btn`) — см. `loved_work_rated_and_commented_seeded`.
+    app_steps.wait_ui_ready(driver)
+    browser_steps.open_listing(driver, rb.LISTING_BASIC_URL)
+    browser_steps.assert_rating_badge_visible(driver, work.ao3_id)
+    browser_steps.assert_note_button_present(driver, work.ao3_id, "TC-149 seeded comment")
+
+    # When 1: для Rate-бейджа и Note-кнопки на листинге вычисляется WCAG-контраст
+    # против эффективного фона (точка маршрута «листинг», Light).
+    measurements += a11y_steps.measure_listing_badge_contrast(driver, work.ao3_id, "листинг×Light")
+
+    # When 2: WebView навигируется на work-страницу LOVED (`BrowserScreen.open_work`,
+    # ТОТ ЖЕ replay-сеанс — flow для этой work-страницы уже записан в
+    # `listing_basic.mitm`, `build_listing_basic`); вычисляется контраст заголовка
+    # (`h2.title.heading`) и первого абзаца тела фикстуры (`.wrapper > p`) —
+    # точка маршрута «work-страница», Light.
+    rating_steps.open_work_page(driver, work.ao3_id)
+    measurements += a11y_steps.measure_work_page_contrast(driver, "work-страница×Light")
+
+    # When 3: тема переключается на Dark (side panel toggle); контраст title/body
+    # пересчитывается на ТЕКУЩЕЙ (work) странице — точка «work-страница», Dark.
+    side_panel_steps.expand(driver)
+    side_panel_steps.toggle_theme(driver)
+    side_panel_steps.assert_theme_is_dark(driver)
+    side_panel_steps.collapse(driver)
+    measurements += a11y_steps.measure_work_page_contrast(driver, "work-страница×Dark")
+
+    # When 4: WebView навигируется обратно на `LISTING_BASIC_URL` (тот же
+    # replay-сеанс, та же фикстура отдаёт тот же HTML); контраст Rate-бейджа/
+    # Note-кнопки пересчитывается — точка маршрута «листинг», Dark.
+    browser_steps.open_listing(driver, rb.LISTING_BASIC_URL)
+    measurements += a11y_steps.measure_listing_badge_contrast(driver, work.ao3_id, "листинг×Dark")
+
+    # Then для каждой из четырёх комбинаций «точка маршрута × тема» (листинг×Light,
+    # work-страница×Light, work-страница×Dark, листинг×Dark) вычисленный ratio
+    # КАЖДОГО узла этой точки >= 4.5:1 (обычный текст) либо >= 3:1 (крупный текст) —
+    # проверяется КАК СВОЙСТВО одновременно для ВСЕХ узлов ОБЕИХ точек И ОБЕИХ тем
+    # (см. «Инвариант» TC-149.md).
+    a11y_steps.assert_all_nodes_meet_contrast_threshold(measurements)

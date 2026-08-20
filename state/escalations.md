@@ -2682,8 +2682,9 @@ vs env) — решение Lead: остаётся state-first (state отраж�
 
 ## CLASS-MECHANISM-TC-GIVEN-STRUCTURALLY-UNREACHABLE — спека кейса требует состояние, недостижимое текущей фикстурой/бриджем одновременно
 
-- [2026-08-20T12:35:00Z] **TC-149-GIVEN-BLURB-VS-WORK-PAGE-CONFLICT** [queued:test-designer] — проход 9, коридор автоматизации (слово оператора 2026-08-20, минимум половина задач прохода на автоматизацию Approved-кейсов). Диспатч test-automator на батч TC-148+TC-149: TC-148 автоматизирован полностью; TC-149 корректно НЕ форсирован — `automated_by` оставлен пустым, воркер вернул структурную находку вместо фиктивного долга/красного теста, критик-гейт подтвердил находку НЕЗАВИСИМЫМ чтением `ao3_bridge.js` (не со слов отчёта): `data-ao3-rate-btn`/`data-ao3-note-btn` инжектируются ИСКЛЮЧИТЕЛЬНО внутри `querySelectorAll('li[id^="work_"].work.blurb')` (три call-site: Initial injection `:930-955`, `fetchAndAppend` `:626-654`, `applyRatings` `:429-477` — все под тем же фильтром) — то есть ТОЛЬКО на listing-странице (`recording_builder._blurb_html`, вызывается единственно из `render_listing_html`). `h2.title.heading`/`.wrapper p` существуют ТОЛЬКО в `render_work_page_html` (work-страница, открытая по `/works/{id}`) — `_blurb_html` несёт `h4.heading`, не `h2.title.heading`, и не несёт `.wrapper` вовсе; `render_listing_html`'s собственный `h2` без класса `title`. Given TC-149 (строки 34-37 на момент находки) требует ОБА набора маркеров ОДНОВРЕМЕННО на ОДНОЙ открытой странице — структурно недостижимо при текущей архитектуре бриджа/фикстур (не гипотеза — сверено чтением кода на HEAD `fdd3f728` дважды, воркером и независимо критиком). D-0043 сиблинг-аудит (тот же критик-гейт): собратьев с ТЕМ ЖЕ ошибочным допущением НЕТ — 8 других кейсов, ссылающихся на `data-ao3-rate-btn`/`data-ao3-note-btn` (TC-070/071/072/073/074/075 Automated, TC-195/196 Approved), корректно называют «листинг» в заголовке/Given. Нужно от test-designer: пересмотреть Given TC-149 — критик предложил (не решил за исполнителя) две развилки: (а) разбить на ДВА кейса/шага — контраст Rate/Note-бейджей на listing + контраст title/body на work-странице раздельно; (б) сузить оракул до одной поверхности за раз. `lock` снят координатором, `status`/`automated_by` не тронуты (кейс остаётся `Approved`/пуст до пересмотра). requirements-координаты TC-149 попутно доведены до HEAD тем же диспатчем (BADGE `:70-96`, `makeRateButton` `:186-203`, `makeNoteButton` `:288-307`).
-- Статус: open.
+- [2026-08-20T12:35:00Z] **TC-149-GIVEN-BLURB-VS-WORK-PAGE-CONFLICT** [resolved:test-designer-tc149-route-checkpoints-0820] — проход 9, коридор автоматизации (слово оператора 2026-08-20, минимум половина задач прохода на автоматизацию Approved-кейсов). Диспатч test-automator на батч TC-148+TC-149: TC-148 автоматизирован полностью; TC-149 корректно НЕ форсирован — `automated_by` оставлен пустым, воркер вернул структурную находку вместо фиктивного долга/красного теста, критик-гейт подтвердил находку НЕЗАВИСИМЫМ чтением `ao3_bridge.js` (не со слов отчёта): `data-ao3-rate-btn`/`data-ao3-note-btn` инжектируются ИСКЛЮЧИТЕЛЬНО внутри `querySelectorAll('li[id^="work_"].work.blurb')` (три call-site: Initial injection `:930-955`, `fetchAndAppend` `:626-654`, `applyRatings` `:429-477` — все под тем же фильтром) — то есть ТОЛЬКО на listing-странице (`recording_builder._blurb_html`, вызывается единственно из `render_listing_html`). `h2.title.heading`/`.wrapper p` существуют ТОЛЬКО в `render_work_page_html` (work-страница, открытая по `/works/{id}`) — `_blurb_html` несёт `h4.heading`, не `h2.title.heading`, и не несёт `.wrapper` вовсе; `render_listing_html`'s собственный `h2` без класса `title`. Given TC-149 (строки 34-37 на момент находки) требует ОБА набора маркеров ОДНОВРЕМЕННО на ОДНОЙ открытой странице — структурно недостижимо при текущей архитектуре бриджа/фикстур (не гипотеза — сверено чтением кода на HEAD `fdd3f728` дважды, воркером и независимо критиком). D-0043 сиблинг-аудит (тот же критик-гейт): собратьев с ТЕМ ЖЕ ошибочным допущением НЕТ — 8 других кейсов, ссылающихся на `data-ao3-rate-btn`/`data-ao3-note-btn` (TC-070/071/072/073/074/075 Automated, TC-195/196 Approved), корректно называют «листинг» в заголовке/Given. Нужно от test-designer: пересмотреть Given TC-149 — критик предложил (не решил за исполнителя) две развилки: (а) разбить на ДВА кейса/шага — контраст Rate/Note-бейджей на listing + контраст title/body на work-странице раздельно; (б) сузить оракул до одной поверхности за раз. `lock` снят координатором, `status`/`automated_by` не тронуты (кейс остаётся `Approved`/пуст до пересмотра). requirements-координаты TC-149 попутно доведены до HEAD тем же диспатчем (BADGE `:70-96`, `makeRateButton` `:186-203`, `makeNoteButton` `:288-307`).
+- **[test-designer @ 2026-08-20T21:15:00Z] resolved** — выбрана развилка (а), реализована КАК ОДИН кейс с ДВУМЯ точками маршрута в одном Given (аналог `TC-148`/`TC-150`: поимённый маршрут, один проход), а не два отдельных кейса: точка 1 — листинг (`listing_basic.mitm`) с блёрбом засеянной работы `LOVED` (Rate-бейдж/Note-кнопка), точка 2 — её же work-страница (`h2.title.heading`/`.wrapper p`), назад на листинг для Dark-замера. Ключевая находка: НОВОЙ фикстуры не потребовалось — `listing_basic.mitm` (`scripts/build_replay_recordings.py::build_listing_basic`, `:27-70`) уже несёт work-page flow ДЛЯ ВСЕХ 5 работ листинга (включая `LOVED`) В ТОМ ЖЕ `.mitm`, поэтому обе точки маршрута обслуживаются ОДНИМ replay-сеансом — граница П1 dedup «другой replay-файл/другой запуск приложения — не сливать» не нарушена (маршрут внутри одной фикстуры одной цены, не склейка через границу другого запуска). Given/Сценарий/Проверяемые данные/Заметки TC-149.md переписаны, текст блокера в «Заметках для автоматизации» заменён разделом «Разрешение эскалации» — новый test_debt-баг НЕ заводится (missing_fixture неприменим, фикстура уже подходила). `status` остался `Approved`, `automated_by` остался пустым (редизайн Given, не автоматизация) — переход `*→Approved` этим ходом НЕ совершён, `lock` снят. Сиблинг-аудит D-0043 подтверждён координатором прохода 9 (8 канареечных кейсов уже корректны) — новых экземпляров класса не найдено.
+- Статус: resolved (2026-08-20, test-designer — см. resolved-маркер записи выше; `test-cases/accessibility/TC-149.md` переписан).
 
 ## CLASS-SYNC-ERROR-BRANCH-TC-COVERAGE-GAP — соседние ветки ошибок sync без кейса
 
@@ -2734,3 +2735,156 @@ vs env) — решение Lead: остаётся state-first (state отраж�
 - [2026-08-20T17:55:00Z] **TC-257-BODY-STALE-LOCATOR-LINES** [queued:test-designer] — проход 11, критик-гейт TC-257. «Заметки для автоматизации» кейса (`test-cases/downloads/TC-257.md:69-70`) цитируют `library_screen.py:66-68`/`:62-64` для локаторов «Delete downloaded file»/«Delete work» — фактические координаты на HEAD `:325-327`/`:321-323` (тот же систематический дрейф класса, что и `SCOUT-STALE-REQUIREMENTS-ANCHORS-SWEEP` выше, другой файл). Координатор поправил СВОЮ копию этих номеров в комментарии `framework/tests/test_downloads.py` (не блокирует автотест — комментарий, не исполняемый якорь), тело кейса не трогал (владение test-designer/scout, не test-automator/координатор этого прохода). Нужно от test-designer: обновить `TC-257.md:69-70` на актуальные номера; возможно, входит в объём разведки `SCOUT-STALE-REQUIREMENTS-ANCHORS-SWEEP`, если та ещё не начата — не дублировать, свериться перед стартом.
 - **[lead:Fable @ 2026-08-20T18:30:13Z] resolved** — батч принят: TC-257.md «Заметки для автоматизации» несут актуальные координаты (`tap_delete_downloaded_file` :325-327, `tap_delete_work` :321-323, сверено Read'ом HEAD) с пометкой об истории правки.
 - Статус: **resolved**.
+
+## ESC-037 — AT-BUG-090, B4 test debt: код-фикс+юниты зелёные, живая верификация TC-091 fail-fast остановлена (2 идентичных TimeoutError на adb-слое + 2/2 `Test-AppiumHealthy -Deep` instrumentation-timeout)
+
+- Артефакт: `bugs/AT-BUG-090.md` (status: **Blocked**, `blocked_reason: environment`,
+  `lock` снят координатором этого хода).
+- С какого времени: 2026-08-20T21:15:00Z (это окно сессии).
+- Причина: B4-починка (test_debt, minor, `debt_kind: flaky_test`, превентивный
+  тикет — 4-й член класса AT-BUG-081/082/083/085). Код-фикс готов и
+  ФУНКЦИОНАЛЬНО проверен device-free: `framework/steps/rating_steps.py::
+  assert_chip_absent` переведён на settle+hold опрос (`_poll_chip_absent`,
+  прямой аналог `_poll_comment_collapsed` из AT-BUG-085), новый юнит-файл
+  `framework/tests/test_rating_chip_absent_settle_unit.py` (6 тестов, включая
+  красные пробы старой одноразовой семантики и settle-only-без-hold) —
+  `Invoke-Pytest tests/test_rating_chip_absent_settle_unit.py -v` →
+  `6 passed in 2.35s`, `PYTEST_EXIT=0`. `python scripts/arch_check.py` →
+  `ошибок 0` (ALLOWLIST-запись + обновление `NEGATIVE_THEN_SETTLE_BASELINE`
+  добавлены тем же диффом). `python -m pytest scripts/tests -q` →
+  `1923 passed, 1 skipped` (1 неродственный флейк
+  `test_p3_appium_url_and_memory.py::test_test_appium_healthy_env_default_
+  actually_reaches_listening_socket` — порт-коллизия параллельного прогона,
+  зелёный в изоляции, к диффу не относится).
+- Живая верификация (DoD п.4, TC-091): `Get-Device` → `DEVICE: emulator-5554`,
+  `Test-AppiumHealthy` (shallow) → `OK (shallow, /status ready=true)` — оба
+  ЗДОРОВЫ ДО попытки. `Invoke-Pytest 'tests/test_rating_listing.py::
+  test_tap_selected_chip_removes_tag' -v` упал ещё в фикстуре `tagged_work_
+  seeded` (`app_steps.clean_state()` → `seed_db.ensure_db_initialized()`):
+  `adb -s emulator-5554 shell am start -W -n
+  com.example.ao3_wrapper/com.example.ao3_wrapper.MainActivity` —
+  `TimeoutError` (`core/adb.py:34`, 60s), затем exception-handling сам
+  вызвал `adb.force_stop()` → `am force-stop com.example.ao3_wrapper` —
+  ВТОРОЙ, ИДЕНТИЧНЫЙ по классу `TimeoutError` (`core/adb.py:34`, 30s) — 2
+  подряд `TimeoutError` на adb-слое ДО первого вызова изменённого кода
+  (упавший шаг не пересекается с `assert_chip_absent`/`_poll_chip_absent` —
+  падение в Given-сидинге). Буквальный триггер CLAUDE.md «Fail-fast среды»
+  (docs/06 §5) — дальнейшие прогоны НЕ предпринимались.
+- Диагностический мини-прогон (выполнен по протоколу, СРАЗУ после падения):
+  `Get-Device` → `DEVICE: emulator-5554` (эмулятор всё ещё видим); `Test-
+  AppiumHealthy -Deep` → **FAILED, 2/2 попытки**, дословно: `POST /session`
+  не удался оба раза с `"The instrumentation process cannot be initialized
+  within 30000ms timeout. Make sure the application under test does not
+  crash and investigate the logcat output..."` (`uiautomator2-server/
+  core.js:158`, полный стек — в выводе диагностического вызова этого хода).
+  Три независимых сигнала (adb `am start -W` timeout, adb `am force-stop`
+  timeout, Appium `-Deep` instrumentation-init timeout 2/2) сходятся на
+  ОДНОМ классе — устройство визуально присутствует (`adb devices`-уровень
+  отвечает), но не отвечает на командный/инструментальный уровень
+  (shell-команды и UiAutomator2-инструментирование) — похоже на
+  деградацию эмулятора/устройства под сессией, не на дефект фикса
+  (упавший шаг вообще не достигал изменённого кода).
+- Действие: код-дифф И device-free DoD (п.1/2/3/5-намерение) готовы, но
+  DoD п.4 (TC-091 живым прогоном, 3х подряд) НЕ достигнут — среда не
+  позволяет отличить код от среды (докстринг CLAUDE.md §«Fail-fast»).
+  Bug оставлен `Open`, ПЕРЕВЕДЁН в `Blocked` (`Open → Blocked, by:
+  test-maintainer`, легальный переход `bug`-машины, `guard`-условия нет —
+  общая ветка эскалации, не test_debt-ветка) с `blocked_reason:
+  environment` и диагнозом выше в «Обсуждении» бага. Код-дифф НЕ откатан
+  (готов к повторной верификации, как только среда восстановится) —
+  `git status` дифф остаётся в рабочем дереве, коммит не делался (владение
+  и решение о коммите — координатор/Lead).
+- Нужно от Lead/человека: восстановить среду (`Stop-NodeProcesses` →
+  `Start-Appium` свежей сессией и/или `Start-Emulator` заново — общий
+  ресурс хоста, вне мандата test-maintainer по правилу 4 маршрутизации) и
+  ЛИБО вернуть `bugs/AT-BUG-090.md` `Blocked → Open` (переход `by: human`,
+  `from_terminal: true`) для повторной live-верификации TC-091 test-
+  maintainer'ом/fix-verifier'ом, ЛИБО делегировать этот шаг иначе по своему
+  усмотрению.
+
+## ESC-038 — `assert_tab_strip_visible` после `open_deep_link` систематически красный (3/3 независимых прогонов), возможно смежный класс с AT-BUG-087
+
+**Координатор /factory 10, проход 1, 2026-08-20T21:50Z.** Три НЕЗАВИСИМЫХ
+живых прогона подряд падают на ОДНОЙ И ТОЙ ЖЕ точке — `BrowserScreen(driver).
+is_tab_strip_visible()` возвращает `False` после
+`app_steps.open_deep_link(browser_steps.HOME_URL)`, вызванного из состояния
+«уже открыта work-страница» (НЕ cold-start, обычный mid-session deep-link —
+маршрут TC-106/TC-107/TC-148):
+
+1. `test-automator` (диспатч TC-150, коридор автоматизации): НОВЫЙ тест
+   `test_no_interactive_bounds_overlap` — 2 прогона подряд, 1-й `TimeoutError:
+   WEBVIEW-контекст не появился`, 2-й `AssertionError: TabStrip должно быть
+   видно` на `assert_tab_strip_visible`.
+2. Тот же воркер, КОНТРОЛЬНЫЙ прогон НЕИЗМЕНЁННОГО
+   `test_native_chrome_touch_targets_at_least_48dp` (TC-148, живой автотест,
+   код не трогался этим проходом) — идентичный
+   `AssertionError: TabStrip должно быть видно` на ТОЙ ЖЕ строке
+   (`browser_steps.py:239`).
+3. Координатор (этот проход, независимая перепроверка находки воркера
+   ДО принятия результата): тот же `test_native_chrome_touch_targets_
+   at_least_48dp` ЕЩЁ РАЗ — `1 failed in 104.89s`, ДОСЛОВНО тот же
+   traceback (`tests/test_accessibility.py:182` →
+   `steps/browser_steps.py:239`, `AssertionError: TabStrip должен быть
+   виден (tabs>1, не в fullscreen)`).
+
+`Test-AppiumHealthy -Deep` в обоих случаях (test-maintainer на AT-BUG-090,
+координатор на этом же ходе) — `OK (deep, сессия создана и удалена)`, т.е.
+сессионный слой сам по себе здоров; отказ локализован именно в ветке
+«deep-link на уже открытое приложение -> вторая вкладка -> TabStrip
+виден».
+
+**Важное следствие для F1/red_lock:** `TC-148.md` несёт `red_lock:
+"BUG-084"` с обоснованием «тест ожидаемо красный на 5/26 touch-target
+целях» — но сейчас тест падает РАНЬШЕ, на `assert_tab_strip_visible`,
+ДО того, как код вообще доходит до touch-target-проверок. Регресс-замок
+red_lock сейчас закрывает НЕ тот класс красноты, что заявлен в его
+обосновании — это надо разобрать ДО следующего F1-прохода TC-148 (когда
+BUG-084 закроется, кейс уйдёт в F1 и упрётся в ЭТУ красноту вместо
+ожидаемой).
+
+**Возможная связь:** `AT-BUG-087` (`status: Blocked`, пинг-понг
+`reopen_count=2`) — тоже deep-link/tab-класс (`test_cold_start_deep_link_
+reuses_single_home_tab`, гонка `ActivityManager remove-task` после
+`pm clear`), но ДРУГАЯ ветка кода (cold-start, не mid-session) и другой
+оракул (`wait_tabs_persisted_after_cold_start_deep_link` на persisted
+prefs, не `is_tab_strip_visible` на UI). Возможно смежный класс
+(деградация deep-link-обработки в целом), возможно независимый — решает
+failure-analyst/Lead чтением обеих веток кода.
+
+**Нужно от Lead/failure-analyst:** триаж (APP_BUG новой регрессии в
+deep-link-обработке mid-session / ENV_ISSUE деградации эмулятора после
+долгой сессии / FLAKY) — это НЕ решает координатор-Sonnet в одиночку
+(вне мандата п.11а). До триажа: TC-150 остаётся `Approved`/`automated_by`
+пуст (код теста написан и лежит в `framework/tests/test_accessibility.py`,
+НЕ подключён к `automated_by` до зелёного прогона — воркер сам это
+корректно не сделал), TC-151 (коридор автоматизации, слот 2 этого
+прохода) ОТЛОЖЕН этим же проходом — новый live-автотест на ту же
+device-инфраструктуру бессмысленно писать, пока маршрут открытия второй
+вкладки/TabStrip не восстановлен, вне зависимости от области кейса.
+`awaiting: none` (адресат — Lead, не разработчик приложения: пока не
+установлено, APP_BUG это или ENV_ISSUE).
+
+**Обновление 2026-08-20T22:12Z (координатор) — ТРЕТИЙ независимый отказ,
+шире, чем deep-link/TabStrip.** Замена TC-151 на TC-149 (replay-only,
+без live/deep-link) была попыткой обойти именно ЭТОТ класс — не помогло:
+`test-automator` на TC-149 получил 2 идентичных `TimeoutException` на
+`app_steps.wait_ui_ready` (WebView не появляется в дереве), включая
+КОНТРОЛЬНЫЙ прогон уже зелёного `test_rate_work_from_listing_overlay`
+(TC-009, код не тронут). Диагностика воркера: `adb shell dumpsys window`
+дважды подряд — `mCurrentFocus=Window{... Application Not Responding:
+system}` (ANR на уровне СИСТЕМЫ эмулятора, не приложения). Appium-сессия
+на тот момент — 14+ часов без рестарта. Хостовая память ~4.5GB свободно
+из 16GB — не похоже на явную нехватку, но эмулятор явно деградировал.
+
+**Вывод: это НЕ узкий deep-link/TabStrip-дефект, а более широкая
+деградация эмулятора/Appium-сессии после долгого аптайма** (эта фабричная
+сессия — окно `/factory 10`, продолжение эпизода с 2026-08-19T17:45Z).
+Live device-класс работа (не только deep-link-маршруты) сейчас ненадёжна
+целиком. Координатор НЕ перезапускает эмулятор самостоятельно
+(общий ресурс хоста, возможна параллельная сессия — см. известный
+in-flight дифф AT-BUG-075 параллельной Fable-сессии в рабочем дереве;
+рестарт мог бы её задеть) — решение о рестарте (`Start-Emulator`/
+`Stop-NodeProcesses`+`Start-Appium`) за Lead/оператором. Координатор
+прекращает device-класс диспатчи ЭТИМ проходом фабрики (проход 1
+закрывается без дальнейших попыток); документные срабатывания (без
+устройства) продолжаются штатно в следующих проходах.

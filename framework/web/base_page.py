@@ -34,3 +34,67 @@ class BasePage:
         JS-глобал, не элемент DOM-дерева, поэтому читается через execute_script,
         не через css-локатор (TC-066/067)."""
         return bool(self.driver.execute_script("return window.__ao3Bridge === true;"))
+
+    # TC-149: вычисленный WCAG-контраст ОДНОГО DOM-узла — относительная
+    # яркость по формуле W3C (sRGB -> linear -> luminance), эффективный фон
+    # ищется подъёмом по `parentElement` до первого предка с непрозрачным
+    # (`alpha > 0`) вычисленным `background-color` (WebView не композитит
+    # частичную альфу за нас — этого достаточно для реальных страниц/фикстур
+    # этого кейса, где фон в итоге упирается в непрозрачную заливку body/li).
+    # «Крупный текст» классифицируется по ТЕКУЩЕМУ отрендеренному
+    # `font-size`/`font-weight` (не номинальному CSS-размеру фикстуры) — см.
+    # TC-149.md «Заметки для автоматизации» про `fontSizeStep`.
+    _CONTRAST_OF_ELEMENT_JS = """
+        function parseColor(str) {
+            if (!str) return null;
+            var m = str.match(/rgba?\\(([^)]+)\\)/);
+            if (!m) return null;
+            var parts = m[1].split(',').map(function (s) { return parseFloat(s); });
+            return {r: parts[0], g: parts[1], b: parts[2], a: parts.length > 3 ? parts[3] : 1};
+        }
+        function channelLum(c) {
+            var s = c / 255;
+            return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+        }
+        function relLuminance(rgb) {
+            return 0.2126 * channelLum(rgb.r) + 0.7152 * channelLum(rgb.g) + 0.0722 * channelLum(rgb.b);
+        }
+        function effectiveBackground(node) {
+            while (node) {
+                var bg = parseColor(window.getComputedStyle(node).backgroundColor);
+                if (bg && bg.a > 0) return bg;
+                node = node.parentElement;
+            }
+            return {r: 255, g: 255, b: 255, a: 1};
+        }
+        var el = arguments[0];
+        var cs = window.getComputedStyle(el);
+        var fg = parseColor(cs.color);
+        var bg = effectiveBackground(el);
+        var l1 = relLuminance(fg);
+        var l2 = relLuminance(bg);
+        var lighter = Math.max(l1, l2), darker = Math.min(l1, l2);
+        var ratio = (lighter + 0.05) / (darker + 0.05);
+        var fontSizePx = parseFloat(cs.fontSize);
+        var weightNum = parseInt(cs.fontWeight, 10);
+        var bold = cs.fontWeight === 'bold' || (!isNaN(weightNum) && weightNum >= 700);
+        var isLarge = fontSizePx >= 24 || (bold && fontSizePx >= 18.66);
+        return {
+            color: cs.color,
+            background: cs.backgroundColor,
+            effectiveBackground: 'rgba(' + bg.r + ', ' + bg.g + ', ' + bg.b + ', ' + bg.a + ')',
+            ratio: ratio,
+            fontSizePx: fontSizePx,
+            fontWeight: cs.fontWeight,
+            bold: bold,
+            isLarge: isLarge,
+            threshold: isLarge ? 3.0 : 4.5,
+        };
+    """
+
+    def contrast_of(self, element) -> dict:
+        """Вычисленный WCAG-контраст-ratio узла `element` против эффективного
+        фона (см. докстринг выше) + классификация «крупный текст»/порог.
+        `element` — уже найденный Selenium/Appium `WebElement` (locator живёт у
+        вызывающего page object, здесь — только вычисление над готовым узлом)."""
+        return self.driver.execute_script(self._CONTRAST_OF_ELEMENT_JS, element)

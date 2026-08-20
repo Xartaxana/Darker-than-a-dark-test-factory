@@ -83,10 +83,9 @@
     "labels": [
       "test-case",
       "area:accessibility",
-      "risk:R-13",
-      "review:changes_requested"
+      "risk:R-13"
     ],
-    "updated": "2026-08-20T13:36:28Z",
+    "updated": "2026-08-20T21:23:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -108,7 +107,7 @@
       "area:accessibility",
       "risk:R-13"
     ],
-    "updated": "2026-08-20T12:17:10Z",
+    "updated": "2026-08-20T21:15:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -130,7 +129,7 @@
       "area:accessibility",
       "risk:R-13"
     ],
-    "updated": "2026-08-10T14:20:00Z",
+    "updated": "2026-08-20T21:40:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -8036,9 +8035,9 @@
     "epic": null,
     "parentPath": null,
     "epicPath": null,
-    "summary": "assert_chip_absent — негативный Then сразу после tap_selected_chip/reopen_listing_overlay без settle/hold (4-й член класса AT-BUG-081/082/083/085), TC-091 — превентивный тикет",
+    "summary": "assert_chip_absent — негативный Then сразу после tap_selected_chip/reopen_listing_overlay без settle/hold (4-й член класса AT-BUG-081/082/083/085), TC-091; код-фикс написан 2026-08-20, live-верификация BLOCKED (environment)",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-blocked",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -8046,7 +8045,7 @@
       "test_case:TC-091",
       "sev:minor"
     ],
-    "updated": "2026-08-20T11:52:04Z",
+    "updated": "2026-08-20T21:15:00Z",
     "resolution": null,
     "children": [],
     "archived": false

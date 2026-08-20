@@ -2,9 +2,9 @@
 key: "AT-BUG-090"
 project: "AO3"
 issueType: "bug"
-status: "bug-open"
+status: "bug-blocked"
 priority: "p2"
-summary: "assert_chip_absent — негативный Then сразу после tap_selected_chip/reopen_listing_overlay без settle/hold (4-й член класса AT-BUG-081/082/083/085), TC-091 — превентивный тикет"
+summary: "assert_chip_absent — негативный Then сразу после tap_selected_chip/reopen_listing_overlay без settle/hold (4-й член класса AT-BUG-081/082/083/085), TC-091; код-фикс написан 2026-08-20, live-верификация BLOCKED (environment)"
 assignee: "qa-agents"
 reporter: "qa-agents"
 labels: ["bug", "test_case:TC-091", "sev:minor"]
@@ -13,18 +13,18 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-20T11:52:04Z"
-updated: "2026-08-20T11:52:04Z"
+created: "2026-08-20T21:15:00Z"
+updated: "2026-08-20T21:15:00Z"
 archived: false
 resolution: null
 ---
 
-# assert_chip_absent — негативный Then сразу после tap_selected_chip/reopen_listing_overlay без settle/hold (4-й член класса AT-BUG-081/082/083/085), TC-091 — превентивный тикет
+# assert_chip_absent — негативный Then сразу после tap_selected_chip/reopen_listing_overlay без settle/hold (4-й член класса AT-BUG-081/082/083/085), TC-091; код-фикс написан 2026-08-20, live-верификация BLOCKED (environment)
 
 _Спроецировано из `bugs/AT-BUG-090.md` (источник правды).
-Статус в нашей машине: **Open**._
+Статус в нашей машине: **Blocked**._
 
-# AT-BUG-090 — `assert_chip_absent` читает `chip_visible` сразу после стейт-меняющего действия без settle/hold (превентивный, TC-091)
+# AT-BUG-090 — `assert_chip_absent` читал `chip_visible` сразу после стейт-меняющего действия без settle/hold (TC-091; фикс написан 2026-08-20, live-верификация BLOCKED — environment)
 
 ## Окружение
 
@@ -33,9 +33,20 @@ _Спроецировано из `bugs/AT-BUG-090.md` (источник прав
 `framework/tests/test_rating_listing.py` (TC-091,
 `test_tap_selected_chip_removes_tag`).
 
-## Статус: ПРЕВЕНТИВНЫЙ
+## Статус: код-фикс готов, live-верификация BLOCKED (env)
 
-**Красных прогонов ПОКА нет.** Этот тикет заведён НЕ по факту наблюдаемого
+**Обновление 2026-08-20T21:15:00Z:** код-фикс написан и device-free проверен
+(settle+hold, зеркало AT-BUG-085 — см. «Обсуждение» ниже); живая
+верификация TC-091 (DoD-пункт «зелёный живой прогон») уперлась в
+деградацию среды (adb/Appium instrumentation timeouts) ДО того, как
+дошла до изменённого кода — `status: Blocked`, `blocked_reason:
+environment`, ждёт восстановления среды и повторной верификации.
+Красных прогонов TC-091 на исходном коде по-прежнему НЕТ (изначальный
+превентивный характер тикета не изменился — см. историю ниже) —
+следующий абзац описывает КАК тикет был заведён, не текущее состояние.
+
+**Красных прогонов ПОКА нет (историческая формулировка при заведении
+тикета).** Этот тикет заведён НЕ по факту наблюдаемого
 флейка (в отличие от AT-BUG-085, где TC-115 реально упал в живом прогоне), а
 превентивно — решением Lead по эскалации `AT-BUG-085-CHIP-ABSENT-CLASS-SIBLING`
 (`state/escalations.md:2590`, 2026-08-20T03:22:31Z): класс дефекта («негативный
@@ -62,7 +73,9 @@ Then одноразовым `is_present`-примитивом короткого
 
 ## Суть долга
 
-`framework/steps/rating_steps.py::assert_chip_absent` (текущая реализация):
+`framework/steps/rating_steps.py::assert_chip_absent` (ИСХОДНАЯ, ДОФИКСОВАЯ
+реализация — тикет описывает проблему, которую фиксит; на HEAD после
+2026-08-20T21:15:00Z функция переведена на settle+hold, см. «Обсуждение»):
 
 ```python
 @allure.step("Then чип «{tag}» отсутствует среди тегов overlay")
@@ -126,26 +139,31 @@ settle+hold опрос вместо одноразового чтения: settl
 
 ## Критерий готовности (Fixed)
 
-- [ ] Негативный ассерт `assert_chip_absent` переведён на settle/hold-полл
+- [x] Негативный ассерт `assert_chip_absent` переведён на settle/hold-полл
       (или эквивалентный `wait_absent`), а не одноразовое
-      `not chip_visible(...)`.
-- [ ] Юнит-пин (device-free), различающий старую одноразовую семантику от
+      `not chip_visible(...)`. (`_poll_chip_absent`, `rating_steps.py`,
+      2026-08-20)
+- [x] Юнит-пин (device-free), различающий старую одноразовую семантику от
       новой settle/hold — по образцу `test_rating_comment_collapse_settle_
-      unit.py` (AT-BUG-085).
-- [ ] `framework/tests/test_rating_listing.py:324` (TC-090, Given) НЕ
-      затронут.
-- [ ] TC-091 зелёный (живой прогон), регресс не хуже baseline.
-- [ ] Сиблинг-аудит по D-0043: остальные негативные `assert_*` в
+      unit.py` (AT-BUG-085). (`framework/tests/test_rating_chip_absent_
+      settle_unit.py`, 6 тестов, `6 passed in 2.35s`)
+- [x] `framework/tests/test_rating_listing.py:324` (TC-090, Given) НЕ
+      затронут. (только `rating_steps.py`/новый юнит-файл/`arch_check.py`
+      правились; `test_rating_listing.py` не тронут, сверено диффом)
+- [ ] TC-091 зелёный (живой прогон), регресс не хуже baseline. **BLOCKED**
+      (env_degraded, см. «Обсуждение» 2026-08-20T21:15:00Z и
+      `state/escalations.md` ESC-037) — не достигнут в этом ходе.
+- [x] Сиблинг-аудит по D-0043: остальные негативные `assert_*` в
       `rating_steps.py` уже проверены AT-BUG-085 (`assert_note_overlay_
       expanded_with_text`/`assert_overlay_still_open` — позитивные опросы,
-      вне класса); повторная сверка не обязательна, если фикс не касается
-      других функций файла.
+      вне класса); повторная сверка не обязательна — фикс не коснулся
+      других функций файла (только `assert_chip_absent`/`_poll_chip_absent`).
 
 ## Верификация (заполняет fix-verifier)
 
 | Дата | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|
-| — | — | — | Open, ждёт разбора |
+| — | — | — | Blocked (env), ждёт восстановления среды и живой верификации TC-091 |
 
 ## Обсуждение
 
@@ -158,6 +176,75 @@ settle+hold опрос вместо одноразового чтения: settl
 чтением фактического `framework/tests/test_rating_listing.py` этим же
 ходом — номера строк совпадают с критик-гейтом О7 AT-BUG-085 дословно, не
 уехали. Awaiting: none.
+
+**[test-maintainer @ 2026-08-20T21:15:00Z]** Код-фикс: `assert_chip_absent`
+переведён на settle+hold опрос (`_poll_chip_absent`, `framework/steps/
+rating_steps.py`) — прямой аналог `_poll_comment_collapsed` (AT-BUG-085):
+settle-фаза (до `_CHIP_ABSENT_SETTLE_TIMEOUT=3.0s`, интервал 0.3s,
+`chip_visible(tag, timeout=1)`) + hold-фаза (`assert_holds_for`, бюджет
+`_CHIP_ABSENT_HOLD_BUDGET=4.0s`, интервал 0.3s) — бюджеты позаимствованы у
+`_COMMENT_COLLAPSE_*` без отдельного живого замера на этом конкретном
+чтении (тот же осознанный trade-off, что у AT-BUG-085: направление отказа
+безопасное — ложный красный, не ложный зелёный). `timeout`-параметр
+`assert_chip_absent` убран (не имел вызывающих с explicit override —
+сверено grep по всему `framework/`, все 3 call-sайта используют дефолт).
+
+Device-free доказательство: новый файл `framework/tests/test_rating_chip_
+absent_settle_unit.py` (6 тестов, прямой аналог `test_rating_comment_
+collapse_settle_unit.py` AT-BUG-085 — транзитный стейл-позитив
+проглатывается, старая одноразовая семантика ловит тот же сценарий и
+падает, persistent-регрессия НЕ маскируется, settle-граница/hold-бюджет
+тратится честно, поздняя ре-экспансия ловится ТОЛЬКО hold-фазой) —
+`Invoke-Pytest tests/test_rating_chip_absent_settle_unit.py -v` →
+дословно `6 passed in 2.35s`, `PYTEST_EXIT=0`.
+
+Архитектурный гейт: `python scripts/arch_check.py` до фикса — `ошибок 1`
+(новый файл импортирует `RatingOverlay` в `tests/`, легитимно по прецеденту
+AT-BUG-059/062/082/083/085, но не был в ALLOWLIST); добавлена запись
+`("tests/test_rating_chip_absent_settle_unit.py", "locators")` в
+`scripts/arch_check.py::ALLOWLIST`. Отдельно снята СТАВШАЯ ФАНТОМНОЙ
+запись `NEGATIVE_THEN_SETTLE_BASELINE[("steps/rating_steps.py",
+"assert_chip_absent", "chip_visible")]` (правило 4 arch_check больше не
+матчит эту функцию — паттерн `assert not X.chip_visible()` ушёл из AST
+после фикса; оставленная запись сломала бы `test_real_repo_negative_then_
+settle_baseline`). После обеих правок: `python scripts/arch_check.py` →
+`ошибок 0` (26 WARN, тот же состав, что до фикса, минус исчезнувший
+rating_steps-хит). `python -m pytest scripts/tests/test_arch_check.py -q`
+→ `54 passed`. `python -m pytest scripts/tests -q` → `1923 passed, 1
+skipped` — единственный failure в первом прогоне
+(`test_p3_appium_url_and_memory.py::test_test_appium_healthy_env_default_
+actually_reaches_listening_socket`, порт-коллизия) перепрогнан ИЗОЛИРОВАННО
+→ `1 passed in 11.56s` (неродственный флейк, к этому диффу не относится).
+
+Живая верификация (DoD «TC-091 зелёный, живой прогон») — **BLOCKED**.
+`Get-Device` → `DEVICE: emulator-5554`; `Test-AppiumHealthy` (shallow) →
+`OK (shallow, /status ready=true)` — оба здоровы ДО попытки.
+`Invoke-Pytest 'tests/test_rating_listing.py::
+test_tap_selected_chip_removes_tag' -v` упал ЕЩЁ В ФИКСТУРЕ
+(`tagged_work_seeded` → `app_steps.clean_state()` →
+`seed_db.ensure_db_initialized()`), ДО первого вызова изменённого кода:
+`adb -s emulator-5554 shell am start -W -n com.example.ao3_wrapper/
+com.example.ao3_wrapper.MainActivity` → `TimeoutError` (`core/adb.py:34`,
+60s); последующий exception-handling сам вызвал `adb.force_stop()` → `am
+force-stop com.example.ao3_wrapper` → ВТОРОЙ, ИДЕНТИЧНЫЙ по классу
+`TimeoutError` (`core/adb.py:34`, 30s). 2 подряд `TimeoutError` на
+adb-слое — буквальный триггер CLAUDE.md «Fail-fast среды» (docs/06 §5).
+Диагностический мини-прогон СРАЗУ после падения: `Get-Device` →
+`DEVICE: emulator-5554` (эмулятор всё ещё видим на adb-уровне); `Test-
+AppiumHealthy -Deep` → **FAILED, 2/2 попытки**, дословно: `POST /session`
+не удался оба раза с `"The instrumentation process cannot be initialized
+within 30000ms timeout..."` (`uiautomator2-server/core.js:158`). Три
+независимых сигнала (adb `am start -W` timeout, adb `am force-stop`
+timeout, Appium `-Deep` instrumentation-init timeout 2/2) сходятся на
+ОДНОМ классе деградации, не пересекающемся с изменённым кодом (падение —
+в Given-сидинге фикстуры, задолго до первого вызова `assert_chip_absent`/
+`_poll_chip_absent`). Не отлаживал на битой среде далее (докстринг
+CLAUDE.md §«Fail-fast среды») — остановился, задокументировал диагноз,
+`status: Open → Blocked` (`blocked_reason: environment`), полный witness
+и запрос к Lead/человеку о восстановлении среды — `state/escalations.md`,
+запись **ESC-037**. Код-дифф НЕ откатан (готов к повторной верификации).
+`test_cases: ["TC-091"]` не меняю (сам кейс не затронут — только
+реализация шага). `lock` снят.
 
 ## Чек-лист качества
 

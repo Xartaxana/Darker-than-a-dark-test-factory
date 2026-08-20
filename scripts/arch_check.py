@@ -196,6 +196,13 @@ ALLOWLIST: set[tuple[str, str]] = {
     # тот же case, тот же инвариант (сканер зеркалит pytest testpaths,
     # перенос вне tests/ выпал бы из штатного прогона).
     ("tests/test_rating_comment_collapse_settle_unit.py", "locators"),
+    # AT-BUG-090 (test-maintainer, 2026-08-20): прямой аналог записи выше,
+    # ДРУГОЙ примитив ТОГО ЖЕ screens-класса — device-free юнит-проба
+    # `rating_steps._poll_chip_absent`/`assert_chip_absent` мокает
+    # `RatingOverlay.chip_visible` НА УРОВНЕ КЛАССА — тот же case, тот же
+    # инвариант (сканер зеркалит pytest testpaths, перенос вне tests/ выпал
+    # бы из штатного прогона).
+    ("tests/test_rating_chip_absent_settle_unit.py", "locators"),
 }
 
 # Предикат имени вызываемого presence-метода (критик-вход D2-B1) — БЕЗ него голый
@@ -229,14 +236,13 @@ NEGATIVE_THEN_METHOD_PATTERN = re.compile(
 # browser_steps.py:1923 tag_link_highlighted — оба истинные члены класса дефекта,
 # осознанная девиация, не случайность).
 NEGATIVE_THEN_SETTLE_BASELINE: dict[tuple[str, str, str], str] = {
-    # AT-BUG-090 / эскалация AT-BUG-085-CHIP-ABSENT-CLASS-SIBLING: ОТКРЫТЫЙ экземпляр
-    # класса BUG-068 (settle-дефект), НЕ легитимный — ждёт фикса (rating_steps.py:497,
-    # assert_chip_absent/chip_visible — non-goals этой задачи: framework/ не правится,
-    # это открытое решение Lead).
-    ("steps/rating_steps.py", "assert_chip_absent", "chip_visible"): (
-        "ОТКРЫТЫЙ экземпляр, НЕ легитимный, тикет AT-BUG-090/эскалация "
-        "AT-BUG-085-CHIP-ABSENT-CLASS-SIBLING, ждёт фикса"
-    ),
+    # AT-BUG-090 (test-maintainer, 2026-08-20): экземпляр ПОЧИНЕН —
+    # `assert_chip_absent` больше не делает `assert not chip_visible(...)`
+    # напрямую (settle+hold через `_poll_chip_absent`, зеркало AT-BUG-085
+    # `_poll_comment_collapsed`) — прежняя запись
+    # `("steps/rating_steps.py", "assert_chip_absent", "chip_visible")`
+    # СНЯТА: rule4 больше не матчит эту функцию (паттерн `assert not
+    # X.method()` ушёл из AST), запись в бейзлайне стала бы фантомной.
     # Given TC-148: докстринг вызывающего кода явно называет это guard'ом
     # предусловия (is_visible/is_expanded), а не негативным Then-ассертом факта —
     # подтверждённое легитимное исключение из дефекта правила 4.

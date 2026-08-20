@@ -1,10 +1,16 @@
-"""Бизнес-шаги accessibility-инспекции (TC-106, TC-148): чтение content-desc/
-text/bounds уже отрисованных контролов accessibility-дерева, БЕЗ
+"""Бизнес-шаги accessibility-инспекции (TC-106, TC-148, TC-150, TC-149): чтение
+content-desc/text/bounds уже отрисованных контролов accessibility-дерева, БЕЗ
 взаимодействия с самими контролами (раскрытие панелей — подготовка состояния
 Given, не часть Then). Локаторы переиспользуются из уже существующих
 screen-модулей (`RatingOverlay`/`SidePanel`/`BrowserScreen`/`LibraryScreen`/
 `SettingsScreen`) — здесь не заводится ни одного нового локатора, только
 композиция + чтение атрибутов через `BaseScreen.label_of`/`.rect`.
+
+TC-149 (свип вычисленного WCAG-контраста, `getComputedStyle`): в отличие от
+остальных функций этого модуля (нативное accessibility-дерево), здесь читается
+WebView DOM через `ListingPage`/`WorkPage` (`framework/web/`) — те же
+существующие локаторы (`RATE_BUTTON`/`NOTE_BUTTON`/`WORK_PAGE_TITLE`/
+`WORK_PAGE_BODY_PARAGRAPH`), формула контраста живёт в `BasePage.contrast_of`.
 
 TC-148 (свип touch-target >= 48dp): функции `measure_*` — это When-шаги,
 накапливающие `(имя_цели, rect)` по именованному списку целей маршрута
@@ -12,17 +18,26 @@ TC-148 (свип touch-target >= 48dp): функции `measure_*` — это Wh
 `side_panel.py::_button_container`/`settings_screen.py::*_button_locator`);
 `assert_touch_targets_at_least_48dp` — единственный Then, проверяющий
 инвариант «>= 48dp» ОДНОВРЕМЕННО для всего накопленного списка (не по одной
-цели за раз — см. «Инвариант» TC-148.md)."""
+цели за раз — см. «Инвариант» TC-148.md).
+
+TC-150 (свип перекрытий bounding-rect'ов интерактивных узлов): в отличие от
+TC-148, `collect_interactive_overlaps` читает дерево ЦЕЛИКОМ (не curated
+список локаторов) через `framework.core.a11y_tree` — геометрия и различение
+parent-child живут ТАМ (не знает о приложении), здесь — только composition
+Given/When/Then-шагов поверх него."""
 from __future__ import annotations
 
 import allure
 
+from framework.core import a11y_tree, contexts
 from framework.screens.browser_screen import BrowserScreen
 from framework.screens.library_screen import FILES_TAB, TAB_BY_RATING, LibraryScreen
 from framework.screens.navigation import BottomNav
 from framework.screens.rating_overlay import RATING_BUTTON_LABEL, RatingOverlay
 from framework.screens.settings_screen import THEME_LABELS, SettingsScreen
 from framework.screens.side_panel import TO_DARK, TO_LIGHT, SidePanel
+from framework.web.listing_page import ListingPage
+from framework.web.work_page import WorkPage
 
 
 @allure.step("Given раскрыта встроенная панель рейтинга (RatingMenu) на текущей странице работы")
@@ -145,11 +160,15 @@ def measure_side_panel_collapsed_handle(driver) -> list[tuple[str, dict]]:
 @allure.step("When накопление bounds: контролы раскрытой side panel (тема, A-/A+)")
 def measure_side_panel_expanded_controls(driver) -> list[tuple[str, dict]]:
     """BrowseSidePanel.kt PanelIconButton (тема) / PanelTextButton (A-/A+):
-    bounds темы измеряются с ВНЕШНЕГО IconButton(36dp) (`icon_button_
-    container`, родитель content-desc-узла), НЕ с 22dp-иконки Contrast
-    (rework 2026-08-20: `by_desc` напрямую занижал размер — сверено живым
-    деревом, scripts/ui_snapshot.py); A-/A+ уже используют корректный
-    родительский `font_button_container` (не менялось)."""
+    bounds темы измеряются с ВНЕШНЕГО content-desc-узла (`icon_button_
+    container`), НЕ с 22dp-иконки Contrast (rework 2026-08-20: `by_desc`
+    напрямую занижал размер — сверено живым деревом, scripts/ui_snapshot.py);
+    фактический accessibility-bounds узла — 63x126px = 24.0x48.0dp
+    @density=420 (BUG-084 находка 3) — ОБРЕЗАН по ширине перекрытием
+    соседнего узла хэндла «Collapse panel», НЕ квадратный IconButton(36dp)
+    (прежняя формулировка докстринга была неточна — сверено критик-гейтом
+    2026-08-20). A-/A+ уже используют корректный родительский
+    `font_button_container` (не менялось)."""
     panel = SidePanel(driver)
     assert panel.is_expanded(), (
         "side panel не раскрылась — ожидали персистентный toggle-стейт после "
@@ -257,4 +276,122 @@ def assert_touch_targets_at_least_48dp(measurements: list[tuple[str, dict]], den
     assert not failures, (
         f"{len(failures)} из {len(measurements)} именованных целей маршрута ниже порога "
         f"48dp (density={density}, порог={threshold_px:.1f}px):\n" + "\n".join(failures)
+    )
+
+
+# --- TC-150: свип перекрытий bounding-rect'ов интерактивных элементов ---
+# В отличие от TC-148 (поимённый curated-список целей), здесь дерево читается
+# ЦЕЛИКОМ на каждой точке маршрута — попарная проверка идёт по ВСЕМ узлам с
+# признаком интерактивности (`a11y_tree._is_interactive`), не только по
+# заранее известным контролам. `Finding = (имя_экрана, Overlap)`.
+
+Finding = tuple[str, a11y_tree.Overlap]
+
+
+@allure.step("When чтение accessibility-дерева и поиск попарных пересечений bounds на экране «{screen_name}»")
+def collect_interactive_overlaps(driver, screen_name: str) -> list[Finding]:
+    """Читает `page_source` ТЕКУЩЕГО экрана НАПРЯМУЮ (без взаимодействия с
+    самими элементами — переключение вкладок/раскрытие панелей готовит
+    состояние Given, не часть этого When), извлекает bounds ВСЕХ узлов с
+    признаком интерактивности и возвращает находки (пары РАЗНЫХ, не
+    parent-child, узлов с пересекающимися bounds) этого ОДНОГО снимка,
+    помеченные именем экрана — для агрегированного Then по всему маршруту
+    (см. `assert_no_overlapping_interactive_targets`, тот же приём
+    накопления, что `measure_*`/`assert_touch_targets_at_least_48dp` TC-148)."""
+    contexts.to_native(driver)
+    overlaps = a11y_tree.find_overlaps(driver.page_source)
+    return [(screen_name, ov) for ov in overlaps]
+
+
+def _format_overlap(screen_name: str, ov: a11y_tree.Overlap) -> str:
+    return (
+        f"{screen_name}: «{ov.a.label}» bounds={ov.a.bounds} пересекается с "
+        f"«{ov.b.label}» bounds={ov.b.bounds} (область пересечения={ov.rect}) — "
+        f"ни один узел не предок другого в дереве этого снимка"
+    )
+
+
+@allure.step("Then ни для одной пары РАЗНЫХ интерактивных узлов ни на одной точке маршрута bounds не пересекаются")
+def assert_no_overlapping_interactive_targets(findings: list[Finding]) -> None:
+    """Инвариант TC-150: свойство «bounds РАЗНЫХ интерактивных узлов не
+    пересекаются» проверяется ОДНОВРЕМЕННО для ВСЕХ пар на КАЖДОЙ точке
+    поимённого маршрута (см. «Инвариант» TC-150.md) — находка по ЛЮБОЙ паре
+    на ЛЮБОЙ точке красит ВЕСЬ прогон, список не сужается выборочно (тот же
+    приём агрегации, что `assert_touch_targets_at_least_48dp` TC-148)."""
+    lines = [_format_overlap(screen_name, ov) for screen_name, ov in findings]
+    allure.attach(
+        "\n".join(lines) if lines else "(пересечений не найдено ни на одной точке маршрута)",
+        name="TC-150 находки (попарные пересечения bounds)",
+        attachment_type=allure.attachment_type.TEXT,
+    )
+    assert not findings, (
+        f"{len(findings)} пересечени{'е' if len(findings) == 1 else 'й'} bounds РАЗНЫХ "
+        f"интерактивных узлов найдено на маршруте:\n" + "\n".join(lines)
+    )
+
+
+# --- TC-149: свип вычисленного WCAG-контраста (getComputedStyle) — инжектированные
+# bridge-элементы листинга (Rate-бейдж/Note-кнопка работы LOVED) + фикстурные узлы
+# её же work-страницы (заголовок/первый абзац тела), в Light и Dark. Тот же приём
+# накопления `(имя_узла, measurement)` + один агрегированный Then, что TC-148/TC-150
+# (см. докстринги `measure_*`/`assert_touch_targets_at_least_48dp` выше) — находка
+# по ЛЮБОМУ узлу ЛЮБОЙ точки маршрута красит ВЕСЬ прогон (см. «Инвариант» TC-149.md).
+# Формула контраста и подъём по DOM до непрозрачного фона живут в `BasePage.
+# contrast_of` (framework/web/base_page.py) — здесь только composition Given/When/
+# Then поверх уже существующих локаторов `ListingPage`/`WorkPage`.
+
+Contrast = tuple[str, dict]
+
+
+@allure.step("When вычислен контраст Rate-бейджа/Note-кнопки работы {work_id} на листинге ({point})")
+def measure_listing_badge_contrast(driver, work_id: str, point: str) -> list[Contrast]:
+    with contexts.in_webview(driver):
+        page = ListingPage(driver)
+        rate = page.rate_button_contrast(work_id)
+        note = page.note_button_contrast(work_id)
+    return [
+        (f"{point}: Rate-бейдж (data-ao3-rate-btn)", rate),
+        (f"{point}: Note-кнопка (data-ao3-note-btn)", note),
+    ]
+
+
+@allure.step("When вычислен контраст заголовка/первого абзаца тела work-страницы ({point})")
+def measure_work_page_contrast(driver, point: str) -> list[Contrast]:
+    with contexts.in_webview(driver):
+        page = WorkPage(driver)
+        title = page.title_contrast()
+        body = page.body_paragraph_contrast()
+    return [
+        (f"{point}: заголовок (h2.title.heading)", title),
+        (f"{point}: первый абзац тела (.wrapper > p)", body),
+    ]
+
+
+def _format_contrast(name: str, m: dict) -> str:
+    return (
+        f"{name}: ratio={m['ratio']:.2f} (порог {m['threshold']}) "
+        f"color={m['color']} effective_bg={m['effectiveBackground']} "
+        f"fontSize={m['fontSizePx']:.1f}px bold={m['bold']} large={m['isLarge']}"
+    )
+
+
+@allure.step("Then вычисленный WCAG-контраст каждого узла каждой точки маршрута держит свой порог (4.5:1/3:1)")
+def assert_all_nodes_meet_contrast_threshold(measurements: list[Contrast]) -> None:
+    """Инвариант TC-149: свойство «вычисленный контраст держит свой WCAG-порог»
+    проверяется ОДНОВРЕМЕННО для ВСЕХ узлов ОБЕИХ точек маршрута И ОБОИХ вариантов
+    темы — находка по ЛЮБОМУ узлу красит ВЕСЬ прогон, список не сужается выборочно
+    (тот же приём агрегации, что `assert_touch_targets_at_least_48dp`/`assert_no_
+    overlapping_interactive_targets` — TC-148/TC-150)."""
+    rows = [_format_contrast(name, m) for name, m in measurements]
+    failures = [
+        _format_contrast(name, m) for name, m in measurements if m["ratio"] < m["threshold"]
+    ]
+    allure.attach(
+        "\n".join(rows),
+        name="TC-149 замеры контраста (все точки маршрута × обе темы)",
+        attachment_type=allure.attachment_type.TEXT,
+    )
+    assert not failures, (
+        f"{len(failures)} из {len(measurements)} узлов ниже своего WCAG-порога:\n"
+        + "\n".join(failures)
     )

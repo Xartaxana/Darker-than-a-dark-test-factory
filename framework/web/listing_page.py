@@ -95,6 +95,17 @@ class ListingPage(BasePage):
         blurb = selectors.blurb_by_work_id(work_id)
         return self.wait_css(f"{blurb} {selectors.RATE_BUTTON}")
 
+    def rate_button_contrast(self, work_id: str) -> dict:
+        """TC-149: вычисленный WCAG-контраст Rate-бейджа работы `work_id`
+        (см. `BasePage.contrast_of`) — узел ищется тем же `rate_button` локатором,
+        уже используемым для взаимодействия/структурных проб (`rate_button_state`)."""
+        return self.contrast_of(self.rate_button(work_id))
+
+    def note_button_contrast(self, work_id: str) -> dict:
+        """TC-149: вычисленный WCAG-контраст Note-кнопки работы `work_id` (см.
+        `BasePage.contrast_of`) — узел ищется тем же `note_button` локатором."""
+        return self.contrast_of(self.note_button(work_id))
+
     def note_button(self, work_id: str):
         """Инжектированная Note-кнопка (карандаш, `ao3_bridge.js::makeNoteButton`) —
         рендерится только при непустом `comment`. ВНИМАНИЕ: клик по НЕЙ лишь
