@@ -839,6 +839,33 @@ def filter_profile_applied_seeded():
     yield "My saved search"
 
 
+@pytest.fixture()
+def library_and_filter_profile_seeded():
+    """TC-197 (баннер скрытых работ, четыре варианта таблицы истинности
+    `ratedHidden × filterActive`): объединяет `seeded_library` (по одной работе
+    на каждый рейтинг, в т.ч. `W.DISLIKED` с `rating=DISLIKE`) И
+    `filter_profile_applied_seeded` (профиль "My saved search",
+    `queryString=rb.FILTER_APPLIED_QUERY_STRING`, тот же байт-в-байт URL, что
+    `rb.LISTING_FILTERED_URL`) — ОДНА фикстура для ВСЕХ четырёх вариантов
+    кейса, а не отдельная на каждый: варианты A/D не выбирают сохранённый
+    профиль (наличие незадействованной строки `filter_profiles` не влияет ни
+    на один их Then), варианты B/C выбирают. Обе таблицы (`WorkRating` и
+    `filter_profiles`) независимы — порядок вызовов `seed_library`/
+    `seed_filter_profiles` друг на друга не влияет (в отличие от
+    `library_mixed_download_status_seeded`, где порядок ОБЯЗАТЕЛЕН из-за
+    общей baseline-строки той же таблицы)."""
+    app_steps.clean_state()
+    app_steps.seed_library([
+        (W.LOVED, "SAVE"),
+        (W.KUDOSED, "LIKE"),
+        (W.READ, "READ"),
+        (W.PENDING, "PENDING"),
+        (W.DISLIKED, "DISLIKE"),
+    ])
+    app_steps.seed_filter_profiles([("My saved search", rb.FILTER_APPLIED_QUERY_STRING)])
+    yield "My saved search"
+
+
 _ca_checked = False  # AT-BUG-011: fail-fast проверка mitm-CA — один раз на сессию
 
 

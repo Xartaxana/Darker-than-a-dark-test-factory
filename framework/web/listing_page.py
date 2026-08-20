@@ -180,6 +180,20 @@ class ListingPage(BasePage):
             for el in els
         ]
 
+    def hidden_banner_text(self) -> str | None:
+        """Текст инжектированного баннера скрытых работ
+        (`#{selectors.HIDDEN_NOTICE_ID}`, `ao3_bridge.js::updateHiddenBanner`) —
+        `None`, если узел отсутствует в DOM (TC-197 вариант D: гейт создания
+        `ratedHidden || filterActive` ложен при обоих флагах false, узел не
+        создаётся/удаляется, если существовал). `.strip()` — защита от
+        случайного whitespace вокруг рендеренного текста, `textContent`
+        (`ao3_bridge.js:534`) присваивается дословно без хвостовых пробелов,
+        так что сравнение остаётся строгим по содержательному тексту."""
+        els = self.css_all(f"#{selectors.HIDDEN_NOTICE_ID}")
+        if not els:
+            return None
+        return els[0].text.strip()
+
     def next_page_link(self):
         """Ссылка «Next →» (`li.next a`) — реальная разметка AO3, НЕ
         инжектируется bridge; клик по ней — штатная навигация вне

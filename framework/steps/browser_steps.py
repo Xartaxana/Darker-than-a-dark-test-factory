@@ -1723,6 +1723,52 @@ def assert_blurb_not_dimmed(driver, work_id: str):
     )
 
 
+# TC-197: баннер над листингом (`selectors.HIDDEN_NOTICE_ID`) — чистая функция
+# пары флагов `(ratedHidden, filterActive)`, инжектируется/обновляется
+# `ao3_bridge.js::updateHiddenBanner`, вызываемым один раз синхронно в конце
+# `ao3BridgeInit` на КАЖДОЙ загрузке страницы. Заметка о нужном методе уже
+# была в TC-197.md («Заметки для автоматизации», page-object-доработка по
+# образцу TC-092/093/094) — `ListingPage.hidden_banner_text`.
+@allure.step("Then над листингом узел баннера скрытых работ показывает ДОСЛОВНО «{expected_text}»")
+def assert_hidden_banner_text(driver, expected_text: str, timeout: int | None = None):
+    """Опрашивает текст `#ao3-companion-hidden-notice`, не читает один раз — тот же
+    класс латентности WEBVIEW round-trip, что `assert_blurb_hidden`, даже несмотря
+    на то, что `updateHiddenBanner` сам синхронен относительно остального прохода
+    bridge-скрипта."""
+    with contexts.in_webview(driver):
+        wait_until(
+            driver,
+            lambda d: ListingPage(d).hidden_banner_text() == expected_text,
+            timeout=timeout,
+            message=f"узел баннера скрытых работ не показал ожидаемый дословный текст {expected_text!r}",
+        )
+
+
+@allure.step("Then узел баннера скрытых работ #ao3-companion-hidden-notice ОТСУТСТВУЕТ в DOM весь бюджет")
+def assert_hidden_banner_absent(driver, timeout: int = 10, poll_interval: float = 0.3):
+    """TC-197 вариант D: гейт создания узла (`ratedHidden || filterActive`,
+    `ao3_bridge.js:511`) ложен при обоих флагах false. Критик-гейт приёмки
+    (2026-08-20): первая редакция опрашивала `wait_until(... is None)` —
+    возврат на ПЕРВОМ чтении «отсутствует», тот же класс латентности,
+    что AT-BUG-082/083/085 (негативный Then без settle+hold), обоснование
+    невакуумности при этом ссылалось на ДРУГИЕ инстансы параметризации
+    (варианты A/B/C — другие сессии Appium/навигация), что тайминговой
+    гарантии ВНУТРИ инстанса D не давало. Теперь `assert_holds_for` держит
+    негатив ВЕСЬ бюджет (симметрично `assert_tab_strip_hidden`), падая на
+    ПЕРВОМ появлении узла в любой момент окна — та же форма, что уже
+    принята для класса «негатив без settle+hold» в этом файле."""
+
+    def check() -> bool:
+        with contexts.in_webview(driver):
+            return ListingPage(driver).hidden_banner_text() is None
+
+    assert_holds_for(
+        check, budget_s=timeout, interval_s=poll_interval,
+        msg="узел баннера скрытых работ #ao3-companion-hidden-notice неожиданно "
+            "присутствует в DOM (оба флага ratedHidden/filterActive должны быть false)",
+    )
+
+
 @allure.step("When нажата Rate-кнопка работы {work_id} на листинге")
 def tap_rate_button(driver, work_id: str):
     """Клик по инжектированной bridge Rate-кнопке (`ao3_bridge.js::makeRateButton`) —
