@@ -25,6 +25,7 @@ skip_locks: [wip]
 # Шаг 0 каждого прохода — выполняет верхний уровень /qa-loop ДО правил запуском
 # скриптов (docs/06 §1). Все 5 шагов реализованы и покрыты тестами (scripts/tests/).
 pre_steps:
+  - name: dirty_tree_check  # scripts/dirty_tree_check.py: leftover-детектор грязного дерева (класс убитых проходов); вызывается КООРДИНАТОРОМ сразу после ACQUIRED лока, ДО doctor.py — иначе REAPED/doctor-эскалации засоряют отчёт (критик D1, план 2026-08-20)
   - name: stale_locks     # scripts/stale_locks.py: lock старше sla.lock_stale без завершения в логе → снять, залогировать
   - name: sla_sweep       # scripts/sla_sweep.py: просрочки по state/sla.yaml → state/escalations.md + метка attention
   - name: board_inbound   # scripts/board_inbound.py: переходы/комментарии человека на борде → артефакты (docs/06 §3, docs/07)
