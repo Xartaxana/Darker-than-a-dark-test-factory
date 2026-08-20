@@ -34,12 +34,16 @@ def fw(tmp_path, monkeypatch):
     """Изолированный framework/ в tmp_path: framework/pytest.ini + framework/tests/
     (+ test-cases/ и framework/data/recording_builder.py для правила 3 — Б8:
     доказывает, что боевой test-cases/ репозитория не читается монкипатченными
-    тестами, см. test_recording_rule_isolated_from_real_test_cases)."""
+    тестами, см. test_recording_rule_isolated_from_real_test_cases; + framework/steps/
+    для правила 4, см. `_steps_dir_of`)."""
     framework = tmp_path / "framework"
     tests_dir = framework / "tests"
     tests_dir.mkdir(parents=True)
     pytest_ini = framework / "pytest.ini"
     pytest_ini.write_text(PYTEST_INI_TEXT, encoding="utf-8")
+
+    steps_dir = framework / "steps"
+    steps_dir.mkdir(parents=True)
 
     cases_dir = tmp_path / "test-cases"
     cases_dir.mkdir(parents=True)
@@ -50,10 +54,12 @@ def fw(tmp_path, monkeypatch):
     monkeypatch.setattr(ac, "REPO", tmp_path, raising=True)
     monkeypatch.setattr(ac, "FRAMEWORK", framework, raising=True)
     monkeypatch.setattr(ac, "TESTS_DIR", tests_dir, raising=True)
+    monkeypatch.setattr(ac, "STEPS_DIR", steps_dir, raising=True)
     monkeypatch.setattr(ac, "PYTEST_INI", pytest_ini, raising=True)
     monkeypatch.setattr(ac, "CASES_DIR", cases_dir, raising=True)
     monkeypatch.setattr(ac, "RECORDING_BUILDER", recording_builder, raising=True)
     monkeypatch.setattr(ac, "ALLOWLIST", set(), raising=True)
+    monkeypatch.setattr(ac, "NEGATIVE_THEN_SETTLE_BASELINE", {}, raising=True)
     return tests_dir
 
 
@@ -381,6 +387,22 @@ def _cases_dir_of(tests_dir: Path) -> Path:
 
 def _recording_builder_of(tests_dir: Path) -> Path:
     return tests_dir.parent / "data" / "recording_builder.py"
+
+
+def _steps_dir_of(tests_dir: Path) -> Path:
+    """framework/steps/ синтетического framework/ (см. fw) — `tests_dir` == .../framework/tests."""
+    return tests_dir.parent / "steps"
+
+
+def _write_steps(tests_dir: Path, name: str, content: str) -> Path:
+    p = _steps_dir_of(tests_dir) / name
+    p.write_text(content, encoding="utf-8")
+    return p
+
+
+def _rule4_warns(warns: list[str]) -> list[str]:
+    """warns-строки правила 4 (см. `run` — всегда с префиксом токена `rule4:`)."""
+    return [w for w in warns if w.startswith("rule4:")]
 
 
 def _case_md(case_id: str, automated_by: str, precondition_body: str = "- Синтетическое предусловие.",
@@ -921,6 +943,220 @@ def test_kwargs_param(replay):
     assert "неразрешимая параметризация" in rule3[0]
 
 
+# --- Правило 4: NEGATIVE-THEN-WITHOUT-SETTLE (спека D v2, framework/steps/*.py) ---
+
+
+def test_negative_then_settle_simple_call_is_warn_not_error(fw):
+    """Базовый матч `assert not screen.method(...)` -> WARN (rule4:), errors пуст —
+    правило WARN-tier, не ERROR-tier (см. докстринг модуля)."""
+    _write_steps(fw, "rating_steps.py", '''from __future__ import annotations
+
+
+def assert_chip_absent(screen, tag):
+    assert not screen.chip_visible(tag), f"chip {tag} still visible"
+''')
+    errors, warns = ac.run()
+    assert errors == []
+    rule4 = _rule4_warns(warns)
+    assert len(rule4) == 1
+    assert "chip_visible" in rule4[0]
+    assert "wait_absent" in rule4[0]
+    assert "settle" in rule4[0]
+    assert "без вердикта" in rule4[0]  # не в NEGATIVE_THEN_SETTLE_BASELINE (fw -> {})
+
+
+def test_negative_then_settle_receiver_constructor_chain_is_matched(fw):
+    """Ф1 (критик-вход): регекс слеп к receiver-вызовам конструктора
+    (`Screen(driver).method()`), AST — нет. Живой образец формы —
+    settings_steps.py:377/rating_steps.py:497 в реальном репо."""
+    _write_steps(fw, "rating_steps.py", '''from __future__ import annotations
+
+
+def assert_chip_absent(driver, tag, timeout=None):
+    assert not RatingOverlay(driver).chip_visible(tag, timeout=timeout), (
+        f"chip {tag} still visible"
+    )
+''')
+    errors, warns = ac.run()
+    assert errors == []
+    rule4 = _rule4_warns(warns)
+    assert len(rule4) == 1
+    assert "chip_visible" in rule4[0]
+
+
+def test_negative_then_settle_multiline_assert_matched_at_first_line(fw):
+    """Многострочный assert (перенос аргументов — живой образец
+    settings_steps.py:377) -> находка на СТРОКЕ САМОГО `assert` (node.lineno),
+    не на строке закрывающей скобки/сообщения."""
+    _write_steps(fw, "settings_steps.py", '''from __future__ import annotations
+
+
+def assert_dialog_gone(screen, timeout):
+    assert not screen.is_present(
+        screen.by_text("Clear all ratings?"), timeout=timeout
+    ), "dialog still open, expected Cancel to close it"
+''')
+    errors, warns = ac.run()
+    assert errors == []
+    rule4 = _rule4_warns(warns)
+    assert len(rule4) == 1
+    assert "settings_steps.py:5:" in rule4[0]
+
+
+def test_negative_then_settle_double_receiver_call_chain_matched(fw):
+    """Адверсариальный случай: `assert not a().b().is_present()` (двойной вызов в
+    цепочке получателя, внешний метод — presence-примитив, матчит предикат) —
+    матч идёт по внешнему `.is_present(...)`, получатель (сколь угодно вложенный)
+    не важен для матчера. Внешний метод обязан матчить NEGATIVE_THEN_METHOD_PATTERN
+    (D2-B1) — `.c(...)` НЕ матчил бы предикат, потому синтетика подобрана иначе,
+    чем в исходной версии этого теста."""
+    _write_steps(fw, "chain_steps.py", '''from __future__ import annotations
+
+
+def assert_chained(a):
+    assert not a().b().is_present(), "still there"
+''')
+    errors, warns = ac.run()
+    assert errors == []
+    rule4 = _rule4_warns(warns)
+    assert len(rule4) == 1
+    assert "`.is_present(...)`" in rule4[0] or ".is_present(...)" in rule4[0]
+
+
+def test_negative_then_settle_non_presence_method_not_matched_by_predicate(fw):
+    """Критик-вход D2-B1: БЕЗ предиката `assert not Path(...).exists()`/`.issubset()`/
+    `.endswith()` матчились бы голым `ast.Call(func=ast.Attribute)` — предикат
+    NEGATIVE_THEN_METHOD_PATTERN их исключает (WARN-текст про presence-примитив для
+    них бессмыслен)."""
+    _write_steps(fw, "fs_steps.py", '''from __future__ import annotations
+
+from pathlib import Path
+
+
+def assert_no_stale_marker(root, allowed):
+    assert not Path(root, "marker").exists(), "stale marker file present"
+    assert not allowed.issubset({"a", "b"}), "unexpected subset"
+    assert not root.endswith(".tmp"), "unexpected tmp suffix"
+''')
+    errors, warns = ac.run()
+    assert errors == []
+    assert _rule4_warns(warns) == []
+
+
+def test_negative_then_settle_bare_name_not_matched(fw):
+    """`assert not flag` (голое имя, НЕ вызов) — вне AST-формы правила, не матчится
+    (двухшаговая форма — известная, НЕ закрытая дыра, см. докстринг модуля)."""
+    _write_steps(fw, "flag_steps.py", '''from __future__ import annotations
+
+
+def assert_not_flag(flag):
+    assert not flag, "flag still set"
+''')
+    errors, warns = ac.run()
+    assert errors == []
+    assert _rule4_warns(warns) == []
+
+
+def test_negative_then_settle_two_step_form_is_the_known_gap(fw):
+    """Двухшаговая форма (`present = screen.is_visible(...); assert not present`) —
+    признанная НЕ закрытая дыра (докстринг модуля): не матчится, это ожидаемо."""
+    _write_steps(fw, "two_step_steps.py", '''from __future__ import annotations
+
+
+def assert_gone(screen):
+    present = screen.is_visible()
+    assert not present, "still visible"
+''')
+    errors, warns = ac.run()
+    assert errors == []
+    assert _rule4_warns(warns) == []
+
+
+def test_negative_then_settle_syntax_error_file_gets_own_warn_not_silence(fw):
+    """Критик-вход D2-F2: файл в framework/steps/ с SyntaxError -> правило 4 НЕ
+    падает (Ф1) и НЕ молчит — rule 1-2 "parse"-ERROR его не касается (framework/
+    tests — их единственный обход, framework/steps/ вне него), тихий пропуск
+    оставил бы файл БЕЗ единой находки любого правила модуля. Вместо этого —
+    собственная WARN-находка «steps-файл не разобран»."""
+    _write_steps(fw, "broken_steps.py", "def assert_broken(:\n    pass\n")
+    errors, warns = ac.run()
+    assert errors == []
+    rule4 = _rule4_warns(warns)
+    assert len(rule4) == 1
+    assert "broken_steps.py" in rule4[0]
+    assert "не разобран" in rule4[0]
+    assert "правило 4" in rule4[0]
+    # это не "попадание" правила — вердикт из бейзлайна к нему не примешивается:
+    assert "без вердикта" not in rule4[0]
+    assert "[вердикт" not in rule4[0]
+
+
+def test_negative_then_settle_baseline_verdict_is_printed(fw, monkeypatch):
+    """Попадание с ключом (rel, func_name, method_name) в NEGATIVE_THEN_SETTLE_
+    BASELINE (критик-вход D2-F1 — ключ НЕ lineno) несёт вердикт в тексте WARN, а
+    не «без вердикта»."""
+    _write_steps(fw, "rating_steps.py", '''from __future__ import annotations
+
+
+def assert_chip_absent(screen, tag):
+    assert not screen.chip_visible(tag), f"chip {tag} still visible"
+''')
+    monkeypatch.setattr(
+        ac, "NEGATIVE_THEN_SETTLE_BASELINE",
+        {("steps/rating_steps.py", "assert_chip_absent", "chip_visible"): "тестовый вердикт X"},
+        raising=True,
+    )
+    errors, warns = ac.run()
+    assert errors == []
+    rule4 = _rule4_warns(warns)
+    assert len(rule4) == 1
+    assert "тестовый вердикт X" in rule4[0]
+    assert "без вердикта" not in rule4[0]
+
+
+def test_negative_then_settle_baseline_key_is_line_independent(fw, monkeypatch):
+    """Критик-вход D2-F1 (прямая проверка): вердикт резолвится по (rel, func_name,
+    method_name) НЕЗАВИСИМО от строки — сдвиг ассерта на другую строку (лишняя
+    пустая строка перед функцией) не отрывает находку от её бейзлайн-записи."""
+    _write_steps(fw, "rating_steps.py", '''from __future__ import annotations
+
+
+
+def assert_chip_absent(screen, tag):
+    assert not screen.chip_visible(tag), f"chip {tag} still visible"
+''')
+    monkeypatch.setattr(
+        ac, "NEGATIVE_THEN_SETTLE_BASELINE",
+        {("steps/rating_steps.py", "assert_chip_absent", "chip_visible"): "тестовый вердикт Y"},
+        raising=True,
+    )
+    errors, warns = ac.run()
+    assert errors == []
+    rule4 = _rule4_warns(warns)
+    assert len(rule4) == 1
+    assert "тестовый вердикт Y" in rule4[0]
+
+
+def test_negative_then_settle_screens_and_tests_dirs_out_of_scope(fw):
+    """Скоуп правила 4 — ТОЛЬКО framework/steps/*.py (докстринг модуля): та же
+    негативная форма в framework/tests/ не матчится этим правилом (может дать
+    находку правила 1-2 по совсем другой причине, но не rule4)."""
+    _write(fw, "test_uses_bad_pattern.py", '''from __future__ import annotations
+
+import allure
+import pytest
+
+
+@allure.id("TC-900")
+@pytest.mark.p0
+def test_ok(screen):
+    assert not screen.is_visible(), "still visible"
+''')
+    errors, warns = ac.run()
+    assert errors == []
+    assert _rule4_warns(warns) == []
+
+
 # --- Самопроверка: реальный framework/ текущего репозитория (не монкипатчено) ---
 
 def test_real_repo_framework_passes():
@@ -944,3 +1180,35 @@ def test_real_repo_recording_rule_baseline():
         assert m, f"не удалось извлечь id кейса из warn-строки правила 3: {w}"
         baseline_ids.add(m.group(1))
     assert baseline_ids == {"TC-176"}, f"warns правила 3 (полный список): {warns}"
+
+
+def test_real_repo_negative_then_settle_baseline():
+    """Бейзлайн находок правила 4 на реальном репо (спека D v2, критик-раунд D2):
+    множество (rel, func_name, method_name) РОВНО равно ключам
+    NEGATIVE_THEN_SETTLE_BASELINE (ключ — критик-вход D2-F1, НЕ lineno: строка
+    дрейфует за рефакторингом, func_name/method_name — нет). Считаем находки
+    ПРЯМО из `run_negative_then_settle_rule()` (Finding.rel/func_name/method_name),
+    а не парсингом текста WARN — func_name в тексте WARN не печатается (только
+    file:line + method), только в самом Finding. Дрейф множества (новый негативный
+    Then без settle в framework/steps/ БЕЗ записи в NEGATIVE_THEN_SETTLE_BASELINE,
+    либо переименование/удаление существующего) ломает этот тест — детектор
+    рецидива до отдельного решения Lead о промоции правила в ERROR (образец —
+    test_real_repo_recording_rule_baseline выше). НЕ утверждаем численный размер
+    множества отдельным assert'ом (D2-F3) — он избыточен над сверкой множеств."""
+    findings = ac.run_negative_then_settle_rule()
+    hits = [f for f in findings if f.rule == "negative_then_settle"]
+    parse_findings = [f for f in findings if f.rule == "negative_then_settle_parse"]
+    assert parse_findings == [], \
+        f"нечитаемые steps-файлы на реальном репо (неожиданно): {[f.message for f in parse_findings]}"
+    keys = {(f.rel, f.func_name, f.method_name) for f in hits}
+    assert keys == set(ac.NEGATIVE_THEN_SETTLE_BASELINE.keys()), (
+        f"множество попаданий rule4 разошлось с NEGATIVE_THEN_SETTLE_BASELINE.\n"
+        f"попадания: {sorted(keys)}\nбейзлайн: {sorted(ac.NEGATIVE_THEN_SETTLE_BASELINE.keys())}"
+    )
+
+    # Каждая находка обязана дойти до `run()` с вердиктом (не «без вердикта») —
+    # сверка, что бейзлайн-гейт в `run()` действительно резолвит эти же ключи.
+    _errors, warns = ac.run()
+    rule4 = _rule4_warns(warns)
+    assert not any("без вердикта" in w for w in rule4), \
+        f"находки rule4 без вердикта в NEGATIVE_THEN_SETTLE_BASELINE: {rule4}"

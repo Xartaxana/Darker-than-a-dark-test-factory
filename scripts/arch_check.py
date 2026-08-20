@@ -49,6 +49,62 @@ argnames содержит `replay`). Отдельный WARNS-канал (см. 
 `run`) — находки не влияют на exit-код, до отдельного решения Lead о промоции
 в ERROR по evidence.
 
+Правило 4 — NEGATIVE-THEN-WITHOUT-SETTLE (спека D v2, критик-раунд D2): ТРЕТЬЯ
+ветвь обхода — framework/steps/*.py (плоско, без рекурсии). Матчер — AST, не
+регекс (критик доказал: регекс слеп к receiver-вызовам конструктора вида
+`Screen(driver).method()`), И ограничен ПРЕДИКАТОМ ИМЕНИ ВЫЗЫВАЕМОГО МЕТОДА
+(`NEGATIVE_THEN_METHOD_PATTERN` — `is_.*|has_.*|.*_has_.*|.*_visible|
+.*_present|.*_expanded|.*_highlighted`; критик-вход D2-B1: без предиката
+голый `ast.Call(func=ast.Attribute)` даёт 10 ЛОЖНЫХ попаданий в
+framework/tests — `Path(...).exists()` x7, `.issubset()`, `.endswith()` — для
+которых WARN-текст про presence-примитив бессмыслен):
+
+    ast.Assert(test=ast.UnaryOp(op=ast.Not, operand=ast.Call(func=ast.Attribute)))
+    # + operand.func.attr матчит NEGATIVE_THEN_METHOD_PATTERN
+
+т.е. `assert not <получатель>.<presence-метод>(...)`, получатель — любое
+выражение (имя, цепочка атрибутов, вызов конструктора). Замер критика
+предикат-фильтрованной формой на этом репо: 19 попаданий в framework/steps/,
+0 в framework/tests/screens/web/core/data. Дефект: presence-примитив
+(`is_visible`/`is_present`/`chip_visible`/...) читает состояние ОДИН РАЗ и
+возвращает немедленно, пока элемент/чип/оверлей ещё может быть на экране —
+негативный Then обязан ЖДАТЬ исчезновения (`wait_absent`/settle-hold-полл,
+см. `base_screen.wait_absent:85`), а не читать примитив присутствия сразу
+после действия. Отдельный WARNS-канал, ярус WARN (не ERROR): каждое
+попадание обязано иметь запись-вердикт в `NEGATIVE_THEN_SETTLE_BASELINE`
+(тикет-источник + вердикт, см. докстринг словаря) — запись без вердикта
+недопустима, промоция части попаданий в ERROR/фикс — отдельное решение Lead
+по конкретному тикету, не этим правилом. Ключ бейзлайна —
+`(rel_от_framework, func_name, method_name)` — НЕ lineno (критик-вход D2-F1:
+lineno дрейфует за рефакторингом, 7 из 19 строк сместились за ~20 коммитов;
+`func_name`/`method_name` устойчивы к сдвигу строк, коллизий на живом репо
+нет); lineno остаётся в тексте самого WARN для навигации.
+
+Дельта 17 (число, названное спекой до критик-раунда) -> 19 — НЕ "мощность
+AST против регекса" (критик-вход D2-B2): исходный предикат спеки давал
+РОВНО 17; предикат расширен ДВУМЯ паттернами (`.*_has_.*`, `.*_highlighted`)
+по факту — они ловят 2 истинных члена того же класса дефекта
+(`browser_steps.py::assert_filter_not_offered` -> `filter_dropdown_has_
+option`, `browser_steps.py::assert_tag_not_highlighted` -> `tag_link_
+highlighted`, докстринг последнего сам называет проверку «мгновенной, не
+опросом») — осознанная девиация от узкого предиката спеки, не техническая
+случайность.
+
+Нечитаемый steps-файл (SyntaxError/UnicodeDecodeError) НЕ даёт находки НИ
+ОДНОГО правила модуля — правила 1-2 обходят только TESTS_DIR
+(framework/tests/), framework/steps/ вне их обхода (критик-вход D2-F2,
+исправлена ложная докстринг-ссылка на их ERROR-канал); правило 4 кладёт
+собственную WARN-находку `rule="negative_then_settle_parse"` («steps-файл не
+разобран — правило 4 по нему не применялось») вместо тихого пропуска.
+
+ОСТАТОЧНАЯ ДЫРА (правило 4, признана и НЕ закрыта в этом ходе): двухшаговая
+форма `present = screen.is_visible(...); assert not present` AST-матчу
+невидима — `operand` внутри `ast.UnaryOp(Not)` в этом случае `ast.Name`, не
+`ast.Call`, и правило намеренно НЕ обобщает до datflow-анализа (пришлось бы
+резолвить произвольное присваивание переменной — источник ложных
+срабатываний). Закрытие — по evidence новых экземпляров этой формы, не
+заранее (F-11 (в), CLAUDE.md).
+
 Запуск:      python scripts/arch_check.py
 Коды выхода: 0 — чисто (WARN/известные исключения допустимы), 1 — есть ERROR.
 Только чтение framework/ + test-cases/ — файлы не изменяются, идемпотентен.
@@ -70,6 +126,7 @@ except (AttributeError, ValueError):
 REPO = Path(__file__).resolve().parents[1]
 FRAMEWORK = REPO / "framework"
 TESTS_DIR = FRAMEWORK / "tests"
+STEPS_DIR = FRAMEWORK / "steps"
 PYTEST_INI = FRAMEWORK / "pytest.ini"
 CASES_DIR = REPO / "test-cases"
 RECORDING_BUILDER = FRAMEWORK / "data/recording_builder.py"
@@ -141,14 +198,86 @@ ALLOWLIST: set[tuple[str, str]] = {
     ("tests/test_rating_comment_collapse_settle_unit.py", "locators"),
 }
 
+# Предикат имени вызываемого presence-метода (критик-вход D2-B1) — БЕЗ него голый
+# `ast.Call(func=ast.Attribute)` матчит и непрезентные вызовы (`Path(...).exists()`,
+# `.issubset()`, `.endswith()`), для которых WARN-текст правила 4 бессмыслен (10 ложных
+# попаданий в framework/tests замерено критиком). Расширен спекового узкого набора
+# (`.*_has_.*`, `.*_highlighted`) по факту двух истинных членов класса — см. докстринг
+# модуля "Дельта 17 -> 19".
+NEGATIVE_THEN_METHOD_PATTERN = re.compile(
+    r"^(is_.*|has_.*|.*_has_.*|.*_visible|.*_present|.*_expanded|.*_highlighted)$"
+)
+
+# NEGATIVE_THEN_SETTLE_BASELINE — бейзлайн правила 4 (NEGATIVE-THEN-WITHOUT-SETTLE,
+# см. докстринг модуля). Образец формы: scripts/dedup_check.py BASELINE (пара -> вердикт)
+# и ALLOWLIST выше (тикет-источник обязателен в комментарии). В отличие от ALLOWLIST
+# (гасит ERROR до WARN по (путь, rule_id) — правила 1-2), это правило ВСЕГДА WARN;
+# словарь не гасит находку, а несёт ОБЯЗАТЕЛЬНЫЙ вердикт к КАЖДОМУ попаданию. Ключ —
+# (rel_от_framework, func_name_объемлющей_функции, method_name) — НЕ lineno
+# (критик-вход D2-F1: lineno дрейфует за рефакторингом, 7 из 19 строк сместились за
+# ~20 коммитов истории steps/; func_name/method_name устойчивы к сдвигу строк,
+# коллизий на живом репо нет — проверено критиком). lineno остаётся в тексте самого
+# WARN для навигации (не участвует в ключе). Находка с ключом ВНЕ словаря — не
+# ошибка (правило не падает), но печатается как «без вердикта — НОВАЯ находка» (см. `run`)
+# и ломает test_real_repo_negative_then_settle_baseline (real-repo пин, детектор дрейфа
+# множества/рецидива, образец test_arch_check.py:933 у правила 3).
+#
+# Список получен прямым прогоном правила (с предикатом) на этом репо: 19 попаданий.
+# Дельта от 17, названных в тексте исходной спеки, — НЕ "мощность AST" (см. докстринг
+# модуля "Дельта 17 -> 19"): 17 даёт узкий предикат спеки, 19 — предикат, расширенный
+# `.*_has_.*`/`.*_highlighted` (browser_steps.py:1977 filter_dropdown_has_option,
+# browser_steps.py:1923 tag_link_highlighted — оба истинные члены класса дефекта,
+# осознанная девиация, не случайность).
+NEGATIVE_THEN_SETTLE_BASELINE: dict[tuple[str, str, str], str] = {
+    # AT-BUG-090 / эскалация AT-BUG-085-CHIP-ABSENT-CLASS-SIBLING: ОТКРЫТЫЙ экземпляр
+    # класса BUG-068 (settle-дефект), НЕ легитимный — ждёт фикса (rating_steps.py:497,
+    # assert_chip_absent/chip_visible — non-goals этой задачи: framework/ не правится,
+    # это открытое решение Lead).
+    ("steps/rating_steps.py", "assert_chip_absent", "chip_visible"): (
+        "ОТКРЫТЫЙ экземпляр, НЕ легитимный, тикет AT-BUG-090/эскалация "
+        "AT-BUG-085-CHIP-ABSENT-CLASS-SIBLING, ждёт фикса"
+    ),
+    # Given TC-148: докстринг вызывающего кода явно называет это guard'ом
+    # предусловия (is_visible/is_expanded), а не негативным Then-ассертом факта —
+    # подтверждённое легитимное исключение из дефекта правила 4.
+    ("steps/a11y_steps.py", "measure_bottom_bar_handle", "is_visible"): (
+        "подтверждённый Given-guard (докстринг: явный guard is_visible, Given TC-148)"
+    ),
+    ("steps/a11y_steps.py", "measure_side_panel_collapsed_handle", "is_expanded"): (
+        "подтверждённый Given-guard (докстринг: явный guard is_visible, Given TC-148)"
+    ),
+    # Остальные 16 — честный вердикт «не разобран» (НЕ «легитимный»): очередь Lead,
+    # промоция в фикс/легитимация — по конкретному тикету на попадание, не этим ходом.
+    ("steps/app_steps.py", "assert_bottom_nav_collapsed", "is_visible"): "не разобран, очередь Lead",
+    ("steps/browser_steps.py", "assert_tab_strip_not_visible", "is_tab_strip_visible"): "не разобран, очередь Lead",
+    ("steps/browser_steps.py", "assert_note_button_absent", "has_note_button"): "не разобран, очередь Lead",
+    ("steps/browser_steps.py", "assert_tag_button_absent", "has_tag_button"): "не разобран, очередь Lead",
+    ("steps/browser_steps.py", "assert_tag_not_highlighted", "tag_link_highlighted"): "не разобран, очередь Lead",
+    ("steps/browser_steps.py", "assert_filter_not_offered", "filter_dropdown_has_option"): "не разобран, очередь Lead",
+    ("steps/browser_steps.py", "assert_tab_limit_dialog_not_shown", "tab_limit_dialog_visible"): "не разобран, очередь Lead",
+    ("steps/browser_steps.py", "assert_opened_in_background_snackbar_not_shown", "opened_in_background_snackbar_visible"): "не разобран, очередь Lead",
+    ("steps/browser_steps.py", "assert_tab_title_not_visible", "tab_title_visible"): "не разобран, очередь Lead",
+    ("steps/library_steps.py", "assert_actions_overlay_closed", "delete_overlay_visible"): "не разобран, очередь Lead",
+    ("steps/library_steps.py", "assert_download_icon_not_shown", "has_download_icon"): "не разобран, очередь Lead",
+    ("steps/library_steps.py", "assert_open_icon_not_shown", "has_open_icon"): "не разобран, очередь Lead",
+    ("steps/library_steps.py", "assert_sort_option_unavailable", "is_present"): "не разобран, очередь Lead",
+    ("steps/settings_steps.py", "assert_clear_all_dialog_closed", "is_present"): "не разобран, очередь Lead",
+    ("steps/settings_steps.py", "assert_filter_profile_not_listed", "has_filter_profile"): "не разобран, очередь Lead",
+    ("steps/settings_steps.py", "assert_no_scan_complete_dialog", "is_present"): "не разобран, очередь Lead",
+}
+
 
 class Finding:
-    __slots__ = ("rel", "rule", "message")
+    __slots__ = ("rel", "rule", "message", "lineno", "func_name", "method_name")
 
-    def __init__(self, rel: str, rule: str, message: str):
+    def __init__(self, rel: str, rule: str, message: str, lineno: int | None = None,
+                 func_name: str | None = None, method_name: str | None = None):
         self.rel = rel
         self.rule = rule
         self.message = message
+        self.lineno = lineno
+        self.func_name = func_name
+        self.method_name = method_name
 
 
 def load_suite_markers(pytest_ini: Path = PYTEST_INI) -> set[str]:
@@ -268,15 +397,95 @@ def check_allure_and_markers(tree: ast.Module, rel: str, suite_markers: set[str]
     return findings
 
 
-def check_file(path: Path) -> list[Finding]:
+def _parse_framework_file(path: Path) -> tuple[ast.Module | None, Finding | None]:
+    """Общий парсер для файлов framework/ (используется правилами 1-2 и 4) —
+    `rel` считается ОТ FRAMEWORK в обоих случаях. `(tree, None)` при успехе,
+    `(None, Finding(rule="parse"))` при SyntaxError/UnicodeDecodeError."""
     rel = path.relative_to(FRAMEWORK).as_posix()
     try:
         source = path.read_text(encoding="utf-8")
         tree = ast.parse(source, filename=str(path))
     except (SyntaxError, UnicodeDecodeError) as exc:
-        return [Finding(rel, "parse", f"framework/{rel}: не удалось разобрать файл ({exc})")]
+        return None, Finding(rel, "parse", f"framework/{rel}: не удалось разобрать файл ({exc})")
+    return tree, None
+
+
+def check_file(path: Path) -> list[Finding]:
+    tree, err = _parse_framework_file(path)
+    if err is not None:
+        return [err]
+    rel = path.relative_to(FRAMEWORK).as_posix()
     findings = check_locators(tree, rel)
     findings += check_allure_and_markers(tree, rel, load_suite_markers())
+    return findings
+
+
+# --- Правило 4: NEGATIVE-THEN-WITHOUT-SETTLE (см. докстринг модуля). ТРЕТЬЯ
+# ветвь обхода — framework/steps/*.py, отдельный WARNS-канал (см. `run`). ---
+
+
+def check_negative_then_settle(tree: ast.Module, rel: str) -> list[Finding]:
+    """AST-матч `assert not <получатель>.<presence-метод>(...)` (см. докстринг
+    модуля для точной формы, предиката имени метода и обоснования AST vs регекс).
+    Получатель — ЛЮБОЕ выражение (Name/Attribute-цепочка/вызов конструктора) —
+    receiver-цепочки вида `Screen(driver).method().other()` матчатся тем же узлом,
+    что и голое `screen.method()`, потому что матч идёт по `operand.func`, не по
+    `operand.func.value`. `func_name` каждой находки — имя БЛИЖАЙШЕЙ объемлющей
+    функции/метода (ключ NEGATIVE_THEN_SETTLE_BASELINE, критик-вход D2-F1); ходим
+    рекурсивным спуском (не плоским `ast.walk`), чтобы отслеживать смену области
+    видимости при входе во вложенные `def`, без двойного счёта.
+    """
+    findings: list[Finding] = []
+
+    def visit(node: ast.AST, func_name: str) -> None:
+        for child in ast.iter_child_nodes(node):
+            if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                visit(child, child.name)
+                continue
+            if (isinstance(child, ast.Assert)
+                    and isinstance(child.test, ast.UnaryOp)
+                    and isinstance(child.test.op, ast.Not)
+                    and isinstance(child.test.operand, ast.Call)
+                    and isinstance(child.test.operand.func, ast.Attribute)):
+                attr = child.test.operand.func.attr
+                if NEGATIVE_THEN_METHOD_PATTERN.match(attr):
+                    findings.append(Finding(
+                        rel, "negative_then_settle",
+                        f"framework/{rel}:{child.lineno}: `assert not <получатель>.{attr}(...)` — "
+                        f"presence-примитив возвращается немедленно, пока элемент ещё присутствует "
+                        f"— исчезновения не дожидается; для негативного Then нужен "
+                        f"wait_absent/settle-hold-полл (base_screen.wait_absent:85)",
+                        lineno=child.lineno, func_name=func_name, method_name=attr,
+                    ))
+            visit(child, func_name)
+
+    visit(tree, "<module>")
+    return findings
+
+
+def run_negative_then_settle_rule() -> list[Finding]:
+    """Правило 4 по framework/steps/*.py (см. докстринг блока выше). Всегда WARNS
+    (см. `run`). Нечитаемый файл (SyntaxError/UnicodeDecodeError) НЕ падает (Ф1) —
+    но и НЕ пропускается молча (критик-вход D2-F2): правила 1-2 обходят только
+    TESTS_DIR (framework/tests/), их "parse"-ERROR framework/steps/ не касается —
+    тихий пропуск здесь оставил бы файл БЕЗ единой находки ЛЮБОГО правила модуля.
+    Кладём собственную WARN-находку `rule="negative_then_settle_parse"` вместо
+    обычной "negative_then_settle" (её никто не сверяет с NEGATIVE_THEN_SETTLE_
+    BASELINE — это не попадание правила, а отчёт о неприменимости)."""
+    if not STEPS_DIR.exists():
+        return []
+    findings: list[Finding] = []
+    for path in sorted(STEPS_DIR.glob("*.py")):
+        tree, err = _parse_framework_file(path)
+        if err is not None:
+            findings.append(Finding(
+                err.rel, "negative_then_settle_parse",
+                f"framework/{err.rel}: steps-файл не разобран — правило 4 по нему "
+                f"не применялось (см. {err.message})",
+            ))
+            continue
+        rel = path.relative_to(FRAMEWORK).as_posix()
+        findings.extend(check_negative_then_settle(tree, rel))
     return findings
 
 
@@ -552,8 +761,9 @@ def run_recording_rule() -> list[Finding]:
 
 def run() -> tuple[list[str], list[str]]:
     """Возвращает (errors, warns). WARN — известные исключения из ALLOWLIST (правила
-    1-2) либо ЛЮБАЯ находка правила 3 (см. `run_recording_rule` — отдельный
-    warns-канал, exit-код не меняется)."""
+    1-2) либо ЛЮБАЯ находка правила 3 (см. `run_recording_rule`) либо ЛЮБАЯ находка
+    правила 4 (см. `run_negative_then_settle_rule`) — оба отдельные warns-каналы,
+    exit-код не меняется."""
     errors: list[str] = []
     warns: list[str] = []
     if not TESTS_DIR.exists():
@@ -576,6 +786,24 @@ def run() -> tuple[list[str], list[str]]:
             warns.append(f"{message} [известное исключение — см. ALLOWLIST]")
         else:
             warns.append(message)
+
+    # Правило 4 (ТРЕТЬЯ ветвь обхода, framework/steps/*.py) — независима от TESTS_DIR;
+    # ВСЕГДА warns, никогда errors (см. докстринг модуля). Каждое попадание несёт
+    # вердикт из NEGATIVE_THEN_SETTLE_BASELINE (ключ — (rel, func_name, method_name),
+    # НЕ lineno, критик-вход D2-F1); отсутствие ключа — НЕ гашение находки (в отличие
+    # от ALLOWLIST у правил 1-2/3) — это НОВАЯ находка, дрейф бейзлайна. Находки типа
+    # "negative_then_settle_parse" (нечитаемый steps-файл, D2-F2) — не попадание
+    # правила, с бейзлайном не сверяются, печатаются как есть.
+    for finding in run_negative_then_settle_rule():
+        if finding.rule == "negative_then_settle_parse":
+            warns.append(f"rule4: {finding.message}")
+            continue
+        key = (finding.rel, finding.func_name, finding.method_name)
+        if key in NEGATIVE_THEN_SETTLE_BASELINE:
+            verdict = NEGATIVE_THEN_SETTLE_BASELINE[key]
+            warns.append(f"rule4: {finding.message} [вердикт: {verdict}]")
+        else:
+            warns.append(f"rule4: {finding.message} [без вердикта — НОВАЯ находка, не в бейзлайне]")
 
     return errors, warns
 
