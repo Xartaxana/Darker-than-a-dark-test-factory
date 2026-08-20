@@ -51,9 +51,15 @@ def assert_work_in_tab(driver, rating: str, title: str):
 
 @allure.step("Then во вкладке {rating} НЕТ работы «{title}»")
 def assert_work_not_in_tab(driver, rating: str, title: str):
+    """AT-BUG-083 (сиблинг AT-BUG-082, D-0043 «класс, не экземпляр»): раньше
+    делала ОДИН `has_work(timeout=4)` сразу после `open_tab_for_rating` — тот
+    же класс гонки с анимацией `HorizontalPager` (см. блок-комментарий у
+    `_poll_tab_absent` ниже). Теперь settle+hold опрос через `_poll_tab_absent`,
+    обобщённый из `_poll_files_tab_absent` (AT-BUG-082) на ЛЮБУЮ вкладку."""
+    tab_label = TAB_BY_RATING[rating]
     lib = LibraryScreen(driver).open_tab_for_rating(rating)
-    assert not lib.has_work(title, timeout=4), (
-        f"работа «{title}» неожиданно присутствует во вкладке {TAB_BY_RATING[rating]}"
+    assert _poll_tab_absent(lib, title, tab_label), (
+        f"работа «{title}» неожиданно присутствует во вкладке {tab_label}"
     )
 
 
@@ -85,7 +91,19 @@ def assert_work_in_files_tab(driver, title: str):
     assert lib.has_work(title), f"работа «{title}» не найдена во вкладке FILES"
 
 
-# --- AT-BUG-082: settle+hold опрос для негативного Then вкладки FILES ---
+# --- AT-BUG-082/083: settle+hold опрос для негативного Then ЛЮБОЙ вкладки ---
+# AT-BUG-083 (D-0043 «класс, не экземпляр», queued follow-up AT-BUG-082):
+# `assert_work_not_in_tab` (ЛЮБАЯ rating-вкладка — FAVORITE/KUDOSED/READ/
+# PENDING/DISLIKED, не только FILES) была СТРУКТУРНО ИДЕНТИЧНА
+# `assert_work_not_in_files_tab` ДО AT-BUG-082: один `has_work(timeout=4)`
+# сразу после `open_tab_for_rating`/`open_tab` — тот же класс гонки, разбор
+# ниже относится к ней в РАВНОЙ мере. `_poll_tab_absent` — обобщение
+# исходного `_poll_files_tab_absent` на произвольную вкладку (принимает
+# `tab_label` для сообщений/логов вместо жёстко зашитого «FILES»);
+# `_poll_files_tab_absent` оставлена тонкой обёрткой (`tab_label="FILES"`) —
+# сохраняет старое имя/сигнатуру для `assert_work_not_in_files_tab` и
+# существующих юнит-проб (`test_library_files_tab_settle_unit.py`).
+#
 # `LibraryScreen.open_tab`/`open_tab_for_rating` таплю по вкладке top bar,
 # реализованной через `HorizontalPager` (`LibraryScreen.kt:238`) — сам Compose
 # АНИМИРОВАННО скроллит страницы; во время скролла ИСХОДНАЯ (ещё не полностью
@@ -135,11 +153,14 @@ _FILES_TAB_ABSENT_HOLD_BUDGET = 4.0
 _FILES_TAB_ABSENT_HOLD_INTERVAL = 0.3
 
 
-def _poll_files_tab_absent(lib: LibraryScreen, title: str) -> bool:
+def _poll_tab_absent(lib: LibraryScreen, title: str, tab_label: str) -> bool:
     """Возвращает `True`, если `title` settled на ОТСУТСТВИИ на текущей
-    вкладке (фаза 1) И остаётся отсутствующей весь `_FILES_TAB_ABSENT_
-    HOLD_BUDGET` (фаза 2) — см. блок-комментарий у констант выше
-    (AT-BUG-082, Б1/Б4 критик-вход rework)."""
+    вкладке `tab_label` (фаза 1) И остаётся отсутствующей весь
+    `_FILES_TAB_ABSENT_HOLD_BUDGET` (фаза 2) — см. блок-комментарий у
+    констант выше (AT-BUG-082 Б1/Б4 критик-вход rework, обобщено на любую
+    вкладку в AT-BUG-083). `tab_label` — только для сообщений/логов, не
+    влияет на логику опроса (одна и та же гонка на любой вкладке того же
+    `HorizontalPager`)."""
     deadline = time.monotonic() + _FILES_TAB_SETTLE_TIMEOUT
     present = lib.has_work(title, timeout=_FILES_TAB_SETTLE_READ_TIMEOUT)
     settle_reads = 1
@@ -157,35 +178,43 @@ def _poll_files_tab_absent(lib: LibraryScreen, title: str) -> bool:
         # молчаливое решение, иначе "фикс подтверждён живыми прогонами"
         # неотличим от "гонка просто не выстрелила в этом прогоне" (правило 14).
         logger.warning(
-            "AT-BUG-082 Б4 (library_steps._poll_files_tab_absent): транзитный "
-            "стейл-позитив «%s» на вкладке FILES проглочен settle-фазой за "
+            "AT-BUG-082/083 (library_steps._poll_tab_absent): транзитный "
+            "стейл-позитив «%s» на вкладке %s проглочен settle-фазой за "
             "%d чтени(й/е) — расследуй, если повторяется часто (может "
             "означать, что анимация Pager'а систематически шире "
             "_FILES_TAB_SETTLE_TIMEOUT=%.1fs)",
-            title, settle_reads, _FILES_TAB_SETTLE_TIMEOUT,
+            title, tab_label, settle_reads, _FILES_TAB_SETTLE_TIMEOUT,
         )
     try:
         assert_holds_for(
             lambda: not lib.has_work(title, timeout=_FILES_TAB_SETTLE_READ_TIMEOUT),
             budget_s=_FILES_TAB_ABSENT_HOLD_BUDGET,
             interval_s=_FILES_TAB_ABSENT_HOLD_INTERVAL,
-            msg=f"работа «{title}» вновь появилась во вкладке FILES во время hold-окна наблюдения",
+            msg=f"работа «{title}» вновь появилась во вкладке {tab_label} во время hold-окна наблюдения",
         )
     except AssertionError:
         # Б1/Б4 критик-вход: ПОЗДНЯЯ регрессия — появилась ПОСЛЕ того, как
         # settle-фаза уже сошлась к отсутствию, но ДО истечения полного окна
         # наблюдения (ровно сценарий живой пробы критика). hold-фаза её ловит
         # (см. докстринг констант) — лог оставляет паспорт факта рядом с
-        # итоговым AssertionError вызывающего Then (assert_work_not_in_files_tab).
+        # итоговым AssertionError вызывающего Then (assert_work_not_in_files_tab/
+        # assert_work_not_in_tab).
         logger.warning(
-            "AT-BUG-082 Б1/Б4 (library_steps._poll_files_tab_absent): работа "
-            "«%s» вновь появилась во вкладке FILES во время hold-окна "
+            "AT-BUG-082/083 (library_steps._poll_tab_absent): работа "
+            "«%s» вновь появилась во вкладке %s во время hold-окна "
             "наблюдения (после %d settle-чтени(й/е)) — ПОЗДНЯЯ регрессия, "
-            "пойманная hold-фазой (старый settle-only код Б1 пропустил бы её)",
-            title, settle_reads,
+            "пойманная hold-фазой (старый settle-only код пропустил бы её)",
+            title, tab_label, settle_reads,
         )
         return False
     return True
+
+
+def _poll_files_tab_absent(lib: LibraryScreen, title: str) -> bool:
+    """Тонкая обёртка над `_poll_tab_absent(lib, title, "FILES")` — сохраняет
+    старое имя/сигнатуру (AT-BUG-082) для `assert_work_not_in_files_tab` и
+    существующих юнит-проб (`test_library_files_tab_settle_unit.py`)."""
+    return _poll_tab_absent(lib, title, "FILES")
 
 
 @allure.step("Then во вкладке FILES НЕТ работы «{title}»")
@@ -260,25 +289,36 @@ def open_in_background_via_overlay(driver, title: str):
     оба были буквально избыточным повторным round-trip'ом Appium-команды на
     УЖЕ известное состояние (карточка видна — доказано предусловиями
     сценария/предыдущими шагами; overlay откроется тем же кодовым путём, что
-    и у карточки №1, которая уже отработала в этом самом тесте). Здесь —
-    ОДИН `find()` (переиспользуется и как precondition-проверка: поднимает
-    `TimeoutException` с текстом локатора, если карточка не найдена, тот же
-    смысл, что раньше давал `has_work`+assert, просто без второго round-trip),
-    свой (более короткий, см. константу выше) `longClickGesture`, и сразу
-    `tap_open_in_background()` (сам ждёт появления/кликабельности пункта —
-    отдельный `delete_overlay_visible()` перед ним был чистым дублированием
-    его собственного ожидания). Измеримый эффект на TC-176 (единственный
-    потребитель с плотным тайминговым окном) — см. TC-176.md, раздел
-    «Тайминг burst-окна»: натуральный (без искусственной задержки) зазор
-    tap1→tap2 упал с 3.68-3.94с (rework attempt1) до ~3.1-3.5с; для
+    и у карточки №1, которая уже отработала в этом самом тесте).
+
+    TC-176 rework attempt3 (`bugs/AT-BUG-075.md`, критик-вход rework
+    attempt2, находка 2 — слоевой дрейф): раньше эта функция САМА делала
+    `driver.execute_script("mobile: longClickGesture", ...)` и сама собирала
+    локатор карточки, дублируя `LibraryScreen.long_press_work` вопреки
+    `docs/02-framework-architecture.md:44` («long-press — зона `screens/`,
+    не `steps/`»). Теперь делегирует В `long_press_work` (параметризован
+    `duration_ms`) — ОДИН locator/gesture-путь для ВСЕХ вызывающих (включая
+    `delete_via_overlay`), не два копии одной логики. `find()` карточки
+    выполняется внутри `long_press_work`, служит и precondition-проверкой —
+    поднимает `TimeoutException`, если карточка не найдена.
+
+    AT-BUG-075 rework attempt3 добавляла отдельный степ `find_work_card_
+    element` + пред-найденный элемент карточки №2 (передавался через
+    `element=` в `long_press_work`, вынося дорогой `find()` ЗА ПРЕДЕЛЫ
+    таймингово-чувствительного burst-окна TC-176) — снято rework attempt4
+    (координатор): измеримый эффект тонул в разбросе между прогонами
+    (диапазон natural gap СТАЛ ШИРЕ, не уже), а сам приём вводил новый класс
+    флака (`StaleElementReferenceException` на закэшированном elementId,
+    непойманный `--reruns`). `element=`-параметр убран из сигнатур обеих
+    функций (критик-гейт О-1, 2026-08-20) — ни один вызывающий код его не
+    передавал. Сразу `tap_open_in_background()` (сам ждёт появления/
+    кликабельности пункта — отдельный `delete_overlay_visible()` перед ним
+    был чистым дублированием его собственного ожидания). Эффект правки
+    rework attempt2 — см. TC-176.md, раздел «Тайминг burst-окна»; для
     TC-173/174/175/189 (без тайминговых ограничений) эффект — только
     ускорение прогона, семантика не меняется."""
     lib = LibraryScreen(driver)
-    el = lib.find(lib.by_text(title))
-    driver.execute_script(
-        "mobile: longClickGesture",
-        {"elementId": el.id, "duration": _OPEN_IN_BACKGROUND_LONG_PRESS_DURATION_MS},
-    )
+    lib.long_press_work(title, duration_ms=_OPEN_IN_BACKGROUND_LONG_PRESS_DURATION_MS)
     lib.tap_open_in_background()
 
 

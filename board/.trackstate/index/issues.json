@@ -5811,7 +5811,7 @@
       "risk:R-08",
       "automation:active"
     ],
-    "updated": "2026-08-15T15:31:00Z",
+    "updated": "2026-08-20T01:29:52Z",
     "resolution": "done",
     "children": [],
     "archived": false
@@ -7550,7 +7550,7 @@
     "epic": null,
     "parentPath": null,
     "epicPath": null,
-    "summary": "TC-176 burst-окно: натуральный запас tap1->tap2 ~0.7-0.85с даже после классовой правки open_in_background_via_overlay — ниже критик-ориентира ≥1с, дальнейшее ужатие требует правок вне манифеста rework attempt2",
+    "summary": "TC-176 burst-окно: натуральный запас tap1->tap2 ~0.52-0.67с после rework attempt4 (path 1/path 2 attempt3 сняты критиком как неокупившиеся/небезопасные, остался только layering-фикс) — ниже критик-ориентира ≥1с, дальнейшее ужатие требует пересмотра сценария/ориентира (test-strategist/Lead)",
     "issueType": "bug",
     "status": "bug-open",
     "priority": "p2",
@@ -7560,7 +7560,7 @@
       "test_case:TC-176",
       "sev:minor"
     ],
-    "updated": "2026-08-15T14:52:22Z",
+    "updated": "2026-08-20T01:29:52Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -7574,15 +7574,15 @@
     "epicPath": null,
     "summary": "Методическая норма Data Setup «auto_apply_filter материализуется только фактическим переключением тумблера» жила только прозой закрытого CH-010 — не была зафиксирована постоянным носителем, читаемым будущими test-designer-сессиями",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-08-15T19:25:47Z",
-    "resolution": null,
+    "updated": "2026-08-20T04:10:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -7726,15 +7726,15 @@
     "epicPath": null,
     "summary": "assert_work_not_in_tab гонится с анимацией HorizontalPager Library (тот же класс, что AT-BUG-082, но на ЛЮБОЙ вкладке, не только FILES) — не почин, только заведён (D-0043 queued follow-up)",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
       "bug",
       "sev:minor"
     ],
-    "updated": "2026-08-17T08:25:19Z",
-    "resolution": null,
+    "updated": "2026-08-20T04:07:00Z",
+    "resolution": "done",
     "children": [],
     "archived": false
   },
@@ -7769,7 +7769,7 @@
     "epicPath": null,
     "summary": "assert_comment_collapsed_with_text читает RatingOverlay.comment_expanded() сразу после save_note() без settle — TC-115 красный в полном test_downloads.py (структурно не связан с AT-BUG-082 fix)",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-verified",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -7777,7 +7777,51 @@
       "test_case:TC-115",
       "sev:minor"
     ],
-    "updated": "2026-08-17T08:25:19Z",
+    "updated": "2026-08-20T04:08:00Z",
+    "resolution": "done",
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-086",
+    "path": "board/AT-BUG-086/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "assert_theme_mode_pref читает SharedPreferences сразу после серии select_theme без settle — TC-005 (test_theme_toggle_stable) красный в test_smoke.py (структурно не связан с AT-BUG-083 fix)",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-005",
+      "sev:minor"
+    ],
+    "updated": "2026-08-20T00:51:21Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-087",
+    "path": "board/AT-BUG-087/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "TC-135 (test_cold_start_deep_link_reuses_single_home_tab) TimeoutError на wait_tabs_persisted(timeout=20) — воспроизводимо 2/2 в изоляции, причина не разделена между реальной регрессией и деградацией резидентной Appium-сессии",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-135",
+      "sev:major"
+    ],
+    "updated": "2026-08-20T04:29:52Z",
     "resolution": null,
     "children": [],
     "archived": false

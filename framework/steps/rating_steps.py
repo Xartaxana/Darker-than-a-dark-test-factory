@@ -6,12 +6,14 @@
 """
 from __future__ import annotations
 
+import logging
 import re
+import time
 
 import allure
 
 from framework.core import contexts
-from framework.core.waits import wait_for, wait_until
+from framework.core.waits import assert_holds_for, wait_for, wait_until
 from framework.data import seed_db
 from framework.screens.browser_screen import BrowserScreen
 from framework.screens.navigation import BottomNav
@@ -23,6 +25,8 @@ from framework.steps import browser_steps
 # диагностика ниже обязана согласовываться с реальным условием приложения, а не
 # с приблизительной эвристикой.
 _WORK_URL_RE = re.compile(r"/works/(\d+)")
+
+logger = logging.getLogger(__name__)
 
 
 def _work_page_diagnosis(driver) -> str:
@@ -275,6 +279,12 @@ def add_tag_via_listing_overlay(driver, tag: str):
 
 @allure.step("Then overlay рейтинга открыт с развёрнутым полем комментария, предзаполненным «{expected_text}»")
 def assert_note_overlay_expanded_with_text(driver, expected_text: str):
+    """AT-BUG-085 сиблинг-аудит (D-0043): оба чтения здесь — ПОЗИТИВНЫЕ опросы
+    присутствия (`is_visible`/`comment_expanded` → `BaseScreen.is_present`,
+    сам ждёт ПОЯВЛЕНИЯ узла до своего `timeout`) — не подвержены классу гонки
+    AT-BUG-085 (которая била только НЕГАТИВНОЕ чтение `not comment_expanded()`,
+    короткозамыкавшееся на первом снимке без ожидания ИСЧЕЗНОВЕНИЯ узла).
+    Оставлено без изменений."""
     overlay = RatingOverlay(driver)
     assert overlay.is_visible(), "overlay рейтинга не открылся по Note-кнопке"
     assert overlay.comment_expanded(), (
@@ -290,15 +300,118 @@ def assert_note_overlay_expanded_with_text(driver, expected_text: str):
 
 @allure.step("Then bottom-sheet рейтинга остаётся открытым")
 def assert_overlay_still_open(driver):
+    """AT-BUG-085 сиблинг-аудит (D-0043): `is_visible()` — позитивный опрос
+    присутствия, не подвержен классу гонки AT-BUG-085 (см. докстринг
+    `assert_note_overlay_expanded_with_text`). Оставлено без изменений."""
     assert RatingOverlay(driver).is_visible(), (
         "bottom-sheet рейтинга неожиданно закрылся"
     )
 
 
+# --- AT-BUG-085: settle+hold опрос для негативного Then после сохранения
+# комментария — тот же двухфазный приём, что `library_steps._poll_tab_absent`
+# (AT-BUG-082/083), применённый к ДРУГОМУ UI-механизму этого модуля.
+#
+# Локализация (живое чтение `ui/components/RatingOverlay.kt`, `RatingMenu`):
+# переключение `showComment` НЕ анимировано — ни `animateColorAsState`, ни
+# `AnimatedVisibility` на этой ветке НЕТ, это простой Compose `if (!showComment
+# && comment.isNotBlank()) {...превью...} else {TextButton("Hide note"/"Add a
+# note")}` — ЭТО доказано чтением кода. Задержка на recomposition/measure/
+# layout ПЕРЕД тем, как новое дерево реально отражается в accessibility
+# snapshot под нагрузкой (тот же класс задержки, что WARNING `LibraryScreen.
+# _settle_tab_switch` в AT-BUG-082 наблюдении) — ОЦЕНКА конкретного механизма
+# задержки, НЕ изолирована отдельным замером (F-30; критик-гейт О3,
+# 2026-08-20); на корректность самого фикса это не влияет — см. следующий
+# абзац, он не зависит от точного механизма. Async Room-запись / JS-мост
+# `applyRatings` НЕ на критическом пути этого конкретного чтения — оба
+# пишутся/читаются через `onSaveNote`, но `showComment=false` выставляется
+# СИНХРОННО в том же обработчике клика, до ухода в `onSaveNote`.
+#
+# `assert_comment_collapsed_with_text` раньше делала ОДИН
+# `overlay.comment_expanded()` СРАЗУ после `add_note_via_listing_overlay`
+# (тап «Save note», возврат немедленный). `comment_expanded()` →
+# `BaseScreen.is_present(by_text("Hide note"))` ждёт ПОЯВЛЕНИЯ узла, но
+# возвращает `True` НЕМЕДЛЕННО на первом же снимке, если узел ещё присутствует
+# — НЕ ждёт его ИСЧЕЗНОВЕНИЯ. Если «Hide note» ещё не успел уйти из дерева на
+# момент чтения, `not comment_expanded()` падает мгновенно, без единого шанса
+# на устаканивание (TC-115, `bugs/AT-BUG-085.md`). ЭТО — достаточное и
+# самостоятельное основание фикса, доказано чтением `base_screen.py` (критик-
+# гейт AT-BUG-085, 2026-08-20).
+#
+# Окно наблюдения (критик-гейт О1, 2026-08-20): старая семантика читала ОДИН
+# раз с timeout=6s (полное непрерывное окно ожидания появления). Новое
+# settle+hold покрывает settle(до 3.0s, интервал 0.3s) + hold(до 4.0s,
+# интервал 0.3s) ≈ до 5.9s суммарно, с блокирующими паузами `sleep(0.3)`
+# между чтениями (не непрерывное наблюдение, а дискретный опрос) — короче
+# исходных 6s и с бюджетом слепых промежутков ~0.9s. Признано практически
+# незначимым: реэкспансия — persistent-состояние (не транзиентный всплеск),
+# 5+ независимых живых прогонов (worker + критик) сошлись зелёными; бюджет
+# сознательно НЕ увеличен до 6s, чтобы не удлинять КАЖДЫЙ вызов без
+# доказанной необходимости — при первом же рецидиве флака здесь пересмотреть
+# это решение в первую очередь.
+#
+# Стоимость чтения `comment_expanded` в этом контексте (settle-интервал 0.3s
+# read_timeout=1) живым замером НЕ откалибрована под D-0043 (докстринг
+# `waits.poll_until_stable`, критик-гейт О2, 2026-08-20) — унаследована от
+# `library_steps._poll_tab_absent` без замера на этом конкретном экране.
+# Направление отказа безопасное (ложный красный, не ложный зелёный) —
+# остаточный риск, не блокер.
+_COMMENT_COLLAPSE_SETTLE_TIMEOUT = 3.0
+_COMMENT_COLLAPSE_SETTLE_INTERVAL = 0.3
+_COMMENT_COLLAPSE_SETTLE_READ_TIMEOUT = 1
+_COMMENT_COLLAPSE_HOLD_BUDGET = 4.0
+_COMMENT_COLLAPSE_HOLD_INTERVAL = 0.3
+
+
+def _poll_comment_collapsed(overlay: RatingOverlay) -> bool:
+    """Возвращает `True`, если поле комментария settled на СВЁРНУТОМ виде
+    (фаза 1, `_COMMENT_COLLAPSE_SETTLE_TIMEOUT`) И остаётся свёрнутым весь
+    `_COMMENT_COLLAPSE_HOLD_BUDGET` (фаза 2) — см. блок-комментарий выше за
+    полным разбором класса гонки (AT-BUG-085, обобщение AT-BUG-082/083
+    `library_steps._poll_tab_absent` на другой UI-механизм)."""
+    deadline = time.monotonic() + _COMMENT_COLLAPSE_SETTLE_TIMEOUT
+    expanded = overlay.comment_expanded(timeout=_COMMENT_COLLAPSE_SETTLE_READ_TIMEOUT)
+    settle_reads = 1
+    while expanded and time.monotonic() < deadline:
+        time.sleep(_COMMENT_COLLAPSE_SETTLE_INTERVAL)
+        expanded = overlay.comment_expanded(timeout=_COMMENT_COLLAPSE_SETTLE_READ_TIMEOUT)
+        settle_reads += 1
+    if expanded:
+        # Никогда не сходилось к свёрнутому виду за весь settle-бюджет —
+        # persistent-регрессия, не транзитный артефакт recomposition-лага.
+        return False
+    if settle_reads > 1:
+        logger.warning(
+            "AT-BUG-085 (rating_steps._poll_comment_collapsed): транзитный "
+            "стейл-позитив «Hide note» проглочен settle-фазой за %d "
+            "чтени(й/е) — расследуй, если повторяется часто (может означать, "
+            "что recomposition/layout систематически шире "
+            "_COMMENT_COLLAPSE_SETTLE_TIMEOUT=%.1fs)",
+            settle_reads, _COMMENT_COLLAPSE_SETTLE_TIMEOUT,
+        )
+    try:
+        assert_holds_for(
+            lambda: not overlay.comment_expanded(timeout=_COMMENT_COLLAPSE_SETTLE_READ_TIMEOUT),
+            budget_s=_COMMENT_COLLAPSE_HOLD_BUDGET,
+            interval_s=_COMMENT_COLLAPSE_HOLD_INTERVAL,
+            msg="поле комментария вновь развернулось во время hold-окна наблюдения",
+        )
+    except AssertionError:
+        logger.warning(
+            "AT-BUG-085 (rating_steps._poll_comment_collapsed): поле "
+            "комментария вновь развернулось во время hold-окна наблюдения "
+            "(после %d settle-чтени(й/е)) — ПОЗДНЯЯ регрессия, пойманная "
+            "hold-фазой (старый одноразовый код пропустил бы её)",
+            settle_reads,
+        )
+        return False
+    return True
+
+
 @allure.step("Then после сохранения поле комментария свёрнуто в превью с текстом «{text}»")
 def assert_comment_collapsed_with_text(driver, text: str):
     overlay = RatingOverlay(driver)
-    assert not overlay.comment_expanded(), (
+    assert _poll_comment_collapsed(overlay), (
         "поле комментария должно свернуться в компактное превью, а не остаться развёрнутым"
     )
     assert overlay.comment_text_visible(text), (

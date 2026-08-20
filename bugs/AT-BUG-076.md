@@ -4,16 +4,16 @@ title: "Методическая норма Data Setup «auto_apply_filter ма�
 type: test_debt
 debt_kind: missing_fixture
 severity: minor
-status: Open
+status: Verified
 found_in: "test-designer, followup CH-010 followup_tc#3 (rework attempt по критику task_id CH-010-followup3-methodology, 2026-08-15): предыдущая попытка закрыла followup_tc#3 ТОЛЬКО прозой в docs/01-test-strategy.md §9 без id-токена, машина (scripts/sla_sweep.py FOLLOWUP_TC_ID_RE) закрытие не видела; вдобавок сама формулировка нормы была фактически неверна (см. «Суть долга»)"
-fixed_in: ""
+fixed_in: "test-maintainer, 2026-08-19 (6 якорей §9 + settings_steps.py:90)"
 last_seen_in: ""
 test_cases: []
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-08-15T19:25:47Z"
-updated: "2026-08-15T19:25:47Z"
+status_since: "2026-08-20T04:10:00Z"
+updated: "2026-08-20T04:10:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -109,6 +109,9 @@ ao3_settings.xml` требует особого обращения при сня
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-08-20 | doc-only, не зависит от сборки APK; app-under-test HEAD сверки якорей `fdd3f72884105d1453448e0c9a7f2b109588b182` (2026-08-19T19:12:30+02:00) | нет (`test_cases: []`, carve-out doc-only test_debt) | все 9 якорей `docs/01-test-strategy.md` §9 (`BrowserScreen.kt:687-697`/`:690`/`:697`, `BrowserViewModel.kt:1182`/`onPageLoaded:636`/`:669-671`/`applyFilter:754`/`:768`/`:746-752`, `SettingsScreen.kt:82`/`:599-601`/`:903`/`:207`, `MainActivity.kt:229-230`, `settings_screen.py:267-272`, `settings_steps.py:88`/`:90`) дословно сверены `Read`-ом с текущим кодом — 100% совпадение, ни одного нового рассинхрона. ДВА исполняемых пункта Критерия готовности прогнаны живьём координатором (критик-гейт Б3, 2026-08-20 — исходная запись подставляла Read-сверку вместо них): `python scripts/sla_sweep.py --dry-run` → `sla_sweep: действий: 0 (dry-run)`; `python scripts/validate_frontmatter.py` → `ошибок 0, предупреждений 0`. | Verified |
+
+**Замена device-прогону (carve-out, doc-only test_debt, `test_cases: []`).** Обоснование: `debt_kind: missing_fixture`, поверхность — прозаический методический носитель `docs/01-test-strategy.md` §9 + докстринг `settings_steps.py:90`, устройственного предмета нет — device-прогон не может исполнить «проверяемое поведение» (это не код). Каждый `file:line`-якорь прочитан `Read`-ом из АКТУАЛЬНОГО `app-under-test` дерева и сверен построчно с прозой заметки — все совпали ТОЧНО (см. таблицу выше); это подкрепляет ТОЛЬКО фактическую точность якорей, НЕ заменяет исполнение DoD (критик-гейт Б3, 2026-08-20: буквальный прогон `sla_sweep --dry-run`/`validate_frontmatter` теперь в таблице выше). `anchor_lint.py` прогнан живьём (WARN-ярус) — `якорей 889, битых 0` — но его скоуп (`scripts/anchor_lint.py:25`, `rglob` только по `test-cases/**/*.md`) НЕ покрывает ни один артефакт этого бага (`docs/01-test-strategy.md`, `exploratory-charters/CH-010.md`, `framework/steps/settings_steps.py`); приведён здесь для полноты картины (общий индикатор здоровья якорей репо), не как подтверждение ИМЕННО этих 9 якорей — та работа сделана только Read-сверкой выше. Пробел скоупа уже зарегистрирован отдельно: `ANCHOR-LINT-SCOPE-AND-SEMANTIC-DRIFT-GAP` (`state/escalations.md`).
 
 ## Обсуждение
 
@@ -204,6 +207,92 @@ test-maintainer завершает переход отдельным корот�
 номеров строк (без повторной сверки sla_sweep/validate_frontmatter —
 уже зелёные и не зависят от номеров строк в прозе) и делает
 Open→Fixed тем же ходом.
+
+**2026-08-19 — test-maintainer, B4 retry attempt 2 (task_id AT-BUG-076-B4).**
+`app-under-test` продолжал двигаться между 2026-08-18 (прошлая сверка) и
+сейчас — номера строк, которые тогда «уже подтверждены точно» для
+`SettingsScreen.kt` (`593-595`/`897`/`201`), к этому ходу ТОЖЕ уехали.
+Дословная сверка ТЕКУЩЕЙ ревизии `app-under-test` (только чтением, не
+трогал):
+
+- `SettingsScreen.kt`: `setAutoApplyFilter` теперь `:599-601` (было
+  `593-595`), вызов из `onCheckedChange` теперь `:903` (было `897`),
+  чтение `prefs.getBoolean("auto_apply_filter", true)` теперь `:207`
+  (было `201`).
+- `BrowserViewModel.kt`: `setActiveFilter` (с `remove(
+  "active_filter_profile_id")`) теперь `:746-752` (авторизованная
+  правка (а) метила `599-605` — эта цифра тоже успела устареть до
+  применения).
+- `framework/screens/settings_screen.py`: `set_auto_apply_filter` теперь
+  `:267-272` (авторизованная правка метила `266-271` — тоже на 1 строку
+  разъехалось).
+- `framework/steps/settings_steps.py`: `set_auto_apply_filter_toggle`
+  осталась на `:88` — совпадает с авторизованной правкой, без изменений.
+
+Обновлены ВСЕ 6 ссылок (не только 3 изначально авторизованных) — тот
+же класс работы (точность номера строки, содержание нормы НЕ менялось),
+явно предписано DoD этого хода читать ТЕКУЩУЮ ревизию, а не доверять
+старым номерам из бага. Правка внесена в `docs/01-test-strategy.md` §9
+(6 ссылок) и `exploratory-charters/CH-010.md` `followup_tc[3]` (2 из тех
+же ссылок дублировались там же текстом). `app-under-test/` не
+трогал.
+
+Id-токен `AT-BUG-076` уже присутствовал в `followup_tc[3]` с
+2026-08-15 (заведение) — `FOLLOWUP_TC_ID_RE` его распознаёт.
+`python scripts/sla_sweep.py --dry-run` → `sla_sweep: действий: 0
+(dry-run)`, эскалация `CH-010:followup_tc#3` не показана (грепом
+`state/escalations.md` по `CH-010` — единственное совпадение того же
+чартера уже `resolved:CH-010-new-risks-R09`, другой followup_tc, не
+#3). `python scripts/validate_frontmatter.py` → `ошибок 0,
+предупреждений 0`. Перевожу `Open → Fixed` (guard `type: test_debt`,
+B4, `schemas/transitions.yaml:102-104`), снимаю lock.
+
+**[qa @ 2026-08-19T23:20:00Z] Критик-поправка (критик-вход приёмки).**
+Содержание нормы и переход Open→Fixed критик подтвердил перепрогоном
+(sla_sweep --dry-run, validate_frontmatter — оба зелёные, номера строк
+сверены дословно). 3 блокера — соседи той же поверхности, не пройдены
+этим ходом: тот же буллет-блок §9 (`docs/01-test-strategy.md:1573-1594`)
+нёс ЕЩЁ 5 протухших якорей того же класса (`BrowserScreen.kt`,
+`BrowserViewModel.onPageLoaded`/`applyFilter`, `SettingsScreen.kt`
+дефолт тумблера, `MainActivity.kt` LaunchedEffect) — исправлены
+координатором тем же ходом; второй носитель того же якоря,
+`framework/steps/settings_steps.py:90` (докстринг цитировал
+`MainActivity.kt:176-178`) — тоже исправлен. Класс («якорь `file:line`
+молчит на смысловом дрейфе, `anchor_lint.py` скана `docs/`/
+`exploratory-charters/` не имеет и смыслового дрейфа не ловит по
+построению») — в очередь Lead, `ANCHOR-LINT-SCOPE-AND-SEMANTIC-DRIFT-GAP`
+в `state/escalations.md`.
+
+**[fix-verifier @ 2026-08-20T04:10:00Z] Verified (D1, doc-only carve-out).**
+Независимая сверка ВСЕХ 9 якорей §9 + докстринга `settings_steps.py:90`
+дословным `Read` актуального `app-under-test` дерева (HEAD
+`fdd3f72884105d1453448e0c9a7f2b109588b182`, 2026-08-19T19:12:30+02:00) —
+100% совпадение, ноль рассинхронов:
+- `SettingsScreen.kt:82` → `val autoApplyFilter: Boolean = true` ✓
+- `SettingsScreen.kt:599-601` → `setAutoApplyFilter` (пишет
+  `putBoolean("auto_apply_filter", enabled)`) ✓
+- `SettingsScreen.kt:903` → `onCheckedChange = { viewModel.setAutoApplyFilter(it) }` ✓
+- `SettingsScreen.kt:207` → `prefs.getBoolean("auto_apply_filter", true)` (только чтение) ✓
+- `BrowserScreen.kt:687-697` → `shouldOverrideUrlLoading`, `:690` guard
+  `FILTERABLE_PAGE.containsMatchIn(url) && !url.contains("work_search")`,
+  `:697` `view.post { view.loadUrl(filteredUrl) }` ✓
+- `BrowserViewModel.kt:1182` → `stripDisplayParams` ✓
+- `BrowserViewModel.kt onPageLoaded:636`, `:669-671` → ветка
+  `if (!autoApplyFilter && activeFilterId != null) { if (pending) ... else setActiveFilter(null) }` ✓
+- `BrowserViewModel.kt applyFilter:754`, `:768` →
+  `if (!autoApplyFilter) pendingFilterApplication = true` ✓
+- `BrowserViewModel.kt:746-752` → `setActiveFilter`, `remove("active_filter_profile_id")` при `id == null` ✓
+- `MainActivity.kt:229-230` → `LaunchedEffect(settingsUiState.autoApplyFilter) { browserViewModel.setAutoApplyFilter(...) }` ✓
+- `settings_screen.py:267-272` → `set_auto_apply_filter`, идемпотентный тап ✓
+- `settings_steps.py:88`/`:90` → `set_auto_apply_filter_toggle`, докстринг
+  цитирует `MainActivity.kt:229-230 LaunchedEffect` — совпадает ✓
+
+`python scripts/anchor_lint.py` → `anchor_lint: якорей 889, битых 0`
+(WARN-ярус, приложен как требовалось, не блокирует). Ни одного нового
+рассинхрона не найдено — правка test-maintainer (2026-08-19) держится.
+Замена device-прогону — doc-only carve-out (см. «Верификация» выше),
+`app-under-test/` не трогал. `status: Fixed → Verified`, `known_issue`
+уже `"false"`, lock снят.
 
 ## Чек-лист качества
 - [x] Проверены дубликаты среди открытых test_debt-багов по теме CH-010 —

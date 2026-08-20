@@ -87,7 +87,7 @@ def assert_tap_to_scroll_enabled(driver, expected: bool = True):
 @allure.step("When в Settings тумблер «Auto-apply on navigation» установлен в {enabled}")
 def set_auto_apply_filter_toggle(driver, enabled: bool):
     """TC-181/184/185: реактивная связка Settings→MainActivity→BrowserViewModel
-    (`MainActivity.kt:176-178 LaunchedEffect`) применяет новое значение немедленно,
+    (`MainActivity.kt:229-230 LaunchedEffect`) применяет новое значение немедленно,
     без рестарта — тумблер можно переключать в любой момент сценария, ДО или ПОСЛЕ
     навигации на Browse (в отличие от `enable_tap_to_scroll`, чей гейт вычисляется
     один раз при инъекции)."""

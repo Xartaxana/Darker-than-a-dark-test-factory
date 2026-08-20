@@ -1,5 +1,17 @@
 # HANDOFF — точка возобновления
 
+**ОЧЕРЕДЬ LEAD-TIER КОММИТА (проход 3, /factory 20, Sonnet-координатор,
+2026-08-20T04:5x):** `scripts/arch_check.py` несёт 2 незакоммиченных
+ALLOWLIST-записи (`test_library_tab_settle_unit.py`/AT-BUG-083,
+`test_rating_comment_collapse_settle_unit.py`/AT-BUG-085) — обе критик-
+одобрены (D1-батч критик-гейт, accepted basis=critic/queued-to-lead в
+routing-log), но `mechanism_gate` отказал sonnet-tier коммит (правило
+10, tier ниже привязки). Правка узкая — мирроит уже закоммиченный
+AT-BUG-082 паттерн, не новый класс. Первая же сессия Lead-яруса
+(Opus/Fable): `git add scripts/arch_check.py`, коммит с осевым блоком
+(см. неудавшуюся попытку — оси 1-4/7-13 н-п, ось 5/6 покрыта, как в
+этой записи) + `tier: opus` (или fable).
+
 **ЗАКРЫТИЕ СЕССИИ 2026-08-19 (42 — Fable, полный Lead).** Сделано:
 (1) проход /qa-loop закрыт штатно ранее в сессии (4 срабатывания,
 AT-BUG-073 Verified — sync-инфраструктура разблокирована; батч

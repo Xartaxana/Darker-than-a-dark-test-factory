@@ -898,7 +898,24 @@ def two_works_same_tab_seeded():
     — нужно для проверки счётчика снекбара по ДВУМ последовательным фоновым
     открытиям РАЗНЫХ карточек (не Files — цель overlay должна быть AO3-URL, не
     локальный файл, см. TC-173/174). Локальная фикстура (не в `conftest.py`) —
-    тот же приём, что `file_access_probe_seeded` в `test_security_file_access.py`."""
+    тот же приём, что `file_access_probe_seeded` в `test_security_file_access.py`.
+
+    AT-BUG-075 rework attempt3 (path 2, СНЯТО rework attempt4): фикстура
+    раньше отключала системные animation-scale настройки
+    (`adb.set_animation_scales(0.0)`/`restore_animation_scales`) на время
+    теста — снято координатором как небезопасное и неокупившееся: (1) живой
+    замер критика показал `window_animation_scale=1.0` на его устройстве
+    (не 0.0, как утверждал докстринг attempt3), и `framework/config/
+    capabilities.py:45` УЖЕ выставляет `appium:disableWindowAnimation=True`
+    для каждой Appium-сессии — существующий механизм, не упомянутый вовсе;
+    несущая посылка «здесь уже 0.0» не была подтверждена исключающим
+    прогоном (с фикстурой vs без неё); (2) helper читал `settings get
+    global` через `shell()` (returncode игнорируется), на сбое adb
+    `restore_animation_scales` записал бы `1.0` во все три ГЛОБАЛЬНЫХ
+    ключа ОС поверх фактических значений — без `ensure_default_
+    animation_scales()` session-scope fail-safe (какой есть у font_scale/
+    night_mode, `conftest.py:66/128/256`) следующий тест унаследовал бы
+    загрязнённое устройство. См. `bugs/AT-BUG-075.md` rework attempt4."""
     app_steps.clean_state()
     app_steps.seed_library([(W.LOVED, "SAVE"), (W.KUDOSED, "SAVE")])
     yield W.LOVED, W.KUDOSED
@@ -935,15 +952,21 @@ def test_background_open_snackbar_counts_background_opens_not_total(
     `consumeBackgroundTabSignal()`) и показывает уже накопленный
     burst-счётчик.
 
-    Тайминг burst-окна (критик-вход rework attempt1, `bugs/AT-BUG-075.md`):
-    зазор tap1->tap2 (жёсткий потолок ~4.2-4.3с по гранично́му зонду rework
-    attempt2, TC-176.md «Тайминг burst-окна») — натуральный (без
-    искусственной задержки) зазор здесь после классовой правки
-    `library_steps.open_in_background_via_overlay` (см. её докстринг) — это
-    ~3.1-3.5с (было 3.68-3.94с), запас ~0.7-0.85с. Ниже критик-ориентира
-    (≥1с) — доведение до полного ориентира требует правок за пределами
-    манифеста этого раунда (см. `bugs/AT-BUG-075.md`, заведён этим же
-    проходом)."""
+    Тайминг burst-окна (критик-вход rework attempt1/attempt3, `bugs/
+    AT-BUG-075.md`): зазор tap1->tap2 после классовой правки
+    `library_steps.open_in_background_via_overlay` (rework attempt2 —
+    двойной round-trip убран, `longClickGesture` короче) — rework attempt4
+    (текущий код) откатил ОБА пути расширенного манифеста attempt3
+    (пред-нахождение карточки №2 — маргинальный эффект, тонущий в шуме, плюс
+    новый класс флака `StaleElementReferenceException`; отключение
+    animation scale — небезопасный helper, не подтверждённый исключающим
+    прогоном), сохранив только layering-фикс (`long_press_work`
+    параметризован `duration_ms`, `open_in_background_via_overlay` больше
+    не дублирует Appium-вызов). См. TC-176.md «Тайминг burst-окна» —
+    живые числа rework attempt4, запас по-прежнему НИЖЕ критик-ориентира
+    (≥1с), `bugs/AT-BUG-075.md` остаётся `Open`, дальнейшее сужение требует
+    пересмотра сценария/ориентира (test-strategist/Lead), не самостоятельной
+    правки в рамках этого манифеста."""
     work1, work2 = two_works_same_tab_seeded
 
     # Given приложение на экране Library, открыта ровно 1 вкладка (Home)
@@ -960,9 +983,9 @@ def test_background_open_snackbar_counts_background_opens_not_total(
     # And СРАЗУ ЖЕ, не дожидаясь дисмисса снекбара от первого открытия (иначе
     # burst успеет сброситься в consumeBackgroundTabSignal — см. докстринг),
     # долгим нажатием по карточке №2 (ДРУГАЯ работа) открывает overlay и
-    # тапает «Open in background tab» (второе открытие ТОГО ЖЕ burst'а — тот
-    # же экран, без навигации прочь и обратно, минимальный естественный темп
-    # UI-примитивов). Промежуточный `wait_persisted_tab_count(2)` убран
+    # тапает «Open in background tab» (второе открытие ТОГО ЖЕ burst'а —
+    # тот же экран, без навигации прочь и обратно, минимальный естественный
+    # темп UI-примитивов). Промежуточный `wait_persisted_tab_count(2)` убран
     # (rework attempt2 — доп. вклад в запас тайминга; финальный
     # `wait_persisted_tab_count(3)` ниже по-прежнему подтверждает
     # кумулятивный эффект обоих открытий, промежуточная проверка тут не

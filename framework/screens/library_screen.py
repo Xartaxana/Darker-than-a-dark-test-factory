@@ -57,10 +57,12 @@ FILES_TAB = "FILES"
 #
 # ALL FIVE existing readers that go through `open_tab`/`open_tab_for_rating`
 # (`library_steps.assert_work_in_tab`, `assert_work_not_in_tab` — AT-BUG-083
-# sibling, `assert_work_tags_visible`, `assert_work_note_icon_visible`,
-# `assert_work_in_files_tab`) get this settle "for free" — the fix lives at
-# the ONE place all of them share (D-0043: chini class, not instance;
-# AT-BUG-082 Б3 критик-вход).
+# sibling, now ALSO fixed at its own call site via `_poll_tab_absent`, see
+# AT-BUG-083 "Верификация" — this settle here is the SECOND line of defense
+# for it, not the only one anymore — `assert_work_tags_visible`,
+# `assert_work_note_icon_visible`, `assert_work_in_files_tab`) get this
+# settle "for free" — the fix lives at the ONE place all of them share
+# (D-0043: chini class, not instance; AT-BUG-082 Б3 критик-вход).
 #
 # --- ESC-035 (AT-BUG-082 эскалация правила 6, Lead-решение 2026-08-18T10:25Z,
 # `state/escalations.md`) — signal replaced, `_scroll_fingerprint` removed
@@ -281,10 +283,25 @@ class LibraryScreen(BaseScreen):
 
     # --- Long-press overlay (WorkActionsSheetContent в LibraryScreen.kt:
     # "Delete work" / "Delete downloaded file") ---
-    def long_press_work(self, title: str, timeout: int | None = None):
+    #
+    # AT-BUG-075 rework attempt3 (path 1): параметризован `duration_ms` (было
+    # захардкожено 1000мс здесь и ПОВТОРНО другим значением в
+    # `library_steps.open_in_background_via_overlay`, которая раньше сама
+    # делала `driver.execute_script("mobile: longClickGesture", ...)` и сама
+    # собирала локатор карточки — дублируя ЭТОТ метод, вопреки
+    # `docs/02-framework-architecture.md:44` («long-press — зона `screens/`,
+    # не `steps/`»). Этот layering-фикс ОСТАЁТСЯ (rework attempt4). rework
+    # attempt3 также добавлял `element=` (передача уже найденного элемента
+    # карточки, чтобы вынести `find()` за пределы временнóго окна) — СНЯТ
+    # rework attempt4 (`bugs/AT-BUG-075.md`): измеримый эффект тонул в
+    # разбросе между прогонами (диапазон natural gap стал ШИРЕ, не уже) и
+    # вводил новый класс флака (`StaleElementReferenceException` на
+    # закэшированном elementId). Убран из сигнатуры вместе с использованием
+    # (критик-гейт О-1, 2026-08-20) — ни один вызывающий код его не передавал.
+    def long_press_work(self, title: str, timeout: int | None = None, duration_ms: int = 1000):
         el = self.find(self.by_text(title), timeout)
         self.driver.execute_script(
-            "mobile: longClickGesture", {"elementId": el.id, "duration": 1000})
+            "mobile: longClickGesture", {"elementId": el.id, "duration": duration_ms})
         return self
 
     def delete_overlay_visible(self, timeout: int | None = None) -> bool:
