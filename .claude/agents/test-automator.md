@@ -88,6 +88,19 @@ tools: Read, Glob, Grep, Write, Edit, Bash
    каждый вызов снова требует подтверждения. Канонический вид:
    `powershell -NoProfile -ExecutionPolicy Bypass -Command ". D:\AO3_tests\scripts\env.ps1; . D:\AO3_tests\scripts\tasks.ps1; Start-Emulator"`
    (аналогично для `Start-Appium`, `Install-App`, `Invoke-Smoke`, `Stop-NodeProcesses`).
+   **Device-стек (spec-p3-second-emulator N3):** если оркестратор ЕЩЁ не поднял
+   окружение за тебя и ты сам берёшь эмулятор/Appium — СНАЧАЛА
+   `powershell -NoProfile -ExecutionPolicy Bypass -Command ". D:\AO3_tests\scripts\env.ps1; . D:\AO3_tests\scripts\tasks.ps1; Use-DeviceStack -N 1"`
+   (стек 2 — `-N 2`), затем `Start-Emulator`/`Start-Appium` как обычно —
+   ставит `AO3_DEVICE`/`APPIUM_URL`/`ALLURE_RESULTS` на этот ход и держит
+   машинную лизу (не даёт двум параллельным прогонам схватить один
+   эмулятор молча). Повторный вызов из НОВОГО процесса конфликтом НЕ
+   считается: лиза принадлежит `пользователь@хост` и продолжается сама,
+   пока под ней нет ЖИВОГО pytest (`-Resume` — синоним, не отдельный путь).
+   Отказ с маркером `DEVICE_LEASE_BLOCKED` в сообщении остался только для
+   ЖИВОГО чужого прогона (его PID назван) и для рассинхрона
+   `AO3_DEVICE`/`APPIUM_URL` с лизой: подожди/возьми другой `-N`/поправь
+   переменные — это не баг твоего теста и не повод чинить `tasks.ps1`.
    **Env-негатив требует сверки (CLAUDE.md permission-hygiene п.6):** пустой/ошибочный
    вывод голого `adb`/`emulator` (не в PATH без env.ps1) — промах вызова, НЕ
    «устройства/эмулятора нет». Присутствие устройства проверяй

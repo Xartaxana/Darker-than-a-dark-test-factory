@@ -83,3 +83,26 @@ logs/fallback-*.log
 # device-стек = второй порт = второй файл) — прогонный вывод, тот же класс,
 # что logs/heartbeat.log/logs/fallback-*.log выше, не версионируем.
 logs/appium-*.log
+# spec-p3-second-emulator N3 (критик-вход rework attempt 2, non-blocker 11):
+# КОРНЕВОЙ allure-results/ (не framework/allure-results/ выше — старый паттерн
+# матчит только вложенный путь) — untracked-мусор был замечен в корне worktree.
+/allure-results/
+# N3: машинная лиза device-стека (state/device-lease-1.json/-2.json) — тот же
+# класс per-host операционного состояния, что state/emulator-session.json выше
+# (пишется/читается Use-DeviceStack/driver_factory.check_device_lease на КАЖДОМ
+# взятии/heartbeat'е, версионирование дало бы бессмысленные диффы).
+state/device-lease-*.json
+# N3 (критик-раунд 2, non-blocker 4): темп/бэкап-файлы АТОМАРНОЙ записи
+# state-файлов (`Write-FileAtomic`: `<файл>.tmp-<pid>-<hex>` +
+# `<файл>.bak-<pid>-<hex>`; python-сторона `_write_device_lease` пишет тот же
+# `.tmp-`-суффикс). В штатном исходе живут миллисекунды и удаляются самим
+# писателем (теперь — в `finally` на ВСЕХ путях), но осиротевший на убитом
+# процессе файл не должен становиться git-шумом: `state/device-lease-*.json`
+# выше их НЕ матчит (суффикс идёт ПОСЛЕ `.json`).
+state/*.tmp-*
+state/*.bak-*
+# B-R4-1 (критик-раунд 4): sidecar-замок CAS-чокпоинта python-стороны
+# (`<лиза>.json.lock`) — снимается в finally, но смерть держателя может
+# оставить файл до stale-break следующего чокпоинта; git-шумом быть не должен
+# (`state/device-lease-*.json` выше его не матчит — суффикс после `.json`).
+state/device-lease-*.json.lock

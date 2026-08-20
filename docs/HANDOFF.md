@@ -1,5 +1,49 @@
 # HANDOFF — точка возобновления
 
+**П3-N3 — device-стек/лиза ПРИНЯТЫ и смержены (5 критик-раундов,
+эскалация sonnet→opus→Fable по правилу 6; финальный вердикт ПРИНЯТЬ,
+журнал p3-n3-lease-usedevicestack 2026-08-20T23:36).**
+**Принятый размен (решение Lead, критик-раунд 5 fixes[1]):** stale-break
+CAS-замка ломает замок и ЖИВОГО держателя по возрасту >10с (fail-OPEN;
+запас 1666x к замеренной секции 0.006с, альтернатива заклинивает чокпоинт
+при PID-reuse); каскад ограничен ownership-check в finally
+(`_release_cas_lock_if_owned`). Порог 10с и окна 600/1800/14400с —
+ОЦЕНКИ (F-30), калибруются живьём. Сверка мусора `state/` — только по ФС
+(`device-lease-*.json` и `*.json.lock` в .gitignore).
+**Постмерж-очередь N3:** device-witness координатора из главного чекаута
+(стек 1 БЕЗ лизы легаси + стек 2 С лизой + post-start-abort ветка +
+первый живой `Use-DeviceStack -N 2`); затем TC-188-эскалация → N4 → N5;
+батч миграции: 10 носителей ниже + `doctor.py:81-91`
+(первое-устройство-побеждает — спека по N3-API); plain-function twin
+`_ensure_app_installed` в conftest.py (гэп builder'а, файл был в
+N3-диффе); awaiting-флаг BUG-013 (файл был dirty у фабрики).
+`Use-DeviceStack -N <1|2>` (`scripts/tasks.ps1`) + чокпоинт лизы в
+`framework/core/driver_factory.py::check_device_lease` (function/driver-
+scoped, вызывается КАЖДЫМ `create_driver`) + доп.ранняя сверка в
+`conftest.py::_ensure_app_installed`; RAM-гейт в `Start-Emulator`; by_serial
+backfill; `Stop-NodeProcesses -WhatIf` печатает кандидатов до throw.
+Мигрированы на канонический `Use-DeviceStack`: `.claude/agents/
+{test-automator,test-runner,fix-verifier}.md`, `.claude/skills/run-suite/
+SKILL.md`, `.claude/settings.json` (allowlist). **Явная строка очереди
+(D-0043, не молчаливый остаток) — 10 файлов промптов/скиллов ЕЩЁ на
+легаси-однодевайсной форме (стек 1 по умолчанию, `Use-DeviceStack` не
+упоминается):** `.claude/agents/builder.md`, `.claude/agents/critic.md`,
+`.claude/agents/exploratory-tester.md`, `.claude/agents/failure-analyst.md`,
+`.claude/agents/scout.md`, `.claude/agents/test-designer.md`,
+`.claude/agents/test-maintainer.md`, `.claude/agents/test-reviewer.md`,
+`.claude/skills/permission-audit/SKILL.md`, `.claude/skills/session-
+handoff/SKILL.md` — back-compat: они продолжают штатно работать по стеку 1
+без правок (чокпоинт на стеке 1 отказывает ТОЛЬКО при конфликте с чужой
+АКТИВНОЙ лизой), правка — пакетным батчем на границе этапа, не в этом узле
+(вне owns N3). **Расхождение с планом (находка builder'а, не сам план):**
+`docs/tasks/p3-second-emulator.md:340` называет эту очередь «14 файлов» и
+перечисляет туда же `run-suite`/`test-automator`/`test-runner`/`fix-
+verifier` — но эти 4 явно в owns N3 (там же, строки 248-249) и мигрированы
+ЭТИМ узлом; фактический остаток после N3 — 10, не 14 (список выше,
+перепроверено `grep` по `.claude/agents/*.md .claude/skills/*/SKILL.md`).
+Стале-строки «П3 за П1/П2» (находка builder'а) — сняты Lead'ом этим же
+коммитом (обе точки ниже по файлу приведены к факту DAG).
+
 **РАЗБОР /lead-review 2026-08-20 вечер (44 — фабричная сессия, поднята
 Sonnet→Fable словом оператора; фабрика остановлена operator_stop,
 passes_done 11/20).** Окно деградации 08-19T17:45..08-20T18:07 ПРИНЯТО
@@ -345,7 +389,8 @@ device-free юнит-пробы для make_snippet_create_flow — если р�
 attempt 4 не закроет соседей тем же ходом. **Очередь программ:** П1 пилот — TC-257 Approved
 оператором, автоматизация подберётся первым проходом (B3→F1), затем
 раскатка по общей фикстуре; П2 N5 harness (builder после пилота);
-П3 второй эмулятор — за П1/П2.
+П3 второй эмулятор — ИДЁТ (ограничение порядка снято оператором
+2026-08-20; DAG docs/tasks/p3-second-emulator.md, N0-N3 Done).
 
 **Вопросы Lead от heartbeat-проходов — ВСЕ ЗАКРЫТЫ этой сессией:**
 ESC-033 (D1 BUG-067 недостижим: TC-256 неисполним, блокер AT-BUG-074) —
@@ -431,7 +476,7 @@ Verified) — исполнение 4 групп в очередь фабрики
 красная проба + F1 + замер до/после); детектор отказа слияний Р-2/Р-3
 сверен — все 5 поглощающих выросли. П2 wide_impact: решение —
 НЕ сужать до завершения L2-раскатки (запись в p2-pyramid-bridge.md
-Р5); П3 — за П2, заблокирован конструкцией. Дробление 5 записей
+Р5); П3 — разблокирован оператором 2026-08-20, идёт по своему DAG. Дробление 5 записей
 реестра с перечислением в title — очередь test-strategist со
 следующим касанием реестра. **Хозяйство:** в корне репо лежит
 `scratchpad/` с мусором сессий 08-14..08-18 (зонды критиков, спеки,
