@@ -271,7 +271,13 @@ defect_found с ref).
    `Start-Emulator` сам ждёт буты); git в OS-репо — одна форма
    `cd /d/Improving_AI/Operating-System-for-LLMs && git <cmd>`.
 2. Не префиксовать `cd <dir> && ...` в своём репо и не добавлять
-   хвост ` 2>&1` — ломает совпадение с allowlist.
+   хвост ` 2>&1` — ломает совпадение с allowlist. **`$env:VAR` в
+   Bash-туле запрещён** (конвенция 2026-08-20, класс AT-BUG-091,
+   4 экземпляра): Bash схлопывает `$env:` в пустоту ДО передачи в
+   `powershell -Command "..."` даже в double-quoted — env-зависимые
+   вызовы tasks.ps1 только PowerShell-тулом. Детектор: критик-гейт
+   прогонов; первый рецидив после конвенции → код-гейт hygiene_gate
+   (порог в AT-BUG-091).
 3. Правки файлов — только Edit/Write-тулами (не python-хиредоки,
    не `python -c "...replace..."`).
 4. Журналы конвейера — только через `python scripts/log_append.py`
