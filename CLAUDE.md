@@ -89,11 +89,14 @@ frontmatter агентов и delegation.config.yaml. Грейды OS
    коллизия — пометка в notes, счёт как две задачи (D-0060).
    **Worktree ≠ полное дерево (2026-08-20):** $root обвязки резолвится
    от файла (детектор: scripts/tests/test_root_resolution_worktree.py),
-   но untracked `tools/` в worktree ОТСУТСТВУЕТ — adb/эмулятор/JDK-
-   зависимые шаги из worktree не исполняются (FileNotFoundError), а
-   wiring-тесты там красные ШТАТНО (hooksPath главного чекаута). DoD
-   worktree-воркера — device-free; device-witness снимает координатор
-   из главного чекаута.
+   но untracked `tools/` И `framework/.venv/` в worktree ОТСУТСТВУЮТ —
+   adb/эмулятор/JDK-зависимые шаги и канонический pytest фреймворка из
+   worktree не исполняются (FileNotFoundError), а wiring-тесты там
+   красные ШТАТНО (hooksPath главного чекаута). DoD worktree-воркера —
+   device-free и venv-free (framework-код — py_compile/стабы);
+   device-witness и канонический прогон framework-юнитов снимает
+   координатор из главного чекаута (его venv'ом по worktree-путям —
+   прецедент N3 П3).
    4а. Задача ≥5 событий ИЛИ ≥2 сессий — markdown-DAG в docs/tasks/
    (D-0080); статус узла — тем же ходом, что его журнальное событие;
    ПИШУЩИЙ узел DAG объявляет owns-пути.
