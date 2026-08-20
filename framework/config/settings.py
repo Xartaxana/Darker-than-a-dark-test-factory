@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 
 # --- Корни ---
@@ -29,6 +30,48 @@ APK_PATH = str(REPO_ROOT / "app-under-test" / "app" / "build" / "outputs" / "apk
 APPIUM_URL = os.environ.get("APPIUM_URL", "http://127.0.0.1:4723")
 DEVICE_NAME = os.environ.get("AO3_DEVICE", "emulator-5554")
 PLATFORM_VERSION = os.environ.get("AO3_PLATFORM_VERSION", "")  # пусто = любой
+
+
+def _parse_system_port(raw: str) -> int | None:
+    """spec-p3-second-emulator N1 (констрейнт 2): при НЕзаданном systemPort
+    UiAutomator2 сам аллоцирует порт из 8200-8299 под кросс-процессным
+    lock-guard (session.js) — параллельные Appium-сессии (второй device-стек)
+    НЕ коллидируют. Поэтому пустой `AO3_SYSTEM_PORT` — легитимный дефолт
+    (возвращает `None`, capabilities.py НЕ выставляет capability вовсе,
+    авто-аллокация сохраняется), явное значение — только опция
+    детерминизма/диагностики. Мусор (нечисло) НЕ роняет импорт этого модуля —
+    единая точка правды окружения не может падать на кривом env (тот же
+    принцип, что остальные `int(os.environ.get(...))` этого файла, только
+    здесь значение по умолчанию ПУСТОЕ, а не число, так что голый `int()` на
+    дефолте упал бы всегда — нужен явный безопасный парсер, не переиспользуем
+    паттерн соседей построчно). Диапазон TCP-портов (1-65535) — единственная
+    валидируемая граница; значения ВНЕ окна авто-аллокации 8200-8299, но
+    внутри 1-65535 — легитимный явный оверрайд (не отбрасываются)."""
+    stripped = raw.strip()
+    if not stripped:
+        return None
+    try:
+        value = int(stripped)
+    except ValueError:
+        print(
+            f"WARNING: AO3_SYSTEM_PORT={raw!r} - не целое число, игнорируется "
+            "(appium:systemPort capability не будет выставлена, UiAutomator2 "
+            "аллоцирует автоматически).",
+            file=sys.stderr,
+        )
+        return None
+    if value < 1 or value > 65535:
+        print(
+            f"WARNING: AO3_SYSTEM_PORT={value} вне диапазона допустимых TCP-портов "
+            "(1-65535), игнорируется (appium:systemPort capability не будет "
+            "выставлена, UiAutomator2 аллоцирует автоматически).",
+            file=sys.stderr,
+        )
+        return None
+    return value
+
+
+SYSTEM_PORT = _parse_system_port(os.environ.get("AO3_SYSTEM_PORT", ""))
 
 # CHROMEDRIVER_EXECUTABLE — AT-BUG-028: embedded System WebView образа
 # `ao3_test_api26` (google_apis, API 26, см. AT-BUG-024) — Chrome 69.0.3497

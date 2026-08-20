@@ -78,3 +78,8 @@ state/last-pass-summary.json
 # на всех исходах busy/spawned/spawn_failed/timeout_kill) — прогонный
 # вывод, тот же класс, что logs/heartbeat.log выше, не версионируем.
 logs/fallback-*.log
+# spec-p3-second-emulator N1 (критик-раунд B3, 2026-08-20): Start-Appium
+# теперь пишет per-port лог (`--log $root\logs\appium-$Port.log`, второй
+# device-стек = второй порт = второй файл) — прогонный вывод, тот же класс,
+# что logs/heartbeat.log/logs/fallback-*.log выше, не версионируем.
+logs/appium-*.log
