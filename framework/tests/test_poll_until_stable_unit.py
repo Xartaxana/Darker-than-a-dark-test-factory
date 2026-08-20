@@ -46,6 +46,13 @@ import pytest
 from framework.core import waits
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _ensure_app_installed():
+    """Переопределяет device-фикстуру conftest.py (см. докстринг модуля) — эта
+    проба чисто локальная, устройство не трогаем."""
+    yield
+
+
 class _FakeClock:
     """См. `test_assert_holds_for_unit.py::_FakeClock` — идентичный приём:
     `sleep(s)` двигает внутренние "часы" вперёд, реальное время не тратится."""

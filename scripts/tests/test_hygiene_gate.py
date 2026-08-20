@@ -607,7 +607,7 @@ def test_v3_cd_self_prefix_msys_and_semicolon_triggers():
 
 
 def test_v3_cd_self_prefix_backslash_case_insensitive_triggers():
-    ctx = _decide_ctx('cd "d:\AO3_tests" && git status')
+    ctx = _decide_ctx(r'cd "d:\AO3_tests" && git status')
     assert ctx is not None and hygiene_gate.MSG_CD_SELF_PREFIX in ctx
 
 
