@@ -98,6 +98,7 @@ from framework.steps import (
     saf_steps,
     settings_steps,
 )
+from framework.tests import conftest as _conftest
 
 
 @pytest.mark.p1
@@ -166,6 +167,112 @@ def test_delete_work_removes_row_and_file(downloaded_work_seeded, driver):
     # Then работа W полностью исчезает из Library — ни FAVORITE, ни FILES
     library_steps.assert_work_not_in_tab(driver, "SAVE", work.title)
     library_steps.assert_work_not_in_files_tab(driver, work.title)
+
+
+# --- TC-257: journey (П1 spec-p1-dedup v7) поглощает TC-034 (открытие
+# стилизует reader.css) + TC-035 (Delete downloaded file сохраняет строку
+# рейтинга) + TC-036 (Delete work удаляет всё). Общий дорогой Given — ОДИН сид
+# `downloaded_work_seeded` ДО создания Appium-сессии (те же три Then, что у
+# TC-034/035/036 выше, дословно). Чекпойнт 3 требует пересидинга той же работы
+# БЕЗ новой Appium-сессии (см. кейс, «Заметки для автоматизации»):
+# `app_steps.seed_downloaded_work` идёт через `seed_db.seed_with_download`,
+# который делает `adb.force_stop()` (см. докстринг `ensure_db_initialized` —
+# схема уже готова к этому моменту, повторный `am start` не требуется), поэтому
+# приложение явно поднимается заново `app_steps.restart_app_via_adb(driver)`
+# (не `restart_app` — см. обоснование ниже) — в ТОЙ ЖЕ Appium-сессии (новый
+# `driver` не создаётся).
+#
+# Старые функции TC-034/TC-035/TC-036 выше НЕ удалены этим диффом: кейсы уже
+# `status: Merged` (`merged_into: TC-257`), но удаление их автотест-функций —
+# отдельный шаг Р4 шаг 2 (владеет Lead, docs/tasks/p1-e2e-dedup.md), вне
+# мандата диспатча test-automator (Р4 шаг 4 — только написать journey).
+
+
+@pytest.mark.p1
+@allure.id("TC-257")
+@allure.title(
+    "Journey: открытие скачанного файла стилизует reader.css -> удаление файла "
+    "сохраняет рейтинг -> удаление работы убирает всё"
+)
+def test_open_delete_file_delete_work_journey(downloaded_work_seeded, driver):
+    work = downloaded_work_seeded
+
+    with allure.step(
+        "Чекпойнт 1 (TC-034 дословно): открытие скачанного файла применяет "
+        "мобильный viewport и reader.css"
+    ):
+        # Given на вкладке FILES есть работа W со связанным локальным .html файлом
+        app_steps.wait_ui_ready(driver)
+        app_steps.open_tab(driver, "Library")
+        library_steps.assert_work_in_files_tab(driver, work.title)
+
+        # When пользователь тапает open-иконку карточки W (открыть скачанный файл)
+        library_steps.open_downloaded_file(driver, work.title)
+        browser_steps.close_other_tabs(driver)
+
+        # Then файл открыт через file://, в загруженном DOM инжектированы мобильный
+        # viewport и reader.css — потребительский симптом, не деталь реализации
+        browser_steps.assert_local_file_opened(driver)
+        browser_steps.assert_downloaded_page_styled(driver)
+
+    with allure.step(
+        "Чекпойнт 2 (TC-035 дословно): Delete downloaded file удаляет только "
+        "файл, строка WorkRating остаётся"
+    ):
+        # Given работа W (после чекпойнта 1, файл всё ещё на диске) с рейтингом
+        # Loved, вкладка FAVORITE показывает open-иконку
+        app_steps.open_tab(driver, "Library")
+        library_steps.assert_work_in_tab(driver, "SAVE", work.title)
+        library_steps.assert_open_icon_shown(driver, work.title)
+
+        # When long-press по карточке W, в overlay выбрано «Delete downloaded file»
+        # (точный текст — НЕ «Delete work», см. library_screen.py:325-327 vs :321-323)
+        library_steps.delete_via_overlay(driver, work.title, "Delete downloaded file")
+
+        # Then файл удалён (downloadPath пуст), W остаётся во FAVORITE с прежним
+        # рейтингом Loved (строка WorkRating НЕ удалена), карточка снова
+        # показывает download-иконку вместо open-иконки
+        library_steps.assert_work_in_tab(driver, "SAVE", work.title)
+        library_steps.assert_download_icon_shown(driver, work.title)
+        library_steps.assert_work_not_in_files_tab(driver, work.title)
+
+    with allure.step(
+        "Given: работа W пересеяна заново с рейтингом Loved и скачанным файлом "
+        "(легально по Р1 — сид дешевле новой Appium-сессии, БЕЗ неё)"
+    ):
+        # Пересидинг мутирует Room тем же примитивом, что и Предусловия
+        # (`app_steps.seed_downloaded_work` -> `seed_db.seed_with_download`) —
+        # он сам force-stop'ает приложение, поэтому явно поднимаем его заново
+        # В ТОЙ ЖЕ Appium-сессии (driver не пересоздаётся). `restart_app_via_adb`
+        # (не `restart_app`) — `am start -W` БЛОКИРУЕТСЯ до полной прорисовки
+        # окна; `driver.terminate_app`/`activate_app` (`restart_app`) на УЖЕ
+        # убитом seed'ом процессе гонялся с релончем без ожидания полной
+        # прорисовки и давал `UiAutomator2Exception: Timed out ... waiting for
+        # the root AccessibilityNodeInfo` на втором прогоне (живой репро).
+        app_steps.seed_downloaded_work(work, "SAVE", _conftest._DOWNLOADED_WORK_FIXTURE)
+        app_steps.restart_app_via_adb(driver)
+        app_steps.wait_ui_ready(driver)
+        app_steps.open_tab(driver, "Library")
+
+        # Позитивный контроль пересидинга ДО When чекпойнта 3 (класс 2
+        # ложно-зелёных негативов): без явного подтверждения непроизошедший
+        # пересид тоже дал бы зелёный чекпойнт 3 на уже-удалённой в чекпойнте 2
+        # работе — Then чекпойнта 3 от состояния этого Given не отличил бы
+        library_steps.assert_work_in_tab(driver, "SAVE", work.title)
+        library_steps.assert_open_icon_shown(driver, work.title)
+
+    with allure.step(
+        "Чекпойнт 3 (TC-036 дословно): Delete work удаляет и файл, и строку "
+        "рейтинга целиком"
+    ):
+        # When long-press по карточке W, в overlay выбрано «Delete work»
+        library_steps.delete_via_overlay(driver, work.title, "Delete work")
+
+        # Then W полностью исчезает из Library — не отображается ни на вкладке
+        # FAVORITE, ни на вкладке FILES (косвенное доказательство, что строка
+        # WorkRating удалена целиком — нет прямого доступа к БД из UI-теста)
+        library_steps.assert_work_not_in_tab(driver, "SAVE", work.title)
+        library_steps.assert_work_not_in_files_tab(driver, work.title)
 
 
 # --- TC-032: авто-скачивание при простановке Loved (Auto-download включён) ---
