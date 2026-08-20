@@ -16,7 +16,7 @@ POST/PUT-запроса публикации).
 
 Доказано ЭТИМ инкрементом (доказательство пригодности минимум одним
 потребителем каждого из 4 пробелов — критерий готовности AT-BUG-073):
-  - GitLab Snippet API мок (GET raw + PUT update) — ВСЕ пять тестов ниже.
+  - GitLab Snippet API мок (GET raw + PUT update) — ВСЕ шесть тестов ниже.
   - Сидер/чтение `sync_tombstones` — TC-211 (прямой сидинг Given + чтение Then).
   - `seed_filter_profiles` возвращает `id` — TC-213 (`id` профиля подставлен в
     надгробие мок-снимка, чтобы синк адресовал ТУ ЖЕ локальную строку).
@@ -66,6 +66,8 @@ _WORK_208 = Work("900000208", "TC-208 LWW Tie Work", "seed_author_sync_208",
                  "Fandom Sync208", 1000)
 _WORK_215 = Work("900000215", "TC-215 Publish Full State Work", "seed_author_sync_215",
                  "Fandom Sync215", 1000)
+_WORK_224 = Work("900000224", "TC-224 Sync Failure Baseline Work", "seed_author_sync_224",
+                 "Fandom Sync224", 1000)
 
 
 def _write_snippet_mock(tmp_path: Path, name: str, remote_content: str,
@@ -188,6 +190,22 @@ def sync_tombstone_removes_profile_seeded(tmp_path):
     listing_flows = rb.read_flows(settings.RECORDINGS_DIR / rb.LISTING_BASIC_FILENAME)
     flows_path = _write_snippet_mock(tmp_path, "tc213.mitm", remote, extra_flows=listing_flows)
     return name, flows_path
+
+
+@pytest.fixture()
+def sync_failure_baseline_seeded():
+    """TC-224 (поглощает TC-225): baseline — одна оценённая работа X, ОБЩИЙ
+    для обоих вариантов сбоя (404 «Snippet not found» / 401 «token rejected»,
+    `pytest.mark.parametrize` ниже — «Заметки для автоматизации» кейса
+    предписывают ОДИН параметризованный тест, не два раздельных). Полный
+    снимок строки `work_ratings` захвачен ЗДЕСЬ, ДО любого сетевого похода —
+    второй Then («данные не изменились») сравнивает его с постфактум
+    прочитанным тем же `read_work_ratings_full()` (приём тождественен обоим
+    вариантам, см. заметки кейса)."""
+    app_steps.clean_state()
+    seed_db.seed([(_WORK_224, "LIKE")])
+    before = seed_db.read_work_ratings_full()[_WORK_224.ao3_id]
+    return _WORK_224, before
 
 
 @pytest.fixture()
@@ -426,4 +444,76 @@ def test_sync_publish_full_state(sync_publish_seeded, driver, sync_replay, tmp_p
     assert isinstance(profiles, list), f"снимок без списка filterProfiles: {snapshot}"
     assert any(p.get("name") == "TC-215 profile" for p in profiles), (
         f"опубликованный filterProfiles не несёт «TC-215 profile»: {profiles}"
+    )
+
+
+@pytest.mark.p1
+@pytest.mark.replay
+@allure.id("TC-224")
+@allure.title("Ручной прогон sync с ошибкой (404/401) показывает дословный диалог, локальные данные не меняются")
+@pytest.mark.parametrize(
+    "status,expected_dialog_text",
+    [
+        pytest.param(
+            404,
+            f"Snippet {_SNIPPET_ID} not found. Check the snippet ID, or clear it to create a new one.",
+            id="variant-A-404-snippet-not-found",
+        ),
+        pytest.param(
+            # Вариант B (поглощает TC-225): достаточно ОДНОГО из 401/403 —
+            # `SyncRepository.kt:364-366` обрабатывает оба кода идентично,
+            # различие только в подставленном `<code>` (см. заметки кейса).
+            401,
+            "GitLab rejected the token (HTTP 401). It needs the 'api' scope.",
+            id="variant-B-401-token-rejected",
+        ),
+    ],
+)
+def test_sync_failure_dialog_preserves_local_data(
+    status, expected_dialog_text, sync_failure_baseline_seeded, driver, sync_replay, tmp_path,
+):
+    """TC-224 (поглощает TC-225). `fetchRemote` (`SyncRepository.kt:354-370`)
+    бросает `IOException` с ДОСЛОВНЫМ текстом ПЕРЕД любым слиянием/записью в
+    Room (`syncNow` вызывает `fetchRemote` первой строкой внутри `runCatching`,
+    `SyncRepository.kt:120-125`) — ошибка всплывает как `SyncState.Error`
+    (`SettingsScreen.kt:310`) БЕЗ единой мутации локальных данных, что бы ни
+    случилось дальше. Точный дословный текст диалога (specific к HTTP-коду,
+    не просто заголовок «Sync failed») сам служит позитивным доказательством,
+    что мок реально ответил ИМЕННО этим кодом и код приложения дошёл до
+    соответствующей ветки `fetchRemote` (класс 3 ложно-зелёных негативов,
+    CLAUDE.md) — вакуумный «данные не изменились» здесь недостижим: диалог
+    с чужим текстом (или его отсутствие) провалил бы assert раньше, чем
+    дошли бы до сверки Room."""
+    work, before = sync_failure_baseline_seeded
+
+    # Given Snippet ID (вариант A — «указывает на несуществующий сниппет»,
+    # вариант B — «валиден, но токен отклонён») — с точки зрения мока оба
+    # различаются ТОЛЬКО кодом ответа GET .../raw (реальный ID нерелевантен,
+    # семантику «несуществует»/«валиден, но токен плохой» задаёт код, не сам
+    # id — сверено с `fetchRemote`, которая ветвится исключительно по
+    # `response.code`); локально уже есть оценённая работа X (общий baseline)
+    flows_path = tmp_path / f"tc224_{status}.mitm"
+    rb.write_flows(flows_path, [gsm.make_snippet_get_flow(_SNIPPET_ID, "", status=status)])
+    sync_replay(flows_path)
+    app_steps.wait_ui_ready(driver)
+    app_steps.open_tab(driver, "Settings")
+    settings_steps.configure_sync(driver, token=_TOKEN, snippet_id=_SNIPPET_ID)
+
+    # When пользователь нажимает «Sync now»
+    settings_steps.tap_sync_now(driver)
+
+    # Then показан диалог «Sync failed» с ДОСЛОВНЫМ текстом причины сбоя
+    settings_steps.assert_sync_result_dialog(driver, "Sync failed")
+    settings_steps.assert_sync_result_dialog_contains(driver, expected_dialog_text)
+    settings_steps.dismiss_sync_result_dialog(driver)
+
+    # And локальные данные работы X НЕ изменились — полная строка Room (все
+    # 11 полей, включая rating/timestamp) идентична baseline, захваченному ДО
+    # запуска sync (инвариант атомарности сбоя относительно Room, общий для
+    # обоих вариантов)
+    after = seed_db.read_work_ratings_full()[work.ao3_id]
+    assert after == before, (
+        f"локальные данные работы {work.ao3_id} изменились после сбоя sync "
+        f"(HTTP {status}) — ожидали полную неизменность строки: "
+        f"before={before}, after={after}"
     )
