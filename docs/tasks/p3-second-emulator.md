@@ -240,7 +240,7 @@ owns: tools/avd/** (новый ao3_corridor_api34), runs/ (артефакт).
   (Get-Device + /status :4723 shallow) — ДО и ПОСЛЕ каждой ветви.
 - RAM-замер до/после, abort-порог из констрейнта 1.
 
-### N3 — интеграционный слой, лиза стека, носители форм (builder + мех-коммит) — Status: Planned, after N2
+### N3 — интеграционный слой, лиза стека, носители форм (builder + мех-коммит) — Status: Done (2026-08-20, мерж 4cc913fa/мех-коммит 10edc3e6 + хвост ba271e3e; 5 критик-раундов, эскалация sonnet→opus→Fable по правилу 6, журнал p3-n3-lease-usedevicestack accepted 23:36; принятый размен age-stale-break и постмерж-очередь device-witness — docs/HANDOFF.md, шапка П3-N3)
 owns: scripts/tasks.ps1 (Use-DeviceStack + лиза), state/ (файл лизы),
 framework/core/driver_factory.py (чокпоинт лизы в create_driver, B22),
 framework/tests/conftest.py (дополнительная ранняя сверка, B22/B26;
