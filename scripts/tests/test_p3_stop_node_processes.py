@@ -16,12 +16,17 @@ from pathlib import Path
 from _ps1_helpers import dot_source_prefix, run_ps
 
 # Общие фейковые узлы: два "живых" AO3-владения (:4723/:4725) + один чужой
-# (не матчит $root => отфильтрован ДО селектора).
+# (не матчит якорь => отфильтрован ДО селектора) + npx-ОБЁРТКА с
+# ПОСТ-диффовым argv (--log <root>\logs\appium-4723.log): B5 критик-раунда —
+# обёртка несёт $root-путь АРГУМЕНТОМ (.log), но НЕ исполняет .js под $root,
+# и владением считаться не должна. Argv обёртки — с живого хоста (замер
+# критика: npx-cli.js дословно повторяет весь argv appium'а).
 _FAKES = """
 function New-FakeProc($ProcId, $Cmd) { [pscustomobject]@{ ProcessId = $ProcId; CommandLine = $Cmd } }
-$p1 = New-FakeProc 111 "node $root\\tools\\appium\\node_modules\\appium\\index.js --port 4723"
-$p2 = New-FakeProc 222 "node $root\\tools\\appium\\node_modules\\appium\\index.js --port 4725"
+$p1 = New-FakeProc 111 "node $root\\tools\\appium\\node_modules\\appium\\index.js --port 4723 --log-level warn --log $root\\logs\\appium-4723.log"
+$p2 = New-FakeProc 222 "node $root\\tools\\appium\\node_modules\\appium\\index.js --port 4725 --log-level warn --log $root\\logs\\appium-4725.log"
 $foreign = New-FakeProc 333 "node C:\\SomeOtherProject\\index.js"
+$npxWrapper = New-FakeProc 444 "`"C:\\Program Files\\nodejs\\node.exe`" `"C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npx-cli.js`" appium --port 4723 --log-level warn --allow-insecure uiautomator2:chromedriver_autodownload --log $root\\logs\\appium-4723.log"
 """
 
 
@@ -46,16 +51,38 @@ def test_zero_servers_does_not_throw(tmp_path):
 
 def test_one_server_no_selector_previous_behavior_verbatim(tmp_path):
     """Матрица DoD: 1 сервер без селектора - прежнее поведение дословно
-    (кандидат убит, счётчик 1)."""
+    (кандидат убит, счётчик 1). B5: процессная модель несёт и npx-ОБЁРТКУ
+    сервера (пост-диффовый argv с --log <root>\\logs\\...) — один сервер
+    обязан давать РОВНО ОДНОГО кандидата (воркер), иначе голая
+    каноническая форма бросает."""
     out = _run(
-        "Stop-NodeProcesses -ProcessListProvider { @($p1, $foreign) } "
+        "Stop-NodeProcesses -ProcessListProvider { @($p1, $npxWrapper, $foreign) } "
         "-PortOwnerResolver { param($P) $null } -Stopper { param($p) }",
         tmp_path,
     )
     assert "Stopping AO3 node process (PID 111)" in out
     assert "Stopped 1 AO3 node process(es)." in out
-    # чужой процесс (не матчит $root) даже не рассматривался
+    # чужой процесс (не матчит якорь) даже не рассматривался
     assert "333" not in out
+    # npx-обёртка ($root-путь только в .log-аргументе) — НЕ кандидат
+    assert "444" not in out
+
+
+def test_npx_wrapper_with_root_log_arg_is_not_owned_candidate(tmp_path):
+    """B5 напрямую: обёртка + воркер одного сервера, без селектора —
+    не throw (кандидат один), убит именно воркер."""
+    cmd = (
+        dot_source_prefix(fake_root=tmp_path) + _FAKES +
+        "$killed = @(); "
+        "Stop-NodeProcesses -ProcessListProvider { @($npxWrapper, $p1) } "
+        "-PortOwnerResolver { param($P) $null } "
+        "-Stopper { param($p) $script:killed += $p }; "
+        "Write-Output \"KILLED=$($killed -join ',')\""
+    )
+    cp = run_ps(cmd)
+    assert cp.returncode == 0, f"stdout={cp.stdout}\nstderr={cp.stderr}"
+    assert "KILLED=111" in cp.stdout
+    assert "444" not in cp.stdout.split("KILLED=")[-1]
 
 
 def test_two_servers_no_selector_refuses_with_candidate_list(tmp_path):

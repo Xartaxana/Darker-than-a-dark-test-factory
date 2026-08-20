@@ -654,7 +654,13 @@ function Start-Appium {
         $ownerProc = Get-CimInstance Win32_Process -Filter "ProcessId=$ownerPid" -ErrorAction SilentlyContinue
 
         if ($Restart) {
-            if ($ownerProc -and $ownerProc.CommandLine -and $ownerProc.CommandLine -match [regex]::Escape($root)) {
+            # B5 (критик-раунд N1): тот же якорный предикат владения, что в
+            # Stop-NodeProcesses — «.js-скрипт под $root» (владелец порта =
+            # appium-воркер, исполняющий index.js под $root; неякорная
+            # подстрока заматчила бы и чужой процесс, несущий $root-путь
+            # простым аргументом, — класс B5/AT-BUG-031).
+            $restartOwnerAnchor = [regex]::Escape($root) + '[^"\s]*\.js\b'
+            if ($ownerProc -and $ownerProc.CommandLine -and $ownerProc.CommandLine -match $restartOwnerAnchor) {
                 $killedPid = $ownerPid
                 $killedCommandLine = $ownerProc.CommandLine
                 Write-Host "Start-Appium -Restart: останавливаю владельца :$Port (PID $killedPid, наш процесс)..." -ForegroundColor Yellow
@@ -946,7 +952,17 @@ function Stop-NodeProcesses {
         throw "Stop-NodeProcesses: `$root пуст или недействителен ('$root') - отказ убивать node-процессы вслепую (AT-BUG-031: [regex]::Escape('') заматчил бы ЛЮБУЮ командную строку)."
     }
     $allNode = & $ProcessListProvider
-    $rootMatched = @($allNode | Where-Object { $_.CommandLine -and $_.CommandLine -match [regex]::Escape($root) })
+    # B5 (критик-раунд N1, 2026-08-20): владение — ЯКОРНЫЙ предикат
+    # «.js-скрипт под $root», не подстрока $root по всей CommandLine.
+    # Неякорная подстрока ловила npx-ОБЁРТКУ (npm-cli из Program Files),
+    # как только в её argv попал путь --log $root\logs\appium-<port>.log:
+    # один сервер = 2 кандидата => голая каноническая форма без селектора
+    # бросала исключение на одностековом хосте. Якорь: токен без пробелов/
+    # кавычек, начинающийся с $root и оканчивающийся .js — матчит воркер
+    # (node ...\appium\index.js) и bridge-раннер (run_bridge.js), но не
+    # .log-аргументы. Класс тот же, что якорь qemu-килла (-avd\s+<name>\b).
+    $rootJsAnchor = [regex]::Escape($root) + '[^"\s]*\.js\b'
+    $rootMatched = @($allNode | Where-Object { $_.CommandLine -and $_.CommandLine -match $rootJsAnchor })
     # spec-p2-pyramid-bridge N5 (docs/tasks/p2-pyramid-bridge.md Р3/Р5, B7):
     # framework/bridge_harness/run_bridge.js лежит ПОД $root, поэтому подпроцесс
     # харнесса (по одному short-lived вызову на каждый bridge-тест,
