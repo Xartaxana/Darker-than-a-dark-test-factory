@@ -337,10 +337,13 @@ docs/HANDOFF.md.
 - `.claude/settings.json`: allowlist-формы для `-Port`/`Use-DeviceStack`
   (сейчас точная форма `…; Start-Appium"` — новые вызовы дадут
   permission-промпты, B10).
-- Остальные носители однодевайсных форм (14 файлов промптов/скиллов:
-  test-maintainer, test-reviewer, failure-analyst, exploratory-tester,
-  builder, scout, critic, run-suite, session-handoff,
-  permission-audit…) — ЯВНАЯ СТРОКА ОЧЕРЕДИ (D-0043, не молчаливый
+- Остальные носители однодевайсных форм (**10 файлов** промптов/скиллов —
+  уточнение N3-исполнения 2026-08-20: всего носителей 14, из них 4
+  мигрированы самим N3 (test-automator/test-runner/fix-verifier/
+  run-suite); остаток: test-maintainer, test-reviewer, failure-analyst,
+  exploratory-tester, builder, scout, critic, session-handoff,
+  permission-audit… — поимённо в HANDOFF-блоке N3) — ЯВНАЯ СТРОКА
+  ОЧЕРЕДИ (D-0043, не молчаливый
   остаток): обновляются пакетно этим узлом либо батчем на границе
   этапа — решение при исполнении N3, остаток фиксируется в HANDOFF.
 - **Хвосты из N2 (runs/N2-p3-clone-bringup-stack2-2026-08-20.md):**
@@ -384,7 +387,8 @@ owns: runs/ (отчёт пилота), state/ (файл лизы — взяти�
   судить не тот стек. Отдельная правка (доложено критиком).
 - Параметризация mitm (`_PORT=8080`) — если понадобится replay на
   стеке 2 (сейчас non-goal, констрейнт 7).
-- 14 носителей однодевайсных канонических форм — см. N3.
+- 10 оставшихся носителей однодевайсных канонических форм — см. N3
+  (4 из исходных 14 мигрированы самим N3).
 
 ## Решение оператора по RAM (2026-08-20, вопрос закрыт)
 
