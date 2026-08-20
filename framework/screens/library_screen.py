@@ -179,6 +179,17 @@ class LibraryScreen(BaseScreen):
     def open_tab_for_rating(self, rating: str):
         return self.open_tab(TAB_BY_RATING[rating])
 
+    def tab_chip_container(self, label: str):
+        """TC-148: родитель текстового узла вкладки (`LibraryScreen.kt:211-225`,
+        `Tab(modifier=Modifier.height(48.dp)) { Text(...) }`) — реальный
+        кликабельный/48dp-высокий Tab-контейнер на ОДИН уровень выше найденного
+        по тексту `TextView` (сверено живым деревом, scripts/ui_snapshot.py,
+        2026-08-20: bounds самого `TextView` — только область глифа, ~30px
+        высотой, искусственно занижает размер цели), тот же приём, что
+        `settings_screen.py::theme_button_locator`/`side_panel.py::
+        _button_container`."""
+        return (AppiumBy.XPATH, f'//*[@text="{label}"]/..')
+
     # --- Позиция вкладок (TC-006: порядок подписей слева направо) ---
     def tab_label_x(self, label: str, timeout: int = 5) -> int | None:
         if not self.is_present(self.by_text(label), timeout=timeout):

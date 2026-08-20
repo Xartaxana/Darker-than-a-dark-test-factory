@@ -144,6 +144,24 @@ def build_work_no_epub_link() -> Path:
     return path
 
 
+def build_work_multi_chapter() -> Path:
+    """AT-BUG-089: work-страница с `<select id="selected_id">` (минимум 2
+    `<option>`, `rb.WORK_MULTI_CHAPTER_TITLES`) — единственная фикстура,
+    несущая эту ветку разметки, нужна подписи «Ch N / M» под полоской
+    прогресса (`BottomBar.kt:76-81`, `ao3_bridge.js:976-978`
+    `ao3ReportProgress`). Та же работа (`ALL_WORKS[0]`, `LOVED`), что
+    остальные одиночные work-фикстуры — сценарий не завязан на конкретную
+    работу набора `ALL_WORKS` (см. `bugs/AT-BUG-089.md` §«Критерий
+    готовности»)."""
+    work = ALL_WORKS[0]
+    flow = rb.make_html_get_flow(
+        work.url, rb.render_work_page_html(work, chapter_titles=rb.WORK_MULTI_CHAPTER_TITLES)
+    )
+    path = settings.RECORDINGS_DIR / rb.WORK_MULTI_CHAPTER_FILENAME
+    rb.write_flows(path, [flow])
+    return path
+
+
 def build_tab_markers() -> Path:
     """`TAB_MARKER_COUNT` статичных высоких страниц с уникальными `<title>` — area=tabs
     (TC-023/024/025): различение вкладок по НАТИВНО видимому заголовку чипа
@@ -257,6 +275,7 @@ def main() -> None:
         build_work_with_download(),
         build_work_with_download_epub(),
         build_work_no_epub_link(),
+        build_work_multi_chapter(),
         build_tab_markers(),
         build_listing_paginated(),
         build_works_multi(),

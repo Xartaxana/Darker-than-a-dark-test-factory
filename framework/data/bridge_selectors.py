@@ -177,6 +177,7 @@ REGISTRY: tuple[BridgeSelectorEntry, ...] = (
             "work_with_download.mitm",
             "work_with_download_epub.mitm",
             "work_no_epub_link.mitm",
+            "work_multi_chapter.mitm",
             "render_work_page_html (generator)",
         ),
     ),
@@ -190,6 +191,7 @@ REGISTRY: tuple[BridgeSelectorEntry, ...] = (
             "work_with_download.mitm",
             "work_with_download_epub.mitm",
             "work_no_epub_link.mitm",
+            "work_multi_chapter.mitm",
             "render_work_page_html (generator)",
         ),
     ),
@@ -204,6 +206,7 @@ REGISTRY: tuple[BridgeSelectorEntry, ...] = (
             "work_with_download.mitm",
             "work_with_download_epub.mitm",
             "work_no_epub_link.mitm",
+            "work_multi_chapter.mitm",
             "render_work_page_html (generator)",
         ),
     ),
@@ -217,6 +220,7 @@ REGISTRY: tuple[BridgeSelectorEntry, ...] = (
             "work_with_download.mitm",
             "work_with_download_epub.mitm",
             "work_no_epub_link.mitm",
+            "work_multi_chapter.mitm",
             "render_work_page_html (generator)",
         ),
     ),
@@ -230,14 +234,19 @@ REGISTRY: tuple[BridgeSelectorEntry, ...] = (
             "work_with_download.mitm",
             "work_with_download_epub.mitm",
             "work_no_epub_link.mitm",
+            "work_multi_chapter.mitm",
             "render_work_page_html (generator)",
         ),
     ),
     BridgeSelectorEntry(
         selector="#selected_id",
         functions=("ao3ReportProgress (reading progress)",),
-        pages=(),  # ao3BridgeInit деградирует мягко (sel ? ... : 1) — ни одна
-        # текущая фикстура узел не несёт; явно пусто, не молчаливый пропуск.
+        pages=("work_multi_chapter.mitm",),  # ao3BridgeInit деградирует мягко
+        # (sel ? ... : 1) — единственная фикстура-носитель добавлена AT-BUG-089
+        # (2026-08-20); НЕ добавлен "render_work_page_html (generator)" — у
+        # него `chapter_titles` дефолтится в `None`, select не рендерится,
+        # тест ушёл бы в красное (см. `_GENERATOR_PAGES` в
+        # `test_contract_pages_carry_declared_selectors.py`).
     ),
     # --- Kudos (AT-BUG-035) --- N6: `pages` доведены под тот же полный
     # список work-page `.mitm`, что dd.*/#chapters выше (`#kudo_submit`
@@ -259,6 +268,7 @@ REGISTRY: tuple[BridgeSelectorEntry, ...] = (
             "work_with_download.mitm",
             "work_with_download_epub.mitm",
             "work_no_epub_link.mitm",
+            "work_multi_chapter.mitm",
             "render_work_page_html (generator)",
         ),
         source=BROWSER_VIEW_MODEL_KT_SOURCE,

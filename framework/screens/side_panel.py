@@ -85,6 +85,16 @@ class SidePanel(BaseScreen):
         тот же локатор, та же причина (см. докстринг `_button_container`)."""
         return self._button_container(text)
 
+    def icon_button_container(self, desc: str):
+        """TC-148: родитель content-desc-узла PanelIconButton
+        (BrowseSidePanel.kt:174-193) — `contentDescription` висит на
+        ВНУТРЕННЕЙ `Icon(size(22.dp))`, реальный кликабельный
+        `IconButton(size(36.dp))` — родитель, тот же приём, что
+        `_button_container` (bounds дочернего content-desc узла занижают
+        размер цели — сверено живым деревом, scripts/ui_snapshot.py,
+        2026-08-20)."""
+        return (AppiumBy.XPATH, f'//*[@content-desc="{desc}"]/..')
+
     # --- Home (BrowseSidePanel.kt PanelIconButton Home, TC-057) ---
     def home_icon_visible(self, timeout: int | None = None) -> bool:
         # contentDescription фиксирован ("AO3 home") — не переключается по стейту,

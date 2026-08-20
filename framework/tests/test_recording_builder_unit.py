@@ -771,6 +771,62 @@ def test_render_work_page_html_dd_fandom_words_ordering_preserves_kudo_invariant
 
 
 @pytest.mark.p2
+@allure.id("recording-builder-work-page-default-call-has-no-chapter-select-node")
+@allure.title("render_work_page_html: без chapter_titles — #selected_id НЕ рендерится вовсе (AT-BUG-089 byte-identical guard)")
+def test_render_work_page_html_default_call_has_no_chapter_select_node():
+    work = ALL_WORKS[0]
+    body = rb.render_work_page_html(work)
+    assert 'id="selected_id"' not in body
+
+
+@pytest.mark.p2
+@allure.id("recording-builder-work-page-chapter-titles-renders-select-with-options")
+@allure.title("render_work_page_html: chapter_titles>=2 — #selected_id несёт >=2 <option> (AT-BUG-089, подпись «Ch N/M»)")
+def test_render_work_page_html_chapter_titles_renders_select_with_options():
+    work = ALL_WORKS[0]
+    body = rb.render_work_page_html(work, chapter_titles=rb.WORK_MULTI_CHAPTER_TITLES)
+    assert 'id="selected_id"' in body
+    select_start = body.index('id="selected_id"')
+    select_end = body.index("</select>", select_start) + len("</select>")
+    select_block = body[select_start:select_end]
+    assert select_block.count("<option") == len(rb.WORK_MULTI_CHAPTER_TITLES)
+    assert 'selected="selected"' in select_block.split("<option", 2)[1]  # первый <option> — selected
+
+
+@pytest.mark.p2
+@allure.id("recording-builder-work-page-chapter-select-is-sibling-after-download-inside-ul")
+@allure.title("render_work_page_html: #selected_id — СИБЛИНГ download-li, ВНУТРИ ul.work.navigation.actions, ПОСЛЕ него (AT-BUG-089)")
+def test_render_work_page_html_chapter_select_is_sibling_after_download_inside_ul():
+    work = ALL_WORKS[0]
+    body = rb.render_work_page_html(work, chapter_titles=rb.WORK_MULTI_CHAPTER_TITLES)
+    ul_start = body.index('<ul class="work navigation actions"')
+    # Then: outer </ul> — ВТОРОЙ по счёту (первый закрывает вложенный
+    # <ul class="download-list expandable">, см. _download_list_html)
+    inner_ul_end = body.index("</ul>", ul_start) + len("</ul>")
+    ul_end = body.index("</ul>", inner_ul_end) + len("</ul>")
+    ul_block = body[ul_start:ul_end]
+    # Then: select ВНУТРИ <ul> (в отличие от #kudo_submit — тот СНАРУЖИ)
+    assert 'id="selected_id"' in ul_block
+    download_start = ul_block.index('class="download"')
+    select_start = ul_block.index('id="selected_id"')
+    # Then: select ПОСЛЕ download-li (регресс-порядок AT-BUG-089 критерия готовности)
+    assert download_start < select_start
+    # Then: #kudo_submit остаётся СНАРУЖИ <ul> — новый узел не сдвинул старый инвариант AT-BUG-035
+    kudo_start = body.index('id="kudo_submit"')
+    assert kudo_start >= ul_end
+
+
+@pytest.mark.p2
+@allure.id("recording-builder-work-page-chapter-titles-below-two-raises-value-error")
+@allure.title("render_work_page_html: chapter_titles с <2 заголовками — ValueError (граница M6, AT-BUG-089 критик-гейт Б3)")
+@pytest.mark.parametrize("chapter_titles", [(), ("Only Chapter",)], ids=["len0", "len1"])
+def test_render_work_page_html_chapter_titles_below_two_raises_value_error(chapter_titles):
+    work = ALL_WORKS[0]
+    with pytest.raises(ValueError, match="минимум 2"):
+        rb.render_work_page_html(work, chapter_titles=chapter_titles)
+
+
+@pytest.mark.p2
 @allure.id("recording-builder-listing-basic-work-pages-have-chapters-and-dd-fandom-words")
 @allure.title("listing_basic.mitm: КАЖДАЯ work-страница несёт #chapters/.userstuff.module и dd.fandom/dd.words (AT-BUG-074, собранная запись, потребитель TC-151/152/256)")
 def test_listing_basic_work_pages_have_chapters_and_dd_fandom_words_nodes(listing_basic_flows):

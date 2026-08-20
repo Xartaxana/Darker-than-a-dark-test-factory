@@ -92,6 +92,18 @@ WORK_WITH_DOWNLOAD_EPUB_FILENAME = "work_with_download_epub.mitm"
 # ожидаемой ошибки — см. `bugs/AT-BUG-071.md` §«Суть долга» п.2.
 WORK_NO_EPUB_LINK_FILENAME = "work_no_epub_link.mitm"
 
+# --- AT-BUG-089: work-страница С `<select id="selected_id">` (минимум 2 `<option>`)
+# — единственная фикстура, несущая эту ветку разметки. Бридж (`ao3_bridge.js:
+# 976-978`, `ao3ReportProgress`) читает `chCur`/`chTot` СТРОГО из этого `<select>`;
+# без него подпись «Ch N / M» под полоской прогресса (`BottomBar.kt:76-81`,
+# показывается только при `chTot > 1`) недостижима корпусом — см.
+# `bugs/AT-BUG-089.md` §«Суть долга». Остальные work-страницы (`work.url` без
+# этой фикстуры) НАМЕРЕННО не несут `#selected_id` — бридж деградирует мягко
+# (`sel ? ... : 1`), существующие one-option/без-select работы не обязаны
+# исчезнуть (критерий готовности AT-BUG-089).
+WORK_MULTI_CHAPTER_FILENAME = "work_multi_chapter.mitm"
+WORK_MULTI_CHAPTER_TITLES: tuple[str, ...] = ("Chapter One", "Chapter Two")
+
 # --- Идентификаторы фикстуры маркерных страниц вкладок (TC-023/024/025, area=tabs) ---
 # Каждая страница — статичная, ВЫСОКАЯ (гарантированный scrollHeight выше вьюпорта
 # любого разумного эмулятора — см. AT-BUG-015 про короткие живые страницы) и с
@@ -731,7 +743,37 @@ def _chapters_html() -> str:
     )
 
 
-def render_work_page_html(work: Work, include_epub: bool = True) -> str:
+# AT-BUG-089: `<select id="selected_id">` — bridge (`ao3_bridge.js:976-978`,
+# `document.getElementById('selected_id')`) читает `chCur = sel.selectedIndex + 1`/
+# `chTot = sel.options.length` ИМЕННО отсюда для подписи «Ch N / M»
+# (`BottomBar.kt:76-81`, показывается только при `chTot > 1`). Реальная разметка
+# AO3 — `<li><form id="chap_index" ...><select id="selected_id" name="selected_id">
+# ...</select><input type="submit" value="Go" /></form></li>`, сиблинг
+# download-`<li>` внутри `<ul class="work navigation actions">`. `chapter_titles`
+# несёт минимум ДВА заголовка (критерий готовности AT-BUG-089); первый `<option>`
+# рендерится `selected="selected"` — соответствует реальному поведению AO3
+# (открытая work-страница по умолчанию показывает первую главу без явного
+# выбора, `sel.selectedIndex == 0`).
+def _chapter_select_html(work: Work, chapter_titles: tuple[str, ...]) -> str:
+    options = []
+    for i, title in enumerate(chapter_titles, start=1):
+        selected_attr = ' selected="selected"' if i == 1 else ""
+        options.append(
+            f'<option value="{work.ao3_id}.{i}"{selected_attr}>{i}. {html.escape(title)}</option>'
+        )
+    options_html = "".join(options)
+    return (
+        '<li><form id="chap_index" method="get">'
+        f'<select id="selected_id" name="selected_id">{options_html}</select>'
+        '<input type="submit" value="Go" /></form></li>'
+    )
+
+
+def render_work_page_html(
+    work: Work,
+    include_epub: bool = True,
+    chapter_titles: tuple[str, ...] | None = None,
+) -> str:
     """Минимальная, но структурно-валидная work-страница AO3 (`#workskin`,
     `h2.title.heading`, `h3.byline.heading a[rel=author]` — сверено с Fragility note
     `PROJECT.md`) с валидной download-ссылкой (`li.download a[href*=".html"]`,
@@ -769,10 +811,31 @@ def render_work_page_html(work: Work, include_epub: bool = True) -> str:
     остаток AT-BUG-074 (`onWorkPageInfo` отдавал `"[]","[]"`, см. докстринг
     `_work_meta_group_and_stats_html`). Позиция `<dl class="work meta group">`
     (`meta_start` в regression-тестах) не сдвигается — контент добавлен ВНУТРИ
-    существующего блока, порядковый инвариант AT-BUG-035 выше не задет."""
+    существующего блока, порядковый инвариант AT-BUG-035 выше не задет.
+
+    AT-BUG-089: `chapter_titles=None` (дефолт) — вывод байт-в-байт идентичен
+    прежней сигнатуре (`<select id="selected_id">` НЕ рендерится вовсе, ни
+    один существующий вызов/запись не меняется). `chapter_titles=(<2+
+    заголовка>)` добавляет `<select id="selected_id">` (`_chapter_select_html`)
+    СИБЛИНГОМ download-`<li>`, ВНУТРИ `<ul class="work navigation actions">`,
+    ПОСЛЕ него — не меняет regression-инварианты AT-BUG-035/AT-BUG-074 выше
+    (kudo/meta/wrapper порядок считается от `</ul>`, не от содержимого внутри
+    неё). `chapter_titles`, если НЕ `None`, обязан нести >=2 заголовка —
+    `ValueError` иначе (критик-гейт прохода 9: `len==1` молча делал бы ветку
+    «Ch N/M» недостижимой ЧЕРЕЗ саму фикстуру-регресс, а не проверял её)."""
     title = html.escape(work.title)
     author = html.escape(work.author)
     fandom = html.escape(work.fandom)
+    chapter_select_line = ""
+    if chapter_titles is not None:
+        if len(chapter_titles) < 2:
+            raise ValueError(
+                f"chapter_titles несёт {len(chapter_titles)} заголовков — минимум 2 "
+                "(критерий готовности AT-BUG-089): при <=1 главе chTot<=1 и подпись "
+                "«Ch N/M» (BottomBar.kt:76-81) не отображается — select с 1 option "
+                "маскировал бы недостижимость ветки, а не тестировал бы её"
+            )
+        chapter_select_line = f"\n      {_chapter_select_html(work, chapter_titles)}"
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><title>{title} | Archive of Our Own</title></head>
@@ -785,7 +848,7 @@ def render_work_page_html(work: Work, include_epub: bool = True) -> str:
       <h5 class="fandom tags"><a class="tag" href="/tags/{fandom}/works">{fandom}</a></h5>
     </div>
     <ul class="work navigation actions" role="navigation">
-      {_download_list_html(work, include_epub=include_epub)}
+      {_download_list_html(work, include_epub=include_epub)}{chapter_select_line}
     </ul>
     {_kudo_submit_html()}
     {_work_meta_group_and_stats_html(fandom, work.word_count)}

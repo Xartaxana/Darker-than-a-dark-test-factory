@@ -203,6 +203,16 @@ def test_native_chrome_touch_targets_at_least_48dp(placeholder_seeded_work, driv
     side_panel_steps.expand(driver)
     measurements += a11y_steps.measure_side_panel_expanded_controls(driver)
 
+    # Раскрытая side panel рисует полноэкранный scrim (MainActivity.kt:686-701,
+    # `AnimatedVisibility(visible = selectedTab == AppTab.BROWSE && panelExpanded)`),
+    # который перекрывает BottomNav в accessibility-дереве — тот же эффект, что
+    # TC-106 задокументировал для RatingMenu/TabStrip/BottomBar. Измерение уже
+    # снято выше; сворачиваем панель ПЕРЕД переходом на Settings — тот же приём,
+    # что TC-108 использует после каждого действия на раскрытой панели
+    # (`side_panel_steps.collapse`), иначе `open_tab("Settings")` не находит
+    # кнопку (перекрыта скримом).
+    side_panel_steps.collapse(driver)
+
     app_steps.open_tab(driver, "Settings")
     settings_steps.assert_settings_loaded(driver)
     measurements += a11y_steps.measure_settings_controls(driver)

@@ -358,6 +358,15 @@ class BrowserScreen(BaseScreen):
     def tap_new_tab(self) -> None:
         self.tap(self.by_desc(self.NEW_TAB_DESC))
 
+    def new_tab_button_locator(self):
+        """Родитель content-desc-узла «New tab» (TabStrip.kt:66-76):
+        `contentDescription` висит на ВНУТРЕННЕЙ `Icon(size(20.dp))`, реальный
+        кликабельный `IconButton(size(36.dp))` — родитель, тот же приём, что
+        `side_panel.py::_button_container`/`settings_screen.py::theme_button_
+        locator` (TC-148: bounds дочернего content-desc узла занижают размер
+        цели — сверено живым деревом, scripts/ui_snapshot.py, 2026-08-20)."""
+        return (AppiumBy.XPATH, f'//*[@content-desc="{self.NEW_TAB_DESC}"]/..')
+
     def tab_chip_locator(self, position: int):
         """Локатор родительского Row чипа по 0-based document-order позиции среди
         ТЕКУЩЕ СКОМПОНОВАННЫХ (не виртуализированных LazyRow за пределами вьюпорта)

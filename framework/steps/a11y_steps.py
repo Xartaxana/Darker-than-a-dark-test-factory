@@ -123,27 +123,40 @@ def measure_bottom_bar_handle(driver) -> list[tuple[str, dict]]:
 
 @allure.step("When накопление bounds: handle «Expand panel» (Browse, side panel свёрнута)")
 def measure_side_panel_collapsed_handle(driver) -> list[tuple[str, dict]]:
-    """BrowseSidePanel.kt:154 — известный кандидат ниже порога (docs/01 §9,
-    CH-005: 32×32 px на эталонном AVD). Явный guard состояния — тот же приём,
-    что `measure_bottom_bar_handle`."""
+    """BrowseSidePanel.kt:118-157 (tabHandle) — известный кандидат ниже порога
+    (docs/01 §9). bounds измеряются с ВНЕШНЕГО кликабельного
+    `Box(.width(handleWidth).height(64.dp).clickable)` (`icon_button_container`,
+    родитель content-desc-узла), НЕ с вложенной 12dp-иконки Icon — тот же
+    приём/причина, что `measure_side_panel_expanded_controls`/`measure_tab_
+    strip_targets` (rework критик-гейта прохода 9, 2026-08-20: `by_desc`
+    напрямую давал 32x32px=12.2x12.2dp — bounds иконки, не цели; реальный
+    контейнер — 84x168px=32.0x64.0dp, сверено живым деревом,
+    scripts/ui_snapshot.py). Явный guard состояния — тот же приём, что
+    `measure_bottom_bar_handle`."""
     panel = SidePanel(driver)
     assert not panel.is_expanded(), (
         "side panel неожиданно уже развёрнута — handle «Expand panel» "
         "измеряется в СВЁРНУТОМ состоянии панели (Given TC-148)"
     )
-    el = panel.find(panel.by_desc("Expand panel"))
+    el = panel.find(panel.icon_button_container("Expand panel"))
     return [('side panel: handle «Expand panel»', el.rect)]
 
 
 @allure.step("When накопление bounds: контролы раскрытой side panel (тема, A-/A+)")
 def measure_side_panel_expanded_controls(driver) -> list[tuple[str, dict]]:
+    """BrowseSidePanel.kt PanelIconButton (тема) / PanelTextButton (A-/A+):
+    bounds темы измеряются с ВНЕШНЕГО IconButton(36dp) (`icon_button_
+    container`, родитель content-desc-узла), НЕ с 22dp-иконки Contrast
+    (rework 2026-08-20: `by_desc` напрямую занижал размер — сверено живым
+    деревом, scripts/ui_snapshot.py); A-/A+ уже используют корректный
+    родительский `font_button_container` (не менялось)."""
     panel = SidePanel(driver)
     assert panel.is_expanded(), (
         "side panel не раскрылась — ожидали персистентный toggle-стейт после "
         "`side_panel_steps.expand` (Given TC-148: раскрытие ОТДЕЛЬНЫМ шагом)"
     )
     theme_desc = TO_DARK if panel.is_present(panel.by_desc(TO_DARK), timeout=2) else TO_LIGHT
-    theme_el = panel.find(panel.by_desc(theme_desc))
+    theme_el = panel.find(panel.icon_button_container(theme_desc))
     minus_el = panel.find(panel.font_button_container("A-"))
     plus_el = panel.find(panel.font_button_container("A+"))
     return [
@@ -156,13 +169,19 @@ def measure_side_panel_expanded_controls(driver) -> list[tuple[str, dict]]:
 @allure.step("When накопление bounds: TabStrip (New tab, Close tab, таб-чип #0)")
 def measure_tab_strip_targets(driver) -> list[tuple[str, dict]]:
     """TabStrip.kt: `New tab` — IconButton(36dp)-обёрнутая Icon(20dp,
-    desc="New tab"); `Close tab` — Icon(14dp) с `.clickable` НА САМОЙ
-    иконке (contentDescription="Close tab") и clickable в ОДНОМ узле, без
-    обёртки; сам таб-чип — родительский Row чипа через уже существующий
+    desc="New tab"); bounds измеряются с ВНЕШНЕГО IconButton
+    (`new_tab_button_locator`, родитель content-desc-узла), НЕ с самой
+    20dp-иконки (rework 2026-08-20: `by_desc` напрямую занижал размер —
+    сверено живым деревом, scripts/ui_snapshot.py). `Close tab` — Icon(14dp)
+    с `.clickable` НА САМОЙ иконке (contentDescription="Close tab") и
+    clickable в ОДНОМ узле, без обёртки — Compose САМ расширяет touch-target
+    этого узла accessibility-дереве до 48dp (сверено живым деревом: реальные
+    bounds 126x126px @density 420, не 14dp), родительский lookup здесь не
+    нужен; сам таб-чип — родительский Row чипа через уже существующий
     `tab_chip_locator` (клик по чипу целится в него же, не в 14dp иконку
     закрытия — см. докстринг `tab_chip_locator`)."""
     screen = BrowserScreen(driver)
-    new_tab_el = screen.find(screen.by_desc(screen.NEW_TAB_DESC))
+    new_tab_el = screen.find(screen.new_tab_button_locator())
     close_tab_els = screen.driver.find_elements(*screen.by_desc(screen.CLOSE_TAB_DESC))
     assert close_tab_els, (
         "ни одной кнопки «Close tab» не найдено в дереве — ожидали >=2 вкладки "
@@ -179,13 +198,17 @@ def measure_tab_strip_targets(driver) -> list[tuple[str, dict]]:
 @allure.step("When накопление bounds: чипы табов Library ({labels})")
 def measure_library_tab_chips(driver, labels: tuple[str, ...] = LIBRARY_TAB_LABELS) -> list[tuple[str, dict]]:
     """LibraryScreen.kt: `Tab(modifier=Modifier.height(48.dp))` с
-    content-lambda `Text(tab.label.uppercase())` — тот же composable, что
-    уже кликается по `by_text(label)` в `LibraryScreen.open_tab` (не новый
-    локатор, переиспользование)."""
+    content-lambda `Text(tab.label.uppercase())` — bounds измеряются с
+    ВНЕШНЕГО 48dp-высокого Tab-контейнера (`tab_chip_container`, родитель
+    текстового узла), НЕ с самого `TextView` (rework 2026-08-20: `by_text`
+    напрямую занижал высоту до ~30px глифа — сверено живым деревом,
+    scripts/ui_snapshot.py; `LibraryScreen.open_tab` по-прежнему тапает по
+    `by_text(label)` — тап физически попадает в родителя, для клика разница
+    не важна, только для замера bounds)."""
     screen = LibraryScreen(driver)
     out = []
     for label in labels:
-        el = screen.find(screen.by_text(label))
+        el = screen.find(screen.tab_chip_container(label))
         out.append((f'Library: таб «{label}»', el.rect))
     return out
 
