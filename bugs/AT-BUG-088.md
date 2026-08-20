@@ -1,19 +1,19 @@
 ---
 id: AT-BUG-088
-title: "Три settings-prefs Then-хелпера (assert_theme_mode_pref/assert_auto_apply_filter_pref/assert_font_size_step_pref) читали через голый adb.run_as — rc/stderr отбрасывались, отказ adb был неотличим от несовпадения значения (AT-BUG-055 класс, remnant после AT-BUG-086); пофикшено переводом _poll_settings_prefs на adb.run_as_file_or_raise, Fixed"
+title: "Три settings-prefs Then-хелпера (assert_theme_mode_pref/assert_auto_apply_filter_pref/assert_font_size_step_pref) читали через голый adb.run_as — rc/stderr отбрасывались, отказ adb был неотличим от несовпадения значения (AT-BUG-055 класс, remnant после AT-BUG-086); пофикшено переводом _poll_settings_prefs на adb.run_as_file_or_raise, Verified"
 type: test_debt
 debt_kind: flaky_test
 severity: minor
-status: Fixed
+status: Verified
 found_in: "критик-гейт B4 AT-BUG-086, 2026-08-20"
 fixed_in: "source_commit fdd3f72884105d1453448e0c9a7f2b109588b182, version_code 12 (state/app-under-test.yaml) — фикс в фреймворке (framework/steps/settings_steps.py, framework/tests/test_theme_mode_pref_settle_unit.py), сборка приложения не менялась"
-last_seen_in: "tests/test_smoke.py::test_theme_toggle_stable (TC-005) + tests/test_side_panel.py::test_font_size_increase_instant_and_persists (TC-051), 2x подряд зелёные, 2026-08-20"
+last_seen_in: ""
 test_cases: ["TC-005", "TC-181", "TC-050", "TC-051"]
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-08-20T08:11:23Z"
-updated: "2026-08-20T08:11:23Z"
+status_since: "2026-08-20T11:25:29Z"
+updated: "2026-08-20T11:25:29Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -25,7 +25,7 @@ lock: ""
 gitlab_issue: ""
 ---
 
-# AT-BUG-088 — settings-prefs Then-хелперы БЫЛИ слепы к отказу adb (rc/stderr не проверялись, remnant класса AT-BUG-055); `_poll_settings_prefs` переведён на `adb.run_as_file_or_raise`, Fixed
+# AT-BUG-088 — settings-prefs Then-хелперы БЫЛИ слепы к отказу adb (rc/stderr не проверялись, remnant класса AT-BUG-055); `_poll_settings_prefs` переведён на `adb.run_as_file_or_raise`, Verified
 
 ## Окружение
 
@@ -37,8 +37,9 @@ gitlab_issue: ""
 ## Обнаружено
 
 Критик-гейт B4 AT-BUG-086 (2026-08-20): фикс AT-BUG-086 добавил settle-опрос
-поверх `adb.run_as("cat shared_prefs/ao3_settings.xml")`, но чтение осталось
-"голым" — rc/stderr отбрасываются, только stdout сверяется подстрокой. Тот же
+поверх `adb.run_as("cat shared_prefs/ao3_settings.xml")`, но чтение на тот
+момент оставалось "голым" — rc/stderr отбрасывались, только stdout сверялся
+подстрокой (класс закрыт фиксом этого тикета — см. ниже). Тот же
 класс дыры, что `AT-BUG-055` уже нашёл и назвал для ЭТИХ ЖЕ ТРЁХ функций
 (`assert_theme_mode_pref`/`assert_font_size_step_pref`, «кандидат для отдельного
 B4-прохода, не блокер»), но НЕ завёл живым тикетом — только прозой внутри уже
@@ -54,10 +55,13 @@ B4-прохода, не блокер»), но НЕ завёл живым тик�
 **Дополнительный аргумент чинить не откладывая бесконечно** (критик-гейт
 AT-BUG-086, Б3): после AT-BUG-086 появилась ЕДИНАЯ точка чтения
 (`_poll_settings_prefs`) — правка теперь локальна (один вызов внутри одной
-функции, а не три места), и текущий полл слегка ухудшает диагностику: мёртвый
-adb-транспорт теперь 3 секунды крутится в цикле и падает как «theme_mode !=
-SYSTEM в SharedPreferences: ''», то есть отказ adb выдаётся за дефект продукта
-под видом settle-таймаута.
+функции, а не три места). **До фикса этого тикета** полл слегка ухудшал
+диагностику: мёртвый adb-транспорт 3 секунды крутился в цикле и падал как
+«theme_mode != SYSTEM в SharedPreferences: ''», то есть отказ adb выдавался за
+дефект продукта под видом settle-таймаута. **После фикса** (см. «Критерий
+готовности»/«Верификация» ниже) отказ adb/run-as всплывает `RuntimeError`
+СРАЗУ, без прокручивания 3-секундного settle-бюджета (`:108-110`) —
+диагностическая путаница снята.
 
 ## Критерий готовности (Fixed)
 
@@ -69,6 +73,11 @@ SYSTEM в SharedPreferences: ''», то есть отказ adb выдаётся
       сообщение об ошибке, отличное от settle-таймаута по значению.
 - [x] Живой регресс: TC-005/TC-181/TC-050/TC-051 (или минимум TC-005 +
       test_smoke.py) зелёный минимум 2 раза подряд после правки.
+
+## Верификация (заполняет fix-verifier)
+| Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
+|---|---|---|---|---|
+| 2026-08-20 | test_debt, сборка приложения не менялась — фикс целиком во фреймворке; state/app-under-test.yaml на момент прогона: source_commit `fdd3f72884105d1453448e0c9a7f2b109588b182` (== `fixed_in`), version_name `dev-local`, version_code 12, apk_sha256 `6bc924f9e3536615b1bcbb5f9533ea9dde0a38e6e31372e39e290c1b68b8b179` (уже установленная сборка, отдельная переустановка не требовалась) | `framework/tests/test_theme_mode_pref_settle_unit.py` (device-free юнит, DoD п.1) + живые `tests/test_smoke.py::test_theme_toggle_stable` (TC-005) и `tests/test_side_panel.py::test_font_size_increase_instant_and_persists` (TC-051) (device, Appium, DoD п.2). TC-181 (`assert_auto_apply_filter_pref`) и TC-050 живьём не гонялись этим ходом — та же граница, что test-maintainer явно назвал в записи Fixed (за пределами объявленного DoD-минимума TC-005 + один из TC-181/TC-050/TC-051); покрыты тем же device-free различающим тестом на общей точке чтения `_poll_settings_prefs`, сигнатура/логика хелперов не менялись | `Invoke-Pytest tests/test_theme_mode_pref_settle_unit.py -q` — дословно: `......` [100%], `AT-BUG-026 device-liveness guard: recoveries this session = 0/2`, `6 passed in 0.20s`, `PYTEST_EXIT=0`. `Invoke-Pytest tests/test_smoke.py::test_theme_toggle_stable tests/test_side_panel.py::test_font_size_increase_instant_and_persists -q` — дословно: `..` [100%], `AT-BUG-026 device-liveness guard: recoveries this session = 0/2`, `2 passed in 138.75s (0:02:18)`, `PYTEST_EXIT=0`. Оба прогона независимо исполнены этой сессией (не переприняты по отчёту test-maintainer), среда сверена канонической формой перед прогоном (`. tasks.ps1; Get-Device` → `DEVICE: emulator-5554`) | Verified |
 
 ## Обсуждение
 
@@ -153,9 +162,53 @@ Open-носителя находка теряется при каждой при
    дефект продукта», раз результат никем не проверяется) — упомянуто для
    полноты сверки, кандидатом B4 не считаю.
 
+**[критик-гейт @ 2026-08-20T11:35:00Z] Дополнение классовой полноты.**
+Собственный сплошной поиск `adb.run_as(` нашёл ещё два места, не включённые
+в перечисление выше: `settings_steps.py:433`/`:520` — оба несут позитивный
+маркер (`OK`/`RDY`) и `2>&1`, т.е. fail-closed по протоколу AT-BUG-045/044,
+структурно НЕ класс AT-BUG-055/088 (та же полярность, что `seed_db.py`
+пункт 1 выше). Перечисление было неполным (упоминало только `seed_db.py`),
+хотя существо негатива «новых голых мест на assert-driving пути нет» —
+верно.
+
 `next_rules`: если B4-проход захочет добить класс до конца, следующий
 кандидат — `seed_db._db_exists()` (пункт 1 выше), по тому же референс-паттерну
 `run_as_file_or_raise`; проверить перед этим, не станет ли она тогда
 избыточной (`ensure_db_initialized` уже не полагается на неё).
+
+**[fix-verifier @ 2026-08-20T11:25:29Z]** `status: Fixed → Verified` (D1).
+`type: test_debt` — сборка приложения не требовалась (фикс целиком во
+фреймворке, `state/app-under-test.yaml` не менялся с `found_in`,
+`source_commit` совпадает с `fixed_in`). Независимо исполнены оба пункта
+DoD этим ходом (не переприняты по отчёту test-maintainer):
+1. `Invoke-Pytest tests/test_theme_mode_pref_settle_unit.py -q` — `6 passed
+   in 0.20s`, `PYTEST_EXIT=0`.
+2. Живой регресс `TC-005` + `TC-051` — `Invoke-Pytest
+   tests/test_smoke.py::test_theme_toggle_stable
+   tests/test_side_panel.py::test_font_size_increase_instant_and_persists
+   -q` — `2 passed in 138.75s (0:02:18)`, `PYTEST_EXIT=0`.
+
+Оба зелёные → критерий D1 закрыт, репро не повторилось. Полный дословный
+вывод — таблица «Верификация» выше. `TC-181`/`TC-050` живьём не гонялись
+(та же явно названная граница, что и в записи Fixed) — не блокер: покрыты
+device-free различающим тестом на единой точке чтения, логика хелперов не
+менялась после фикса.
+
+Заголовок (`title`) и H1 переведены с хвоста «, Fixed» на «, Verified»
+(класс CLASS-MECHANISM-STALE-TEXT-AFTER-STATUS-TRANSITION). **Критик-гейт
+2026-08-20 (переход Fixed→Verified) поймал 8й экземпляр того же класса,
+пропущенный этой репликой** — `## Обнаружено` несла настоящее время о
+непочиненном состоянии («текущий полл слегка ухудшает...», «теперь 3 секунды
+крутится», «выдаётся за дефект продукта»), прямо противоречащее содержимому
+того же артефакта (`:108-110`, «теперь всплывает `RuntimeError` СРАЗУ»);
+секции — не только title/H1 — исправлены координатором тем же ходом
+(датированы/переведены в прошедшее время). `last_seen_in` также приведён к
+задокументированной семантике (docs/templates/bug-report.md — «сборка, где
+репро подтверждено», не список зелёных прогонов). `known_issue` уже был
+`"false"` — сбрасывать не потребовалось.
+
+`app-under-test/` не тронут. Дефектов-собратьев (D-0043) при верификации
+не замечено сверх уже задокументированных в теле бага (`seed_db.py`,
+пункты 1-2 «Классовой полноты» выше).
 
 `lock` снят.

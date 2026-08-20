@@ -1330,6 +1330,42 @@ features:
     title: "FAB «Scroll to top» на листинге: появляется после прокрутки (activeScrollY > 600) вне страницы работы и прокручивает активную вкладку в начало"
     screen: browse
     source: "app/src/main/java/com/example/ao3_wrapper/MainActivity.kt"
+  # ДВЕ НОВЫЕ записи (test-strategist 2026-08-20; вход — new_risks чартера CH-011,
+  # docs/01 §10 (ю)). ПРОБЕЛ РЕЕСТРА, а не новая фича: «прогресс чтения» жил в коде
+  # и до этой сборки, но реестр знал только ОТЧЁТ позиции в Kotlin
+  # (`bridge-scroll-reporting`) — ни Room-носителя, ни оффера возобновления в нём не
+  # было (позитивный контроль формы поиска: `resume|readProgress|ao3ScrollToPercent`
+  # по этому файлу давал только комментарий `repeatOnLifecycle(RESUMED)` записи
+  # синхронизации). Это ЧЕТВЁРТЫЙ носитель позиции чтения сверх трёх известных
+  # (нативный WebView-скролл, HistoryEntry.scrollY/prefs, два производных
+  # индикатора) — обоснование и предложение риска: docs/01 §10 (ю) п.1.
+  # Гранулярность (правило шапки): записи ДВЕ, потому что Then наблюдаемо разные —
+  # «строка Room получила позицию» против «пользователю предъявлен снекбар с
+  # предложением и он им пользуется».
+  #  - ЗАПИСЬ (носитель): `BrowserViewModel.persistReadingProgress:544-581` —
+  #    порог `MIN_PROGRESS_PERCENT` (`:549`), дебаунс `PROGRESS_SAVE_DEBOUNCE_MS`
+  #    (`:553-556`), поля `readProgress*` с СОБСТВЕННЫМИ часами `readProgressAt`,
+  #    строковый `timestamp` не трогается (`:559-576`); межустройственное слияние
+  #    пофилдово — `SyncRepository.withNewerProgress:293-302` (∩ R-18).
+  #  - ПРЕДЪЯВЛЕНИЕ: `maybeOfferResume:583-604` пишет ГЛОБАЛЬНОЕ
+  #    `uiState.resumeOffer` (guard'а по активной вкладке нет; `ResumeOffer` несёт
+  #    `tabId`, `:593-600`), снекбар — `MainActivity.kt:343-354`, принятие —
+  #    `acceptResumeOffer:611-621` (две ветки: `ao3ScrollToPercent`
+  #    `ao3_bridge.js:989` либо `navigateActiveTabTo` чужим URL), подавление
+  #    повтора — `suppressResumeForWork` (`:584-585`, `:613`).
+  # Покрытие обеих: 0 кейсов; P1-область docs/01 §9 «reading-progress/Resume …» с
+  # действующей дизайн-меткой; живой дефект предъявления — bugs/BUG-082.md (major,
+  # Open). `inventoried_at_commit` НЕ тронут: это не переинвентаризация, а закрытие
+  # пробела (прецедент правок 2026-07-28/2026-08-03 выше); реестр остаётся на
+  # aa377e0e при сборке fdd3f728 — полная переинвентаризация идёт своим триггером.
+  - id: browse-reading-progress-persist-room
+    title: "Позиция чтения работы сохраняется в Room (readProgress*: URL, %, глава) при чтении страницы работы в приложении — только выше порога 5 % и с дебаунсом, не трогая timestamp строки"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt"
+  - id: browse-resume-offer-snackbar
+    title: "Оффер «Continue reading at N%?» с кнопкой Resume при повторном открытии работы с сохранённой позицией: тап возобновляет чтение с сохранённого места, отказ/истечение гасит оффер и не повторяет его"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt"
   # НОВАЯ запись (test-strategist 2026-08-15; коммит 2a1ceca6). Плавающие кнопки
   # листания в нижних углах браузера:
   #  - условие показа — ОБА флага: `einkMode && showPageTurnButtons`
