@@ -438,6 +438,112 @@ def wait_tabs_persisted(sentinel: str, timeout: int = 10) -> None:
              message=f"вкладки с сентинелом {sentinel!r} не появились в {_TABS_PREFS_PATH}")
 
 
+_AM_KILLED_BY_AM_MARKER = "killedByAm=true"
+_AM_RACE_LOGCAT_LINES = 400
+
+
+@allure.step("Then вкладки сохранены в SharedPreferences после cold-start deep-link "
+              "(сентинел «{sentinel}», устойчиво к гонке ActivityManager remove-task)")
+def wait_tabs_persisted_after_cold_start_deep_link(url: str, sentinel: str, timeout: int = 20) -> None:
+    """AT-BUG-087 (test_debt, flaky_test, Fixed) — TC-135
+    (`test_cold_start_deep_link_reuses_single_home_tab`) звала голый
+    `wait_tabs_persisted(timeout=20)` СРАЗУ после `open_deep_link` на процессе,
+    только что поднятом ПОСЛЕ `clean_state()` (`pm clear`) на УЖЕ ЖИВОЙ
+    Appium-сессии — это НЕ проблема латентности персиста (докстринг TC-135
+    документировал окно t+6.3-7.3с, критик-расследование 2026-07-31).
+
+    Живая диагностика этого бага (2026-08-20, 6 изолированных прогонов на
+    ИЗМЕРЕННО свежей Appium-сессии, `-s` + `adb logcat`/prefs post-mortem)
+    нашла РЕАЛЬНУЮ причину: `pm clear` синхронно возвращает успех ДО того, как
+    внутренняя асинхронная уборка ActivityManager по предыдущей задаче
+    (`ActivityTaskManager: Destroy timeout of remove-task`, ~150-200мс после
+    `pm clear`) гарантированно завершилась. Если zygote-форк, поднятый СЛЕДУЮЩИМ
+    `am start` (deep-link cold-start), попадает в это окно, ActivityManager
+    убивает СВЕЖЕСОЗДАННЫЙ процесс САМ (наблюдался логкэт-паттерн: `Zygote:
+    Forked child process <pid>` немедленно (<10мс) следом `ActivityManager:
+    ProcessRecord{...} start not valid, killing pid=<pid>, killedByAm=true`) —
+    `BrowserViewModel` в этом прогоне вообще НИКОГДА не инициализировался, маркер
+    физически НЕ появляется НИ ЗА КАКОЙ таймаут (живой контроль: 90с опрос с
+    интервалом 0.2с, `last_raw_len=0` весь бюджет — не "медленно", а "никогда";
+    воспроизведено 2 раза из 6 изолированных прогонов, ~33%). Увеличение
+    `timeout` здесь НЕ фикс (маскировка без эффекта — ждать нечего, процесс
+    мёртв), фактическая латентность на ЗДОРОВЫХ прогонах (без гонки) —
+    ~13-14с (выросла против 6.3-7.3с 2026-07-31, но это отдельное наблюдение,
+    не причина красных прогонов: 13-14с всё ещё укладывается в 20с-бюджет).
+
+    Фикс — детерминированное различение УБИТ-ГОНКОЙ / РЕАЛЬНО-МЕДЛЕННО ПОСЛЕ
+    таймаута (не ретраит вслепую, не маскирует потенциальную иную причину):
+    `adb.pidof_app() is None` ПОСЛЕ истечения `timeout` доказывает лишь «процесс
+    сейчас не жив» — это истинно и при гонке AM, и (критик-блокер Б5,
+    2026-08-20) при (а) РЕАЛЬНОМ крахе приложения на первом холодном старте
+    после `pm clear` (если он не всегда воспроизводится, слепой ретрай на
+    голом `pidof_app() is None` молча превратил бы КРАСНЫЙ прогон в зелёный —
+    ровно маскировка регрессии, которую test-maintainer обязан ИЗБЕГАТЬ), и
+    (б) при отвале самой adb-команды (`adb.shell`/`_run`, `framework/core/
+    adb.py`, может вернуть пустой stdout не из-за мёртвого процесса
+    приложения, а из-за сбоя транспорта). Принадлежность смерти процесса
+    ИМЕННО гонке AM remove-task подтверждается ОТДЕЛЬНО — строкой
+    `killedByAm=true` в логкэте (см. живой паттерн `Zygote: Forked child
+    process <pid>` немедленно следом `ActivityManager: ... killing pid=<pid>,
+    killedByAm=true` выше в этом докстринге): ПЕРЕД ретраем снимается
+    `adb.shell("logcat -d -t ...")` и прикладывается через `allure.attach`
+    (тот же стиль, что `perf_steps.assert_no_crash_or_anr`/
+    `security_steps`) — ретрай происходит ТОЛЬКО если маркер найден; если
+    процесс мёртв, но маркера в логкэте нет, это НЕИЗВЕСТНАЯ причина смерти
+    (потенциальный краш приложения ИЛИ отвал adb) — `raise` без ретрая, не
+    маскируем. Факт срабатывания ретрая (Б6) сам по себе тоже приложен через
+    `allure.attach` ДО повторного `open_deep_link` — без этого частота гонки
+    была бы ненаблюдаема в отчётах фабрики (зелёный-с-ретраем неотличим от
+    зелёного-с-первого-раза).
+
+    Повтор — ОДИН раз (не бесконечный ретрай): исходный `am start`, доказано,
+    детерминированно убивается ГОНКОЙ, а не системной перегрузкой — вторая
+    попытка почти всегда не попадает в то же узкое окно (эмпирически: race
+    hit НЕ повторялся 2 раза подряд ни разу в 6 прогонах диагностики).
+    Повторный `am start` с ТЕМ ЖЕ url безопасен — `MainActivity`
+    `launchMode="singleTask"`, `openOrNavigateDeepLink` идемпотентна для
+    одного и того же url (см. докстринг `open_deep_link`). Если ретрай ТОЖЕ
+    падает по той же причине (killedByAm=true повторно) — итоговый
+    `TimeoutError` пробрасывается наружу (bounded-ретрай, не бесконечный
+    цикл): юнит-пробы см. `test_cold_start_deep_link_am_race_retry_unit.py`.
+
+    Область: только TC-135 (единственный вызывающий этот шаг) — НЕ трогает
+    дефолтный `wait_tabs_persisted`/`open_deep_link`, используемые TC-025 и
+    остальными потребителями (не задета сторонняя латентность/поведение)."""
+    open_deep_link(url)
+    try:
+        wait_tabs_persisted(sentinel, timeout=timeout)
+        return
+    except TimeoutError:
+        if adb.pidof_app() is not None:
+            raise  # процесс жив -- не гонка AM remove-task, не маскируем иную причину
+
+        logcat_text = adb.shell(
+            f"logcat -d -t {_AM_RACE_LOGCAT_LINES}", timeout=settings.ADB_SHELL_TIMEOUT
+        )
+        allure.attach(
+            logcat_text, name="AT-BUG-087-logcat-on-pidof-none",
+            attachment_type=allure.attachment_type.TEXT,
+        )
+        if _AM_KILLED_BY_AM_MARKER not in logcat_text:
+            # Процесс мёртв, но НЕ доказано, что это гонка AM remove-task --
+            # неизвестная причина (потенциальный краш приложения или отвал
+            # adb, критик-блокер Б5) -- не маскируем слепым ретраем.
+            raise
+
+        allure.attach(
+            f"AM-kill detected ({_AM_KILLED_BY_AM_MARKER}), retrying deep_link "
+            f"once, timeout={timeout}s",
+            name="AT-BUG-087-retry-fired", attachment_type=allure.attachment_type.TEXT,
+        )
+        # Процесс убит гонкой ActivityManager remove-task (AT-BUG-087),
+        # подтверждено логкэтом -- Android сам не перезапускает; переотправляем
+        # deep-link intent один раз (bounded -- исключение из этого вызова
+        # пробрасывается наружу, если ретрай тоже не успел).
+        open_deep_link(url)
+        wait_tabs_persisted(sentinel, timeout=timeout)
+
+
 def _parse_persisted_tabs(raw: str) -> list[dict]:
     """Извлекает и JSON-парсит массив TabSnapshot из `open_tabs_urls`
     (`BrowserViewModel.kt saveTabsToPrefs`/`TabSnapshot`). НЕ substring-подсчёт
