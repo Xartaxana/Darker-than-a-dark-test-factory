@@ -1,865 +1,100 @@
 {
-  "TC-106": {
+  "TC-151": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-132": {
     "itype": "test-case",
     "artifact_status": "Automated",
     "board_status": "Automated"
   },
-  "TC-107": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-108": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-148": {
+  "TC-163": {
     "itype": "test-case",
     "artifact_status": "Approved",
     "board_status": "Approved"
   },
-  "TC-149": {
+  "BUG-013": {
+    "itype": "bug",
+    "artifact_status": "Intended",
+    "board_status": "Intended"
+  },
+  "BUG-072": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-182": {
     "itype": "test-case",
     "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-150": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-021": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-165": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-166": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-167": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-168": {
-    "itype": "test-case",
-    "artifact_status": "Merged",
-    "board_status": "Merged"
-  },
-  "TC-171": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-172": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-050": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
+    "board_status": null
   },
   "TC-051": {
     "itype": "test-case",
     "artifact_status": "Automated",
     "board_status": "Automated"
   },
-  "TC-052": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-053": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-054": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-055": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-057": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-058": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-094": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-126": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-127": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-128": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-130": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-157": {
+  "TC-214": {
     "itype": "test-case",
     "artifact_status": "Approved",
     "board_status": "Approved"
   },
-  "TC-158": {
-    "itype": "test-case",
-    "artifact_status": "Merged",
-    "board_status": "Merged"
-  },
-  "TC-159": {
+  "TC-208": {
     "itype": "test-case",
     "artifact_status": "Approved",
-    "board_status": "Approved"
+    "board_status": null
   },
-  "TC-160": {
+  "TC-084": {
     "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-161": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-162": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-197": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-198": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-199": {
-    "itype": "test-case",
-    "artifact_status": "Merged",
-    "board_status": "Merged"
-  },
-  "TC-200": {
-    "itype": "test-case",
-    "artifact_status": "Merged",
-    "board_status": "Merged"
-  },
-  "TC-201": {
-    "itype": "test-case",
-    "artifact_status": "Merged",
-    "board_status": "Merged"
-  },
-  "TC-202": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-203": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-204": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-247": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-248": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-249": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-250": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-252": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-253": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-254": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-259": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-260": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-261": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-262": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-263": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-264": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-265": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-266": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-267": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-269": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-270": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-271": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-066": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-067": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-068": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-069": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-070": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-071": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-072": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-073": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-074": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-075": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-076": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-077": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-078": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-079": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-080": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-081": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-082": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-083": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-118": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-119": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-120": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-121": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-122": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-195": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-196": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-109": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-110": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-111": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-032": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-033": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-034": {
-    "itype": "test-case",
-    "artifact_status": "Merged",
-    "board_status": "Merged"
-  },
-  "TC-035": {
-    "itype": "test-case",
-    "artifact_status": "Merged",
-    "board_status": "Merged"
-  },
-  "TC-036": {
-    "itype": "test-case",
-    "artifact_status": "Merged",
-    "board_status": "Merged"
-  },
-  "TC-037": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-038": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-039": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-112": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-113": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-114": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-115": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-116": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-117": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-153": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-154": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-156": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-164": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-236": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-237": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-238": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-239": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-240": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-257": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-046": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-040": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-041": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-042": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-085": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-086": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-181": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-182": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-183": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-184": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-185": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-205": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-206": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-006": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-016": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-017": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-027": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-028": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-029": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-030": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-031": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-060": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-061": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-062": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-063": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-064": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-065": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-089": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-136": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-137": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-173": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-174": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-175": {
-    "itype": "test-case",
     "artifact_status": "Automated",
     "board_status": "Automated"
   },
-  "TC-177": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-178": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
+  "AT-BUG-028": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
   },
-  "TC-179": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
+  "BUG-012": {
+    "itype": "bug",
+    "artifact_status": "Intended",
+    "board_status": "Intended"
   },
-  "TC-180": {
+  "TC-049": {
     "itype": "test-case",
     "artifact_status": "Automated",
     "board_status": "Automated"
   },
-  "TC-189": {
+  "TC-018": {
     "itype": "test-case",
     "artifact_status": "Automated",
     "board_status": "Automated"
-  },
-  "TC-190": {
-    "itype": "test-case",
-    "artifact_status": "Draft",
-    "board_status": "Draft"
-  },
-  "TC-241": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-242": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-243": {
-    "itype": "test-case",
-    "artifact_status": "Merged",
-    "board_status": "Merged"
   },
   "TC-244": {
     "itype": "test-case",
     "artifact_status": "Approved",
     "board_status": "Approved"
   },
-  "TC-245": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
+  "RUN-20260815-0337": {
+    "itype": "run",
+    "artifact_status": "Closed",
+    "board_status": "Closed"
   },
-  "TC-255": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-096": {
+  "TC-103": {
     "itype": "test-case",
     "artifact_status": "Automated",
     "board_status": "Automated"
   },
-  "TC-097": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
+  "AT-BUG-042": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
   },
-  "TC-098": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
+  "BUG-071": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
   },
-  "TC-099": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-007": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-008": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-009": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-010": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-011": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-012": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-043": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-044": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-045": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-056": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-087": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-088": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-090": {
+  "TC-064": {
     "itype": "test-case",
     "artifact_status": "Automated",
     "board_status": "Automated"
@@ -869,702 +104,17 @@
     "artifact_status": "Automated",
     "board_status": "Automated"
   },
-  "TC-138": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-139": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-140": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-141": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-142": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-143": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-144": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-151": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-152": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-155": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-191": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-192": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-193": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-194": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-256": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-100": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-101": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-102": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-103": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-104": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-105": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-232": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-233": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-234": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-018": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-019": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-020": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-047": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-048": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-049": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-059": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-123": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-124": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-125": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-129": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-145": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-146": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-147": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-163": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-169": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-170": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-186": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-187": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-188": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-235": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-246": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-251": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-001": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-002": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-003": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-004": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-005": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-207": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-208": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-209": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-210": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-211": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-212": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-213": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-214": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-215": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-216": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-217": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-218": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-219": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-220": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-221": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-222": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-223": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-224": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-225": {
-    "itype": "test-case",
-    "artifact_status": "Merged",
-    "board_status": "Merged"
-  },
-  "TC-226": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-227": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-228": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-229": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-230": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-231": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-272": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-022": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-023": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-024": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-025": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-026": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-084": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-131": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-132": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-133": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-134": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-135": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-176": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-258": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-268": {
-    "itype": "test-case",
-    "artifact_status": "Approved",
-    "board_status": "Approved"
-  },
-  "TC-013": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-014": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-015": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-092": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-093": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "TC-095": {
-    "itype": "test-case",
-    "artifact_status": "Automated",
-    "board_status": "Automated"
-  },
-  "AT-BUG-002": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-003": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-004": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-005": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-006": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-007": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-008": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-009": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-010": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-011": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-012": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-013": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-014": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-015": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-016": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-017": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-018": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-019": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-020": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-021": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-022": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-023": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-024": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-025": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-026": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-027": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-028": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-029": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-030": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-031": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-032": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-033": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-034": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-035": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-036": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
   "AT-BUG-037": {
     "itype": "bug",
     "artifact_status": "Verified",
     "board_status": "Verified"
   },
-  "AT-BUG-038": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
+  "TC-130": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
-  "AT-BUG-039": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-040": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-041": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-042": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-043": {
+  "AT-BUG-015": {
     "itype": "bug",
     "artifact_status": "Verified",
     "board_status": "Verified"
@@ -1574,52 +124,27 @@
     "artifact_status": "Verified",
     "board_status": "Verified"
   },
-  "AT-BUG-045": {
+  "AT-BUG-082": {
     "itype": "bug",
     "artifact_status": "Verified",
     "board_status": "Verified"
   },
-  "AT-BUG-046": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
+  "TC-125": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
-  "AT-BUG-047": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
+  "TC-120": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
-  "AT-BUG-048": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
+  "TC-272": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
-  "AT-BUG-053": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-054": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-055": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-057": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-058": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-059": {
+  "AT-BUG-031": {
     "itype": "bug",
     "artifact_status": "Verified",
     "board_status": "Verified"
@@ -1629,187 +154,87 @@
     "artifact_status": "Rejected",
     "board_status": "Rejected"
   },
-  "AT-BUG-061": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
+  "TC-164": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
-  "AT-BUG-062": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
+  "TC-014": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
-  "AT-BUG-063": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
+  "TC-009": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
-  "AT-BUG-064": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
+  "TC-095": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
-  "AT-BUG-066": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
+  "RUN-20260810-1529": {
+    "itype": "run",
+    "artifact_status": "Closed",
+    "board_status": "Closed"
   },
-  "AT-BUG-067": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
+  "TC-253": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
-  "AT-BUG-068": {
-    "itype": "bug",
-    "artifact_status": "Blocked",
-    "board_status": "Blocked"
+  "TC-266": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
-  "AT-BUG-069": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
+  "TC-242": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
-  "AT-BUG-070": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
+  "TC-248": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
-  "AT-BUG-071": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
+  "TC-251": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
-  "AT-BUG-072": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
+  "TC-075": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
-  "AT-BUG-073": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
+  "TC-021": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
-  "AT-BUG-074": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
+  "TC-119": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
-  "AT-BUG-075": {
-    "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
+  "TC-083": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
-  "AT-BUG-076": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
+  "TC-188": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
-  "AT-BUG-077": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
+  "TC-191": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
-  "AT-BUG-078": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-079": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-080": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-081": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-082": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-083": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-084": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-085": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-086": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-087": {
-    "itype": "bug",
-    "artifact_status": "Blocked",
-    "board_status": "Blocked"
-  },
-  "AT-BUG-088": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-089": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "AT-BUG-090": {
-    "itype": "bug",
-    "artifact_status": "Blocked",
-    "board_status": "Blocked"
-  },
-  "AT-BUG-091": {
-    "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
-  },
-  "BUG-001": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "BUG-011": {
-    "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
-  },
-  "BUG-012": {
-    "itype": "bug",
-    "artifact_status": "Intended",
-    "board_status": "Intended"
-  },
-  "BUG-013": {
-    "itype": "bug",
-    "artifact_status": "Intended",
-    "board_status": "Intended"
-  },
-  "BUG-014": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "BUG-015": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "BUG-016": {
+  "AT-BUG-026": {
     "itype": "bug",
     "artifact_status": "Verified",
     "board_status": "Verified"
@@ -1819,72 +244,242 @@
     "artifact_status": "Open",
     "board_status": "Open"
   },
-  "BUG-018": {
+  "TC-171": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-034": {
+    "itype": "test-case",
+    "artifact_status": "Merged",
+    "board_status": "Merged"
+  },
+  "AT-BUG-008": {
     "itype": "bug",
     "artifact_status": "Verified",
     "board_status": "Verified"
   },
-  "BUG-019": {
+  "TC-057": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-211": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": null
+  },
+  "RUN-20260819-2012": {
+    "itype": "run",
+    "artifact_status": "Closed",
+    "board_status": "Closed"
+  },
+  "AT-BUG-019": {
     "itype": "bug",
     "artifact_status": "Verified",
     "board_status": "Verified"
   },
-  "BUG-020": {
+  "TC-212": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "AT-BUG-041": {
     "itype": "bug",
     "artifact_status": "Verified",
     "board_status": "Verified"
+  },
+  "TC-154": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": null
+  },
+  "TC-050": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "BUG-075": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
   },
   "BUG-021": {
     "itype": "bug",
     "artifact_status": "Verified",
     "board_status": "Verified"
   },
-  "BUG-022": {
+  "AT-BUG-070": {
     "itype": "bug",
     "artifact_status": "Verified",
     "board_status": "Verified"
   },
-  "BUG-046": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "BUG-047": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "BUG-048": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
+  "TC-056": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "BUG-049": {
     "itype": "bug",
     "artifact_status": "Open",
     "board_status": "Open"
   },
-  "BUG-050": {
-    "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
+  "TC-245": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
-  "BUG-051": {
-    "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
+  "TC-029": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
-  "BUG-052": {
-    "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
-  },
-  "BUG-056": {
+  "AT-BUG-030": {
     "itype": "bug",
     "artifact_status": "Verified",
     "board_status": "Verified"
   },
-  "BUG-057": {
+  "TC-226": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "BUG-015": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-008": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "AT-BUG-003": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "AT-BUG-033": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-096": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-219": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-079": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-228": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-236": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": null
+  },
+  "TC-065": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "RUN-20260811-0406": {
+    "itype": "run",
+    "artifact_status": "Triaged",
+    "board_status": "Triaged"
+  },
+  "TC-105": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-060": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-122": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-038": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "AT-BUG-086": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-234": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-263": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-162": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-073": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "AT-BUG-055": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-265": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "AT-BUG-090": {
+    "itype": "bug",
+    "artifact_status": "Blocked",
+    "board_status": "Blocked"
+  },
+  "TC-249": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-271": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-111": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-160": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "AT-BUG-035": {
     "itype": "bug",
     "artifact_status": "Verified",
     "board_status": "Verified"
@@ -1894,142 +489,742 @@
     "artifact_status": "Verified",
     "board_status": "Verified"
   },
-  "BUG-059": {
+  "TC-124": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-028": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-230": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-110": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-043": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-020": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-145": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-107": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-181": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": null
+  },
+  "TC-239": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "AT-BUG-020": {
     "itype": "bug",
     "artifact_status": "Verified",
     "board_status": "Verified"
   },
-  "BUG-060": {
-    "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
+  "TC-207": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": null
   },
-  "BUG-061": {
+  "TC-093": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "AT-BUG-063": {
     "itype": "bug",
     "artifact_status": "Verified",
     "board_status": "Verified"
   },
-  "BUG-065": {
+  "AT-BUG-066": {
     "itype": "bug",
     "artifact_status": "Verified",
     "board_status": "Verified"
   },
-  "BUG-067": {
+  "TC-128": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-156": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-090": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-007": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "AT-BUG-057": {
     "itype": "bug",
     "artifact_status": "Verified",
     "board_status": "Verified"
+  },
+  "AT-BUG-077": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-231": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-131": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "AT-BUG-016": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "AT-BUG-025": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "AT-BUG-064": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-026": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-187": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": null
+  },
+  "AT-BUG-088": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "RUN-20260810-0146": {
+    "itype": "run",
+    "artifact_status": "Triaged",
+    "board_status": "Triaged"
   },
   "BUG-068": {
     "itype": "bug",
     "artifact_status": "Open",
     "board_status": "Open"
   },
-  "BUG-069": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
+  "TC-133": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
-  "BUG-070": {
-    "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
+  "TC-089": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
-  "BUG-071": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "BUG-072": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "BUG-073": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "BUG-074": {
+  "AT-BUG-091": {
     "itype": "bug",
     "artifact_status": "Open",
     "board_status": "Open"
-  },
-  "BUG-075": {
-    "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
-  },
-  "BUG-076": {
-    "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
-  },
-  "BUG-077": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "BUG-078": {
-    "itype": "bug",
-    "artifact_status": "Verified",
-    "board_status": "Verified"
-  },
-  "BUG-079": {
-    "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
-  },
-  "BUG-080": {
-    "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
-  },
-  "BUG-081": {
-    "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
-  },
-  "BUG-082": {
-    "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
-  },
-  "BUG-083": {
-    "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
-  },
-  "BUG-084": {
-    "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
-  },
-  "RUN-20260702-0300": {
-    "itype": "run",
-    "artifact_status": "Closed",
-    "board_status": "Closed"
   },
   "RUN-20260803-2012": {
     "itype": "run",
     "artifact_status": "Triaged",
     "board_status": "Triaged"
   },
-  "RUN-20260804-1301": {
-    "itype": "run",
-    "artifact_status": "Blocked",
-    "board_status": "Blocked"
+  "TC-222": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   },
-  "RUN-20260804-1317": {
+  "TC-086": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-137": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "BUG-074": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "AT-BUG-039": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-077": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "BUG-046": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-161": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-229": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-115": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-173": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "AT-BUG-061": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "AT-BUG-048": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-076": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-216": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "AT-BUG-072": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-104": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "RUN-20260819-1818": {
+    "itype": "run",
+    "artifact_status": "Closed",
+    "board_status": "Closed"
+  },
+  "TC-109": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "AT-BUG-029": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-157": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "AT-BUG-059": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-210": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "BUG-052": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "RUN-20260811-0405": {
+    "itype": "run",
+    "artifact_status": "Closed",
+    "board_status": "Closed"
+  },
+  "TC-261": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-044": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-134": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "AT-BUG-024": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "AT-BUG-023": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-098": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-025": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-186": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": null
+  },
+  "TC-170": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-053": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "AT-BUG-017": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "AT-BUG-013": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-045": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "AT-BUG-043": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-011": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-113": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "AT-BUG-085": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "BUG-014": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-189": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "BUG-083": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "BUG-048": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-143": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "AT-BUG-053": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-085": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-129": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "AT-BUG-083": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-052": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "BUG-051": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "TC-035": {
+    "itype": "test-case",
+    "artifact_status": "Merged",
+    "board_status": "Merged"
+  },
+  "TC-168": {
+    "itype": "test-case",
+    "artifact_status": "Merged",
+    "board_status": "Merged"
+  },
+  "TC-198": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-159": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "AT-BUG-078": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-194": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "AT-BUG-067": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-256": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": null
+  },
+  "TC-183": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": null
+  },
+  "TC-235": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "AT-BUG-002": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-094": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-092": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-010": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "AT-BUG-062": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-023": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-108": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-215": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": null
+  },
+  "AT-BUG-058": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-136": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "AT-BUG-084": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "AT-BUG-045": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "RUN-20260805-0437": {
     "itype": "run",
     "artifact_status": "Triaged",
     "board_status": "Triaged"
+  },
+  "AT-BUG-022": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-074": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-258": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-100": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-153": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": null
+  },
+  "TC-197": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": null
+  },
+  "AT-BUG-071": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-068": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "AT-BUG-068": {
+    "itype": "bug",
+    "artifact_status": "Blocked",
+    "board_status": "Blocked"
+  },
+  "TC-218": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-048": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-257": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": null
+  },
+  "TC-152": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-004": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "AT-BUG-036": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-118": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-201": {
+    "itype": "test-case",
+    "artifact_status": "Merged",
+    "board_status": "Merged"
+  },
+  "TC-155": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-185": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": null
+  },
+  "AT-BUG-038": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "AT-BUG-004": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-165": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "BUG-057": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "BUG-019": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "AT-BUG-007": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-106": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "BUG-082": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
   },
   "RUN-20260804-1355": {
     "itype": "run",
     "artifact_status": "Closed",
     "board_status": "Closed"
   },
-  "RUN-20260804-1624": {
+  "TC-233": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-260": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "BUG-056": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-221": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "AT-BUG-073": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "AT-BUG-018": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-071": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "BUG-076": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "RUN-20260816-1831": {
     "itype": "run",
     "artifact_status": "Triaged",
     "board_status": "Triaged"
@@ -2039,79 +1234,884 @@
     "artifact_status": "Triaged",
     "board_status": "Triaged"
   },
-  "RUN-20260805-0437": {
-    "itype": "run",
-    "artifact_status": "Triaged",
-    "board_status": "Triaged"
+  "TC-013": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
-  "RUN-20260810-0145": {
-    "itype": "run",
-    "artifact_status": "Triaged",
-    "board_status": "Triaged"
+  "TC-062": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
-  "RUN-20260810-0146": {
-    "itype": "run",
-    "artifact_status": "Triaged",
-    "board_status": "Triaged"
+  "TC-047": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
-  "RUN-20260810-1529": {
-    "itype": "run",
-    "artifact_status": "Closed",
-    "board_status": "Closed"
+  "AT-BUG-040": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
   },
-  "RUN-20260811-0405": {
-    "itype": "run",
-    "artifact_status": "Closed",
-    "board_status": "Closed"
-  },
-  "RUN-20260811-0406": {
-    "itype": "run",
-    "artifact_status": "Triaged",
-    "board_status": "Triaged"
-  },
-  "RUN-20260814-0605": {
-    "itype": "run",
-    "artifact_status": "Closed",
-    "board_status": "Closed"
-  },
-  "RUN-20260815-0149": {
-    "itype": "run",
-    "artifact_status": "Closed",
-    "board_status": "Closed"
-  },
-  "RUN-20260815-0337": {
-    "itype": "run",
-    "artifact_status": "Closed",
-    "board_status": "Closed"
+  "TC-005": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
   "RUN-20260816-0332": {
     "itype": "run",
     "artifact_status": "Closed",
     "board_status": "Closed"
   },
+  "TC-268": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-254": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "BUG-069": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "BUG-018": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-063": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
   "RUN-20260816-0334": {
     "itype": "run",
     "artifact_status": "Closed",
     "board_status": "Closed"
+  },
+  "RUN-20260702-0300": {
+    "itype": "run",
+    "artifact_status": "Closed",
+    "board_status": "Closed"
+  },
+  "TC-195": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-177": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-243": {
+    "itype": "test-case",
+    "artifact_status": "Merged",
+    "board_status": "Merged"
+  },
+  "TC-250": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-141": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-209": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "AT-BUG-006": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-147": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-036": {
+    "itype": "test-case",
+    "artifact_status": "Merged",
+    "board_status": "Merged"
+  },
+  "TC-252": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": null
+  },
+  "BUG-016": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "AT-BUG-079": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-166": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-238": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-003": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "AT-BUG-011": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-123": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-262": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "RUN-20260814-0605": {
+    "itype": "run",
+    "artifact_status": "Closed",
+    "board_status": "Closed"
+  },
+  "TC-027": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-080": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "AT-BUG-010": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "BUG-061": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "AT-BUG-081": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-012": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-069": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-241": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "BUG-065": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-176": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-202": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "BUG-077": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-267": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "RUN-20260804-1317": {
+    "itype": "run",
+    "artifact_status": "Triaged",
+    "board_status": "Triaged"
+  },
+  "TC-061": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-070": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-269": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "AT-BUG-014": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "AT-BUG-032": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-006": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-040": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-039": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-127": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-037": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-121": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-179": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-225": {
+    "itype": "test-case",
+    "artifact_status": "Merged",
+    "board_status": "Merged"
+  },
+  "TC-178": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "BUG-020": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-101": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-174": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "BUG-081": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "TC-227": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-199": {
+    "itype": "test-case",
+    "artifact_status": "Merged",
+    "board_status": "Merged"
+  },
+  "TC-016": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-205": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "BUG-001": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-019": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "AT-BUG-054": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "RUN-20260804-1624": {
+    "itype": "run",
+    "artifact_status": "Triaged",
+    "board_status": "Triaged"
+  },
+  "TC-206": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "RUN-20260810-0145": {
+    "itype": "run",
+    "artifact_status": "Triaged",
+    "board_status": "Triaged"
+  },
+  "TC-192": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-087": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-142": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "BUG-070": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "BUG-067": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "BUG-078": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-172": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "AT-BUG-027": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-059": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-033": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "RUN-20260804-1301": {
+    "itype": "run",
+    "artifact_status": "Blocked",
+    "board_status": "Blocked"
+  },
+  "BUG-060": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "BUG-059": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-135": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "AT-BUG-074": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-148": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": null
+  },
+  "AT-BUG-012": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-126": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-247": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-024": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-138": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-055": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-203": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-081": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-001": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-140": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-002": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-264": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "BUG-050": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "BUG-084": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "TC-158": {
+    "itype": "test-case",
+    "artifact_status": "Merged",
+    "board_status": "Merged"
+  },
+  "AT-BUG-076": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-117": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-030": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-150": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-184": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": null
+  },
+  "TC-031": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-067": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-022": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-167": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-217": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-072": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "BUG-080": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "AT-BUG-075": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "TC-193": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-175": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "RUN-20260815-0149": {
+    "itype": "run",
+    "artifact_status": "Closed",
+    "board_status": "Closed"
+  },
+  "TC-082": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-097": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-116": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "AT-BUG-009": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
   },
   "RUN-20260816-1758": {
     "itype": "run",
     "artifact_status": "Closed",
     "board_status": "Closed"
   },
-  "RUN-20260816-1831": {
-    "itype": "run",
-    "artifact_status": "Triaged",
-    "board_status": "Triaged"
+  "TC-180": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
   },
-  "RUN-20260819-1818": {
-    "itype": "run",
-    "artifact_status": "Closed",
-    "board_status": "Closed"
+  "BUG-022": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
   },
-  "RUN-20260819-2012": {
-    "itype": "run",
-    "artifact_status": "Closed",
-    "board_status": "Closed"
+  "TC-213": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": null
+  },
+  "TC-220": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-232": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-149": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-066": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-200": {
+    "itype": "test-case",
+    "artifact_status": "Merged",
+    "board_status": "Merged"
+  },
+  "TC-114": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "AT-BUG-089": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-144": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-246": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "BUG-079": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "TC-240": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-046": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "AT-BUG-005": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-041": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-255": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-032": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-078": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "AT-BUG-046": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "AT-BUG-021": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-223": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-015": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "AT-BUG-087": {
+    "itype": "bug",
+    "artifact_status": "Blocked",
+    "board_status": "Blocked"
+  },
+  "TC-146": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "BUG-011": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "TC-237": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-259": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "BUG-073": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-017": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "BUG-047": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-224": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-088": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-139": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "AT-BUG-047": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-102": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-270": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "AT-BUG-069": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "AT-BUG-080": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-054": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-112": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-058": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-042": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-190": {
+    "itype": "test-case",
+    "artifact_status": "Draft",
+    "board_status": "Draft"
+  },
+  "AT-BUG-034": {
+    "itype": "bug",
+    "artifact_status": "Verified",
+    "board_status": "Verified"
+  },
+  "TC-204": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-099": {
+    "itype": "test-case",
+    "artifact_status": "Automated",
+    "board_status": "Automated"
+  },
+  "TC-196": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
+  },
+  "TC-169": {
+    "itype": "test-case",
+    "artifact_status": "Approved",
+    "board_status": "Approved"
   }
 }
