@@ -187,6 +187,16 @@ dev-<IID> у CI — немонотонен между источниками). �
 ## Как запускать команды (не плоди permission-запросы)
 - Окружение/сборка — функции `scripts/tasks.ps1` (`Install-App`, `Start-Emulator`,
   `Start-Appium`), НЕ ручной `. env.ps1; export ...` и НЕ ручной poll `getprop`/`curl`.
+- **Device-стек (spec-p3-second-emulator N3):** если сам поднимаешь окружение
+  (не унаследовал живой стек от оркестратора) — СНАЧАЛА `powershell -NoProfile
+  -ExecutionPolicy Bypass -Command ". D:\AO3_tests\scripts\env.ps1; . D:\AO3_tests\scripts\tasks.ps1;
+  Use-DeviceStack -N 1"` (стек 2 — `-N 2`), затем `Start-Emulator`/`Start-Appium`.
+  Повторный вызов из нового процесса — не конфликт: своя лиза
+  (`пользователь@хост`) продолжается сама, пока под ней нет ЖИВОГО pytest
+  (`-Resume` — синоним того же поведения). Отказ с маркером
+  `DEVICE_LEASE_BLOCKED` = `status: Blocked` — только ЖИВОЙ чужой прогон
+  (его PID в сообщении) либо рассинхрон `AO3_DEVICE`/`APPIUM_URL` с лизой;
+  НЕ провал верификации фикса.
 - Pytest с конкретными кейсами: `powershell -NoProfile -ExecutionPolicy Bypass -Command
   ". D:\AO3_tests\scripts\tasks.ps1; Invoke-Pytest <аргументы pytest>"` — НЕ собирай свою
   `". env.ps1; <venv-python> -m pytest ..."`: каждая новая строка требует подтверждения.

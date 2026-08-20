@@ -57,7 +57,28 @@ def run_ps(command: str, timeout: int = 60) -> subprocess.CompletedProcess:
 def dot_source_prefix(fake_root: Path | None = None) -> str:
     """Префикс команды: дот-сорсит tasks.ps1 (worktree-копия), опционально
     переопределяет `$root` на `fake_root` СРАЗУ ПОСЛЕ (см. докстринг модуля) -
-    ни один вызов ЭТОГО модуля не пишет в реальный `D:\\AO3_tests\\state\\`."""
+    ни один вызов ЭТОГО модуля не пишет в реальный `D:\\AO3_tests\\state\\`.
+
+    !!! ГРАНИЦА ИЗОЛЯЦИИ (M1, критик-раунд 3 — НЕ ПОВТОРЯТЬ КЛАСС) !!!
+    `fake_root` изолирует РОВНО ОДНУ переменную — `$root`. Он НЕ изолирует
+    окружение: `tasks.ps1` ПЕРВОЙ СТРОКОЙ дот-сорсит `env.ps1`, который
+    выставляет `$env:ANDROID_HOME`/`$env:JAVA_HOME`/`PATH` от НАСТОЯЩЕГО
+    корня репозитория — и делает это ДО того, как этот префикс успевает
+    подменить `$root`. Поэтому всё, что резолвится из ANDROID_HOME
+    (`$adb = "$env:ANDROID_HOME\\platform-tools\\adb.exe"`,
+    `$emu = "$env:ANDROID_HOME\\emulator\\emulator.exe"` —
+    `tasks.ps1::Start-Emulator`), в пробе остаётся РЕАЛЬНЫМ.
+
+    Практическое следствие: `fake_root` сам по себе НЕ делает пробу
+    device-free. Проба, способная дойти до `Start-Process $emu`/`& $adb ...`,
+    ОБЯЗАНА инжектировать соответствующий шов (`-Launcher`,
+    `-AdbDevicesProvider`, `-BootCompletedProvider`, `-EmuKiller`,
+    `-WaitForDeviceProvider`, `-OrphanCleaner`) — иначе в worktree она
+    «зелёная» лишь потому, что `tools/` отсутствует, а в главном чекауте
+    поднимет живой эмулятор. Ровно так шесть проб
+    `test_p3_ram_gate.py` годами выглядели device-free, будучи не device-free
+    (воспроизведено суррогатным `emulator.exe`: печаталось
+    «Waiting for device boot...»)."""
     prefix = f". '{TASKS_PS1}'; "
     if fake_root is not None:
         prefix += f"$root = '{fake_root}'; "

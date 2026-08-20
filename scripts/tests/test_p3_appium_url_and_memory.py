@@ -81,9 +81,19 @@ def test_android_serial_set_before_getprop_and_ipv4_pin_calls():
     start_emulator_body = text.split("function Start-Emulator", 1)[1].split("function Install-MitmCA", 1)[0]
     serial_idx = start_emulator_body.index('Resolve-DeviceSerial -Serial $serial')
     guest_pin_idx = start_emulator_body.index('Set-GuestIPv4Pin -Adb $adb')
-    getprop_idx = start_emulator_body.index('Get-AdbOutput -Adb $adb -AdbArgs @("shell","getprop"')
+    # M1 (критик-раунд 3): getprop-цикл теперь идёт ЧЕРЕЗ ШОВ
+    # `-BootCompletedProvider` (device-free юнит post-start ветки был иначе
+    # недостижим - цикл БЕЗЛИМИТЕН и вешал пробу). Якорь переставлен на МЕСТО
+    # ВЫЗОВА: прежний литерал `Get-AdbOutput -Adb $adb -AdbArgs @("shell",
+    # "getprop"...)` уехал в ДЕФОЛТ параметра, а дефолты объявлены в param-блоке
+    # ВЫШЕ Resolve-DeviceSerial - матч по нему проверял бы порядок ОБЪЯВЛЕНИЯ
+    # вместо порядка ИСПОЛНЕНИЯ. Проверяемое утверждение не изменилось:
+    # ANDROID_SERIAL выставлен РАНЬШЕ, чем adb-путь его читает.
+    getprop_idx = start_emulator_body.index('& $BootCompletedProvider $adb')
     assert serial_idx < guest_pin_idx
     assert serial_idx < getprop_idx
+    # Дефолт шва остаётся ТЕМ ЖЕ вызовом (адресация - через env, без -s)
+    assert 'Get-AdbOutput -Adb $AdbPath -AdbArgs @("shell", "getprop", "sys.boot_completed")' in start_emulator_body
 
 
 def test_boot_oracle_adb_devices_call_not_addressed_by_s_flag():
@@ -93,8 +103,14 @@ def test_boot_oracle_adb_devices_call_not_addressed_by_s_flag():
     text = _source()
     start_emulator_body = text.split("function Start-Emulator", 1)[1].split("function Install-MitmCA", 1)[0]
     boot_oracle_section = start_emulator_body.split("$deviceUp = $false", 1)[1].split("if (-not $deviceUp)", 1)[0]
-    assert "& $adb devices" in boot_oracle_section
+    # M1 (критик-раунд 3): оракул буда зовёт `adb devices` ЧЕРЕЗ объявленный шов
+    # `-AdbDevicesProvider` (раньше - прямой `& $adb devices` МИМО шва, из-за
+    # чего "device-free" пробы доезжали до реального adb). Дефолт шва -
+    # ДОСЛОВНО прежний `& $AdbPath devices`, так что проверяемое свойство
+    # (адресация НЕ через -s, а anchored-матчем серийника в выводе) сохранено.
+    assert "& $AdbDevicesProvider $adb" in boot_oracle_section
     assert "-s $serial" not in boot_oracle_section
+    assert "& $AdbPath devices" in start_emulator_body, "дефолт шва обязан остаться голым 'adb devices'"
 
 
 def test_install_mitm_ca_relies_on_bare_adb_env_var_addressing():

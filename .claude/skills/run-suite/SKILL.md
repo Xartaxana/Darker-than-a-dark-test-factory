@@ -19,8 +19,17 @@ description: Прогнать набор тестов (smoke/regression/canary) 
 - `canary` → `pytest -m live` (canary/tests), режим live — минимально, AO3 сторонний.
 - допускается `--mode live|replay`.
 
-Агент сам поднимет окружение (`scripts/tasks.ps1`: Start-Emulator/Start-Appium/Install-App),
-прогонит набор, создаст `runs/RUN-<ts>.md` по шаблону и обновит
+Агент сам поднимет окружение (`scripts/tasks.ps1`: `Use-DeviceStack -N 1` (spec-
+p3-second-emulator N3 — берёт машинную лизу стека 1 ДО Start-Emulator/Start-
+Appium; стек по умолчанию, `/run-suite` не принимает выбор стека — параллельный
+прогон на стеке 2 запускается отдельно, вручную) → Start-Emulator/Start-Appium/
+Install-App), прогонит набор, создаст `runs/RUN-<ts>.md` по шаблону и обновит
 `state/app-under-test.yaml`. По завершении покажи пользователю итоги
 (passed/failed/длительность, путь к отчёту и Allure) и, если есть падения, напомни,
-что дальше нужен `/triage`.
+что дальше нужен `/triage`. Если агент вернул `status: Blocked` с маркером
+`DEVICE_LEASE_BLOCKED` — сообщи это пользователю как есть, не как провал
+набора. Такой отказ означает РОВНО одно из двух: под лизой идёт ЖИВОЙ чужой
+прогон (его PID назван в сообщении) либо `AO3_DEVICE`/`APPIUM_URL`
+рассинхронизированы с лизой. Лиза, оставшаяся от ПРЕДЫДУЩЕГО завершённого
+прогона того же пользователя, `Blocked` НЕ даёт — повторный
+`Use-DeviceStack` продолжает её сам.

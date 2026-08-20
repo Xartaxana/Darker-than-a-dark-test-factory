@@ -52,6 +52,28 @@ function Get-AdbOutput {
     return (($out | Out-String)).Trim()
 }
 
+function Get-FreeMemoryGB {
+    # spec-p3-second-emulator N3 (хвост N2 §6 п.3, RAM-гейт КОДОМ): свободная
+    # физическая RAM хоста в GB, округлено до 2 знаков. `-OsInfoProvider` -
+    # инжектируемый seam (тот же приём, что Start-Emulator's
+    # -PortListenerResolver/-ProcessInfoResolver) для device-free юнита без
+    # реального WMI-запроса. `FreePhysicalMemory` (Win32_OperatingSystem) -
+    # килобайты; `$null`, если провайдер не смог получить данные (WMI
+    # недоступен) - вызывающий код (Start-Emulator) трактует `$null` как
+    # "гейт пропущен, замер невозможен" (fail-soft, не абортит на
+    # неспособности ИЗМЕРИТЬ - только на подтверждённой нехватке).
+    param(
+        [scriptblock]$OsInfoProvider = { Get-CimInstance Win32_OperatingSystem -ErrorAction SilentlyContinue }
+    )
+    $os = & $OsInfoProvider
+    if (-not $os -or -not $os.FreePhysicalMemory) { return $null }
+    # FreePhysicalMemory -- КБ (Win32_OperatingSystem); 1024*1024 КБ = 1 ГБ
+    # (двоичный ГБ, не десятичный) -- НЕ используем литерал `1MB` как делитель
+    # (численно совпадает с 1024*1024, но читатель мог бы принять его за
+    # "перевод в МБ", а не в ГБ -- пишем делитель явно).
+    return [math]::Round($os.FreePhysicalMemory / (1024 * 1024), 2)
+}
+
 function Resolve-DeviceSerial {
     # spec-p3-second-emulator N1, критик-раунд B1 (2026-08-20): tasks.ps1
     # ДОТ-СОРСИТСЯ КАЖДЫМ вызовом (констрейнт 6) - Install-App/
@@ -264,16 +286,57 @@ function Set-EmulatorSessionState {
             updated_utc = $updatedUtc
             by_serial   = $bySerial
         } | ConvertTo-Json -Compress -Depth 5
-        # `Set-Content -Encoding UTF8` в Windows PowerShell 5.1 пишет UTF-8 С BOM --
-        # найдено красной пробой AT-BUG-063 attempt 2: `json.loads` на python-стороне
-        # (`driver_factory._read_emulator_session_state`) падал
-        # `JSONDecodeError: Unexpected UTF-8 BOM` на РЕАЛЬНО записанном файле.
-        # `[System.IO.File]::WriteAllText` с явным `UTF8Encoding($false)` пишет
-        # БЕЗ BOM.
-        $utf8NoBom = New-Object System.Text.UTF8Encoding $false
-        [System.IO.File]::WriteAllText($stateFile, $payload, $utf8NoBom)
+        # `[System.IO.File]::WriteAllText`-семейство с явным `UTF8Encoding($false)`
+        # (внутри Write-FileAtomic) пишет БЕЗ BOM — `Set-Content -Encoding UTF8` в
+        # Windows PowerShell 5.1 пишет UTF-8 С BOM, что валило `json.loads` на
+        # python-стороне (`JSONDecodeError: Unexpected UTF-8 BOM`, AT-BUG-063
+        # attempt 2). N3 B3 (критик-вход rework attempt 2, "тот же класс",
+        # D-0043): темп+Replace вместо голого WriteAllText — та же неатомарная
+        # RMW-запись, тот же фикс, что Test-BySerialBackfill/Use-DeviceStack.
+        Write-FileAtomic -Path $stateFile -Content $payload
     } catch {
         Write-Warning "WARNING: emulator-session.json state write failed ($_) - device-liveness recovery may fall back to defaults (AT-BUG-063)."
+    }
+}
+
+function Undo-EmulatorSessionStateEntry {
+    # N3 B4 (критик-вход rework attempt 2, fix-совет 3): Start-Emulator пишет
+    # by_serial[emulator-$Port] СРАЗУ после разрешения -Gpu/-AvdName (см.
+    # Set-EmulatorSessionState) — ЗАДОЛГО до буда/RAM-гейта post-start. Если
+    # post-start RAM-гейт абортит (эмулятор гасится ПОСЛЕ буда), запись уже
+    # лежит в state-файле и называет AVD, который только что погашен — ровно
+    # класс инцидента N2 §5 (recovery ДРУГОГО серийника прочитал бы эту
+    # запись и попытался бы поднять мёртвый AVD). Снимает ТОЛЬКО
+    # by_serial[emulator-$Port] (флэт top-level "последний записавший стек" -
+    # шире по духу существующего AT-BUG-063 компромисса, откат которого - вне
+    # скоупа этого фикса, см. отчёт). Fail-soft: ошибка отката — WARN, не throw
+    # (тот же класс отказоустойчивости, что Set-EmulatorSessionState).
+    param([Parameter(Mandatory)][int]$Port)
+    $stateFile = "$root\state\emulator-session.json"
+    if (-not (Test-Path $stateFile)) { return }
+    try {
+        $raw = [System.IO.File]::ReadAllText($stateFile)
+        $obj = $raw | ConvertFrom-Json -ErrorAction Stop
+    } catch {
+        Write-Warning "Undo-EmulatorSessionStateEntry: state-файл нечитаем ($_) - откат пропущен."
+        return
+    }
+    $serial = "emulator-$Port"
+    if (-not $obj.by_serial -or -not ($obj.by_serial.PSObject.Properties.Name -contains $serial)) {
+        return
+    }
+    $bySerial = [ordered]@{}
+    foreach ($prop in $obj.by_serial.PSObject.Properties) {
+        if ($prop.Name -ne $serial) { $bySerial[$prop.Name] = $prop.Value }
+    }
+    $payload = [ordered]@{
+        gpu = $obj.gpu; avd_name = $obj.avd_name; updated_utc = $obj.updated_utc; by_serial = $bySerial
+    } | ConvertTo-Json -Compress -Depth 5
+    try {
+        Write-FileAtomic -Path $stateFile -Content $payload
+        Write-Warning "Start-Emulator: RAM-гейт (post-start) abort - by_serial[$serial] снята из emulator-session.json (не оставляем state на погашенный AVD, N2-инцидент §5)."
+    } catch {
+        Write-Warning "Undo-EmulatorSessionStateEntry: запись отката не удалась ($_) - by_serial[$serial] может по-прежнему указывать на погашенный AVD."
     }
 }
 
@@ -404,11 +467,72 @@ function Start-Emulator {
             param($ProcId)
             Get-CimInstance Win32_Process -Filter "ProcessId=$ProcId" -ErrorAction SilentlyContinue
         },
+        # `-AdbDevicesProvider` (B2) обслуживает ТРИ `adb devices`-вызова этой
+        # функции - ветку port-occupancy, ОРАКУЛ БУДА и поллинг подтверждения
+        # гашения RAM-гейта (M1, критик-раунд 3): один класс вызова - один шов
+        # (D-0043). Раньше два последних звали `& $adb devices` НАПРЯМУЮ, мимо
+        # объявленного шва, из-за чего "device-free" юниты доезжали до
+        # реального adb.
         [scriptblock]$AdbDevicesProvider = { param($AdbPath) & $AdbPath devices },
-        [scriptblock]$OrphanCleaner = { param($Avd) Stop-OrphanedQemu -AvdName $Avd }
+        [scriptblock]$OrphanCleaner = { param($Avd) Stop-OrphanedQemu -AvdName $Avd },
+        # M1 (БЛОКЕР МЕРЖА, критик-раунд 3): ЗАПУСК эмулятора - инжектируемый шов.
+        # Без него ЛЮБАЯ проба, прошедшая RAM-гейт, доезжала до РЕАЛЬНОГО
+        # `Start-Process emulator.exe`: `fake_root` подменяет только `$root`, а
+        # `$emu`/`$adb` резолвятся из `$env:ANDROID_HOME`, который ставит
+        # `env.ps1` (дот-сорсится строкой 11 ЭТОГО файла) от НАСТОЯЩЕГО корня -
+        # ДО любой подмены. В worktree это маскировалось отсутствием `tools/`
+        # (FileNotFoundError), в главном чекауте бинарники есть: воспроизведено
+        # суррогатным emulator.exe - проба печатает "Waiting for device boot...",
+        # т.е. Start-Process ИСПОЛНИЛСЯ, а фолбэк-ветка ниже позвала бы
+        # `Stop-OrphanedQemu -AvdName ao3_test_api34` и убила бы ЖИВОЙ фабричный
+        # qemu. Дефолт - ДОСЛОВНО прежний Start-Process (живой прогон не меняется).
+        [scriptblock]$Launcher = {
+            param($Path, $ArgList)
+            Start-Process -FilePath $Path -ArgumentList $ArgList -WindowStyle Minimized -PassThru
+        },
+        # M1-спутники: оставшиеся ПРЯМЫЕ adb-вызовы пути подъёма, без которых
+        # post-start-ветка недостижима для юнита (getprop-цикл вообще БЕЗЛИМИТЕН
+        # и вешает пробу). Дефолты дословно повторяют прежний инлайн.
+        [scriptblock]$BootCompletedProvider = {
+            param($AdbPath) Get-AdbOutput -Adb $AdbPath -AdbArgs @("shell", "getprop", "sys.boot_completed")
+        },
+        [scriptblock]$EmuKiller = { param($AdbPath, $Serial) & $AdbPath -s $Serial emu kill 2>$null | Out-Null },
+        [scriptblock]$WaitForDeviceProvider = { param($AdbPath) & $AdbPath wait-for-device },
+        # spec-p3-second-emulator N3 (хвост N2 §6 п.3, RAM-гейт КОДОМ; B4
+        # критик-вход rework attempt 2 — ПОДКЛЮЧЕНО К РЕАЛЬНОМУ ПУТИ):
+        # дефолт зависит от `-Port` — 5554 (первичный/единственный стек,
+        # прежнее поведение ДОСЛОВНО) держит гейт ВЫКЛЮЧЕННЫМ (0); ЛЮБОЙ
+        # ДРУГОЙ порт (второй/дополнительный эмулятор — ровно то, что делает
+        # стек 2) автоматически включает пороги плана. Раньше эти пороги
+        # передавал ТОЛЬКО вызывающий явно — комментарий здесь ЛГАЛ, что
+        # "Use-DeviceStack для стека 2 передаёт своё оценочное число":
+        # Use-DeviceStack НИКОГДА не вызывает Start-Emulator (это два
+        # независимых входа tasks.ps1) — единственный реальный путь
+        # подключения гейта - дефолт САМОЙ Start-Emulator, ключёванный по
+        # -Port. Явное отключение по-прежнему возможно (`-MinFreeGBPreStart 0
+        # -MinFreeGBPostStart 0` явным параметром переопределяет дефолт-
+        # выражение ниже, PowerShell параметр-биндинг это гарантирует).
+        # Оценка (F-30, docs/tasks/p3-second-emulator.md "Решение оператора
+        # по RAM"): клон ~2-2.5 GB (берём верхнюю/консервативную границу) +
+        # буфер 1.0 GB = 3.5 GB pre-start; post-start 1.0 GB (констрейнт 1).
+        # `$null` из -FreeMemoryProvider (WMI недоступен) — гейт МОЛЧА
+        # пропускается (fail-soft: неспособность ИЗМЕРИТЬ не абортит подъём,
+        # абортит только ПОДТВЕРЖДЁННАЯ нехватка).
+        [double]$MinFreeGBPreStart = $(if ($Port -ne 5554) { 3.5 } else { 0 }),
+        [double]$MinFreeGBPostStart = $(if ($Port -ne 5554) { 1.0 } else { 0 }),
+        [scriptblock]$FreeMemoryProvider = { Get-FreeMemoryGB }
     )
     if (-not $Gpu) { $Gpu = if ($env:AO3_EMU_GPU) { $env:AO3_EMU_GPU } else { "swiftshader_indirect" } }
     $serial = "emulator-$Port"
+
+    if ($MinFreeGBPreStart -gt 0) {
+        $freePre = & $FreeMemoryProvider
+        if ($null -ne $freePre -and $freePre -lt $MinFreeGBPreStart) {
+            throw ("Start-Emulator: RAM-гейт (pre-start) - free ${freePre} GB < требуемых " +
+                "${MinFreeGBPreStart} GB (N2-эмпирика runs/N2-p3-clone-bringup-stack2-2026-08-20.md: " +
+                "клон+1.0 GB буфер) - abort ДО подъёма эмулятора $serial, ни один side-effect ещё не начат.")
+        }
+    }
 
     # N1 back-compat-строка (плана): РАНЬШЕ повторный Start-Emulator на живом
     # порте тихо уезжал на следующую свободную пару портов (сам emulator.exe
@@ -480,7 +604,9 @@ function Start-Emulator {
     if ($Memory) { $emuArgs += @("-memory","$Memory") }
     if ($WritableSystem) { $emuArgs += "-writable-system" }
 
-    $proc = Start-Process -FilePath $emu -ArgumentList $emuArgs -WindowStyle Minimized -PassThru
+    # M1: через $Launcher (дефолт = прежний Start-Process). ЕДИНСТВЕННАЯ точка
+    # реального запуска в этой функции вместе с фолбэком ниже.
+    $proc = & $Launcher $emu $emuArgs
     Write-Host "Waiting for device boot ($serial, snapshot, up to ${SnapshotBootTimeoutSec}s)..." -ForegroundColor Cyan
 
     $deadline = (Get-Date).AddSeconds($SnapshotBootTimeoutSec)
@@ -488,7 +614,7 @@ function Start-Emulator {
     do {
         Start-Sleep 2
         if ($proc.HasExited) { break }
-        $lines = & $adb devices
+        $lines = & $AdbDevicesProvider $adb
         # N1/B3 (N0-проба 2026-08-20): матч ИМЕННО $serial, НЕ "любое устройство
         # в состоянии device" - оракул буда раньше объявлял буд по ЧУЖОМУ
         # emulator-5554, если тот уже был жив (молчаливый ложный успех,
@@ -515,16 +641,49 @@ function Start-Emulator {
         # и новая ветка port-occupancy выше (живой орфан держит консольный порт).
         Stop-OrphanedQemu -AvdName $AvdName -LauncherProc $proc
         $fallbackArgs = $emuArgs + "-no-snapshot-load"
-        $proc = Start-Process -FilePath $emu -ArgumentList $fallbackArgs -WindowStyle Minimized -PassThru
+        $proc = & $Launcher $emu $fallbackArgs  # M1: тот же шов, что первичный запуск
         # Бэрный вызов (без -s) - таргетируется через $env:ANDROID_SERIAL,
         # выставленный выше (единая адресация, констрейнт 4).
-        & $adb wait-for-device
+        & $WaitForDeviceProvider $adb
     }
 
     # Get-AdbOutput (null-safe .Trim(), констрейнт 4 п.2): голый `(& $adb ...).Trim()`
     # падал бы на $null-выводе независимо от адресации - защита остаётся.
-    do { Start-Sleep 2; $b = Get-AdbOutput -Adb $adb -AdbArgs @("shell","getprop","sys.boot_completed") } while ($b -ne "1")
+    do { Start-Sleep 2; $b = & $BootCompletedProvider $adb } while ($b -ne "1")
     Write-Host "Emulator booted ($serial)." -ForegroundColor Green
+
+    if ($MinFreeGBPostStart -gt 0) {
+        $freePost = & $FreeMemoryProvider
+        if ($null -ne $freePost -and $freePost -lt $MinFreeGBPostStart) {
+            Write-Warning ("Start-Emulator: RAM-гейт (post-start) - free ${freePost} GB < " +
+                "${MinFreeGBPostStart} GB (констрейнт 1 плана) - abort, гашу только что поднятый $serial " +
+                "(N2-эмпирика: чистое гашение `adb -s <serial> emu kill`).")
+            & $EmuKiller $adb $serial
+            # B4 fix-совет 3 (критик-вход rework attempt 2): проверяем ФАКТ
+            # гашения (не верим "emu kill вернул код 0" на слово) - короткий
+            # поллинг adb devices; если серийник всё ещё виден - qemu-дитя
+            # могло пережить emu kill (тот же класс, что AT-BUG-014 килл
+            # лаунчера). Stop-OrphanedQemu зовём БЕЗУСЛОВНО после - подметает
+            # и лаунчер ($proc), и его qemu-детей, и осиротевших по имени AVD
+            # (идемпотентна, если всё уже мертво - Get-CimInstance просто
+            # ничего не найдёт).
+            $killDeadline = (Get-Date).AddSeconds(10)
+            $stillUp = $true
+            do {
+                Start-Sleep 1
+                $killLines = & $AdbDevicesProvider $adb
+                $stillUp = @($killLines | Where-Object { $_ -match "^$([regex]::Escape($serial))\s+device$" }).Count -gt 0
+            } while ($stillUp -and (Get-Date) -lt $killDeadline)
+            if ($stillUp) {
+                Write-Warning "Start-Emulator: RAM-гейт abort - $serial всё ещё виден в 'adb devices' 10с после emu kill - подметаю qemu-детей принудительно."
+            }
+            Stop-OrphanedQemu -AvdName $AvdName -LauncherProc $proc
+            Undo-EmulatorSessionStateEntry -Port $Port
+            throw ("Start-Emulator: RAM-гейт (post-start) сработал - free ${freePost} GB < " +
+                "${MinFreeGBPostStart} GB, эмулятор $serial погашен (гашение подтверждено: $(-not $stillUp)), " +
+                "ни IPv4-пин, ни mitm-CA не выполнялись, emulator-session.json откачен.")
+        }
+    }
 
     Set-GuestIPv4Pin -Adb $adb
 
@@ -998,6 +1157,18 @@ function Stop-NodeProcesses {
             $toStop = @($owned | Where-Object { $_.ProcessId -eq $selectedPid })
         }
     } elseif ($owned.Count -gt 1) {
+        # N3 (хвост N2 §3: "полировка WhatIf-отказа жнеца" - живой прогон
+        # N2 нашёл, что список кандидатов приходил ТОЛЬКО в тексте исключения,
+        # не отдельным stdout-выводом, - под -WhatIf это неудобно читать (сам
+        # dry-run "зеркалит" отказ live throw'ом, приёмка N2 признала это
+        # приемлемым, но кандидатов стоит видеть ДО throw, не только в тексте
+        # исключения). Печатаем ОТДЕЛЬНО ДО throw - throw остаётся (dry-run
+        # честно предсказывает отказ live-вызова, N2-эмпирика), но список
+        # теперь виден дважды: как обычный вывод И в тексте исключения (второе
+        # сохранено для совместимости с существующими тестами/catch-блоками,
+        # которые читают перечень из сообщения).
+        Write-Host "Candidates to stop (селектор -Port/-OwnerPid не передан):" -ForegroundColor Cyan
+        foreach ($p in $owned) { Write-Host "  PID $($p.ProcessId): $($p.CommandLine)" }
         $list = ($owned | ForEach-Object { "  PID $($_.ProcessId): $($_.CommandLine)" }) -join "`n"
         throw ("Stop-NodeProcesses: найдено $($owned.Count) AO3 node-процессов без селектора " +
             "-Port/-OwnerPid - откажусь убивать все вслепую (второй device-стек может " +
@@ -1170,4 +1341,897 @@ function Get-Device {
     else { Write-Host "NO DEVICE" }
 }
 
-Write-Host "Tasks loaded: Start-Emulator, Install-MitmCA, Start-Appium, Test-AppiumHealthy, Get-DeviceSerials, Stop-NodeProcesses, Ensure-BridgeHarness, Install-App, Invoke-Smoke, Invoke-Suite, Invoke-Pytest, Show-Report, Get-Device" -ForegroundColor Green
+# --- spec-p3-second-emulator N3: машинная лиза стека ---
+#
+# Окна лизы (F-30 -- ОЦЕНКА, не замер; калибруется живыми прогонами N2/N4,
+# см. docs/tasks/p3-second-emulator.md N3): grace ~10 мин до первого штампа
+# (между шагами bring-up, ПОКА pytest ещё не подключился), idle ~30 мин
+# после смерти pytest-PID (паузы "прогон -> правка -> прогон" внутри
+# тикета), TTL 4 ч -- верхняя страховка, если heartbeat реально замолк.
+# Формулы состояния (`Get-DeviceLeaseStatus` ниже) СВЕРЕНЫ юнитами с
+# Python-стороной чокпоинта (`framework/core/driver_factory._lease_status`,
+# `framework/tests/test_device_lease_checkpoint_unit.py`) -- ОДНА семантика,
+# ДВЕ реализации (PS для Use-DeviceStack, Python для create_driver).
+$_DEVICE_LEASE_GRACE_SECONDS = 600
+$_DEVICE_LEASE_IDLE_SECONDS = 1800
+$_DEVICE_LEASE_TTL_SECONDS = 14400
+
+$_DEVICE_STACKS = @{
+    1 = @{ Device = "emulator-5554"; AppiumPort = 4723; AllureDir = "framework\allure-results" }
+    2 = @{ Device = "emulator-5556"; AppiumPort = 4725; AllureDir = "framework\allure-results-2" }
+}
+
+function Write-FileAtomic {
+    # N3 B3 (критик-вход rework attempt 2): темп-файл + [System.IO.File]::
+    # Replace/Move — критик воспроизвёл двойную/тройную выдачу лизы на
+    # НЕАТОМАРНЫХ записях (голый Set-Content/WriteAllText поверх
+    # существующего файла — читатель, попавший на середину записи, видит
+    # партиальный/битый JSON и ошибочно трактует лизу как "битую -> free",
+    # что открывает окно повторного взятия параллельным процессом).
+    # `File.Replace` — атомарная замена СУЩЕСТВУЮЩЕГО файла (требует, чтобы
+    # dest существовал); для НОВОГО файла (dest ещё не создан этим потоком
+    # исполнения) — атомарный `File.Move` из темпа. Используется ЛЮБОЙ
+    # RMW-записью state-файлов этого модуля (Use-DeviceStack heartbeat/idle-
+    # own, Test-BySerialBackfill, Set-EmulatorSessionState,
+    # Undo-EmulatorSessionStateEntry — "чини класс, а не экземпляр", D-0043:
+    # один и тот же паттерн неатомарной RMW-записи JSON, один и тот же фикс).
+    #
+    # НЕ используется для ВЗЯТИЯ лизы (see Take-DeviceLeaseSlot) — там нужна
+    # НАСТОЯЩАЯ компаре-и-своп семантика (кто первый — тот и взял), которую
+    # File.Replace НЕ даёт (просто перезаписывает без проверки, что dest
+    # всё ещё в ожидаемом состоянии — два конкурентных Replace оба "успешно"
+    # отработают последовательно, оба вызывающих решат "я выиграл").
+    param(
+        [Parameter(Mandatory)][string]$Path,
+        [Parameter(Mandatory)][string]$Content
+    )
+    $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+    $dir = Split-Path -Parent $Path
+    if ($dir -and -not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+    $tmp = "$Path.tmp-$PID-$([guid]::NewGuid().ToString('N').Substring(0,8))"
+    # Non-blocker 4 (критик-раунд 2): темп удаляется в `finally` на ВСЕХ путях
+    # отказа, не только на узкой Move-гонке. Раньше отказ Replace (sharing
+    # violation целевого файла - штатный транзиент, пока Take-DeviceLeaseSlot
+    # держит FileShare.None) оставлял `<файл>.tmp-<pid>-<hex>` НАВСЕГДА: сирота
+    # такого класса найден живьём в worktree этой задачи
+    # (`state/emulator-session.json.tmp-17940-922927f7`). Remove-Item
+    # -ErrorAction SilentlyContinue - housekeeping не должен маскировать
+    # исходное исключение записи.
+    try {
+    [System.IO.File]::WriteAllText($tmp, $Content, $utf8NoBom)
+    if (Test-Path $Path) {
+        # Найдено ЭТОЙ сессией эмпирически (M6/F-30-класс, не предположение):
+        # `[System.IO.File]::Replace(src, dst, $null)` (destinationBackupFileName
+        # = null, "без бэкапа" по документации .NET) на ЭТОМ хосте (Windows
+        # PowerShell 5.1 / .NET Framework) кидает `ArgumentException`
+        # (HRESULT=0x80070057, E_INVALIDARG) — воспроизведено детерминированно
+        # в изоляции, не разовый глюк. Явный бэкап-путь работает штатно;
+        # подчищаем бэкап сразу же (fail-soft — не срываем саму атомарную
+        # запись, если удаление бэкапа не удалось, только WARN).
+        $bak = "$Path.bak-$PID-$([guid]::NewGuid().ToString('N').Substring(0,8))"
+        try {
+            [System.IO.File]::Replace($tmp, $Path, $bak)
+        } finally {
+            if (Test-Path $bak) {
+                try { Remove-Item $bak -Force -ErrorAction Stop } catch {
+                    Write-Warning "Write-FileAtomic: бэкап-файл $bak не удалён ($_) - не мусор данных, только housekeeping."
+                }
+            }
+        }
+    } else {
+        try {
+            [System.IO.File]::Move($tmp, $Path)
+        } catch [System.IO.IOException] {
+            # Узкая гонка: кто-то создал $Path МЕЖДУ нашим Test-Path и Move -
+            # темп подчищаем, отказ пробрасываем как есть (RMW-запись, не
+            # ВЗЯТИЕ лизы — нет отдельной "гонка, повтори" семантики здесь).
+            throw
+        }
+    }
+    } finally {
+        if (Test-Path $tmp) { Remove-Item $tmp -Force -ErrorAction SilentlyContinue }
+    }
+}
+
+function Write-FileAtomicResilient {
+    # Non-blocker 5 (критик-раунд 2): ДОМЕННАЯ обёртка над Write-FileAtomic для
+    # вызывающих, чей СОБСТВЕННЫЙ докстринг обещает "НЕ блокирует"
+    # (Test-BySerialBackfill - страховка recovery; heartbeat лизы - страховка
+    # свежести, не гейт присутствия устройства). Голый Write-FileAtomic в этих
+    # точках пробрасывал СЫРОЙ MethodInvocationException наружу и ронял
+    # Use-DeviceStack целиком на ТРАНЗИЕНТНОМ sharing violation (файл в этот
+    # момент держит эксклюзивно Take-DeviceLeaseSlot соседнего процесса) -
+    # ровно то, чего докстринги обещали не делать.
+    #
+    # Семантика: транзиентный IO-отказ (IOException/UnauthorizedAccessException,
+    # в т.ч. завёрнутый PowerShell в MethodInvocationException) - до $Retries
+    # попыток с паузой $DelayMs; исчерпали ЛИБО не-IO отказ - WARN и $false
+    # (НЕ throw). Зеркалит python-сторону (driver_factory
+    # ::_heartbeat_device_lease: `except OSError -> _warn_lease(... не
+    # блокирует прогон)`) - ОДНА семантика, ДВЕ реализации.
+    param(
+        [Parameter(Mandatory)][string]$Path,
+        [Parameter(Mandatory)][string]$Content,
+        [Parameter(Mandatory)][string]$Context,
+        [int]$Retries = 3,
+        [int]$DelayMs = 100
+    )
+    for ($attempt = 1; $attempt -le $Retries; $attempt++) {
+        try {
+            Write-FileAtomic -Path $Path -Content $Content
+            return $true
+        } catch {
+            # PowerShell заворачивает исключение .NET-метода в
+            # MethodInvocationException - разворачиваем до настоящего типа, НЕ
+            # полагаясь на то, что `catch [System.IO.IOException]` матчит
+            # обёртку (поведение зависит от версии движка).
+            $ex = $_.Exception
+            while ($ex -is [System.Management.Automation.MethodInvocationException] -and $ex.InnerException) {
+                $ex = $ex.InnerException
+            }
+            $transient = ($ex -is [System.IO.IOException]) -or ($ex -is [System.UnauthorizedAccessException])
+            if ($transient -and $attempt -lt $Retries) {
+                Start-Sleep -Milliseconds $DelayMs
+                continue
+            }
+            $kind = if ($transient) { "транзиентный лок не разошёлся за $Retries попыток" } else { "нетранзиентный отказ" }
+            Write-Warning "${Context}: атомарная запись $Path не удалась ($kind): $($ex.Message) - НЕ блокирует вызывающего."
+            return $false
+        }
+    }
+    return $false
+}
+
+function Resolve-DeviceLeaseTimestamp {
+    # N3 B7 (критик-вход rework attempt 2, выравнивание PS/Python фолбэка):
+    # ЧИСТАЯ функция парсинга ОДНОГО поля timestamp'а лизы (heartbeat_utc
+    # ИЛИ taken_utc) - вызывающий код (Get-DeviceLeaseStatus) пробует
+    # heartbeat_utc, при $null-результате (отсутствует ИЛИ НЕ РАЗОБРАН -
+    # НЕ различаем на этом уровне) пробует taken_utc - ТА ЖЕ семантика, что
+    # Python `_parse_lease_timestamp(heartbeat) or _parse_lease_timestamp(taken)`.
+    # РАНЬШЕ PS-сторона фолбэчилась на taken_utc ТОЛЬКО если heartbeat_utc был
+    # falsy (пустой/null), но НЕ если он был НЕРАЗБИРАЕМОЙ строкой (catch
+    # молча возвращал "free", даже когда taken_utc был валиден) - расхождение
+    # с Python, которое эта функция закрывает.
+    param($Raw)
+    if (-not $Raw) { return $null }
+    try {
+        if ($Raw -is [datetime]) {
+            $dt = $Raw
+        } else {
+            # RoundtripKind (без AdjustToUniversal - несовместимы, .NET throw'ит
+            # на комбинации): формат "o" ВСЕГДА несёт суффикс "Z" -> RoundtripKind
+            # сам даёт Kind=Utc без доп. флага (см. докстринг Get-DeviceLeaseStatus
+            # оригинала - та же находка M6/F-30, перенесена сюда без изменений).
+            $dt = [datetime]::Parse([string]$Raw, [System.Globalization.CultureInfo]::InvariantCulture,
+                [System.Globalization.DateTimeStyles]::RoundtripKind)
+        }
+        if ($dt.Kind -ne [System.DateTimeKind]::Utc) { $dt = $dt.ToUniversalTime() }
+        return $dt
+    } catch {
+        return $null
+    }
+}
+
+function Resolve-DeviceLeasePid {
+    # Non-blocker 3 (критик-раунд 2): `pytest_pid` лизы приходит из JSON и НЕ
+    # обязан быть числом - руками правленный файл, оборванная запись, чужая
+    # версия схемы дают строку/массив/объект/true. Раньше такое значение
+    # доезжало до `Get-Process -Id <не-число>` и падало ПАРАМЕТРИЧЕСКИМ
+    # биндингом (терминирующая ошибка МИМО -ErrorAction SilentlyContinue) -
+    # Use-DeviceStack заклинивало НАСМЕРТЬ на любом пути (даже путь взятия),
+    # и вылезти можно было только `-Release`. Контракт ТЕПЕРЬ: не-число =
+    # "pid отсутствует" (ровно тот же исход, что `pytest_pid: null` -
+    # стартовое grace-окно / idle по возрасту), симметрично python-стороне
+    # (`driver_factory._coerce_lease_pid`).
+    #
+    # `[bool]` отсекается ОТДЕЛЬНО: `[int]$true` = 1 в PowerShell (валидный
+    # PID 1!), а JSON `true` - заведомо не PID.
+    param($Raw)
+    if ($null -eq $Raw) { return $null }
+    if ($Raw -is [bool]) { return $null }
+    if ($Raw -is [array] -or $Raw -is [hashtable] -or $Raw -is [pscustomobject]) { return $null }
+    try {
+        $n = [int]$Raw
+    } catch {
+        return $null
+    }
+    if ($n -le 0) { return $null }
+    return $n
+}
+
+function Test-DeviceLeasePidAlive {
+    # N3 B1 (критик-вход rework attempt 2): живость pytest_pid лизы - без
+    # новой зависимости psutil (requirements.txt не несёт её, добавлять
+    # ради одной проверки нежелательно) и БЕЗ Get-Process на постороннем
+    # PID через что-то небезопасное - `Get-Process -Id` -ErrorAction
+    # SilentlyContinue -> $null на несуществующем/недоступном PID, ничего
+    # не убивает, чистая read-only проверка (в отличие от Python-стороны,
+    # где `os.kill(pid, 0)` на Windows - документированная ловушка,
+    # реально ЗАВЕРШАЕТ процесс, см. driver_factory._is_pid_alive).
+    # Образец подхода - резидентный owner-guard Appium этого файла
+    # (Start-Appium): та же готовность доверять факту процесса, не
+    # криптографической идентичности PID.
+    #
+    # Non-blocker 7 (критик-раунд 2) — ПРИНЯТЫЙ ОСТАТОЧНЫЙ РИСК, НЕ недосмотр:
+    # переиспользованный ОС номер PID (Windows перевыдаёт номера агрессивно)
+    # держит лизу в статусе `active` до TTL 4ч — сверки времени старта
+    # процесса против штампа лизы здесь НЕТ (её пришлось бы завести полем
+    # схемы лизы `pytest_pid_started_utc`, писать python-стороной через
+    # GetProcessTimes и сверять здесь Get-Process .StartTime с допуском на
+    # формат/часовой пояс — новая поверхность отказа ради проблемы, чьё
+    # ПОСЛЕДСТВИЕ fail-safe: ложно-живой PID БЛОКИРУЕТ взятие, а НЕ выдаёт
+    # устройство дважды, и в самом сообщении отказа назван эскейп-хэтч
+    # `-Release`). Симметричный комментарий — `driver_factory._is_pid_alive`.
+    param([Parameter(Mandatory)][AllowNull()]$ProcId)
+    $procIdNum = Resolve-DeviceLeasePid $ProcId
+    if ($null -eq $procIdNum) { return $false }
+    return [bool](Get-Process -Id $procIdNum -ErrorAction SilentlyContinue)
+}
+
+function Get-DeviceLeaseStatus {
+    # N3 (B1, критик-вход rework attempt 2 — ПЕРЕПИСАНО): статус лизы стека -
+    # ЧИСТАЯ функция (device-free юнит-тестируема напрямую через
+    # -PidAliveResolver), возвращает "free"/"active"/"idle"/"reclaimed".
+    # Переход active->idle раньше не был реализован (`status` поле лизы
+    # НИКТО не переводил в "idle" — писался только "active"): статус ТЕПЕРЬ
+    # ВСЕГДА вычисляется ЧИТАТЕЛЕМ по живости `pytest_pid`, поле `status` в
+    # самом файле — чисто диагностическое, эта функция его не читает вовсе.
+    #
+    # Алгоритм (согласован с Python driver_factory._lease_status - ОДНА
+    # семантика, ДВЕ реализации, сверено юнитами обеих сторон):
+    #   - pytest_pid ЖИВ (PidAliveResolver -> $true) и age <= TTL -> "active"
+    #     (TTL — верхняя страховка для ДОЛГОЖИВУЩЕГО процесса, не грейс).
+    #   - pytest_pid ОТСУТСТВУЕТ (только что взята, create_driver ещё ни
+    #     разу не вызывался) и age <= Grace -> "active" (стартовое окно,
+    #     короче TTL/Idle — pytest ещё не успел стартовать).
+    #   - ИНАЧЕ (pid мёртв ИЛИ (pid отсутствует и age > Grace) ИЛИ (pid жив,
+    #     но heartbeat не обновлялся дольше TTL)) — "idle", пока age <= Idle,
+    #     дальше "reclaimed". Окно idle ВСЕГДА меряется от heartbeat_utc
+    #     (или taken_utc-фолбэка) — не от момента смерти процесса (который
+    #     мы не знаем, только последний heartbeat).
+    #
+    # `$Lease` - deserialized-объект (PSCustomObject/hashtable) с полями
+    # owner_token/taken_utc/heartbeat_utc/pytest_pid; `$null` -> "free".
+    # Нечитаемый/отсутствующий timestamp (ОБА heartbeat_utc И taken_utc
+    # непарсибельны/отсутствуют) -> "free".
+    param(
+        $Lease,
+        [Parameter(Mandatory)][datetime]$Now,
+        [double]$GraceSeconds = $_DEVICE_LEASE_GRACE_SECONDS,
+        [double]$IdleSeconds = $_DEVICE_LEASE_IDLE_SECONDS,
+        [double]$TtlSeconds = $_DEVICE_LEASE_TTL_SECONDS,
+        [scriptblock]$PidAliveResolver = { param($ProcId) Test-DeviceLeasePidAlive -ProcId $ProcId }
+    )
+    if ($null -eq $Lease) { return "free" }
+    # B7: heartbeat_utc, ПРИ ОТКАЗЕ ПАРСИНГА (не только при falsy) - фолбэк
+    # на taken_utc. Раньше PS смотрела ТОЛЬКО на falsy heartbeat_utc, ловила
+    # неразбираемую-но-непустую строку в общий catch -> "free", расходясь с
+    # Python (`_parse_lease_timestamp(hb) or _parse_lease_timestamp(taken)`).
+    $last = Resolve-DeviceLeaseTimestamp $Lease.heartbeat_utc
+    if ($null -eq $last) { $last = Resolve-DeviceLeaseTimestamp $Lease.taken_utc }
+    if ($null -eq $last) { return "free" }
+    $age = ($Now - $last).TotalSeconds
+    # Non-blocker 3: НЕ-ЧИСЛОВОЙ pytest_pid нормализуется в $null ("отсутствует")
+    # ДО любого использования - резолвер живости на не-числе раньше падал
+    # биндингом Get-Process и заклинивал весь Use-DeviceStack.
+    $pytestPid = Resolve-DeviceLeasePid $Lease.pytest_pid
+    if ($null -ne $pytestPid -and (& $PidAliveResolver $pytestPid)) {
+        if ($age -le $TtlSeconds) { return "active" }
+        # жив, но heartbeat не обновлялся дольше TTL - падает в idle/reclaimed ниже
+    } elseif ($null -eq $pytestPid -and $age -le $GraceSeconds) {
+        return "active"
+    }
+    if ($age -gt $IdleSeconds) { return "reclaimed" }
+    return "idle"
+}
+
+function Get-EmulatorAvdName {
+    # Non-blocker 8 (критик-раунд 2): ЧЕСТНЫЙ источник имени AVD для ЖИВОГО
+    # серийника - `adb -s <serial> emu avd name` (витнесс соответствия,
+    # прямо назван спекой docs/tasks/p3-second-emulator.md п.(г)). Вывод
+    # эмуляторной консоли - имя AVD первой строкой + служебное "OK".
+    # Fail-soft: adb недоступен (нет ANDROID_HOME/tools в worktree),
+    # серийник не отвечает, вывод пуст -> $null, вызывающий сам решает
+    # (Test-BySerialBackfill: пропуск с WARN, НЕ фабрикация).
+    param([Parameter(Mandatory)][string]$Serial)
+    try {
+        $out = & "$env:ANDROID_HOME\platform-tools\adb.exe" -s $Serial emu avd name 2>$null
+    } catch {
+        Write-Warning "Get-EmulatorAvdName: вызов 'adb -s $Serial emu avd name' упал ($_) - ANDROID_HOME/adb.exe недоступен?"
+        return $null
+    }
+    $name = @($out | ForEach-Object { "$_".Trim() } |
+        Where-Object { $_ -and $_ -ne "OK" -and $_ -notmatch '^KO' }) | Select-Object -First 1
+    if (-not $name) { return $null }
+    return $name
+}
+
+function Test-BySerialBackfill {
+    # N3, хвост N2 (§5 отчёта runs/N2-p3-clone-bringup-stack2-2026-08-20.md):
+    # перед стартом стека N>1 - все ЖИВЫЕ серийники обязаны иметь свою
+    # запись `by_serial` в state/emulator-session.json, иначе recovery того
+    # серийника (driver_factory._read_emulator_session_state) молча
+    # фолбэчится на ФЛЭТ top-level поля ("последний записавший стек") и
+    # может поднять НЕ ТОТ AVD при рестарте (найдено живьём в N2 -
+    # фабричный 5554 поднят ДО мержа N1, флэт-поля перезаписаны клоном).
+    #
+    # Решение (WARN + бэкфилл, выбор из двух легальных веток спеки
+    # docs/tasks/p3-second-emulator.md N3): бэкфилл ИЗ ФЛЭТ top-level полей
+    # (gpu/avd_name) - они оказались КОРРЕКТНЫМИ для затронутого серийника в
+    # живом инциденте (последнее известное состояние ИМЕННО этого серийника,
+    # записанное до введения by_serial). Флэт-поля тоже пусты -> бэкфилл
+    # невозможен, только WARN (НЕ throw - это страховка recovery, не гейт
+    # присутствия устройства, Use-DeviceStack не блокируется).
+    #
+    # Non-blocker 8 (критик-раунд 2) — ГРАНИЦА ЧЕСТНОСТИ бэкфилла. Флэт
+    # top-level поля пишет `Set-EmulatorSessionState` ОДНИМ payload'ом ВМЕСТЕ
+    # с `by_serial[emulator-<свой порт>]` и ОДНИМ И ТЕМ ЖЕ `updated_utc` -
+    # значит флэт-поля ВСЕГДА описывают КОНКРЕТНЫЙ серийник, а не "любой".
+    # Отсюда правило:
+    #   - `by_serial` ОТСУТСТВУЕТ/ПУСТА -> файл ЛЕГАСИ (записан ДО введения
+    #     секции, ровно случай инцидента N2 §5) -> флэт - единственное, что
+    #     есть, бэкфилл из него ЛЕГАЛЕН (историческое поведение сохранено);
+    #   - `by_serial` НЕПУСТА -> флэт принадлежит ДРУГОМУ (уже описанному
+    #     ЛИБО намеренно откаченному `Undo-EmulatorSessionStateEntry` после
+    #     abort'а RAM-гейта) серийнику -> фабриковать из него avd_name для
+    #     ЧУЖОГО серийника ЗАПРЕЩЕНО: спрашиваем ЧЕСТНЫЙ источник
+    #     (`adb -s <serial> emu avd name`), а если он недоступен - ПРОПУСК с
+    #     WARN.
+    # Экземпляр класса, найденный живьём в worktree этой задачи: флэт нёс
+    # `avd_name=ao3_test_api34` от аборченного старта, бэкфилл сфабриковал
+    # `by_serial['emulator-5556'].avd_name = ao3_test_api34` (стек 2 держит
+    # ДРУГОЙ AVD) - т.е. ВОССТАНОВИЛ ровно ту запись, которую
+    # `Undo-EmulatorSessionStateEntry` намеренно СНЯЛ, и подсунул recovery
+    # заведомо неверный AVD. Стек->AVD жёсткой карты в проекте НЕТ
+    # (`$_DEVICE_STACKS` знает только Device/AppiumPort/AllureDir, стек 2 -
+    # это и `ao3_test_api29`, и `ao3_corridor_api34` в разных сценариях
+    # спеки), поэтому "вычислить правильный avd_name" неоткуда - только
+    # спросить устройство либо честно промолчать.
+    param(
+        [Parameter(Mandatory)][AllowEmptyCollection()][string[]]$LiveSerials,
+        [Parameter(Mandatory)][string]$StateFile,
+        [scriptblock]$AvdNameResolver = { param($Serial) Get-EmulatorAvdName -Serial $Serial }
+    )
+    if ($LiveSerials.Count -eq 0) { return }
+    if (-not (Test-Path $StateFile)) { return }
+    try {
+        $raw = [System.IO.File]::ReadAllText($StateFile)
+        $data = $raw | ConvertFrom-Json -ErrorAction Stop
+    } catch {
+        Write-Warning "Use-DeviceStack: emulator-session.json нечитаем ($_) - by_serial-проверка пропущена."
+        return
+    }
+    $bySerial = [ordered]@{}
+    if ($data.by_serial) {
+        foreach ($prop in $data.by_serial.PSObject.Properties) { $bySerial[$prop.Name] = $prop.Value }
+    }
+    # Флэт-поля "принадлежат" уже описанному/откаченному серийнику ровно тогда,
+    # когда секция by_serial НЕПУСТА (см. блок про границу честности выше).
+    $flatIsClaimedByOthers = ($bySerial.Count -gt 0)
+    $changed = $false
+    foreach ($serial in $LiveSerials) {
+        if (-not $bySerial.Contains($serial)) {
+            if ($flatIsClaimedByOthers) {
+                # Честный источник ИЛИ молчание - фабрикация запрещена.
+                $liveAvd = & $AvdNameResolver $serial
+                if ($liveAvd) {
+                    Write-Warning ("Use-DeviceStack: by_serial-запись для $serial отсутствует - бэкфилл из " +
+                        "ЧЕСТНОГО источника 'adb -s $serial emu avd name' (avd_name=$liveAvd); флэт " +
+                        "top-level НЕ используется - он описывает другой серийник (by_serial непуста).")
+                    $bySerial[$serial] = [ordered]@{
+                        gpu = $null; avd_name = $liveAvd; updated_utc = (Get-Date).ToUniversalTime().ToString("o")
+                    }
+                    $changed = $true
+                } else {
+                    Write-Warning ("Use-DeviceStack: by_serial-запись для $serial отсутствует, честный источник " +
+                        "(adb emu avd name) недоступен, а флэт top-level описывает ДРУГОЙ серийник - бэкфилл " +
+                        "ПРОПУЩЕН (фабриковать avd_name чужого стека нельзя: recovery подняло бы неверный AVD). " +
+                        "Не блокирует Use-DeviceStack - страховка recovery, не гейт устройства.")
+                }
+            } elseif ($data.avd_name) {
+                Write-Warning ("Use-DeviceStack: by_serial-запись для $serial отсутствует (класс §5 " +
+                    "N2-отчёта, легаси-файл без секции by_serial) - бэкфилл из флэт top-level " +
+                    "(avd_name=$($data.avd_name), gpu=$($data.gpu)).")
+                $bySerial[$serial] = [ordered]@{
+                    gpu = $data.gpu; avd_name = $data.avd_name; updated_utc = $data.updated_utc
+                }
+                $changed = $true
+            } else {
+                Write-Warning ("Use-DeviceStack: by_serial-запись для $serial отсутствует, и флэт " +
+                    "top-level тоже пуст - бэкфилл невозможен, recovery этого серийника может поднять " +
+                    "неверный AVD (не блокирует Use-DeviceStack - страховка recovery, не гейт устройства).")
+            }
+        }
+    }
+    if ($changed) {
+        $payload = [ordered]@{
+            gpu = $data.gpu; avd_name = $data.avd_name; updated_utc = $data.updated_utc; by_serial = $bySerial
+        } | ConvertTo-Json -Compress -Depth 5
+        # N3 B3 (критик-вход rework attempt 2, "тот же класс" - D-0043): раньше
+        # голый WriteAllText поверх СУЩЕСТВУЮЩЕГО файла - неатомарная RMW-запись,
+        # тот же класс риска партиального/битого чтения, что нашёл критик в
+        # Use-DeviceStack. Write-FileAtomic (темп+Replace) закрывает класс здесь тем
+        # же ходом.
+        # Non-blocker 5 (критик-раунд 2): ...Resilient - докстринг ЭТОЙ функции
+        # обещает "НЕ блокирует Use-DeviceStack", а голый Write-FileAtomic
+        # пробрасывал сырой MethodInvocationException на транзиентном локе и
+        # ронял взятие лизы. Теперь ретрай + WARN.
+        Write-FileAtomicResilient -Path $StateFile -Content $payload -Context "Use-DeviceStack (by_serial-бэкфилл)" | Out-Null
+    }
+}
+
+function Take-DeviceLeaseSlot {
+    # N3 B3 (критик-вход rework attempt 2): ЕДИНСТВЕННЫЙ путь мутации файла
+    # лизы на ВЗЯТИИ (fresh/reclaimed/битый/пустой). Критик воспроизвёл
+    # двойную/тройную выдачу лизы на старой схеме "Remove-Item ПОТОМ
+    # CreateNew" (окно между удалением и созданием, где ДРУГОЙ процесс
+    # проходит ту же проверку "reclaimed -> беру" и тоже удаляет+создаёт).
+    #
+    # Схема: [System.IO.File]::Open(..., CreateNew) — арбитр для
+    # ДЕЙСТВИТЕЛЬНО отсутствующего файла (ОС гарантирует РОВНО один успешный
+    # Open, это НЕ меняется относительно исходной реализации). Если файл УЖЕ
+    # существует (reclaimed/битый JSON/пустой/чужая живая лиза — на этом шаге
+    # НЕ различаем причину), открываем его же ЭКСКЛЮЗИВНО
+    # (FileMode.Open, FileShare.None) — пока хэндл открыт, ЛЮБОЙ другой
+    # процесс (свой CreateNew ИЛИ свой Open) получает IOException
+    # (sharing violation) НЕМЕДЛЕННО, никто не может одновременно с нами
+    # решить "лиза протухла, беру". Статус ПЕРЕОЦЕНИВАЕТСЯ ЗАНОВО внутри
+    # этой секции на свежем $Now — решение принимается на актуальных данных,
+    # не на данных, прочитанных ДО захвата хэндла (могли устареть за время
+    # ожидания).
+    #
+    # B6 (критик-вход rework attempt 2): 0-байтный/пустой файл (Get-Content
+    # -Raw возвращает $null на пустом файле — известная PowerShell-ловушка)
+    # ТЕПЕРЬ явно трактуется как unparseable (не как "лиза без данных ->
+    # непонятно") — без этой ветки [System.IO.File]::Open(CreateNew) на
+    # уже-существующем 0-байтном файле раньше throw'ил "гонка, повтори"
+    # ВЕЧНО (повтор снова видит тот же 0-байтный файл, снова throw).
+    #
+    # Возвращает [pscustomobject]@{ Outcome = 'won'|'adopted'|'raced'|'live'; Lease = <PSCustomObject|$null>; Status = <string|$null> }.
+    # 'won' — слот наш, $Payload записан. 'raced' — sharing violation, кто-то
+    # ДРУГОЙ держит критическую секцию ПРЯМО СЕЙЧАС (транзиент, не "лиза
+    # жива") — вызывающий код различает это от 'live' (реально живая
+    # активная/idle лиза, обычный конфликт владения) в сообщении отказа
+    # (B6: "различай «файл существует» от «проиграна гонка»").
+    #
+    # БЛОКЕР B-R2-1 (критик-раунд 2) — АДОПЦИЯ. `-AdoptOwnerLabel <label>`
+    # включает ветку "продолжение ТИКЕТА между одноразовыми процессами":
+    # существующая ЖИВАЯ (active/idle) лиза ТОГО ЖЕ owner_label, чей
+    # `pytest_pid` отсутствует ИЛИ мёртв, ПЕРЕЗАПИСЫВАЕТСЯ $Payload'ом ПОД ТЕМ
+    # ЖЕ эксклюзивным хэндлом (FileShare.None) - никакого окна между
+    # "решил адоптировать" и "записал". Возвращает Outcome='adopted' и
+    # PreviousToken (прежний owner_token, для INFO-строки вызывающего).
+    # ЖИВОЙ `pytest_pid` адопцию НЕ допускает НИКОГДА (Outcome='live') -
+    # это настоящий идущий прогон, а не брошенный тикет.
+    param(
+        [Parameter(Mandatory)][string]$LeaseFile,
+        [Parameter(Mandatory)][string]$Payload,
+        [Parameter(Mandatory)][datetime]$Now,
+        [Parameter(Mandatory)][scriptblock]$PidAliveResolver,
+        [string]$AdoptOwnerLabel = "",
+        [string]$OwnToken = ""
+    )
+    $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+    $bytes = $utf8NoBom.GetBytes($Payload)
+    $dir = Split-Path -Parent $LeaseFile
+    if ($dir -and -not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+
+    try {
+        $fs = [System.IO.File]::Open($LeaseFile, [System.IO.FileMode]::CreateNew, [System.IO.FileAccess]::Write, [System.IO.FileShare]::None)
+        try { $fs.Write($bytes, 0, $bytes.Length) } finally { $fs.Close() }
+        return [pscustomobject]@{ Outcome = "won"; Lease = $null; Status = $null }
+    } catch [System.IO.IOException] {
+        # файл уже существует - НЕ throw'им здесь, переоцениваем под замком ниже
+    }
+
+    try {
+        $fs = [System.IO.File]::Open($LeaseFile, [System.IO.FileMode]::Open, [System.IO.FileAccess]::ReadWrite, [System.IO.FileShare]::None)
+    } catch [System.IO.IOException] {
+        return [pscustomobject]@{ Outcome = "raced"; Lease = $null; Status = $null }
+    }
+    try {
+        $reader = New-Object System.IO.StreamReader($fs, $utf8NoBom, $false, 1024, $true)
+        $raw = $reader.ReadToEnd()
+        $reader.Dispose()
+        $existingLease = $null
+        $unparseable = [string]::IsNullOrEmpty($raw)  # B6: пустой файл = битый
+        if (-not $unparseable) {
+            try { $existingLease = $raw | ConvertFrom-Json -ErrorAction Stop } catch { $unparseable = $true }
+        }
+        $freshStatus = if ($unparseable) { "free" } else { Get-DeviceLeaseStatus -Lease $existingLease -Now $Now -PidAliveResolver $PidAliveResolver }
+        if ($freshStatus -eq "free" -or $freshStatus -eq "reclaimed") {
+            $fs.Seek(0, [System.IO.SeekOrigin]::Begin) | Out-Null
+            $fs.SetLength(0)
+            $fs.Write($bytes, 0, $bytes.Length)
+            $fs.Flush()
+            return [pscustomobject]@{ Outcome = "won"; Lease = $existingLease; Status = $freshStatus }
+        }
+        # active/idle - лиза ЖИВА. Своя ПО ТОКЕНУ - отдаём вызывающему как есть
+        # ('live', own-token ветка). Своя ПО owner_label с НЕживым pytest_pid -
+        # АДОПЦИЯ прямо здесь, под тем же эксклюзивным хэндлом (B-R2-1).
+        $ownedByToken = $OwnToken -and $existingLease -and ($existingLease.owner_token -eq $OwnToken)
+        if (-not $ownedByToken -and $AdoptOwnerLabel -and $existingLease -and ($existingLease.owner_label -eq $AdoptOwnerLabel)) {
+            $leasePid = Resolve-DeviceLeasePid $existingLease.pytest_pid
+            $pidAlive = ($null -ne $leasePid) -and (& $PidAliveResolver $leasePid)
+            if (-not $pidAlive) {
+                $fs.Seek(0, [System.IO.SeekOrigin]::Begin) | Out-Null
+                $fs.SetLength(0)
+                $fs.Write($bytes, 0, $bytes.Length)
+                $fs.Flush()
+                return [pscustomobject]@{
+                    Outcome = "adopted"; Lease = $existingLease; Status = $freshStatus
+                    PreviousToken = $existingLease.owner_token; PreviousPid = $leasePid
+                }
+            }
+        }
+        # чужая (или своя-по-метке с ЖИВЫМ прогоном) - файл НЕ трогаем,
+        # возвращаем прочитанное как есть, решение за вызывающим.
+        return [pscustomobject]@{ Outcome = "live"; Lease = $existingLease; Status = $freshStatus }
+    } finally {
+        $fs.Dispose()
+    }
+}
+
+function Invoke-DeviceLeaseAdoption {
+    # БЛОКЕР B-R2-1 (критик-раунд 2): ЕДИНСТВЕННАЯ реализация адопции - и для
+    # дефолтного вызова, и для `-Resume` (синоним). Выпускает НОВЫЙ
+    # owner_token и отдаёт запись Take-DeviceLeaseSlot'у с
+    # `-AdoptOwnerLabel`, который ПЕРЕПРОВЕРЯЕТ владение и живость pid ПОД
+    # ЭКСКЛЮЗИВНЫМ хэндлом и пишет там же - между "решил" и "записал" окна нет.
+    #
+    # `pytest_pid` новой записи = $null НАРОЧНО: прежний pytest мёртв, новый
+    # ещё не стартовал - лиза заново входит в стартовое grace-окно, а штамп
+    # реального PID ставит python-чокпоинт (`driver_factory
+    # ::_heartbeat_device_lease`) на первом create_driver. Это же чинит
+    # сценарий критика "второй проход через 5 минут" (прежде: своя же лиза
+    # из нового процесса читалась как чужая -> THROWN).
+    param(
+        [Parameter(Mandatory)][int]$N,
+        [Parameter(Mandatory)][string]$LeaseFile,
+        [Parameter(Mandatory)][datetime]$Now,
+        [Parameter(Mandatory)][string]$OwnerLabel,
+        [AllowEmptyString()][string]$OwnToken = "",
+        [Parameter(Mandatory)][string]$Device,
+        [Parameter(Mandatory)][string]$AppiumUrl,
+        [Parameter(Mandatory)][scriptblock]$TokenProvider,
+        [Parameter(Mandatory)][scriptblock]$PidAliveResolver
+    )
+    $newToken = & $TokenProvider
+    $payload = [ordered]@{
+        owner_token = $newToken; owner_label = $OwnerLabel
+        taken_utc = $Now.ToString("o"); heartbeat_utc = $Now.ToString("o")
+        pytest_pid = $null; status = "active"
+        device = $Device; appium_url = $AppiumUrl
+    } | ConvertTo-Json -Compress
+
+    $result = Take-DeviceLeaseSlot -LeaseFile $LeaseFile -Payload $payload -Now $Now `
+        -PidAliveResolver $PidAliveResolver -AdoptOwnerLabel $OwnerLabel -OwnToken $OwnToken
+    switch ($result.Outcome) {
+        "adopted" {
+            $env:AO3_DEVICE_LEASE_TOKEN = $newToken
+            $prevPid = if ($null -ne $result.PreviousPid) { $result.PreviousPid } else { "отсутствовал" }
+            Write-Host ("Use-DeviceStack: своя лиза стека $N ПРОДОЛЖЕНА адопцией (owner_label=$OwnerLabel, " +
+                "прежний owner_token=$($result.PreviousToken), прежний pytest_pid=$prevPid не жив) - " +
+                "выпущен новый токен.") -ForegroundColor Green
+        }
+        "won" {
+            # Между чтением и захватом лиза успела протухнуть/исчезнуть -
+            # обычное взятие, не адопция.
+            $env:AO3_DEVICE_LEASE_TOKEN = $newToken
+            Write-Host "Use-DeviceStack: лиза стека $N взята (owner=$OwnerLabel; прежняя запись протухла к моменту захвата)." -ForegroundColor Green
+        }
+        "raced" {
+            throw ("Use-DeviceStack: лиза стека $N временно заблокирована другим процессом " +
+                "(гонка ВЗЯТИЯ - кто-то читает/пишет файл лизы прямо сейчас) - повтори вызов " +
+                "через секунду. Если это НЕ транзиент (повторяется постоянно) - проверь, не " +
+                "завис ли другой процесс, и при необходимости используй -Release.")
+        }
+        "live" {
+            $owner = if ($result.Lease.owner_label) { $result.Lease.owner_label } else { "неизвестен" }
+            $livePid = Resolve-DeviceLeasePid $result.Lease.pytest_pid
+            if ($OwnToken -and $result.Lease.owner_token -eq $OwnToken) {
+                $env:AO3_DEVICE_LEASE_TOKEN = $OwnToken
+                Write-Host "Use-DeviceStack: лиза стека $N уже твоя (тот же токен, взята параллельно)." -ForegroundColor Green
+            } elseif ($result.Lease.owner_label -eq $OwnerLabel) {
+                throw ("Use-DeviceStack: стек $N занят ЖИВЫМ прогоном владельца $owner (pytest_pid=$livePid) - " +
+                    "дождись завершения прогона либо сними лизу от владельца: Use-DeviceStack -N $N -Release.")
+            } else {
+                throw "Use-DeviceStack: стек $N занят чужой лизой (владелец: $owner) - ждать нечего, лиза жива."
+            }
+        }
+        default {
+            throw "Use-DeviceStack: Take-DeviceLeaseSlot вернул неожиданный Outcome='$($result.Outcome)' - внутренняя ошибка."
+        }
+    }
+}
+
+function Use-DeviceStack {
+    # N3: каноническая форма переключения на device-стек 1/2 - выставляет
+    # AO3_DEVICE/APPIUM_URL/ALLURE_RESULTS ПЕР-СТЕК и берёт/снимает машинную
+    # лизу (`state/device-lease-<N>.json`, ОТДЕЛЬНЫЙ файл на стек).
+    #
+    # B3 (критик-вход rework attempt 2): ВЗЯТИЕ свободной/протухшей/битой
+    # лизы идёт ЧЕРЕЗ Take-DeviceLeaseSlot (эксклюзивная критическая секция,
+    # не Remove-Item+CreateNew — старая схема давала окно двойной выдачи,
+    # критик воспроизвёл эмпирически). Перезапись СВОЕЙ живой лизы
+    # (heartbeat/idle->active) — через Write-FileAtomic (темп+Replace, не
+    # голый WriteAllText — партиальная запись НЕ должна быть видна читателю).
+    #
+    # ВЛАДЕНИЕ = owner_label (user@host) + СВЕЖЕСТЬ (дизайн-решение Lead,
+    # критик-раунд 2, БЛОКЕР B-R2-1). Единица владения - ТИКЕТ, а не процесс;
+    # продолжение тикета между одноразовыми PowerShell-процессами
+    # (констрейнт 6 плана - tasks.ps1 дот-сорсится КАЖДЫМ вызовом) идёт через
+    # АДОПЦИЮ:
+    #   - лиза ТОГО ЖЕ owner_label, чей `pytest_pid` ОТСУТСТВУЕТ или МЁРТВ
+    #     (grace/idle), продолжается ДЕФОЛТНЫМ вызовом `Use-DeviceStack -N <N>`:
+    #     выпускается НОВЫЙ owner_token, файл атомарно перезаписывается ПОД
+    #     ЭКСКЛЮЗИВНЫМ take-локом (Take-DeviceLeaseSlot -AdoptOwnerLabel),
+    #     печатается INFO с ПРЕЖНИМ токеном;
+    #   - `pytest_pid` ЖИВ -> ОТКАЗ ВСЕГДА (и с `-Resume` тоже): это идущий
+    #     прогон, а не брошенный тикет; сообщение несёт имя владельца, PID и
+    #     совет "дождись завершения прогона либо -Release от владельца".
+    # РАНЬШЕ (B2 attempt 2) продолжение требовало явного `-Resume`, а без него
+    # своя же лиза из НОВОГО процесса читалась как "чужая активная" и
+    # Use-DeviceStack ОТКАЗЫВАЛ - критик воспроизвёл ровно это на связке
+    # "взял процессом А -> pytest в процессе Б" и на "второй проход через 5
+    # минут". `-Resume` СОХРАНЁН как ЯВНЫЙ СИНОНИМ той же адопции (семантика
+    # идентична дефолтной, жёсткий гейт живого pid тот же) - двух РАЗНЫХ путей
+    # взятия быть не должно.
+    #
+    # $env:AO3_DEVICE_LEASE_TOKEN по-прежнему наследуется ДОЧЕРНИМИ процессами
+    # ЭТОЙ ЖЕ powershell-сессии (быстрый путь "лиза точно моя, тот же токен");
+    # owner_token в файле переживает смерть процесса и служит опорой адопции.
+    #
+    # `-Release` - ЕДИНСТВЕННАЯ ручная форма снятия (permission hygiene):
+    # безусловно удаляет файл лизы стека (явное человеческое действие,
+    # эскейп-хэтч для застрявшего стека - НЕ проверяет владение, тот же
+    # дух, что "снятие" вручную любого другого стейл-лока в этом файле,
+    # AT-BUG-012 Clear-EmulatorStaleLocks).
+    #
+    # Non-blocker 1 (критик-вход rework attempt 2): -WhatIf ТЕПЕРЬ честен -
+    # КАЖДАЯ мутирующая ветка (Release/heartbeat/idle->active/take) гейтится
+    # `$PSCmdlet.ShouldProcess`, отказ -> `return` ДО экспорта env-переменных
+    # (раньше -WhatIf РЕАЛЬНО брал лизу, SupportsShouldProcess был пустым
+    # обещанием — паттерн ShouldProcess зеркалит Stop-NodeProcesses выше).
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [Parameter(Mandatory)][ValidateSet(1, 2)][int]$N,
+        [switch]$Release,
+        [switch]$Resume,
+        [scriptblock]$NowProvider = { (Get-Date).ToUniversalTime() },
+        [scriptblock]$TokenProvider = { [guid]::NewGuid().ToString() },
+        [scriptblock]$LiveSerialsProvider = { Get-DeviceSerials },
+        [scriptblock]$PidAliveResolver = { param($ProcId) Test-DeviceLeasePidAlive -ProcId $ProcId },
+        [scriptblock]$AvdNameResolver = { param($Serial) Get-EmulatorAvdName -Serial $Serial },
+        [string]$StateFile = "$root\state\emulator-session.json",
+        [string]$LeaseFile = ""
+    )
+    $cfg = $_DEVICE_STACKS[$N]
+    $leaseFile = if ($LeaseFile) { $LeaseFile } else { "$root\state\device-lease-$N.json" }
+    $appiumUrl = "http://127.0.0.1:$($cfg.AppiumPort)"
+    $ownerLabel = "$env:USERNAME@$env:COMPUTERNAME"
+
+    if ($Release) {
+        if (-not (Test-Path $leaseFile)) {
+            Write-Warning "Use-DeviceStack -Release: лизы стека $N нет ($leaseFile) - нечего снимать."
+            return
+        }
+        if (-not $PSCmdlet.ShouldProcess($leaseFile, "Release device lease stack $N")) { return }
+        Remove-Item $leaseFile -Force
+        Remove-Item Env:\AO3_DEVICE_LEASE_TOKEN -ErrorAction SilentlyContinue
+        Write-Host "Use-DeviceStack: лиза стека $N снята (-Release)." -ForegroundColor Green
+        return
+    }
+
+    if ($N -gt 1) {
+        # @(...) форсирует массив: голый `& $LiveSerialsProvider` на ПУСТОМ
+        # `@()`-выводе провайдера даёт $null, не пустой массив (классическая
+        # PowerShell-ловушка "пустой массив -> $null через pipeline") -
+        # Test-BySerialBackfill -LiveSerials Mandatory упал бы биндингом.
+        $liveSerials = @(& $LiveSerialsProvider)
+        Test-BySerialBackfill -LiveSerials $liveSerials -StateFile $StateFile -AvdNameResolver $AvdNameResolver
+    }
+
+    $now = & $NowProvider
+    $lease = $null
+    $leaseFileUnparseable = $false
+    if (Test-Path $leaseFile) {
+        try {
+            $raw = Get-Content $leaseFile -Raw
+            if ([string]::IsNullOrEmpty($raw)) {
+                # B6 (критик-вход rework attempt 2): 0-байтный/пустой файл -
+                # Get-Content -Raw возвращает $null на пустом файле (известная
+                # PowerShell-ловушка) - explicit unparseable, НЕ молчаливое
+                # ConvertFrom-Json $null (которое раньше НЕ ставило флаг и
+                # давало вечный ложный "гонка, повтори вызов").
+                $leaseFileUnparseable = $true
+            } else {
+                $lease = $raw | ConvertFrom-Json -ErrorAction Stop
+            }
+        } catch {
+            Write-Warning "Use-DeviceStack: лиза стека $N ($leaseFile) - битый JSON, трактуется как отсутствующая."
+            $lease = $null
+            $leaseFileUnparseable = $true
+        }
+    }
+    $status = if ($leaseFileUnparseable) { "free" } else { Get-DeviceLeaseStatus -Lease $lease -Now $now -PidAliveResolver $PidAliveResolver }
+    $ownToken = $env:AO3_DEVICE_LEASE_TOKEN
+
+    # B-R2-1: -Resume - ЯВНЫЙ СИНОНИМ дефолтного поведения (адопция своей
+    # лизы по owner_label). Отдельного пути НЕТ - флаг сохранён только ради
+    # обратной совместимости уже написанных вызовов/промптов.
+    if ($Resume) {
+        Write-Host ("Use-DeviceStack -Resume: синоним поведения по умолчанию (продолжение своей лизы " +
+            "по owner_label = $ownerLabel) - отдельного пути взятия нет, гейт живого pytest_pid тот же.") -ForegroundColor Cyan
+    }
+
+    $isOwn = ($null -ne $lease) -and $ownToken -and ($lease.owner_token -eq $ownToken)
+    # B-R2-1: своя ли лиза ПО МЕТКЕ ВЛАДЕЛЬЦА и идёт ли под ней ЖИВОЙ прогон.
+    $sameOwnerLabel = ($null -ne $lease) -and (-not $leaseFileUnparseable) -and ($lease.owner_label -eq $ownerLabel)
+    $leasePid = if ($null -ne $lease) { Resolve-DeviceLeasePid $lease.pytest_pid } else { $null }
+    $leasePidAlive = ($null -ne $leasePid) -and (& $PidAliveResolver $leasePid)
+
+    switch ($status) {
+        "active" {
+            if (-not $isOwn) {
+                if ($sameOwnerLabel -and -not $leasePidAlive) {
+                    if (-not $PSCmdlet.ShouldProcess($leaseFile, "Adopt own device lease stack $N (owner_label match, pytest_pid not alive)")) { return }
+                    Invoke-DeviceLeaseAdoption -N $N -LeaseFile $leaseFile -Now $now `
+                        -OwnerLabel $ownerLabel -OwnToken $ownToken -Device $cfg.Device -AppiumUrl $appiumUrl `
+                        -TokenProvider $TokenProvider -PidAliveResolver $PidAliveResolver
+                    break
+                }
+                $owner = if ($lease.owner_label) { $lease.owner_label } else { "неизвестен" }
+                if ($sameOwnerLabel) {
+                    throw ("Use-DeviceStack: стек $N занят ЖИВЫМ прогоном владельца $owner (pytest_pid=$leasePid) - " +
+                        "дождись завершения прогона либо сними лизу от владельца: Use-DeviceStack -N $N -Release.")
+                }
+                throw "Use-DeviceStack: стек $N занят чужой АКТИВНОЙ лизой (владелец: $owner) - ждать нечего, лиза жива."
+            }
+            if (-not $PSCmdlet.ShouldProcess($leaseFile, "Renew (heartbeat) device lease stack $N")) { return }
+            $updated = [ordered]@{
+                owner_token = $lease.owner_token; owner_label = $ownerLabel
+                taken_utc = $lease.taken_utc; heartbeat_utc = $now.ToString("o")
+                pytest_pid = $lease.pytest_pid; status = "active"
+                device = $cfg.Device; appium_url = $appiumUrl
+            } | ConvertTo-Json -Compress
+            # Non-blocker 5: heartbeat - страховка свежести, НЕ гейт: транзиентный
+            # лок даёт WARN, не сырой MethodInvocationException наружу.
+            Write-FileAtomicResilient -Path $leaseFile -Content $updated -Context "Use-DeviceStack (heartbeat стека $N)" | Out-Null
+            Write-Host "Use-DeviceStack: лиза стека $N уже твоя (активна), heartbeat обновлён." -ForegroundColor Green
+        }
+        "idle" {
+            if (-not $isOwn) {
+                if ($sameOwnerLabel -and -not $leasePidAlive) {
+                    if (-not $PSCmdlet.ShouldProcess($leaseFile, "Adopt own device lease stack $N (owner_label match, pytest_pid not alive)")) { return }
+                    Invoke-DeviceLeaseAdoption -N $N -LeaseFile $leaseFile -Now $now `
+                        -OwnerLabel $ownerLabel -OwnToken $ownToken -Device $cfg.Device -AppiumUrl $appiumUrl `
+                        -TokenProvider $TokenProvider -PidAliveResolver $PidAliveResolver
+                    break
+                }
+                $owner = if ($lease.owner_label) { $lease.owner_label } else { "неизвестен" }
+                if ($sameOwnerLabel) {
+                    # idle с ЖИВЫМ pid = heartbeat протух за TTL, но процесс жив.
+                    throw ("Use-DeviceStack: стек $N занят ЖИВЫМ прогоном владельца $owner (pytest_pid=$leasePid, " +
+                        "heartbeat протух) - дождись завершения прогона либо сними лизу от владельца: " +
+                        "Use-DeviceStack -N $N -Release.")
+                }
+                throw ("Use-DeviceStack: стек $N в ожидании (idle), чужой владелец ($owner) может вернуться - " +
+                    "жди либо запроси освобождение (Use-DeviceStack -N $N -Release).")
+            }
+            if (-not $PSCmdlet.ShouldProcess($leaseFile, "Resume device lease stack $N (idle -> active, B28)")) { return }
+            $updated = [ordered]@{
+                owner_token = $lease.owner_token; owner_label = $ownerLabel
+                taken_utc = $lease.taken_utc; heartbeat_utc = $now.ToString("o")
+                pytest_pid = $null; status = "active"
+                device = $cfg.Device; appium_url = $appiumUrl
+            } | ConvertTo-Json -Compress
+            Write-FileAtomicResilient -Path $leaseFile -Content $updated -Context "Use-DeviceStack (idle->active стека $N)" | Out-Null
+            $env:AO3_DEVICE_LEASE_TOKEN = $lease.owner_token
+            Write-Host "Use-DeviceStack: своя idle-лиза стека $N принята (B28), возвращаю в active." -ForegroundColor Green
+        }
+        default {
+            # "free" ИЛИ "reclaimed" - берём через Take-DeviceLeaseSlot (B3).
+            # Non-blocker 4: реклейм СВОЕЙ протухшей лизы - тихий (Write-
+            # Verbose, БЕЗ log_append); реклейм ЧУЖОЙ брошенной - громкий
+            # (Write-Warning + log_append orchestrator-строка) - план N3
+            # прямо разводит эти два случая, owner_label лизы (сохранённой
+            # ДО протухания) даёт достаточный сигнал "свой ли был владелец".
+            if ($status -eq "reclaimed") {
+                $wasOwn = $lease -and ($lease.owner_label -eq $ownerLabel)
+                if ($wasOwn) {
+                    Write-Verbose "Use-DeviceStack: своя протухшая лиза стека $N реклеймится (тихо, own-reclaim, non-blocker 4)."
+                } else {
+                    $staleOwner = if ($lease -and $lease.owner_label) { $lease.owner_label } else { "неизвестен" }
+                    Write-Warning "Use-DeviceStack: лиза стека $N истекла (reclaimed, владелец: $staleOwner) - беру заново."
+                    $logScript = "$root\scripts\log_append.py"
+                    if (Test-Path $logScript) {
+                        try {
+                            $pythonExe = if (Test-Path "$venv\python.exe") { "$venv\python.exe" } else { "python" }
+                            & $pythonExe $logScript orchestrator "p3-second-emulator N3: device-lease reclaim" `
+                                "Use-DeviceStack" "стек $N reclaimed (владелец: $staleOwner) -> взят $ownerLabel" 2>$null | Out-Null
+                        } catch {
+                            # fail-soft (докстринг выше): отсутствие интерпретатора/скрипта не
+                            # роняет взятие лизы, только теряет запись в журнал.
+                        }
+                    }
+                }
+            }
+            $newToken = & $TokenProvider
+            $payload = [ordered]@{
+                owner_token = $newToken; owner_label = $ownerLabel
+                taken_utc = $now.ToString("o"); heartbeat_utc = $now.ToString("o")
+                pytest_pid = $null; status = "active"
+                device = $cfg.Device; appium_url = $appiumUrl
+            } | ConvertTo-Json -Compress
+
+            if (-not $PSCmdlet.ShouldProcess($leaseFile, "Take device lease stack $N")) { return }
+            # B-R2-1: -AdoptOwnerLabel и здесь - между чтением (free/reclaimed) и
+            # захватом хэндла лиза могла СТАТЬ живой; если она при этом СВОЯ по
+            # метке и без живого pytest_pid, правильный исход - адопция, а не
+            # отказ "занято".
+            $result = Take-DeviceLeaseSlot -LeaseFile $leaseFile -Payload $payload -Now $now `
+                -PidAliveResolver $PidAliveResolver -AdoptOwnerLabel $ownerLabel -OwnToken $ownToken
+            switch ($result.Outcome) {
+                "won" {
+                    $env:AO3_DEVICE_LEASE_TOKEN = $newToken
+                    Write-Host "Use-DeviceStack: лиза стека $N взята (owner=$ownerLabel)." -ForegroundColor Green
+                }
+                "adopted" {
+                    $env:AO3_DEVICE_LEASE_TOKEN = $newToken
+                    $prevPid = if ($null -ne $result.PreviousPid) { $result.PreviousPid } else { "отсутствовал" }
+                    Write-Host ("Use-DeviceStack: своя лиза стека $N ПРОДОЛЖЕНА адопцией под замком " +
+                        "(owner_label=$ownerLabel, прежний owner_token=$($result.PreviousToken), " +
+                        "прежний pytest_pid=$prevPid не жив) - выпущен новый токен.") -ForegroundColor Green
+                }
+                "raced" {
+                    # B6: РАЗЛИЧАЕМ "файл существует" (обычный путь взятия
+                    # free/reclaimed выше) от "проиграна гонка" (sharing
+                    # violation - кто-то ДРУГОЙ держит критическую секцию
+                    # ПРЯМО СЕЙЧАС, транзиент).
+                    throw ("Use-DeviceStack: лиза стека $N временно заблокирована другим процессом " +
+                        "(гонка ВЗЯТИЯ - кто-то читает/пишет файл лизы прямо сейчас) - повтори вызов " +
+                        "через секунду. Если это НЕ транзиент (повторяется постоянно) - проверь, не " +
+                        "завис ли другой процесс, и при необходимости используй -Release.")
+                }
+                "live" {
+                    if ($ownToken -and $result.Lease.owner_token -eq $ownToken) {
+                        # редкий, но легальный случай: под замком обнаружилась
+                        # СВОЯ же (уже взятая параллельно этим же токеном) лиза.
+                        $env:AO3_DEVICE_LEASE_TOKEN = $ownToken
+                        Write-Host "Use-DeviceStack: лиза стека $N уже твоя (взята параллельно, тот же токен)." -ForegroundColor Green
+                    } else {
+                        $owner = if ($result.Lease.owner_label) { $result.Lease.owner_label } else { "неизвестен" }
+                        if ($result.Lease.owner_label -eq $ownerLabel) {
+                            # B-R2-1: своя по метке, но с ЖИВЫМ прогоном - адопция
+                            # запрещена ВСЕГДА (Take-DeviceLeaseSlot уже отказал в ней
+                            # под замком, вернув 'live').
+                            $livePid = Resolve-DeviceLeasePid $result.Lease.pytest_pid
+                            throw ("Use-DeviceStack: стек $N занят ЖИВЫМ прогоном владельца $owner " +
+                                "(pytest_pid=$livePid) - дождись завершения прогона либо сними лизу от " +
+                                "владельца: Use-DeviceStack -N $N -Release.")
+                        }
+                        if ($result.Status -eq "active") {
+                            throw "Use-DeviceStack: стек $N занят чужой АКТИВНОЙ лизой (владелец: $owner) - ждать нечего, лиза жива."
+                        } else {
+                            throw ("Use-DeviceStack: стек $N в ожидании (idle), чужой владелец ($owner) может вернуться - " +
+                                "жди либо запроси освобождение (Use-DeviceStack -N $N -Release).")
+                        }
+                    }
+                }
+                default {
+                    throw "Use-DeviceStack: Take-DeviceLeaseSlot вернул неожиданный Outcome='$($result.Outcome)' - внутренняя ошибка."
+                }
+            }
+        }
+    }
+
+    $env:AO3_DEVICE = $cfg.Device
+    $env:APPIUM_URL = $appiumUrl
+    $env:ALLURE_RESULTS = "$root\$($cfg.AllureDir)"
+    Write-Host ("Use-DeviceStack: стек $N - AO3_DEVICE=$($env:AO3_DEVICE) APPIUM_URL=$($env:APPIUM_URL) " +
+        "ALLURE_RESULTS=$($env:ALLURE_RESULTS)") -ForegroundColor Cyan
+}
+
+Write-Host "Tasks loaded: Start-Emulator, Install-MitmCA, Start-Appium, Test-AppiumHealthy, Get-DeviceSerials, Stop-NodeProcesses, Ensure-BridgeHarness, Install-App, Invoke-Smoke, Invoke-Suite, Invoke-Pytest, Show-Report, Get-Device, Use-DeviceStack" -ForegroundColor Green

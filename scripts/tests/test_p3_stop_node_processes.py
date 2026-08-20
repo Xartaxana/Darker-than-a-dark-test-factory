@@ -101,6 +101,32 @@ def test_two_servers_no_selector_refuses_with_candidate_list(tmp_path):
     assert "111" in cp.stdout and "222" in cp.stdout  # перечень кандидатов в сообщении
 
 
+def test_two_servers_no_selector_prints_candidates_separately_before_throw(tmp_path):
+    """N3 (хвост N2 §3, "полировка WhatIf-отказа жнеца"): список кандидатов
+    печатается ОТДЕЛЬНЫМ Write-Host выводом ("Candidates to stop") ДО
+    throw'а - не только внутри текста исключения. Проверяем ОБА пути
+    (-WhatIf и живой вызов), throw остаётся в обоих (dry-run честно
+    зеркалит отказ live, приёмка N2 признала это приемлемым)."""
+    for whatif_flag in ("", " -WhatIf"):
+        cmd = (
+            dot_source_prefix(fake_root=tmp_path) + _FAKES +
+            "try { "
+            f"Stop-NodeProcesses -ProcessListProvider {{ @($p1, $p2) }} "
+            "-PortOwnerResolver { param($P) $null } -Stopper { param($p) }" + whatif_flag + "; "
+            "Write-Output 'NO_THROW' "
+            "} catch { Write-Output \"THROWN: $($_.Exception.Message)\" }"
+        )
+        cp = run_ps(cmd)
+        assert cp.returncode == 0, f"whatif={whatif_flag!r} stdout={cp.stdout}"
+        assert "THROWN:" in cp.stdout, f"whatif={whatif_flag!r}"
+        # Отдельная строка-заголовок ДО throw (не только текст исключения)
+        assert "Candidates to stop" in cp.stdout, f"whatif={whatif_flag!r}"
+        # Заголовок печатается РАНЬШЕ throw-строки в общем выводе
+        header_idx = cp.stdout.index("Candidates to stop")
+        thrown_idx = cp.stdout.index("THROWN:")
+        assert header_idx < thrown_idx, f"whatif={whatif_flag!r}"
+
+
 def test_selector_port_kills_only_matching_process(tmp_path):
     out = _run(
         "Stop-NodeProcesses -Port 4725 -ProcessListProvider { @($p1, $p2) } "

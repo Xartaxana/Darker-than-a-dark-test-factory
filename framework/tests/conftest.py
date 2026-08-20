@@ -142,7 +142,17 @@ def _ensure_app_installed():
     AT-BUG-066 (сиблинг класса, найденный критиком по правилу 9 CLAUDE.md на
     приёмке AT-BUG-064): та же логика подключена здесь для font_scale/night
     mode — тот же класс персистентной Android-настройки, тот же аргумент
-    единой переопределяемой точки."""
+    единой переопределяемой точки.
+
+    spec-p3-second-emulator N3 (B22/B26): `driver_factory.check_device_lease()`
+    вызывается ПЕРВОЙ строкой — ДОПОЛНИТЕЛЬНАЯ (не единственная — план N3
+    прямо это называет) ранняя сверка лизы: незалиженный прогон стека 2
+    падает ДО ЛЮБОГО реального adb-вызова этой фикстуры (residual-proxy/
+    font_scale/night_mode/install), не только на первом `driver` теста.
+    Авторитетная точка — `create_driver` (function/driver-scoped, вызывается
+    КАЖДЫМ тестом) — эта session-scoped сверка не заменяет её, только даёт
+    более ранний/дешёвый сигнал на старте сессии."""
+    driver_factory.check_device_lease()
     _ensure_no_residual_device_proxy()
     _ensure_default_font_scale()
     _ensure_default_night_mode()
@@ -262,11 +272,36 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
     после `_ensure_no_residual_device_proxy()` — тот же твин-паттерн, тот же
     аргумент (recovery ребутит эмулятор через snapshot-boot, session-scoped
     `_ensure_app_installed` инстанцируется РОВНО РАЗ и не видит recovery,
-    случившийся посреди прогона)."""
+    случившийся посреди прогона).
+
+    Non-blocker 2 (критик-вход rework attempt 2, spec-p3-second-emulator
+    N3): `driver_factory.check_device_lease()` теперь звучит ЗДЕСЬ ЖЕ,
+    ПЕРВЫМ device-related вызовом хука (до `ensure_ready()`) — не только в
+    session-scoped `_ensure_app_installed` (там — разовая ранняя сверка НА
+    СТАРТ сессии) и не только в `create_driver` (авторитетная точка, но
+    инстанцируется ПОСЛЕ `clean_app`/`replay`/`seeded_library`, если те
+    стоят раньше `driver` в сигнатуре теста — ТОТ ЖЕ порядковый класс
+    риска, что B1 выше уже чинит для `ensure_ready()`: `clean_app`/`replay`
+    реально трогают adb ДО того, как `driver` вообще успевает
+    инстанцироваться). Незалиженный чужой стек 2 теперь падает ДО
+    `pm clear`/`set_device_proxy`, не только до создания Appium-сессии.
+
+    Отклонение от буквального текста задачи ("первой строкой pytest_
+    runtest_setup... до ensure_ready()"): вызов гейтится ТЕМ ЖЕ условием
+    `"driver" in item.fixturenames`, что и `ensure_ready()` ниже, а не
+    стоит перед этим гейтом безусловно для КАЖДОГО теста сессии (включая
+    device-free юниты) — репозиторий системно бережёт device-free пробы от
+    любого adb/устройство-связанного пути (см. докстринг `_ensure_app_
+    installed` про ~20 переопределяющих юнит-проб); `check_device_lease()`
+    файл-based и обычно дёшев, но безусловный вызов на КАЖДОМ из тысяч
+    device-free тестов сессии добавил бы стек-2-релевантную проверку туда,
+    где её раньше не было вовсе, без выигрыша (device-free тест лизу не
+    держит и не блокируется её отсутствием намеренно)."""
     global _pending_recovery_warning
     _pending_recovery_warning = None
     if "driver" not in item.fixturenames:
         return
+    driver_factory.check_device_lease()
     _pending_recovery_warning = _DEVICE_GUARD.ensure_ready()
     if _pending_recovery_warning is not None:
         _reset_ca_check()
