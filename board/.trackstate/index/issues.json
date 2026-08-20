@@ -135,6 +135,72 @@
     "archived": false
   },
   {
+    "key": "TC-276",
+    "path": "board/TC-276/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "E-ink нативные экраны (Settings и родня): фон строго белый/чёрный во ВСЕХ 4 комбинациях eink×тема — вместо тёплой light/тёмно-коричневой dark палитры",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:accessibility",
+      "risk:R-13"
+    ],
+    "updated": "2026-08-20T23:38:20Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-277",
+    "path": "board/TC-277/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "E-ink: инжектированные bridge-элементы листинга получают насыщенную палитру, сплошную 2px рамку и чисто белый фон страницы — вместо приглушённой палитры, 1px alpha-рамки и тёплого фона",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:accessibility",
+      "risk:R-13"
+    ],
+    "updated": "2026-08-20T23:38:20Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-278",
+    "path": "board/TC-278/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "E-ink: разворот side panel завершается практически мгновенно (snap) — без ~200мс tween-задержки обычного режима",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:accessibility",
+      "risk:R-13"
+    ],
+    "updated": "2026-08-20T23:38:20Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "TC-021",
     "path": "board/TC-021/main.md",
     "parent": null,
@@ -1310,6 +1376,72 @@
       "risk:R-08"
     ],
     "updated": "2026-08-20T14:57:02Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-273",
+    "path": "board/TC-273/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "«Continue reading» предлагается только для позиций прочтения >= 5% (MIN_PROGRESS_PERCENT); беглый взгляд на страницу оффера не получает НИКОГДА",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-08"
+    ],
+    "updated": "2026-08-20T23:01:31Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-274",
+    "path": "board/TC-274/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "«Continue reading» предъявляется ТОЛЬКО когда видна вкладка/экран работы-владельца, не поверх постороннего экрана (регресс-замок BUG-082, сейчас — красный)",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-16"
+    ],
+    "updated": "2026-08-20T23:01:31Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-275",
+    "path": "board/TC-275/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Тап «Resume»: при совпадении URL скроллит вкладку-владельца НА МЕСТЕ; при несовпадении переносит АКТИВНУЮ вкладку на адрес оффера; сразу после — повторный оффер не предъявляется",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-16"
+    ],
+    "updated": "2026-08-20T23:01:31Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -9019,9 +9151,10 @@
     "assignee": "qa-agents",
     "labels": [
       "bug",
+      "test_case:TC-274",
       "sev:major"
     ],
-    "updated": "2026-08-20T09:51:00Z",
+    "updated": "2026-08-20T23:01:31Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -9594,7 +9727,7 @@
     "labels": [
       "stage:story-writing-cases",
       "регресс сборки: smoke RUN-20260819-1818 49/49 · чисто · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 1",
-      "фич без кейсов: 5/8",
+      "фич без кейсов: 2/8",
       "багов на кейсах стори: 1"
     ],
     "updated": "2026-08-14T23:12:35Z",

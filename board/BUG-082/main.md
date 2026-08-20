@@ -7,14 +7,14 @@ priority: "p1"
 summary: "Снекбар «Continue reading at N%?» предъявляется поверх чужой вкладки/экрана, его действие невидимо"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["bug", "sev:major"]
+labels: ["bug", "test_case:TC-274", "sev:major"]
 components: []
 fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-20T09:51:00Z"
-updated: "2026-08-20T09:51:00Z"
+created: "2026-08-20T23:01:31Z"
+updated: "2026-08-20T23:01:31Z"
 archived: false
 resolution: null
 ---
@@ -130,6 +130,17 @@ _Спроецировано из `bugs/BUG-082.md` (источник правд�
 - **BUG-082** (эта находка) — `uiState.resumeOffer` пишется из Room-обновления БЕЗ guard'а вовсе (отсутствует проверка активности вкладки-владельца И видимости экрана)
 
 Критик-гейт CH-011 (2026-08-20) подтвердил: классовый обход всех трёх осей выходит за таймбокс одной сессии (§34, `mission_leftover: "Аудит ОСТАЛЬНЫХ полей"`).
+
+**[test-designer @ 2026-08-20T23:50:00Z] Регресс-замок заведён.**
+`test-cases/browser/TC-274.md` (P1, L3, `status: Review`) — замок на
+сценарий (б) этого бага (снекбар поверх Library через «Open in background
+tab»). Заголовок и Then сформулированы от ОЖИДАЕМОГО поведения («оффер
+предъявляется ТОЛЬКО когда видна вкладка/экран владельца»), фактическое
+красное поведение зафиксировано в теле кейса. `red_lock` НЕ проставлен
+(валидатор требует непустой `automated_by`, design-time его ещё нет) —
+проставляется test-automator/test-reviewer тем же ходом, что кодирование
+теста (прецедент TC-268/BUG-081). `test_cases` этого бага обновлён:
+`[] → ["TC-274"]`.
 
 `awaiting: dev`
 

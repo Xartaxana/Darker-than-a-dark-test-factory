@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-20T22:13:05Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-08-20T23:57:03Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 ⚠ реестр фич протух: сборка fdd3f72884105d1453448e0c9a7f2b109588b182, реестр инвентаризован против aa377e0ec9664fcd5439fec9391638fabf94f448
@@ -9,9 +9,9 @@ generated_at: 2026-08-20T22:13:05Z · генератор: `scripts/coverage_map.
 
 | Область | Кейсов | Automated | coverage_status |
 |---|---|---|---|
-| accessibility | 6 | 3 | partial |
+| accessibility | 9 | 3 | partial |
 | backup | 6 | 1 | partial |
-| browser | 42 | 13 | partial |
+| browser | 45 | 13 | partial |
 | canary | 25 | 23 | partial |
 | compatibility | 3 | 3 | designed-full |
 | downloads | 21 | 11 | partial |
@@ -38,15 +38,15 @@ generated_at: 2026-08-20T22:13:05Z · генератор: `scripts/coverage_map.
 | R-05 | TECH | downloads:TC-032, downloads:TC-033, downloads:TC-034, downloads:TC-035, downloads:TC-036, downloads:TC-037, downloads:TC-038, downloads:TC-039, downloads:TC-112, downloads:TC-113, downloads:TC-114, downloads:TC-115, downloads:TC-116, downloads:TC-117, downloads:TC-153, downloads:TC-154, downloads:TC-164, downloads:TC-236, downloads:TC-237, downloads:TC-238, downloads:TC-257, library:TC-244, settings:TC-235 |
 | R-06 | BUS | browser:TC-094, browser:TC-197, browser:TC-198, browser:TC-199, browser:TC-200, browser:TC-201, browser:TC-202, browser:TC-203, browser:TC-204, library:TC-027, library:TC-028, library:TC-029, library:TC-030, library:TC-031, library:TC-060, library:TC-061, library:TC-062, library:TC-063, library:TC-064, library:TC-065, library:TC-177, library:TC-178, library:TC-179, library:TC-180, visibility:TC-013, visibility:TC-014, visibility:TC-015, visibility:TC-092, visibility:TC-093, visibility:TC-095 |
 | R-07 | OPS | риск не покрыт дизайном |
-| R-08 | TECH | browser:TC-261, browser:TC-262, browser:TC-266, browser:TC-267, browser:TC-269, browser:TC-270, browser:TC-271, library:TC-136, library:TC-137, library:TC-173, library:TC-174, library:TC-175, library:TC-189, library:TC-190, tabs:TC-022, tabs:TC-023, tabs:TC-024, tabs:TC-025, tabs:TC-026, tabs:TC-084, tabs:TC-131, tabs:TC-132, tabs:TC-133, tabs:TC-134, tabs:TC-135, tabs:TC-176, tabs:TC-258, tabs:TC-268 |
+| R-08 | TECH | browser:TC-261, browser:TC-262, browser:TC-266, browser:TC-267, browser:TC-269, browser:TC-270, browser:TC-271, browser:TC-273, library:TC-136, library:TC-137, library:TC-173, library:TC-174, library:TC-175, library:TC-189, library:TC-190, tabs:TC-022, tabs:TC-023, tabs:TC-024, tabs:TC-025, tabs:TC-026, tabs:TC-084, tabs:TC-131, tabs:TC-132, tabs:TC-133, tabs:TC-134, tabs:TC-135, tabs:TC-176, tabs:TC-258, tabs:TC-268 |
 | R-11 | TECH | accessibility:TC-108, browser:TC-050, browser:TC-051, browser:TC-052, browser:TC-053, browser:TC-054, browser:TC-055, browser:TC-057, browser:TC-058, browser:TC-126, browser:TC-127, browser:TC-128, browser:TC-130, browser:TC-157, browser:TC-158, browser:TC-159, browser:TC-160, browser:TC-161, browser:TC-247, browser:TC-248, browser:TC-250, settings:TC-047, settings:TC-048, settings:TC-049, settings:TC-059, settings:TC-123, settings:TC-124, settings:TC-125, settings:TC-129, settings:TC-145, settings:TC-146, settings:TC-147, settings:TC-163, settings:TC-169, settings:TC-170, settings:TC-246 |
 | R-09 | BUS | backup:TC-166, filter-profiles:TC-040, filter-profiles:TC-041, filter-profiles:TC-042, filter-profiles:TC-085, filter-profiles:TC-086, filter-profiles:TC-181, filter-profiles:TC-182, filter-profiles:TC-183, filter-profiles:TC-184, filter-profiles:TC-185, filter-profiles:TC-205, filter-profiles:TC-206, sync:TC-212, sync:TC-213 |
 | R-10 | DATA | library:TC-089, rating:TC-043, rating:TC-044, rating:TC-045, rating:TC-056, rating:TC-087, rating:TC-088, rating:TC-090, rating:TC-091, rating:TC-191, rating:TC-192, rating:TC-193, rating:TC-194 |
 | R-12 | PERF | performance:TC-096, performance:TC-097, performance:TC-098, performance:TC-099 |
-| R-13 | A11Y | accessibility:TC-106, accessibility:TC-107, accessibility:TC-148, accessibility:TC-149, accessibility:TC-150, browser:TC-249, settings:TC-188 |
+| R-13 | A11Y | accessibility:TC-106, accessibility:TC-107, accessibility:TC-148, accessibility:TC-149, accessibility:TC-150, accessibility:TC-276, accessibility:TC-277, accessibility:TC-278, browser:TC-249, settings:TC-188 |
 | R-14 | COMPAT | compatibility:TC-109, compatibility:TC-110, compatibility:TC-111 |
 | R-15 | SEC | security:TC-100, security:TC-101, security:TC-102, security:TC-103, security:TC-104, security:TC-105, security:TC-232, security:TC-233, security:TC-234 |
-| R-16 | BUS | browser:TC-162, browser:TC-252, browser:TC-253, browser:TC-254, browser:TC-260, browser:TC-263, browser:TC-264, downloads:TC-156, downloads:TC-239, downloads:TC-240, library:TC-255, settings:TC-251, sync:TC-218, sync:TC-219, sync:TC-220, sync:TC-221, sync:TC-222, sync:TC-223, sync:TC-224, sync:TC-225, sync:TC-230, sync:TC-272 |
+| R-16 | BUS | browser:TC-162, browser:TC-252, browser:TC-253, browser:TC-254, browser:TC-260, browser:TC-263, browser:TC-264, browser:TC-274, browser:TC-275, downloads:TC-156, downloads:TC-239, downloads:TC-240, library:TC-255, settings:TC-251, sync:TC-218, sync:TC-219, sync:TC-220, sync:TC-221, sync:TC-222, sync:TC-223, sync:TC-224, sync:TC-225, sync:TC-230, sync:TC-272 |
 | R-17 | BUS | library:TC-242, library:TC-243, rating:TC-138, rating:TC-139, rating:TC-140, rating:TC-141, rating:TC-142, rating:TC-143, rating:TC-144 |
 | R-18 | DATA | риск не покрыт дизайном |
 | R-19 | SEC | риск не покрыт дизайном |
@@ -143,8 +143,8 @@ generated_at: 2026-08-20T22:13:05Z · генератор: `scripts/coverage_map.
 | browse-filter-autoapply-on-navigation | browse | filter-profiles:TC-182[Approved], filter-profiles:TC-183[Approved], filter-profiles:TC-206[Approved] |
 | browse-filter-autoapply-off-drops-active | browse | filter-profiles:TC-184[Approved], filter-profiles:TC-185[Approved], filter-profiles:TC-205[Approved] |
 | browse-scroll-to-top-fab | browse | browser:TC-266[Approved], browser:TC-269[Approved], browser:TC-270[Approved], browser:TC-271[Approved] |
-| browse-reading-progress-persist-room | browse | нет кейсов |
-| browse-resume-offer-snackbar | browse | нет кейсов |
+| browse-reading-progress-persist-room | browse | browser:TC-273[Review] |
+| browse-resume-offer-snackbar | browse | browser:TC-273[Review], browser:TC-274[Review], browser:TC-275[Review] |
 | browse-page-turn-buttons | browse | browser:TC-247[Approved], browser:TC-248[Approved], browser:TC-249[Approved] |
 | browse-volume-button-paging | browse | browser:TC-252[Approved], browser:TC-253[Approved], browser:TC-254[Approved], library:TC-255[Approved] |
 | browser-error-page | browse | errors:TC-046[Automated] |
@@ -175,10 +175,10 @@ generated_at: 2026-08-20T22:13:05Z · генератор: `scripts/coverage_map.
 | bridge-empty-page-auto-advance-replaces-history | ao3-bridge | browser:TC-263[Approved], browser:TC-264[Approved] |
 | bridge-live-rating-push-no-auto-advance | ao3-bridge | browser:TC-260[Approved] |
 | bridge-copy-url-clipboard-fallback | ao3-bridge | browser:TC-265[Approved] |
-| eink-palette-native | eink | нет кейсов |
+| eink-palette-native | eink | accessibility:TC-276[Review] |
 | eink-no-ripple-indication | eink | нет кейсов |
-| eink-snap-animations | eink | нет кейсов |
-| eink-bridge-badge-palette | eink | нет кейсов |
+| eink-snap-animations | eink | accessibility:TC-278[Review] |
+| eink-bridge-badge-palette | eink | accessibility:TC-277[Review] |
 | eink-webview-no-overscroll | eink | нет кейсов |
 | sync-settings-config-fields | sync | sync:TC-218[Approved], sync:TC-219[Approved], sync:TC-220[Approved] |
 | sync-manual-run-result-dialog | sync | sync:TC-216[Approved], sync:TC-221[Approved], sync:TC-222[Approved] |
@@ -224,13 +224,8 @@ generated_at: 2026-08-20T22:13:05Z · генератор: `scripts/coverage_map.
 
 - browse-tabstrip-indicators (browse): TabStrip: индикация активной вкладки, закрытие свайпом вверх, кнопка New tab
 - library-filters-clear-all-topbar (library): Топ-бар Library: бейдж с числом активных фильтров и кнопка «Clear filters» (видна только при активных фильтрах) сбрасывают все фильтры разом
-- browse-reading-progress-persist-room (browse): Позиция чтения работы сохраняется в Room (readProgress*: URL, %, глава) при чтении страницы работы в приложении — только выше порога 5 % и с дебаунсом, не трогая timestamp строки
-- browse-resume-offer-snackbar (browse): Оффер «Continue reading at N%?» с кнопкой Resume при повторном открытии работы с сохранённой позицией: тап возобновляет чтение с сохранённого места, отказ/истечение гасит оффер и не повторяет его
 - bridge-dark-css (ao3-bridge): CSS-переопределения тёмной темы на AO3-страницах (window.__ao3AppDark)
-- eink-palette-native (eink): E-ink палитра нативных экранов: чисто белые/чёрные поверхности, сплошные непрозрачные границы и насыщенные цвета рейтингов вместо обычных light/dark схем (4 схемы: eink-light, eink-dark, обычные light/dark)
 - eink-no-ripple-indication (eink): E-ink: нажатие на контролы не рисует ripple-волну (индикация подменена no-op для foundation-clickable и Material3 одновременно)
-- eink-snap-animations (eink): E-ink: анимации панели и появления/исчезновения элементов заменены мгновенным переключением (snap вместо tween) — промежуточных кадров нет
-- eink-bridge-badge-palette (eink): E-ink палитра инжектированных элементов AO3-страницы (бейджи/Rate-кнопки — насыщенные цвета, сплошная рамка 2px, чисто белый фон в светлой теме); применяется к уже открытым вкладкам только перезагрузкой страницы
 - eink-webview-no-overscroll (eink): E-ink: WebView не показывает overscroll-эффект на границе страницы (ни свечения, ни растягивания); выключение режима возвращает штатный overscroll
 - data-workrating-model (data): Room-сущность WorkRating (rating/comment/tags/fandom/author/wordCount/downloadPath)
 - data-filterprofile-model (data): Room-сущность FilterProfile (name/queryString)
@@ -239,7 +234,7 @@ generated_at: 2026-08-20T22:13:05Z · генератор: `scripts/coverage_map.
 
 ### accessibility
 
-- coverage_status: **partial** (3/6 Automated)
+- coverage_status: **partial** (3/9 Automated)
 - риски: R-11, R-13
 - кейсы без risk: нет
 - P0/P1 не в Automated: нет
@@ -254,7 +249,7 @@ generated_at: 2026-08-20T22:13:05Z · генератор: `scripts/coverage_map.
 |---|---|---|---|---|---|---|
 | P0 |  |  |  |  |  |  |
 | P1 |  |  |  |  |  |  |
-| P2 |  |  | 3 | 3 |  |  |
+| P2 |  | 3 | 3 | 3 |  |  |
 | P3 |  |  |  |  |  |  |
 
 ### backup
@@ -277,10 +272,10 @@ generated_at: 2026-08-20T22:13:05Z · генератор: `scripts/coverage_map.
 
 ### browser
 
-- coverage_status: **partial** (13/42 Automated)
+- coverage_status: **partial** (13/45 Automated)
 - риски: R-02, R-06, R-08, R-11, R-13, R-16
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-157 [P1, Approved], TC-159 [P1, Approved], TC-161 [P1, Approved], TC-197 [P1, Approved], TC-198 [P1, Approved], TC-202 [P1, Approved], TC-203 [P1, Approved], TC-204 [P1, Approved], TC-247 [P1, Approved], TC-248 [P1, Approved], TC-250 [P1, Approved], TC-252 [P1, Approved], TC-253 [P1, Approved], TC-254 [P1, Approved], TC-259 [P1, Approved], TC-260 [P1, Approved], TC-261 [P1, Approved], TC-262 [P1, Approved], TC-263 [P1, Approved], TC-264 [P1, Approved], TC-266 [P1, Approved], TC-267 [P1, Approved], TC-269 [P1, Approved], TC-270 [P1, Approved], TC-271 [P1, Approved]
+- P0/P1 не в Automated: TC-157 [P1, Approved], TC-159 [P1, Approved], TC-161 [P1, Approved], TC-197 [P1, Approved], TC-198 [P1, Approved], TC-202 [P1, Approved], TC-203 [P1, Approved], TC-204 [P1, Approved], TC-247 [P1, Approved], TC-248 [P1, Approved], TC-250 [P1, Approved], TC-252 [P1, Approved], TC-253 [P1, Approved], TC-254 [P1, Approved], TC-259 [P1, Approved], TC-260 [P1, Approved], TC-261 [P1, Approved], TC-262 [P1, Approved], TC-263 [P1, Approved], TC-264 [P1, Approved], TC-266 [P1, Approved], TC-267 [P1, Approved], TC-269 [P1, Approved], TC-270 [P1, Approved], TC-271 [P1, Approved], TC-273 [P1, Review], TC-274 [P1, Review], TC-275 [P1, Review]
 - автотесты (automated_by): framework/tests/test_hidden_banner.py::test_hidden_banner_matches_flag_combination, framework/tests/test_infinite_scroll.py::test_infinite_scroll_on_loads_next_page_in_background, framework/tests/test_reading_ux.py::test_tap_zone_bottom_third_scrolls_down, framework/tests/test_reading_ux.py::test_tap_zone_middle_third_toggles_fullscreen, framework/tests/test_reading_ux.py::test_tap_zone_top_third_scrolls_up, framework/tests/test_side_panel.py::test_font_buttons_disabled_at_range_boundaries, framework/tests/test_side_panel.py::test_font_size_increase_instant_and_persists, framework/tests/test_side_panel.py::test_pinch_spread_changes_font_size, framework/tests/test_side_panel.py::test_side_panel_and_settings_share_theme_and_font_state, framework/tests/test_side_panel.py::test_side_panel_contrast_toggles_theme_instantly, framework/tests/test_side_panel.py::test_side_panel_fullscreen_hides_tabstrip_and_toggles_label, framework/tests/test_side_panel.py::test_side_panel_home_navigates_active_tab_to_ao3_root, framework/tests/test_side_panel.py::test_side_panel_toggle_kudosed_hides_and_syncs_settings, framework/tests/test_side_panel.py::test_two_finger_drag_changes_brightness, framework/tests/test_volume_paging.py::test_volume_buttons_page_browse_listing
 - last_green_run: RUN-20260819-2012 (suite: regression, status: Closed, updated: 2026-08-19T20:15:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
@@ -301,7 +296,7 @@ generated_at: 2026-08-20T22:13:05Z · генератор: `scripts/coverage_map.
 | Priority | Draft | Review | Approved | Automated | Merged | Blocked |
 |---|---|---|---|---|---|---|
 | P0 |  |  |  |  |  |  |
-| P1 |  |  | 25 | 11 | 4 |  |
+| P1 |  | 3 | 25 | 11 | 4 |  |
 | P2 |  |  | 4 |  |  |  |
 | P3 |  |  |  | 2 |  |  |
 
