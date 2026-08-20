@@ -319,9 +319,13 @@ USAGE_LIMIT_PATTERNS = (
 # am-pm/зона; всё, кроме часа, опционально (формулировка вендора может
 # смениться — тогда reset_ts=None и потребитель берёт консервативный
 # дефолт, но КЛАСС исхода всё равно распознан).
+# Н2 (критик v8.2): зона — И круглые «(Europe/Paris)», И квадратные
+# «[Europe/Paris]» скобки (см. докстринг `_CLAUSE_BREAK_RE` — квадратная
+# скобка перестала быть безусловным разделителем клаузы именно ради этой
+# формы).
 _RESET_CLOCK_RE = re.compile(
     r"(?P<hour>\d{1,2})(?::(?P<minute>\d{2}))?\s*(?P<ampm>am|pm)?"
-    r"(?:[^(\r\n]*\((?P<tz>[A-Za-z_]+/[A-Za-z_]+)\))?",
+    r"(?:[^(\[\r\n]*[(\[](?P<tz>[A-Za-z_]+/[A-Za-z_]+)[)\]])?",
     re.IGNORECASE)
 USAGE_LIMIT_TAIL_BYTES = 8192
 # Н4 (критик v8.1): сколько ПОСЛЕДНИХ непустых строк среза считать зоной
@@ -394,7 +398,18 @@ _RESET_DATE_RE = re.compile(
 # квадратной скобки) — во всех трёх «дата» на самом деле не про сброс, но
 # старый код подставлял её. Круглые скобки — НЕ разделитель клаузы: именно в
 # них живёт IANA-зона («2am (Europe/Paris)»), обрезать по ним нельзя.
-_CLAUSE_BREAK_RE = re.compile(r"[—–;\[]")
+#
+# Н2 (критик v8.2): квадратная скобка ТОЖЕ НЕ безусловный разделитель —
+# вендор может нести зону в НЕЙ («resets 2am [Europe/Paris]»), символично
+# с круглыми. Прежняя редакция (`\[` — всегда break) делала эту форму
+# НЕДОСТИЖИМОЙ: `_clause_text` обрезал бы строку ДО зоны, `_RESET_CLOCK_RE`
+# её никогда бы не увидел. Различие с «настоящим» разделителем (см.
+# `test_date_after_square_bracket_is_not_used`, «...(Europe/Paris) [ref 12
+# Mar incident]») — НЕГАТИВНЫЙ LOOKAHEAD: `[` НЕ считается разрывом клаузы
+# ТОЛЬКО если сразу за ним лежит `Регион/Город]` (зона-подобный токен);
+# любое другое содержимое скобки (заметка/дата/что угодно) по-прежнему
+# разрывает клаузу как раньше.
+_CLAUSE_BREAK_RE = re.compile(r"[—–;]|\[(?![A-Za-z_]+/[A-Za-z_]+\])")
 
 
 def _clause_text(reset_text: str) -> str:
@@ -405,6 +420,20 @@ def _clause_text(reset_text: str) -> str:
     text = reset_text or ""
     m = _CLAUSE_BREAK_RE.search(text)
     return text[:m.start()] if m else text
+
+
+# --- Н2 (критик v8.2): щит на мис-распознанные ОТНОСИТЕЛЬНЫЕ/словесные формы
+# -----------------------------------------------------------------------
+# «resets in 3 hours»/«resets in 30 min» — `_RESET_CLOCK_RE` читало число
+# как ЧАС («in 3 hours» -> «03:00» ближайшее будущее, а не «now+3ч»);
+# «resets tomorrow at 9am (...)» — слово «tomorrow» игнорировалось молча,
+# час/зона/(отсутствующая) дата давали «СЕГОДНЯ в 9am», то есть момент на
+# СУТКИ РАНЬШЕ настоящего. Обе формы этот парсер вычислить НЕ умеет
+# (не хватает якоря/семантики) — момент явно неизвестен, тот же
+# консервативный фолбэк, что для нераспознанного текста вовсе.
+_RELATIVE_TIME_RE = re.compile(
+    r"\bin\s+\d+\s*(?:hours?|hrs?|minutes?|mins?)\b", re.IGNORECASE)
+_TOMORROW_RE = re.compile(r"\btomorrow\b", re.IGNORECASE)
 
 
 def _extract_reset_date(reset_text: str) -> tuple:
@@ -461,8 +490,19 @@ def _parse_reset_ts(reset_text: str, now: datetime.datetime) -> tuple:
     НЕ объявлена в framework/requirements.txt намеренно: механизм обязан
     работать и без неё) -> `(None, "<причина>")`; потребитель берёт
     консервативный дефолт. Класс E-негатива: отсутствие зоны — не факт
-    «лимита нет», а неизвестность ВРЕМЕНИ."""
+    «лимита нет», а неизвестность ВРЕМЕНИ.
+
+    Н2 (критик v8.2): ОТНОСИТЕЛЬНАЯ форма («in 3 hours»/«in 30 min») и
+    словесная «tomorrow» — щит ДО поиска даты/часа (см. докстринги
+    `_RELATIVE_TIME_RE`/`_TOMORROW_RE`): этот парсер не умеет их
+    вычислить, момент явно неизвестен, консервативный фолбэк вместо
+    правдоподобной, но ошибочной цифры."""
     clause = _clause_text(reset_text or "")
+    if _RELATIVE_TIME_RE.search(clause) or _TOMORROW_RE.search(clause):
+        print(f"usage-limit: подсказка {reset_text!r} несёт относительную/"
+              "словесную форму (in N hours|min / tomorrow) — момент сброса "
+              "не вычисляется этим парсером (консервативный фолбэк)")
+        return None, f"относительная/словесная форма не распознана: {reset_text!r}"
     month, day, clock_text, date_warn = _extract_reset_date(clause)
     if date_warn:
         # Б-1е: НЕ продолжаем к поиску часа — дата-подобный невалидный токен
@@ -486,6 +526,18 @@ def _parse_reset_ts(reset_text: str, now: datetime.datetime) -> tuple:
     hour = int(m.group("hour"))
     minute = int(m.group("minute") or 0)
     ampm = (m.group("ampm") or "").lower()
+    tz_name = m.group("tz")
+    # Н2 (критик v8.2): час БЕЗ am/pm И БЕЗ зоны — неоднозначная форма: не
+    # отличить регулярным выражением честный 24-часовой формат вендора от
+    # постороннего числа (в т.ч. цифры относительной формы «in 3 hours»,
+    # уже отсечённой щитом выше, но сюда же попал бы любой БУДУЩИЙ похожий
+    # случай) — тот же консервативный фолбэк, что и для нераспознанного
+    # текста вовсе.
+    if not ampm and not tz_name:
+        print(f"usage-limit: подсказка {reset_text!r} несёт час без am/pm и "
+              "без зоны — момент сброса неоднозначен (консервативный "
+              "фолбэк)")
+        return None, f"час без am/pm и без зоны: {reset_text!r}"
     if ampm == "pm" and hour < 12:
         hour += 12
     elif ampm == "am" and hour == 12:
@@ -493,7 +545,6 @@ def _parse_reset_ts(reset_text: str, now: datetime.datetime) -> tuple:
     if not (0 <= hour <= 23 and 0 <= minute <= 59):
         return None, f"время сброса вне диапазона: {reset_text!r}"
 
-    tz_name = m.group("tz")
     tzinfo = datetime.timezone.utc
     note = "зона не названа — трактована как UTC"
     if tz_name:
@@ -747,7 +798,8 @@ def classify_death_reason(tail_text: str | None) -> str:
 
 
 def _fastdeath_revert_one(fastdeath_path: Path, escalations_path: Path | None = None,
-                          now: datetime.datetime | None = None) -> str:
+                          now: datetime.datetime | None = None, *,
+                          prev_snapshot: dict | None = None) -> str:
     """Откатывает РОВНО ОДИН инкремент, сделанный текущим вызовом (исход
     переклассифицирован в usage_limit — смерть от лимита поломкой НЕ
     является и серию поломок копить не должна).
@@ -756,36 +808,110 @@ def _fastdeath_revert_one(fastdeath_path: Path, escalations_path: Path | None = 
     отказами, их история — не наша (класс «чини экземпляр, который сам
     создал»).
 
-    Н1 (критик v8.1): откат счётчика ОБЯЗАН откатывать и эскалацию, которую
-    этот счётчик успел поднять. `_fastdeath_increment` пишет singleton
-    `HEARTBEAT-CHILD-DEATH` при достижении порога ДО того, как мы узнаём
-    причину; без переписывания в человеко-читаемом файле оставалась ложная
-    «поломка» при чистом реестре — реестр и эскалация расходились (замер
-    критика: count=2 + смерть от лимита -> реестр 2, а в escalations.md
-    «3 быстрых смертей подряд»). Non-throwing (BL-4)."""
+    Б1 (критик v8.2, rework): `_fastdeath_increment` мутирует НЕ ТОЛЬКО
+    `count` — ещё `first_ts`/`last_ts`/`last_rc`, а `last_reason`
+    (`_fastdeath_annotate_reason`) вообще ТЕРЯЕТСЯ при инкременте (запись
+    словаря БЕЗ этого ключа). Прежняя редакция откатывала только `count`
+    -=1, оставляя `first_ts`/`last_ts`/`last_rc` СВЕЖИМИ (от лимитной
+    смерти, которая поломкой не была) и `last_reason` — потерянным. Фикс:
+    вызывающий (`run_fallback_pass`) снимает СНИМОК реестра ДО вызова
+    `_run_child` (то есть ДО инкремента) и передаёт его сюда через
+    `prev_snapshot` — откат = запись этого снимка ЦЕЛИКОМ (все 5 полей),
+    не арифметика над файлом, каким он стал ПОСЛЕ инкремента.
+    `prev_snapshot=None` (старый вызывающий/тест) — деградация на прежнее
+    поведение (только `count`, best-effort, без гарантии по остальным
+    полям).
+
+    Н1 (критик v8.1) + Б1(а) (критик v8.2): откат счётчика ОБЯЗАН
+    откатывать и эскалацию, которую он поднял/раздул, ТЕКСТОМ, СИНХРОННЫМ
+    С РЕЕСТРОМ ПОСЛЕ отката — не только «упал ниже порога» (полная
+    переклассификация, прежний случай), но и «остался на/выше порога,
+    просто с другим числом» (реестр может остаться эскалированным
+    ПРЕЖНИМИ настоящими отказами — эскалация обязана называть ИХ число,
+    не раздутое лимитной смертью, которую мы только что откатили; замер
+    критика: реестр 3->4->откат->3, эскалация осталась «4 быстрых смертей
+    подряд» — расхождение с реестром).
+
+    О1 (критик v8.2, второй раунд, probe9(2)): `prev_snapshot` снят
+    ВЫЗЫВАЮЩИМ до `_run_child` — между этим снимком и вызовом отката МОГ
+    вклиниться КОНКУРЕНТНЫЙ тик/процесс, переписавший реестр НЕЗАВИСИМО
+    (замер критика: параллельный тик обнулил `count`, слепая запись
+    старого снимка «воскресила» 3). Щит: реальный `count` файла СЕЙЧАС
+    ОБЯЗАН быть РОВНО `prev_snapshot.count + 1` (наш собственный,
+    единственный инкремент) — расхождение означает чужую конкурентную
+    правку; деградация на арифметический откат (`факт-1`, не ниже 0)
+    ПОВЕРХ ТЕКУЩЕГО состояния файла (не поверх протухшего снимка),
+    non-throwing нота в суффиксе + `print`."""
     try:
-        data = _read_fastdeath(fastdeath_path)
-        count = int(data.get("count") or 0)
-        if count <= 0:
-            return ""
-        was_escalated = count >= FAST_DEATH_ESCALATE_AT
-        count -= 1
+        if prev_snapshot is None:
+            data = _read_fastdeath(fastdeath_path)
+            post_count = int(data.get("count") or 0)
+            if post_count <= 0:
+                return ""
+            prev_count = post_count - 1
+            prev_snapshot = dict(data)
+            prev_snapshot["count"] = prev_count
+            concurrent_note = ""
+        else:
+            prev_count = int(prev_snapshot.get("count") or 0)
+            expected_post_count = prev_count + 1
+            actual = _read_fastdeath(fastdeath_path)
+            actual_post_count = int(actual.get("count") or 0)
+            if actual_post_count != expected_post_count:
+                # О1: реестр изменился конкурентно между снимком и откатом —
+                # снимок ПРОТУХ, доверять его полям (first_ts/last_ts/
+                # last_rc/last_reason) нельзя; деградация — арифметика
+                # ПОВЕРХ фактического файла.
+                print(f"usage-limit: реестр изменился конкурентно (ожидали "
+                      f"count={expected_post_count} после нашего инкремента, "
+                      f"факт={actual_post_count}) — деградация на "
+                      "арифметический откат поверх ТЕКУЩЕГО состояния, "
+                      "снимок ДО инкремента не применяется")
+                post_count = actual_post_count
+                prev_count = max(post_count - 1, 0)
+                prev_snapshot = dict(actual)
+                prev_snapshot["count"] = prev_count
+                concurrent_note = " fastdeath-конкурентная-правка"
+            else:
+                post_count = expected_post_count
+                concurrent_note = ""
+
         _write_fastdeath(fastdeath_path, {
-            "count": count,
-            "first_ts": data.get("first_ts") if count else None,
-            "last_ts": data.get("last_ts") if count else None,
-            "last_rc": data.get("last_rc") if count else None,
+            "count": prev_count,
+            "first_ts": prev_snapshot.get("first_ts"),
+            "last_ts": prev_snapshot.get("last_ts"),
+            "last_rc": prev_snapshot.get("last_rc"),
+            "last_reason": prev_snapshot.get("last_reason"),
         })
-        if was_escalated and count < FAST_DEATH_ESCALATE_AT and escalations_path is not None:
-            _write_singleton_escalation(
-                Path(escalations_path), HEARTBEAT_CHILD_DEATH_KEY,
-                HEARTBEAT_CHILD_DEATH_TAG,
-                "ПЕРЕКЛАССИФИЦИРОВАНО: последняя смерть — лимит подписки, не "
-                f"поломка; серия откачена до {count} (порог {FAST_DEATH_ESCALATE_AT}). "
-                "Человеку чинить нечего: резерв ждёт сброса лимита. См. "
-                "logs/fallback-*.log",
-                now or _utcnow())
-        return f" fastdeath-откат={count}"
+
+        was_escalated = post_count >= FAST_DEATH_ESCALATE_AT
+        if was_escalated and escalations_path is not None:
+            if prev_count < FAST_DEATH_ESCALATE_AT:
+                _write_singleton_escalation(
+                    Path(escalations_path), HEARTBEAT_CHILD_DEATH_KEY,
+                    HEARTBEAT_CHILD_DEATH_TAG,
+                    "ПЕРЕКЛАССИФИЦИРОВАНО: последняя смерть — лимит подписки, не "
+                    f"поломка; серия откачена до {prev_count} (порог {FAST_DEATH_ESCALATE_AT}). "
+                    "Человеку чинить нечего: резерв ждёт сброса лимита. См. "
+                    "logs/fallback-*.log",
+                    now or _utcnow())
+            else:
+                # Б1(а): серия ОСТАЁТСЯ эскалированной (порог всё ещё
+                # превышен ПРЕЖНИМИ настоящими отказами) — переписываем
+                # текст, чтобы он называл ЧИСЛО РЕЕСТРА после отката, а не
+                # раздутое инкрементом лимитной смерти.
+                _write_singleton_escalation(
+                    Path(escalations_path), HEARTBEAT_CHILD_DEATH_KEY,
+                    HEARTBEAT_CHILD_DEATH_TAG,
+                    "ПЕРЕКЛАССИФИЦИРОВАНО (частично): последняя смерть — лимит "
+                    "подписки, не поломка; серия остаётся эскалированной "
+                    f"ПРЕЖНИМИ отказами — счёт синхронизирован с реестром: "
+                    f"{prev_count} (порог {FAST_DEATH_ESCALATE_AT}), окно "
+                    f"{prev_snapshot.get('first_ts')}..{prev_snapshot.get('last_ts')}, "
+                    f"последний rc={prev_snapshot.get('last_rc')}. См. "
+                    "logs/fallback-*.log",
+                    now or _utcnow())
+        return f" fastdeath-откат={prev_count}{concurrent_note}"
     except Exception as e:                          # non-throwing (BL-4)
         print(f"usage-limit: откат fastdeath не удался: {e}")
         return ""
@@ -1685,6 +1811,12 @@ def run_fallback_pass(*, child_args: list[str] | None = None, budget_enabled: bo
             log_offset = 0
         log_fh = log_path.open("ab")
 
+    # Б1 (критик v8.2): снимок fastdeath-реестра ДО _run_child (то есть ДО
+    # возможного инкремента внутри него) — единственный надёжный источник
+    # для ПОЛНОГО отката (_fastdeath_revert_one), если исход этого прохода
+    # окажется usage_limit (см. блок ниже).
+    _fastdeath_pre_snapshot = _read_fastdeath(fastdeath_path)
+
     try:
         r = _run_child(
             lock_file=lock_file, reaps_path=reaps_path, escalations_path=escalations_path,
@@ -1762,7 +1894,9 @@ def run_fallback_pass(*, child_args: list[str] | None = None, budget_enabled: bo
             m4_outcome = (f"usage-limit ({usage_limit['span'] or 'подписка'}) "
                          f"reset={reset_txt}")
             if fast_death:
-                m4_outcome += _fastdeath_revert_one(fastdeath_path, escalations_path, now)
+                m4_outcome += _fastdeath_revert_one(
+                    fastdeath_path, escalations_path, now,
+                    prev_snapshot=_fastdeath_pre_snapshot)
                 fast_death = False
         else:
             m4_outcome = f"exit={r['child_rc']}" + r["fastdeath_suffix"]

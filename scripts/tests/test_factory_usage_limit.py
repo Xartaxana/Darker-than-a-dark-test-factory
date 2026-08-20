@@ -799,3 +799,677 @@ def test_toast_names_the_computed_moment_not_the_raw_hint(tmp_path):
     msg = dict(toast.calls)["[factory:usage-limit]"]
     assert fw._fmt_ts(cap) in msg
     assert "2am (Europe/Paris)" not in msg
+
+
+# ===========================================================================
+# v8.2 (критик-вердикт по диффу v8, приёмка Lead 2026-08-20)
+# ===========================================================================
+#
+# Б1: `_fastdeath_revert_one` откатывал только `count` — `first_ts`/
+# `last_ts`/`last_rc`/`last_reason` оставались СВЕЖИМИ (от лимитной
+# смерти, которая поломкой не была), эскалация могла остаться раздутой
+# числом инкремента, которого больше нет в реестре.
+# ===========================================================================
+
+def test_fastdeath_revert_from_4_to_3_keeps_escalation_synced_with_registry(
+        tmp_path, _isolate_log_append, monkeypatch):
+    """Б1(а): реестр УЖЕ эскалирован (3, порог 3) настоящими прежними
+    отказами; лимитная смерть этого прохода поднимает его до 4, и
+    `_fastdeath_increment` переписывает эскалацию на «4». Откат обязан
+    вернуть реестр к 3 И синхронизировать ТЕКСТ эскалации — не оставить
+    заявление про 4, когда факт — 3."""
+    p = _hw_paths(tmp_path)
+    hw._write_fastdeath(p["fastdeath_path"],
+                        {"count": 3, "first_ts": "2026-08-17T08:00:00Z",
+                         "last_ts": "2026-08-17T09:00:00Z", "last_rc": 1,
+                         "last_reason": "auth"})
+    _limit_child(monkeypatch)
+
+    hw.run_fallback_pass(log_path=tmp_path / "logs" / "f.log", now=NOW, **p)
+
+    reg = hw._read_fastdeath(p["fastdeath_path"])
+    assert reg["count"] == 3
+    esc = p["escalations_path"].read_text(encoding="utf-8")
+    assert "HEARTBEAT-CHILD-DEATH" in esc
+    assert "4 быстрых смертей" not in esc         # раздутая инкрементом цифра ушла
+    assert "3" in esc                              # синхронизировано с реестром
+
+
+def test_fastdeath_revert_preserves_last_reason_annotation(
+        tmp_path, _isolate_log_append, monkeypatch):
+    """Б1(б): `last_reason='auth'` (от НАСТОЯЩЕГО прежнего отказа) обязан
+    пережить откат — `_fastdeath_increment` пишет реестр БЕЗ ключа
+    `last_reason` (теряет его), полный снимок ДО инкремента восстанавливает
+    его вместе со счётчиком."""
+    p = _hw_paths(tmp_path)
+    hw._write_fastdeath(p["fastdeath_path"],
+                        {"count": 2, "first_ts": "2026-08-17T08:00:00Z",
+                         "last_ts": "2026-08-17T09:00:00Z", "last_rc": 1,
+                         "last_reason": "auth"})
+    _limit_child(monkeypatch)
+
+    hw.run_fallback_pass(log_path=tmp_path / "logs" / "f.log", now=NOW, **p)
+
+    reg = hw._read_fastdeath(p["fastdeath_path"])
+    assert reg["count"] == 2
+    assert reg["last_reason"] == "auth"
+
+
+def test_series_blocked_not_triggered_by_stale_last_ts_after_limit_revert(
+        tmp_path, _isolate_log_append, monkeypatch):
+    """Б1(в): `last_ts`, оставшийся в реестре ПОСЛЕ отката, — момент
+    СТАРОГО настоящего отказа (снимок ДО инкремента), не «сейчас» лимитной
+    смерти. `_series_blocked` не должен считать серию свежей из-за одной
+    лишь лимитной смерти (старая редакция сохраняла ФРЕШ `last_ts` от
+    инкремента даже после отката count)."""
+    p = _hw_paths(tmp_path)
+    old_last_ts = "2026-08-10T00:00:00Z"          # >> FALLBACK_BLOCK_PROBE_HOURS от NOW
+    hw._write_fastdeath(p["fastdeath_path"],
+                        {"count": 3, "first_ts": "2026-08-09T00:00:00Z",
+                         "last_ts": old_last_ts, "last_rc": 1})
+    _limit_child(monkeypatch)
+
+    hw.run_fallback_pass(log_path=tmp_path / "logs" / "f.log", now=NOW, **p)
+
+    reg = hw._read_fastdeath(p["fastdeath_path"])
+    assert reg["count"] == 3
+    assert reg["last_ts"] == old_last_ts           # НЕ подменён на "сейчас" лимитной смерти
+    last_ts_dt = fw._parse_ts(reg["last_ts"])
+    assert fw._series_blocked(reg["count"], last_ts_dt, NOW, 3,
+                              fw.FALLBACK_BLOCK_PROBE_HOURS) is False
+
+
+def test_fastdeath_revert_without_snapshot_falls_back_to_count_only(tmp_path):
+    """Регресс-щит: вызывающий БЕЗ `prev_snapshot` (устаревший вызов) —
+    прежнее поведение (откат `count`-1, best-effort по остальным полям из
+    ПОСТ-состояния файла) — функция не требует снимок обязательным
+    аргументом."""
+    fastdeath_path = tmp_path / "heartbeat-fastdeath.json"
+    hw._write_fastdeath(fastdeath_path, {"count": 2, "first_ts": "t1",
+                                         "last_ts": "t2", "last_rc": 1})
+    suffix = hw._fastdeath_revert_one(fastdeath_path, None, NOW)
+    assert suffix == " fastdeath-откат=1"
+    assert hw._read_fastdeath(fastdeath_path)["count"] == 1
+
+
+def test_fastdeath_revert_does_not_resurrect_count_after_concurrent_reset(tmp_path):
+    """О1 (критик v8.2, второй раунд, probe9(2)): реестр МЕНЯЕТСЯ между
+    снимком (до `_run_child`) и вызовом отката — параллельный тик/процесс
+    обнулил `count` НЕЗАВИСИМО от нашей серии. Слепая запись СТАРОГО
+    снимка (2) поверх текущего (0) "воскресила" бы поломку, которой
+    конкурентный тик уже избавился — щит обязан деградировать на
+    арифметику ПОВЕРХ факта, не поверх протухшего снимка."""
+    fastdeath_path = tmp_path / "heartbeat-fastdeath.json"
+    escalations_path = tmp_path / "escalations.md"
+    prev_snapshot = {"count": 2, "first_ts": "2026-08-17T08:00:00Z",
+                     "last_ts": "2026-08-17T09:00:00Z", "last_rc": 1,
+                     "last_reason": "auth"}
+    # конкурентный тик УЖЕ переписал реестр (обнулил count) ПОСЛЕ снимка,
+    # но ДО того, как наш вызывающий добрался до отката.
+    hw._write_fastdeath(fastdeath_path, {"count": 0, "first_ts": None,
+                                         "last_ts": None, "last_rc": None,
+                                         "last_reason": None})
+
+    suffix = hw._fastdeath_revert_one(fastdeath_path, escalations_path, NOW,
+                                      prev_snapshot=prev_snapshot)
+
+    reg = hw._read_fastdeath(fastdeath_path)
+    assert reg["count"] == 0                       # НЕ воскрешён к 2
+    assert reg["last_reason"] is None               # не "воскрешён" auth от протухшего снимка
+    assert "конкурентная-правка" in suffix
+
+
+def test_fastdeath_revert_no_concurrent_change_uses_full_snapshot_unaffected(tmp_path):
+    """Регресс-щит О1: КОГДА расхождения нет (наш собственный, единственный
+    инкремент) — щит НЕ мешает штатному полному восстановлению снимка."""
+    fastdeath_path = tmp_path / "heartbeat-fastdeath.json"
+    escalations_path = tmp_path / "escalations.md"
+    prev_snapshot = {"count": 2, "first_ts": "2026-08-17T08:00:00Z",
+                     "last_ts": "2026-08-17T09:00:00Z", "last_rc": 1,
+                     "last_reason": "auth"}
+    # ИМЕННО ожидаемый post-инкремент (никакой конкурентной правки).
+    hw._write_fastdeath(fastdeath_path, {"count": 3, "first_ts": "2026-08-17T08:00:00Z",
+                                         "last_ts": NOW.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                                         "last_rc": 1, "last_reason": None})
+
+    suffix = hw._fastdeath_revert_one(fastdeath_path, escalations_path, NOW,
+                                      prev_snapshot=prev_snapshot)
+
+    reg = hw._read_fastdeath(fastdeath_path)
+    assert reg["count"] == 2
+    assert reg["last_reason"] == "auth"             # снимок применён целиком
+    assert "конкурентная-правка" not in suffix
+
+
+def test_fastdeath_revert_handles_corrupt_registry_file_without_crash(tmp_path):
+    """Адверсариально (DoD): реестр-файл БИТЫЙ JSON в момент отката — НЕ
+    падать. Битый файл читается `_read_fastdeath` как `count=0` (её
+    собственная гарантия) — это НЕ совпадает с ожидаемым `prev_count+1`
+    (О1-щит расхождения: снимок ДО инкремента протух/недостоверен), поэтому
+    откат деградирует на арифметику ПОВЕРХ факта (0), а не слепо
+    "воскрешает" переданный снимок — тот же щит, что и для настоящей
+    конкурентной правки, не падает в обоих случаях."""
+    fastdeath_path = tmp_path / "heartbeat-fastdeath.json"
+    fastdeath_path.write_bytes(b"{not json at all!!")
+    escalations_path = tmp_path / "escalations.md"
+    prev_snapshot = {"count": 1, "first_ts": "2026-08-17T08:00:00Z",
+                     "last_ts": "2026-08-17T08:00:00Z", "last_rc": 1,
+                     "last_reason": None}
+
+    suffix = hw._fastdeath_revert_one(fastdeath_path, escalations_path, NOW,
+                                      prev_snapshot=prev_snapshot)
+
+    assert "конкурентная-правка" in suffix
+    assert hw._read_fastdeath(fastdeath_path)["count"] == 0
+
+
+# ===========================================================================
+# Б2: входной тост `[factory:usage-limit]` ронял `toast_fn`-detail без
+# следа — в лимитном окне прочие тосты подавлены, отказ ИМЕННО этого тоста
+# означал полное молчание сторожа до возврата лимитов (до 8 суток). Класс
+# (решение Lead) — та же трассировка на [factory:fallback]/[factory:child-
+# death]/[factory:fallback-broken]/[factory:fallback-channel].
+# ===========================================================================
+
+def test_toast_with_trace_logs_failure_detail(tmp_path):
+    """Юнит DoD: `toast_fn` возвращает `(False, 'detail-text')` -> след
+    появляется (нота + orchestrator-log строка)."""
+    def fake_toast(title, message):
+        return False, "detail-text"
+    notes: list[str] = []
+    orch_log = tmp_path / "orchestrator-log.md"
+
+    shown, detail = fw._toast_with_trace(
+        fake_toast, "[factory:usage-limit]", "msg text",
+        orchestrator_log=orch_log, artifact="state/factory-watchdog.json",
+        now=NOW, notes_list=notes)
+
+    assert shown is False
+    assert detail == "detail-text"
+    assert any("detail-text" in n for n in notes)
+    assert "detail-text" in orch_log.read_text(encoding="utf-8")
+
+
+def test_toast_with_trace_survives_toast_fn_exception(tmp_path):
+    """Адверсариально (DoD): `toast_fn` кидает исключение — не падать,
+    отказ всё равно трассируется."""
+    def raising_toast(title, message):
+        raise RuntimeError("toast API unavailable")
+    notes: list[str] = []
+    orch_log = tmp_path / "orchestrator-log.md"
+
+    shown, detail = fw._toast_with_trace(
+        raising_toast, "[factory:fallback]", "msg text",
+        orchestrator_log=orch_log, artifact="x", now=NOW, notes_list=notes)
+
+    assert shown is False
+    assert "toast API unavailable" in detail
+    assert "toast API unavailable" in orch_log.read_text(encoding="utf-8")
+
+
+def test_toast_with_trace_failure_line_does_not_carry_bare_bracketed_tag(tmp_path):
+    """О4(1) (критик v8.2, второй раунд): строка следа отказа НЕ несёт
+    голый бракетный литерал тега — грep по `[factory:usage-limit]` КАК
+    СОБЫТИЮ ВХОДА не должен ловить строку отказа тоста."""
+    def fake_toast(title, message):
+        return False, "boom"
+    notes: list[str] = []
+    orch_log = tmp_path / "orchestrator-log.md"
+
+    fw._toast_with_trace(
+        fake_toast, "[factory:usage-limit]", "msg text",
+        orchestrator_log=orch_log, artifact="x", now=NOW, notes_list=notes)
+
+    assert "[factory:usage-limit]" not in orch_log.read_text(encoding="utf-8")
+    assert not any("[factory:usage-limit]" in n for n in notes)
+    assert "factory:usage-limit" in orch_log.read_text(encoding="utf-8")   # тег БЕЗ скобок остаётся
+
+
+def test_toast_with_trace_does_not_log_deliberate_no_toast_suppression(tmp_path):
+    """О4(2) (критик v8.2, второй раунд): `--no-toast`/`AO3_FACTORY_NO_TOAST`
+    подавляет тосты ПРЕДНАМЕРЕННО (смок-режим/CLI-отладка) — это НЕ отказ
+    канала; `_toast_with_trace` не должен писать эту тишину в БОЕВОЙ
+    orchestrator-log/notes как будто это поломка (иначе КАЖДЫЙ тик
+    смок-режима засорял бы реальный журнал одинаковыми "отказами")."""
+    def suppressed_toast(title, message):
+        return False, fw.NO_TOAST_SUPPRESSED_PREFIX + " подавлен"
+    notes: list[str] = []
+    orch_log = tmp_path / "orchestrator-log.md"
+
+    shown, detail = fw._toast_with_trace(
+        suppressed_toast, "[factory:usage-limit]", "msg text",
+        orchestrator_log=orch_log, artifact="x", now=NOW, notes_list=notes)
+
+    assert shown is False
+    assert notes == []
+    assert not orch_log.exists()
+
+
+def test_no_toast_suppression_via_run_tick_does_not_pollute_orchestrator_log(tmp_path):
+    """О4(2), сквозной прогон: тот же сентинел через полный `run_tick`."""
+    p = _paths(tmp_path)
+    _stalled_setup(p, stalled_since_minutes_ago=20)
+
+    def no_toast_stub(title, message):
+        return False, fw.NO_TOAST_SUPPRESSED_PREFIX + " подавлен"
+
+    fw.run_tick(now=NOW, toast_fn=no_toast_stub,
+                reserve_runner=_runner([], _limit_result(RESET)), **p)
+
+    orch = p["orchestrator_log"].read_text(encoding="utf-8")
+    assert "тост не показан" not in orch
+    st = _read_state(p)
+    assert not any("тост не показан" in n for n in st["notes"])
+
+
+def test_usage_limit_toast_failure_leaves_trace_via_run_tick(tmp_path):
+    """Б2 (блокер): сквозной прогон через `run_tick` — отказ входного тоста
+    `[factory:usage-limit]` оставляет след и в notes state-файла, и в
+    orchestrator-log (не молчание до возврата лимитов)."""
+    p = _paths(tmp_path)
+    _stalled_setup(p, stalled_since_minutes_ago=20)
+
+    def fail_toast(title, message):
+        return False, "detail-text"
+
+    fw.run_tick(now=NOW, toast_fn=fail_toast,
+                reserve_runner=_runner([], _limit_result(RESET)), **p)
+
+    orch = p["orchestrator_log"].read_text(encoding="utf-8")
+    assert "тост не показан (factory:usage-limit): detail-text" in orch
+    # О4 (критик v8.2, второй раунд): строка ОТКАЗА тоста не несёт голый
+    # бракетный литерал РЯДОМ с самим следом отказа — грep по
+    # `[factory:usage-limit]` как СОБЫТИЮ ВХОДА не должен путать реальный
+    # entry-event (пишется note'ой "резерв умер от лимита подписки" -
+    # легитимно несёт тег в бракетах) со строкой отказа тоста.
+    assert "[factory:usage-limit] тост" not in orch
+    st = _read_state(p)
+    assert any("detail-text" in n for n in st["notes"])
+
+
+class _RaisingToast:
+    """Адверсариальный toast_fn: ЛЮБОЙ вызов бросает исключение."""
+
+    def __init__(self):
+        self.calls = []
+
+    def __call__(self, title, message):
+        self.calls.append((title, message))
+        raise RuntimeError("toast API unavailable")
+
+
+def test_usage_limit_toast_exception_does_not_crash_run_tick(tmp_path):
+    """Адверсариально (DoD): `toast_fn` кидает исключение внутри `run_tick`
+    (не только в изолированном юните) — тик обязан завершиться (return 0),
+    не падать наружу, И state ОБЯЗАН быть ЗАПИСАН ПОСЛЕ исключения (окно
+    закрывается штатно — иначе usage_limit_until замерзает в прошлом и
+    СЛЕДУЮЩИЙ тик падает на ТОЙ ЖЕ точке, сторож окирпичен, probe7 C/D)."""
+    p = _paths(tmp_path)
+    _stalled_setup(p, stalled_since_minutes_ago=20)
+    toast = _RaisingToast()
+
+    rc = fw.run_tick(now=NOW, toast_fn=toast,
+                     reserve_runner=_runner([], _limit_result(RESET)), **p)
+
+    assert rc == 0
+    orch = p["orchestrator_log"].read_text(encoding="utf-8")
+    assert "тост не показан (factory:usage-limit)" in orch
+    assert "toast API unavailable" in orch
+    # state ЗАПИСАН после исключения: усвоенное лимитное окно РЕАЛЬНО
+    # отражено в state-файле (не заморожено на пред-тиковом значении).
+    st = _read_state(p)
+    assert st["usage_limit_until"] == fw._fmt_ts(RESET)
+
+
+def test_limit_back_toast_exception_does_not_crash_run_tick(tmp_path):
+    """БЛОКЕР (критик v8.2, второй раунд): `[factory:limit-back]` звало
+    `toast_fn` СЫРЫМ (не через `_toast_with_trace`) — исключение уходило
+    наружу `run_tick` ДО финального `_write_state`, `usage_limit_until`
+    замерзал в ПРОШЛОМ навсегда -> КАЖДЫЙ следующий тик падал на ТОЙ ЖЕ
+    точке (сторож окирпичен, probe7 C/D критика). Проверка на площадке
+    ВОЗВРАТНОГО тоста (не только входного, как в тесте выше)."""
+    p = _paths(tmp_path)
+    after_reset = RESET + datetime.timedelta(minutes=1)
+    _stalled_setup(p, stalled_since_minutes_ago=600,
+                   extra_state={"usage_limit_until": fw._fmt_ts(RESET)})
+    toast = _RaisingToast()
+
+    rc = fw.run_tick(now=after_reset, toast_fn=toast,
+                     reserve_runner=_runner([], _limit_result(RESET)), **p)
+
+    assert rc == 0
+    orch = p["orchestrator_log"].read_text(encoding="utf-8")
+    assert "тост не показан (factory:limit-back)" in orch
+    assert "toast API unavailable" in orch
+    # state ЗАПИСАН после исключения: окно закрылось штатно (grace открыт,
+    # usage_limit_until снят) — НЕ заморожено на пред-тиковом значении.
+    st = _read_state(p)
+    assert st["usage_limit_until"] is None
+    assert st["usage_limit_grace_until"] is not None
+
+
+def test_stalled_toast_exception_does_not_crash_run_tick(tmp_path):
+    """БЛОКЕР (критик v8.2, второй раунд): `[factory:stalled]` тоже звало
+    `toast_fn` СЫРЫМ на транзиции ok->stalled — та же экспозиция, что
+    `[factory:limit-back]`."""
+    from test_factory_watchdog_fallback import _mode_snap_dict, _write_mode, _write_sla
+    p = _paths(tmp_path)
+    _write_sla(p)
+    started = NOW - datetime.timedelta(minutes=61)
+    _write_state(p, last_state="ok", last_progress_ts=fw._fmt_ts(started),
+                last_mode_snapshot=_mode_snap_dict("active", fw._fmt_ts(started)), notes=[])
+    _write_mode(p, mode="active", updated_ts=fw._fmt_ts(started))
+    toast = _RaisingToast()
+
+    rc = fw.run_tick(now=NOW, toast_fn=toast, stall_no_lock_min=60, **p)
+
+    assert rc == 0
+    orch = p["orchestrator_log"].read_text(encoding="utf-8")
+    assert "тост не показан (factory:stalled)" in orch
+    assert "toast API unavailable" in orch
+    # state ЗАПИСАН после исключения: транзиция ok->stalled реально
+    # зафиксирована — НЕ заморожена на пред-тиковом "ok".
+    st = _read_state(p)
+    assert st["last_state"] == "stalled"
+
+
+def test_ordinary_fallback_toast_failure_leaves_trace(tmp_path):
+    """Класс: [factory:fallback] (обычный резервный запуск, БЕЗ лимита) —
+    та же трассировка отказа тоста."""
+    p = _paths(tmp_path)
+    _stalled_setup(p, stalled_since_minutes_ago=20)
+
+    def fail_toast(title, message):
+        return False, "no display"
+
+    fw.run_tick(now=NOW, toast_fn=fail_toast,
+                reserve_runner=_runner([], {"outcome": "spawned", "child_rc": 0,
+                                            "fast_death": False, "holder": "h",
+                                            "mode_write": None, "usage_limit": None}), **p)
+
+    orch = p["orchestrator_log"].read_text(encoding="utf-8")
+    assert "тост не показан (factory:fallback): no display" in orch
+
+
+def test_fallback_broken_toast_failure_leaves_trace(tmp_path):
+    """Класс: [factory:fallback-broken] (slowdeath-стоп) — та же
+    трассировка отказа тоста, что усилена для [factory:usage-limit]."""
+    p = _paths(tmp_path)
+    _stalled_setup(p, stalled_since_minutes_ago=30, extra_state={
+        "slowdeath_streak": 2, "slowdeath_stopped": False})
+
+    def fail_toast(title, message):
+        return False, "broken-detail"
+
+    fw.run_tick(now=NOW, toast_fn=fail_toast,
+                reserve_runner=_runner([], {"outcome": "timeout_kill", "child_rc": None,
+                                            "fast_death": False, "holder": "x",
+                                            "mode_write": None}), **p)
+
+    orch = p["orchestrator_log"].read_text(encoding="utf-8")
+    assert "тост не показан (factory:fallback-broken): broken-detail" in orch
+
+
+def test_child_death_toast_failure_leaves_trace(tmp_path):
+    """Класс: [factory:child-death] (fastdeath-стоп) — та же трассировка."""
+    p = _paths(tmp_path)
+    _stalled_setup(p, stalled_since_minutes_ago=30)
+    from test_factory_watchdog_fallback import _runner_bumping_fastdeath_to
+    from test_factory_watchdog_fallback import _write_fastdeath as _fw_write_fastdeath
+    _fw_write_fastdeath(p, count=2, last_ts=fw._fmt_ts(NOW - datetime.timedelta(minutes=5)))
+
+    def fail_toast(title, message):
+        return False, "child-detail"
+
+    fw.run_tick(now=NOW, toast_fn=fail_toast,
+                reserve_runner=_runner_bumping_fastdeath_to(p, 3), **p)
+
+    orch = p["orchestrator_log"].read_text(encoding="utf-8")
+    assert "тост не показан (factory:child-death): child-detail" in orch
+
+
+def test_fallback_channel_toast_return_value_is_accepted_and_failure_logged(tmp_path):
+    """Б2: `[factory:fallback-channel]` (:1233 в ревьюченной версии) ронял
+    `toast_fn`-возврат целиком — теперь принят и отказ логируется."""
+    p = _paths(tmp_path)
+    _stalled_setup(p, stalled_since_minutes_ago=20,
+                   extra_state={"unknown_streak": fw.UNKNOWN_STREAK_TOAST - 1})
+
+    def fail_toast(title, message):
+        return False, "channel-detail"
+
+    fw.run_tick(now=NOW, toast_fn=fail_toast,
+                reserve_runner=_runner([], {"outcome": "spawned", "child_rc": 0,
+                                            "fast_death": False, "holder": "h",
+                                            "mode_write": None, "usage_limit": None,
+                                            }), **p)
+
+    orch = p["orchestrator_log"].read_text(encoding="utf-8")
+    assert "тост не показан (factory:fallback-channel): channel-detail" in orch
+
+
+# ===========================================================================
+# Н1: `episode_closed_by_window` истинно и при нечитаемом mode-файле
+# (mode_missing -> alarm=False by construction) — это НЕ улика возврата
+# лимитов (лимит — свойство аккаунта, не mode-файла).
+# ===========================================================================
+
+def test_corrupt_mode_file_mid_window_does_not_clear_usage_limit(tmp_path):
+    p = _paths(tmp_path)
+    _stalled_setup(p, stalled_since_minutes_ago=200,
+                   extra_state={"usage_limit_until": fw._fmt_ts(RESET),
+                                "usage_limit_raw": "weekly"})
+    # порти mode-файл ПОСЛЕ _stalled_setup (которая пишет валидный mode.json
+    # и соответствующий last_mode_snapshot в state) — симулирует порчу
+    # ПОСРЕДИ окна, а не с самого начала.
+    p["mode_file"].write_bytes(b"{not valid json at all")
+
+    fw.run_tick(now=NOW, toast_fn=_NoToast(),
+                reserve_runner=_runner([], _limit_result()), **p)
+
+    st = _read_state(p)
+    assert st["usage_limit_until"] == fw._fmt_ts(RESET)
+
+
+def test_window_progress_still_clears_limit_state_with_readable_mode(tmp_path):
+    """Регресс-щит: Н1 не должен ломать существующий позитивный путь
+    (`test_window_progress_clears_limit_state`) — читаемый mode-файл с
+    реальным прогрессом по-прежнему снимает лимитное окно."""
+    p = _paths(tmp_path)
+    fresh = NOW - datetime.timedelta(minutes=1)
+    _write_state(p, last_state="stalled",
+                stalled_since=fw._fmt_ts(NOW - datetime.timedelta(hours=3)),
+                last_progress_ts=fw._fmt_ts(fresh),
+                usage_limit_until=fw._fmt_ts(RESET), usage_limit_raw="weekly")
+    from test_factory_watchdog_fallback import _write_mode, _write_sla
+    _write_sla(p)
+    _write_mode(p, mode="active", updated_ts=fw._fmt_ts(fresh))
+
+    fw.run_tick(now=NOW, toast_fn=_NoToast(), reserve_runner=_runner([], _limit_result()), **p)
+
+    st = _read_state(p)
+    assert st["usage_limit_until"] is None and st["usage_limit_grace_until"] is None
+
+
+def test_mode_stopped_mid_window_does_not_clear_usage_limit(tmp_path):
+    """О2 (решение Lead, критик v8.2, второй раунд): `mode=stopped` — НЕ
+    прогресс окна и НЕ снимает `usage_limit_until` (лимит — свойство
+    аккаунта; при stopped резерв всё равно гейтится, а после рестарта
+    фабрика корректно спит до сброса). Читаемый И ИЗМЕНИВШИЙСЯ mode-снимок
+    (active->stopped) раньше засчитывался как «прогресс» — ложно."""
+    p = _paths(tmp_path)
+    _stalled_setup(p, stalled_since_minutes_ago=200,
+                   extra_state={"usage_limit_until": fw._fmt_ts(RESET),
+                                "usage_limit_raw": "weekly"})
+    from test_factory_watchdog_fallback import _write_mode
+    _write_mode(p, mode="stopped")            # читаемый, ВАЛИДНЫЙ JSON, отличается от "active"
+
+    fw.run_tick(now=NOW, toast_fn=_NoToast(),
+                reserve_runner=_runner([], _limit_result()), **p)
+
+    st = _read_state(p)
+    assert st["usage_limit_until"] == fw._fmt_ts(RESET)
+
+
+# ===========================================================================
+# Н2: щит на мис-распознанные формы подсказки сброса.
+# ===========================================================================
+
+def test_relative_in_hours_hint_is_not_computed_as_clock_hour():
+    """«resets in 3 hours» — число раньше читалось как ЧАС («03:00»), не
+    как «через 3 часа». Момент считается неизвестным (консервативный
+    фолбэк), НЕ вычисляется правдоподобной, но ошибочной цифрой."""
+    got = hw.parse_usage_limit("You've hit your weekly limit · resets in 3 hours", NOW)
+    assert got is not None
+    assert got["reset_ts"] is None
+
+
+def test_relative_in_minutes_hint_is_not_computed():
+    got = hw.parse_usage_limit("You've hit your weekly limit · resets in 30 min", NOW)
+    assert got is not None
+    assert got["reset_ts"] is None
+
+
+@needs_tz
+def test_tomorrow_hint_is_not_computed_as_today():
+    """«tomorrow at 9am (America/Los_Angeles)» — слово 'tomorrow' раньше
+    игнорировалось молча, час+зона давали момент СЕГОДНЯ (на СУТКИ раньше
+    настоящего). Момент считается неизвестным."""
+    got = hw.parse_usage_limit(
+        "You've hit your weekly limit · resets tomorrow at 9am "
+        "(America/Los_Angeles)", NOW)
+    assert got is not None
+    assert got["reset_ts"] is None
+    # Регресс-щит: старое поведение — СЕГОДНЯ 9am LA (PDT=UTC-7) = 16:00Z,
+    # на сутки раньше настоящего значения.
+    assert got["reset_ts"] != datetime.datetime(2026, 8, 17, 16, 0,
+                                                tzinfo=datetime.timezone.utc)
+
+
+def test_bare_hour_without_ampm_or_tz_is_not_guessed():
+    """Час БЕЗ am/pm И БЕЗ зоны — неоднозначная форма (не отличить от
+    постороннего числа/относительной формы регулярным выражением).
+    Момент неизвестен, тот же консервативный фолбэк."""
+    got = hw.parse_usage_limit("You've hit your weekly limit · resets 14", NOW)
+    assert got is not None
+    assert got["reset_ts"] is None
+
+
+@needs_tz
+def test_square_bracket_zone_is_recognized():
+    """Н2: квадратная скобка — НОСИТЕЛЬ зоны, не безусловный разделитель
+    клаузы. «resets 2am [Europe/Paris]» раньше была НЕДОСТИЖИМА:
+    `_clause_text` обрезал бы клаузу ДО зоны."""
+    got = hw.parse_usage_limit(
+        "You've hit your weekly limit · resets 2am [Europe/Paris]", NOW)
+    assert got is not None
+    # 02:00 CEST (Paris, UTC+2) следующих суток = 2026-08-18T00:00Z — та же
+    # арифметика, что REAL_LINE (круглые скобки), просто зона в квадратных.
+    assert got["reset_ts"] == datetime.datetime(2026, 8, 18, 0, 0,
+                                                tzinfo=datetime.timezone.utc)
+
+
+# ===========================================================================
+# Н3: `usage_limit_until` дефолтный (не замер) — флаг «момент угадан»
+# переживает окно, возвратный тост хеджирует формулировку.
+# ===========================================================================
+
+def test_return_toast_is_hedged_when_reset_moment_was_estimated(tmp_path):
+    p = _paths(tmp_path)
+    after_reset = RESET + datetime.timedelta(minutes=1)
+    _stalled_setup(p, stalled_since_minutes_ago=600,
+                   extra_state={"usage_limit_until": fw._fmt_ts(RESET),
+                                "usage_limit_estimated": True})
+    toast = _NoToast()
+
+    fw.run_tick(now=after_reset, toast_fn=toast,
+                reserve_runner=_runner([], _limit_result(RESET)), **p)
+
+    msg = dict(toast.calls)["[factory:limit-back]"]
+    assert "оценкой" in msg or "вероятно" in msg
+
+
+def test_return_toast_is_not_hedged_when_reset_moment_was_measured(tmp_path):
+    """Регресс-щит: `usage_limit_estimated=False` (замер, не дефолт) —
+    прежняя формулировка БЕЗ хеджа."""
+    p = _paths(tmp_path)
+    after_reset = RESET + datetime.timedelta(minutes=1)
+    _stalled_setup(p, stalled_since_minutes_ago=600,
+                   extra_state={"usage_limit_until": fw._fmt_ts(RESET),
+                                "usage_limit_estimated": False})
+    toast = _NoToast()
+
+    fw.run_tick(now=after_reset, toast_fn=toast,
+                reserve_runner=_runner([], _limit_result(RESET)), **p)
+
+    msg = dict(toast.calls)["[factory:limit-back]"]
+    assert "оценкой" not in msg and "вероятно" not in msg
+    assert "толкни окно" in msg
+
+
+# ===========================================================================
+# О5 (критик v8.2, второй раунд): хеджировать и ВХОДНОЙ тост при
+# usage_limit_estimated («фабрика спит примерно до ... (момент — оценка)»);
+# пометка estimated — тоже при срезании поясом MAX_LIMIT_SLEEP_H.
+# ===========================================================================
+
+def test_input_toast_is_hedged_when_reset_moment_is_estimated(tmp_path):
+    """О5: reset_ts не распознан парсером -> дефолтный сон -> входной тост
+    ОБЯЗАН хеджировать («примерно», «оценка»), симметрично Н3."""
+    p = _paths(tmp_path)
+    _stalled_setup(p, stalled_since_minutes_ago=20)
+    toast = _NoToast()
+
+    fw.run_tick(now=NOW, toast_fn=toast,
+                reserve_runner=_runner([], _limit_result(reset_ts=None, reset_hint=None)), **p)
+
+    msg = dict(toast.calls)["[factory:usage-limit]"]
+    assert "оценка" in msg
+
+
+def test_input_toast_is_not_hedged_when_reset_moment_is_measured(tmp_path):
+    """Регресс-щит: reset_ts РЕАЛЬНО измерен парсером — прежняя
+    формулировка БЕЗ хеджа."""
+    p = _paths(tmp_path)
+    _stalled_setup(p, stalled_since_minutes_ago=20)
+    toast = _NoToast()
+
+    fw.run_tick(now=NOW, toast_fn=toast,
+                reserve_runner=_runner([], _limit_result(RESET)), **p)
+
+    msg = dict(toast.calls)["[factory:usage-limit]"]
+    assert "оценка" not in msg
+    assert "лимиты подписки кончились — фабрика спит до" in msg
+
+
+def test_belt_capped_reset_marks_estimated_and_hedges_input_toast(tmp_path):
+    """О5: срез поясом `MAX_LIMIT_SLEEP_H` — тоже "оценка", не замер
+    (ПРИМЕНЁННЫЙ момент отличается от ИЗМЕРЕННОГО вендором, даже если
+    парсер сам отработал безошибочно) — флаг `usage_limit_estimated`
+    переживает окно, входной тост хеджирует."""
+    p = _paths(tmp_path)
+    _stalled_setup(p, stalled_since_minutes_ago=20)
+    way_beyond = NOW + datetime.timedelta(hours=fw.MAX_LIMIT_SLEEP_H, seconds=1)
+    toast = _NoToast()
+
+    fw.run_tick(now=NOW, toast_fn=toast,
+                reserve_runner=_runner([], _limit_result(way_beyond)), **p)
+
+    msg = dict(toast.calls)["[factory:usage-limit]"]
+    assert "оценка" in msg
+    st = _read_state(p)
+    assert st["usage_limit_estimated"] is True
+
+
+def test_reset_ts_within_belt_is_not_marked_estimated(tmp_path):
+    """Регресс-щит: reset_ts В ПРЕДЕЛАХ пояса (не срезан) и РЕАЛЬНО
+    измерен — НЕ помечается estimated, входной тост БЕЗ хеджа."""
+    p = _paths(tmp_path)
+    _stalled_setup(p, stalled_since_minutes_ago=20)
+    toast = _NoToast()
+
+    fw.run_tick(now=NOW, toast_fn=toast,
+                reserve_runner=_runner([], _limit_result(RESET)), **p)
+
+    st = _read_state(p)
+    assert st["usage_limit_estimated"] is False

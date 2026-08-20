@@ -328,6 +328,65 @@ def _append_orchestrator_line(path: Path, artifact: str, outcome: str,
         print(f"ORCHESTRATOR-LOG write failed: {e}")
 
 
+# О4 (критик v8.2, второй раунд): `--no-toast`/`AO3_FACTORY_NO_TOAST=1`
+# (см. `main()`) подменяет `toast_fn` заглушкой, что ВСЕГДА возвращает
+# `(False, NO_TOAST_SUPPRESSED_PREFIX + ...)` — это ПРЕДНАМЕРЕННОЕ
+# подавление (смок-режим/CLI-отладка), НЕ отказ канала. `_toast_with_trace`
+# узнаёт этот сентинел по префиксу и НЕ пишет его в боевой orchestrator-log
+# как будто это поломка — иначе КАЖДЫЙ тик смок-прогона засорял бы журнал
+# продакшена одинаковыми «отказами».
+NO_TOAST_SUPPRESSED_PREFIX = "AO3_FACTORY_NO_TOAST/--no-toast:"
+
+
+def _toast_with_trace(toast_fn, tag: str, message: str, *, orchestrator_log: Path,
+                      artifact: str, now: datetime.datetime,
+                      notes_list: list[str] | None = None) -> tuple[bool, str]:
+    """Б2 (критик v8.2): единая точка вызова `toast_fn`, что ОСТАВЛЯЕТ СЛЕД
+    отказа — orchestrator-log строка + (опционально) нота в `notes_list`.
+
+    Мотив: входной тост `[factory:usage-limit]` (:1132, ДО этой правки)
+    ронял `toast_fn`-detail БЕЗ следа при отказе — в лимитном окне ВСЕ
+    прочие тосты подавлены (`limit_quiet`), так что отказ конкретно ЭТОГО
+    тоста означал ПОЛНОЕ молчание сторожа до возврата лимитов (до 8
+    суток).
+
+    О4 (критик v8.2, второй раунд, оба пункта):
+    1. Строка следа НЕ несёт голый ЛИТЕРАЛ бракетного тега (`[factory:
+       usage-limit]`) — иначе грep по этому тегу КАК СОБЫТИЮ ВХОДА (детектор
+       §v8.2) ловил бы и строки отказа тоста. Формат — `тег БЕЗ скобок` в
+       круглых скобках внутри фразы («тост не показан (factory:usage-limit):
+       ...») — подстрока «тост не показан» сохранена БАЙТ-В-БАЙТ (регресс-щит
+       на существующий пин `test_toast_failure_recorded_in_notes`, который
+       эту фразу проверяет для `[factory:stalled]`, заведённого до этой
+       правки).
+    2. Преднамеренное `--no-toast`-подавление (см. `NO_TOAST_SUPPRESSED_
+       PREFIX`) — НЕ пишется в боевой orchestrator-log/notes: это выбор
+       оператора, не отказ канала.
+
+    Non-throwing (BL-4): `toast_fn` — внешний коллбэк (в проде дергает
+    Windows toast API), адверсариальный DoD требует пережить и его
+    исключение, не только его собственный `(False, detail)`. Критично для
+    БЛОКЕРА второго раунда: ЛЮБАЯ площадка `toast_fn`, не проведённая через
+    эту функцию (сырой вызов), рискует уронить исключение НАРУЖУ `run_tick`
+    — тик обрывается ДО финального `_write_state`, состояние окна
+    замораживается, следующий тик падает на ТОЙ ЖЕ точке (сторож
+    окирпичен)."""
+    try:
+        shown, detail = toast_fn(tag, message)
+    except Exception as e:                          # non-throwing (BL-4)
+        shown, detail = False, f"toast_fn raised: {e.__class__.__name__}: {e}"
+    if not shown:
+        if isinstance(detail, str) and detail.startswith(NO_TOAST_SUPPRESSED_PREFIX):
+            return shown, detail                     # О4(2): преднамеренно, не отказ — молчим
+        bare_tag = tag.strip("[]")
+        note = f"тост не показан ({bare_tag}): {detail}"
+        if notes_list is not None:
+            notes_list.append(note)
+        _append_orchestrator_line(orchestrator_log, artifact, note, now)
+        print(f"toast не показан: {detail}")
+    return shown, detail
+
+
 _ESCALATION_LINE_RE = re.compile(
     r"(?m)^- \[(?P<ts>[^\]]+)\] \*\*" + re.escape(FACTORY_STALLED_KEY) +
     r"\*\*(?:\s*\[resolved:[^\]]*\])?\s*\[" + re.escape(FACTORY_STALLED_TAG) +
@@ -810,6 +869,7 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
             "usage_limit_raw": None,
             "usage_limit_toast_ts": None,
             "usage_limit_grace_until": None,
+            "usage_limit_estimated": False,
         })
         return 0
 
@@ -840,6 +900,11 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
     usage_limit_raw = watchdog_data.get("usage_limit_raw")
     usage_limit_toast_ts = _parse_ts(watchdog_data.get("usage_limit_toast_ts"))
     usage_limit_grace_until = _parse_ts(watchdog_data.get("usage_limit_grace_until"))
+    # Н3 (критик v8.2): «момент угадан» (reset_ts не распознан парсером —
+    # применён консервативный дефолт USAGE_LIMIT_DEFAULT_SLEEP_H), не
+    # ЗАМЕРЕН. Переживает тик наравне с usage_limit_until — нужен ПОЗЖЕ,
+    # когда придёт время возвратного тоста, хеджировать формулировку.
+    usage_limit_estimated = bool(watchdog_data.get("usage_limit_estimated") or False)
 
     changed = (lock_snap != prev_lock_snap) or (mode_snap != prev_mode_snap)
     progress_ts = now if (changed or prev_progress_ts is None) else prev_progress_ts
@@ -874,14 +939,39 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
     # модуля — «результативный проход» ТОЖЕ сбрасывает (обрабатывается ниже,
     # ПОСЛЕ решения о резервном проходе, если он в этом тике случится).
     episode_closed_by_window = (not mode_active_alarm) and (prev_stalled_since is not None)
+    # Н1 (критик v8.2): `episode_closed_by_window` истинно и когда mode-файл
+    # ПРОСТО стал нечитаем (mode_missing -> alarm=False by construction) —
+    # это НЕ улика возврата лимитов (лимит — свойство АККАУНТА, не mode-
+    # файла), а порча файла. `mode_snap` нечитаемого тика — фиксированный
+    # снимок «пусто» (`_mode_snapshot(None)`), который почти всегда ОТЛИЧЕН
+    # от прежнего валидного снимка — то есть голый `changed` (лок ИЛИ
+    # mode_snap отличаются от прошлого тика) сам по себе тоже обманывается
+    # ИМЕННО в этот момент порчи. Гейт ниже — `changed`, вычисленный БЕЗ
+    # участия mode_snap, если mode в ЭТОМ тике нечитаем (лок — всегда
+    # надёжный сигнал, читаемый mode_snap — тоже; нечитаемый — не сигнал
+    # вовсе, ни за, ни против).
+    # О2 (Lead-решение, критик v8.2, второй раунд): `mode=stopped` — тоже
+    # НЕ улика возврата лимитов, даже если mode-снимок ЧИТАЕМ и ОТЛИЧЕН от
+    # прежнего (переход active->stopped сам по себе — реальное изменение
+    # снимка, но лимит — свойство АККАУНТА, не факт «оператор остановил
+    # цикл»; резерв всё равно гейтится и при stopped, а после рестарта
+    # фабрика обязана корректно спать до сброса, не проснуться раньше
+    # времени только потому, что кто-то нажал stop/start).
+    mode_is_stopped_now = (not mode_missing) and (mode_data.get("mode") == MODE_STOPPED)
+    usage_limit_progress = (lock_snap != prev_lock_snap) or (
+        (not mode_missing) and (not mode_is_stopped_now) and (mode_snap != prev_mode_snap))
     if episode_closed_by_window:
         # v8: живой прогресс окна закрывает и лимитное окно — кто-то (чаще
         # всего оператор по возвратному тосту) фабрику толкнул, ждать
         # больше нечего. Иначе протухший `usage_limit_until` глушил бы
-        # резерв уже после того, как всё поехало.
-        usage_limit_until = None
-        usage_limit_raw = None
-        usage_limit_grace_until = None
+        # резерв уже после того, как всё поехало. Н1: ТОЛЬКО при реальном
+        # `usage_limit_progress` — иначе один лишь сбой чтения mode-файла
+        # снимал бы окно лимита без единой улики, что лимиты вернулись.
+        if usage_limit_progress:
+            usage_limit_until = None
+            usage_limit_raw = None
+            usage_limit_grace_until = None
+            usage_limit_estimated = False
         empty_streak = 0
         slowdeath_streak = 0
         slowdeath_last_ts = None
@@ -948,15 +1038,35 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
             usage_limit_until = None
             usage_limit_raw = None
             usage_limit_toast_ts = None
+            usage_limit_estimated = False
         elif (usage_limit_until is not None and not limit_active
                 and usage_limit_grace_until is None):
             # момент сброса наступил — РОВНО ОДИН возвратный тост, дальше
             # grace-окно приоритета живого окна над резервом
             usage_limit_grace_until = now + datetime.timedelta(minutes=limit_grace_min)
-            shown, _detail = toast_fn(
-                "[factory:limit-back]",
+            # Н3 (критик v8.2): момент сброса мог быть ОЦЕНКОЙ (парсер не
+            # распознал время вендора, применён консервативный дефолт
+            # USAGE_LIMIT_DEFAULT_SLEEP_H) — тост обязан хеджировать
+            # утверждение «лимиты вернулись», а не заявлять его как замер.
+            return_msg = (
+                "лимиты, вероятно, вернулись — момент сброса был оценкой, не "
+                f"замером. Толкни окно (/factory). Резерв ждёт "
+                f"{limit_grace_min:.0f} мин, потом поедет сам"
+                if usage_limit_estimated else
                 f"лимиты вернулись — толкни окно (/factory). Резерв ждёт "
                 f"{limit_grace_min:.0f} мин, потом поедет сам")
+            # БЛОКЕР (критик v8.2, второй раунд): раньше СЫРОЙ `toast_fn(...)`
+            # — исключение уходило НАРУЖУ `run_tick` ДО финального
+            # `_write_state`, usage_limit_until замораживался в ПРОШЛОМ,
+            # эта же ветка срабатывала на КАЖДОМ следующем тике -> сторож
+            # окирпичен (probe7 C/D критика). `_toast_with_trace` —
+            # non-throwing, дальнейший код блока (эскалация, снятие
+            # usage_limit_*, финальная запись state) исполняется штатно
+            # независимо от исхода тоста.
+            shown, _detail = _toast_with_trace(
+                toast_fn, "[factory:limit-back]", return_msg,
+                orchestrator_log=orchestrator_log, artifact=_rel_path(state_file),
+                now=now, notes_list=night_fallback_notes)
             # Б3 (критик v8.1): тег печатается ЛИТЕРАЛОМ. Прежний детектор
             # F-11(в) грепал `[factory:limit-back]` по orchestrator-log, где
             # этой строки не было никогда (счётный греп критика с позитивным
@@ -970,13 +1080,15 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
                 f"{_fmt_ts(usage_limit_grace_until)}", now)
             _write_generic_singleton_escalation(
                 escalations_file, FACTORY_LIMIT_KEY, FACTORY_LIMIT_TAG,
-                f"лимиты вернулись {_fmt_ts(now)} (сброс "
+                f"лимиты{', вероятно,' if usage_limit_estimated else ''} вернулись "
+                f"{_fmt_ts(now)} (сброс{' (оценка)' if usage_limit_estimated else ''} "
                 f"{_fmt_ts(usage_limit_until)}); окно требует ручного толчка, "
                 f"резерв поедет сам после {_fmt_ts(usage_limit_grace_until)}",
                 now, resolved=True)
             usage_limit_until = None
             usage_limit_raw = None
             usage_limit_toast_ts = None
+            usage_limit_estimated = False
 
         grace_active = (usage_limit_grace_until is not None
                        and now < usage_limit_grace_until)
@@ -1047,6 +1159,7 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
                     "usage_limit_raw": usage_limit_raw,
                     "usage_limit_toast_ts": _fmt_ts(usage_limit_toast_ts),
                     "usage_limit_grace_until": _fmt_ts(usage_limit_grace_until),
+                    "usage_limit_estimated": usage_limit_estimated,
                 })   # Д п.1: state-файл пишется ДО спавна (чек 3б не дрейфует на длинном тике)
 
                 reserve_outcome = reserve_runner(
@@ -1088,6 +1201,11 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
                 if detected_limit:
                     reset_ts = detected_limit.get("reset_ts")
                     reset_unknown_note = None
+                    # Н3 (критик v8.2): reset_ts не распознан парсером ->
+                    # применяем дефолтный сон — это ОЦЕНКА, не замер;
+                    # флаг переживает окно (пишется в state), возвратный
+                    # тост читает его, чтобы хеджировать формулировку.
+                    usage_limit_estimated = reset_ts is None
                     if reset_ts is None:
                         reset_ts = now + datetime.timedelta(
                             hours=hw.USAGE_LIMIT_DEFAULT_SLEEP_H)
@@ -1102,6 +1220,12 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
                     capped = reset_ts > belt_cap
                     if capped:
                         reset_ts = belt_cap
+                        # О5 (критик v8.2, второй раунд): срез поясом — тоже
+                        # НЕ применённый момент вендора «как есть», реальный
+                        # reset_ts вендора мог быть верным, но ПРИМЕНЁННЫЙ
+                        # (срезанный) — не он; тот же класс «оценка, не
+                        # замер», что нераспознанный reset_ts.
+                        usage_limit_estimated = True
                     usage_limit_until = reset_ts
                     usage_limit_raw = detected_limit.get("raw")
                     usage_limit_grace_until = None
@@ -1129,10 +1253,20 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
                     # вендора) — сырой хвост мог быть НЕ тем моментом, что
                     # реально применён (Б-1а/б/в все МОГУТ отклонить/срезать
                     # его), тост не должен называть время, которого не будет.
-                    shown, _detail = toast_fn(
-                        "[factory:usage-limit]",
+                    # О5 (критик v8.2, второй раунд): ВХОДНОЙ тост тоже
+                    # хеджируется при `usage_limit_estimated` — симметрично
+                    # возвратному (Н3), заявлять оценку как замер нельзя ни
+                    # на входе в окно, ни на выходе из него.
+                    entry_msg = (
+                        f"лимиты подписки кончились — фабрика спит примерно до "
+                        f"{_fmt_ts(usage_limit_until)} (момент — оценка)"
+                        if usage_limit_estimated else
                         f"лимиты подписки кончились — фабрика спит до "
                         f"{_fmt_ts(usage_limit_until)}")
+                    shown, _detail = _toast_with_trace(
+                        toast_fn, "[factory:usage-limit]", entry_msg,
+                        orchestrator_log=orchestrator_log, artifact=_rel_path(state_file),
+                        now=now, notes_list=night_fallback_notes)
                     if shown:
                         usage_limit_toast_ts = now
 
@@ -1191,10 +1325,13 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
                                     (now - last_slowdeath_toast_ts).total_seconds() / 3600.0
                                     >= cooldown_hours)
                         if toast_due:
-                            shown, _detail = toast_fn(
-                                "[factory:fallback-broken]",
+                            shown, _detail = _toast_with_trace(
+                                toast_fn, "[factory:fallback-broken]",
                                 f"{slowdeath_streak} прохода подряд безрезультатны "
-                                f"({reason_label}) — поломка, см. logs/fallback-*.log")
+                                f"({reason_label}) — поломка, см. logs/fallback-*.log",
+                                orchestrator_log=orchestrator_log,
+                                artifact=_rel_path(state_file), now=now,
+                                notes_list=night_fallback_notes)
                             if shown:
                                 last_slowdeath_toast_ts = now
                 # fast_death (spawn_failed/быстрая смерть) — fastdeath уже учтён
@@ -1221,16 +1358,24 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
                                     (now - last_fastdeath_toast_ts).total_seconds() / 3600.0
                                     >= cooldown_hours)
                         if toast_due:
-                            shown, _detail = toast_fn(
-                                "[factory:child-death]",
+                            shown, _detail = _toast_with_trace(
+                                toast_fn, "[factory:child-death]",
                                 f"{fd_count_after} быстрых смертей резерва подряд "
-                                f"({reason_label}) — см. logs/fallback-*.log")
+                                f"({reason_label}) — см. logs/fallback-*.log",
+                                orchestrator_log=orchestrator_log,
+                                artifact=_rel_path(state_file), now=now,
+                                notes_list=night_fallback_notes)
                             if shown:
                                 last_fastdeath_toast_ts = now
 
                 if unknown_streak >= UNKNOWN_STREAK_TOAST:
                     night_fallback_notes.append("канал сводки прохода сломан")
-                    toast_fn("[factory:fallback-channel]", "канал сводки прохода сломан")
+                    # Б2 (критик v8.2, класс): возврат `toast_fn` раньше был
+                    # ОТБРОШЕН целиком — отказ здесь тоже уходил без следа.
+                    _toast_with_trace(
+                        toast_fn, "[factory:fallback-channel]", "канал сводки прохода сломан",
+                        orchestrator_log=orchestrator_log, artifact=_rel_path(state_file),
+                        now=now, notes_list=night_fallback_notes)
 
                 # Н3 (Lead-решение, критик-раунд Д1): тост запуска резерва —
                 # ОДИН НА КАЖДЫЙ запуск (семантика спеки п.7 «один на
@@ -1247,8 +1392,11 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
                 # limit], и сказано ПРИЧИНОЙ, а не «резервный проход
                 # (spawned)».
                 if not detected_limit:
-                    shown, _detail = toast_fn(
-                        "[factory:fallback]", f"окно молчит — резервный проход ({outcome_kind})")
+                    shown, _detail = _toast_with_trace(
+                        toast_fn, "[factory:fallback]",
+                        f"окно молчит — резервный проход ({outcome_kind})",
+                        orchestrator_log=orchestrator_log, artifact=_rel_path(state_file),
+                        now=now, notes_list=night_fallback_notes)
                     if shown:
                         last_fallback_toast_ts = now
 
@@ -1275,12 +1423,16 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
             notes_now.append("тревога STALLED подавлена: лимитное окно "
                             "(фабрика не может поехать — будить незачем)")
         elif toast_due:
-            shown, toast_detail = toast_fn("[factory:stalled]", detail)
+            # БЛОКЕР (критик v8.2, второй раунд): та же экспозиция, что
+            # [factory:limit-back] — сырой `toast_fn` мог уронить исключение
+            # НАРУЖУ `run_tick`, минуя финальный `_write_state` (окно
+            # замораживается, следующий тик падает там же — probe7 C/D).
+            shown, toast_detail = _toast_with_trace(
+                toast_fn, "[factory:stalled]", detail,
+                orchestrator_log=orchestrator_log, artifact=_rel_path(state_file),
+                now=now, notes_list=notes_now)
             if shown:
                 prev_alert_ts = now
-            else:
-                notes_now.append(f"тост не показан: {toast_detail}")
-                print(f"toast не показан: {toast_detail}")
     elif new_state_label == "ok" and prev_state_label == "stalled":
         _write_singleton_escalation(
             escalations_file, f"восстановлено {_fmt_ts(now)}", now, resolved=True)
@@ -1327,6 +1479,7 @@ def run_tick(*, lock_file: Path = DEFAULT_LOCK_FILE,
         "usage_limit_raw": usage_limit_raw,
         "usage_limit_toast_ts": _fmt_ts(usage_limit_toast_ts),
         "usage_limit_grace_until": _fmt_ts(usage_limit_grace_until),
+        "usage_limit_estimated": usage_limit_estimated,
     })
     return 0
 
