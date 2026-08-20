@@ -605,10 +605,69 @@ def assert_no_ratings():
 # в тот же SharedPreferences-файл, что и читает SettingsScreen при следующем
 # открытии. Тот же паттерн деградации к прямому чтению, что и `assert_no_ratings`.
 
+
+def _poll_settings_prefs(settled: Callable[[str], bool], timeout: float | None = None) -> str:
+    """AT-BUG-086: общий settle-опрос `ao3_settings.xml` для трёх Then-хелперов
+    ниже (`assert_theme_mode_pref`/`assert_auto_apply_filter_pref`/
+    `assert_font_size_step_pref`) — та же архитектура, что `_poll_ratings_marker`
+    (AT-BUG-081), другой файл-оракул (SharedPreferences, не Room; четвёртый
+    слой того же класса гонки «Then читает раньше, чем состояние устаканилось»,
+    после Room/AT-BUG-081, Pager-анимации/AT-BUG-082-083, comment-collapse
+    превью/AT-BUG-085).
+
+    `SettingsScreen.select_theme`/`set_auto_apply_filter_toggle`/font-size
+    setters (`MainActivity.kt`/`SettingsViewModel`) пишут через
+    `SharedPreferences.Editor.apply()` — асинхронная запись на фоновом потоке
+    (`QueuedWork`), БЕЗ await и без какого-либо UI-сигнала завершения. Прежний
+    код каждого из трёх Then-хелперов ниже делал ОДИН
+    `adb.run_as("cat shared_prefs/ao3_settings.xml")` СРАЗУ после UI-тапа —
+    гонка между быстрым Appium round-trip и асинхронным `apply()`-флашем
+    (`bugs/AT-BUG-086.md`).
+
+    Локализация (изолированный трайл, живой `emulator-5554`, AT-BUG-086
+    чек-лист п.1): гонка воспроизводится уже на ОДНОМ `select_theme`-тапе, не
+    только на серии из трёх (DARK settle -> SYSTEM тап -> немедленное raw-
+    чтение, 8 повторов: 6/8 немедленных чтений НЕ видели финальное значение).
+    Этого пробника ДОСТАТОЧНО, чтобы объяснить наблюдаемый отказ простым
+    отсутствием ожидания финального флаша, гонка есть уже на единичной
+    записи. Гипотеза «переупорядочение apply()-флашей между несколькими
+    тапами» НЕ ИЗМЕРЯЛАСЬ (пробник одного тапа по построению не может её
+    наблюдать) — исключается не экспериментом, а по устройству
+    `SharedPreferences`/`QueuedWork` (Android сериализует `apply()`-записи
+    одного файла на одном фоновом потоке в порядке вызова — более ранний
+    коммит не может перезаписать более поздний). Settle-опрос (без
+    hold-фазы, в отличие от `library_steps._poll_tab_absent`) опирается
+    именно на эту гарантию: файл перезаписывается атомарно каждым `apply()`
+    целиком, после того как опрос увидел искомое значение, отката к
+    предыдущему без НОВОЙ явной записи не бывает (не колеблющийся
+    UI-анимационный процесс, как `HorizontalPager`). ОСТАТОЧНЫЙ РИСК: если
+    бы гарантия `QueuedWork` подвела, settle-без-hold остановился бы на
+    транзиентном совпадении и TC-005 воспроизводимо зафлейкал бы снова —
+    это детектор регрессии этого допущения, не доказанный ноль.
+
+    Опрашивает `adb.run_as("cat shared_prefs/ao3_settings.xml")` до
+    `settled(out)` или `settings.SETTINGS_PREFS_POLL_TIMEOUT` секунд (шаг
+    `settings.SETTINGS_PREFS_POLL_INTERVAL`), возвращает ПОСЛЕДНИЙ прочитанный
+    `out` — вызывающий Then-хелпер сам решает финальный assert. Первый опрос —
+    сразу (t=0), симметрично `_poll_ratings_marker`."""
+    timeout = timeout if timeout is not None else settings.SETTINGS_PREFS_POLL_TIMEOUT
+    interval = settings.SETTINGS_PREFS_POLL_INTERVAL
+    deadline = time.monotonic() + timeout
+    out = adb.run_as("cat shared_prefs/ao3_settings.xml")
+    while not settled(out) and time.monotonic() < deadline:
+        time.sleep(interval)
+        out = adb.run_as("cat shared_prefs/ao3_settings.xml")
+    return out
+
+
 @allure.step("Then сохранённая тема (SharedPreferences) = {mode}")
 def assert_theme_mode_pref(mode: str):
-    out = adb.run_as("cat shared_prefs/ao3_settings.xml")
-    assert f'name="theme_mode">{mode}<' in out, f"theme_mode != {mode} в SharedPreferences: {out}"
+    """AT-BUG-086: опрашивает через `_poll_settings_prefs` (см. её докстринг за
+    полным разбором класса гонки и локализацией) вместо одноразового чтения
+    СРАЗУ после серии `select_theme`."""
+    needle = f'name="theme_mode">{mode}<'
+    out = _poll_settings_prefs(lambda o: needle in o)
+    assert needle in out, f"theme_mode != {mode} в SharedPreferences: {out}"
 
 
 @allure.step("Then сохранённое состояние Auto-apply on navigation (SharedPreferences auto_apply_filter) = {expected}")
@@ -616,19 +675,29 @@ def assert_auto_apply_filter_pref(expected: bool):
     """TC-181: `SettingsScreen.kt:539` (`prefs.edit().putBoolean("auto_apply_filter",
     enabled).apply()`) — стандартная Android SharedPreferences boolean-запись
     (`<boolean name="auto_apply_filter" value="false" />`), тот же файл
-    `ao3_settings.xml`, что читает `assert_theme_mode_pref`."""
-    out = adb.run_as("cat shared_prefs/ao3_settings.xml")
+    `ao3_settings.xml`, что читает `assert_theme_mode_pref`.
+
+    AT-BUG-086 (D-0043 сиблинг-аудит `assert_theme_mode_pref`, тот же файл-
+    оракул/тот же `apply()`-механизм записи, вызывается сразу после
+    `set_auto_apply_filter_toggle` — TC-181 структурно тот же race window):
+    опрашивает через `_poll_settings_prefs` вместо одноразового чтения."""
     expected_str = "true" if expected else "false"
-    assert f'name="auto_apply_filter" value="{expected_str}"' in out, (
+    needle = f'name="auto_apply_filter" value="{expected_str}"'
+    out = _poll_settings_prefs(lambda o: needle in o)
+    assert needle in out, (
         f"auto_apply_filter != {expected_str} в SharedPreferences: {out}"
     )
 
 
 @allure.step("Then сохранённый размер шрифта (SharedPreferences font_size_step) = {step}")
 def assert_font_size_step_pref(step: int):
-    out = adb.run_as("cat shared_prefs/ao3_settings.xml")
-    assert f'name="font_size_step" value="{step}"' in out, \
-        f"font_size_step != {step} в SharedPreferences: {out}"
+    """AT-BUG-086 (D-0043 сиблинг-аудит `assert_theme_mode_pref`, тот же файл-
+    оракул/тот же `apply()`-механизм записи; вызывающие тесты — TC-050/051 —
+    читают сразу после `side_panel_steps.increase_font`/`app_steps.restart_app`):
+    опрашивает через `_poll_settings_prefs` вместо одноразового чтения."""
+    needle = f'name="font_size_step" value="{step}"'
+    out = _poll_settings_prefs(lambda o: needle in o)
+    assert needle in out, f"font_size_step != {step} в SharedPreferences: {out}"
 
 
 # --- Scan for downloads (silent auto-триггер после смены папки загрузок/Restore,

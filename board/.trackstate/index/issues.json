@@ -7789,9 +7789,9 @@
     "epic": null,
     "parentPath": null,
     "epicPath": null,
-    "summary": "assert_theme_mode_pref читает SharedPreferences сразу после серии select_theme без settle — TC-005 (test_theme_toggle_stable) красный в test_smoke.py (структурно не связан с AT-BUG-083 fix)",
+    "summary": "assert_theme_mode_pref читает SharedPreferences без settle сразу после select_theme (гонка воспроизводится уже на ОДНОМ тапе) — TC-005 (test_theme_toggle_stable) красный в test_smoke.py (структурно не связан с AT-BUG-083 fix); пофикшено settle-poll'ом",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -7799,7 +7799,7 @@
       "test_case:TC-005",
       "sev:minor"
     ],
-    "updated": "2026-08-20T00:51:21Z",
+    "updated": "2026-08-20T05:36:44Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -7811,9 +7811,9 @@
     "epic": null,
     "parentPath": null,
     "epicPath": null,
-    "summary": "TC-135 (test_cold_start_deep_link_reuses_single_home_tab) TimeoutError на wait_tabs_persisted(timeout=20) — воспроизводимо 2/2 в изоляции, причина не разделена между реальной регрессией и деградацией резидентной Appium-сессии",
+    "summary": "TC-135 (test_cold_start_deep_link_reuses_single_home_tab) TimeoutError на wait_tabs_persisted(timeout=20) — воспроизводимо 2/2 в изоляции на резидентной сессии; исключающим прогоном разделено — (б) деградация среды, не регрессия приложения",
     "issueType": "bug",
-    "status": "bug-open",
+    "status": "bug-fixed",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -7821,7 +7821,32 @@
       "test_case:TC-135",
       "sev:major"
     ],
-    "updated": "2026-08-20T04:29:52Z",
+    "updated": "2026-08-20T04:56:04Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-088",
+    "path": "board/AT-BUG-088/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Три settings-prefs Then-хелпера (assert_theme_mode_pref/assert_auto_apply_filter_pref/assert_font_size_step_pref) читают через голый adb.run_as — rc/stderr отбрасываются, отказ adb неотличим от несовпадения значения (AT-BUG-055 класс, живой remnant после AT-BUG-086)",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-005",
+      "test_case:TC-181",
+      "test_case:TC-050",
+      "test_case:TC-051",
+      "sev:minor"
+    ],
+    "updated": "2026-08-20T06:00:00Z",
     "resolution": null,
     "children": [],
     "archived": false

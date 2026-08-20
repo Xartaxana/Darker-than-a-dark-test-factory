@@ -1716,10 +1716,15 @@
   },
   "AT-BUG-086": {
     "itype": "bug",
-    "artifact_status": "Open",
-    "board_status": "Open"
+    "artifact_status": "Fixed",
+    "board_status": "Fixed"
   },
   "AT-BUG-087": {
+    "itype": "bug",
+    "artifact_status": "Fixed",
+    "board_status": "Fixed"
+  },
+  "AT-BUG-088": {
     "itype": "bug",
     "artifact_status": "Open",
     "board_status": "Open"

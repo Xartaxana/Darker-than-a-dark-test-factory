@@ -234,6 +234,21 @@ MAX_RECOVERIES_PER_SESSION = int(os.environ.get("AO3_MAX_RECOVERIES_PER_SESSION"
 RATINGS_DB_POLL_TIMEOUT = float(os.environ.get("AO3_RATINGS_DB_POLL_TIMEOUT", "3.0"))
 RATINGS_DB_POLL_INTERVAL = float(os.environ.get("AO3_RATINGS_DB_POLL_INTERVAL", "0.3"))
 
+# SETTINGS_PREFS_POLL_TIMEOUT / SETTINGS_PREFS_POLL_INTERVAL — AT-BUG-086: три
+# `ao3_settings.xml`-Then-хелпера (`settings_steps.assert_theme_mode_pref`/
+# `assert_auto_apply_filter_pref`/`assert_font_size_step_pref`) читают
+# SharedPreferences через adb СРАЗУ после UI-действий (`select_theme` и т.п.),
+# чья запись идёт через `SharedPreferences.Editor.apply()` — асинхронный
+# фоновый флаш (`QueuedWork`), БЕЗ await и без UI-сигнала завершения.
+# Одноразовое чтение гонится с этим флашем (изолированный трайл на
+# `emulator-5554`: 6/8 немедленных чтений сразу после ОДНОГО тапа не увидели
+# финальное значение — см. bugs/AT-BUG-086.md). Тот же класс гонки, что
+# `RATINGS_DB_POLL_*` выше (AT-BUG-081), другой файл-оракул — те же значения
+# по умолчанию по той же причине (ОЦЕНКА по порядку с соседним
+# adb-таймаутом, не профилирование конкретно этого флаша).
+SETTINGS_PREFS_POLL_TIMEOUT = float(os.environ.get("AO3_SETTINGS_PREFS_POLL_TIMEOUT", "3.0"))
+SETTINGS_PREFS_POLL_INTERVAL = float(os.environ.get("AO3_SETTINGS_PREFS_POLL_INTERVAL", "0.3"))
+
 # --- Артефакты ---
 RUNS_DIR = REPO_ROOT / "runs"
 ALLURE_RESULTS = Path(os.environ.get("ALLURE_RESULTS", FRAMEWORK_ROOT / "allure-results"))
