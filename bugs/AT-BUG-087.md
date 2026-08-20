@@ -1,31 +1,31 @@
 ---
 id: AT-BUG-087
-title: "TC-135 (test_cold_start_deep_link_reuses_single_home_tab) TimeoutError на wait_tabs_persisted(timeout=20) — причина найдена: гонка ActivityManager remove-task после pm clear убивает cold-start процесс до init; фикс — детекция-и-ретрай в app_steps.py, Fixed"
+title: "TC-135 (test_cold_start_deep_link_reuses_single_home_tab) TimeoutError на wait_tabs_persisted(timeout=20) — гонка ActivityManager remove-task после pm clear убивает cold-start процесс до init; фикс детектирует killedByAm=true и ретраит, НО детектор не покрывает все логкэт-варианты того же кила — D1-верификация 2026-08-20T07:44:07Z: 1 red из 2 живых прогонов на одной измеренно свежей сессии, пинг-понг reopen_count=2=sla.reopened_pingpong, Blocked"
 type: test_debt
 debt_kind: flaky_test
 severity: major
-status: Fixed
+status: Blocked
 found_in: "критик-гейт D1-батч верификации AT-BUG-076/083/085, живой прогон полного test_tabs.py, 2026-08-20"
 fixed_in: "app dev-local, version_code 12 (source_commit fdd3f72884105d1453448e0c9a7f2b109588b182, apk_sha256 6bc924f9..., built_at 2026-08-19T17:47:59Z) -- фикс чисто фреймворковый (framework/steps/app_steps.py, framework/tests/test_tabs.py), сборка приложения не менялась"
-last_seen_in: "tests/test_tabs.py::test_cold_start_deep_link_reuses_single_home_tab (TC-135), 2026-08-20T06:06:49Z -- 1 failed in 56.47s, TimeoutError на wait_tabs_persisted (последнее ПОДТВЕРЖДЁННОЕ репро; 6/6 зелёных после фикса — см. «Обсуждение»/критерии готовности, это поле их не несёт)"
+last_seen_in: "tests/test_tabs.py::test_cold_start_deep_link_reuses_single_home_tab (TC-135), 2026-08-20T07:44:07Z (fix-verifier D1) -- 1 failed in 52.94s, ИТЕРАЦИЯ 2 на измеренно свежей сессии (PID 18316/12104 неизменны между итерациями 1 и 2), TimeoutError на wait_tabs_persisted_after_cold_start_deep_link; anti-масking raise сработал (killedByAm=true НЕ найден в логкэте), но post-mortem логкэт показывает ТОТ ЖЕ класс гонки (Destroy timeout of remove-task -> Killing <pid> ... remove task -> signal 9) другой строкой без литерала killedByAm=true -- см. «Обсуждение»"
 test_cases: ["TC-135"]
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-08-20T06:52:59Z"
-updated: "2026-08-20T07:26:18Z"
-reopen_count: 1
+status_since: "2026-08-20T07:44:07Z"
+updated: "2026-08-20T07:44:07Z"
+reopen_count: 2
 dispute_count: 0
-awaiting: none
+awaiting: dev
 resolution: ""
 resolution_comment: ""
-known_issue: "false"
-blocked_reason: ""
+known_issue: "true"
+blocked_reason: "dev_answer"
 lock: ""
 gitlab_issue: ""
 ---
 
-# AT-BUG-087 — TC-135: `TimeoutError` в cold-start deep-link ветке; корень найден — гонка ActivityManager remove-task после `pm clear` убивает свежий процесс до init (`killedByAm=true`); фикс — детекция мёртвого процесса + однократный повтор интента (`wait_tabs_persisted_after_cold_start_deep_link`), Fixed
+# AT-BUG-087 — TC-135: `TimeoutError` в cold-start deep-link ветке; гонка ActivityManager remove-task подтверждена независимой D1-верификацией, но детектор `killedByAm=true` не покрывает все логкэт-варианты того же кила — 1/2 живых прогонов красных на одной измеренно свежей сессии, Blocked (пинг-понг reopen_count=2)
 
 ## Окружение
 
@@ -194,6 +194,7 @@ post-mortem чтение произошло после случайного по
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
 | 2026-08-20T06:06:49Z | app dev-local, version_code 12 (source_commit fdd3f72884105d1453448e0c9a7f2b109588b182, apk_sha256 6bc924f9…, built_at 2026-08-19T17:47:59Z, state/app-under-test.yaml — тот же билд, что `fixed_in`; фикс был чисто окружением, кода не менял) | TC-135 (`tests/test_tabs.py::test_cold_start_deep_link_reuses_single_home_tab`) — единственный связанный кейс из `test_cases`, на ИЗМЕРЕННО свежей Appium-сессии (`Stop-NodeProcesses` → `Start-Appium` → `Get-CimInstance Win32_Process -Filter "name='node.exe'"` подтвердил новые PID 15128/10824, `CreationDate 20.08.2026 8:01:56/57`, отличные от предыдущего резидентного PID 13120/14108 — свежесть не строкой «started and ready», а замером) | Прогон 1: `1 passed in 42.27s`, `PYTEST_EXIT=0`. Прогон 2 (та же сессия, ~3 мин спустя, PID не менялся): `1 failed in 56.47s`, `PYTEST_EXIT=1`, `TimeoutError: вкладки с сентинелом '...ao3_tab_marker=1' не появились в .../ao3_settings.xml (after 20s)` — ДОСЛОВНО тот же класс отказа, что в исходном witness (`app_steps.wait_tabs_persisted`, `core/waits.py:43`) | Fixed → **Reopened** |
+| 2026-08-20T07:44:07Z | app dev-local, version_code 12 (source_commit fdd3f72884105d1453448e0c9a7f2b109588b182, apk_sha256 6bc924f9e3536615b1bcbb5f9533ea9dde0a38e6e31372e39e290c1b68b8b179, built_at 2026-08-19T17:47:59Z — тот же билд, что `fixed_in`; фикс за B4 06:52:59Z/07:26:18Z чисто фреймворковый, сборка приложения не менялась) | (1) TC-135 (`tests/test_tabs.py::test_cold_start_deep_link_reuses_single_home_tab`) x2 подряд на ИЗМЕРЕННО свежей Appium-сессии: `Stop-NodeProcesses` → `Start-Appium` → `Get-CimInstance Win32_Process -Filter "name='node.exe'"` подтвердил новые PID 18316/12104, `CreationDate 20.08.2026 9:35:49/50` (предыдущий резидентный PID 12516 остановлен этим же ходом); (2) TC-025 (`test_tabs_persist_url_and_scroll_after_restart`) x1, позитивный контроль, та же сессия, PID подтверждён неизменным ПОСЛЕ обоих прогонов TC-135; (3) `python -m pytest scripts/tests -q` | TC-135 ИТЕРАЦИЯ 1: `1 passed in 58.58s`, `PYTEST_EXIT=0`. TC-135 ИТЕРАЦИЯ 2 (та же сессия, PID 18316/12104 подтверждён неизменным до и после): `1 failed in 52.94s`, `PYTEST_EXIT=1`, ДОСЛОВНО (allure `statusDetails.message`, `68e3649f-…-result.json`): `TimeoutError: вкладки с сентинелом 'https://archiveofourown.org/works?ao3_tab_marker\\u003d1' не появились в /data/data/com.example.ao3_wrapper/shared_prefs/ao3_settings.xml (after 20s)`, `core/waits.py:43`. Traceback-фрейм `app_steps.py:515` (ПЕРВЫЙ вызов `wait_tabs_persisted` внутри `wait_tabs_persisted_after_cold_start_deep_link`, НЕ строка 544 повторной попытки) + attachment `AT-BUG-087-logcat-on-pidof-none` присутствует, `AT-BUG-087-retry-fired` ОТСУТСТВУЕТ → ретрай не сработал: код дошёл до ветки «процесс мёртв, `killedByAm=true` не найден в логкэте → честный `raise` без ретрая» (anti-масking путь, строки 528-532 `app_steps.py`). Post-mortem логкэта (`ad6b3535-…-attachment.txt`, дословный grep) показывает: `Forked child process 26765` → `Start proc 26765:com.example.ao3_wrapper/u0a147 ... for next-top-activity` → `Destroy timeout of remove-task, attempt to kill Task{...}` → `Killing 26765:com.example.ao3_wrapper/u0a147 (adj -10000): remove task` → `Process 26765 exited due to signal 9 (Killed)` — ТОТ ЖЕ причинный паттерн (AM remove-task после `pm clear` убивает форкнутый cold-start процесс до init), что документирован фиксом, но БЕЗ литерала `killedByAm=true` в этой конкретной строке килла (та фраза наблюдалась в оригинальной диагностике 06:52:59Z в ДРУГОМ логкэт-паттерне: `ProcessRecord{...} start not valid, killing pid=..., killedByAm=true;pendingStart=false;`) — детектор строкового совпадения не универсален по вариантам одного и того же класса кила. TC-025 (позитивный контроль): `1 passed in 71.14s`, `PYTEST_EXIT=0` — общий `wait_tabs_persisted`/сессия/оракул здоровы, отказ локализован в детекторе `wait_tabs_persisted_after_cold_start_deep_link`. `python -m pytest scripts/tests -q`: `1704 passed, 1 skipped in 47.72s` — обвязка не задета. | Fixed → **Blocked** (пинг-понг: `reopen_count` 1→2 = `sla.reopened_pingpong`=2, транзит через легальный `Fixed→Reopened`(`schemas/transitions.yaml`) немедленно продолженный `Reopened→Blocked` тем же ходом по правилу пинг-понга) |
 
 ## Обсуждение
 
@@ -581,3 +582,96 @@ TC-025 `1 passed in 68.71s` — итог живого контроля 3 зел�
 дополнительное различение только внутри ветки "процесс мёртв"). Три
 последующих изолированных прогона (TC-135×2 + TC-025×1) — зелёные, тест
 не деградировал в "систематически красный". `app-under-test/` не трогал.
+
+**[fix-verifier @ 2026-08-20T07:44:07Z] Независимая D1-верификация —
+1/2 живых прогонов TC-135 красный на измеренно свежей сессии. Пинг-понг:
+`Fixed → Blocked` (reopen_count 1→2 = `sla.reopened_pingpong`), `awaiting: dev`.**
+
+Прочитан весь файл, включая обе итерации фикса (Б5/Б6/Б7-доработка
+07:26:18Z). Не переоткрывал диагностику с нуля — верифицировал прогоном,
+формальная роль этого хода.
+
+Порядок:
+1. `Get-Device` → `emulator-5554` присутствует.
+2. `Stop-NodeProcesses` — погасил резидентный процесс (PID 12516).
+3. `Start-Appium` → `Get-CimInstance Win32_Process -Filter "name='node.exe'"`
+   подтвердил ИЗМЕРЕНИЕМ (не строкой «started and ready») новые PID
+   18316/12104, `CreationDate 20.08.2026 9:35:49/50`.
+4. TC-135 итерация 1: `1 passed in 58.58s`, `PYTEST_EXIT=0`.
+5. TC-135 итерация 2 (та же сессия сразу следом): `1 failed in 52.94s`,
+   `PYTEST_EXIT=1`. PID сверен НЕИЗМЕННЫМ (`18316/12104`) до и после — это
+   не артефакт свежести/деградации сессии, идентичная сессия дала и зелёный,
+   и красный прогон подряд.
+6. Дословная цитата упавшего теста взята из `framework/allure-results/
+   68e3649f-301d-49e2-8582-9593ac5d9da8-result.json` (`statusDetails.message`)
+   СРАЗУ после прогона, до следующего вызова `Invoke-Pytest`
+   (`--clean-alluredir` стирает каталог) — см. таблицу «Верификация» выше.
+7. Traceback-фрейм упавшего вызова — `app_steps.py:515` (ПЕРВЫЙ вызов
+   `wait_tabs_persisted` ВНУТРИ `wait_tabs_persisted_after_cold_start_deep_link`,
+   не строка 544 повторной попытки) — подтверждено сверкой с исходником
+   (bare `raise` в Python НЕ добавляет новый traceback-фрейм на месте
+   `raise`, эмпирически проверено отдельным тестовым скриптом); ключевое
+   доказательство отсутствия ретрая — attachment `AT-BUG-087-retry-fired`
+   ОТСУТСТВУЕТ в result.json, что однозначно исключает путь ретрая: ретрай
+   не срабатывал вовсе.
+8. Присутствует attachment `AT-BUG-087-logcat-on-pidof-none` (значит
+   `adb.pidof_app()` вернул `None` — процесс мёртв, гейт Б5 сработал) БЕЗ
+   `AT-BUG-087-retry-fired` (значит литерал `killedByAm=true` в снятом
+   логкэте НЕ найден) → код прошёл в ветку «неизвестная причина смерти
+   процесса, не маскируем» (`app_steps.py:528-532`) и честно пробросил
+   `TimeoutError` — это РАБОТАЕТ КАК СПРОЕКТИРОВАНО (анти-маскировка,
+   критик-блокер Б5), НЕ регрессия самого детектора в смысле "сломался".
+9. Post-mortem логкэта (`ad6b3535-b670-424d-9351-a2d558c3c8e7-attachment.txt`,
+   79731 байт, дословный grep СРАЗУ после прогона): `08-20 07:37:30.682
+   Zygote: Forked child process 26765` → `07:37:30.735 ActivityManager:
+   Start proc 26765:com.example.ao3_wrapper/u0a147 for next-top-activity` →
+   `07:37:30.781 ActivityTaskManager: Destroy timeout of remove-task,
+   attempt to kill Task{4237c1c #3653 ...}` → `07:37:30.791
+   ActivityManager: Killing 26765:com.example.ao3_wrapper/u0a147
+   (adj -10000): remove task` → `07:37:30.862 Zygote: Process 26765 exited
+   due to signal 9 (Killed)`. Это ПРИЧИННО ТОТ ЖЕ паттерн, что диагностика
+   06:52:59Z задокументировала как корень бага (AM remove-task после
+   `pm clear` убивает форкнутый cold-start процесс до инициализации
+   `BrowserViewModel`) — но КОНКРЕТНАЯ строка килла в ЭТОМ прогоне НЕ несёт
+   литерала `killedByAm=true` (та фраза была из ДРУГОГО варианта строки
+   логкэта, зафиксированного в диагностике 06:52:59Z: `ProcessRecord{...}
+   start not valid, killing pid=..., killedByAm=true;pendingStart=false;`).
+   Не додумываю причину сам — это прямое сопоставление дословного логкэта
+   этого прогона с уже документированным в файле паттерном, не новая
+   диагностика с нуля.
+10. Позитивный контроль TC-025 на ТОЙ ЖЕ сессии сразу следом: `1 passed
+    in 71.14s`, `PYTEST_EXIT=0` — общий `wait_tabs_persisted`/оракул/сессия
+    здоровы, красный локализован именно в детекторе нового шага.
+11. `python -m pytest scripts/tests -q`: `1704 passed, 1 skipped in
+    47.72s` — обвязка не задета.
+
+**Вывод:** фикс закрывает КЛАСС гонки частично — сама детекция «процесс
+мёртв» (Б5) и ретрай-механика работают корректно, но конкретный
+литерал-детектор `killedByAm=true` (единственный маркер, отличающий
+«гонка AM, ретраим» от «неизвестная причина, не маскируем») не покрывает
+как минимум ЕЩЁ ОДИН логкэт-вариант ТОГО ЖЕ причинного паттерна
+(`Destroy timeout of remove-task` → `Killing <pid> ... : remove task` →
+`signal 9`, без слова `killedByAm`). Итог — честный `raise` без ретрая на
+прогоне, который, по логкэту, ПОХОЖ на ту самую гонку, для которой ретрай
+существует. Не расширяю scope и не чиню сам (framework/steps/app_steps.py
+— зона test-maintainer/test-automator, не fix-verifier) — это находка для
+следующего B4-раунда: детектор нуждается либо в более широком наборе
+маркеров (`remove task` + сигнал килла БЕЗ обязательного `killedByAm=true`
+literal), либо в семантической проверке (kill КОНКРЕТНОГО pid, полученного
+из `adb.pidof_app()` ДО его смерти, а не grep по всему логкэт-окну).
+
+Дефекты-собратья: не заметил новых кроме уже зарегистрированных
+`START-APPIUM-NO-RESIDENT-GUARD-FALSE-READY` (кросс-ссылка выше в файле).
+
+**Действие:** `status: Fixed → Blocked` (через легальный `Fixed→Reopened`
+`schemas/transitions.yaml`, `reopen_count 1→2`, немедленно продолженный
+`Reopened→Blocked` по правилу пинг-понга `sla.reopened_pingpong=2` —
+дальнейший цикл верификации по кругу не даёт новой информации сверх уже
+собранной, фикс нуждается в доработке детектора, не в ещё одном прогоне).
+`known_issue: false → true` (проблема снова жива). `awaiting: dev`.
+`blocked_reason: dev_answer` (нужно решение по расширению детектора —
+зона решения test-maintainer/test-automator/Lead, ближайший прецедент
+формы поля — `dev_answer` у ESC-021/BUG-014 пинг-понга). `lock` снят.
+`app-under-test/` не трогал, код фреймворка не трогал (только прогонял и
+читал `app_steps.py`/`allure-results` для диагностики traceback-фрейма).
+Эскалация — `state/escalations.md` ESC-036.

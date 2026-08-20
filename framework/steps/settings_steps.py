@@ -606,6 +606,9 @@ def assert_no_ratings():
 # открытии. Тот же паттерн деградации к прямому чтению, что и `assert_no_ratings`.
 
 
+_SETTINGS_PREFS_PATH = "shared_prefs/ao3_settings.xml"
+
+
 def _poll_settings_prefs(settled: Callable[[str], bool], timeout: float | None = None) -> str:
     """AT-BUG-086: общий settle-опрос `ao3_settings.xml` для трёх Then-хелперов
     ниже (`assert_theme_mode_pref`/`assert_auto_apply_filter_pref`/
@@ -614,6 +617,27 @@ def _poll_settings_prefs(settled: Callable[[str], bool], timeout: float | None =
     слой того же класса гонки «Then читает раньше, чем состояние устаканилось»,
     после Room/AT-BUG-081, Pager-анимации/AT-BUG-082-083, comment-collapse
     превью/AT-BUG-085).
+
+    AT-BUG-088 (fail-closed на транспортную ошибку, отдельно от «значение ещё
+    не устаканилось»): читает через `adb.run_as_file_or_raise` — тот же
+    приём, что `app_steps._read_tabs_prefs_raw` уже применяет к ЭТОМУ ЖЕ
+    файлу (AT-BUG-055) — вместо голого `adb.run_as("cat ...")`. Голый
+    `adb.run_as`/`adb.shell` отбрасывает `returncode`/`stderr` (см.
+    `adb.shell` докстринг) — отвалившийся adb-транспорт (rc!=0, пустой/
+    ошибочный вывод НЕ из-за легитимного отсутствия значения) неотличимо
+    совпадал с «apply() ещё не отфлашил» и 3-секундный settle-полл
+    (`SETTINGS_PREFS_POLL_TIMEOUT`) крутился до конца бюджета, чтобы упасть
+    как обычный `AssertionError` про несовпадение значения («theme_mode !=
+    SYSTEM в SharedPreferences: ''») — отказ ИНСТРУМЕНТА выдавал себя за
+    дефект ПРОДУКТА под видом settle-таймаута. `run_as_file_or_raise` сам
+    различает три исхода (см. его докстринг, `framework/core/adb.py`):
+    `rc==0` — реально прочитано (может быть пустым — легитимно); `rc!=0` БЕЗ
+    содержимого — легитимно «файла ещё нет» (до первой `apply()`-записи);
+    иначе — явный `RuntimeError` СРАЗУ (не проглатывается циклом ниже, не
+    ждёт `deadline`) — текст ошибки структурно ДРУГОЙ (`RuntimeError` про
+    отказ `run-as`/adb), чем `AssertionError` settle-таймаута про
+    несовпадение значения, поэтому эти два разных отказа больше не путаются
+    в выводе прогона.
 
     `SettingsScreen.select_theme`/`set_auto_apply_filter_toggle`/font-size
     setters (`MainActivity.kt`/`SettingsViewModel`) пишут через
@@ -645,7 +669,8 @@ def _poll_settings_prefs(settled: Callable[[str], bool], timeout: float | None =
     транзиентном совпадении и TC-005 воспроизводимо зафлейкал бы снова —
     это детектор регрессии этого допущения, не доказанный ноль.
 
-    Опрашивает `adb.run_as("cat shared_prefs/ao3_settings.xml")` до
+    Опрашивает `adb.run_as_file_or_raise(_SETTINGS_PREFS_PATH)` (AT-BUG-088 —
+    различает отказ adb-транспорта от "значения ещё нет", см. абзац выше) до
     `settled(out)` или `settings.SETTINGS_PREFS_POLL_TIMEOUT` секунд (шаг
     `settings.SETTINGS_PREFS_POLL_INTERVAL`), возвращает ПОСЛЕДНИЙ прочитанный
     `out` — вызывающий Then-хелпер сам решает финальный assert. Первый опрос —
@@ -653,10 +678,10 @@ def _poll_settings_prefs(settled: Callable[[str], bool], timeout: float | None =
     timeout = timeout if timeout is not None else settings.SETTINGS_PREFS_POLL_TIMEOUT
     interval = settings.SETTINGS_PREFS_POLL_INTERVAL
     deadline = time.monotonic() + timeout
-    out = adb.run_as("cat shared_prefs/ao3_settings.xml")
+    out = adb.run_as_file_or_raise(_SETTINGS_PREFS_PATH)
     while not settled(out) and time.monotonic() < deadline:
         time.sleep(interval)
-        out = adb.run_as("cat shared_prefs/ao3_settings.xml")
+        out = adb.run_as_file_or_raise(_SETTINGS_PREFS_PATH)
     return out
 
 
