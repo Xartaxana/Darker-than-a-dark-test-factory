@@ -4,7 +4,7 @@ title: "Ветка подписи «Ch N/M» (readingChapterTotal>1) была н
 type: test_debt
 debt_kind: missing_fixture
 severity: minor
-status: Fixed
+status: Verified
 found_in: "exploratory charter CH-011 (2026-08-20), followup_tc[3] — JS-пробой измерено sel:false, opts:0"
 fixed_in: "framework (test-only, без сборки приложения) — framework/data/recording_builder.py (_chapter_select_html, render_work_page_html(chapter_titles=...), WORK_MULTI_CHAPTER_FILENAME/WORK_MULTI_CHAPTER_TITLES), scripts/build_replay_recordings.py (build_work_multi_chapter), framework/data/recordings/work_multi_chapter.mitm (новая запись)"
 last_seen_in: ""
@@ -12,8 +12,8 @@ test_cases: []
 runs: [CH-011]
 duplicates: []
 regression_of: ""
-status_since: "2026-08-20T12:01:14Z"
-updated: "2026-08-20T12:01:14Z"
+status_since: "2026-08-20T13:11:00Z"
+updated: "2026-08-20T13:11:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -32,7 +32,7 @@ gitlab_issue: ""
   Затрагивает `bridge-scroll-reporting` (подпись «Ch N/M» под полоской
   прогресса, `BottomBar.kt:76-81`) и любой будущий сценарий, которому нужна
   work-страница с несколькими главами. Адресат: `test-automator`/владелец
-  `recording_builder.py::render_work_page_html` (`framework/data/recording_builder.py:734`).
+  `recording_builder.py::render_work_page_html` (`framework/data/recording_builder.py:772`).
 
 ## Суть долга
 
@@ -62,8 +62,8 @@ test-maintainer тем же ходом (см. «Обсуждение» ниже)
 долгу, но отрицать его существование неверно. Ещё два вхождения
 `dd.chapters`/похожей разметки в кодовой базе фикстур относятся к ДРУГИМ
 поверхностям (блёрб листинга `_blurb_html:351`, было `:339`, `dd.chapters` на
-`:377`, было `:365`; страница metadata-fetch `render_work_metadata_page_html:944`,
-было `:890`, `dd.chapters` на `:986`, было `:932` — `AT-BUG-061`) и к ветке
+`:377`, было `:365`; страница metadata-fetch `render_work_metadata_page_html:953`,
+было `:890`, `dd.chapters` на `:995`, было `:932` — `AT-BUG-061`) и к ветке
 «Ch N/M» work-страницы отношения не имеют.
 
 *(Все номера строк в этом разделе датированы 2026-08-20 после фикса —
@@ -108,9 +108,69 @@ Reopened, пока follow-up висит в очереди с явным влад
 ## Верификация (заполняет fix-verifier)
 | Дата | Версия сборки | Прогнанные TC | Результат | Вердикт |
 |---|---|---|---|---|
+| 2026-08-20 | framework (test-only, `fixed_in` source_commit `dbb9110e`, HEAD совпадает — приложение не пересобиралось, D1-исключение для `test_debt` применено) | `test_cases: []` — форма (б) замка fix-verifier (фикс БЕЗ постоянного продуктового кейса: TC на ветку «Ch N/M» затребован самим тикетом, владелец test-designer, очередь `AT-BUG-089-CH-N-M-TC-COVERAGE`, не блокирует Fixed→Verified; фикстурный регресс-замок вместо TC обеспечен контрактным тестом `tests/bridge` (`#selected_id` -> `work_multi_chapter.mitm`) + 5 юнитами). Замена — фактическое исполнение критерия "Код фикстуры": `framework/tests/test_recording_builder_unit.py -v` (device-free unit на фикстурный артефакт) + `tests/bridge -q` (регрессия реестра селекторов) + `scripts/tests` (обвязка генератора) + сверка наличия файла фикстуры на диске | `Invoke-Pytest tests/test_recording_builder_unit.py -v` → **69 passed in 0.46s, PYTEST_EXIT=0** (дословно, включая 5 новых: `test_render_work_page_html_default_call_has_no_chapter_select_node`, `test_render_work_page_html_chapter_titles_renders_select_with_options`, `test_render_work_page_html_chapter_select_is_sibling_after_download_inside_ul`, `test_render_work_page_html_chapter_titles_below_two_raises_value_error[len0]`, `[len1]`). `Invoke-Pytest tests/bridge -q` → **129 passed in 82.93s, PYTEST_EXIT=0** (реестр `bridge_selectors.py` с 7 записями, несущими новую `.mitm`). `python -m pytest scripts/tests -q` → **4 failed, 1825 passed, 1 skipped** — все 4 падения в `scripts/tests/test_factory_usage_limit.py` (toast/`factory_watchdog` fallback-channel), изолированы: `git diff --stat` подтверждает 531-строчный НЕЗАКОММИЧЕННЫЙ WIP-дифф в этом файле + 197 строк в `scripts/factory_watchdog.py` (чужая параллельная сессия, домен — фабричный watchdog, не пересекается с `recording_builder.py`/`build_replay_recordings.py`); повторный прогон `--ignore=scripts/tests/test_factory_usage_limit.py` → **1738 passed, 1 skipped, 0 failed**. Единственный тестовый файл `scripts/tests`, ссылающийся на `recording_builder`/`build_work_multi_chapter` — `test_arch_check.py`, прогнан изолированно: **54 passed**. Файл фикстуры `framework/data/recordings/work_multi_chapter.mitm` подтверждён на диске: 10049 байт, `git log` показывает коммит `dbb9110e` (тот же, что `fixed_in`). | Критерий готовности "Код фикстуры" (единственный, блокирующий Fixed→Verified по тексту тикета) подтверждён живым прогоном — **Fixed → Verified**. Раздел "TC-покрытие" не тронут (follow-up `AT-BUG-089-CH-N-M-TC-COVERAGE` остаётся в очереди test-designer, `test_cases: []` — легальный carve-out, а не молчаливый пропуск). |
 
 ## Обсуждение
 Канал человек ↔ фабрика.
+
+**[fix-verifier @ 2026-08-20T13:11:00Z] Fixed → Verified. Живой прогон
+подтвердил критерий "Код фикстуры".**
+
+Форма (б) замка fix-verifier: фикс БЕЗ постоянного продуктового кейса —
+TC на ветку «Ch N/M» ЗАТРЕБОВАН самим тикетом (раздел "TC-покрытие" выше),
+владелец test-designer, очередь `AT-BUG-089-CH-N-M-TC-COVERAGE`
+(`state/escalations.md`), не входит в критерий Fixed. Вместо TC регресс-
+замок на саму фикстуру обеспечен контрактным тестом `tests/bridge`
+(`#selected_id` -> `work_multi_chapter.mitm`) + 5 новыми юнитами. Замена прогона кейсов —
+device-free unit-прогон НА фикстурном артефакте
+(`framework/tests/test_recording_builder_unit.py`, образец AT-BUG-029) +
+регрессия реестра селекторов (`tests/bridge`) + обвязка генератора
+(`scripts/tests`), все — живым исполнением, не чтением кода.
+
+Witness (дословно, этот ход):
+```
+Invoke-Pytest tests/test_recording_builder_unit.py -v
+  69 passed in 0.46s, PYTEST_EXIT=0
+
+Invoke-Pytest tests/bridge -q
+  129 passed in 82.93s (0:01:22), PYTEST_EXIT=0
+
+python -m pytest scripts/tests -q
+  4 failed, 1825 passed, 1 skipped in 73.64s
+  (все 4 — test_factory_usage_limit.py::test_ordinary_fallback_toast_*,
+  test_fallback_broken_toast_*, test_child_death_toast_*,
+  test_fallback_channel_toast_* — падают на mojibake-ассерте
+  cyrillic-строки, домен factory_watchdog toast, никак не пересекается с
+  recording_builder.py/build_replay_recordings.py)
+
+git diff --stat -- scripts/factory_watchdog.py scripts/tests/test_factory_usage_limit.py
+  scripts/factory_watchdog.py               | 197 +++++++++--
+  scripts/tests/test_factory_usage_limit.py | 531 ++++++++++++++++++++++++
+  (незакоммиченный WIP чужой параллельной сессии — не мой owns-скоуп)
+
+python -m pytest scripts/tests -q --ignore=scripts/tests/test_factory_usage_limit.py
+  1738 passed, 1 skipped in 74.56s (0:01:14) — 0 failed
+
+python -m pytest scripts/tests/test_arch_check.py -q
+  54 passed in 4.33s (единственный файл scripts/tests, ссылающийся на
+  recording_builder/build_work_multi_chapter)
+
+ls framework/data/recordings/work_multi_chapter.mitm
+  10049 bytes, git log: dbb9110e (совпадает с fixed_in)
+
+python scripts/validate_frontmatter.py (схемный witness, критик-гейт)
+  ошибок 0, предупреждений 1 (WARN state/app-under-test.yaml
+  canary_status-когерентность — вне скоупа этого тикета)
+```
+
+Дефекты-собратья (D-0043): падения `test_factory_usage_limit.py` — та же
+mojibake-природа cyrillic-ассертов в Windows-консоли, что описана в правиле
+«Дословность цитат при cp-консоли» этого промпта; они относятся к чужому
+активному WIP (factory_watchdog toast fallback), НЕ к скоупу этого тикета —
+докладываю, не расширяю и не трогаю.
+
+`app-under-test/` не тронут за весь ход. Раздел "TC-покрытие" выше не
+менялся — follow-up `AT-BUG-089-CH-N-M-TC-COVERAGE` остаётся в очереди.
 
 **[test-maintainer @ 2026-08-20T12:01:14Z] Open → Fixed. Критерий готовности
 выполнен эмпирически.**
