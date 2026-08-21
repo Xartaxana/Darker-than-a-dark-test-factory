@@ -105,6 +105,15 @@ machines:
       - {from: Reopened, to: Fixed, by: [test-maintainer, test-automator],
          guard: {type: test_debt},
          ref: "B4: повторная починка долга после Reopened"}
+      - {from: Blocked, to: Fixed, by: [test-maintainer, test-automator, lead],
+         guard: {type: test_debt},
+         ref: "выход test_debt из Blocked фиксом (заведён 2026-08-21, прецедент
+           AT-BUG-068: долг Blocked/environment устранён ОБХОДОМ — якорь Then
+           переформулирован ESC-032, реализация window-пробой по эскалации
+           правила 6; до этой строки у машины bug вообще не было фабричного
+           выхода из Blocked — исполнитель фиксировал расхождение в тикете и
+           ждал слова Lead, класс назван его отчётом. app_bug из Blocked
+           по-прежнему выходит только рукой человека (*->Open)"}
 
   test-case:
     initial: [Draft, Review]   # test-designer: Draft при спорных требованиях, иначе сразу Review
