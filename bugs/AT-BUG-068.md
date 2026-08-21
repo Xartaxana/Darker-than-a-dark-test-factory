@@ -6,7 +6,7 @@ debt_kind: broken_environment
 severity: minor
 status: Fixed
 found_in: "test-automator, автоматизация TC-188 (settings-debug-copy-url-toggle, P2), 2026-08-14"
-fixed_in: "37a5c507 (HEAD репозитория на момент фикса; сам фикс НЕ закоммичен исполнителем — коммит за Lead): framework/steps/browser_steps.py (arm_clipboard_write_probe + ClipboardWriteProbeLost + assert_copy_url_write_text_invoked на window-пробе вместо driver.get_log('browser')), framework/tests/test_settings.py (снят @pytest.mark.skip). Сборка приложения не участвует — долг тестовой системы"
+fixed_in: "c2cd7280 (коммит фикса, принят критик-раундом 2): framework/steps/browser_steps.py (arm_clipboard_write_probe + ClipboardWriteProbeLost + assert_copy_url_write_text_invoked на window-пробе вместо driver.get_log('browser')), framework/tests/test_settings.py (снят @pytest.mark.skip). Сборка приложения не участвует — долг тестовой системы"
 last_seen_in: ""
 test_cases: ["TC-188"]
 runs: []
