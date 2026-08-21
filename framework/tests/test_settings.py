@@ -621,18 +621,28 @@ def test_fetch_missing_metadata_stop_mid_process(metadata_fetch_stop_queue_seede
 # --- TC-188: Show copy-URL button (секция DEBUG) ---
 #
 # Продуктовый контракт «Copied!»/1500мс-таймер/содержимое буфера — DEFERRED,
-# НЕ реализован здесь: заблокирован `bugs/AT-BUG-068.md` (`DOMException:
-# Write permission denied` бросается permission-слоем Blink ДО Android
-# `ClipboardManager` на этом AVD/WebView, путь (а) АРХИТЕКТУРНО недостижим,
-# критерий готовности «Fixed» не закрыт). Ядро кейса, переформулированное по
+# НЕ реализован здесь: отложен решением ESC-032 (путь б.1) по
+# `bugs/AT-BUG-068.md` (`DOMException: Write permission denied` бросался
+# permission-слоем Blink ДО Android `ClipboardManager` на этом AVD/WebView,
+# путь (а) АРХИТЕКТУРНО недостижим). Сам AT-BUG-068 закрыт (Fixed,
+# 2026-08-21) — закрыт блокер АВТОМАТИЗАЦИИ ЯДРА (якорь факта вызова), а не
+# продуктовая грань; пересмотр deferred-части — за Lead/test-designer.
+# ВАЖНО (критик-раунд 2, 2026-08-21): наблюдаемая в прогонах подпись «Copied!»
+# НЕ означает, что clipboard разрешён — после фикса BUG-069 (Verified,
+# `fixed_in 85fbed4`) её печатают ОБЕ ветки `ao3_bridge.js:1157-1186`: и резолв
+# `writeText` (:1180), и `execCommandFallback` при РЕДЖЕКТЕ (:1173). Исход
+# промиса этим тестом как вердикт НЕ определяется — только пишется в
+# диагностическое allure-вложение (счётчики resolved/rejected window-пробы),
+# вопрос «резолвится или фолбэк» остаётся открытым для триажа AT-BUG-068.
+# Ядро кейса, переформулированное по
 # решению ESC-032 путь (б.1) и автоматизируемое сейчас: обе стороны тумблера
 # переключаются немедленно без reload, кнопка «Copy URL» не перекрыта
 # тап-зонами (guard, образец TC-119), клик доходит до DOM-узла и
 # `navigator.clipboard.writeText` РЕАЛЬНО вызывается (позитивный
-# артефакт-якорь `DOMException` в browser log — см.
-# `browser_steps.assert_copy_url_write_text_invoked`). Связанный продуктовый
-# баг `bugs/BUG-069.md` (`ao3_bridge.js:1077-1080` без `.catch()`) — вне
-# мандата этого теста.
+# артефакт-якорь — счётчик window-пробы, взводимой `arm_clipboard_write_probe`
+# ДО тапа; см. `browser_steps.assert_copy_url_write_text_invoked`). Связанный
+# продуктовый баг `bugs/BUG-069.md` (`ao3_bridge.js` без `.catch()`) —
+# ПОФИКШЕН и Verified 2026-08-15, вне мандата этого теста.
 
 @pytest.mark.p2
 @pytest.mark.replay
@@ -642,22 +652,6 @@ def test_fetch_missing_metadata_stop_mid_process(metadata_fetch_stop_queue_seede
     "без перекрытия инжектированного интерактива"
 )
 @pytest.mark.parametrize("replay", [rb.WORK_WITH_DOWNLOAD_FILENAME], indirect=True)
-@pytest.mark.skip(
-    reason="TC-188-automate rework attempt2: критик (opus) обнаружил флак "
-    "~20% (1 failed / 2 в независимом перепрогоне, PYTEST_EXIT=1 на "
-    "browser_steps.py:2831 'накопленный browser log: []', следом чистый "
-    "PASSED без изменений среды/кода) — assert_copy_url_write_text_invoked "
-    "читает driver.get_log('browser'), теряющий буфер при пере-аттаче "
-    "chromedriver-сессии (contexts.in_webview входит/выходит из WEBVIEW на "
-    "каждом опросе), плюс 'except Exception: entries = []' маскирует эту "
-    "tooling-потерю под ложный продуктовый вердикт «клик не дошёл». "
-    "Document-identity/tap_to_scroll-readback ассерты ниже ВАЛИДНЫ (критик "
-    "подтвердил: проходят в обоих прогонах, красном и зелёном) — оставлены "
-    "для следующей попытки. Нужен якорь вызова writeText НЕ через "
-    "эфемерный browser log, а через window-пробу (в стиле "
-    "mark_document_identity), переживающую переключение контекста. "
-    "automated_by в TC-188.md снят до устранения флака."
-)
 def test_debug_copy_url_toggle_both_directions_without_overlap(loved_work_seeded, replay, driver):
     # Given тумблер «Show copy-URL button» — OFF (дефолт, подтверждено явным
     # assert'ом — класс ложно-зелёных #2, CLAUDE.md), tap_to_scroll — ON (нужен
@@ -712,16 +706,29 @@ def test_debug_copy_url_toggle_both_directions_without_overlap(loved_work_seeded
     browser_steps.assert_document_identity_preserved(driver, doc_marker)
     browser_steps.assert_copy_url_button_visible(driver)
 
+    # Given вызов navigator.clipboard.writeText помечен window-пробой ДО тапа
+    # (эскалация TC-188-automate, 2026-08-21, AT-BUG-068): якорь факта вызова
+    # живёт в window ТЕКУЩЕГО документа и переживает пере-аттач
+    # chromedriver-сессии на каждом contexts.in_webview — в отличие от прежнего
+    # якоря (запись DOMException в эфемерном driver.get_log('browser')),
+    # дававшего флак ~20% и маскировавшего tooling-потерю под вердикт «клик не
+    # дошёл». Обёртка зовёт оригинал — семантика приложения не меняется.
+    probe_token = browser_steps.arm_clipboard_write_probe(driver)
+
     # When пользователь тапает по кнопке «Copy URL»
     scroll_before = browser_steps.get_webview_scroll_y(driver)
     browser_steps.tap_copy_url_button(driver)
 
     # Then (ядро, автоматизируемое; ESC-032 путь б.1) клик доходит до DOM-узла
     # кнопки, и navigator.clipboard.writeText РЕАЛЬНО вызывается — позитивный
-    # артефакт-якорь (DOMException в browser log в текущей среде / подпись
-    # «Copied!» в среде без ограничения), не ассертит продуктовый Then
-    # «Copied!»/1.5с-таймер (deferred, AT-BUG-068)
-    browser_steps.assert_copy_url_write_text_invoked(driver)
+    # артефакт-якорь (счётчик window-пробы; либо подпись «Copied!» при своём
+    # токене — резолв ЛИБО execCommand-фолбэк, ветки неразличимы по подписи;
+    # замер 2026-08-21: rejected=1 NotAllowedError — печатает фолбэк), не
+    # ассертит продуктовый Then «Copied!»/1.5с-таймер
+    # (deferred, AT-BUG-068). Утрата пробы (пересозданный документ/недоступный
+    # WEBVIEW-контекст) поднимает ClipboardWriteProbeLost, а не ложный
+    # AssertionError про продукт.
+    browser_steps.assert_copy_url_write_text_invoked(driver, probe_token)
 
     # And (грань nf-a11y-interactive-overlap) тап по кнопке НЕ запускает
     # зональный эффект tap_to_scroll (страница не скроллится), несмотря на то,

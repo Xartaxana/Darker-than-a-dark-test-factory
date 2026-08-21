@@ -19,7 +19,7 @@ from selenium.webdriver.common.actions.interaction import POINTER_TOUCH
 from framework.config import settings
 from framework.core import contexts
 from framework.core.navigate import navigate
-from framework.core.waits import assert_holds_for, poll_for, wait_until
+from framework.core.waits import assert_holds_for, wait_until
 from framework.screens.browser_screen import BrowserScreen
 from framework.screens.navigation import BottomNav
 from framework.web import selectors
@@ -2960,64 +2960,245 @@ def tap_copy_url_button(driver) -> None:
     builder.perform()
 
 
-@allure.step("Then подпись кнопки «Copy URL» показывает «{expected}»")
-def assert_copy_url_button_label(driver, expected: str, timeout: int = 5) -> None:
-    """AT-BUG-039-класс диагностики (тот же приём, что `assert_tap_to_scroll_delta`):
-    `holder` заполняется ВНУТРИ предиката на каждом опросе; при таймауте
-    `TimeoutException` перехватывается и переброшен заново с сообщением,
-    дополненным `holder["value"]` — РЕАЛЬНО ПОСЛЕДНИМ наблюдённым значением, а
-    не свежим вызовом ДО/ПОСЛЕ ожидания (`message=` строкой вычислился бы до
-    входа в `wait_until`, замораживая устаревшее/начальное значение под
-    подписью «последнее»)."""
-    holder: dict[str, str | None] = {"value": None}
+# --- TC-188/AT-BUG-068: якорь ФАКТА ВЫЗОВА `navigator.clipboard.writeText` —
+# WINDOW-ПРОБА (эскалация task_id TC-188-automate, 2026-08-21).
+#
+# Прежняя редакция строила вердикт на `driver.get_log('browser')` (искала запись
+# `DOMException: Write permission denied`) и дала флак ~20%: буфер browser log
+# принадлежит КОНКРЕТНОЙ chromedriver-сессии, а `contexts.in_webview` входит в
+# WEBVIEW-контекст и выходит из него на КАЖДОМ опросе (`switch_to.context` внутри
+# себя стартует/пере-аттачивает chromedriver-прокси — см. докстринг
+# `core/contexts.py`), поэтому уже накопленные записи могли исчезнуть до того,
+# как их прочитает предикат. Хуже того, `except Exception: entries = []`
+# маскировал ЭТУ инструментальную потерю под продуктовый вердикт «клик не дошёл
+# до узла» — ложно-красный, неотличимый от настоящего отказа приложения.
+#
+# Якорь перенесён на состояние САМОГО ДОКУМЕНТА — тот же приём, что
+# `mark_document_identity` (`window.__ao3TestDocMarker`): JS-глобал живёт в
+# window текущего документа, переживает выход/повторный вход в WEBVIEW-контекст
+# и пере-аттач chromedriver-сессии (эмпирика изоляции/стабильности window-полей
+# и handle'ов — докстринг `contexts.in_webview_matching`), исчезает ТОЛЬКО
+# вместе с документом (reload/навигация) — а это уже другой, отличимый класс
+# отказа, а не «вызова не было».
+#
+# Семантика приложения не меняется: обёртка ИНКРЕМЕНТИРУЕТ счётчик и зовёт
+# ОРИГИНАЛЬНЫЙ `writeText` с тем же `this`/аргументами, ВОЗВРАЩАЯ вызывающему
+# исходный промис как есть. Своя ветка `p.then(mark, mark)` вешается на промис
+# ТОЛЬКО ради диагностических счётчиков (см. ниже) и ничего не подавляет:
+# обработчики приложения навешиваются на тот же промис независимо, реджект
+# приложение обрабатывает само (`ao3_bridge.js:1157-1186`, вызов на :1179 —
+# `execCommandFallback` передан ВТОРЫМ аргументом `.then`, т.е. эквивалент
+# `.catch`; фикс `bugs/BUG-069.md`, status Verified, `fixed_in 85fbed4`).
+#
+# ВАЖНО про подпись «Copied!» (критик-раунд 2, 2026-08-21): после фикса BUG-069
+# «Copied!» печатают ОБЕ ветки — и успешный резолв `writeText` (:1180), и
+# `execCommandFallback` при РЕДЖЕКТЕ (:1173, `flash(ok ? 'Copied!' : 'Copy
+# failed')`). Поэтому наблюдение подписи «Copied!» НЕ различает миров «clipboard
+# разрешён» и «clipboard отказал, сработал fallback» — ни один шаг здесь такого
+# вывода не делает. Различение вынесено в ДИАГНОСТИЧЕСКИЕ счётчики
+# `window.__ao3TestClipboardWriteResolved`/`__ao3TestClipboardWriteRejected`
+# (только allure-вложение, НЕ вердикт) — они и дают материал для отложенного
+# триажа продуктовой грани TC-188 (`bugs/AT-BUG-068.md`, «Обсуждение»).
 
-    def _label(d) -> str | None:
-        with contexts.in_webview(d):
-            value = d.execute_script(
-                f"var b = document.querySelector({selectors.DEBUG_COPY_URL_BUTTON!r}); "
-                "return b ? b.textContent : null;"
-            )
-        holder["value"] = value
-        return value
 
-    try:
-        wait_until(
-            driver, lambda d: _label(d) == expected, timeout=timeout,
-            message=f"подпись кнопки «Copy URL» не стала «{expected}» за {timeout}с",
+class ClipboardWriteProbeLost(RuntimeError):
+    """window-проба вызова `navigator.clipboard.writeText` не установлена или
+    утрачена (документ пересоздан / WebView-контекст недоступен) — это
+    ИНСТРУМЕНТАЛЬНЫЙ отказ, СТРУКТУРНО отличимый от продуктового вердикта
+    «вызова не было» (тот — `AssertionError`). Разделение введено эскалацией
+    TC-188-automate: прежняя редакция сводила оба случая к одному красному
+    ассерту «клик не дошёл» (см. комментарий выше)."""
+
+
+# Идемпотентная установка (флаг — сам факт сохранённого оригинала в
+# `window.__ao3TestClipboardWriteOrig`): повторный вызов на уже обёрнутом
+# документе НЕ оборачивает второй раз (иначе счётчик рос бы кратно), только
+# перевзводит токен/счётчики. Readback `installed` обязателен: присваивание
+# `c.writeText = ...` в non-strict режиме молча не сработало бы, будь свойство
+# нерасширяемым — без сверки проба считалась бы установленной, и последующий
+# ноль вызовов был бы ложно-красным.
+#
+# `resolved`/`rejected` — ДИАГНОСТИКА исхода промиса (решение Lead, критик-раунд
+# 2): своя ветка `p.then(mark, mark)` не меняет ни возвращаемое значение (наружу
+# уходит ИСХОДНЫЙ `p`), ни обработку реджекта приложением (его handler висит на
+# том же `p` независимо; собственная ветка задаёт ОБА обработчика, поэтому
+# производный промис не порождает своих unhandled-реджектов). Инкремент
+# происходит в микротаске ПОСЛЕ оседания промиса — вердикт на этих счётчиках
+# не строится НИГДЕ, они только пишутся в allure-вложение.
+_CLIPBOARD_WRITE_PROBE_ARM_JS = """\
+var token = arguments[0];
+var c = navigator.clipboard;
+if (!c || typeof c.writeText !== 'function') {
+  return {armed: false, reason: 'clipboard-api-absent',
+          clipboardType: typeof navigator.clipboard, token: null, calls: 0};
+}
+if (window.__ao3TestClipboardWriteProbe !== token) {
+  if (!window.__ao3TestClipboardWriteOrig) {
+    window.__ao3TestClipboardWriteOrig = c.writeText;
+    c.writeText = function () {
+      window.__ao3TestClipboardWriteCalls = (window.__ao3TestClipboardWriteCalls || 0) + 1;
+      window.__ao3TestClipboardWriteLastArg = arguments.length ? String(arguments[0]) : null;
+      var p = window.__ao3TestClipboardWriteOrig.apply(this, arguments);
+      try {
+        if (p && typeof p.then === 'function') {
+          p.then(
+            function () {
+              window.__ao3TestClipboardWriteResolved =
+                (window.__ao3TestClipboardWriteResolved || 0) + 1;
+            },
+            function (e) {
+              window.__ao3TestClipboardWriteRejected =
+                (window.__ao3TestClipboardWriteRejected || 0) + 1;
+              window.__ao3TestClipboardWriteRejectReason =
+                (e && (e.name || e.message)) ? ((e.name || '') + ': ' + (e.message || '')) : String(e);
+            }
+          );
+        }
+      } catch (probeErr) { /* диагностика не имеет права ронять вызов приложения */ }
+      return p;
+    };
+  }
+  window.__ao3TestClipboardWriteCalls = 0;
+  window.__ao3TestClipboardWriteLastArg = null;
+  window.__ao3TestClipboardWriteResolved = 0;
+  window.__ao3TestClipboardWriteRejected = 0;
+  window.__ao3TestClipboardWriteRejectReason = null;
+  window.__ao3TestClipboardWriteProbe = token;
+}
+var installed = (c.writeText !== window.__ao3TestClipboardWriteOrig);
+return {armed: installed,
+        reason: installed ? '' : 'writeText-assignment-refused',
+        token: window.__ao3TestClipboardWriteProbe || null,
+        calls: window.__ao3TestClipboardWriteCalls || 0};
+"""
+
+
+# Бюджет ДИАГНОСТИЧЕСКОГО дочитывания исхода промиса (см.
+# `_attach_promise_outcome_diagnostic`): промис оседает микротаском практически
+# сразу после вызова, но опрос идёт через пере-аттач WEBVIEW-контекста —
+# короткий потолок с явной пометкой «не осел» во вложении честнее, чем
+# бесконечное ожидание ради строки диагностики. На вердикт шага не влияет ни
+# при каком значении: исчерпание бюджета лишь помечает вложение.
+_PROMISE_OUTCOME_DIAG_BUDGET_S = 3.0
+_PROMISE_OUTCOME_DIAG_INTERVAL_S = 0.3
+
+
+@allure.step("Given вызов navigator.clipboard.writeText помечен window-пробой "
+             "(якорь факта вызова, TC-188/AT-BUG-068)")
+def arm_clipboard_write_probe(driver) -> str:
+    """Ставит обёртку-счётчик на `navigator.clipboard.writeText` ТЕКУЩЕГО
+    документа и возвращает токен пробы — вызывающий код передаёт его в
+    `assert_copy_url_write_text_invoked` (тот же контракт «пометил → сверил тем
+    же значением», что `mark_document_identity`/`assert_document_identity_
+    preserved`). Токен нужен, чтобы отличить «проба этой же жизни документа»
+    от «документ пересоздан после взвода» — второе инструментальный отказ, а не
+    отсутствие вызова.
+
+    Вызывать ДО тапа и ПОСЛЕ того, как страница окончательно загружена
+    (reload/навигация стирают пробу вместе с window)."""
+    token = str(uuid.uuid4())
+    with contexts.in_webview(driver):
+        state = driver.execute_script(_CLIPBOARD_WRITE_PROBE_ARM_JS, token)
+    if not isinstance(state, dict) or not state.get("armed") or state.get("token") != token:
+        raise ClipboardWriteProbeLost(
+            f"window-проба вызова navigator.clipboard.writeText НЕ установлена "
+            f"(ожидался токен {token!r}, состояние пробы: {state!r}) — шаг падает "
+            f"ЗДЕСЬ, а не позже нулём вызовов: без взведённой пробы вердикт "
+            f"«writeText не вызывался» был бы неотличим от инструментального отказа"
         )
-    except TimeoutException as exc:
-        # Диагностика (2026-08-14): различает «клик не дошёл до узла» (см.
-        # __ao3TestClickCount, tap_copy_url_button) от «клик дошёл, но
-        # navigator.clipboard.writeText не зарезолвился» (hasFocus/isSecureContext/
-        # тип API) — без этого таймаут неотличим по причине.
+    allure.attach(
+        token, name="clipboard-write-probe-token",
+        attachment_type=allure.attachment_type.TEXT,
+    )
+    return token
+
+
+def _read_clipboard_write_probe(driver) -> dict:
+    """Один `execute_script` на опрос: состояние пробы + подпись кнопки +
+    диагностический счётчик кликов (`tap_copy_url_button`). Поля
+    `resolved`/`rejected`/`rejectReason` — ЧИСТАЯ ДИАГНОСТИКА исхода промиса
+    (см. `_CLIPBOARD_WRITE_PROBE_ARM_JS`), ни один вердикт их не читает."""
+    with contexts.in_webview(driver):
+        return driver.execute_script(
+            f"var b = document.querySelector({selectors.DEBUG_COPY_URL_BUTTON!r}); "
+            "return {token: window.__ao3TestClipboardWriteProbe || null, "
+            "calls: window.__ao3TestClipboardWriteCalls || 0, "
+            "lastArg: window.__ao3TestClipboardWriteLastArg || null, "
+            "resolved: window.__ao3TestClipboardWriteResolved || 0, "
+            "rejected: window.__ao3TestClipboardWriteRejected || 0, "
+            "rejectReason: window.__ao3TestClipboardWriteRejectReason || null, "
+            "label: b ? b.textContent : null, "
+            "clickCount: window.__ao3TestClickCount || 0};"
+        )
+
+
+def _attach_promise_outcome_diagnostic(driver, probe_token: str, state: dict) -> None:
+    """Диагностическое вложение «резолв или фолбэк» — материал для отложенного
+    триажа продуктовой грани TC-188 (`bugs/AT-BUG-068.md`): подпись «Copied!»
+    после фикса BUG-069 печатают ОБЕ ветки `ao3_bridge.js:1173/1180`, поэтому
+    исход промиса наблюдаем ТОЛЬКО этими счётчиками.
+
+    Счётчики инкрементируются в микротаске ПОСЛЕ оседания промиса, а вердикт
+    ассерта мог сработать раньше — здесь короткий ОГРАНИЧЕННЫЙ дочит (не более
+    `_PROMISE_OUTCOME_DIAG_BUDGET_S`), и он НЕ может изменить исход шага: любое
+    исключение подавляется и превращается в текст вложения (диагностика,
+    добытая ценой падения зелёного теста, — это уже не диагностика)."""
+    final = state
+    deadline = time.time() + _PROMISE_OUTCOME_DIAG_BUDGET_S
+    try:
+        while int(final.get("resolved") or 0) + int(final.get("rejected") or 0) == 0:
+            if time.time() >= deadline:
+                break
+            time.sleep(_PROMISE_OUTCOME_DIAG_INTERVAL_S)
+            final = _read_clipboard_write_probe(driver)
+        note = ""
+        if final.get("token") != probe_token:
+            note = " (ВНИМАНИЕ: токен пробы не совпал — диагностика не о нашем документе)"
+        elif int(final.get("resolved") or 0) + int(final.get("rejected") or 0) == 0:
+            note = (" (исход промиса не осел за отведённый диагностический бюджет — "
+                    "вывода о резолве/реджекте НЕ делать)")
+        allure.attach(
+            f"{final!r}{note}",
+            name="clipboard-write-probe: исход промиса (диагностика, НЕ вердикт)",
+            attachment_type=allure.attachment_type.TEXT,
+        )
+    except Exception as exc:  # noqa: BLE001
         try:
-            with contexts.in_webview(driver):
-                diag = driver.execute_script(
-                    f"var b = document.querySelector({selectors.DEBUG_COPY_URL_BUTTON!r}); "
-                    "return {hasFocus: document.hasFocus(), "
-                    "isSecureContext: window.isSecureContext, "
-                    "clipboardType: typeof navigator.clipboard, "
-                    "writeTextType: (navigator.clipboard && typeof navigator.clipboard.writeText) || 'n/a', "
-                    "clickCount: window.__ao3TestClickCount || 0, "
-                    "buttonText: b ? b.textContent : null};"
-                )
-                try:
-                    browser_log = driver.get_log("browser")
-                except Exception as log_exc:  # noqa: BLE001
-                    browser_log = f"<browser log недоступен: {log_exc.__class__.__name__}: {log_exc}>"
-        except Exception as diag_exc:  # noqa: BLE001
-            diag = f"<диагностика недоступна: {diag_exc.__class__.__name__}>"
-            browser_log = "<n/a>"
-        raise TimeoutException(
-            f"подпись кнопки «Copy URL» не стала «{expected}» за {timeout}с "
-            f"(последнее наблюдение: {holder['value']!r}; диагностика: {diag!r}; "
-            f"browser log: {browser_log!r})"
-        ) from exc
+            allure.attach(
+                f"<диагностика исхода промиса недоступна: {exc.__class__.__name__}: {exc}>; "
+                f"последнее состояние: {final!r}",
+                name="clipboard-write-probe: исход промиса (диагностика, НЕ вердикт)",
+                attachment_type=allure.attachment_type.TEXT,
+            )
+        except Exception:  # noqa: BLE001 — даже отказ allure не должен ронять шаг
+            pass
+
+
+def _browser_log_diagnostic(driver) -> str:
+    """ТОЛЬКО строка для сообщения об отказе — на ней НЕ строится ни один
+    вердикт (буфер теряется при пере-аттаче chromedriver-сессии, см.
+    комментарий выше). Недоступность лога возвращается ТЕКСТОМ исключения, а не
+    пустым списком: молчаливое `[]` было ровно тем, что маскировало
+    инструментальную потерю под продуктовый отказ."""
+    try:
+        with contexts.in_webview(driver):
+            entries = driver.get_log("browser")
+    except Exception as exc:  # noqa: BLE001
+        return f"<browser log недоступен: {exc.__class__.__name__}: {exc}>"
+    try:
+        return repr([
+            entry.get("message", "") if isinstance(entry, dict) else str(entry)
+            for entry in entries
+        ])
+    except Exception as exc:  # noqa: BLE001
+        return f"<browser log не разобран: {exc.__class__.__name__}: {exc}>"
 
 
 @allure.step("Then клик по «Copy URL» реально вызывает navigator.clipboard.writeText "
-              "(browser log/подпись — ESC-032 путь б.1)")
-def assert_copy_url_write_text_invoked(driver, timeout: int = 5, poll_interval: float = 0.3) -> None:
+              "(window-проба — ESC-032 путь б.1)")
+def assert_copy_url_write_text_invoked(
+    driver, probe_token: str, timeout: int = 5, poll_interval: float = 0.3,
+) -> None:
     """TC-188 (переформулировка Then, ESC-032 путь б.1, `bugs/AT-BUG-068.md`):
     продуктовый контракт «Copied!»/1500мс-таймер/содержимое буфера НЕ
     ассертится здесь — заблокирован окружением (`DOMException` бросается
@@ -3028,43 +3209,84 @@ def assert_copy_url_write_text_invoked(driver, timeout: int = 5, poll_interval: 
     ВЫЗЫВАЕТСЯ.
 
     Позитивный артефакт-якорь, не вакуумный негатив (класс ложно-зелёных #1,
-    CLAUDE.md): в ТЕКУЩЕЙ тестовой среде (`ao3_test_api34`, System WebView
-    Chromium 113.0.5672.136) вызов `writeText` детерминированно ДОКАЗУЕМ через
-    `driver.get_log('browser')` — запись `DOMException: Write permission
-    denied` СУЩЕСТВУЕТ там, только если исполнение реально дошло до Clipboard
-    API (см. живую диагностику `AT-BUG-068.md`: `clickCount=1`,
-    `hasFocus=true`, `isSecureContext=true`, промис РЕАЛЬНО реджектится этим
-    исключением). Отсутствие сигнала НЕ засчитывается автоматически —
-    альтернативный позитивный путь (среда, где запись в буфер РАЗРЕШЕНА:
-    промис резолвится, `.then()` меняет подпись на «Copied!») тоже
-    принимается тем же ассертом, поэтому формулировка не ломается при смене
-    WebView/AVD-образа. Один ИЗ ДВУХ сигналов ОБЯЗАН появиться — иначе клик,
-    похоже, вообще не дошёл до обработчика (или тестовая среда деградировала
-    иначе), и это честный провал, а не «продукт не готов»."""
-    accumulated: list[str] = []
+    CLAUDE.md): счётчик обёртки (`window.__ao3TestClipboardWriteCalls`,
+    взводится `arm_clipboard_write_probe` ДО тапа) инкрементируется ТОЛЬКО
+    исполнением самого вызова — независимо от того, резолвится промис или
+    реджектится `DOMException`, и независимо от версии WebView/AVD-образа
+    (прежний якорь — текст `DOMException` в browser log — был признаком ЭТОЙ
+    среды И жил в эфемерном буфере chromedriver-сессии).
 
-    def _observed() -> bool:
-        with contexts.in_webview(driver):
-            try:
-                entries = driver.get_log("browser")
-            except Exception:  # noqa: BLE001
-                entries = []
-            label = driver.execute_script(
-                f"var b = document.querySelector({selectors.DEBUG_COPY_URL_BUTTON!r}); "
-                "return b ? b.textContent : null;"
-            )
-        for entry in entries:
-            msg = entry.get("message", "") if isinstance(entry, dict) else str(entry)
-            accumulated.append(msg)
-        if any("DOMException" in m and "Write permission denied" in m for m in accumulated):
-            return True
-        return label == "Copied!"
+    Второй принимаемый сигнал — подпись «Copied!» ПРИ СВОЁМ ТОКЕНЕ: после фикса
+    BUG-069 её печатают ОБЕ ветки обработчика (`ao3_bridge.js:1180` — резолв
+    `writeText`; `:1173` — `execCommandFallback` при реджекте), то есть она
+    доказывает ровно то же ядро («клик дошёл, копирование инициировано») и
+    НИЧЕГО не говорит о том, разрешён ли clipboard в этой среде. Сверка токена
+    обязательна и здесь (критик-раунд 2): без неё «Copied!», доставшаяся от
+    ЧУЖОГО/пересозданного документа, давала бы ложно-зелёное при утраченной
+    пробе. Исход промиса пишется отдельным диагностическим вложением
+    (`_attach_promise_outcome_diagnostic`), в вердикт НЕ входит.
 
-    ok = poll_for(_observed, timeout=timeout, interval=poll_interval)
-    assert ok, (
-        "ни DOMException «Write permission denied» в browser log (AT-BUG-068, "
-        "признак этой среды), ни подпись «Copied!» (признак среды без этого "
-        f"ограничения) не наблюдались за {timeout}с после тапа по «Copy URL» — "
-        f"navigator.clipboard.writeText, похоже, не был вызван вовсе (клик не "
-        f"дошёл до обработчика узла); накопленный browser log: {accumulated!r}"
+    ТРИ РАЗЛИЧИМЫХ исхода вместо прежних двух:
+    - при СВОЁМ токене: счётчик > 0 либо подпись «Copied!» — успех;
+    - проба недоступна/утрачена (WEBVIEW-контекст не отдал состояние; токен
+      чужой/пропал → документ пересоздан) — `ClipboardWriteProbeLost`,
+      ИНСТРУМЕНТАЛЬНЫЙ отказ, НЕ вердикт о продукте;
+    - проба жива, своя, счётчик 0 и подпись не «Copied!» — честный
+      `AssertionError`: вызова действительно не было."""
+    deadline = time.time() + timeout
+    last_state: dict | None = None
+    last_exc: Exception | None = None
+    while True:
+        try:
+            state = _read_clipboard_write_probe(driver)
+            last_exc = None
+        except WebDriverException as exc:
+            state = None
+            last_exc = exc
+        if isinstance(state, dict):
+            last_state = state
+            if state.get("token") == probe_token and int(state.get("calls") or 0) > 0:
+                allure.attach(
+                    repr(state), name="clipboard-write-probe: вызов зафиксирован",
+                    attachment_type=allure.attachment_type.TEXT,
+                )
+                _attach_promise_outcome_diagnostic(driver, probe_token, state)
+                return
+            if state.get("token") == probe_token and state.get("label") == "Copied!":
+                allure.attach(
+                    repr(state),
+                    name=("clipboard-write-probe: подпись «Copied!» (резолв ЛИБО "
+                          "execCommand-фолбэк — ветки неразличимы по подписи)"),
+                    attachment_type=allure.attachment_type.TEXT,
+                )
+                _attach_promise_outcome_diagnostic(driver, probe_token, state)
+                return
+        if time.time() >= deadline:
+            break
+        time.sleep(poll_interval)
+
+    if last_exc is not None:
+        raise ClipboardWriteProbeLost(
+            f"состояние window-пробы не прочитано за {timeout}с после тапа по "
+            f"«Copy URL» — WEBVIEW-контекст/chromedriver-сессия недоступны "
+            f"({last_exc.__class__.__name__}: {last_exc}); это ИНСТРУМЕНТАЛЬНЫЙ "
+            f"отказ, вывод о том, дошёл ли клик до обработчика, НЕ делается. "
+            f"Последнее прочитанное состояние: {last_state!r}"
+        ) from last_exc
+    if not isinstance(last_state, dict) or last_state.get("token") != probe_token:
+        raise ClipboardWriteProbeLost(
+            f"window-проба вызова writeText утрачена: ожидался токен "
+            f"{probe_token!r}, состояние {last_state!r} — документ WebView, "
+            f"похоже, был пересоздан (reload/навигация) ПОСЛЕ взвода пробы, "
+            f"вместе с ним стёрт и счётчик. ИНСТРУМЕНТАЛЬНЫЙ отказ: вывод о "
+            f"том, дошёл ли клик до обработчика, НЕ делается"
+        )
+    raise AssertionError(
+        f"navigator.clipboard.writeText НЕ вызывался за {timeout}с после тапа по "
+        f"«Copy URL»: window-проба жива и своя (токен {probe_token!r}), счётчик "
+        f"вызовов {last_state.get('calls')!r}, подпись кнопки "
+        f"{last_state.get('label')!r} (не «Copied!»), кликов по узлу "
+        f"{last_state.get('clickCount')!r} — клик, похоже, не дошёл до "
+        f"обработчика узла. Диагностика (НЕ вердикт), browser log: "
+        f"{_browser_log_diagnostic(driver)}"
     )
