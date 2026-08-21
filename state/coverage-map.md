@@ -1,9 +1,7 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-20T23:57:03Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-08-21T00:23:16Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
-
-⚠ реестр фич протух: сборка fdd3f72884105d1453448e0c9a7f2b109588b182, реестр инвентаризован против aa377e0ec9664fcd5439fec9391638fabf94f448
 
 ## Сводка по областям
 
@@ -150,6 +148,8 @@ generated_at: 2026-08-20T23:57:03Z · генератор: `scripts/coverage_map.
 | browser-error-page | browse | errors:TC-046[Automated] |
 | bridge-tag-highlight | ao3-bridge | rating:TC-056[Automated] |
 | browse-initial-load | browse | smoke:TC-001[Automated] |
+| browse-pull-to-refresh | browse | нет кейсов |
+| library-open-local-html-reader-css | browse | нет кейсов |
 | rating-overlay-five-options | rating-notes | rating:TC-007[Automated], rating:TC-009[Automated] |
 | rating-deselect-on-tap | rating-notes | rating:TC-008[Automated], rating:TC-151[Approved], rating:TC-152[Approved] |
 | rating-comment-save | rating-notes | rating:TC-087[Automated] |
@@ -175,6 +175,8 @@ generated_at: 2026-08-20T23:57:03Z · генератор: `scripts/coverage_map.
 | bridge-empty-page-auto-advance-replaces-history | ao3-bridge | browser:TC-263[Approved], browser:TC-264[Approved] |
 | bridge-live-rating-push-no-auto-advance | ao3-bridge | browser:TC-260[Approved] |
 | bridge-copy-url-clipboard-fallback | ao3-bridge | browser:TC-265[Approved] |
+| bridge-reading-progress-reporting | ao3-bridge | нет кейсов |
+| bridge-scroll-to-percent-resume-retry | ao3-bridge | нет кейсов |
 | eink-palette-native | eink | accessibility:TC-276[Review] |
 | eink-no-ripple-indication | eink | нет кейсов |
 | eink-snap-animations | eink | accessibility:TC-278[Review] |
@@ -191,10 +193,16 @@ generated_at: 2026-08-20T23:57:03Z · генератор: `scripts/coverage_map.
 | sync-download-path-device-local | sync | sync:TC-207[Approved], sync:TC-214[Approved] |
 | sync-publish-merged-state | sync | sync:TC-215[Approved], sync:TC-216[Approved] |
 | sync-auto-trigger-foreground-and-changes | sync | sync:TC-226[Approved], sync:TC-227[Approved], sync:TC-228[Approved], sync:TC-229[Approved], sync:TC-230[Approved], sync:TC-231[Approved] |
+| sync-merge-reading-progress-fieldwise | sync | нет кейсов |
+| library-card-send-to-other-devices | library | нет кейсов |
+| sync-send-request-fulfil-download | sync | нет кейсов |
+| sync-send-arrival-snackbar | sync | нет кейсов |
+| sync-merge-send-request-fieldwise | sync | нет кейсов |
 | data-workrating-model | data | нет кейсов |
 | data-filterprofile-model | data | нет кейсов |
 | data-clear-all-ratings | data | smoke:TC-004[Automated], settings:TC-018[Automated], settings:TC-019[Automated], settings:TC-020[Automated] |
 | data-sync-tombstone-model | data | sync:TC-217[Approved] |
+| data-schema-migration-8-10 | data | нет кейсов |
 | background-download-repository | background | downloads:TC-032[Automated], downloads:TC-033[Automated] |
 | download-work-epub-format | background | downloads:TC-236[Approved], downloads:TC-237[Approved], downloads:TC-238[Approved] |
 | background-auto-download-trigger | background | downloads:TC-032[Automated], downloads:TC-112[Automated], downloads:TC-114[Automated], downloads:TC-115[Automated], downloads:TC-116[Automated], downloads:TC-117[Automated] |
@@ -224,11 +232,21 @@ generated_at: 2026-08-20T23:57:03Z · генератор: `scripts/coverage_map.
 
 - browse-tabstrip-indicators (browse): TabStrip: индикация активной вкладки, закрытие свайпом вверх, кнопка New tab
 - library-filters-clear-all-topbar (library): Топ-бар Library: бейдж с числом активных фильтров и кнопка «Clear filters» (видна только при активных фильтрах) сбрасывают все фильтры разом
+- browse-pull-to-refresh (browse): Свайп вниз по странице вкладки Browse перезагружает её (pull-to-refresh поверх WebView)
+- library-open-local-html-reader-css (browse): Скачанный HTML-файл открывается в приложении с подмешанным читательским стилем reader.css (loadDataWithBaseURL), а при нечитаемом файле молча грузится как есть
 - bridge-dark-css (ao3-bridge): CSS-переопределения тёмной темы на AO3-страницах (window.__ao3AppDark)
+- bridge-reading-progress-reporting (ao3-bridge): Bridge на странице работы репортит Kotlin номер главы, число глав и процент прокрутки (Android.onReadingProgress) — сразу при инициализации и далее не чаще раза в 250 мс при скролле; вне страницы работы отчёта нет
+- bridge-scroll-to-percent-resume-retry (ao3-bridge): window.ao3ScrollToPercent прокручивает страницу работы к сохранённому проценту и повторяет попытку до 5 раз с шагом 200 мс, пока ленивый контент дорастает высоту — позиция, снятая на другом экране/шрифте, попадает в то же место
 - eink-no-ripple-indication (eink): E-ink: нажатие на контролы не рисует ripple-волну (индикация подменена no-op для foundation-clickable и Material3 одновременно)
 - eink-webview-no-overscroll (eink): E-ink: WebView не показывает overscroll-эффект на границе страницы (ни свечения, ни растягивания); выключение режима возвращает штатный overscroll
-- data-workrating-model (data): Room-сущность WorkRating (rating/comment/tags/fandom/author/wordCount/downloadPath)
+- sync-merge-reading-progress-fieldwise (sync): Позиция чтения сливается между устройствами ПОФИЛДОВО по собственным часам readProgressAt, независимо от того, чья строка выиграла LWW: более свежая позиция переносится, а рейтинг/заметка победившей строки при этом не откатываются
+- library-card-send-to-other-devices (library): Пункт «Send to my other devices» в листе длинного нажатия по карточке Library ставит запрос на скачивание для ОСТАЛЬНЫХ устройств: подпись становится «…again» у уже отправленной работы, пункт недоступен без сохранённого URL, а само это устройство работу не качает
+- sync-send-request-fulfil-download (sync): Устройство-приёмник на ближайшей синхронизации само скачивает работы, отправленные с другого устройства (едет только запрос, файл — никогда); устройство, у которого файл уже есть, помечает запрос отработанным без закачки, а неудачная попытка повторяется следующим проходом
+- sync-send-arrival-snackbar (sync): Приход присланных работ подтверждается снекбаром «Downloaded N works sent from another device» — единственное сообщение об этом событии: собственный диалог «Sync complete» о полученных работах молчит, а автоматический прогон не показывает ничего другого
+- sync-merge-send-request-fieldwise (sync): Запрос «Send to my other devices» сливается пофилдово и монотонно (побеждает более поздний sendRequestedAt) независимо от исхода LWW строки, а отметка об отработке (sendHandledAt) не публикуется и не приходит извне — остаётся устройство-локальной
+- data-workrating-model (data): Room-сущность WorkRating (rating/comment/tags/fandom/author/wordCount/downloadPath + позиция чтения readProgress* со своими часами и запрос отправки sendRequestedAt/sendHandledAt)
 - data-filterprofile-model (data): Room-сущность FilterProfile (name/queryString)
+- data-schema-migration-8-10 (data): Миграции схемы Room 8→9 (колонки readProgress*) и 9→10 (sendRequestedAt/sendHandledAt): обновление приложения поверх старой базы сохраняет все пользовательские данные, новые поля пустые, старт не падает
 
 ## Области
 

@@ -301,7 +301,151 @@
 #     at press time)», тогда как `BrowserScreen.kt:261-268` читает НЕ
 #     `WebView.canGoBack()`, а `viewModel.goBack(tabId)` поверх `TabNavHistory`
 #     — ровно то расхождение, на которое напоролась верификация BUG-019.
-inventoried_at_commit: "aa377e0ec9664fcd5439fec9391638fabf94f448"
+# ПЕРЕИНВЕНТАРИЗАЦИЯ (test-strategist; вход — триггер rules.yaml «реестр
+# протух», третья ветка: реестр стоял на aa377e0e, сборка
+# fdd3f72884105d1453448e0c9a7f2b109588b182, built_at 2026-08-19T17:47:59Z,
+# `coalesced_commits: [36cda8ef, 4f9feb33, 494a356d, 994a3128, 33918fef]` —
+# ШЕСТЬ коммитов в диапазоне). Инвентаризация сделана ПО КОДУ
+# (`app/src/main/**` + `assets/ao3_bridge.js`); PROJECT.md прочитан как
+# ОГЛАВЛЕНИЕ и как перекрёстная сверка (в этой пачке он правился, разделы
+# «Reading progress» и «Send to my other devices» — новые).
+# `inventoried_at_commit` поднят до fdd3f728 — НОВЫЙ build.
+#
+# ОГРАНИЧЕНИЕ СЛЕДА (называю явно): у роли test-strategist нет Bash, своего
+# `git log --oneline aa377e0e..fdd3f728` в этой сессии не было, ТЕМЫ коммитов
+# недоступны. Опоры дельта-скана:
+#  (1) ГИТ-ПРОИЗВОДНЫЙ список изменённых файлов — дословный вывод
+#      `python scripts/impact_select.py` в `runs/RUN-20260819-2012.md:148-181`
+#      («Диапазон: aa377e0e…..fdd3f728…», «Файлов изменено: 18», четыре
+#      секции ignore/wide_impact/rules/unknown), снятый координатором на
+#      устройстве; 4+4+5+5 = 18 — список ПОЛНЫЙ, дыр перечисления нет;
+#  (2) состав диапазона (6 коммитов) — `state/app-under-test.yaml` +
+#      `runs/RUN-20260819-1818.md:59-65`; `app-under-test/.git/logs/HEAD:12`
+#      подтверждает checkout aa377e0e → fdd3f728;
+#  (3) чтение текущего кода и прежние код-якоря самого реестра;
+#  (4) `app-under-test/PROJECT.md` (новые разделы) — только как сверка, не
+#      как основание записи.
+# Где опор не хватило — сомнение записано строкой, а не спрятано (см. вердикт
+# по `BrowserScreen.kt` в перечислении ниже).
+#
+# ДЕЛЬТА-СКАН ПЕРЕЧИСЛЕНИЕМ (строка вердикта на КАЖДЫЙ из 18 файлов диффа;
+# форма введена 2026-08-19):
+#   1. `app/src/main/assets/ao3_bridge.js` — НОВЫЕ записи
+#      `bridge-reading-progress-reporting`, `bridge-scroll-to-percent-resume-retry`
+#      (`:969-1005`); остальные bridge-записи код-якоря не потеряли.
+#   2. `app/src/main/java/…/MainActivity.kt` — покрыт записью
+#      `browse-resume-offer-snackbar` (снекбар `:343-354`) + НОВАЯ запись
+#      `sync-send-arrival-snackbar` (`:333-339`).
+#   3. `app/src/main/java/…/data/db/AppDatabase.kt` — НОВАЯ запись
+#      `data-schema-migration-8-10` (version 8 → 10, `MIGRATION_8_9` `:113-121`,
+#      `MIGRATION_9_10` `:123-128`, регистрация `:137`).
+#   4. `app/src/main/java/…/data/model/WorkRating.kt` — покрыт
+#      `data-workrating-model` (title расширен: семь новых полей), поля
+#      наблюдаемы через записи прогресса/отправки/слияния.
+#   5. `app/src/main/java/…/ui/browser/BrowserScreen.kt` — СОМНЕНИЕ НАЗВАНО:
+#      конкретная правка без git-диффа не изолирована; сплошным чтением файла
+#      нового наблюдаемого поведения, не покрытого записями, не найдено
+#      (`:161-256` пуши настроек, `:258-269` Back, `:271-333` жесты,
+#      `:549-568` локальный файл, `:570+` createWebView) — вердикт «покрыт
+#      существующими записями (`browse-bridge-injection`,
+#      `browse-back-per-tab-history`, `browse-pinch-font`,
+#      `browse-two-finger-brightness`, `browse-page-turn-buttons`,
+#      `eink-webview-no-overscroll`, `browser-error-page`)». Попутно этот
+#      просмотр вскрыл ДВА пробела реестра (класс B ниже) — они НЕ дельта
+#      сборки (их код-якоря диффом не затронуты).
+#   6. `app/src/main/java/…/ui/browser/BrowserViewModel.kt` — покрыт записями
+#      `browse-reading-progress-persist-room`, `browse-resume-offer-snackbar`
+#      (`:530-622`, JS-интерфейс `onReadingProgress:1510-1520`); классификация
+#      обеих ИСПРАВЛЕНА этим проходом (см. блок «КОРРЕКЦИЯ» ниже).
+#   7. `app/src/main/java/…/ui/library/LibraryScreen.kt` — НОВАЯ запись
+#      `library-card-send-to-other-devices` (`:348-351`, `:403`, `:446-455`);
+#      прочие пункты листа действий — прежние записи.
+#   8. `app/src/main/java/…/ui/library/LibraryViewModel.kt` — та же новая
+#      запись (`sendToOtherDevices:103-110`).
+#   9. `app/src/main/java/…/ui/settings/SettingsScreen.kt` — покрыт: канал
+#      `syncReceived = syncRepo.received` (`:174-178`) — часть записи
+#      `sync-send-arrival-snackbar`; новых видимых настроек нет (полный
+#      просмотр `SettingsUiState:84-100` и секции Sync `:1186-1250`);
+#      уточнение границы у `sync-manual-run-result-dialog` (диалог «Sync
+#      complete» `:1442-1465` про полученные работы МОЛЧИТ).
+#  10. `app/src/main/java/…/data/sync/LibraryJson.kt` — покрыт
+#      `sync-publish-merged-state` + новыми записями слияния: сериализация
+#      `readProgress*` (`:30-35`, `:63-67`) и `sendRequestedAt` (`:36-38`,
+#      `:68`), `sendHandledAt` НЕ публикуется и НЕ принимается (`:69`) —
+#      это грань записи `sync-merge-send-request-fieldwise`. Своей записи
+#      формат не получает (внутренний носитель, наблюдаем только через
+#      слияние).
+#  11. `app/src/main/java/…/data/sync/SyncRepository.kt` — ТРИ новые записи:
+#      `sync-merge-reading-progress-fieldwise` (`withNewerProgress:293-303`),
+#      `sync-merge-send-request-fieldwise` (`withNewerSendRequest:310-314`),
+#      `sync-send-request-fulfil-download` (`fulfillSendRequests:327-349`,
+#      вызов `:244-245`).
+#  12. `testing/.gitignore` — не-фичевый (инфраструктура фикстур репозитория
+#      разработчика, поведения приложения не создаёт).
+#  13. `testing/load-fixture.sh` — не-фичевый (тот же харнесс фикстур).
+#  14. `testing/make-fixtures.sh` — не-фичевый (тот же харнесс фикстур).
+#  15. `testing/README.md` — не-фичевый (документ харнесса).
+#  16. `PROJECT.md` — не-фичевый (документ-оглавление; использован как сверка).
+#  17. `DESIGN.md` — не-фичевый (документ).
+#  18. `CLAUDE.md` (репозитория приложения) — не-фичевый (инструкции агенту
+#      разработчика).
+#
+# ДЕЛЬТА:
+#  A. Новая подсистема №1 — ПРОГРЕСС ЧТЕНИЯ и оффер Resume (Room v9,
+#     `readProgress*`): записи `browse-reading-progress-persist-room` и
+#     `browse-resume-offer-snackbar` УЖЕ ЗАВЕДЕНЫ (2026-08-20, вход — чартер
+#     CH-011), но КЛАССИФИЦИРОВАНЫ ОШИБОЧНО как «пробел реестра, код жил и до
+#     этой сборки». КОРРЕКЦИЯ этого прохода: это ДЕЛЬТА СБОРКИ fdd3f728.
+#     Доказательство: инвентарь 59be96c6 (шапка выше) фиксирует «Room v8 +
+#     MIGRATION_7_8» как максимум схемы; диапазон 59be96c6..aa377e0e — ровно
+#     два коммита, `AppDatabase.kt`/`WorkRating.kt` ими НЕ затронуты (--stat в
+#     шапке того прохода); в диффе ЭТОЙ сборки оба файла присутствуют, а в
+#     коде HEAD — `version = 10` с `MIGRATION_8_9` (колонки `readProgress*`).
+#     Колонок не было ⇒ поведения не было. id обеих записей СТАБИЛЬНЫ
+#     (TC-273/274/275 ссылаются на них), ре-теггинг не требуется — правится
+#     только классификация комментарием у самих записей.
+#     Новые грани того же носителя, ранее не имевшие записи:
+#     + bridge-reading-progress-reporting
+#     + bridge-scroll-to-percent-resume-retry
+#     + sync-merge-reading-progress-fieldwise
+#  B. Новая подсистема №2 — «SEND TO MY OTHER DEVICES» (Room v10,
+#     `sendRequestedAt`/`sendHandledAt`): ни одной записи не существовало.
+#     + library-card-send-to-other-devices   (действие в листе длинного нажатия)
+#     + sync-send-request-fulfil-download    (ПРАВИЛО-РЕАКЦИЯ, п.2а роли)
+#     + sync-send-arrival-snackbar           (единственное сообщение о приходе)
+#     + sync-merge-send-request-fieldwise    (пофилдовое слияние запроса)
+#  C. Схема данных:
+#     + data-schema-migration-8-10 (обновление поверх базы v8 сохраняет данные
+#       и не падает; `fallbackToDestructiveMigration` по-прежнему НЕ включён).
+#     ~ data-workrating-model (title расширен семью новыми полями).
+#  D. Пробелы САМОГО РЕЕСТРА, вскрытые этим проходом (НЕ дельта сборки — код
+#     существовал и на aa377e0e: `app/build.gradle.kts` и `assets/reader.css`
+#     диффом сборки НЕ затронуты, а без них обе фичи неработоспособны):
+#     + browse-pull-to-refresh              (`BrowserScreen.kt:610-624`)
+#     + library-open-local-html-reader-css  (`BrowserScreen.kt:549-568`)
+#     Обе — 0 кейсов; обе внесены в «Сознательно отложенные дыры» docs/01 §9
+#     (не needs-design), решение о дозакрытии — за человеком.
+#  E. Изменённые формулировки существующих записей (id стабильны, ре-теггинг
+#     не требуется): ~ `data-workrating-model`; комментарии-примечания без
+#     правки title — у `sync-manual-run-result-dialog` (диалог не сообщает о
+#     полученных работах), `background-download-repository` (второй,
+#     неинтерактивный вызывающий — `fulfillSendRequests`),
+#     `sync-publish-merged-state` (новые поля добавлены ВНУТРЬ payload v3, без
+#     бампа версии).
+#  F. Удалённых/переименованных фич не найдено: код-якоря всех затронутых
+#     записей на месте. `Rating.PENDING` НЕ является новинкой этой сборки —
+#     записи `library-tabs-six` и `rating-overlay-five-options` называли Pending
+#     уже до неё (проверено чтением их title), поэтому «пятый рейтинг» в дельту
+#     не попадает.
+#  G. `story:`-полей проход не добавляет: QAready-айтемов на эту сборку в
+#     `state/escalations.md` нет (последние — QAREADY-38/42, резолвлены
+#     инвентаризацией 59be96c6); вся пачка пришла коммитами без work item'ов.
+#  H. Доложено Lead как кандидаты в вопрос разработчику (записи не заводят
+#     новых багов сами): (1) ручной «Sync complete» не упоминает
+#     `receivedWorks`, хотя поле в `SyncResult` есть — молчаливая асимметрия с
+#     отдельным снекбаром; (2) `fulfillSendRequests` качает файлы на приёмнике
+#     БЕЗ спроса и без предварительного сообщения (класс R-16 + R-05).
+inventoried_at_commit: "fdd3f72884105d1453448e0c9a7f2b109588b182"
 
 features:
   # ── Browse/WebView ──────────────────────────────────────────────────────
@@ -1358,6 +1502,19 @@ features:
   # Open). `inventoried_at_commit` НЕ тронут: это не переинвентаризация, а закрытие
   # пробела (прецедент правок 2026-07-28/2026-08-03 выше); реестр остаётся на
   # aa377e0e при сборке fdd3f728 — полная переинвентаризация идёт своим триггером.
+  # КОРРЕКЦИЯ КЛАССИФИКАЦИИ (test-strategist, переинвентаризация fdd3f728 —
+  # блок A шапки): абзац выше называет обе записи «ПРОБЕЛОМ РЕЕСТРА» («прогресс
+  # чтения жил в коде и до этой сборки») — это НЕВЕРНО, обе суть ДЕЛЬТА СБОРКИ
+  # fdd3f728. Доказательство: инвентарь 59be96c6 фиксирует максимум схемы «Room
+  # v8 + MIGRATION_7_8»; диапазон 59be96c6..aa377e0e — ровно два коммита, и ни
+  # один не трогал `AppDatabase.kt`/`WorkRating.kt` (--stat в шапке того
+  # прохода), тогда как в диффе ЭТОЙ сборки оба файла есть, а код HEAD несёт
+  # `version = 10` с `MIGRATION_8_9` (колонки `readProgress*`). Колонок не
+  # существовало ⇒ поведения не существовало. Практическое следствие для
+  # приёмки: соседние формулировки «фича есть в коде, в реестре нет» (§10 (ч)
+  # аналог 1) к этой паре НЕ относятся, счётчик того класса ими не растёт. id
+  # обеих записей стабильны, ре-теггинг TC-273/274/275 не требуется — правится
+  # только классификация.
   - id: browse-reading-progress-persist-room
     title: "Позиция чтения работы сохраняется в Room (readProgress*: URL, %, глава) при чтении страницы работы в приложении — только выше порога 5 % и с дебаунсом, не трогая timestamp строки"
     screen: browse
@@ -1435,6 +1592,37 @@ features:
     title: "Запуск приложения: вкладка Browse открывает AO3 root (HOME_URL)"
     screen: browse
     source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserViewModel.kt"
+  # ДВЕ ЗАПИСИ НИЖЕ — ПРОБЕЛ РЕЕСТРА (test-strategist, переинвентаризация
+  # fdd3f728; блок D шапки), НЕ дельта сборки: их код-якоря диффом
+  # aa377e0e..fdd3f728 не затронуты — зависимость `libs.androidx
+  # .swiperefreshlayout` (`app/build.gradle.kts:84`) и ассет
+  # `app/src/main/assets/reader.css` в списке 18 изменённых файлов
+  # ОТСУТСТВУЮТ, а без них обе фичи неработоспособны. Обе — 0 кейсов; обе
+  # внесены в «Сознательно отложенные дыры» docs/01 §9 (машинной дизайн-метки
+  # не получают, дозакрытие — решение человека).
+  #  - PULL-TO-REFRESH: каждая вкладка живёт внутри `SwipeRefreshLayout`
+  #    (`BrowserScreen.kt:610-624`, `setOnRefreshListener { webView.reload() }`;
+  #    контейнер активной вкладки подставляется в композицию `:335-339`).
+  #    Наблюдаемые грани, важные для будущего дизайна: перезагрузка страницы
+  #    рушит накопленное окно бесконечной подгрузки (`browse-infinite-scroll`,
+  #    PAGE_WINDOW) и позицию чтения на странице работы, то есть жест
+  #    пересекается сразу с двумя чувствительными зонами.
+  #  - READER.CSS: локально открытый файл скачанной работы грузится НЕ как
+  #    `loadUrl`, а читается целиком и отдаётся `loadDataWithBaseURL` с
+  #    подмешанным читательским стилем (`BrowserScreen.kt:549-568`,
+  #    `injectReaderCss`); ветка отказа (нечитаемый файл/пустой ассет) молча
+  #    падает обратно на `loadUrl` (`:551-553`, `:567`). Then наблюдаемо
+  #    отличается от `library-card-open-file` (та — про то, ЧТО открылось и на
+  #    каком экране; эта — про то, что содержимое отрисовано читательским
+  #    стилем, а адресная строка/база остаётся файловой).
+  - id: browse-pull-to-refresh
+    title: "Свайп вниз по странице вкладки Browse перезагружает её (pull-to-refresh поверх WebView)"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserScreen.kt"
+  - id: library-open-local-html-reader-css
+    title: "Скачанный HTML-файл открывается в приложении с подмешанным читательским стилем reader.css (loadDataWithBaseURL), а при нечитаемом файле молча грузится как есть"
+    screen: browse
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/browser/BrowserScreen.kt"
 
   # ── Rating & Notes ───────────────────────────────────────────────────────
   - id: rating-overlay-five-options
@@ -1695,6 +1883,34 @@ features:
     title: "Кнопка Copy URL на странице без Clipboard API (file:// и прочие небезопасные origin) не падает молча: срабатывает execCommand-fallback и подпись меняется на «Copied!» либо «Copy failed»"
     screen: ao3-bridge
     source: "app/src/main/assets/ao3_bridge.js"
+  # ДВЕ НОВЫЕ записи (test-strategist, переинвентаризация fdd3f728; дельта
+  # сборки — блок A шапки). Bridge-СТОРОНА прогресса чтения: Kotlin-сторона
+  # уже описана записями `browse-reading-progress-persist-room` /
+  # `browse-resume-offer-snackbar`, но Then у bridge-узлов другой и проверяется
+  # другим способом (L2/jsdom без устройства), поэтому записи свои — по тому же
+  # прецеденту, что `bridge-scroll-reporting` рядом с `browse-scroll-restore`.
+  #  - ОТЧЁТ (`ao3_bridge.js:969-1005`): блок активен ТОЛЬКО на странице работы
+  #    (`workMatch`, `:958`/`:972`); номер главы и общее число глав берутся из чужого
+  #    DOM — `document.getElementById('selected_id')`, `selectedIndex+1` и
+  #    `options.length`, при отсутствии селекта — 1/1 (`:976-978`); процент —
+  #    `window.scrollY / max(1, body.scrollHeight - innerHeight)`, округление
+  #    (`:979-980`); отчёт идёт СРАЗУ на инициализации (`:983`) и далее по
+  #    throttle 250 мс на `scroll` (`:998-1004`, `{passive:true}`). Зависимость
+  #    от разметки AO3 (`#selected_id`) — прямая грань R-02.
+  #  - ПРЫЖОК (`:989-996`): `window.ao3ScrollToPercent(pct)` вызывается ТОЛЬКО
+  #    из принятия оффера (`BrowserViewModel.kt:620`, `:665`) и ретраит до 5 раз
+  #    с шагом 200 мс, потому что ленивый контент дорастает `scrollHeight` уже
+  #    после загрузки; проценты вместо пикселей — чтобы позиция с другого
+  #    устройства (другой экран/шрифт) попадала в то же место. Наблюдаемая
+  #    граница: при `scrollable == 0` (короткая глава) прыжка нет вовсе.
+  - id: bridge-reading-progress-reporting
+    title: "Bridge на странице работы репортит Kotlin номер главы, число глав и процент прокрутки (Android.onReadingProgress) — сразу при инициализации и далее не чаще раза в 250 мс при скролле; вне страницы работы отчёта нет"
+    screen: ao3-bridge
+    source: "app/src/main/assets/ao3_bridge.js"
+  - id: bridge-scroll-to-percent-resume-retry
+    title: "window.ao3ScrollToPercent прокручивает страницу работы к сохранённому проценту и повторяет попытку до 5 раз с шагом 200 мс, пока ленивый контент дорастает высоту — позиция, снятая на другом экране/шрифте, попадает в то же место"
+    screen: ao3-bridge
+    source: "app/src/main/assets/ao3_bridge.js"
 
   # ── E-ink режим ───────────────────────────────────────────────────────────
   # ПЯТЬ записей ниже — эффекты режима e-ink (коммит bc32c275, сборка 59be96c6),
@@ -1794,6 +2010,16 @@ features:
   # «N filters removed» через запятую) + «. Snippet updated.» либо «.» /
   # «No incoming changes. Snippet updated.» / «Everything already in sync.».
   # Плюс подпись «Last synced <MMM d, HH:mm>» вместо «Not synced yet» (`:1256-1263`).
+  # Примечание-граница (test-strategist, переинвентаризация fdd3f728; title НЕ
+  # правлю — набор из четырёх сообщений тот же): в сборке fdd3f728 у
+  # `SyncRepository.SyncResult` появилось поле `receivedWorks` (`:100`,
+  # заполняется `:244-245`), но диалог «Sync complete» о нём МОЛЧИТ — список
+  # `changes` (`SettingsScreen.kt:1448-1453`) его не содержит, и ручной прогон,
+  # который только что скачал N присланных работ, честно скажет «Everything
+  # already in sync.», если больше ничего не менялось. Единственный носитель
+  # этого события — запись `sync-send-arrival-snackbar`. Доложено Lead как
+  # кандидат в вопрос разработчику (асимметрия сообщений, класс R-16); своего
+  # бага стратег не заводит.
   - id: sync-manual-run-result-dialog
     title: "Кнопка «Sync now»: во время прогона подпись «Syncing…» и повторный тап игнорируется, по завершении — диалог «Sync complete» с одним из четырёх дословных сообщений и обновлённая подпись «Last synced …»"
     screen: sync
@@ -1906,6 +2132,14 @@ features:
   # этом обновляется в любом случае (`:230`). Then отличается от слияния: здесь
   # наблюдается СОДЕРЖИМОЕ сниппета и факт/отсутствие записи, а не состояние
   # локальной базы; это же свойство — оракул сходимости для N устройств.
+  # Примечание-граница (test-strategist, переинвентаризация fdd3f728): payload
+  # обзавёлся новыми полями (`readProgress*`, `sendRequestedAt` —
+  # `LibraryJson.kt:30-38`) ВНУТРИ той же версии 3 (`SyncRepository.kt:249`),
+  # бампа версии этой сборкой не было. Следствие для дизайна: устройство со
+  # старой сборкой прочитает такой payload молча (`workFromJson` берёт поля
+  # через `isNull`/`opt*`), но при публикации ПОТЕРЯЕТ незнакомые поля — то
+  # есть смешанный парк устройств откатывает прогресс и запросы отправки без
+  # единого сообщения. title не правлю: версия и Then прежние.
   - id: sync-publish-merged-state
     title: "После слияния устройство публикует в сниппет полное состояние (works + filterProfiles + tombstones, version 3); если состояние совпадает с уже лежащим в сниппете, запись не выполняется вовсе"
     screen: sync
@@ -1943,10 +2177,89 @@ features:
     title: "Автоматическая синхронизация: на каждом выходе приложения на передний план и через 5 с после локального изменения базы, но не чаще раза в минуту, если ничего не менялось; успех и ОШИБКА этого пути пользователю не показываются"
     screen: sync
     source: "app/src/main/java/com/example/ao3_wrapper/data/sync/SyncRepository.kt"
+  # НОВАЯ запись (test-strategist, переинвентаризация fdd3f728; дельта сборки,
+  # блок A шапки). Слияние прогресса чтения идёт ОТДЕЛЬНО от строкового LWW:
+  # `SyncRepository.withNewerProgress:293-303` переносит группу `readProgress*`
+  # со стороны с бОльшим `readProgressAt`, и делает это в ОБЕИХ ветках цикла —
+  # когда победила локальная строка (`:172-178`, вместе с
+  # `withNewerSendRequest`) и когда победила удалённая (`:185-197`). Then
+  # наблюдаемо отличается от `sync-merge-lww-works` (там строка ЗАМЕЩАЕТСЯ
+  # целиком): устройство, на котором только читали, не теряет чужую заметку, а
+  # устройство, на котором только оценивали, не откатывает чужую позицию.
+  # Границы для дизайна: у прогресса СВОИ часы (строковый `timestamp` не
+  # трогается — `BrowserViewModel.kt:559-576`), поэтому чтение вообще не влияет
+  # на исход строкового LWW; работа, читаемая во ВНЕШНЕМ EPUB-ридере, не
+  # репортит ничего и в слиянии не участвует (`SyncRepository.kt:290-291`).
+  # Покрытие: 0 кейсов; это п.5 P1-области docs/01 §9 «reading-progress/Resume»,
+  # СОЗНАТЕЛЬНО оставленный остатком вне дизайн-очереди (нужна синк-фикстура на
+  # конфликт `readProgress*`) — отдельная дизайн-метка этой записи не требуется.
+  - id: sync-merge-reading-progress-fieldwise
+    title: "Позиция чтения сливается между устройствами ПОФИЛДОВО по собственным часам readProgressAt, независимо от того, чья строка выиграла LWW: более свежая позиция переносится, а рейтинг/заметка победившей строки при этом не откатываются"
+    screen: sync
+    source: "app/src/main/java/com/example/ao3_wrapper/data/sync/SyncRepository.kt"
+  # ЧЕТЫРЕ НОВЫЕ записи ниже (test-strategist, переинвентаризация fdd3f728) —
+  # подсистема «Send to my other devices» (дельта сборки, блок B шапки; Room
+  # v10, поля `sendRequestedAt`/`sendHandledAt`). Дробление по правилу шапки:
+  # Then у действия пользователя, у реакции устройства-приёмника, у сообщения о
+  # приходе и у слияния запроса наблюдаемо разные, а зонтичная запись зачла бы
+  # всю четвёрку по первому же кейсу. У всех четырёх — 0 кейсов. Запись
+  # действия (`library-card-send-to-other-devices`, screen: library) держится
+  # здесь же, рядом со своим механизмом, — соседство с sync-записями важнее
+  # алфавита блока, а координата экрана несётся полем `screen`.
+  #
+  # `sync-send-request-fulfil-download` — ПРАВИЛО-РЕАКЦИЯ (п.2а роли), полный
+  # паспорт:
+  #  - семантический ТРИГГЕР: до этого устройства доехал запрос «скачай эту
+  #    работу», сделанный на ДРУГОМ устройстве позже, чем этот отработал
+  #    прошлый;
+  #  - ФАКТИЧЕСКИЕ места (поиском по символу, ВСЕ): объявление
+  #    `SyncRepository.fulfillSendRequests:327-349`; ЕДИНСТВЕННЫЙ вызов —
+  #    `:244-245` (после слияния, до публикации, поэтому только что пришедший
+  #    запрос отрабатывается тем же проходом); предикат `:330-331`
+  #    (`sendRequestedAt != null && sendHandledAt < sendRequestedAt`); запись
+  #    водяного знака `:333`, `:341`; источник запроса — `LibraryViewModel
+  #    .sendToOtherDevices:103-110`;
+  #  - ЭФФЕКТ: `DownloadRepository.downloadWork` — реальная сетевая закачка
+  #    файла на ЭТОМ устройстве, без спроса и без предварительного сообщения;
+  #    устройство, у которого файл уже есть (`downloadPath != null`, `:332-335`),
+  #    помечает запрос отработанным и НЕ качает; неуспех оставляет запрос
+  #    неотработанным, и следующий проход повторит (`:342-346`);
+  #  - наблюдаемая ПОВЕРХНОСТЬ: работа появляется на вкладке Files приёмника +
+  #    снекбар прихода (`sync-send-arrival-snackbar`); на отправителе — ничего;
+  #  - КРАСНЫЕ ФЛАГИ п.2а: (а) edge-vs-level НЕ горит — уровневый предикат
+  #    удерживается монотонным водяным знаком `sendHandledAt`, семантика
+  #    «одного перехода» соблюдена; (б) АСИММЕТРИЯ горит и она задумана:
+  #    `sendHandledAt` устройство-локальный и НЕ публикуется
+  #    (`LibraryJson.kt:36-38`, `:69`; сохраняется при победе удалённой строки —
+  #    `SyncRepository.kt:191`), поэтому удаление файла на приёмнике НЕ
+  #    приводит к повторной закачке по тому же запросу, а новый Send —
+  #    приводит. Доложено Lead как кандидат в вопрос разработчику: закачка
+  #    файлов на чужом устройстве без спроса — класс R-16 ∩ R-05.
+  - id: library-card-send-to-other-devices
+    title: "Пункт «Send to my other devices» в листе длинного нажатия по карточке Library ставит запрос на скачивание для ОСТАЛЬНЫХ устройств: подпись становится «…again» у уже отправленной работы, пункт недоступен без сохранённого URL, а само это устройство работу не качает"
+    screen: library
+    source: "app/src/main/java/com/example/ao3_wrapper/ui/library/LibraryScreen.kt"
+  - id: sync-send-request-fulfil-download
+    title: "Устройство-приёмник на ближайшей синхронизации само скачивает работы, отправленные с другого устройства (едет только запрос, файл — никогда); устройство, у которого файл уже есть, помечает запрос отработанным без закачки, а неудачная попытка повторяется следующим проходом"
+    screen: sync
+    source: "app/src/main/java/com/example/ao3_wrapper/data/sync/SyncRepository.kt"
+  - id: sync-send-arrival-snackbar
+    title: "Приход присланных работ подтверждается снекбаром «Downloaded N works sent from another device» — единственное сообщение об этом событии: собственный диалог «Sync complete» о полученных работах молчит, а автоматический прогон не показывает ничего другого"
+    screen: sync
+    source: "app/src/main/java/com/example/ao3_wrapper/MainActivity.kt"
+  - id: sync-merge-send-request-fieldwise
+    title: "Запрос «Send to my other devices» сливается пофилдово и монотонно (побеждает более поздний sendRequestedAt) независимо от исхода LWW строки, а отметка об отработке (sendHandledAt) не публикуется и не приходит извне — остаётся устройство-локальной"
+    screen: sync
+    source: "app/src/main/java/com/example/ao3_wrapper/data/sync/SyncRepository.kt"
 
   # ── Данные ───────────────────────────────────────────────────────────────
+  # Title расширен test-strategist (переинвентаризация fdd3f728): у сущности
+  # появились СЕМЬ новых полей — группа `readProgress*` (`WorkRating.kt:19-35`)
+  # и пара `sendRequestedAt`/`sendHandledAt` (`:36-48`). Дробления это не
+  # требует: сами наблюдаемые поведения описаны записями прогресса, отправки и
+  # слияния, а эта запись остаётся про носитель. id стабилен.
   - id: data-workrating-model
-    title: "Room-сущность WorkRating (rating/comment/tags/fandom/author/wordCount/downloadPath)"
+    title: "Room-сущность WorkRating (rating/comment/tags/fandom/author/wordCount/downloadPath + позиция чтения readProgress* со своими часами и запрос отправки sendRequestedAt/sendHandledAt)"
     screen: data
     source: "app/src/main/java/com/example/ao3_wrapper/data/model/WorkRating.kt"
   - id: data-filterprofile-model
@@ -1978,6 +2291,23 @@ features:
     title: "Room-сущность SyncTombstone (kind+id, deletedAt) и миграция схемы 7→8: обновление поверх старой базы сохраняет все пользовательские данные и не падает"
     screen: data
     source: "app/src/main/java/com/example/ao3_wrapper/data/db/AppDatabase.kt"
+  # НОВАЯ запись (test-strategist, переинвентаризация fdd3f728; дельта сборки,
+  # блок C шапки). Схема Room шагнула 8 → 10 ДВУМЯ миграциями сразу
+  # (`AppDatabase.kt:14` version = 10; `MIGRATION_8_9` `:113-121` — пять колонок
+  # `readProgress*`; `MIGRATION_9_10` `:123-128` — `sendRequestedAt`/
+  # `sendHandledAt`; обе зарегистрированы `:137`). Своя запись, а не дописка в
+  # `data-sync-tombstone-model`: у той единственный кейс TC-217 гоняет переход
+  # 7→8 и этот путь не проходит — дописав, мы зачли бы непокрытую грань
+  # покрытой (урок hide/dim). Then: пользователь обновляет приложение поверх
+  # базы v8 (или более старой — цепочка миграций непрерывна), все рейтинги,
+  # заметки, теги, пути загрузок, профили и надгробия на месте, новые колонки
+  # пустые, старт не падает; `fallbackToDestructiveMigration` по-прежнему НЕ
+  # включён (`:132-138`), поэтому пропущенная миграция наблюдаема как краш, а
+  # не как тихая потеря. 0 кейсов.
+  - id: data-schema-migration-8-10
+    title: "Миграции схемы Room 8→9 (колонки readProgress*) и 9→10 (sendRequestedAt/sendHandledAt): обновление приложения поверх старой базы сохраняет все пользовательские данные, новые поля пустые, старт не падает"
+    screen: data
+    source: "app/src/main/java/com/example/ao3_wrapper/data/db/AppDatabase.kt"
 
   # ── Фоновые ──────────────────────────────────────────────────────────────
   # Title уточнён test-strategist 2026-08-15 (сборка 59be96c6, коммит 6e64b1fb):
@@ -1989,6 +2319,14 @@ features:
     title: "DownloadRepository: скачивание работы через OkHttp в SAF-папку или app storage; расширение и MIME файла определяются выбранным форматом загрузки"
     screen: background
     source: "app/src/main/java/com/example/ao3_wrapper/data/repository/DownloadRepository.kt"
+  # Примечание-граница (test-strategist, переинвентаризация fdd3f728; title не
+  # правлю — сам механизм скачивания не изменился): у репозитория появился
+  # ВТОРОЙ, НЕинтерактивный вызывающий — `SyncRepository.fulfillSendRequests
+  # :336` качает файлы по запросу с ЧУЖОГО устройства, вне какого-либо действия
+  # пользователя на этом устройстве и в потоке синхронизации (запись
+  # `sync-send-request-fulfil-download`). Для дизайна это значит, что все
+  # границы download-flow (папка SAF, cookies, формат, коллизии имён, отказ
+  # сети) достижимы теперь и без единого тапа здесь.
   # НОВАЯ запись (test-strategist 2026-08-15; коммит 6e64b1fb). Наблюдаемый
   # эффект выбора «EPUB» — отдельно от самого контрола
   # (`settings-download-format-choice`):
