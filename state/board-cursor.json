@@ -324,6 +324,16 @@
     "artifact_status": "Review",
     "board_status": "Review"
   },
+  "TC-284": {
+    "itype": "test-case",
+    "artifact_status": "Review",
+    "board_status": "Review"
+  },
+  "TC-285": {
+    "itype": "test-case",
+    "artifact_status": "Review",
+    "board_status": "Review"
+  },
   "TC-066": {
     "itype": "test-case",
     "artifact_status": "Automated",

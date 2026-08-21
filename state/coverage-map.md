@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-21T02:06:14Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-08-21T02:50:58Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 ## Сводка по областям
@@ -9,7 +9,7 @@ generated_at: 2026-08-21T02:06:14Z · генератор: `scripts/coverage_map.
 |---|---|---|---|
 | accessibility | 9 | 3 | partial |
 | backup | 6 | 1 | partial |
-| browser | 45 | 13 | partial |
+| browser | 47 | 13 | partial |
 | canary | 25 | 23 | partial |
 | compatibility | 3 | 3 | designed-full |
 | downloads | 21 | 11 | partial |
@@ -30,7 +30,7 @@ generated_at: 2026-08-21T02:06:14Z · генератор: `scripts/coverage_map.
 | Риск | Категория | Покрывающие кейсы |
 |---|---|---|
 | R-01 | DATA | backup:TC-021, backup:TC-165, backup:TC-167, backup:TC-168, backup:TC-171, backup:TC-172, rating:TC-151, rating:TC-152, rating:TC-155, rating:TC-191, rating:TC-192, rating:TC-193, rating:TC-194, rating:TC-256, settings:TC-018, settings:TC-019, settings:TC-020, settings:TC-186, settings:TC-187, smoke:TC-004, sync:TC-207, sync:TC-208, sync:TC-209, sync:TC-210, sync:TC-211, sync:TC-214, sync:TC-215, sync:TC-216, sync:TC-217, sync:TC-226, sync:TC-227, sync:TC-228, sync:TC-229, sync:TC-231, sync:TC-281 |
-| R-02 | TECH | browser:TC-259, browser:TC-265, canary:TC-066, canary:TC-067, canary:TC-068, canary:TC-069, canary:TC-070, canary:TC-071, canary:TC-072, canary:TC-073, canary:TC-074, canary:TC-075, canary:TC-076, canary:TC-077, canary:TC-078, canary:TC-079, canary:TC-080, canary:TC-081, canary:TC-082, canary:TC-083, canary:TC-118, canary:TC-119, canary:TC-120, canary:TC-121, canary:TC-122, canary:TC-195, canary:TC-196 |
+| R-02 | TECH | browser:TC-259, browser:TC-265, browser:TC-284, canary:TC-066, canary:TC-067, canary:TC-068, canary:TC-069, canary:TC-070, canary:TC-071, canary:TC-072, canary:TC-073, canary:TC-074, canary:TC-075, canary:TC-076, canary:TC-077, canary:TC-078, canary:TC-079, canary:TC-080, canary:TC-081, canary:TC-082, canary:TC-083, canary:TC-118, canary:TC-119, canary:TC-120, canary:TC-121, canary:TC-122, canary:TC-195, canary:TC-196 |
 | R-03 | TECH | errors:TC-046, smoke:TC-001 |
 | R-04 | DATA | canary:TC-072, canary:TC-073, canary:TC-074, canary:TC-075, canary:TC-076, canary:TC-077, library:TC-016, library:TC-017, library:TC-241, library:TC-245, rating:TC-007, rating:TC-008, rating:TC-009, rating:TC-010, rating:TC-011, rating:TC-012, smoke:TC-003 |
 | R-05 | TECH | downloads:TC-032, downloads:TC-033, downloads:TC-034, downloads:TC-035, downloads:TC-036, downloads:TC-037, downloads:TC-038, downloads:TC-039, downloads:TC-112, downloads:TC-113, downloads:TC-114, downloads:TC-115, downloads:TC-116, downloads:TC-117, downloads:TC-153, downloads:TC-154, downloads:TC-164, downloads:TC-236, downloads:TC-237, downloads:TC-238, downloads:TC-257, library:TC-244, settings:TC-235 |
@@ -46,7 +46,7 @@ generated_at: 2026-08-21T02:06:14Z · генератор: `scripts/coverage_map.
 | R-15 | SEC | security:TC-100, security:TC-101, security:TC-102, security:TC-103, security:TC-104, security:TC-105, security:TC-232, security:TC-233, security:TC-234 |
 | R-16 | BUS | browser:TC-162, browser:TC-252, browser:TC-253, browser:TC-254, browser:TC-260, browser:TC-263, browser:TC-264, browser:TC-274, browser:TC-275, downloads:TC-156, downloads:TC-239, downloads:TC-240, library:TC-255, settings:TC-251, sync:TC-218, sync:TC-219, sync:TC-220, sync:TC-221, sync:TC-222, sync:TC-223, sync:TC-224, sync:TC-225, sync:TC-230, sync:TC-272 |
 | R-17 | BUS | library:TC-242, library:TC-243, rating:TC-138, rating:TC-139, rating:TC-140, rating:TC-141, rating:TC-142, rating:TC-143, rating:TC-144 |
-| R-18 | DATA | library:TC-279, sync:TC-280, sync:TC-282, sync:TC-283 |
+| R-18 | DATA | browser:TC-285, library:TC-279, sync:TC-280, sync:TC-282, sync:TC-283 |
 | R-19 | SEC | риск не покрыт дизайном |
 
 ## Фичи → покрытие
@@ -175,8 +175,8 @@ generated_at: 2026-08-21T02:06:14Z · генератор: `scripts/coverage_map.
 | bridge-empty-page-auto-advance-replaces-history | ao3-bridge | browser:TC-263[Approved], browser:TC-264[Approved] |
 | bridge-live-rating-push-no-auto-advance | ao3-bridge | browser:TC-260[Approved] |
 | bridge-copy-url-clipboard-fallback | ao3-bridge | browser:TC-265[Approved] |
-| bridge-reading-progress-reporting | ao3-bridge | нет кейсов |
-| bridge-scroll-to-percent-resume-retry | ao3-bridge | нет кейсов |
+| bridge-reading-progress-reporting | ao3-bridge | browser:TC-284[Review] |
+| bridge-scroll-to-percent-resume-retry | ao3-bridge | browser:TC-285[Review] |
 | eink-palette-native | eink | accessibility:TC-276[Review] |
 | eink-no-ripple-indication | eink | нет кейсов |
 | eink-snap-animations | eink | accessibility:TC-278[Review] |
@@ -235,8 +235,6 @@ generated_at: 2026-08-21T02:06:14Z · генератор: `scripts/coverage_map.
 - browse-pull-to-refresh (browse): Свайп вниз по странице вкладки Browse перезагружает её (pull-to-refresh поверх WebView)
 - library-open-local-html-reader-css (browse): Скачанный HTML-файл открывается в приложении с подмешанным читательским стилем reader.css (loadDataWithBaseURL), а при нечитаемом файле молча грузится как есть
 - bridge-dark-css (ao3-bridge): CSS-переопределения тёмной темы на AO3-страницах (window.__ao3AppDark)
-- bridge-reading-progress-reporting (ao3-bridge): Bridge на странице работы репортит Kotlin номер главы, число глав и процент прокрутки (Android.onReadingProgress) — сразу при инициализации и далее не чаще раза в 250 мс при скролле; вне страницы работы отчёта нет
-- bridge-scroll-to-percent-resume-retry (ao3-bridge): window.ao3ScrollToPercent прокручивает страницу работы к сохранённому проценту и повторяет попытку до 5 раз с шагом 200 мс, пока ленивый контент дорастает высоту — позиция, снятая на другом экране/шрифте, попадает в то же место
 - eink-no-ripple-indication (eink): E-ink: нажатие на контролы не рисует ripple-волну (индикация подменена no-op для foundation-clickable и Material3 одновременно)
 - eink-webview-no-overscroll (eink): E-ink: WebView не показывает overscroll-эффект на границе страницы (ни свечения, ни растягивания); выключение режима возвращает штатный overscroll
 - sync-merge-reading-progress-fieldwise (sync): Позиция чтения сливается между устройствами ПОФИЛДОВО по собственным часам readProgressAt, независимо от того, чья строка выиграла LWW: более свежая позиция переносится, а рейтинг/заметка победившей строки при этом не откатываются
@@ -285,10 +283,10 @@ generated_at: 2026-08-21T02:06:14Z · генератор: `scripts/coverage_map.
 
 ### browser
 
-- coverage_status: **partial** (13/45 Automated)
-- риски: R-02, R-06, R-08, R-11, R-13, R-16
+- coverage_status: **partial** (13/47 Automated)
+- риски: R-02, R-06, R-08, R-11, R-13, R-16, R-18
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-157 [P1, Approved], TC-159 [P1, Approved], TC-161 [P1, Approved], TC-197 [P1, Approved], TC-198 [P1, Approved], TC-202 [P1, Approved], TC-203 [P1, Approved], TC-204 [P1, Approved], TC-247 [P1, Approved], TC-248 [P1, Approved], TC-250 [P1, Approved], TC-252 [P1, Approved], TC-253 [P1, Approved], TC-254 [P1, Approved], TC-259 [P1, Approved], TC-260 [P1, Approved], TC-261 [P1, Approved], TC-262 [P1, Approved], TC-263 [P1, Approved], TC-264 [P1, Approved], TC-266 [P1, Approved], TC-267 [P1, Approved], TC-269 [P1, Approved], TC-270 [P1, Approved], TC-271 [P1, Approved], TC-273 [P1, Review], TC-274 [P1, Review], TC-275 [P1, Review]
+- P0/P1 не в Automated: TC-157 [P1, Approved], TC-159 [P1, Approved], TC-161 [P1, Approved], TC-197 [P1, Approved], TC-198 [P1, Approved], TC-202 [P1, Approved], TC-203 [P1, Approved], TC-204 [P1, Approved], TC-247 [P1, Approved], TC-248 [P1, Approved], TC-250 [P1, Approved], TC-252 [P1, Approved], TC-253 [P1, Approved], TC-254 [P1, Approved], TC-259 [P1, Approved], TC-260 [P1, Approved], TC-261 [P1, Approved], TC-262 [P1, Approved], TC-263 [P1, Approved], TC-264 [P1, Approved], TC-266 [P1, Approved], TC-267 [P1, Approved], TC-269 [P1, Approved], TC-270 [P1, Approved], TC-271 [P1, Approved], TC-273 [P1, Review], TC-274 [P1, Review], TC-275 [P1, Review], TC-284 [P1, Review], TC-285 [P1, Review]
 - автотесты (automated_by): framework/tests/test_hidden_banner.py::test_hidden_banner_matches_flag_combination, framework/tests/test_infinite_scroll.py::test_infinite_scroll_on_loads_next_page_in_background, framework/tests/test_reading_ux.py::test_tap_zone_bottom_third_scrolls_down, framework/tests/test_reading_ux.py::test_tap_zone_middle_third_toggles_fullscreen, framework/tests/test_reading_ux.py::test_tap_zone_top_third_scrolls_up, framework/tests/test_side_panel.py::test_font_buttons_disabled_at_range_boundaries, framework/tests/test_side_panel.py::test_font_size_increase_instant_and_persists, framework/tests/test_side_panel.py::test_pinch_spread_changes_font_size, framework/tests/test_side_panel.py::test_side_panel_and_settings_share_theme_and_font_state, framework/tests/test_side_panel.py::test_side_panel_contrast_toggles_theme_instantly, framework/tests/test_side_panel.py::test_side_panel_fullscreen_hides_tabstrip_and_toggles_label, framework/tests/test_side_panel.py::test_side_panel_home_navigates_active_tab_to_ao3_root, framework/tests/test_side_panel.py::test_side_panel_toggle_kudosed_hides_and_syncs_settings, framework/tests/test_side_panel.py::test_two_finger_drag_changes_brightness, framework/tests/test_volume_paging.py::test_volume_buttons_page_browse_listing
 - last_green_run: RUN-20260819-2012 (suite: regression, status: Closed, updated: 2026-08-19T20:15:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
@@ -309,7 +307,7 @@ generated_at: 2026-08-21T02:06:14Z · генератор: `scripts/coverage_map.
 | Priority | Draft | Review | Approved | Automated | Merged | Blocked |
 |---|---|---|---|---|---|---|
 | P0 |  |  |  |  |  |  |
-| P1 |  | 3 | 25 | 11 | 4 |  |
+| P1 |  | 5 | 25 | 11 | 4 |  |
 | P2 |  |  | 4 |  |  |  |
 | P3 |  |  |  | 2 |  |  |
 

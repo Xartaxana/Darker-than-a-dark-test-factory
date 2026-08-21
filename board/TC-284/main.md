@@ -1,0 +1,228 @@
+---
+key: "TC-284"
+project: "AO3"
+issueType: "test-case"
+status: "tc-review"
+priority: "p1"
+summary: "Bridge репортит Kotlin номер/число глав и процент прокрутки на КАЖДОЙ странице работы (загрузка + throttled скролл); при отсутствии выбора главы отчёт коллапсирует в 1/1, вне страницы работы отчёта нет"
+assignee: "qa-agents"
+reporter: "qa-agents"
+labels: ["test-case", "area:browser", "risk:R-02"]
+components: []
+fixVersions: []
+watchers: []
+parent: null
+epic: null
+created: "2026-08-21T02:20:32Z"
+updated: "2026-08-21T02:20:32Z"
+archived: false
+resolution: null
+---
+
+# Bridge репортит Kotlin номер/число глав и процент прокрутки на КАЖДОЙ странице работы (загрузка + throttled скролл); при отсутствии выбора главы отчёт коллапсирует в 1/1, вне страницы работы отчёта нет
+
+_Спроецировано из `test-cases/browser/TC-284.md` (источник правды).
+Статус в нашей машине: **Review**._
+
+# TC-284 — ao3ReportProgress: номер/число глав из #selected_id (коллапс в 1/1 без него), throttled повтор на scroll, вне work-страницы отчёта нет
+
+## Предусловия
+- L2 bridge-harness (`framework/tests/bridge/`, фикстура `bridge_call`,
+  device-free jsdom против `ao3_bridge.js`), маркер `@pytest.mark.bridge`.
+- Фикстуры — `recording_builder.render_work_page_html(W.LOVED,
+  chapter_titles=(...))` (мультиглавая работа) и без аргумента (без
+  select) и `render_listing_html([W.LOVED])` (не-work-страница) — все три
+  собираются литералами внутри теста, без записанных `.mitm`.
+- `request.url` для work-страницы — `https://archiveofourown.org/works/900000001`
+  (совпадает с `workMatch`-регексом `/\/works\/(\d+)/`); для листинга —
+  дефолтный `https://archiveofourown.org/works`.
+- `request.peekScrollRestore` не задаётся (дефолт харнесса `0`) — блок
+  App-reload scroll restore (`ao3_bridge.js:1212-1230`, ДРУГАЯ, ранее
+  исключённая из L2-кандидатов запись, `docs/tasks/p2-pyramid-bridge.md`
+  Р3 «НЕ кандидаты: … scroll-restore») остаётся неактивным и не
+  вмешивается в `window.scrollTo`/`androidCalls` этого кейса.
+
+## Сценарий (Given-When-Then)
+
+**Given** (Branch A — gating) листинговая страница (НЕ work-страница)
+загружена бриджем
+
+**Then** ни один вызов `Android.onReadingProgress` не зафиксирован в
+`response.androidCalls` — reading-progress блок целиком гейтирован
+`workMatch` (`:972`), листинг его не достигает вовсе
+
+---
+
+**Given** (Branch B — обязательная грань R-02) work-страница БЕЗ
+`#selected_id` (`render_work_page_html(W.LOVED)`, `chapter_titles=None`
+— дефолт, select не рендерится) загружена бриджем
+
+**Then** init-вызов `Android.onReadingProgress` зафиксирован РОВНО ОДИН
+раз, `args == [1, 1, 0]` — `chCur`/`chTot` коллапсировали к `1/1`
+(`sel` отсутствует -> `sel ? ... : 1` по обеим переменным, `:976-978`),
+`pct == 0` (свежая загрузка, `scrollY` по умолчанию `0`)
+
+---
+
+**Given** (Branch C — многоглавая работа, живой отчёт номера главы и
+формула процента) work-страница С трёхглавым `#selected_id`
+(`render_work_page_html(W.LOVED, chapter_titles=("Chapter One",
+"Chapter Two", "Chapter Three"))`, первая опция `selected` по умолчанию
+— так же, как реальный AO3 открывает главу 1)
+
+**Then** init-вызов зафиксирован `args == [1, 3, 0]` — `chTot=3`
+(реальное число `<option>`), `chCur=1` (дефолтный `selectedIndex=0`)
+
+**When** ДАЛЬШЕ, в рамках того же `bridge_call` (один jsdom-документ),
+выполняются подряд: (1) `window.setTimeout` подменён на СИНХРОННЫЙ
+немедленный вызов колбэка (throttle-таймер `:1000` больше не ждёт
+250мс реального времени харнесса); (2) `document.body.scrollHeight` и
+`window.scrollY` затенены через `Object.defineProperty` на `3100` и
+`1500` соответственно (управляемая непустая геометрия — та же техника
+подмены встроенного метода/свойства, что уже принята в
+`test_layout_fail_open_canary.py`/TC-260/TC-263 для `Element.prototype.
+getBoundingClientRect`/`Location.prototype.replace` — не test_debt);
+(3) `document.getElementById('selected_id').selectedIndex` выставлен в
+`2` (пользователь читает главу 3); (4) синтетическое событие `scroll`
+диспетчится (`window.dispatchEvent(new Event('scroll'))`)
+
+**Then** зафиксирован ВТОРОЙ вызов `Android.onReadingProgress`,
+`args == [3, 3, pct]`, где `pct == Math.round(1500 / (3100 -
+innerHeight) * 100)` (`innerHeight` читается ДИНАМИЧЕСКИ отдельным
+action'ом, не хардкодится — формула сверяется, не константа) —
+одновременно доказывает: (а) throttled scroll-листенер реально
+триггерит ПОВТОРНЫЙ отчёт, не только init; (б) `chCur` читает `#selected_id`
+ЖИВЬЁМ на каждый вызов (не кэширует значение с момента инициализации);
+(в) формула `pct` корректно связывает `scrollY`/`scrollable` при
+НЕвырожденной (управляемо-заданной) геометрии, а не только в
+дефолтном jsdom-нуле
+
+**Инвариант:** пара `(chCur, chTot)` всегда отражает ТЕКУЩЕЕ состояние
+`#selected_id`, если он есть на странице, и коллапсирует РОВНО к
+`(1, 1)`, если его нет — свойство проверено на ДВУХ разных состояниях
+DOM (Branch B — узла нет, Branch C — узел есть и меняется между
+вызовами), не на одном примере; `pct` — детерминированная функция
+`scrollY`/`scrollable`, не зависящая от того, инициализация это или
+scroll-триггер.
+
+## Проверяемые данные
+| Ветка | `androidCalls` (метод `onReadingProgress`) |
+|---|---|
+| A (листинг) | 0 вызовов |
+| B (work, без select) | 1 вызов, `[1, 1, 0]` |
+| C init (work, 3 главы) | 1-й вызов, `[1, 3, 0]` |
+| C после scroll | 2-й вызов, `[3, 3, round(1500/(3100-innerHeight)*100)]` |
+
+## Заметки для автоматизации
+- Инфраструктура уже принята и зелёная (N5/N6, `docs/tasks/p2-pyramid-
+  bridge.md`): `framework/tests/bridge/conftest.py` (`bridge_call`),
+  `framework/bridge_harness/run_bridge.js`, `recording_builder.
+  render_work_page_html(chapter_titles=...)` (AT-BUG-089, УЖЕ несёт
+  `<select id="selected_id">` с первой опцией `selected` по умолчанию —
+  ничего расширять в `framework/data/recording_builder.py` не нужно).
+  Блокера нет.
+- **Пограничное решение для F1/B10-гейта test-reviewer (ПРОЧИТАТЬ перед
+  ревью).** `docs/tasks/p2-pyramid-bridge.md` Р3 перечисляет
+  «scroll-restore» в списке «НЕ кандидаты» для L2 — но это ссылка на
+  ДРУГОЙ механизм (`ao3_bridge.js:1205-1230`, App-reload scroll restore
+  по `window.__ao3ScrollRestore`/`Android.peekScrollRestore()`,
+  пиксельный, включается на КАЖДОЙ non-listing странице при
+  `peekScrollRestore()>0`), НЕ ТОТ ЖЕ, что этот кейс: `ao3ReportProgress`
+  (этот кейс) читает геометрию ТОЛЬКО ради ВЫЧИСЛЕНИЯ отправляемого `pct`
+  (никогда не читает и не пишет позицию скролла обратно), не гейтирует
+  СВОЁ СОБСТВЕННОЕ выполнение никаким layout-условием (`if
+  (getBoundingClientRect...) return`, как у append/auto-READ) — вызов
+  `Android.onReadingProgress` достижим БЕЗУСЛОВНО на любой work-странице
+  независимо от геометрии (в отличие от исключённых append/auto-READ,
+  где именно ДОСТИЖИМОСТЬ защищаемой ветки — предмет спора). Управляемое
+  затенение `scrollHeight`/`scrollY` в Branch C — не попытка обойти
+  fail-open границу B4 ради тавтологии, а прямая проверка АРИФМЕТИКИ
+  формулы `pct` при заданных входах (тот же класс приёма, что подмена
+  `Element.prototype.getBoundingClientRect` в красной пробе B4 самой
+  канарейки — тест НЕ ассертит «геометрия реалистична», а проверяет, что
+  КОД корректно связывает заданные значения). По умолчанию (без
+  затенения, Branch A/B) `pct` остаётся вырожденным `0` — тоже
+  корректное, не вакуумное значение (`scrollY==0` на свежей загрузке —
+  это НАСТОЯЩИЙ семантически верный «0% прочитано», не артефакт
+  харнесса).
+  peekScrollRestore=0 (дефолт харнесса) держит блок `:1212-1230`
+  неактивным во всех трёх ветках — witness в предусловиях.
+- Действия Branch C — `bridge_call` с последовательными `eval`-action'ами
+  (порядок ОБЯЗАТЕЛЕН: патч таймера -> затенение geometry -> смена
+  `selectedIndex` -> диспетч `scroll`), одним ЗАПРОСОМ (харнесс держит
+  ОДИН jsdom-документ на весь request — три Then Branch C читаются из
+  ОДНОГО `response.androidCalls`, не трёх отдельных вызовов):
+  - `{"id":"patchTimers","type":"eval","code":"window.setTimeout=function(fn){fn();return 0;};'patched'"}`
+  - `{"id":"shadowScrollState","type":"eval","code":"Object.defineProperty(document.body,'scrollHeight',{get:function(){return 3100;},configurable:true});Object.defineProperty(window,'scrollY',{get:function(){return 1500;},configurable:true});'shadowed'"}`
+  - `{"id":"selectChapter","type":"eval","code":"document.getElementById('selected_id').selectedIndex=2;'selected'"}`
+  - `{"id":"innerHeightProbe","type":"eval","code":"window.innerHeight"}`
+  - `{"id":"scroll","type":"eval","code":"window.dispatchEvent(new Event('scroll'));'dispatched'"}`
+  Ожидаемый `pct` вычисляется в Python-ассерте из
+  `response["results"]["innerHeightProbe"]`, НЕ хардкодится литералом
+  (принцип «не перепечатывать константу», уже применённый в
+  `test_layout_fail_open_canary.py::_extract_scroll_margin`).
+- Патч `window.setTimeout` синхронным немедленным вызовом также
+  затрагивает НЕСВЯЗАННЫЙ scroll-листенер `Android.onScrollChanged`
+  (`ao3_bridge.js:38-44`) — тот тоже отработает и добавит СВОЮ запись в
+  `androidCalls`; Then-фильтрация — по `method=="onReadingProgress"`,
+  остальные записи в `androidCalls` игнорируются, не мешают. По факту
+  зонда `Android.onWorkFinished` тоже отрабатывает и попадает в тот же
+  массив — то же уточнение. **Запрещено** ассертить на `len(androidCalls)`
+  целиком (число посторонних записей — деталь реализации таймер-патча,
+  не контракт этого кейса), только на отфильтрованном по `method`
+  подмножестве.
+- Формула `pct` в Then Branch C (`Math.round(1500 / (3100 -
+  innerHeight) * 100)`) не несёт явного `Math.max(1, ...)`-зажима
+  знаменателя на случай `scrollable <= 0` — на выбранных числах
+  (`innerHeight` порядка 768) знаменатель заведомо положителен, формула
+  совпадает с реализацией случайно, а не по построению; если реализация
+  клэмпит знаменатель (защита от деления на 0/отрицательное), а тест —
+  нет, при других входных числах пути разойдутся. Для ЭТОГО кейса не
+  блокер (числа заданы явно и заведомо невырождены), но автор автотеста
+  обязан свериться с реальной формулой в `ao3_bridge.js`, а не
+  переносить Then-строку буквально.
+- Батарея правил-реакций (область несёт признак «on scroll/load ->
+  report», CLAUDE.md калибровка №4): **off-инвариант** — покрыт Branch A
+  (не-work-страница = «off» по типу поверхности, отчёта нет);
+  **edge vs level** — н-п: нет семантики «пере-сохранение без перехода»,
+  единственный триггер — сам факт scroll-события, различать «тот же»/
+  «другой» скролл не нужно; **ретроактивность** — н-п: нет понятия
+  «размечено до/после» настройки; **идемпотентность** — ОТЛОЖЕННЫЙ
+  МИНОРНЫЙ ОСТАТОК, не «н-п»: throttle-коалессинг БЫСТРЫХ повторных
+  scroll-событий (несколько диспетчей до истечения 250мс → один отчёт) и
+  сам интервал ретрая 200мс (TC-285) технически наблюдаемы даже синхронной
+  техникой этого харнесса через очередной (не немедленный) стаб
+  `window.setTimeout`, фиксирующий переданный `ms` и список отложенных
+  колбэков для явного флаша — прежнее заявление «требует реального
+  ожидания» было неверным. Остаток намеренно не включён в обязательные
+  Then докс/01 п.1 (та точность интервалов лежит ВНЕ рискового ядра
+  R-02/R-18 — контракт «что именно репортится» уже покрыт Branch'ами
+  A/B/C, «как часто/с каким шагом» это эффективность передачи, а не
+  корректность данных); **propagation** — н-п:
+  единственный потребитель — `Android.onReadingProgress`, broadcast на
+  другие поверхности вне скоупа этой записи реестра.
+
+## Чек-лист качества (test-designer проходит перед `Review`)
+- [x] Один сценарий — один кейс: три ветки — грани ОДНОГО контракта
+      («что и когда репортит bridge»), не независимые сценарии; нет
+      «и ещё проверить...»
+- [x] Given описывает полное состояние, воспроизводимое фикстурами
+      (HTML литералами через `render_work_page_html`/`render_listing_html`)
+- [x] Then проверяет наблюдаемое поведение (аргументы вызова моста к
+      Kotlin), а не реализацию впрямую
+- [x] Заголовок сформулирован от ожидаемого поведения
+- [x] Указаны приоритет (P1), область (browser) и источник требования (R-02)
+- [x] Кейс независим от порядка выполнения других кейсов
+- [x] Блокер автоматизации отсутствует (harness/фикстуры уже приняты N5/N6)
+- [x] Строка `Инвариант:` добавлена (свойство на ДВУХ состояниях DOM,
+      не на одном примере)
+- [x] Слой L2 обоснован (device-free, живой AO3 не нужен); пограничное
+      решение относительно B4/Р3-исключения «scroll-restore» объяснено
+      явно в заметках для ревьюера (другой механизм, не тот же)
+- [x] Батарея правил-реакций пройдена по пунктам, пропуски — явной
+      строкой «н-п: <причина>»
+- [x] Наблюдаемость негативного Then (Branch A): `androidCalls` —
+      прямой позитивный канал (счётчик вызовов конкретного метода),
+      не вакуумное отсутствие эффекта — тот же метод `onReadingProgress`
+      наблюдаемо СРАБАТЫВАЕТ в Branch B/C той же инфраструктурой,
+      контрольная ветка доказывает достижимость

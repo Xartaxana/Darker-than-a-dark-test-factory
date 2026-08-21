@@ -1,19 +1,19 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-21T02:06:11Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-21T02:50:55Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
 - Сборка: dev-local (versionCode 12), commit `fdd3f728`, built_at 2026-08-19T17:47:59Z
-- smoke: Closed · smoke_freshness_hours: **31.8** (RUN-20260819-1818)
-- regression: Closed · regression_freshness_hours: **29.9** (RUN-20260819-2012)
-- canary: Triaged · canary_freshness_hours: **398.4** (RUN-20260804-1317)
+- smoke: Closed · smoke_freshness_hours: **32.5** (RUN-20260819-1818)
+- regression: Closed · regression_freshness_hours: **30.6** (RUN-20260819-2012)
+- canary: Triaged · canary_freshness_hours: **399.1** (RUN-20260804-1317)
 - Открытые blocker/critical: **1** — BUG-083
 - Известные проблемы (known_issue): **2**
 - p0_automation_coverage: **100%** (37/37)
-- p1_automation_coverage: **47%** (85/180)
+- p1_automation_coverage: **47%** (85/182)
 - Test debt открыт: **2** — AT-BUG-075, AT-BUG-091
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
@@ -24,16 +24,16 @@ story-карточки: стадии см. docs/05-board.md §Story
 - dev-local (versionCode 12), commit `fdd3f728`, built_at 2026-08-19T17:47:59Z
 - smoke: passed · regression: passed
 
-## Тест-кейсы (283)
+## Тест-кейсы (285)
 
-- Draft: **1** · Review: **11** · Approved: **110** · Automated: **151** · Merged: **10**
+- Draft: **1** · Review: **13** · Approved: **110** · Automated: **151** · Merged: **10**
 - автотесты (B3): active: **151**
 
 | Область | Draft | Review | Approved | Automated | Merged | Blocked |
 |---|---|---|---|---|---|---|
 | accessibility |  | 3 | 3 | 3 |  |  |
 | backup |  |  | 5 | 1 | 1 |  |
-| browser |  | 3 | 29 | 13 | 4 |  |
+| browser |  | 5 | 29 | 13 | 4 |  |
 | canary |  |  | 2 | 23 |  |  |
 | compatibility |  |  |  | 3 |  |  |
 | downloads |  |  | 10 | 11 | 3 |  |

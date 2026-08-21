@@ -1447,6 +1447,50 @@
     "archived": false
   },
   {
+    "key": "TC-284",
+    "path": "board/TC-284/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Bridge репортит Kotlin номер/число глав и процент прокрутки на КАЖДОЙ странице работы (загрузка + throttled скролл); при отсутствии выбора главы отчёт коллапсирует в 1/1, вне страницы работы отчёта нет",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-02"
+    ],
+    "updated": "2026-08-21T02:20:32Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-285",
+    "path": "board/TC-285/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "ao3ScrollToPercent прыгает к позиции по ПРОЦЕНТУ (не пикселям) и ретраит до 5 раз, пока контент дорастает; при scrollable==0 прыжка нет вовсе, вне страницы работы функции не существует",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:browser",
+      "risk:R-18"
+    ],
+    "updated": "2026-08-21T02:20:32Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "TC-066",
     "path": "board/TC-066/main.md",
     "parent": null,
