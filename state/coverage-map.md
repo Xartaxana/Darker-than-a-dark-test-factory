@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-21T00:23:16Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-08-21T00:56:42Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 ## Сводка по областям
@@ -15,13 +15,13 @@ generated_at: 2026-08-21T00:23:16Z · генератор: `scripts/coverage_map.
 | downloads | 21 | 11 | partial |
 | errors | 1 | 1 | designed-full |
 | filter-profiles | 12 | 5 | partial |
-| library | 31 | 25 | partial |
+| library | 32 | 25 | partial |
 | performance | 4 | 4 | designed-full |
 | rating | 29 | 21 | partial |
 | security | 9 | 6 | partial |
 | settings | 23 | 11 | partial |
 | smoke | 5 | 5 | designed-full |
-| sync | 25 | 1 | partial |
+| sync | 27 | 1 | partial |
 | tabs | 14 | 12 | partial |
 | visibility | 6 | 6 | designed-full |
 
@@ -29,7 +29,7 @@ generated_at: 2026-08-21T00:23:16Z · генератор: `scripts/coverage_map.
 
 | Риск | Категория | Покрывающие кейсы |
 |---|---|---|
-| R-01 | DATA | backup:TC-021, backup:TC-165, backup:TC-167, backup:TC-168, backup:TC-171, backup:TC-172, rating:TC-151, rating:TC-152, rating:TC-155, rating:TC-191, rating:TC-192, rating:TC-193, rating:TC-194, rating:TC-256, settings:TC-018, settings:TC-019, settings:TC-020, settings:TC-186, settings:TC-187, smoke:TC-004, sync:TC-207, sync:TC-208, sync:TC-209, sync:TC-210, sync:TC-211, sync:TC-214, sync:TC-215, sync:TC-216, sync:TC-217, sync:TC-226, sync:TC-227, sync:TC-228, sync:TC-229, sync:TC-231 |
+| R-01 | DATA | backup:TC-021, backup:TC-165, backup:TC-167, backup:TC-168, backup:TC-171, backup:TC-172, rating:TC-151, rating:TC-152, rating:TC-155, rating:TC-191, rating:TC-192, rating:TC-193, rating:TC-194, rating:TC-256, settings:TC-018, settings:TC-019, settings:TC-020, settings:TC-186, settings:TC-187, smoke:TC-004, sync:TC-207, sync:TC-208, sync:TC-209, sync:TC-210, sync:TC-211, sync:TC-214, sync:TC-215, sync:TC-216, sync:TC-217, sync:TC-226, sync:TC-227, sync:TC-228, sync:TC-229, sync:TC-231, sync:TC-281 |
 | R-02 | TECH | browser:TC-259, browser:TC-265, canary:TC-066, canary:TC-067, canary:TC-068, canary:TC-069, canary:TC-070, canary:TC-071, canary:TC-072, canary:TC-073, canary:TC-074, canary:TC-075, canary:TC-076, canary:TC-077, canary:TC-078, canary:TC-079, canary:TC-080, canary:TC-081, canary:TC-082, canary:TC-083, canary:TC-118, canary:TC-119, canary:TC-120, canary:TC-121, canary:TC-122, canary:TC-195, canary:TC-196 |
 | R-03 | TECH | errors:TC-046, smoke:TC-001 |
 | R-04 | DATA | canary:TC-072, canary:TC-073, canary:TC-074, canary:TC-075, canary:TC-076, canary:TC-077, library:TC-016, library:TC-017, library:TC-241, library:TC-245, rating:TC-007, rating:TC-008, rating:TC-009, rating:TC-010, rating:TC-011, rating:TC-012, smoke:TC-003 |
@@ -46,7 +46,7 @@ generated_at: 2026-08-21T00:23:16Z · генератор: `scripts/coverage_map.
 | R-15 | SEC | security:TC-100, security:TC-101, security:TC-102, security:TC-103, security:TC-104, security:TC-105, security:TC-232, security:TC-233, security:TC-234 |
 | R-16 | BUS | browser:TC-162, browser:TC-252, browser:TC-253, browser:TC-254, browser:TC-260, browser:TC-263, browser:TC-264, browser:TC-274, browser:TC-275, downloads:TC-156, downloads:TC-239, downloads:TC-240, library:TC-255, settings:TC-251, sync:TC-218, sync:TC-219, sync:TC-220, sync:TC-221, sync:TC-222, sync:TC-223, sync:TC-224, sync:TC-225, sync:TC-230, sync:TC-272 |
 | R-17 | BUS | library:TC-242, library:TC-243, rating:TC-138, rating:TC-139, rating:TC-140, rating:TC-141, rating:TC-142, rating:TC-143, rating:TC-144 |
-| R-18 | DATA | риск не покрыт дизайном |
+| R-18 | DATA | library:TC-279, sync:TC-280 |
 | R-19 | SEC | риск не покрыт дизайном |
 
 ## Фичи → покрытие
@@ -194,15 +194,15 @@ generated_at: 2026-08-21T00:23:16Z · генератор: `scripts/coverage_map.
 | sync-publish-merged-state | sync | sync:TC-215[Approved], sync:TC-216[Approved] |
 | sync-auto-trigger-foreground-and-changes | sync | sync:TC-226[Approved], sync:TC-227[Approved], sync:TC-228[Approved], sync:TC-229[Approved], sync:TC-230[Approved], sync:TC-231[Approved] |
 | sync-merge-reading-progress-fieldwise | sync | нет кейсов |
-| library-card-send-to-other-devices | library | нет кейсов |
-| sync-send-request-fulfil-download | sync | нет кейсов |
+| library-card-send-to-other-devices | library | library:TC-279[Review] |
+| sync-send-request-fulfil-download | sync | sync:TC-280[Review] |
 | sync-send-arrival-snackbar | sync | нет кейсов |
 | sync-merge-send-request-fieldwise | sync | нет кейсов |
 | data-workrating-model | data | нет кейсов |
 | data-filterprofile-model | data | нет кейсов |
 | data-clear-all-ratings | data | smoke:TC-004[Automated], settings:TC-018[Automated], settings:TC-019[Automated], settings:TC-020[Automated] |
 | data-sync-tombstone-model | data | sync:TC-217[Approved] |
-| data-schema-migration-8-10 | data | нет кейсов |
+| data-schema-migration-8-10 | data | sync:TC-281[Review] |
 | background-download-repository | background | downloads:TC-032[Automated], downloads:TC-033[Automated] |
 | download-work-epub-format | background | downloads:TC-236[Approved], downloads:TC-237[Approved], downloads:TC-238[Approved] |
 | background-auto-download-trigger | background | downloads:TC-032[Automated], downloads:TC-112[Automated], downloads:TC-114[Automated], downloads:TC-115[Automated], downloads:TC-116[Automated], downloads:TC-117[Automated] |
@@ -240,13 +240,10 @@ generated_at: 2026-08-21T00:23:16Z · генератор: `scripts/coverage_map.
 - eink-no-ripple-indication (eink): E-ink: нажатие на контролы не рисует ripple-волну (индикация подменена no-op для foundation-clickable и Material3 одновременно)
 - eink-webview-no-overscroll (eink): E-ink: WebView не показывает overscroll-эффект на границе страницы (ни свечения, ни растягивания); выключение режима возвращает штатный overscroll
 - sync-merge-reading-progress-fieldwise (sync): Позиция чтения сливается между устройствами ПОФИЛДОВО по собственным часам readProgressAt, независимо от того, чья строка выиграла LWW: более свежая позиция переносится, а рейтинг/заметка победившей строки при этом не откатываются
-- library-card-send-to-other-devices (library): Пункт «Send to my other devices» в листе длинного нажатия по карточке Library ставит запрос на скачивание для ОСТАЛЬНЫХ устройств: подпись становится «…again» у уже отправленной работы, пункт недоступен без сохранённого URL, а само это устройство работу не качает
-- sync-send-request-fulfil-download (sync): Устройство-приёмник на ближайшей синхронизации само скачивает работы, отправленные с другого устройства (едет только запрос, файл — никогда); устройство, у которого файл уже есть, помечает запрос отработанным без закачки, а неудачная попытка повторяется следующим проходом
 - sync-send-arrival-snackbar (sync): Приход присланных работ подтверждается снекбаром «Downloaded N works sent from another device» — единственное сообщение об этом событии: собственный диалог «Sync complete» о полученных работах молчит, а автоматический прогон не показывает ничего другого
 - sync-merge-send-request-fieldwise (sync): Запрос «Send to my other devices» сливается пофилдово и монотонно (побеждает более поздний sendRequestedAt) независимо от исхода LWW строки, а отметка об отработке (sendHandledAt) не публикуется и не приходит извне — остаётся устройство-локальной
 - data-workrating-model (data): Room-сущность WorkRating (rating/comment/tags/fandom/author/wordCount/downloadPath + позиция чтения readProgress* со своими часами и запрос отправки sendRequestedAt/sendHandledAt)
 - data-filterprofile-model (data): Room-сущность FilterProfile (name/queryString)
-- data-schema-migration-8-10 (data): Миграции схемы Room 8→9 (колонки readProgress*) и 9→10 (sendRequestedAt/sendHandledAt): обновление приложения поверх старой базы сохраняет все пользовательские данные, новые поля пустые, старт не падает
 
 ## Области
 
@@ -448,10 +445,10 @@ generated_at: 2026-08-21T00:23:16Z · генератор: `scripts/coverage_map.
 
 ### library
 
-- coverage_status: **partial** (25/31 Automated)
-- риски: R-04, R-05, R-06, R-08, R-10, R-16, R-17
+- coverage_status: **partial** (25/32 Automated)
+- риски: R-04, R-05, R-06, R-08, R-10, R-16, R-17, R-18
 - кейсы без risk: TC-006
-- P0/P1 не в Automated: TC-241 [P1, Approved], TC-242 [P1, Approved], TC-244 [P1, Approved], TC-255 [P1, Approved]
+- P0/P1 не в Automated: TC-241 [P1, Approved], TC-242 [P1, Approved], TC-244 [P1, Approved], TC-255 [P1, Approved], TC-279 [P1, Review]
 - автотесты (automated_by): framework/tests/test_library.py::test_change_rating_moves_work_between_tabs, framework/tests/test_library.py::test_comment_only_not_in_any_rating_tab, framework/tests/test_library.py::test_library_card_shows_note_icon_and_tags, framework/tests/test_library.py::test_library_tab_labels, framework/tests/test_library_background_open.py::test_background_local_file_tab_persists_after_kill_relaunch, framework/tests/test_library_background_open.py::test_library_files_tab_overlay_open_in_background_targets_local_file, framework/tests/test_library_background_open.py::test_library_overlay_open_in_background_at_tab_limit_shows_dialog, framework/tests/test_library_background_open.py::test_library_overlay_open_in_background_stays_on_library, framework/tests/test_library_filters.py::test_library_filter_by_fandom, framework/tests/test_library_filters.py::test_library_filter_downloaded_only, framework/tests/test_library_filters.py::test_library_filter_freetext_search, framework/tests/test_library_filters.py::test_library_filter_tags_and_semantics, framework/tests/test_library_filters.py::test_library_filter_word_count_range, framework/tests/test_library_filters.py::test_library_sort_author_asc_blank_last, framework/tests/test_library_filters.py::test_library_sort_last_read_default, framework/tests/test_library_filters.py::test_library_sort_rating_files_tab_only, framework/tests/test_library_filters.py::test_library_sort_wordcount_asc_resets_scroll, framework/tests/test_library_filters.py::test_library_sort_wordcount_desc_resets_scroll, framework/tests/test_library_filters.py::test_library_sort_wordcount_null_last, framework/tests/test_library_tab_scroll_state.py::test_library_favorite_scroll_retained_across_tab_switch, framework/tests/test_library_tab_scroll_state.py::test_library_files_rating_and_neighbor_scroll_retained, framework/tests/test_library_tab_scroll_state.py::test_library_files_rating_pick_survives_visit_to_other_tab, framework/tests/test_library_tab_scroll_state.py::test_library_offscreen_sort_change_resets_scroll_on_return, framework/tests/test_tabs.py::test_library_card_open_at_tab_limit_shows_dialog_and_switches_screen, framework/tests/test_tabs.py::test_library_card_open_work_opens_new_active_browse_tab
 - last_green_run: RUN-20260819-2012 (suite: regression, status: Closed, updated: 2026-08-19T20:15:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
@@ -484,7 +481,7 @@ generated_at: 2026-08-21T00:23:16Z · генератор: `scripts/coverage_map.
 | Priority | Draft | Review | Approved | Automated | Merged | Blocked |
 |---|---|---|---|---|---|---|
 | P0 |  |  |  | 2 |  |  |
-| P1 |  |  | 4 | 19 | 1 |  |
+| P1 |  | 1 | 4 | 19 | 1 |  |
 | P2 | 1 |  | 1 | 3 |  |  |
 | P3 |  |  |  | 1 |  |  |
 
@@ -622,10 +619,10 @@ generated_at: 2026-08-21T00:23:16Z · генератор: `scripts/coverage_map.
 
 ### sync
 
-- coverage_status: **partial** (1/25 Automated)
-- риски: R-01, R-09, R-16
+- coverage_status: **partial** (1/27 Automated)
+- риски: R-01, R-09, R-16, R-18
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-207 [P1, Approved], TC-209 [P1, Approved], TC-210 [P1, Approved], TC-211 [P1, Approved], TC-214 [P1, Approved], TC-215 [P1, Approved], TC-216 [P1, Approved], TC-217 [P1, Approved], TC-218 [P1, Approved], TC-220 [P1, Approved], TC-221 [P1, Approved], TC-223 [P1, Approved], TC-226 [P1, Approved], TC-227 [P1, Approved], TC-228 [P1, Approved], TC-229 [P1, Approved], TC-230 [P1, Approved], TC-231 [P1, Approved]
+- P0/P1 не в Automated: TC-207 [P1, Approved], TC-209 [P1, Approved], TC-210 [P1, Approved], TC-211 [P1, Approved], TC-214 [P1, Approved], TC-215 [P1, Approved], TC-216 [P1, Approved], TC-217 [P1, Approved], TC-218 [P1, Approved], TC-220 [P1, Approved], TC-221 [P1, Approved], TC-223 [P1, Approved], TC-226 [P1, Approved], TC-227 [P1, Approved], TC-228 [P1, Approved], TC-229 [P1, Approved], TC-230 [P1, Approved], TC-231 [P1, Approved], TC-280 [P1, Review], TC-281 [P1, Review]
 - автотесты (automated_by): framework/tests/test_sync.py::test_sync_failure_dialog_preserves_local_data, framework/tests/test_sync.py::test_sync_lww_work_remote_wins, framework/tests/test_sync.py::test_sync_lww_work_tie_keeps_local, framework/tests/test_sync.py::test_sync_publish_full_state, framework/tests/test_sync.py::test_sync_rerate_clears_tombstone, framework/tests/test_sync.py::test_sync_tombstone_removes_filter_profile
 - last_green_run: RUN-20260819-2012 (suite: regression, status: Closed, updated: 2026-08-19T20:15:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
@@ -634,7 +631,7 @@ generated_at: 2026-08-21T00:23:16Z · генератор: `scripts/coverage_map.
 | Priority | Draft | Review | Approved | Automated | Merged | Blocked |
 |---|---|---|---|---|---|---|
 | P0 |  |  |  |  |  |  |
-| P1 |  |  | 18 | 1 | 1 |  |
+| P1 |  | 2 | 18 | 1 | 1 |  |
 | P2 |  |  | 6 |  |  |  |
 | P3 |  |  |  |  |  |  |
 

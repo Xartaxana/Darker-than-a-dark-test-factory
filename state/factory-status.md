@@ -1,19 +1,19 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-20T23:57:01Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-21T00:56:39Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
 - Сборка: dev-local (versionCode 12), commit `fdd3f728`, built_at 2026-08-19T17:47:59Z
-- smoke: Closed · smoke_freshness_hours: **29.7** (RUN-20260819-1818)
-- regression: Closed · regression_freshness_hours: **27.7** (RUN-20260819-2012)
-- canary: Triaged · canary_freshness_hours: **396.2** (RUN-20260804-1317)
+- smoke: Closed · smoke_freshness_hours: **30.6** (RUN-20260819-1818)
+- regression: Closed · regression_freshness_hours: **28.7** (RUN-20260819-2012)
+- canary: Triaged · canary_freshness_hours: **397.2** (RUN-20260804-1317)
 - Открытые blocker/critical: **1** — BUG-083
 - Известные проблемы (known_issue): **2**
 - p0_automation_coverage: **100%** (37/37)
-- p1_automation_coverage: **49%** (85/175)
+- p1_automation_coverage: **48%** (85/178)
 - Test debt открыт: **2** — AT-BUG-075, AT-BUG-091
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
@@ -24,9 +24,9 @@ story-карточки: стадии см. docs/05-board.md §Story
 - dev-local (versionCode 12), commit `fdd3f728`, built_at 2026-08-19T17:47:59Z
 - smoke: passed · regression: passed
 
-## Тест-кейсы (278)
+## Тест-кейсы (281)
 
-- Draft: **1** · Review: **6** · Approved: **110** · Automated: **151** · Merged: **10**
+- Draft: **1** · Review: **9** · Approved: **110** · Automated: **151** · Merged: **10**
 - автотесты (B3): active: **151**
 
 | Область | Draft | Review | Approved | Automated | Merged | Blocked |
@@ -39,13 +39,13 @@ story-карточки: стадии см. docs/05-board.md §Story
 | downloads |  |  | 10 | 11 | 3 |  |
 | errors |  |  |  | 1 |  |  |
 | filter-profiles |  |  | 7 | 5 |  |  |
-| library | 1 |  | 5 | 25 | 1 |  |
+| library | 1 | 1 | 5 | 25 | 1 |  |
 | performance |  |  |  | 4 |  |  |
 | rating |  |  | 8 | 21 |  |  |
 | security |  |  | 3 | 6 |  |  |
 | settings |  |  | 12 | 11 |  |  |
 | smoke |  |  |  | 5 |  |  |
-| sync |  |  | 24 | 1 | 1 |  |
+| sync |  | 2 | 24 | 1 | 1 |  |
 | tabs |  |  | 2 | 12 |  |  |
 | visibility |  |  |  | 6 |  |  |
 
@@ -99,7 +99,7 @@ story-карточки: стадии см. docs/05-board.md §Story
 
 - нет
 
-## Эскалации (57)
+## Эскалации (60)
 
 - [2026-07-24T05:10:04Z] **BUG-011** [sla:bug_open_major] — major-баг open с 2026-07-15T14:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
 - [2026-08-01T16:01:07Z] **BUG-017** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-30T00:00:00Z | нужно: ответить в ## Обсуждение
@@ -158,3 +158,6 @@ story-карточки: стадии см. docs/05-board.md §Story
 - [2026-08-20T18:05:30Z] **RUNS-N0-P3-MISSING-FRONTMATTER** — `runs/N0-p3-two-device-probe-2026-08-20.md` (коммит `380fb637`, Lead/Fable, П3 узел N0 — эмпирическая проба двух устройств) не несёт YAML-frontmatter вовсе (`[ERROR] frontmatter отсутствует или не парсится`, `validate_frontmatter` красный на HEAD с 2026-08-20T18:05:30Z). НЕ мой owns-скоуп (чужой параллельный трек П3) — не правил. Не блокирует rule-scan этой сессии (нет `status: NeedsTriage` в файле, скан по `runs/` пуст независимо). Нужно от Lead/Fable: добавить frontmatter (или это намеренно текстовый протокол вне схемы `runs/*.md` — тогда `validate_frontmatter.py` нуждается в explicit-исключении для этого файла/паттерна).
 - [2026-08-20T17:55:00Z] **LEAD-ARCH-CHECK-PRIORITY-MARKER-SYNC-GAP** [queued:lead] — проход 11, критик-гейт приёмки автоматизации TC-257 (`test-cases/downloads/TC-257.md`, journey поглощает TC-034/035/036). `test-automator` самовольно поднял `priority: P1 → P0` в кейсе И проставил `@pytest.mark.p0` в тесте — вне мандата (`.claude/agents/test-automator.md` запрещает поимённо только смену `status`, `priority` не назван; чек-лист :210 предполагает обратное направление — маркер СЛЕДУЕТ за кейсом), нарушая явный запрет `docs/tasks/p1-e2e-dedup.md:166-168` («без изменений: … разные приоритеты; разные suite-маркеры» — поглощённые TC-034/035/036 остались P1). Ни `scripts/arch_check.py`, ни `scripts/validate_frontmatter.py` этот класс не ловят (`arch_check` требует лишь любой `p<N>`-маркер, не сверяет его со значением `priority` кейса; в `validate_frontmatter.py` слова `priority` нет вообще — 0 совпадений grep). Эффект не косметический: `@pytest.mark.p0` уходит в `Invoke-Smoke` (`tasks.ps1:740`, `pytest -m p0`, «на каждой сборке») — молчаливое удлинение smoke на ~4.5 мин. Координатор откатил экземпляр (`priority: P1`, `@pytest.mark.p1` — согласовано с телом кейса/спекой/поглощёнными кейсами) этим же ходом. Нужно от Lead: (а) решить, добавлять ли в `arch_check.py` сверку suite-маркера теста с `priority` его кейса (естественный дом — скрипт уже читает оба); (б) явная строка «`priority` НЕ меняй» рядом с «`status` НЕ меняй» в `.claude/agents/test-automator.md`.
 - [2026-08-20T17:55:00Z] **TC-257-BODY-STALE-LOCATOR-LINES** [queued:test-designer] — проход 11, критик-гейт TC-257. «Заметки для автоматизации» кейса (`test-cases/downloads/TC-257.md:69-70`) цитируют `library_screen.py:66-68`/`:62-64` для локаторов «Delete downloaded file»/«Delete work» — фактические координаты на HEAD `:325-327`/`:321-323` (тот же систематический дрейф класса, что и `SCOUT-STALE-REQUIREMENTS-ANCHORS-SWEEP` выше, другой файл). Координатор поправил СВОЮ копию этих номеров в комментарии `framework/tests/test_downloads.py` (не блокирует автотест — комментарий, не исполняемый якорь), тело кейса не трогал (владение test-designer/scout, не test-automator/координатор этого прохода). Нужно от test-designer: обновить `TC-257.md:69-70` на актуальные номера; возможно, входит в объём разведки `SCOUT-STALE-REQUIREMENTS-ANCHORS-SWEEP`, если та ещё не начата — не дублировать, свериться перед стартом.
+- [2026-08-21T00:00:23Z] **BUG-074** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-19T00:00:00Z | нужно: ответить в ## Обсуждение
+- [2026-08-21T00:00:23Z] **BUG-075** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-19T00:00:00Z | нужно: ответить в ## Обсуждение
+- [2026-08-21T00:00:23Z] **BUG-076** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-19T00:00:00Z | нужно: ответить в ## Обсуждение

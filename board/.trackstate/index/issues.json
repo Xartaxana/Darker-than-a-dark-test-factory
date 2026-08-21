@@ -3648,6 +3648,28 @@
     "archived": false
   },
   {
+    "key": "TC-279",
+    "path": "board/TC-279/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "«Send to my other devices» ставит запрос на скачивание для ОСТАЛЬНЫХ устройств: подпись переключается на «…again» после отправки, устройство-отправитель себя не докачивает, timestamp рейтинга не сдвигается",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:library",
+      "risk:R-18"
+    ],
+    "updated": "2026-08-21T00:15:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "TC-096",
     "path": "board/TC-096/main.md",
     "parent": null,
@@ -5801,6 +5823,50 @@
       "risk:R-16"
     ],
     "updated": "2026-08-20T18:32:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-280",
+    "path": "board/TC-280/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Приёмник сам скачивает работы, присланные с другого устройства (файл — никогда по сети); две синхронизации подряд с тем же запросом дают ОДНУ закачку; устройство, у которого файл уже есть, помечает запрос отработанным БЕЗ повторной закачки",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:sync",
+      "risk:R-18"
+    ],
+    "updated": "2026-08-21T00:20:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-281",
+    "path": "board/TC-281/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Обновление поверх старой БД (v8) через ДВЕ миграции подряд (8→9→10) сохраняет все пользовательские данные и не падает",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:sync",
+      "risk:R-01"
+    ],
+    "updated": "2026-08-21T00:25:00Z",
     "resolution": null,
     "children": [],
     "archived": false

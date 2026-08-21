@@ -1,0 +1,144 @@
+---
+key: "TC-279"
+project: "AO3"
+issueType: "test-case"
+status: "tc-review"
+priority: "p1"
+summary: "«Send to my other devices» ставит запрос на скачивание для ОСТАЛЬНЫХ устройств: подпись переключается на «…again» после отправки, устройство-отправитель себя не докачивает, timestamp рейтинга не сдвигается"
+assignee: "qa-agents"
+reporter: "qa-agents"
+labels: ["test-case", "area:library", "risk:R-18"]
+components: []
+fixVersions: []
+watchers: []
+parent: null
+epic: null
+created: "2026-08-21T00:15:00Z"
+updated: "2026-08-21T00:15:00Z"
+archived: false
+resolution: null
+---
+
+# «Send to my other devices» ставит запрос на скачивание для ОСТАЛЬНЫХ устройств: подпись переключается на «…again» после отправки, устройство-отправитель себя не докачивает, timestamp рейтинга не сдвигается
+
+_Спроецировано из `test-cases/library/TC-279.md` (источник правды).
+Статус в нашей машине: **Review**._
+
+# TC-279 — Long-press-пункт «Send to my other devices»: смена подписи, off-грани, себя не качает
+
+## Предусловия
+- Приложение запущено с чистыми данными (`clean_state`).
+- Работа W засеяна с `rating=LIKE`, сохранённым `url` (`canOpen=true`),
+  БЕЗ `downloadPath`, БЕЗ `sendRequestedAt` (`seed_db.seed([(W.LOVED, "LIKE")])`
+  — тот же сидинг, что живой прогон BUG-078-верификации,
+  `runs/reference/test_bug078_verify_temp_REFERENCE.py::test_send_sets_request_and_handled_without_moving_timestamp`,
+  3/3 green 2026-08-19/20).
+- Библиотека открыта, вкладка Liked.
+
+## Сценарий (Given-When-Then)
+
+**Given** работа W (LIKE, `sendRequestedAt=null`, `timestamp=T0`) видна в
+Library
+
+**When** пользователь делает long-press по карточке W
+
+**Then** в листе действий пункт подписан ДОСЛОВНО «Send to my other devices»
+(НЕ «…again» — `alreadySent=false`, `work.sendRequestedAt == null`)
+
+**When** пользователь тапает «Send to my other devices»
+
+**Then** в Room у W: `sendRequestedAt` и `sendHandledAt` оба проставлены
+свежим `now` и РАВНЫ друг другу (устройство-отправитель помечает запрос
+отработанным для СЕБЯ — не качает работу себе же, `LibraryViewModel.kt:106-108`)
+**And** `timestamp` рейтинга W НЕ изменился (остался T0) — отправка не
+является правкой рейтинга/заметки и не должна выигрывать sync-merge у
+реальной правки, сделанной на другом устройстве (`LibraryViewModel.kt:100-101`)
+**And** `downloadPath` W остаётся `null` (это устройство файл не скачивало —
+скачивание для этого запроса выполняют ТОЛЬКО остальные устройства на своей
+ближайшей синхронизации, см. TC-280)
+
+**When** пользователь снова делает long-press по той же карточке W
+
+**Then** пункт теперь подписан ДОСЛОВНО «Send to my other devices again»
+(`alreadySent=true`, `work.sendRequestedAt != null`)
+
+**When** пользователь тапает пункт повторно («…again»)
+
+**Then** (идемпотентность) `sendRequestedAt`/`sendHandledAt` обновляются на
+НОВЫЙ `now` (оба по-прежнему равны друг другу, оба строго больше предыдущего
+значения) — повторная отправка не создаёт дублирующую строку/ошибку, просто
+переставляет метку времени запроса свежее (это и есть механизм, которым
+«Send … again» заставляет ДАЖЕ уже отработавшее устройство переотработать
+запрос — доказано на приёмной стороне в TC-280)
+
+## Проверяемые данные
+| Параметр | Значение |
+|---|---|
+| Работа W | `W.LOVED` (`framework/data/works.py`), rating=LIKE, canOpen=true |
+| До отправки | `sendRequestedAt=null`, `sendHandledAt=null`, `downloadPath=null` |
+| После 1-й отправки | `sendRequestedAt == sendHandledAt` = свежий `now`, `timestamp` неподвижен, `downloadPath` остаётся `null` |
+| После 2-й отправки («…again») | оба поля обновлены на НОВЫЙ `now` (строго больше первого), по-прежнему равны друг другу |
+
+## Заметки для автоматизации
+- Блокера нет. Рецепт живьём уже проверен: `LibraryScreen(driver).long_press_work(title)`
+  → `lib.is_present(lib.by_text("Send to my other devices"), timeout=8)` →
+  `lib.tap(...)` → чтение `sendRequestedAt/sendHandledAt/timestamp` через
+  `seed_db._pull_baseline`+прямой SQL (см. `_pull_send_fields` в reference-файле
+  выше, `SELECT sendRequestedAt, sendHandledAt, timestamp, rating, downloadPath
+  FROM work_ratings WHERE ao3Id=?`) — тот же приём, что и постоянные
+  `read_work_ratings_full()`, но с двумя полями, которых там пока нет: перед
+  кодированием стоит добавить `sendRequestedAt`/`sendHandledAt` в
+  `_read_full_rows()`/`read_work_ratings_full()` (тонкое расширение по
+  образцу TC-268 — данные физически читаемы, просто нет готового геттера —
+  `debt_kind: missing_fixture` НЕ заводится, тот же класс, что TC-268
+  примечание).
+- Батарея правил-реакций («Send to my other devices» — правило-реакция,
+  единственная точка вызова `LibraryViewModel.sendToOtherDevices:103-110`):
+  - edge-vs-level — н-п: это прямое явное действие пользователя (тап по
+    пункту меню), не срабатывает на пересохранении по общему save-пути —
+    тот же вывод, что TC-272/TC-224 для «Sync now».
+  - ретроактивность — н-п: нет настройки-переключателя, влияющей на
+    доступность действия; пункт доступен всегда при `canOpen`.
+  - off-инвариант — н-п: выключаемой настройки для этого действия нет.
+  - идемпотентность — ПОКРЫТА явно (последний When/Then сценария выше).
+  - propagation — н-п в РАМКАХ этого кейса: единственный содержательный
+    консьюмер эффекта (`sendRequestedAt`) — приёмная сторона на ДРУГИХ
+    устройствах, покрыта отдельным кейсом TC-280 (fulfillSendRequests); на
+    ЭТОМ устройстве кроме подписи пункта меню другого потребителя эффекта
+    нет.
+- Область НЕ комбинаторная (одно действие, конечный набор состояний
+  before/after/again — не фильтр/сортировка/backup) — строка `Инвариант:`
+  не требуется.
+- **Дефект-сосед (доклад, не расширение scope):** пункт «Send to my other
+  devices» становится `enabled=false` без сохранённого `url`
+  (`canOpen=false`, `LibraryScreen.kt:453`) с описанием-подсказкой «No link
+  saved for this work.» — этот кейс его НЕ проверяет. Это НЕ узкий пробел
+  этой фичи: тот же паттерн `enabled=canOpen` разделяет ещё один пункт того
+  же листа («Open in background tab», `LibraryScreen.kt:427`; «Rate / edit
+  note» параметра `enabled` не имеет вовсе, «Open in e-reader app» использует
+  `enabled=hasFile`), и нигде в `test-cases/library/` нет seed-рецепта «работа без
+  `url`» — общий, более широкий пробел листа действий Library, не специфика
+  send-to-devices. Строка для test-strategist/владельца реестра, не мой
+  scope в этом ходе.
+
+## Чек-лист качества (test-designer проходит перед `Review`)
+- [x] Один сценарий — один кейс (единая цепочка: увидеть лейбл → отправить →
+      увидеть «…again» → отправить снова — один пользовательский путь, не
+      «и ещё проверить»)
+- [x] Given описывает полное состояние, воспроизводимое фикстурами (`seed()`
+      известной работой без `sendRequestedAt`)
+- [x] Then проверяет наблюдаемое поведение (текст пункта меню, поля Room,
+      отсутствие файла), а не реализацию
+- [x] Заголовок сформулирован от ожидаемого (спецификационного) поведения
+- [x] Указаны приоритет (P1), область (library) и источник требования (R-18)
+- [x] Кейс независим от порядка выполнения других кейсов
+- [x] Блокер автоматизации отсутствует (рецепт живьём уже подтверждён
+      BUG-078-верификацией; недостающая читающая обёртка — тонкое расширение
+      по образцу TC-268, не `missing_fixture`)
+- [x] Область не комбинаторная — строка `Инвариант:` не требуется
+- [x] Батарея правил-реакций — по пунктам выше (idempotency покрыта явно,
+      остальные — `н-п` с обоснованием)
+- [x] Слой **L3**, «почему не L2»: действие целиком в Compose/Room
+      (`LibraryScreen.kt`/`LibraryViewModel.kt`), не в WebView/`ao3_bridge.js`
+      — здесь L3 не «дороже», а ЕДИНСТВЕННЫЙ применимый: jsdom-харнесс L2 не
+      имеет ни Compose long-press-листа, ни доступа к Room
