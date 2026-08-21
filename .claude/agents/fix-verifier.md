@@ -196,7 +196,10 @@ dev-<IID> у CI — немонотонен между источниками). �
   (`-Resume` — синоним того же поведения). Отказ с маркером
   `DEVICE_LEASE_BLOCKED` = `status: Blocked` — только ЖИВОЙ чужой прогон
   (его PID в сообщении) либо рассинхрон `AO3_DEVICE`/`APPIUM_URL` с лизой;
-  НЕ провал верификации фикса.
+  НЕ провал верификации фикса. Лиза транзиентна — в баг причину НЕ
+  записываем: `status: Blocked` здесь про твой доклад координатору, поле
+  `blocked_reason` не заполняется (в его enum у лизы дома нет — не
+  изобретай значение вне enum).
 - Pytest с конкретными кейсами: `powershell -NoProfile -ExecutionPolicy Bypass -Command
   ". D:\AO3_tests\scripts\tasks.ps1; Invoke-Pytest <аргументы pytest>"` — НЕ собирай свою
   `". env.ps1; <venv-python> -m pytest ..."`: каждая новая строка требует подтверждения.

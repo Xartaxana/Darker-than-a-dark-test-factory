@@ -66,13 +66,17 @@ p0, regression=p1, canary) — compatibility-suite сейчас некому г�
 нужно правило-каденция (по сборке? еженедельно?) — device-время,
 прецедент включения canary — слово владельца. Плюс протухшая строка
 docs/01:3110 «второй AVD физически отсутствует» (снять; dirty фабрики).
-**Хвосты (в работе batch-minor-fixes-2026-08-21):** Start-Appium
-TimeoutSeconds 60→150; test_compatibility.py подсказки на канон стека
-2; test-runner.md протухшая оговорка про немигрированные носители;
-класс blocked_reason в 4 принятых N3-файлах (test-automator/
-test-runner/fix-verifier/run-suite — в 9 файлах батча миграции закрыто
-правками Lead по критик-раунду 2); anchor_lint ROOTS + runs/reference/
-(запрос фабричного прохода 4). Вне батча (named): plain-function twin
+**Хвосты — ЗАКРЫТЫ batch-minor-fixes-2026-08-21 (критик ПРИНЯТЬ/0
+блокеров, эмпирика: якорей 1815=1815, битых 5→0, коллизий basename 0):**
+Start-Appium TimeoutSeconds 60→150; test_compatibility.py подсказки на
+канон стека 2; test-runner.md протухшая оговорка; класс blocked_reason
+в 4 принятых N3-файлах; anchor_lint ROOTS + runs/reference/. Остатки
+критика (латентные, не реализованы сегодня): изоляция 18 старых
+вызовов al.run() в test_anchor_lint.py — наследуют ЖИВОЙ
+runs/reference/ вместо tmp_path (класс M1-спутников; передать 7-й
+аргумент/хелпер); builder.md — единственный носитель без уточнения
+«Blocked = статус доклада, blocked_reason не заполняется» (влияние
+~нулевое, симметрия). Вне батча (named): plain-function twin
 `_ensure_app_installed` в conftest.py (гэп builder'а N3 — спека
 утрачена, восстановить из N3-отчёта builder'а до диспатча);
 awaiting-флаг BUG-013 (файл dirty у фабрики).

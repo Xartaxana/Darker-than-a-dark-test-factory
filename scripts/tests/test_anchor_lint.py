@@ -51,6 +51,15 @@ def _scripts_file(tmp_path, relpath, n_lines):
     return p
 
 
+def _runs_reference_file(tmp_path, relpath, n_lines):
+    """Файл под изолированным runs/reference/-корнем фикстуры (НЕ живой репо)."""
+    p = tmp_path / "runs-reference" / relpath
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text("\n".join(f"line {i}" for i in range(1, n_lines + 1)) + "\n",
+                 encoding="utf-8")
+    return p
+
+
 # --- извлечение якорей ------------------------------------------------------
 
 def test_extract_anchors_basic():
@@ -159,6 +168,90 @@ def test_py_anchor_on_scripts_root_is_clean(tmp_path):
     broken, total = al.run(cases_dir, app_dir, fw_dir, scripts_dir,
                            tmp_path / "no-docs.md", tmp_path / "no-charters")
     assert total == 1 and broken == [], "scripts/-файл обязан считаться кандидатом"
+
+
+# --- четвёртый корень (runs/reference/) — батч мелочей П3 2026-08-21 -------
+
+def test_py_anchor_on_runs_reference_root_is_clean(tmp_path):
+    """runs/reference/ — ЧЕТВЁРТЫЙ корень поиска (запрос фабричного прохода 4:
+    docs/01 несёт якорь на файл, реально лежащий под runs/reference/, но
+    старый линтер его не находил — корень не сканировался)."""
+    cases_dir = tmp_path / "cases"
+    app_dir = tmp_path / "app"
+    runs_ref = _runs_reference_file(
+        tmp_path, "test_bug078_verify_temp_REFERENCE.py", 300)
+    _case(tmp_path, "TC-012", "`test_bug078_verify_temp_REFERENCE.py:227`")
+
+    broken, total = al.run(cases_dir, app_dir, tmp_path / "framework",
+                           tmp_path / "scripts", tmp_path / "no-docs.md",
+                           tmp_path / "no-charters", runs_ref.parent)
+    assert total == 1 and broken == [], \
+        "runs/reference/-файл обязан считаться кандидатом"
+
+
+def test_py_anchor_on_runs_reference_root_boundary_and_beyond(tmp_path):
+    """M6: граница на ЭТОМ новом корне отдельно — line == длине файла чист,
+    line на 1 больше бит (тот же механизм, что и у остальных корней, но
+    измерен именно на новом четвёртом корне, не выведен по аналогии)."""
+    cases_dir = tmp_path / "cases"
+    app_dir = tmp_path / "app"
+    runs_ref = _runs_reference_file(tmp_path, "Bound.py", 15)
+    _case(tmp_path, "TC-013",
+          "на границе `Bound.py:15` и за границей `Bound.py:16`")
+
+    broken, total = al.run(cases_dir, app_dir, tmp_path / "framework",
+                           tmp_path / "scripts", tmp_path / "no-docs.md",
+                           tmp_path / "no-charters", runs_ref.parent)
+    assert total == 2 and len(broken) == 1
+    assert broken[0]["file"] == "Bound.py" and broken[0]["line"] == 16
+
+
+def test_broken_anchor_under_runs_reference_is_still_caught_as_missing(tmp_path):
+    """Битый file:line под runs/reference/ (файл вообще отсутствует в этом
+    корне) по-прежнему ловится линтером, а не молча проглатывается новым
+    корнем."""
+    cases_dir = tmp_path / "cases"
+    app_dir = tmp_path / "app"
+    runs_ref_dir = tmp_path / "runs-reference-empty"
+    _case(tmp_path, "TC-014", "`GhostReference.py:1`")
+
+    broken, total = al.run(cases_dir, app_dir, tmp_path / "framework",
+                           tmp_path / "scripts", tmp_path / "no-docs.md",
+                           tmp_path / "no-charters", runs_ref_dir)
+    assert total == 1 and len(broken) == 1
+    assert broken[0]["reason"] == "файл не найден"
+
+
+def test_file_only_outside_runs_reference_subdir_is_not_a_candidate(tmp_path):
+    """Граница ЗА пределами скоупа (M6, снаружи): файл лежит под runs/, но
+    НЕ под runs/reference/ (соседний подкаталог, напр. runs/RUN-2026...) —
+    НЕ должен становиться кандидатом, только reference/ входит в скоуп
+    (докстринг модуля «СКОУП»: не весь runs/, там объёмные артефакты)."""
+    cases_dir = tmp_path / "cases"
+    app_dir = tmp_path / "app"
+    runs_root = tmp_path / "runs-fixture"
+    other = runs_root / "not-reference" / "Sibling.py"
+    other.parent.mkdir(parents=True, exist_ok=True)
+    other.write_text("\n".join(f"line {i}" for i in range(1, 21)) + "\n",
+                     encoding="utf-8")
+    _case(tmp_path, "TC-015", "`Sibling.py:10`")
+
+    # runs_reference_dir указывает именно на .../reference (которого тут нет) -
+    # соседний .../not-reference/ НЕ передан ни одним корнем поиска.
+    broken, total = al.run(cases_dir, app_dir, tmp_path / "framework",
+                           tmp_path / "scripts", tmp_path / "no-docs.md",
+                           tmp_path / "no-charters", runs_root / "reference")
+    assert total == 1 and len(broken) == 1
+    assert broken[0]["reason"] == "файл не найден", \
+        "runs/<не-reference> вне скоупа — пин текущего поведения (M6, снаружи)"
+
+
+def test_runs_reference_dir_constant_is_scoped_to_reference_subdir():
+    """Структурный пин: константа корня — РОВНО `runs/reference`, не голый
+    `runs/` (защита от будущей правки, расширяющей скоуп на весь runs/ и
+    затягивающей объёмные артефакты прогонов как шум)."""
+    assert al.RUNS_REFERENCE_DIR.name == "reference"
+    assert al.RUNS_REFERENCE_DIR.parent.name == "runs"
 
 
 def test_file_only_in_venv_is_not_a_candidate(tmp_path):

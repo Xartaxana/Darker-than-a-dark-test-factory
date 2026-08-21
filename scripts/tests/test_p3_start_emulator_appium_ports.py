@@ -55,6 +55,54 @@ def test_start_appium_port_valid_boundaries_are_in_domain():
     assert "MIN=1 MAX=65535" in cp.stdout
 
 
+# --- -TimeoutSeconds дефолт 150 (батч мелочей П3, 2026-08-21): холодный
+# npx-старт ВТОРОГО Appium (:4725) занимал ~90-120с, 60с не хватало
+# (runs/N3-postmerge-device-witness-2026-08-21.md §1). Пин - СТАТИЧЕСКИЙ
+# разбор текста/AST tasks.ps1, НЕ живой вызов Start-Appium (реальный npx
+# порождать в юнит-тесте запрещено).
+
+
+def test_start_appium_timeout_seconds_default_is_150():
+    """Дефолт параметра -TimeoutSeconds - 150 (было 60). Читаем DefaultValue
+    прямо из AST параметра рефлексией - НЕ вызываем тело функции."""
+    cp = run_ps(
+        dot_source_prefix() +
+        "$ast = (Get-Command Start-Appium).ScriptBlock.Ast; "
+        "$p = $ast.Body.ParamBlock.Parameters | "
+        "  Where-Object { $_.Name.VariablePath.UserPath -eq 'TimeoutSeconds' }; "
+        "Write-Output \"DEFAULT=$($p.DefaultValue.Extent.Text)\""
+    )
+    assert cp.returncode == 0, cp.stderr
+    assert "DEFAULT=150" in cp.stdout
+
+
+def test_start_appium_timeout_seconds_flows_into_deadline_not_hardcoded():
+    """Граница M6: явный -TimeoutSeconds на вызове ПОБЕЖДАЕТ дефолт - параметр
+    не хардкожен, тело функции использует переменную `$TimeoutSeconds`
+    (не литерал), значит явный аргумент действительно течёт в дедлайн-цикл.
+    Проверено рефлексией параметра (ParameterMetadata.SwitchParameter=False,
+    обычный позиционно-независимый параметр без ValidateScript, запрещающего
+    произвольные значения) + структурным разбором источника - без реального
+    вызова (живой npx под юнит-тестом запрещён)."""
+    cp = run_ps(
+        dot_source_prefix() +
+        "$param = (Get-Command Start-Appium).Parameters['TimeoutSeconds']; "
+        "Write-Output \"TYPE=$($param.ParameterType.Name)\"; "
+        "Write-Output \"HAS_VALIDATE_SCRIPT=$(($param.Attributes | "
+        "  Where-Object { $_ -is [System.Management.Automation.ValidateScriptAttribute] }).Count -gt 0)\""
+    )
+    assert cp.returncode == 0, cp.stderr
+    assert "TYPE=Int32" in cp.stdout
+    assert "HAS_VALIDATE_SCRIPT=False" in cp.stdout  # ничто не отбраковывает явный аргумент
+    text = _ps1_helpers_source()
+    start_appium_body = text.split("function Start-Appium", 1)[1].split("function Get-DeviceSerials", 1)[0]
+    # дедлайн строится ИЗ переменной параметра, не из literal 60/150 -
+    # явный -TimeoutSeconds на вызове реально долетает до цикла ожидания.
+    assert "$deadline = (Get-Date).AddSeconds($TimeoutSeconds)" in start_appium_body
+    assert "AddSeconds(60)" not in start_appium_body
+    assert "AddSeconds(150)" not in start_appium_body
+
+
 # --- Start-Emulator -Port: домен свой (чётный, 5554-5584) ---
 
 

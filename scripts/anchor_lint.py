@@ -25,12 +25,27 @@ basename, `rglob` по корням поиска ищет совпадение �
 СКОУП. Сканируются `test-cases/**/*.md` со статусом НЕ Merged/Deprecated
 (`Merged` уже поглощён слиянием — дублирует dedup_check.py; `Deprecated`
 кейс не развивается) — сам `scripts/` при этом на тест-кейсы НЕ сканируется.
-Код ищется по ТРЁМ корням: app-under-test/ + framework/ + scripts/ (без
-framework/.venv и framework/allure-*, чтобы не матчить site-packages/отчёты;
-внутри scripts/ исключений нет — venv там не живёт, scripts/tests/ матчится
-наравне с остальным) — класс дефекта «код под кейсом сменился, кейс молчит»
-покрывает всю обвязку (тестовый фреймворк И скрипты конвейера), не только
-код приложения (решение координатора).
+Код ищется по ЧЕТЫРЁМ корням: app-under-test/ + framework/ + scripts/ +
+runs/reference/ (без framework/.venv и framework/allure-*, чтобы не матчить
+site-packages/отчёты; внутри scripts/ исключений нет — venv там не живёт,
+scripts/tests/ матчится наравне с остальным) — класс дефекта «код под
+кейсом сменился, кейс молчит» покрывает всю обвязку (тестовый фреймворк И
+скрипты конвейера), не только код приложения (решение координатора).
+`runs/reference/` (НЕ весь `runs/` — там объёмные артефакты живых прогонов,
+шум без сигнала) добавлен запросом фабричного прохода 4 (state/
+orchestrator-log.md 2026-08-21T01:10:44): docs/01 несёт якорь на
+`runs/reference/test_bug078_verify_temp_REFERENCE.py:227`, файл реально
+существует на диске, но старый линтер его не находил (корень не
+сканировался) — ложно-битый якорь.
+
+ЛАТЕНТНОЕ МАСКИРОВАНИЕ (критик-вход batch-minor-fixes-2026-08-21,
+не реализовано сегодня — коллизий basename 0, измерено): `check_anchor`
+берёт `best = max(counts)` по ВСЕМ кандидатам basename, а
+`runs/reference/` по назначению хранит КОПИИ скриптов — копия под
+ОРИГИНАЛЬНЫМ именем, если она длиннее оригинала, сделает якорь «за
+концом настоящего файла» молча зелёным. Страховка — конвенция имён
+`*_REFERENCE.py` для reference-копий: класть в `runs/reference/` файл
+под именем, совпадающим с живым файлом других корней, НЕЛЬЗЯ.
 
 ДОПОЛНИТЕЛЬНЫЕ ИСТОЧНИКИ (решение Lead, эскалация
 ANCHOR-LINT-SCOPE-AND-SEMANTIC-DRIFT-GAP, скоуп-часть, 2026-08-20).
@@ -49,6 +64,7 @@ docs/ ЦЕЛИКОМ НЕ берётся — `docs/09-history.md` и други�
 Запуск: python scripts/anchor_lint.py [--strict] [--cases-dir DIR]
                                        [--app-dir DIR] [--framework-dir DIR]
                                        [--scripts-dir DIR]
+                                       [--runs-reference-dir DIR]
                                        [--docs-strategy-file FILE]
                                        [--charters-dir DIR]
 Коды выхода: 0 — ВСЕГДА (WARN-ярус); 1 — есть битые якоря И задан --strict
@@ -72,6 +88,11 @@ CASES_DIR = REPO / "test-cases"
 APP_DIR = REPO / "app-under-test"
 FRAMEWORK_DIR = REPO / "framework"
 SCRIPTS_DIR = REPO / "scripts"
+# Батч мелочей П3 (2026-08-21, запрос фабричного прохода 4): якоря на
+# reference-скрипты прогонов (runs/reference/) — ЧЕТВЁРТЫЙ корень поиска
+# кода. Только reference/, НЕ весь runs/ — там объёмные артефакты живых
+# прогонов, шум без сигнала (см. докстринг модуля «СКОУП»).
+RUNS_REFERENCE_DIR = REPO / "runs" / "reference"
 # Ровно два носителя живых норм сверх test-cases/ — решение Lead, докстринг
 # модуля «ДОПОЛНИТЕЛЬНЫЕ ИСТОЧНИКИ». НЕ вся docs/ — исторические архивы
 # (docs/09-history.md и т.п.) протухают легитимно.
@@ -127,8 +148,9 @@ def extract_anchors(text: str) -> list[tuple[str, int]]:
 
 def build_basename_index(roots: list[Path]) -> dict[str, list[Path]]:
     """basename -> список путей под КОРНЯМИ поиска (app-under-test/,
-    framework/, scripts/) с таким именем. Каталоги из EXCLUDED_DIR_NAMES/
-    EXCLUDED_DIR_PREFIXES (.venv, allure-*) не обходятся ни в одном корне."""
+    framework/, scripts/, runs/reference/) с таким именем. Каталоги из
+    EXCLUDED_DIR_NAMES/EXCLUDED_DIR_PREFIXES (.venv, allure-*) не
+    обходятся ни в одном корне."""
     index: dict[str, list[Path]] = {}
     for root in roots:
         if not root.is_dir():
@@ -218,11 +240,12 @@ def run(cases_dir: Path = CASES_DIR, app_dir: Path = APP_DIR,
         framework_dir: Path = FRAMEWORK_DIR,
         scripts_dir: Path = SCRIPTS_DIR,
         docs_strategy_file: Path = DOCS_STRATEGY_FILE,
-        charters_dir: Path = CHARTERS_DIR) -> tuple[list[dict], int]:
+        charters_dir: Path = CHARTERS_DIR,
+        runs_reference_dir: Path = RUNS_REFERENCE_DIR) -> tuple[list[dict], int]:
     """Возвращает (список_битых, всего_якорей).
 
     Каждый элемент битых: {case_id, path, file, line, reason}."""
-    index = build_basename_index([app_dir, framework_dir, scripts_dir])
+    index = build_basename_index([app_dir, framework_dir, scripts_dir, runs_reference_dir])
     line_cache: dict[Path, int] = {}
     broken: list[dict] = []
     total = 0
@@ -250,13 +273,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--app-dir", default=str(APP_DIR))
     parser.add_argument("--framework-dir", default=str(FRAMEWORK_DIR))
     parser.add_argument("--scripts-dir", default=str(SCRIPTS_DIR))
+    parser.add_argument("--runs-reference-dir", default=str(RUNS_REFERENCE_DIR))
     parser.add_argument("--docs-strategy-file", default=str(DOCS_STRATEGY_FILE))
     parser.add_argument("--charters-dir", default=str(CHARTERS_DIR))
     args = parser.parse_args(argv)
 
     broken, total = run(Path(args.cases_dir), Path(args.app_dir),
                         Path(args.framework_dir), Path(args.scripts_dir),
-                        Path(args.docs_strategy_file), Path(args.charters_dir))
+                        Path(args.docs_strategy_file), Path(args.charters_dir),
+                        Path(args.runs_reference_dir))
 
     for item in broken:
         anchor = f"{item['file']}:{item['line']}"

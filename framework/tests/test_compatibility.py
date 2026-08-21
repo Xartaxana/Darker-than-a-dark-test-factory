@@ -54,15 +54,19 @@ def api26_device_required():
     устройства нет вовсе). Проверяет ФАКТИЧЕСКИЙ API level ПОДКЛЮЧЁННОГО
     устройства (`adb shell getprop ro.build.version.sdk`) — диагностируемый
     fail-fast вместо таймаута, сам fixture не пытается переключать эмулятор
-    (это делает оператор/оркестратор через `Start-Emulator -WritableSystem
-    -AvdName ao3_test_api29`, см. docs/environment-setup.md). Имя фикстуры
+    (это делает оператор/оркестратор через `Use-DeviceStack -N 2` (лиза
+    обязательна) + `Start-Emulator -Port 5556 -AvdName ao3_test_api29
+    -WritableSystem`; адресация целевого устройства — через env AO3_DEVICE/
+    APPIUM_URL, которые выставляет Use-DeviceStack, НЕ "первое устройство",
+    см. docs/environment-setup.md). Имя фикстуры
     сохранено (`api26_device_required`) ради минимальной правки call site —
     проверяемый уровень теперь `SECOND_AVD_API_LEVEL` (AT-BUG-028, см. выше)."""
     actual = adb.shell("getprop ro.build.version.sdk").strip()
     assert actual == SECOND_AVD_API_LEVEL, (
         f"TC-109 требует эмулятор API {SECOND_AVD_API_LEVEL} (AVD {SECOND_AVD_NAME}), "
         f"подключено устройство с API {actual!r} — переключите эмулятор: "
-        f"`Start-Emulator -WritableSystem -AvdName {SECOND_AVD_NAME}` (см. AT-BUG-028)"
+        f"`Use-DeviceStack -N 2` + `Start-Emulator -Port 5556 "
+        f"-AvdName {SECOND_AVD_NAME} -WritableSystem` (см. AT-BUG-028)"
     )
 
 
