@@ -5062,7 +5062,7 @@
     "epicPath": null,
     "summary": "Show copy-URL button: обе стороны тумблера переключаются немедленно, без перекрытия инжектированного интерактива",
     "issueType": "test-case",
-    "status": "tc-approved",
+    "status": "tc-awaiting-review",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -5070,7 +5070,7 @@
       "area:settings",
       "risk:R-13"
     ],
-    "updated": "2026-08-15T22:37:14Z",
+    "updated": "2026-08-21T01:04:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -5867,6 +5867,50 @@
       "risk:R-01"
     ],
     "updated": "2026-08-21T00:25:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-282",
+    "path": "board/TC-282/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Снекбар прихода использует множественное число «works» при N>1 И появляется от АВТОМАТИЧЕСКОЙ (фоновой) синхронизации — без единого тапа «Sync now»",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:sync",
+      "risk:R-18"
+    ],
+    "updated": "2026-08-21T01:38:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-283",
+    "path": "board/TC-283/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Слияние запроса на отправку полевым способом: `sendHandledAt` сохраняется ЛОКАЛЬНЫМ даже когда удалённая строка побеждает LWW; свежий Send снова докачивает после удаления файла; БЕЗ нового Send удаление файла не запускает повторную закачку",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:sync",
+      "risk:R-18"
+    ],
+    "updated": "2026-08-21T01:42:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -7720,9 +7764,9 @@
     "epic": null,
     "parentPath": null,
     "epicPath": null,
-    "summary": "navigator.clipboard.writeText() отклоняется DOMException 'Write permission denied' в тестовом WebView — блокирует Then «Copied!» TC-188",
+    "summary": "navigator.clipboard.writeText() БЫЛ недоказуем в тестовом WebView (DOMException 'Write permission denied') — блокер Then TC-188 снят window-пробой 2026-08-21",
     "issueType": "bug",
-    "status": "bug-blocked",
+    "status": "bug-fixed",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
@@ -7730,7 +7774,7 @@
       "test_case:TC-188",
       "sev:minor"
     ],
-    "updated": "2026-08-14T04:20:00Z",
+    "updated": "2026-08-21T01:04:00Z",
     "resolution": null,
     "children": [],
     "archived": false

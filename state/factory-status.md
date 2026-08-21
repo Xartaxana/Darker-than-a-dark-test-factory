@@ -1,19 +1,19 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-21T00:56:39Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-21T02:06:11Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
 - Сборка: dev-local (versionCode 12), commit `fdd3f728`, built_at 2026-08-19T17:47:59Z
-- smoke: Closed · smoke_freshness_hours: **30.6** (RUN-20260819-1818)
-- regression: Closed · regression_freshness_hours: **28.7** (RUN-20260819-2012)
-- canary: Triaged · canary_freshness_hours: **397.2** (RUN-20260804-1317)
+- smoke: Closed · smoke_freshness_hours: **31.8** (RUN-20260819-1818)
+- regression: Closed · regression_freshness_hours: **29.9** (RUN-20260819-2012)
+- canary: Triaged · canary_freshness_hours: **398.4** (RUN-20260804-1317)
 - Открытые blocker/critical: **1** — BUG-083
 - Известные проблемы (known_issue): **2**
 - p0_automation_coverage: **100%** (37/37)
-- p1_automation_coverage: **48%** (85/178)
+- p1_automation_coverage: **47%** (85/180)
 - Test debt открыт: **2** — AT-BUG-075, AT-BUG-091
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
@@ -24,9 +24,9 @@ story-карточки: стадии см. docs/05-board.md §Story
 - dev-local (versionCode 12), commit `fdd3f728`, built_at 2026-08-19T17:47:59Z
 - smoke: passed · regression: passed
 
-## Тест-кейсы (281)
+## Тест-кейсы (283)
 
-- Draft: **1** · Review: **9** · Approved: **110** · Automated: **151** · Merged: **10**
+- Draft: **1** · Review: **11** · Approved: **110** · Automated: **151** · Merged: **10**
 - автотесты (B3): active: **151**
 
 | Область | Draft | Review | Approved | Automated | Merged | Blocked |
@@ -45,7 +45,7 @@ story-карточки: стадии см. docs/05-board.md §Story
 | security |  |  | 3 | 6 |  |  |
 | settings |  |  | 12 | 11 |  |  |
 | smoke |  |  |  | 5 |  |  |
-| sync |  | 2 | 24 | 1 | 1 |  |
+| sync |  | 4 | 24 | 1 | 1 |  |
 | tabs |  |  | 2 | 12 |  |  |
 | visibility |  |  |  | 6 |  |  |
 
@@ -78,7 +78,7 @@ story-карточки: стадии см. docs/05-board.md §Story
 
 ## Test debt (5)
 
-- AT-BUG-068 [broken_environment] Blocked — navigator.clipboard.writeText() отклоняется DOMException 'Write permission denied' в тестовом WebView — блокирует Then «Copied!» TC-188
+- AT-BUG-068 [broken_environment] Fixed — navigator.clipboard.writeText() БЫЛ недоказуем в тестовом WebView (DOMException 'Write permission denied') — блокер Then TC-188 снят window-пробой 2026-08-21
 - AT-BUG-075 [flaky_test] Open — TC-176 burst-окно: натуральный запас tap1->tap2 ~0.52-0.67с после rework attempt4 (path 1/path 2 attempt3 сняты критиком как неокупившиеся/небезопасные, остался только layering-фикс) — ниже критик-ориентира ≥1с, дальнейшее ужатие требует пересмотра сценария/ориентира (test-strategist/Lead)
 - AT-BUG-087 [flaky_test] Blocked — TC-135 (test_cold_start_deep_link_reuses_single_home_tab) TimeoutError на wait_tabs_persisted(timeout=20) — гонка ActivityManager remove-task после pm clear убивает cold-start процесс до init; фикс детектирует killedByAm=true и ретраит, НО детектор не покрывает все логкэт-варианты того же кила — D1-верификация 2026-08-20T07:44:07Z: 1 red из 2 живых прогонов на одной измеренно свежей сессии, пинг-понг reopen_count=2=sla.reopened_pingpong, Blocked
 - AT-BUG-090 [flaky_test] Blocked — assert_chip_absent — негативный Then сразу после tap_selected_chip/reopen_listing_overlay без settle/hold (4-й член класса AT-BUG-081/082/083/085), TC-091; код-фикс написан 2026-08-20, live-верификация BLOCKED (environment)
@@ -99,7 +99,7 @@ story-карточки: стадии см. docs/05-board.md §Story
 
 - нет
 
-## Эскалации (60)
+## Эскалации (59)
 
 - [2026-07-24T05:10:04Z] **BUG-011** [sla:bug_open_major] — major-баг open с 2026-07-15T14:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
 - [2026-08-01T16:01:07Z] **BUG-017** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-30T00:00:00Z | нужно: ответить в ## Обсуждение
@@ -122,7 +122,6 @@ story-карточки: стадии см. docs/05-board.md §Story
 - [2026-08-16T00:28:00Z] **AO3-BRIDGE-CLIPBOARD-GUARD** [resolved:critic-findings-file-0816] — ЗАКРЫТО 2026-08-16 полным Lead (Opus): находка верна и класс реален; заведён `bugs/BUG-071.md` (app_bug, minor, Open, `regression_of: BUG-069`) — теперь класс ВИДИМ сканеру очереди (прецедент AT-BUG-020/ESC-004: долг, живущий только в escalations.md, конвейеру невидим). Дальше — штатным путём: фикс в `app-under-test/` делает разработчик, мы не правим код приложения. Исходный текст находки — история: сиблинг-класс BUG-069: `app-under-test/app/src/main/assets/ao3_bridge.js:1102` разыменовывает `navigator.clipboard.writeText` БЕЗ guard'а (`if (navigator.clipboard && navigator.clipboard.writeText)`, который был в разделе «Альтернатива» самого BUG-069, но в фикс `85fbed4` не вошёл). При отсутствии Clipboard API (WebView без поддержки) — синхронный `TypeError` до входа в try/catch промиса, кнопка снова молчит, тот же наблюдаемый симптом. Insecure-context путь исключён (нет `usesCleartextTraffic`/`networkSecurityConfig`, нет `http://` в Kotlin, targetSdk 36 запрещает cleartext по умолчанию) — вероятность низкая, но класс реален (D-0043). Находка critic-входа D1 BUG-069 (2026-08-16), независимо перепроверена (собственный grep всех `.js` в assets/). | нужно: bug-reporter заводит app_bug (или test-designer — test_debt, если решат не чинить сразу) на отсутствие guard'а; координатор следующего прохода — приоритетное заведение
 - [2026-08-16T00:15:00Z] **ADB-UNQUOTED-SHELL-SIBLINGS** [resolved:critic-findings-file-0816] — ЗАКРЫТО 2026-08-16 полным Lead (Opus): заведён `bugs/AT-BUG-079.md` (test_debt, minor, Open, `regression_of: AT-BUG-069`) — подберётся правилом B4 штатно. Приоритет подтверждаю НИЗКИМ: критик перечислил всех вызывающих, все передают module-константы без пробелов/кавычек, `push_app_file` вдобавок громко фейлит — латентно, не блокер, вперёд живой очереди не лезет. Исходный текст — история: сиблинг-класс AT-BUG-069 (B4-фикс `pull_app_file` квотирования): `framework/core/adb.py:378` (`run_as_file_or_raise`, вызывающий `app_steps.py:323` через `_TABS_PREFS_PATH`) и `framework/core/adb.py:556` (`push_app_file`, `tmp`+`rel_path` из `seed_db.py:557`) строят remote-shell-команду интерполяцией БЕЗ кавычек — тот же класс, что чинили в `pull_app_file` (пробел/пустой-hang/метасимволы). Недостижимо СЕГОДНЯ (критик перечислил все вызывающие — все module-константы без пробелов/кавычек), `push_app_file` вдобавок громко фейлит (returncode проверяется). Находка critic-входа D1 AT-BUG-069 round2 (2026-08-16), class_completeness. | нужно: test-designer/test-maintainer заводит test_debt на симметричное квотирование обеих функций (низкий приоритет — латентно, не блокер)
 - [2026-08-14T23:53:31Z] **CH-011** [resolved:CH-011-plan-fix] — ЗАКРЫТО 2026-08-15 полным Lead: charter-designer доработал план (блокер Г2 — проба перенесена в seed 2 холодного старта с обязательным позитивным контролем события; 10 правок точности), критик-раунд 2 PASS (2026-08-15T10:57:30Z), Blocked→Planned рукой Fable, plan_review заполнен. Чартер готов к исполнению правилом «Исполнить exploratory charter» следующего прохода. Исходный текст FAIL — история: критик-на-план (task_id CH-011-plan-review) вернул ДОРАБОТАТЬ: 1 блокер, кодом подтверждён — контроль Г2 запланирован через дверь `library_screen.tap_open_in_background` (новая фоновая вкладка), которая НЕ порождает событие `onScrollChanged` (restore-скрипт исполняется только при `pendingScrollRestores[tabId]>0`, взводится только `goBack`/созданием WebView с непустой историей — у свежей фоновой вкладки история пуста); наблюдение «FAB не дрогнул» неотличимо от работающего guard'а, при этом план заранее санкционирует превратить этот пустой негатив в строку приёмки фикса BUG-068 (Open, major) — ложный негатив. Плюс 10 некритичных правок точности (номера строк устарели с эпохи CH-010, infinite_scroll-дефолт не назван, seed 3 без имени .mitm-записи, work-страница гейта FAB не помечена «н-п по isWorkPage»). Переход Proposed→Blocked — by=factory (schemas/transitions.yaml, критик FAIL по плану); возврат Blocked→Planned — ТОЛЬКО human/lead (полный Lead, Fable), деградированный координатор не снимает. | нужно: charter-designer чинит дверь контроля Г2 (перенос в seed 2 ЛИБО явная перезарядка фоновой вкладки + позитивный контроль события) + 10 правок точности, затем повторный критик-вход плана; альтернатива — Lead решает иначе на разборе очереди
-- [2026-08-15T10:36:48Z] **AT-BUG-068** [sla:blocked_any] — в Blocked с 2026-08-14T04:20:00Z (причина: environment) | нужно: разобрать причину и вывести из Blocked
 - [2026-08-16T00:12:36Z] **QAREADY-SYNC-RACE-BUG-058** [resolved:lead-gitlab-race-0816] — ЗАКРЫТО 2026-08-16 полным Lead (Opus), причина установлена ИЗМЕРЕНИЕМ, не рассуждением: гонка была РЕАЛЬНОЙ и ровно той, что предполагал скрипт — разработчик выставил ярлык, а нота ещё не была втянута. `gitlab_inbound --check` показывал 2 необработанные ноты (BUG-058, BUG-065); прогон `gitlab_inbound` перенёс реплику `[gitlab:dyakagreen @ 2026-08-15T23:08:39Z]` и применил label-событие → **BUG-058 Open → Fixed, `awaiting: qa`**. `gitlab_sync --check` после этого: «все BUG-* синхронизированы». Поведение скрипта признаю ПРАВИЛЬНЫМ: он СОХРАНИЛ ярлык и пропустил снятие вместо того, чтобы затереть сигнал разработчика — механизм отработал как задуман, это не дефект. Следствие для очереди: BUG-058 стал кандидатом D1 (Fixed + awaiting qa → правила D1/D6 подберут проходом). Исходный текст — история: BUG-058: gitlab_sync собрался снять ярлык qa-status::QAready (внутренний статус Open — Open|Reopened, сигнал ещё не сведён) — вероятная гонка с gitlab_inbound (ярлык поставлен разработчиком, ещё не обработан). Ярлык СОХРАНЁН, снятие пропущено; разберитесь и пометьте [resolved:<task_id>] после проверки.
 - [2026-08-16T00:12:38Z] **QAREADY-SYNC-RACE-BUG-065** [resolved:lead-gitlab-race-0816] — ЗАКРЫТО 2026-08-16 полным Lead (Opus), тот же корень и та же проверка, что у `QAREADY-SYNC-RACE-BUG-058` (см. строку выше): нота `[gitlab:dyakagreen @ 2026-08-15T23:08:38Z]` втянута, label-событие применено → **BUG-065 Open → Fixed, `awaiting: qa`**; `gitlab_sync --check` → «все BUG-* синхронизированы». Скрипт сохранил ярлык вместо затирания сигнала разработчика — штатное поведение. BUG-065 — кандидат D1 следующего прохода. Исходный текст — история: BUG-065: gitlab_sync собрался снять ярлык qa-status::QAready (внутренний статус Open — Open|Reopened, сигнал ещё не сведён) — вероятная гонка с gitlab_inbound (ярлык поставлен разработчиком, ещё не обработан). Ярлык СОХРАНЁН, снятие пропущено; разберитесь и пометьте [resolved:<task_id>] после проверки.
 - [2026-08-16T05:30:32Z] **BUG-068** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-14T03:49:31Z | нужно: ответить в ## Обсуждение

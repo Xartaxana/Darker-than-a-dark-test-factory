@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-21T00:56:42Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-08-21T02:06:14Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 ## Сводка по областям
@@ -21,7 +21,7 @@ generated_at: 2026-08-21T00:56:42Z · генератор: `scripts/coverage_map.
 | security | 9 | 6 | partial |
 | settings | 23 | 11 | partial |
 | smoke | 5 | 5 | designed-full |
-| sync | 27 | 1 | partial |
+| sync | 29 | 1 | partial |
 | tabs | 14 | 12 | partial |
 | visibility | 6 | 6 | designed-full |
 
@@ -46,7 +46,7 @@ generated_at: 2026-08-21T00:56:42Z · генератор: `scripts/coverage_map.
 | R-15 | SEC | security:TC-100, security:TC-101, security:TC-102, security:TC-103, security:TC-104, security:TC-105, security:TC-232, security:TC-233, security:TC-234 |
 | R-16 | BUS | browser:TC-162, browser:TC-252, browser:TC-253, browser:TC-254, browser:TC-260, browser:TC-263, browser:TC-264, browser:TC-274, browser:TC-275, downloads:TC-156, downloads:TC-239, downloads:TC-240, library:TC-255, settings:TC-251, sync:TC-218, sync:TC-219, sync:TC-220, sync:TC-221, sync:TC-222, sync:TC-223, sync:TC-224, sync:TC-225, sync:TC-230, sync:TC-272 |
 | R-17 | BUS | library:TC-242, library:TC-243, rating:TC-138, rating:TC-139, rating:TC-140, rating:TC-141, rating:TC-142, rating:TC-143, rating:TC-144 |
-| R-18 | DATA | library:TC-279, sync:TC-280 |
+| R-18 | DATA | library:TC-279, sync:TC-280, sync:TC-282, sync:TC-283 |
 | R-19 | SEC | риск не покрыт дизайном |
 
 ## Фичи → покрытие
@@ -196,8 +196,8 @@ generated_at: 2026-08-21T00:56:42Z · генератор: `scripts/coverage_map.
 | sync-merge-reading-progress-fieldwise | sync | нет кейсов |
 | library-card-send-to-other-devices | library | library:TC-279[Review] |
 | sync-send-request-fulfil-download | sync | sync:TC-280[Review] |
-| sync-send-arrival-snackbar | sync | нет кейсов |
-| sync-merge-send-request-fieldwise | sync | нет кейсов |
+| sync-send-arrival-snackbar | sync | sync:TC-282[Review] |
+| sync-merge-send-request-fieldwise | sync | sync:TC-283[Review] |
 | data-workrating-model | data | нет кейсов |
 | data-filterprofile-model | data | нет кейсов |
 | data-clear-all-ratings | data | smoke:TC-004[Automated], settings:TC-018[Automated], settings:TC-019[Automated], settings:TC-020[Automated] |
@@ -240,8 +240,6 @@ generated_at: 2026-08-21T00:56:42Z · генератор: `scripts/coverage_map.
 - eink-no-ripple-indication (eink): E-ink: нажатие на контролы не рисует ripple-волну (индикация подменена no-op для foundation-clickable и Material3 одновременно)
 - eink-webview-no-overscroll (eink): E-ink: WebView не показывает overscroll-эффект на границе страницы (ни свечения, ни растягивания); выключение режима возвращает штатный overscroll
 - sync-merge-reading-progress-fieldwise (sync): Позиция чтения сливается между устройствами ПОФИЛДОВО по собственным часам readProgressAt, независимо от того, чья строка выиграла LWW: более свежая позиция переносится, а рейтинг/заметка победившей строки при этом не откатываются
-- sync-send-arrival-snackbar (sync): Приход присланных работ подтверждается снекбаром «Downloaded N works sent from another device» — единственное сообщение об этом событии: собственный диалог «Sync complete» о полученных работах молчит, а автоматический прогон не показывает ничего другого
-- sync-merge-send-request-fieldwise (sync): Запрос «Send to my other devices» сливается пофилдово и монотонно (побеждает более поздний sendRequestedAt) независимо от исхода LWW строки, а отметка об отработке (sendHandledAt) не публикуется и не приходит извне — остаётся устройство-локальной
 - data-workrating-model (data): Room-сущность WorkRating (rating/comment/tags/fandom/author/wordCount/downloadPath + позиция чтения readProgress* со своими часами и запрос отправки sendRequestedAt/sendHandledAt)
 - data-filterprofile-model (data): Room-сущность FilterProfile (name/queryString)
 
@@ -573,7 +571,7 @@ generated_at: 2026-08-21T00:56:42Z · генератор: `scripts/coverage_map.
 - риски: R-01, R-05, R-11, R-13, R-16
 - кейсы без risk: нет
 - P0/P1 не в Automated: TC-145 [P1, Approved], TC-146 [P1, Approved], TC-147 [P1, Approved], TC-163 [P1, Approved], TC-169 [P1, Approved], TC-170 [P1, Approved], TC-186 [P1, Approved], TC-187 [P1, Approved], TC-235 [P1, Approved], TC-246 [P1, Approved], TC-251 [P1, Approved]
-- автотесты (automated_by): framework/tests/test_infinite_scroll.py::test_infinite_scroll_off_keeps_native_pagination, framework/tests/test_reading_ux.py::test_tap_to_scroll_live_push_and_reload_persistence, framework/tests/test_reading_ux.py::test_tap_to_scroll_survives_kill_and_relaunch, framework/tests/test_reading_ux.py::test_tap_zone_disabled_no_effect_in_any_third, framework/tests/test_settings.py::test_cancel_clear_all_dialog_keeps_data, framework/tests/test_settings.py::test_clear_all_ratings_badge_persists_without_reload, framework/tests/test_settings.py::test_clear_all_ratings_shows_confirmation_dialog, framework/tests/test_settings.py::test_fetch_missing_metadata_fills_only_empty_titles, framework/tests/test_settings.py::test_fetch_missing_metadata_stop_mid_process, framework/tests/test_settings.py::test_system_theme_follows_os_dark_mode, framework/tests/test_settings.py::test_theme_dark_applies_instantly_without_recreating_activity, framework/tests/test_settings.py::test_webview_dark_mode_applies_instantly, framework/tests/test_settings.py::test_webview_follows_system_theme_without_in_app_toggle
+- автотесты (automated_by): framework/tests/test_infinite_scroll.py::test_infinite_scroll_off_keeps_native_pagination, framework/tests/test_reading_ux.py::test_tap_to_scroll_live_push_and_reload_persistence, framework/tests/test_reading_ux.py::test_tap_to_scroll_survives_kill_and_relaunch, framework/tests/test_reading_ux.py::test_tap_zone_disabled_no_effect_in_any_third, framework/tests/test_settings.py::test_cancel_clear_all_dialog_keeps_data, framework/tests/test_settings.py::test_clear_all_ratings_badge_persists_without_reload, framework/tests/test_settings.py::test_clear_all_ratings_shows_confirmation_dialog, framework/tests/test_settings.py::test_debug_copy_url_toggle_both_directions_without_overlap, framework/tests/test_settings.py::test_fetch_missing_metadata_fills_only_empty_titles, framework/tests/test_settings.py::test_fetch_missing_metadata_stop_mid_process, framework/tests/test_settings.py::test_system_theme_follows_os_dark_mode, framework/tests/test_settings.py::test_theme_dark_applies_instantly_without_recreating_activity, framework/tests/test_settings.py::test_webview_dark_mode_applies_instantly, framework/tests/test_settings.py::test_webview_follows_system_theme_without_in_app_toggle
 - last_green_run: RUN-20260819-2012 (suite: regression, status: Closed, updated: 2026-08-19T20:15:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
   - TC-018: нет зелёного per-TC
@@ -619,10 +617,10 @@ generated_at: 2026-08-21T00:56:42Z · генератор: `scripts/coverage_map.
 
 ### sync
 
-- coverage_status: **partial** (1/27 Automated)
+- coverage_status: **partial** (1/29 Automated)
 - риски: R-01, R-09, R-16, R-18
 - кейсы без risk: нет
-- P0/P1 не в Automated: TC-207 [P1, Approved], TC-209 [P1, Approved], TC-210 [P1, Approved], TC-211 [P1, Approved], TC-214 [P1, Approved], TC-215 [P1, Approved], TC-216 [P1, Approved], TC-217 [P1, Approved], TC-218 [P1, Approved], TC-220 [P1, Approved], TC-221 [P1, Approved], TC-223 [P1, Approved], TC-226 [P1, Approved], TC-227 [P1, Approved], TC-228 [P1, Approved], TC-229 [P1, Approved], TC-230 [P1, Approved], TC-231 [P1, Approved], TC-280 [P1, Review], TC-281 [P1, Review]
+- P0/P1 не в Automated: TC-207 [P1, Approved], TC-209 [P1, Approved], TC-210 [P1, Approved], TC-211 [P1, Approved], TC-214 [P1, Approved], TC-215 [P1, Approved], TC-216 [P1, Approved], TC-217 [P1, Approved], TC-218 [P1, Approved], TC-220 [P1, Approved], TC-221 [P1, Approved], TC-223 [P1, Approved], TC-226 [P1, Approved], TC-227 [P1, Approved], TC-228 [P1, Approved], TC-229 [P1, Approved], TC-230 [P1, Approved], TC-231 [P1, Approved], TC-280 [P1, Review], TC-281 [P1, Review], TC-282 [P1, Review], TC-283 [P1, Review]
 - автотесты (automated_by): framework/tests/test_sync.py::test_sync_failure_dialog_preserves_local_data, framework/tests/test_sync.py::test_sync_lww_work_remote_wins, framework/tests/test_sync.py::test_sync_lww_work_tie_keeps_local, framework/tests/test_sync.py::test_sync_publish_full_state, framework/tests/test_sync.py::test_sync_rerate_clears_tombstone, framework/tests/test_sync.py::test_sync_tombstone_removes_filter_profile
 - last_green_run: RUN-20260819-2012 (suite: regression, status: Closed, updated: 2026-08-19T20:15:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
@@ -631,7 +629,7 @@ generated_at: 2026-08-21T00:56:42Z · генератор: `scripts/coverage_map.
 | Priority | Draft | Review | Approved | Automated | Merged | Blocked |
 |---|---|---|---|---|---|---|
 | P0 |  |  |  |  |  |  |
-| P1 |  | 2 | 18 | 1 | 1 |  |
+| P1 |  | 4 | 18 | 1 | 1 |  |
 | P2 |  |  | 6 |  |  |  |
 | P3 |  |  |  |  |  |  |
 

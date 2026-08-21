@@ -2,7 +2,7 @@
 key: "TC-188"
 project: "AO3"
 issueType: "test-case"
-status: "tc-approved"
+status: "tc-awaiting-review"
 priority: "p2"
 summary: "Show copy-URL button: обе стороны тумблера переключаются немедленно, без перекрытия инжектированного интерактива"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-15T22:37:14Z"
-updated: "2026-08-15T22:37:14Z"
+created: "2026-08-21T01:04:00Z"
+updated: "2026-08-21T01:04:00Z"
 archived: false
 resolution: null
 ---

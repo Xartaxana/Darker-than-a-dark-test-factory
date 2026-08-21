@@ -2,9 +2,9 @@
 key: "AT-BUG-068"
 project: "AO3"
 issueType: "bug"
-status: "bug-blocked"
+status: "bug-fixed"
 priority: "p2"
-summary: "navigator.clipboard.writeText() отклоняется DOMException 'Write permission denied' в тестовом WebView — блокирует Then «Copied!» TC-188"
+summary: "navigator.clipboard.writeText() БЫЛ недоказуем в тестовом WebView (DOMException 'Write permission denied') — блокер Then TC-188 снят window-пробой 2026-08-21"
 assignee: "qa-agents"
 reporter: "qa-agents"
 labels: ["bug", "test_case:TC-188", "sev:minor"]
@@ -13,18 +13,18 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-14T04:20:00Z"
-updated: "2026-08-14T04:20:00Z"
+created: "2026-08-21T01:04:00Z"
+updated: "2026-08-21T01:04:00Z"
 archived: false
 resolution: null
 ---
 
-# navigator.clipboard.writeText() отклоняется DOMException 'Write permission denied' в тестовом WebView — блокирует Then «Copied!» TC-188
+# navigator.clipboard.writeText() БЫЛ недоказуем в тестовом WebView (DOMException 'Write permission denied') — блокер Then TC-188 снят window-пробой 2026-08-21
 
 _Спроецировано из `bugs/AT-BUG-068.md` (источник правды).
-Статус в нашей машине: **Blocked**._
+Статус в нашей машине: **Fixed**._
 
-# AT-BUG-068 — Clipboard write отклоняется тестовым WebView, «Copied!» недостижим в этой среде
+# AT-BUG-068 — Clipboard write БЫЛ недоказуем в тестовом WebView; блокер автоматизации TC-188 снят 2026-08-21 (window-проба факта вызова)
 
 ## Окружение
 
@@ -125,9 +125,15 @@ without_overlap`, `work_with_download.mitm`, `loved_work_seeded`) установ
   permission denied` в `driver.get_log('browser')` в текущей среде), не
   успешную запись в буфер — Then TC-188.md переписан test-designer'ом тем же
   решением.
-- [ ] `@pytest.mark.skip` снят с `test_debug_copy_url_toggle_both_directions_
+- [x] `@pytest.mark.skip` снят с `test_debug_copy_url_toggle_both_directions_
   without_overlap`, 3 зелёных подряд БЕЗ флака, `automated_by` в TC-188.md
-  заполнен — **отложено** (координатор, 2026-08-16): attempt1 дал зелёный
+  заполнен — **ЗАКРЫТО 2026-08-21** (эскалация правила 6 на opus-ярус,
+  task_id `TC-188-automate`): якорь факта вызова перенесён с эфемерного
+  `driver.get_log('browser')` на window-пробу
+  (`browser_steps.arm_clipboard_write_probe`), 3 зелёных подряд канонической
+  формой — 177.01s / 122.92s / 126.71s, `PYTEST_EXIT=0` каждый, ни одного
+  красного (механика и witness — запись в «Обсуждении» ниже). История
+  блокера, закрытого этой правкой: attempt1 дал зелёный
   витнесс, критик-вход нашёл 2 блокера различающей силы (закрыты rework
   attempt2 — document-identity/tap_to_scroll-readback ассерты валидны,
   подтверждены критиком в обоих прогонах). Но независимый перепрогон критика
@@ -139,9 +145,10 @@ without_overlap`, `work_with_download.mitm`, `loved_work_seeded`) установ
   task_id `TC-188-automate` — 3-я попытка на том же ярусе запрещена,
   эскалация нужна. `@pytest.mark.skip` возвращён координатором (причина в
   докстринге теста), `automated_by` снят обратно. Направление фикса
-  (предложение критика, не исполнено): якорь вызова `writeText` перенести на
+  (предложение критика) — якорь вызова `writeText` перенести на
   `window`-пробу (в стиле `mark_document_identity`), переживающую
-  переключение контекста, вместо эфемерного browser log.
+  переключение контекста, вместо эфемерного browser log — **ИСПОЛНЕНО
+  2026-08-21**, см. запись «Обсуждения» ниже.
 
 ## Анализ
 
@@ -262,6 +269,119 @@ skip снят и возвращён тем же ходом. **Поправка (
 в файле, декоратор один, следов временной пробы (закомментированный skip,
 appops-вызовы, лишняя инструментация) не осталось — сверено чтением файла,
 не гипотетическим diff'ом против несуществующего базлайна.
+
+**[builder (opus, эскалация правила 6, task_id TC-188-automate) @
+2026-08-21T01:04:00Z]** Критерий готовности #3 закрыт: флак снят переносом
+якоря на window-пробу, `@pytest.mark.skip` снят, 3 зелёных подряд.
+
+**Механика пробы** (`framework/steps/browser_steps.py`):
+- `arm_clipboard_write_probe(driver) -> token` вызывается ДО тапа и
+  оборачивает `navigator.clipboard.writeText` ТЕКУЩЕГО документа: обёртка
+  инкрементирует `window.__ao3TestClipboardWriteCalls`, кладёт аргумент в
+  `window.__ao3TestClipboardWriteLastArg` и возвращает ВЫЗЫВАЮЩЕМУ ИСХОДНЫЙ
+  промис оригинала (`__ao3TestClipboardWriteOrig.apply(this, arguments)`) как
+  есть, поэтому семантика приложения не меняется: `DOMException` реджектится
+  ровно как реджектился, а обработчик приложения (`ao3_bridge.js:1157-1186`,
+  вызов на :1179; реджект-ветка — второй аргумент `.then`, фикс `BUG-069`,
+  Verified, `fixed_in 85fbed4`) висит на том же промисе независимо. Собственная
+  ветка `p.then(mark, mark)` привешивается ТОЛЬКО ради диагностических
+  счётчиков (ниже) — она задаёт ОБА обработчика, ничего не подавляет и не
+  порождает своих unhandled-реджектов. `app-under-test/` не тронут (запрет
+  владельца) — обёртка живёт только в window тестового прогона.
+- Токен-нонс (тот же контракт, что `mark_document_identity`): проба своя
+  только пока жив ТОТ ЖЕ документ; пересоздание документа стирает и токен, и
+  счётчик.
+- Установка идемпотентна (оригинал сохраняется один раз — иначе счётчик рос
+  бы кратно) и снабжена readback'ом `armed`: молчаливо не сработавшее
+  присваивание `writeText` даёт немедленный отказ на шаге взвода, а не
+  ложно-красный ноль вызовов позже.
+- `assert_copy_url_write_text_invoked(driver, probe_token)` даёт ТРИ
+  различимых исхода вместо прежних двух: успех (счётчик > 0 при своём токене
+  ЛИБО подпись «Copied!»); `ClipboardWriteProbeLost` — ИНСТРУМЕНТАЛЬНЫЙ отказ
+  (WEBVIEW-контекст не отдал состояние / токен пропал → документ пересоздан),
+  вердикт о продукте НЕ выносится; `AssertionError` — честное «вызова не
+  было» (проба жива и своя, счётчик 0). `driver.get_log('browser')` больше не
+  участвует в вердикте — остался ТОЛЬКО строкой диагностики в сообщении
+  отказа, причём его недоступность печатается текстом исключения, а не
+  подменяется пустым списком (прежнее `except Exception: entries = []` и было
+  маскировкой tooling-потери под продуктовый отказ).
+
+**Почему картина сменилась после 2026-08-15 (установленный факт, критик-раунд
+2 2026-08-21).** Первая редакция этой записи утверждала, что
+`navigator.clipboard.writeText` теперь **резолвится** — утверждение ОПРОВЕРГНУТО
+и снято. Основание опровержения: фикс `BUG-069` (Verified, `fixed_in 85fbed4`,
+2026-08-15) переписал обработчик на `ao3_bridge.js:1157-1186`, где
+`execCommandFallback` передан ВТОРЫМ аргументом `.then` (:1181) и при РЕДЖЕКТЕ
+тоже печатает «Copied!» (:1173, `flash(ok ? 'Copied!' : 'Copy failed')`).
+Значит наблюдение `label == 'Copied!'` (allure-вложение шага:
+`{'calls': 1, 'clickCount': 1, 'label': 'Copied!', 'lastArg':
+'https://archiveofourown.org/works/900000001', 'token': ...}`) исходы НЕ
+различает — вывод «clipboard разрешён» из него не следует. **Что установлено
+фактически:** (1) клик доходит до узла и `writeText` реально вызывается
+(счётчик пробы); (2) подпись «Copied!» появляется в ОБОИХ мирах; (3) исход
+самого промиса этими прогонами НЕ определён — вопрос открыт.
+
+Тот же фикс объясняет и смену картины браузерного лога, на которой держался
+прежний якорь: реджект стал ОБРАБОТАННЫМ, поэтому `Uncaught DOMException:
+Write permission denied` из `driver.get_log('browser')` исчез — и старый
+ассерт остался с единственным сигналом «подпись Copied!», которую надо было
+поймать в 1500мс-окно опросом через `contexts.in_webview` (пере-аттач
+chromedriver на каждый шаг). Промах по окну и давал наблюдавшийся критиком
+красный «накопленный browser log: []» ~20% прогонов. Window-проба от этого
+свободна: счётчик монотонен и живёт до конца жизни документа, окна для
+промаха нет.
+
+**Механизм будущего триажа (решение Lead, критик-раунд 2).** Чтобы вопрос
+«резолв или execCommand-фолбэк» закрывался ФАКТОМ, а не рассуждением, обёртка
+пробы ведёт РАЗЛИЧАЮЩИЕ счётчики `window.__ao3TestClipboardWriteResolved` /
+`window.__ao3TestClipboardWriteRejected` (+ `...RejectReason`): своя ветка
+`p.then(mark, mark)` на том же промисе, вызывающему по-прежнему возвращается
+исходный `p`. Счётчики попадают ТОЛЬКО в allure-вложение
+«clipboard-write-probe: исход промиса (диагностика, НЕ вердикт)» — ни один
+ассерт их не читает, поэтому смена поведения среды не может ни зазеленить, ни
+покраснить тест. Продуктовый Then («Copied!»/1.5с/содержимое буфера)
+по-прежнему НЕ ассертится (ESC-032 б.1 не пересматривался), но предложение
+пересмотра deferred-части остаётся в силе и теперь опирается на измеряемый
+признак: пусть Lead/test-designer читают эти счётчики из ближайшего прогона.
+
+**Первое измерение этими счётчиками (прогон 2026-08-21, дословное содержимое
+вложения `framework/allure-results/daf247fd-35f4-40ab-a05a-2e8bac50105c-
+attachment.txt`):**
+```
+{'calls': 1, 'clickCount': 1, 'label': 'Copied!', 'lastArg': 'https://archiveofourown.org/works/900000001', 'rejectReason': 'NotAllowedError: Write permission denied.', 'rejected': 1, 'resolved': 0, 'token': 'c2b5ca58-4514-4075-98a1-df92bda65100'}
+```
+— `writeText` **РЕДЖЕКТИТСЯ** (`NotAllowedError: Write permission denied.`,
+`resolved: 0`, `rejected: 1`), а «Copied!» на кнопке — работа
+`execCommandFallback`. Ограничение clipboard в этой среде НИКУДА не делось
+(исходный диагноз тикета верен), просто после фикса BUG-069 оно перестало быть
+наблюдаемым и через подпись, и через browser log. Для deferred-части TC-188 это
+значит: грань «URL реально в буфере» через Clipboard API по-прежнему
+недостижима, но у приложения появился второй канал копирования
+(`document.execCommand('copy')`, `ao3_bridge.js:1162-1174`), которого не
+существовало на момент написания кейса, — годится ли он как наблюдаемый Then,
+решать Lead/test-designer.
+
+**Witness (канонической формой, `Invoke-Pytest`, стек 1 emulator-5554):**
+```
+1 passed in 177.01s (0:02:57)   PYTEST_EXIT=0
+1 passed in 122.92s (0:02:02)   PYTEST_EXIT=0
+1 passed in 126.71s (0:02:06)   PYTEST_EXIT=0
+1 passed in 124.73s (0:02:04)   PYTEST_EXIT=0   (перепрогон на финальном
+                                                состоянии файлов)
+1 passed in 126.70s (0:02:06)   PYTEST_EXIT=0   (rework attempt 2 по
+                                                критик-вердикту: сверка токена
+                                                в label-ветке + счётчики
+                                                resolved/rejected)
+```
+Прогонам предшествовала штатная подготовка среды (`Install-MitmCA`): первый
+запуск упал предусловием `_ensure_replay_ca` — mitm-CA отсутствовал в
+apex-сторе устройства (сверено позитивным контролем: `adb shell ls
+/apex/com.android.conscrypt/cacerts/` перечисляет сертификаты, `c8750f0d.0`
+среди них НЕТ), после установки — `CA visible in apex store: OK`.
+
+Переход `Blocked → Fixed` (`type: test_debt`) заведён в
+`schemas/transitions.yaml` коммитом `9b755313` — этот тикет и есть его
+прецедент.
 
 ## Чек-лист качества
 - [x] Проверены дубликаты среди открытых test_debt-багов (`grep -ri
