@@ -10,13 +10,23 @@ CAS-замка ломает замок и ЖИВОГО держателя по �
 (`_release_cas_lock_if_owned`). Порог 10с и окна 600/1800/14400с —
 ОЦЕНКИ (F-30), калибруются живьём. Сверка мусора `state/` — только по ФС
 (`device-lease-*.json` и `*.json.lock` в .gitignore).
-**Постмерж-очередь N3:** device-witness координатора из главного чекаута
-(стек 1 БЕЗ лизы легаси + стек 2 С лизой + post-start-abort ветка +
-первый живой `Use-DeviceStack -N 2`); затем TC-188-эскалация → N4 → N5;
-батч миграции: 10 носителей ниже + `doctor.py:81-91`
+**Постмерж-верификация N3 — ВЫПОЛНЕНА 2026-08-21 (Lead/Fable), полный
+отчёт runs/N3-postmerge-device-witness-2026-08-21.md:** все 4 условия
+критика fixes[2] живьём (стек 2 с лизой: взятие/адопция/smoke 1 passed
+55.23s/Release; стек 1 без лизы легаси: smoke 1 passed 28.04s, лиза не
+создана; живой post-start-abort на одноразовом api26; state/ по ФС
+чист). По дороге найден и починен постмерж-дефект класса M1 (канон
+главного чекаута вис на голых adb-вызовах внутри Set-GuestIPv4Pin) —
+шов -GuestPinner, коммит e584b910, журнал defect_found+accepted; канон
+главного чекаута теперь 2011 passed. Два инцидента среды оператору —
+§«Инциденты» отчёта (4 сироты adb wait-for-device; сирота-лаунчер
+emulator.exe с worktree-путём, атрибуция не удалась).
+**Оставшаяся очередь П3:** TC-188-эскалация → N4 → N5; хвост: дефолт
+-TimeoutSeconds Start-Appium мал для холодного второго инстанса (~90с
+против 60); батч миграции: 10 носителей ниже + `doctor.py:81-91`
 (первое-устройство-побеждает — спека по N3-API); plain-function twin
-`_ensure_app_installed` в conftest.py (гэп builder'а, файл был в
-N3-диффе); awaiting-флаг BUG-013 (файл был dirty у фабрики).
+`_ensure_app_installed` в conftest.py (гэп builder'а); awaiting-флаг
+BUG-013 (файл был dirty у фабрики).
 `Use-DeviceStack -N <1|2>` (`scripts/tasks.ps1`) + чокпоинт лизы в
 `framework/core/driver_factory.py::check_device_lease` (function/driver-
 scoped, вызывается КАЖДЫМ `create_driver`) + доп.ранняя сверка в
