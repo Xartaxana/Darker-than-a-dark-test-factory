@@ -322,6 +322,227 @@ def test_guest_ipv4_pin_skipped_when_no_device(repo, env, monkeypatch):
     assert dr.main([]) == 0
 
 
+# ---------------------------------------------------------------------------
+# _adb_device_serial — адресация устройства при возможных ДВУХ device-стеках
+# (spec-p3-second-emulator N3; доложено критиком, docs/tasks/
+# p3-second-emulator.md:395: раньше бралась ПЕРВАЯ строка `adb devices`,
+# что могло судить не тот стек)
+# ---------------------------------------------------------------------------
+
+def _clear_device_env(monkeypatch):
+    monkeypatch.delenv("AO3_DEVICE", raising=False)
+    monkeypatch.delenv("ANDROID_SERIAL", raising=False)
+
+
+def test_adb_device_serial_zero_devices_no_warning(env, monkeypatch):
+    """Граница снизу: 0 устройств — None, БЕЗ warning (легитимное «эмулятор
+    не поднят», отличается от неоднозначности)."""
+    def fake_run(args, timeout=60):
+        if args[-1] == "devices":
+            return 0, "List of devices attached\n"
+        return 0, "deps-ok"
+    monkeypatch.setattr(dr, "_run", fake_run, raising=True)
+    _clear_device_env(monkeypatch)
+
+    serial, warning = dr._adb_device_serial(Path("C:/fake/adb.exe"))
+    assert serial is None
+    assert warning is None
+
+
+def test_adb_device_serial_run_failure_returns_none_none_regardless_of_env(env, monkeypatch):
+    """M6-дырка (rework, критик-вход): `adb devices` сам не выполнился
+    (rc != 0 — не «промах формы вызова», а реальный отказ инструмента) —
+    (None, None), БЕЗ warning, даже если env-адресация выставлена (нечего
+    сверять — список серийников недоступен, не «env не найден среди
+    пустого списка»)."""
+    def fake_run(args, timeout=60):
+        if args[-1] == "devices":
+            return 1, "adb: command failed"
+        return 0, "deps-ok"
+    monkeypatch.setattr(dr, "_run", fake_run, raising=True)
+    monkeypatch.setenv("AO3_DEVICE", "emulator-5554")
+
+    serial, warning = dr._adb_device_serial(Path("C:/fake/adb.exe"))
+    assert serial is None
+    assert warning is None
+
+
+def test_adb_device_serial_env_set_zero_devices_no_warning(env, monkeypatch):
+    """M6-дырка (rework, критик-вход): env-адресация ВЫСТАВЛЕНА, но живых
+    устройств 0 — пин порядка веток: «нет устройств» проверяется РАНЬШЕ
+    env-адресации, поэтому это тихий (None, None) («эмулятор не поднят»),
+    НЕ WARNING «AO3_DEVICE не найден среди живых устройств ()» с пустым
+    списком в тексте."""
+    def fake_run(args, timeout=60):
+        if args[-1] == "devices":
+            return 0, "List of devices attached\n"
+        return 0, "deps-ok"
+    monkeypatch.setattr(dr, "_run", fake_run, raising=True)
+    monkeypatch.setenv("AO3_DEVICE", "emulator-5554")
+
+    serial, warning = dr._adb_device_serial(Path("C:/fake/adb.exe"))
+    assert serial is None
+    assert warning is None
+
+
+def test_adb_device_serial_one_device_no_env_uses_it(env, monkeypatch):
+    """Прежнее (легаси) поведение сохранено: ровно одно устройство без
+    env-адресации используется молча."""
+    def fake_run(args, timeout=60):
+        if args[-1] == "devices":
+            return 0, "List of devices attached\nemulator-5554\tdevice\n"
+        return 0, "deps-ok"
+    monkeypatch.setattr(dr, "_run", fake_run, raising=True)
+    _clear_device_env(monkeypatch)
+
+    serial, warning = dr._adb_device_serial(Path("C:/fake/adb.exe"))
+    assert serial == "emulator-5554"
+    assert warning is None
+
+
+def test_adb_device_serial_two_devices_no_env_ambiguous_warns(env, monkeypatch):
+    """M6-граница за пределом 1: >1 устройство без env-адресации — None +
+    WARNING (не первое из списка молча, как было до N3-фикса)."""
+    def fake_run(args, timeout=60):
+        if args[-1] == "devices":
+            return 0, ("List of devices attached\n"
+                        "emulator-5554\tdevice\nemulator-5556\tdevice\n")
+        return 0, "deps-ok"
+    monkeypatch.setattr(dr, "_run", fake_run, raising=True)
+    _clear_device_env(monkeypatch)
+
+    serial, warning = dr._adb_device_serial(Path("C:/fake/adb.exe"))
+    assert serial is None
+    assert warning is not None
+    assert "emulator-5554" in warning and "emulator-5556" in warning
+    assert "Use-DeviceStack" in warning
+
+
+def test_adb_device_serial_env_points_to_present_serial(env, monkeypatch):
+    """env указывает на ПРИСУТСТВУЮЩИЙ серийник среди двух живых — берём
+    именно его (не первый), молча."""
+    def fake_run(args, timeout=60):
+        if args[-1] == "devices":
+            return 0, ("List of devices attached\n"
+                        "emulator-5554\tdevice\nemulator-5556\tdevice\n")
+        return 0, "deps-ok"
+    monkeypatch.setattr(dr, "_run", fake_run, raising=True)
+    _clear_device_env(monkeypatch)
+    monkeypatch.setenv("AO3_DEVICE", "emulator-5556")
+
+    serial, warning = dr._adb_device_serial(Path("C:/fake/adb.exe"))
+    assert serial == "emulator-5556"
+    assert warning is None
+
+
+def test_adb_device_serial_android_serial_fallback(env, monkeypatch):
+    """AO3_DEVICE не выставлен — ANDROID_SERIAL тоже валиден как явная
+    адресация (та же пара, что Use-DeviceStack per-стек выставляет)."""
+    def fake_run(args, timeout=60):
+        if args[-1] == "devices":
+            return 0, ("List of devices attached\n"
+                        "emulator-5554\tdevice\nemulator-5556\tdevice\n")
+        return 0, "deps-ok"
+    monkeypatch.setattr(dr, "_run", fake_run, raising=True)
+    _clear_device_env(monkeypatch)
+    monkeypatch.setenv("ANDROID_SERIAL", "emulator-5554")
+
+    serial, warning = dr._adb_device_serial(Path("C:/fake/adb.exe"))
+    assert serial == "emulator-5554"
+    assert warning is None
+
+
+def test_adb_device_serial_env_points_to_absent_serial_warns_not_none_silently(env, monkeypatch):
+    """env указывает на ОТСУТСТВУЮЩИЙ серийник (протухшая переменная/чужой
+    стек погашен) — None + объясняющий WARNING, а НЕ молчаливый откат на
+    первое присутствующее устройство (дух doctor: env-ложь не даёт права
+    судить по случайному другому устройству)."""
+    def fake_run(args, timeout=60):
+        if args[-1] == "devices":
+            return 0, "List of devices attached\nemulator-5554\tdevice\n"
+        return 0, "deps-ok"
+    monkeypatch.setattr(dr, "_run", fake_run, raising=True)
+    _clear_device_env(monkeypatch)
+    monkeypatch.setenv("AO3_DEVICE", "emulator-9999")
+
+    serial, warning = dr._adb_device_serial(Path("C:/fake/adb.exe"))
+    assert serial is None
+    assert warning is not None
+    assert "emulator-9999" in warning
+    assert "emulator-5554" in warning  # перечисляет реально живые серийники
+
+
+def test_device_package_check_ambiguous_serial_differs_from_no_device(env):
+    """Прямой юнит на `_device_package_check` (B2, критик-вход батча миграции
+    2026-08-21): `serial=None` С `ambiguous=True` (2 устройства без явной
+    адресации) даёт ДРУГОЙ текст, чем `serial=None` БЕЗ ambiguous (0
+    устройств) — самопротиворечие «устройства нет» рядом с WARN про 2
+    устройства больше не воспроизводится."""
+    ambiguous = dr._device_package_check(True, None, None, None, "", ambiguous=True)
+    assert ambiguous.ok and not ambiguous.warn
+    assert "неоднозначна" in ambiguous.detail
+    assert "устройства нет" not in ambiguous.detail
+
+    no_device = dr._device_package_check(True, None, None, None, "", ambiguous=False)
+    assert no_device.ok and not no_device.warn
+    assert "устройства нет" in no_device.detail
+    assert "неоднозначна" not in no_device.detail
+
+
+def test_run_checks_two_devices_no_env_adds_addressing_warn_not_fail(repo, env, monkeypatch):
+    """Интеграционный уровень: run_checks() несёт отдельный WARN-чек
+    «устройство: однозначная адресация», guest IPv4 pin отмечается н/п с
+    объяснением (не «устройства нет»), и doctor остаётся exit 0 (WARN, не
+    FAIL) — не молча первое, но и не роняет прогон."""
+    def fake_run(args, timeout=60):
+        if args[-1] == "devices":
+            return 0, ("List of devices attached\n"
+                        "emulator-5554\tdevice\nemulator-5556\tdevice\n")
+        return 0, "deps-ok"
+    monkeypatch.setattr(dr, "_run", fake_run, raising=True)
+    _clear_device_env(monkeypatch)
+
+    checks = dr.run_checks()
+    addressing = next(c for c in checks if c.name == "устройство: однозначная адресация")
+    assert not addressing.ok and addressing.warn
+    assert "Use-DeviceStack" in addressing.detail
+    pin = next(c for c in checks if c.name == "guest IPv4 pin")
+    assert pin.ok and not pin.warn
+    assert "неоднозначна" in pin.detail
+    # B2 (критик-вход батча миграции 2026-08-21): 2-й потребитель serial=None
+    # (mech-device-build-check) раньше самопротиворечиво писал «устройства
+    # нет» рядом с WARN «2 устройств без адресации» — теперь тоже
+    # «адресация неоднозначна», не «устройства нет».
+    pkg = next(c for c in checks if c.name == "пакет на устройстве соответствует yaml")
+    assert pkg.ok and not pkg.warn
+    assert "неоднозначна" in pkg.detail
+    assert "устройства нет" not in pkg.detail
+    assert dr.main([]) == 0
+
+
+def test_run_checks_env_addressed_device_no_warn(repo, env, monkeypatch):
+    """Позитивный контроль интеграционного уровня: env корректно адресует
+    один из двух устройств — НЕТ WARN-чека адресации, guest IPv4 pin
+    работает по адресованному серийнику как обычно."""
+    def fake_run(args, timeout=60):
+        if args[-1] == "devices":
+            return 0, ("List of devices attached\n"
+                        "emulator-5554\tdevice\nemulator-5556\tdevice\n")
+        if args[-3:] == ["ip", "-6", "addr"]:
+            return 0, ""
+        return 0, "deps-ok"
+    monkeypatch.setattr(dr, "_run", fake_run, raising=True)
+    _clear_device_env(monkeypatch)
+    monkeypatch.setenv("AO3_DEVICE", "emulator-5556")
+
+    checks = dr.run_checks()
+    assert not any(c.name == "устройство: однозначная адресация" for c in checks)
+    pin = next(c for c in checks if c.name == "guest IPv4 pin")
+    assert pin.ok and not pin.warn
+    assert "emulator-5556" in pin.detail
+    assert dr.main([]) == 0
+
+
 def test_no_escalate_flag(repo, env):
     (repo.root / "tools" / "android-sdk" / "platform-tools" / "adb.exe").unlink()
 

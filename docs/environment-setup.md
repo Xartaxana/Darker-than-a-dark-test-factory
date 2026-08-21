@@ -120,6 +120,28 @@ cd D:\AO3_tests\tools\appium; npx appium
 & D:\AO3_tests\framework\.venv\Scripts\Activate.ps1; pytest framework/tests -m p0
 ```
 
+## Device-стек (второй эмулятор, spec-p3-second-emulator N3)
+
+Команды выше поднимают устройство БЕЗ выбора стека — легитимно только
+для стека 1 (дефолт/легаси: сессия без явной лизы, отказ только при
+чужой АКТИВНОЙ лизе). Второй эмулятор (стек 2, `AVD ao3_test_api29`,
+секция выше) — ТОЛЬКО через машинную лизу, чтобы два параллельных
+прогона не схватили одно и то же устройство:
+
+```powershell
+. D:\AO3_tests\scripts\env.ps1; . D:\AO3_tests\scripts\tasks.ps1
+Use-DeviceStack -N 2          # лиза ОБЯЗАТЕЛЬНА для стека 2; -N 1 - легаси-дефолт, лиза необязательна
+Start-Emulator; Start-Appium  # используют AO3_DEVICE/APPIUM_URL, которые выставил Use-DeviceStack
+# по завершении, если явно нужно освободить стек для другой сессии:
+Use-DeviceStack -N 2 -Release
+```
+
+`Use-DeviceStack`/лиза — `scripts/tasks.ps1`; при двух живых устройствах
+адресуйся переменными `AO3_DEVICE`/`APPIUM_URL`, которые она выставляет,
+а не первым устройством из `adb devices`/`Get-Device`. Детали
+жизненного цикла лизы (grace/idle/TTL, DEVICE_LEASE_BLOCKED) —
+`docs/tasks/p3-second-emulator.md` N3.
+
 ## Аппаратное ускорение эмулятора (РЕШЕНО; текущее = WHPX)
 
 > **ТЕКУЩЕЕ СОСТОЯНИЕ (с 2026-07-09): гипервизор — WHPX; AEHD удалён

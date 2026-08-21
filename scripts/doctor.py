@@ -17,6 +17,13 @@ scheduled-проходом /qa-loop убеждаемся, что стенд це
         mech-device-build-check); LastRunTime задачи AO3-QA-Heartbeat < 2ч
         (warn, н/п при Disabled — spec-factory-window v6 К5в, 2026-08-16)
 
+Адресация устройства (spec-p3-second-emulator N3, `_adb_device_serial`):
+AO3_DEVICE/ANDROID_SERIAL из окружения, если серийник присутствует; иначе
+единственное живое устройство; больше одного без env-адресации или env,
+указывающий на отсутствующий серийник, — WARN «устройство: однозначная
+адресация» вместо молчаливого первого из списка (docs/tasks/
+p3-second-emulator.md:395).
+
 Коды выхода: 0 — всё OK/WARN; 1 — есть FAIL (эскалация уже записана).
 FAIL дедуплицируется: одна строка **DOCTOR** на проверку, пока не устранена.
 
@@ -28,6 +35,7 @@ import argparse
 import datetime
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -78,19 +86,56 @@ def _run(args: list[str], *, timeout: int = 60) -> tuple[int, str]:
         return 127, str(e)
 
 
-def _adb_device_serial(adb: Path) -> str | None:
-    """Канонический признак присутствия устройства (тот же паттерн, что
-    scripts/tasks.ps1::Get-Device): первая строка `adb devices` в состоянии
-    `device`. None — устройства нет (не «adb сломан», см. `_run` для ошибок
-    вызова)."""
+def _adb_device_serial(adb: Path) -> tuple[str | None, str | None]:
+    """Признак присутствия устройства для гейтов ниже (guest IPv4 pin,
+    mech-device-build-check). Раньше (до spec-p3-second-emulator N3) брал
+    ПЕРВУЮ строку `adb devices` в состоянии `device` — при ДВУХ живых
+    device-стеках это могло молча судить не тот стек (доложено критиком,
+    docs/tasks/p3-second-emulator.md:395). Адресация теперь:
+      1. Явная — `AO3_DEVICE`, иначе `ANDROID_SERIAL` (та же пара, что
+         `Use-DeviceStack` выставляет per-стек в scripts/tasks.ps1). Серийник
+         присутствует среди живых `device`-строк -> используем его молча
+         (штатный случай при активной лизе). Задан, но НЕ присутствует
+         (протухшая переменная/чужой стек погашен) -> адресация ЛОЖНАЯ:
+         возвращаем None + WARNING, а НЕ откатываемся на первое попавшееся —
+         иначе гейт снова судит не тот стек, только тише.
+      2. Без явной адресации и РОВНО одно устройство -> используем его
+         (прежнее поведение — легаси-дефолт стека 1).
+      3. Без явной адресации и БОЛЬШЕ одного устройства -> неоднозначность:
+         None + WARNING с перечислением серийников и советом
+         `Use-DeviceStack -N <1|2>` — не первое из списка.
+      4. Ноль устройств -> None БЕЗ warning (легитимное «эмулятор не
+         поднят», вызывающий код это уже трактует отдельно).
+
+    Возвращает `(serial, warning)`; `warning` — None, когда предупреждать не
+    о чем (0/1 устройство без env, либо явная адресация нашла серийник)."""
     rc, out = _run([str(adb), "devices"])
     if rc != 0:
-        return None
+        return None, None
+    serials: list[str] = []
     for line in out.splitlines()[1:]:
         parts = line.split()
         if len(parts) == 2 and parts[1] == "device":
-            return parts[0]
-    return None
+            serials.append(parts[0])
+    if not serials:
+        return None, None
+
+    env_serial = os.environ.get("AO3_DEVICE") or os.environ.get("ANDROID_SERIAL")
+    if env_serial:
+        if env_serial in serials:
+            return env_serial, None
+        return None, (
+            f"AO3_DEVICE/ANDROID_SERIAL={env_serial!r} не найден среди живых "
+            f"устройств ({', '.join(serials)}) — адресация протухла, судить "
+            "по ней нельзя; сверь Use-DeviceStack")
+
+    if len(serials) == 1:
+        return serials[0], None
+
+    return None, (
+        f"{len(serials)} устройств без явной адресации ({', '.join(serials)}) "
+        "— какой стек проверять, неясно; выстави AO3_DEVICE/ANDROID_SERIAL "
+        "(Use-DeviceStack -N <1|2> делает это сам) перед doctor'ом")
 
 
 def _lock_payload(lock_file: Path) -> dict | None:
@@ -322,7 +367,7 @@ def _parse_sha256sum_hex(sha_out: str) -> str | None:
 
 def _device_package_check(adb_available: bool, serial: str | None,
                           dumpsys_out: str | None, installed_sha: str | None,
-                          aut_text: str) -> Check:
+                          aut_text: str, *, ambiguous: bool = False) -> Check:
     """Третье звено цепочки идентичности сборки (spec-device-build-check.md
     v3): сборка→yaml закрыт build_watch (M-B), yaml→файл закрыт
     `_apk_sha256_check` (A2/C1) — здесь устройство↔yaml. Чистая функция:
@@ -330,13 +375,24 @@ def _device_package_check(adb_available: bool, serial: str | None,
     `run_checks`; `installed_sha` — уже посчитанный вызывающим кодом sha256
     установленного base.apk (`_parse_pm_path_base_apk` + `_parse_sha256sum_hex`
     поверх реальных adb-вызовов), либо None, если путь/хэш не удалось
-    получить. Ветки — ДОСЛОВНО спека (7 состояний границы)."""
+    получить. Ветки — ДОСЛОВНО спека (7 состояний границы).
+
+    `ambiguous` (N3-фикс критик-входа батча миграции 2026-08-21, doctor.py
+    ранее :619): `serial is None` НЕ обязательно значит «устройства нет» —
+    при 2 живых устройствах без явной адресации `_adb_device_serial`
+    возвращает `None` С WARNING (см. отдельный чек «устройство: однозначная
+    адресация»). Раньше оба случая молча схлопывались в один и тот же текст
+    «устройства нет (эмулятор не поднят)» — самопротиворечие рядом с WARN
+    «2 устройств без адресации» в том же выводе doctor. Тот же принцип, что
+    ветка guest IPv4 pin (run_checks)."""
     name = "пакет на устройстве соответствует yaml"
 
     if not adb_available:
         return Check(name, "run", True, "н/п — adb недоступен")
     if serial is None:
-        return Check(name, "run", True, "н/п — устройства нет (эмулятор не поднят)")
+        return Check(name, "run", True,
+                    "н/п — адресация неоднозначна (см. проверку выше)" if ambiguous
+                    else "н/п — устройства нет (эмулятор не поднят)")
 
     m_vcode = re.search(r'(?m)^version_code:\s*([^\r\n#]*)\s*(#.*)?$', aut_text)
     yaml_vcode = (m_vcode.group(1).strip() if m_vcode else "")
@@ -465,11 +521,21 @@ def run_checks() -> list[Check]:
     # NameError, когда adb вовсе недоступен (второй `adb devices` не зовётся,
     # spec-device-build-check.md v3).
     device_serial: str | None = None
+    device_serial_warning: str | None = None
     if adb.exists():
-        device_serial = _adb_device_serial(adb)
+        device_serial, device_serial_warning = _adb_device_serial(adb)
+        if device_serial_warning:
+            # N3-находка (docs/tasks/p3-second-emulator.md:395): адресация
+            # неоднозначна (>1 устройства без env) либо env указывает на
+            # отсутствующий серийник — WARN, не молчаливое первое устройство.
+            checks.append(Check("устройство: однозначная адресация", "run",
+                                False, device_serial_warning, warn=True))
         if device_serial is None:
-            checks.append(Check("guest IPv4 pin", "run", True,
-                                "н/п — устройства нет (эмулятор не поднят)"))
+            checks.append(Check(
+                "guest IPv4 pin", "run", True,
+                "н/п — адресация неоднозначна (см. проверку выше)"
+                if device_serial_warning else
+                "н/п — устройства нет (эмулятор не поднят)"))
         else:
             # Находка живой верификации 2026-08-03 (attempt 2, полный холодный
             # рестарт): `net.ipv6.conf.ALL.disable_ipv6` — недостаточный сигнал.
@@ -563,7 +629,8 @@ def run_checks() -> list[Check]:
                                 "sha256sum", base_apk_path])
             installed_sha = _parse_sha256sum_hex(out_s) if rc_s == 0 else None
     checks.append(_device_package_check(adb.exists(), device_serial, dumpsys_out,
-                                        installed_sha, aut_text_for_sha))
+                                        installed_sha, aut_text_for_sha,
+                                        ambiguous=bool(device_serial_warning)))
 
     # M1/R4 (plan-m1-m4.md v3, 2026-08-09): сирота-детектор для heartbeat-обёртки.
     checks.append(_heartbeat_lock_dead_pid_check())

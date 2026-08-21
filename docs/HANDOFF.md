@@ -21,12 +21,37 @@ CAS-замка ломает замок и ЖИВОГО держателя по �
 главного чекаута теперь 2011 passed. Два инцидента среды оператору —
 §«Инциденты» отчёта (4 сироты adb wait-for-device; сирота-лаунчер
 emulator.exe с worktree-путём, атрибуция не удалась).
-**Оставшаяся очередь П3:** TC-188-эскалация → N4 → N5; хвост: дефолт
+**TC-188-эскалация — ЗАКРЫТА 2026-08-21** (opus-builder, rework
+attempt 2, критик-раунд 2 ПРИНЯТЬ/0 блокеров; коммиты c2cd7280 +
+5c05c7e9 fixed_in): window-проба writeText со счётчиками исхода
+промиса. **Установленный ФАКТ (2 независимых замера, исполнитель +
+критик):** `navigator.clipboard.writeText` в этой среде РЕДЖЕКТИТСЯ
+(`NotAllowedError: Write permission denied`, resolved=0/rejected=1) —
+подпись «Copied!» печатает execCommand-фолбэк (`ao3_bridge.js:1179-1182`,
+после фикса BUG-069); исходный диагноз AT-BUG-068 от 2026-08-14
+восстановлен в правах.
+**Очередь из TC-188 (правило 8а, named):**
+(1) **класс poll_for-маскировки** — `framework/core/waits.py:58`
+`except Exception: pass` глотает исключения предиката; вызывающие:
+`settings_screen.py:426,454,589`, `base_screen.py:250,317,386` —
+разбор классом (builder-диспатч, спека Lead);
+(2) **deferred-грань TC-188 — триаж на ФАКТАХ счётчиков** (за
+test-designer): clipboard-канал недостижим в тест-среде, но
+execCommand-канал работает и даёт тот же UX — годится ли подпись
+«Copied!»+1.5с-таймер как продуктовый Then без различения канала;
+(3) **текст test-cases/settings/TC-188.md** — Then всё ещё называет
+browser log прежним якорем (за test-designer/фабрику).
+**Оставшаяся очередь П3:** N4 → N5; хвост: дефолт
 -TimeoutSeconds Start-Appium мал для холодного второго инстанса (~90с
-против 60); батч миграции: 10 носителей ниже + `doctor.py:81-91`
-(первое-устройство-побеждает — спека по N3-API); plain-function twin
-`_ensure_app_installed` в conftest.py (гэп builder'а); awaiting-флаг
-BUG-013 (файл был dirty у фабрики).
+против 60); plain-function twin `_ensure_app_installed` в conftest.py
+(гэп builder'а); awaiting-флаг BUG-013 (файл был dirty у фабрики);
+**класс blocked_reason-неоднозначности в 4 ПРИНЯТЫХ N3-файлах**
+(test-automator/test-runner/fix-verifier/run-suite: «status: Blocked»
+при отказе лизы без оговорки, что `blocked_reason` не заполняется — в
+enum у лизы дома нет; в 9 файлах батча закрыто правками Lead по
+критик-раунду 2, находка критика).
+**Батч миграции носителей + `doctor.py:81-91` — ЗАКРЫТ 2026-08-21**
+(builder, rework attempt 2 по критик-входу; детали блока ниже).
 `Use-DeviceStack -N <1|2>` (`scripts/tasks.ps1`) + чокпоинт лизы в
 `framework/core/driver_factory.py::check_device_lease` (function/driver-
 scoped, вызывается КАЖДЫМ `create_driver`) + доп.ранняя сверка в
@@ -34,23 +59,39 @@ scoped, вызывается КАЖДЫМ `create_driver`) + доп.ранняя
 backfill; `Stop-NodeProcesses -WhatIf` печатает кандидатов до throw.
 Мигрированы на канонический `Use-DeviceStack`: `.claude/agents/
 {test-automator,test-runner,fix-verifier}.md`, `.claude/skills/run-suite/
-SKILL.md`, `.claude/settings.json` (allowlist). **Явная строка очереди
-(D-0043, не молчаливый остаток) — 10 файлов промптов/скиллов ЕЩЁ на
-легаси-однодевайсной форме (стек 1 по умолчанию, `Use-DeviceStack` не
-упоминается):** `.claude/agents/builder.md`, `.claude/agents/critic.md`,
-`.claude/agents/exploratory-tester.md`, `.claude/agents/failure-analyst.md`,
-`.claude/agents/scout.md`, `.claude/agents/test-designer.md`,
-`.claude/agents/test-maintainer.md`, `.claude/agents/test-reviewer.md`,
-`.claude/skills/permission-audit/SKILL.md`, `.claude/skills/session-
-handoff/SKILL.md` — back-compat: они продолжают штатно работать по стеку 1
-без правок (чокпоинт на стеке 1 отказывает ТОЛЬКО при конфликте с чужой
-АКТИВНОЙ лизой), правка — пакетным батчем на границе этапа, не в этом узле
-(вне owns N3). **Расхождение с планом (находка builder'а, не сам план):**
-`docs/tasks/p3-second-emulator.md:340` называет эту очередь «14 файлов» и
-перечисляет туда же `run-suite`/`test-automator`/`test-runner`/`fix-
-verifier` — но эти 4 явно в owns N3 (там же, строки 248-249) и мигрированы
-ЭТИМ узлом; фактический остаток после N3 — 10, не 14 (список выше,
-перепроверено `grep` по `.claude/agents/*.md .claude/skills/*/SKILL.md`).
+SKILL.md`, `.claude/settings.json` (allowlist) — узлом N3. **Батч
+миграции остатка — ЗАКРЫТ 2026-08-21** (builder, критик-вход
+ДОРАБОТАТЬ→ПРИНЯТЬ, rework attempt 2): из 10 файлов, названных N3
+легаси-остатком, фактический носитель — 9 (`.claude/agents/{builder,
+critic,exploratory-tester,failure-analyst,scout,test-maintainer,
+test-reviewer}.md`, `.claude/skills/{permission-audit,session-handoff}/
+SKILL.md`); `.claude/agents/test-designer.md` — **не носитель**
+(подтверждено grep'ом `adb|эмулятор|Get-Device|Invoke-Pytest|
+Start-Emulator|Start-Appium|device` по файлу — 0 совпадений: кейс-дизайнер
+никогда не запускает pytest/устройство), правка не требовалась. Каждый
+из 9 несёт: дефолт стек 1 (легаси, лиза не обязательна) →
+`Use-DeviceStack -N 2` для стека 2 (лиза ОБЯЗАТЕЛЬНА) → адресация
+`AO3_DEVICE`/`APPIUM_URL`, а 4 device-водящих (`builder`, `test-maintainer`,
+`test-reviewer`, `exploratory-tester`) дополнительно несут обработку
+отказа лизы (`DEVICE_LEASE_BLOCKED` → `status: Blocked` + доклад, НЕ
+`blocked_reason: environment`/поломка среды, явно разведено с соседними
+стоками той же роли; правки Lead по критик-раунду 2: `blocked_reason`
+при лизе НЕ заполняется — у транзиентной причины нет дома в enum, а
+exploratory-tester вместо Blocked оставляет чартеру Planned+снятый лок —
+переход `*→Blocked` требует эскалации и снимается только полным Lead,
+для чужого живого прогона это дорого). Заодно закрыт `scripts/doctor.py:81-91`
+(`_adb_device_serial`): было «первое устройство побеждает» при >1
+живых — теперь явная адресация (`AO3_DEVICE`/`ANDROID_SERIAL`) либо
+единственное устройство, а при неоднозначности (>1 без env, либо env на
+отсутствующий серийник) — `None` + WARN-чек «устройство: однозначная
+адресация» вместо молчаливого выбора; второй потребитель
+(mech-device-build-check) больше не пишет самопротиворечивое «устройства
+нет» рядом с этим WARN. **Расхождение с планом (находка builder'а, не
+сам план, снятое N3):** `docs/tasks/p3-second-emulator.md:340` называл
+эту очередь «14 файлов», включая уже мигрированные N3
+`run-suite`/`test-automator`/`test-runner`/`fix-verifier` — фактический
+остаток после N3 был 9 (не 10, не 14); ссылки на план обновлены тем же
+ходом (docs/tasks/p3-second-emulator.md:350-358,400-401).
 Стале-строки «П3 за П1/П2» (находка builder'а) — сняты Lead'ом этим же
 коммитом (обе точки ниже по файлу приведены к факту DAG).
 

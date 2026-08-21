@@ -88,7 +88,15 @@ def test_start_emulator_repeated_launch_on_occupied_port_is_explicit_error(tmp_p
         f"$listener = New-Object System.Net.Sockets.TcpListener([System.Net.IPAddress]::Loopback, {port}); "
         "$listener.Start(); "
         "try { "
-        f"  try {{ Start-Emulator -Port {port} -AvdName 'fake_avd_for_test' -ErrorAction Stop; "
+        f"  try {{ Start-Emulator -Port {port} -AvdName 'fake_avd_for_test' "
+        # RAM-гейт выключен явно - порт != 5554 включает дефолт 3.5 GB, и под
+        # нагрузкой хоста (параллельные сессии/эмуляторы) проба абортила бы
+        # на РЕАЛЬНОЙ RAM ДО occupancy-throw (3-й M1-спутник, найдено критик-
+        # входом батча миграции 2026-08-21: РАНЬШЕ все 5 ассертов проходили
+        # даже под RAM-abort, потому что его сообщение тоже содержит номер
+        # порта и тоже не создаёт state-файл — ложно-зелёная проба).
+        "-MinFreeGBPreStart 0 -MinFreeGBPostStart 0 "
+        "-ErrorAction Stop; "
         "        Write-Output 'NO_THROW' } "
         "  catch { Write-Output \"THROWN: $($_.Exception.Message)\" } "
         "} finally { $listener.Stop() }; "
@@ -99,6 +107,11 @@ def test_start_emulator_repeated_launch_on_occupied_port_is_explicit_error(tmp_p
     assert "THROWN:" in cp.stdout
     assert "NO_THROW" not in cp.stdout
     assert f"{port}" in cp.stdout  # сообщение называет занятый порт
+    # Различающий оракул (не просто номер порта — RAM-гейт тоже его называет,
+    # см. комментарий выше): текст occupancy-throw специфичен ("уже занят"),
+    # RAM-гейт называет причину иначе ("RAM-гейт", "free ... GB").
+    assert "уже занят" in cp.stdout
+    assert "RAM-гейт" not in cp.stdout
     # Occupancy-check стоит ДО Set-EmulatorSessionState -> state-файл не появился
     assert "STATE_FILE_EXISTS=False" in cp.stdout
 
@@ -175,6 +188,11 @@ def test_orphan_branch_wired_via_injectable_seams_reaches_orphan_cleaner_not_thr
         dot_source_prefix(fake_root=tmp_path) +
         "try { "
         "Start-Emulator -Port 5566 -AvdName 'fake_avd_for_test' "
+        # RAM-гейт выключен явно: порт != 5554 включает дефолт 3.5 GB, и под
+        # нагрузкой хоста (2 эмулятора соседних сессий) проба абортила бы на
+        # РЕАЛЬНОЙ RAM до мокнутых швов (класс M1-спутников, найдено батчем
+        # миграции 2026-08-21).
+        "-MinFreeGBPreStart 0 -MinFreeGBPostStart 0 "
         "-PortListenerResolver { param($P) [pscustomobject]@{ OwningProcess = 4242 } } "
         "-ProcessInfoResolver { param($ProcId) [pscustomobject]@{ Name = 'qemu-system-x86_64.exe'; "
         "    CommandLine = 'qemu-system-x86_64.exe -avd fake_avd_for_test -no-boot-anim' } } "
@@ -200,6 +218,8 @@ def test_live_device_or_foreign_owner_still_throws_via_seams_not_orphan_cleaner(
         dot_source_prefix(fake_root=tmp_path) +
         "try { "
         "Start-Emulator -Port 5566 -AvdName 'fake_avd_for_test' "
+        # RAM-гейт выключен явно - см. комментарий в тесте выше (тот же класс).
+        "-MinFreeGBPreStart 0 -MinFreeGBPostStart 0 "
         "-PortListenerResolver { param($P) [pscustomobject]@{ OwningProcess = 4242 } } "
         "-ProcessInfoResolver { param($ProcId) [pscustomobject]@{ Name = 'qemu-system-x86_64.exe'; "
         "    CommandLine = 'qemu-system-x86_64.exe -avd fake_avd_for_test -no-boot-anim' } } "
