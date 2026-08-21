@@ -67,7 +67,10 @@ class BasePage:
             }
             return {r: 255, g: 255, b: 255, a: 1};
         }
-        var el = arguments[0];
+        var el = document.querySelector(arguments[0]);
+        if (!el) {
+            throw new Error('contrast_of: querySelector не нашёл узел для селектора: ' + arguments[0]);
+        }
         var cs = window.getComputedStyle(el);
         var fg = parseColor(cs.color);
         var bg = effectiveBackground(el);
@@ -92,9 +95,18 @@ class BasePage:
         };
     """
 
-    def contrast_of(self, element) -> dict:
-        """Вычисленный WCAG-контраст-ratio узла `element` против эффективного
-        фона (см. докстринг выше) + классификация «крупный текст»/порог.
-        `element` — уже найденный Selenium/Appium `WebElement` (locator живёт у
-        вызывающего page object, здесь — только вычисление над готовым узлом)."""
-        return self.driver.execute_script(self._CONTRAST_OF_ELEMENT_JS, element)
+    def contrast_of(self, selector: str) -> dict:
+        """Вычисленный WCAG-контраст-ratio узла, адресуемого CSS-селектором
+        `selector`, против эффективного фона (см. докстринг выше) +
+        классификация «крупный текст»/порог. Узел резолвится ВНУТРИ
+        инжектированного скрипта через `document.querySelector(selector)` —
+        `selector` (строка-локатор, живёт у вызывающего page object) уходит
+        через границу Appium/chromedriver как примитив, а не как сериализованная
+        W3C-ссылка на `WebElement` (`arguments[0]` = WebElement): на
+        chromedriver=74.0.3729.6 (стек 2, api29) такая ссылка резолвилась
+        некорректно внутри инжектированного скрипта — `getComputedStyle`
+        получал НЕ `Element` (`TypeError: parameter 1 is not of type
+        'Element'`, `bugs/AT-BUG-096.md`). Передача строки работает
+        одинаково на chromedriver 74 И на текущем chromedriver стека 1
+        (api34) — не версионная развилка."""
+        return self.driver.execute_script(self._CONTRAST_OF_ELEMENT_JS, selector)

@@ -28,12 +28,17 @@ class WorkPage(BasePage):
 
     def title_contrast(self) -> dict:
         """TC-149: вычисленный WCAG-контраст заголовка работы (`h2.title.heading`,
-        `selectors.WORK_PAGE_TITLE` — см. `BasePage.contrast_of`)."""
-        return self.contrast_of(self.wait_css(selectors.WORK_PAGE_TITLE))
+        `selectors.WORK_PAGE_TITLE` — см. `BasePage.contrast_of`). Ждём рендера
+        `wait_css`, затем передаём СЕЛЕКТОР (не найденный `WebElement`) в
+        `contrast_of` — см. докстринг `BasePage.contrast_of` про AT-BUG-096."""
+        self.wait_css(selectors.WORK_PAGE_TITLE)
+        return self.contrast_of(selectors.WORK_PAGE_TITLE)
 
     def body_paragraph_contrast(self) -> dict:
         """TC-149: вычисленный WCAG-контраст ПЕРВОГО абзаца тела фикстуры
         (`.wrapper > p`, `selectors.WORK_PAGE_BODY_PARAGRAPH` — прямой потомок,
         НЕ вложенные филлерные `<p>` `render_reading_ux_filler_html`, см.
-        докстринг селектора)."""
-        return self.contrast_of(self.wait_css(selectors.WORK_PAGE_BODY_PARAGRAPH))
+        докстринг селектора). Селектор уникален (см. `selectors.py`), передаётся
+        строкой в `contrast_of` — см. докстринг там про AT-BUG-096."""
+        self.wait_css(selectors.WORK_PAGE_BODY_PARAGRAPH)
+        return self.contrast_of(selectors.WORK_PAGE_BODY_PARAGRAPH)

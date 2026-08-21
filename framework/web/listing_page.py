@@ -97,14 +97,24 @@ class ListingPage(BasePage):
 
     def rate_button_contrast(self, work_id: str) -> dict:
         """TC-149: вычисленный WCAG-контраст Rate-бейджа работы `work_id`
-        (см. `BasePage.contrast_of`) — узел ищется тем же `rate_button` локатором,
-        уже используемым для взаимодействия/структурных проб (`rate_button_state`)."""
-        return self.contrast_of(self.rate_button(work_id))
+        (см. `BasePage.contrast_of`) — тот же селектор, что `rate_button`
+        (`blurb} RATE_BUTTON`), уже используемый для взаимодействия/структурных
+        проб (`rate_button_state`); ждём рендера тем же `wait_css`, что и
+        `rate_button`, затем передаём СЕЛЕКТОР (не найденный `WebElement`) в
+        `contrast_of` — см. докстринг `BasePage.contrast_of` про AT-BUG-096."""
+        blurb = selectors.blurb_by_work_id(work_id)
+        selector = f"{blurb} {selectors.RATE_BUTTON}"
+        self.wait_css(selector)
+        return self.contrast_of(selector)
 
     def note_button_contrast(self, work_id: str) -> dict:
         """TC-149: вычисленный WCAG-контраст Note-кнопки работы `work_id` (см.
-        `BasePage.contrast_of`) — узел ищется тем же `note_button` локатором."""
-        return self.contrast_of(self.note_button(work_id))
+        `BasePage.contrast_of`) — тот же селектор, что `note_button`, передаётся
+        строкой (не `WebElement`), см. докстринг `BasePage.contrast_of`."""
+        blurb = selectors.blurb_by_work_id(work_id)
+        selector = f"{blurb} {selectors.NOTE_BUTTON}"
+        self.wait_css(selector)
+        return self.contrast_of(selector)
 
     def note_button(self, work_id: str):
         """Инжектированная Note-кнопка (карандаш, `ao3_bridge.js::makeNoteButton`) —
