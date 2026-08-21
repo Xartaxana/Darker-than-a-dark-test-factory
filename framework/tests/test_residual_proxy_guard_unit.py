@@ -156,7 +156,7 @@ def test_ensure_no_residual_proxy_noop_when_clean(monkeypatch, clean_value):
     # Then ничего не найдено и НИ ОДНОЙ команды "put" не ушло (только чтение)
     assert result is None
     assert len(calls) == 1
-    assert calls[0][3] == "get"
+    assert calls[0][5] == "get"
 
 
 @pytest.mark.p1
@@ -167,7 +167,7 @@ def test_ensure_no_residual_proxy_clears_stale_value(monkeypatch):
 
     def _run(args, **kw):
         calls.append(args)
-        if args[3] == "get":
+        if args[5] == "get":
             return subprocess.CompletedProcess(args=args, returncode=0, stdout="10.0.2.2:8080\n", stderr="")
         # settings put global http_proxy :0
         return subprocess.CompletedProcess(args=args, returncode=0, stdout="", stderr="")
@@ -181,8 +181,8 @@ def test_ensure_no_residual_proxy_clears_stale_value(monkeypatch):
     # Then функция вернула СТАРОЕ значение и реально сняла прокси (get + put)
     assert result == "10.0.2.2:8080"
     assert len(calls) == 2
-    assert calls[0][3] == "get"
-    assert calls[1][3] == "put"
+    assert calls[0][5] == "get"
+    assert calls[1][5] == "put"
     assert calls[1][-1] == ":0"
 
 

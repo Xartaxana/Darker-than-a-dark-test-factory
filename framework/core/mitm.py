@@ -83,7 +83,7 @@ def is_ca_installed() -> bool:
     ca_hash = hash_cp.stdout.strip()
     try:
         ls_cp = subprocess.run(
-            [settings.ADB, "shell", "ls", _APEX_CACERTS_DIR],
+            [settings.ADB, "-s", settings.DEVICE_NAME, "shell", "ls", _APEX_CACERTS_DIR],
             capture_output=True, text=True, timeout=settings.ADB_SHELL_TIMEOUT,
         )
     except subprocess.TimeoutExpired as exc:
@@ -523,7 +523,7 @@ def wait_device_proxy_reachable(timeout: float | None = None) -> None:
     )
     marker = "AO3_PROXY_REACHABLE"
     cmd = [
-        settings.ADB, "shell",
+        settings.ADB, "-s", settings.DEVICE_NAME, "shell",
         f"echo -n | nc -w 1 -q 1 {host} {port} && echo {marker} || echo NOPE",
     ]
     deadline = time.time() + effective_timeout
@@ -609,8 +609,8 @@ def set_device_proxy() -> None:
     №1 AT-BUG-009 (ReadTimeoutError на TC-013 внутри driver.get() ПОСЛЕ этого
     вызова на нагруженной длинной сессии). Истечение — явная `TimeoutError` с
     контекстом, не молчаливый клин."""
-    cmd = [settings.ADB, "shell", "settings", "put", "global",
-           "http_proxy", settings.PROXY_HOST_ALIAS]
+    cmd = [settings.ADB, "-s", settings.DEVICE_NAME, "shell", "settings", "put",
+           "global", "http_proxy", settings.PROXY_HOST_ALIAS]
     try:
         subprocess.run(cmd, check=True, timeout=settings.ADB_SHELL_TIMEOUT)
     except subprocess.TimeoutExpired as exc:
@@ -627,8 +627,8 @@ def clear_device_proxy() -> None:
     обязан завершаться явной ошибкой, а не висеть, даже если `check=False`
     (истечение таймаута — не то же самое, что ненулевой returncode, и не
     подавляется `check=False`)."""
-    cmd = [settings.ADB, "shell", "settings", "put", "global",
-           "http_proxy", ":0"]
+    cmd = [settings.ADB, "-s", settings.DEVICE_NAME, "shell", "settings", "put",
+           "global", "http_proxy", ":0"]
     try:
         subprocess.run(cmd, check=False, timeout=settings.ADB_SHELL_TIMEOUT)
     except subprocess.TimeoutExpired as exc:
@@ -660,7 +660,8 @@ def get_device_proxy() -> str | None:
     Не бросает исключение на ненулевом `returncode` — fail-safe слой не
     должен ронять сессию из-за недоступного adb (только зависший adb
     по-прежнему даёт явную `TimeoutError` выше, тот же AT-BUG-009-паттерн)."""
-    cmd = [settings.ADB, "shell", "settings", "get", "global", "http_proxy"]
+    cmd = [settings.ADB, "-s", settings.DEVICE_NAME, "shell", "settings", "get",
+           "global", "http_proxy"]
     try:
         cp = subprocess.run(
             cmd, capture_output=True, text=True, check=False,
