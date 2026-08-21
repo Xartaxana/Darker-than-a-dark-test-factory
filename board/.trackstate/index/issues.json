@@ -5960,6 +5960,28 @@
     "archived": false
   },
   {
+    "key": "TC-286",
+    "path": "board/TC-286/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Приёмник, не сумевший скачать присланную работу, оставляет запрос НЕОТРАБОТАННЫМ (работа НЕ появляется на вкладке Files) и УСПЕШНО докачивает её на следующем проходе синхронизации без нового Send",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:sync",
+      "risk:R-18"
+    ],
+    "updated": "2026-08-21T04:05:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "TC-022",
     "path": "board/TC-022/main.md",
     "parent": null,
@@ -8357,6 +8379,27 @@
       "sev:minor"
     ],
     "updated": "2026-08-20T11:52:04Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-092",
+    "path": "board/AT-BUG-092/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Нет безопасного способа переключить ответ сервера на ОДИН и тот же URL между двумя проходами синхронизации ВНУТРИ одного теста — блокирует TC-286 (retry после сбоя закачки, sync/downloads)",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "sev:major"
+    ],
+    "updated": "2026-08-21T04:05:00Z",
     "resolution": null,
     "children": [],
     "archived": false

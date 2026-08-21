@@ -1324,6 +1324,11 @@
     "artifact_status": "Review",
     "board_status": "Review"
   },
+  "TC-286": {
+    "itype": "test-case",
+    "artifact_status": "Review",
+    "board_status": "Review"
+  },
   "TC-022": {
     "itype": "test-case",
     "artifact_status": "Automated",
@@ -1840,6 +1845,11 @@
     "board_status": "Blocked"
   },
   "AT-BUG-091": {
+    "itype": "bug",
+    "artifact_status": "Open",
+    "board_status": "Open"
+  },
+  "AT-BUG-092": {
     "itype": "bug",
     "artifact_status": "Open",
     "board_status": "Open"
