@@ -13,6 +13,16 @@ def build_options(no_reset: bool = True) -> UiAutomator2Options:
     opts.platform_name = "Android"
     opts.automation_name = "UiAutomator2"
     opts.device_name = settings.DEVICE_NAME
+    # p3-n4-udid-pin-binding-guard (критик-эскалация TC-149, M2): `deviceName`
+    # САМ ПО СЕБЕ не привязывает Appium-сессию к конкретному serial при двух
+    # живых устройствах — `appium-android-driver` выбирает устройство только
+    # по `udid`/`avd`/`platformVersion` ("grab the first device we see" при их
+    # отсутствии), из-за чего сессия стека 2 фактически биндилась на
+    # devices[0] (emulator-5554) вместо адресованного (замер M2: bound
+    # deviceUDID=emulator-5554 при env стека 2). `settings.DEVICE_NAME` — уже
+    # серийник на ОБОИХ стеках (см. `_DEVICE_LEASE_STACK_DEVICES` в
+    # driver_factory.py), поэтому он же годится как `appium:udid`.
+    opts.set_capability("appium:udid", settings.DEVICE_NAME)
     opts.app_package = settings.APP_PACKAGE
     opts.app_activity = settings.APP_ACTIVITY
     if settings.PLATFORM_VERSION:

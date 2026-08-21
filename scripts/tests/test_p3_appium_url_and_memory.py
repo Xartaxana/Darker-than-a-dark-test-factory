@@ -48,6 +48,17 @@ def test_test_appium_healthy_source_default_reads_param_or_env():
     assert "http://127.0.0.1:4723" in func_body  # литерал-фолбэк остаётся
 
 
+def test_test_appium_healthy_deep_caps_include_udid_pinned_to_device_name():
+    """p3-n4-udid-pin-binding-guard: deep-слой Test-AppiumHealthy шлёт
+    `appium:udid`, привязанный к тому же `$deviceName`, что и
+    `appium:deviceName` — сиблинг оси framework/config/capabilities.py
+    ::build_options (M2: без udid Appium при двух живых устройствах
+    биндится на devices[0], не на адресованное)."""
+    text = _source()
+    func_body = text.split("function Test-AppiumHealthy", 1)[1].split("\n$shallowOk", 1)[0]
+    assert '"appium:udid"            = $deviceName' in func_body
+
+
 # --- Start-Emulator -Memory ---
 
 

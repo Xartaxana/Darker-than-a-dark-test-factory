@@ -1151,6 +1151,53 @@ class DeviceLivenessGuard:
         )
 
 
+class DeviceBindingMismatchError(RuntimeError):
+    """p3-n4-udid-pin-binding-guard (критик-эскалация TC-149, M2): Appium
+    ответил сессией, привязанной к УСТРОЙСТВУ, ОТЛИЧНОМУ от адресованного
+    (`settings.DEVICE_NAME`) — вопреки `appium:udid` в capabilities (см.
+    `capabilities.py::build_options`). Fail-fast: продолжать прогон на
+    ОШИБОЧНО забинженной сессии опаснее, чем упасть здесь (тесты стека 2
+    молча гоняли бы по устройству стека 1, отчёт выглядел бы зелёным).
+    Маркер `DEVICE_BINDING_MISMATCH` — greppable, тот же дух, что
+    `ENV_ISSUE`/`DEVICE_LEASE_BLOCKED` соседних гвардов этого модуля."""
+
+
+def _assert_bound_device(driver) -> None:
+    """M2-фикс: сверяет `deviceUDID` фактически созданной Appium-сессии с
+    адресованным `settings.DEVICE_NAME` СРАЗУ после `webdriver.Remote(...)`
+    — до `implicitly_wait`/любого использования сессии тестом.
+
+    Пустой/отсутствующий `deviceUDID` — НЕ падение гвардии, а WARN-путь
+    (константа-решение, не забытый случай): не все Appium-бэкенды/версии
+    отдают `deviceUDID` в `driver.capabilities` (задокументированная
+    капризность самого поля в appium-android-driver) — трактовать отсутствие
+    как "устройство не то" дало бы ложные красные на средах, которые честно
+    выполнили привязку через `appium:udid`, но не эхнули её обратно в
+    capabilities ответа. Расхождение проверяем ТОЛЬКО когда значение реально
+    известно и не совпадает."""
+    bound = None
+    try:
+        bound = driver.capabilities.get("deviceUDID")
+    except Exception:  # noqa: BLE001 — диагностика не должна маскировать реальную ошибку сессии
+        bound = None
+    if not bound:
+        _warn_lease(
+            "M2 device-binding guard: сессия не сообщила deviceUDID в "
+            "capabilities ответа — сверка привязки пропущена (не все "
+            "бэкенды его отдают)."
+        )
+        return
+    expected = settings.DEVICE_NAME
+    if bound != expected:
+        quit_driver(driver)
+        raise DeviceBindingMismatchError(
+            "DEVICE_BINDING_MISMATCH (p3-n4-udid-pin-binding-guard, M2): Appium-сессия "
+            f"забинжена на deviceUDID={bound!r}, а адресовано было "
+            f"settings.DEVICE_NAME={expected!r}. Сессия закрыта (quit_driver). Проверь "
+            "Use-DeviceStack/AO3_DEVICE/APPIUM_URL перед повтором."
+        )
+
+
 def create_driver(no_reset: bool = True, settle_retries: int = 0):
     """`settle_retries` (AT-BUG-026, device-liveness guard, находка красной
     пробы w1): число ДОПОЛНИТЕЛЬНЫХ попыток создать сессию, если ПЕРВАЯ упала
@@ -1198,6 +1245,7 @@ def create_driver(no_reset: bool = True, settle_retries: int = 0):
             driver = webdriver.Remote(
                 settings.APPIUM_URL, options=opts, client_config=client_config
             )
+            _assert_bound_device(driver)
             driver.implicitly_wait(settings.IMPLICIT_WAIT)
             return driver
         except Exception as exc:  # noqa: BLE001 — ретрай только opt-in (settle_retries>0)

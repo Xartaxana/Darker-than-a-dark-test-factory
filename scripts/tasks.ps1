@@ -1001,6 +1001,11 @@ function Test-AppiumHealthy {
         platformName             = "Android"
         "appium:automationName"  = "UiAutomator2"
         "appium:deviceName"      = $deviceName
+        # p3-n4-udid-pin-binding-guard: сиблинг оси framework/config/capabilities.py
+        # ::build_options (та же ОДНА семантика "привяжи сессию к serial", ДВЕ
+        # реализации, tasks.ps1:1365) - без appium:udid Appium при двух живых
+        # устройствах биндится на devices[0], а не на адресованное (M2).
+        "appium:udid"            = $deviceName
         "appium:newCommandTimeout" = 30
     }
     if ($platformVersion) { $caps["appium:platformVersion"] = $platformVersion }
