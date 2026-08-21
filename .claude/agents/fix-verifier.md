@@ -191,6 +191,11 @@ dev-<IID> у CI — немонотонен между источниками). �
   (не унаследовал живой стек от оркестратора) — СНАЧАЛА `powershell -NoProfile
   -ExecutionPolicy Bypass -Command ". D:\AO3_tests\scripts\env.ps1; . D:\AO3_tests\scripts\tasks.ps1;
   Use-DeviceStack -N 1"` (стек 2 — `-N 2`), затем `Start-Emulator`/`Start-Appium`.
+  Топология (оператор 2026-08-21): пара = 2×api29 (стек 1 — ЯВНО
+  `-AvdName ao3_corridor_api29`, стек 2 — `ao3_test_api29 -Port 5556`);
+  api34 — только посменный вердиктный прогон в 1 проход (дефолт
+  `Start-Emulator`); детали — docs/tasks/p3-second-emulator.md
+  §«Решение оператора по топологии».
   Повторный вызов из нового процесса — не конфликт: своя лиза
   (`пользователь@хост`) продолжается сама, пока под ней нет ЖИВОГО pytest
   (`-Resume` — синоним того же поведения). Отказ с маркером

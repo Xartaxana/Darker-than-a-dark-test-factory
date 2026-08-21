@@ -23,7 +23,10 @@ description: Прогнать набор тестов (smoke/regression/canary) 
 p3-second-emulator N3 — берёт машинную лизу стека 1 ДО Start-Emulator/Start-
 Appium; стек по умолчанию, `/run-suite` не принимает выбор стека — параллельный
 прогон на стеке 2 запускается отдельно, вручную) → Start-Emulator/Start-Appium/
-Install-App), прогонит набор, создаст `runs/RUN-<ts>.md` по шаблону и обновит
+Install-App; топология эмуляторов — оператор 2026-08-21: пара = 2×api29, стек 1
+поднимается ЯВНО `Start-Emulator -AvdName ao3_corridor_api29`, api34 — только
+посменный вердиктный прогон в 1 проход, см. docs/tasks/p3-second-emulator.md
+§«Решение оператора по топологии»), прогонит набор, создаст `runs/RUN-<ts>.md` по шаблону и обновит
 `state/app-under-test.yaml`. По завершении покажи пользователю итоги
 (passed/failed/длительность, путь к отчёту и Allure) и, если есть падения, напомни,
 что дальше нужен `/triage`. Если агент вернул `status: Blocked` с маркером

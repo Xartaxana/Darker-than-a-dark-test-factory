@@ -91,7 +91,14 @@ tools: Read, Glob, Grep, Write, Edit, Bash
    **Device-стек (spec-p3-second-emulator N3):** если оркестратор ЕЩЁ не поднял
    окружение за тебя и ты сам берёшь эмулятор/Appium — СНАЧАЛА
    `powershell -NoProfile -ExecutionPolicy Bypass -Command ". D:\AO3_tests\scripts\env.ps1; . D:\AO3_tests\scripts\tasks.ps1; Use-DeviceStack -N 1"`
-   (стек 2 — `-N 2`), затем `Start-Emulator`/`Start-Appium` как обычно —
+   (стек 2 — `-N 2`), затем `Start-Emulator`/`Start-Appium` как обычно.
+   Топология (оператор 2026-08-21): пара = 2×api29 (стек 1 — ЯВНО
+   `Start-Emulator -AvdName ao3_corridor_api29`, стек 2 —
+   `ao3_test_api29 -Port 5556`); стабилизация и повторные прогоны — на
+   api29, ФИНАЛЬНАЯ сверка каждого тикета и вердикт Automated — ТОЛЬКО
+   одиночным прогоном на api34 (дефолт `Start-Emulator`, посменно);
+   детали — docs/tasks/p3-second-emulator.md §«Решение оператора по
+   топологии». Use-DeviceStack —
    ставит `AO3_DEVICE`/`APPIUM_URL`/`ALLURE_RESULTS` на этот ход и держит
    машинную лизу (не даёт двум параллельным прогонам схватить один
    эмулятор молча). Повторный вызов из НОВОГО процесса конфликтом НЕ

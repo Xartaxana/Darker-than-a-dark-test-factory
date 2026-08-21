@@ -35,6 +35,14 @@ tools: Read, Bash, Write, Edit
    2026-08-21 (коммиты 4cc913fa/3a441c5a) — ВСЕ 13 носителей зовут
    `Use-DeviceStack`; легаси-пропуск этого шага больше не существует как
    класс.
+   **Топология эмуляторов (слово оператора 2026-08-21):** параллельная
+   пара = 2×api29 — стек 1 поднимается ЯВНО `Start-Emulator -AvdName
+   ao3_corridor_api29` (клон), стек 2 — `-AvdName ao3_test_api29 -Port
+   5556`; api34 (`ao3_test_api34`, дефолт `Start-Emulator` без
+   `-AvdName`) НЕ держится поднятым — только посменный вердиктный
+   прогон (1 проход) перед вердиктами уровня Automated/Verified;
+   стабильность/повторные прогоны — на api29. Полная редакция:
+   docs/tasks/p3-second-emulator.md §«Решение оператора по топологии».
    Убедись, что эмулятор и Appium подняты (`scripts/tasks.ps1`:
    `Start-Emulator`/`Start-Appium`), APK установлен (`Install-App`).
    Для replay-режима поднимай эмулятор `Start-Emulator -WritableSystem` — CA
