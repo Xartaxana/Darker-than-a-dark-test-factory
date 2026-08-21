@@ -12,6 +12,9 @@ tools/
 app-under-test/
 framework/.venv/
 framework/allure-results/
+# пер-стековый каталог результатов стека 2 (Use-DeviceStack -N 2,
+# ALLURE_RESULTS=framework/allure-results-2) — тот же класс, что allure-results/
+framework/allure-results-2/
 framework/allure-report/
 framework/**/__pycache__/
 **/__pycache__/

@@ -1,0 +1,2 @@
+AT-BUG-064 WARNING: adb shell settings get http_proxy вернул код 1 (устройство offline/unauthorized?) -- stderr: 'adb.exe: more than one device/emulator' -- get_device_proxy() не может определить текущее значение прокси, возвращаю None (не путать с "прокси не выставлен"); не бросаю, чтобы не ронять сессию.
+adb.exe: more than one device/emulator

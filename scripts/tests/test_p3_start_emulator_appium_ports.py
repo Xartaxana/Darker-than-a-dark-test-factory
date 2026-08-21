@@ -57,7 +57,7 @@ def test_start_appium_port_valid_boundaries_are_in_domain():
 
 # --- -TimeoutSeconds дефолт 150 (батч мелочей П3, 2026-08-21): холодный
 # npx-старт ВТОРОГО Appium (:4725) занимал ~90-120с, 60с не хватало
-# (runs/N3-postmerge-device-witness-2026-08-21.md §1). Пин - СТАТИЧЕСКИЙ
+# (runs/N3-p3-postmerge-device-witness-2026-08-21.md §1). Пин - СТАТИЧЕСКИЙ
 # разбор текста/AST tasks.ps1, НЕ живой вызов Start-Appium (реальный npx
 # порождать в юнит-тесте запрещено).
 

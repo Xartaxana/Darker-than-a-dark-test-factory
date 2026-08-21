@@ -1,0 +1,417 @@
+--------- beginning of main
+08-21 10:53:33.916 14304 14336 I appium  : channel read: POST /session/6e06a45b-2dfd-4957-9015-aea2a8d12c27/element
+08-21 10:53:33.918 14304 14336 I appium  : FindElement command
+08-21 10:53:33.920 14304 14336 I appium  : method: '-android uiautomator', selector: 'new UiSelector().text("Library")'
+08-21 10:53:33.922 14304 14336 I appium  : Waiting up to 10000ms for the device to idle
+08-21 10:53:34.251 14304 14336 I appium  : AppiumResponse: {"sessionId":"6e06a45b-2dfd-4957-9015-aea2a8d12c27","value":{"error":"no such element","message":"An element could not be located on the page using the given search parameters","stacktrace":"io.appium.uiautomator2.common.exceptions.ElementNotFoundException: An element could not be located on the page using the given search parameters\n\tat io.appium.uiautomator2.handler.FindElement.safeHandle(FindElement.java:63)\n\tat io.appium.uiautomator2.handler.request.SafeRequestHandler.handle(SafeRequestHandler.java:59)\n\tat io.appium.uiautomator2.server.AppiumServlet.handleRequest(AppiumServlet.java:267)\n\tat io.appium.uiautomator2.server.AppiumServlet.handleHttpRequest(AppiumServlet.java:261)\n\tat io.appium.uiautomator2.http.ServerHandler.channelRead(ServerHandler.java:77)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)\n\tat io.netty.handler.codec.MessageToMessageDecoder.channelRead(MessageToMessageDecoder.java:107)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)\n\tat io.netty.channel.CombinedChannelDuplexHandler$DelegatingChannelHandlerContext.fireChannelRead(CombinedChannelDuplexHandler.java:434)\n\tat io.netty.handler.codec.ByteToMessageDecoder.fireChannelRead(ByteToMessageDecoder.java:361)\n\tat io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:325)\n\tat io.netty.channel.CombinedChannelDuplexHandler.channelRead(CombinedChannelDuplexHandler.java:249)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:355)\n\tat io.netty.handler.timeout.IdleStateHandler.channelRead(IdleStateHandler.java:288)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:355)\n\tat io.netty.channel.DefaultChannelPipeline$HeadContext.channelRead(DefaultChannelPipeline.java:1429)\n\tat io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:918)\n\tat io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:176)\n\tat io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.handle(AbstractNioChannel.java:445)\n\tat io.netty.channel.nio.NioIoHandler$DefaultNioRegistration.handle(NioIoHandler.java:388)\n\tat io.netty.channel.nio.NioIoHandler.processSelectedKey(NioIoHandler.java:596)\n\tat io.netty.channel.nio.NioIoHandler.processSelectedKeysOptimized(NioIoHandler.java:571)\n\tat io.netty.channel.nio.NioIoHandler.processSelectedKeys(NioIoHandler.java:512)\n\tat io.netty.channel.nio.NioIoHandler.run(NioIoHandler.java:484)\n\tat io.netty.channel.SingleThreadIoEventLoop.runIo(SingleThreadIoEventLoop.java:225)\n\tat io.netty.channel.SingleThreadIoEventLoop.run(SingleThreadIoEventLoop.java:196)\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:1195)\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\n\tat java.lang.Thread.run(Thread.java:1012)\n"}}
+08-21 10:53:34.664 14304 14336 I appium  : channel read: POST /session/6e06a45b-2dfd-4957-9015-aea2a8d12c27/element
+08-21 10:53:34.667 14304 14336 I appium  : FindElement command
+08-21 10:53:34.670 14304 14336 I appium  : method: '-android uiautomator', selector: 'new UiSelector().text("Library")'
+08-21 10:53:34.672 14304 14336 I appium  : Waiting up to 10000ms for the device to idle
+08-21 10:53:34.709 14304 14336 I appium  : AppiumResponse: {"sessionId":"6e06a45b-2dfd-4957-9015-aea2a8d12c27","value":{"error":"no such element","message":"An element could not be located on the page using the given search parameters","stacktrace":"io.appium.uiautomator2.common.exceptions.ElementNotFoundException: An element could not be located on the page using the given search parameters\n\tat io.appium.uiautomator2.handler.FindElement.safeHandle(FindElement.java:63)\n\tat io.appium.uiautomator2.handler.request.SafeRequestHandler.handle(SafeRequestHandler.java:59)\n\tat io.appium.uiautomator2.server.AppiumServlet.handleRequest(AppiumServlet.java:267)\n\tat io.appium.uiautomator2.server.AppiumServlet.handleHttpRequest(AppiumServlet.java:261)\n\tat io.appium.uiautomator2.http.ServerHandler.channelRead(ServerHandler.java:77)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)\n\tat io.netty.handler.codec.MessageToMessageDecoder.channelRead(MessageToMessageDecoder.java:107)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)\n\tat io.netty.channel.CombinedChannelDuplexHandler$DelegatingChannelHandlerContext.fireChannelRead(CombinedChannelDuplexHandler.java:434)\n\tat io.netty.handler.codec.ByteToMessageDecoder.fireChannelRead(ByteToMessageDecoder.java:361)\n\tat io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:325)\n\tat io.netty.channel.CombinedChannelDuplexHandler.channelRead(CombinedChannelDuplexHandler.java:249)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:355)\n\tat io.netty.handler.timeout.IdleStateHandler.channelRead(IdleStateHandler.java:288)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:355)\n\tat io.netty.channel.DefaultChannelPipeline$HeadContext.channelRead(DefaultChannelPipeline.java:1429)\n\tat io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:918)\n\tat io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:176)\n\tat io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.handle(AbstractNioChannel.java:445)\n\tat io.netty.channel.nio.NioIoHandler$DefaultNioRegistration.handle(NioIoHandler.java:388)\n\tat io.netty.channel.nio.NioIoHandler.processSelectedKey(NioIoHandler.java:596)\n\tat io.netty.channel.nio.NioIoHandler.processSelectedKeysOptimized(NioIoHandler.java:571)\n\tat io.netty.channel.nio.NioIoHandler.processSelectedKeys(NioIoHandler.java:512)\n\tat io.netty.channel.nio.NioIoHandler.run(NioIoHandler.java:484)\n\tat io.netty.channel.SingleThreadIoEventLoop.runIo(SingleThreadIoEventLoop.java:225)\n\tat io.netty.channel.SingleThreadIoEventLoop.run(SingleThreadIoEventLoop.java:196)\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:1195)\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\n\tat java.lang.Thread.run(Thread.java:1012)\n"}}
+08-21 10:53:34.744  2611  3862 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-21 10:53:34.744  2611  3862 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-21 10:53:34.744  2611  3862 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-21 10:53:34.744  2611  3862 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-21 10:53:34.745  2522  2522 D StatusBarIconController: ignoring old pipeline callback because the new wifi icon is enabled
+08-21 10:53:35.016 14353 14353 I chromium: [INFO:CONSOLE(0)] "Error with Permissions-Policy header: Unrecognized feature: 'hid'.", source:  (0)
+08-21 10:53:35.018 14353 14353 I chromium: [INFO:CONSOLE(0)] "Error with Permissions-Policy header: Unrecognized feature: 'payment'.", source:  (0)
+08-21 10:53:35.019 14353 14353 I chromium: [INFO:CONSOLE(0)] "Error with Permissions-Policy header: Unrecognized feature: 'serial'.", source:  (0)
+08-21 10:53:35.026 14353 14353 I chromium: [INFO:CONSOLE(0)] "Error with Permissions-Policy header: Unrecognized feature: 'usb'.", source:  (0)
+08-21 10:53:35.026 14353 14353 I chromium: [INFO:CONSOLE(0)] "Error with Permissions-Policy header: Unrecognized feature: 'xr-spatial-tracking'.", source:  (0)
+08-21 10:53:35.086 14353 14374 D EGL_emulation: app_time_stats: avg=677.57ms min=139.55ms max=1266.45ms count=3
+08-21 10:53:35.127 14304 14336 I appium  : channel read: POST /session/6e06a45b-2dfd-4957-9015-aea2a8d12c27/element
+08-21 10:53:35.141 14304 14336 I appium  : FindElement command
+08-21 10:53:35.145 14304 14336 I appium  : method: '-android uiautomator', selector: 'new UiSelector().text("Library")'
+08-21 10:53:35.147 14304 14336 I appium  : Waiting up to 10000ms for the device to idle
+08-21 10:53:35.751  2611  3862 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-21 10:53:35.751  2611  3862 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-21 10:53:35.751  2611  3862 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-21 10:53:35.752  2611  3862 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-21 10:53:35.770 14353 14353 I Choreographer: Skipped 32 frames!  The application may be doing too much work on its main thread.
+08-21 10:53:35.817  2255 14453 I resolv  : GetAddrInfoHandler::run: {101 101 101 983141 10147 0}
+08-21 10:53:35.819  2255 14455 I resolv  : res_nmkquery: (QUERY, IN, A)
+08-21 10:53:35.819  2255 14454 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+08-21 10:53:35.820  2255 14454 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0x7ec57830cbb0
+08-21 10:53:35.820  2255 14454 I resolv  : doQuery: rcode=0, ancount=2, return value=99
+08-21 10:53:35.821  2255 14455 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0x7ec7083091d0
+08-21 10:53:35.822  2255 14455 I resolv  : doQuery: rcode=0, ancount=2, return value=75
+08-21 10:53:35.919 14353 14353 I chromium: [INFO:CONSOLE(3)] "Failed to create WebGPU Context Provider", source: https://archiveofourown.org/cdn-cgi/challenge-platform/h/g/orchestrate/chl_page/v1?ray=a2e91851bf4c4ffb (3)
+08-21 10:53:35.935 14393 14460 I chromium: [INFO:peer_connection_dependency_factory.cc(640)] Running WebRTC with a combined Network and Worker thread.
+08-21 10:53:35.977 14393 14460 W chromium: [WARNING:codec.cc(466)] Explicitly added H264 constrained baseline to list of supported formats.
+08-21 10:53:35.981 14304 14336 I appium  : AppiumResponse: {"sessionId":"6e06a45b-2dfd-4957-9015-aea2a8d12c27","value":{"error":"no such element","message":"An element could not be located on the page using the given search parameters","stacktrace":"io.appium.uiautomator2.common.exceptions.ElementNotFoundException: An element could not be located on the page using the given search parameters\n\tat io.appium.uiautomator2.handler.FindElement.safeHandle(FindElement.java:63)\n\tat io.appium.uiautomator2.handler.request.SafeRequestHandler.handle(SafeRequestHandler.java:59)\n\tat io.appium.uiautomator2.server.AppiumServlet.handleRequest(AppiumServlet.java:267)\n\tat io.appium.uiautomator2.server.AppiumServlet.handleHttpRequest(AppiumServlet.java:261)\n\tat io.appium.uiautomator2.http.ServerHandler.channelRead(ServerHandler.java:77)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)\n\tat io.netty.handler.codec.MessageToMessageDecoder.channelRead(MessageToMessageDecoder.java:107)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)\n\tat io.netty.channel.CombinedChannelDuplexHandler$DelegatingChannelHandlerContext.fireChannelRead(CombinedChannelDuplexHandler.java:434)\n\tat io.netty.handler.codec.ByteToMessageDecoder.fireChannelRead(ByteToMessageDecoder.java:361)\n\tat io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:325)\n\tat io.netty.channel.CombinedChannelDuplexHandler.channelRead(CombinedChannelDuplexHandler.java:249)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:355)\n\tat io.netty.handler.timeout.IdleStateHandler.channelRead(IdleStateHandler.java:288)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:355)\n\tat io.netty.channel.DefaultChannelPipeline$HeadContext.channelRead(DefaultChannelPipeline.java:1429)\n\tat io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:918)\n\tat io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:176)\n\tat io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.handle(AbstractNioChannel.java:445)\n\tat io.netty.channel.nio.NioIoHandler$DefaultNioRegistration.handle(NioIoHandler.java:388)\n\tat io.netty.channel.nio.NioIoHandler.processSelectedKey(NioIoHandler.java:596)\n\tat io.netty.channel.nio.NioIoHandler.processSelectedKeysOptimized(NioIoHandler.java:571)\n\tat io.netty.channel.nio.NioIoHandler.processSelectedKeys(NioIoHandler.java:512)\n\tat io.netty.channel.nio.NioIoHandler.run(NioIoHandler.java:484)\n\tat io.netty.channel.SingleThreadIoEventLoop.runIo(SingleThreadIoEventLoop.java:225)\n\tat io.netty.channel.SingleThreadIoEventLoop.run(SingleThreadIoEventLoop.java:196)\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:1195)\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\n\tat java.lang.Thread.run(Thread.java:1012)\n"}}
+08-21 10:53:35.994 14393 14460 W chromium: [WARNING:media_session.cc(949)] RED codec red is missing an associated payload type.
+08-21 10:53:36.038 14251 14251 W ziparchive: Unable to open '/data/app/~~MvPNR3bpeOytyRXasVkBxg==/io.appium.settings-RuST0jAfoPursCI-lPln_A==/base.dm': No such file or directory
+08-21 10:53:36.039 14251 14251 W ziparchive: Unable to open '/data/app/~~MvPNR3bpeOytyRXasVkBxg==/io.appium.settings-RuST0jAfoPursCI-lPln_A==/base.dm': No such file or directory
+08-21 10:53:36.079 14393 14461 W chromium: [WARNING:codec.cc(466)] Explicitly added H264 constrained baseline to list of supported formats.
+08-21 10:53:36.086 14393 14461 W chromium: [WARNING:codec.cc(466)] Explicitly added H264 constrained baseline to list of supported formats.
+08-21 10:53:36.089 14353 14374 D EGL_emulation: app_time_stats: avg=198.83ms min=32.04ms max=648.84ms count=5
+08-21 10:53:36.114 14393 14461 I chromium: [INFO:ipc_socket_factory.cc(503)] Setting new p2p socket buffer limit to 65536
+08-21 10:53:36.115 14393 14461 I chromium: [INFO:ipc_socket_factory.cc(503)] Setting new p2p socket buffer limit to 65536
+08-21 10:53:36.121  2255 14482 I resolv  : GetAddrInfoHandler::run: {101 101 101 983141 10147 0}
+08-21 10:53:36.122  2255 14484 I resolv  : res_nmkquery: (QUERY, IN, A)
+08-21 10:53:36.123  2255 14484 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0x7ec618310990
+08-21 10:53:36.123  2255 14484 I resolv  : doQuery: rcode=0, ancount=1, return value=53
+08-21 10:53:36.130  2255 14485 I resolv  : GetAddrInfoHandler::run: {101 101 101 983141 10147 0}
+08-21 10:53:36.131  2255 14486 I resolv  : res_nmkquery: (QUERY, IN, A)
+08-21 10:53:36.132  2255 14486 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0x7ec61830f190
+08-21 10:53:36.133  2255 14486 I resolv  : doQuery: rcode=0, ancount=1, return value=52
+08-21 10:53:36.134  2255 14487 I resolv  : GetAddrInfoHandler::run: {101 101 101 983141 10147 0}
+08-21 10:53:36.134  2255 14483 I resolv  : GetAddrInfoHandler::run: {101 101 101 983141 10147 0}
+08-21 10:53:36.135  2255 14489 I resolv  : GetAddrInfoHandler::run: {101 101 101 983141 10147 0}
+08-21 10:53:36.137  2255 14492 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+08-21 10:53:36.137  2255 14490 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+08-21 10:53:36.137  2255 14491 I resolv  : res_nmkquery: (QUERY, IN, A)
+08-21 10:53:36.139  2255 14490 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0x7ec70830a7b0
+08-21 10:53:36.139  2255 14490 I resolv  : doQuery: rcode=0, ancount=1, return value=65
+08-21 10:53:36.141  2255 14492 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0x7ec70830b070
+08-21 10:53:36.141  2255 14492 I resolv  : doQuery: rcode=0, ancount=1, return value=64
+08-21 10:53:36.142  2255 14488 I resolv  : GetAddrInfoHandler::run: {101 101 101 983141 10147 0}
+08-21 10:53:36.142  2255 14491 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0x7ec618310810
+08-21 10:53:36.142  2255 14491 I resolv  : doQuery: rcode=0, ancount=1, return value=51
+08-21 10:53:36.150  2255 14494 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+08-21 10:53:36.151  2255 14494 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0x7ec7083098d0
+08-21 10:53:36.151  2255 14494 I resolv  : doQuery: rcode=0, ancount=1, return value=63
+--------- beginning of kernel
+08-21 10:53:36.209     0     0 I logd    : logdr: UID=0 GID=0 PID=14499 b tail=0 logMask=99 pid=0 start=0ns deadline=0ns
+08-21 10:53:36.266 14353 14503 D ProfileInstaller: Installing profile for com.example.ao3_wrapper
+08-21 10:53:36.394 14304 14336 I appium  : channel read: POST /session/6e06a45b-2dfd-4957-9015-aea2a8d12c27/element
+08-21 10:53:36.398 14304 14336 I appium  : FindElement command
+08-21 10:53:36.409 14304 14336 I appium  : method: '-android uiautomator', selector: 'new UiSelector().text("Library")'
+08-21 10:53:36.411 14304 14336 I appium  : Waiting up to 10000ms for the device to idle
+08-21 10:53:36.436 14251 14251 W ziparchive: Unable to open '/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.dm': No such file or directory
+08-21 10:53:36.436 14251 14251 W ziparchive: Unable to open '/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.dm': No such file or directory
+08-21 10:53:36.611 14353 14353 I chromium: [INFO:CONSOLE(1)] "Unrecognized feature: 'xr-spatial-tracking'.", source: https://challenges.cloudflare.com/turnstile/v0/g/aae2b9a1c261/api.js?onload=mlyM5&render=explicit (1)
+08-21 10:53:36.727 14304 14525 I appium  : channel read: GET /sessions
+08-21 10:53:36.728 14304 14525 I appium  : GetSessions command
+08-21 10:53:36.742 14304 14525 I appium  : AppiumResponse: {"sessionId":"None","value":[{"id":"6e06a45b-2dfd-4957-9015-aea2a8d12c27","capabilities":{"appPackage":"com.example.ao3_wrapper","networkConnectionEnabled":true,"disableWindowAnimation":true,"noReset":true,"ensureWebviewsHavePages":true,"warnings":{},"databaseEnabled":false,"deviceName":"emulator-55вЂ¦
+08-21 10:53:36.751 14304 14336 I appium  : AppiumResponse: {"sessionId":"6e06a45b-2dfd-4957-9015-aea2a8d12c27","value":{"error":"no such element","message":"An element could not be located on the page using the given search parameters","stacktrace":"io.appium.uiautomator2.common.exceptions.ElementNotFoundException: An element could not be located on the page using the given search parameters\n\tat io.appium.uiautomator2.handler.FindElement.safeHandle(FindElement.java:63)\n\tat io.appium.uiautomator2.handler.request.SafeRequestHandler.handle(SafeRequestHandler.java:59)\n\tat io.appium.uiautomator2.server.AppiumServlet.handleRequest(AppiumServlet.java:267)\n\tat io.appium.uiautomator2.server.AppiumServlet.handleHttpRequest(AppiumServlet.java:261)\n\tat io.appium.uiautomator2.http.ServerHandler.channelRead(ServerHandler.java:77)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)\n\tat io.netty.handler.codec.MessageToMessageDecoder.channelRead(MessageToMessageDecoder.java:107)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)\n\tat io.netty.channel.CombinedChannelDuplexHandler$DelegatingChannelHandlerContext.fireChannelRead(CombinedChannelDuplexHandler.java:434)\n\tat io.netty.handler.codec.ByteToMessageDecoder.fireChannelRead(ByteToMessageDecoder.java:361)\n\tat io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:325)\n\tat io.netty.channel.CombinedChannelDuplexHandler.channelRead(CombinedChannelDuplexHandler.java:249)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:355)\n\tat io.netty.handler.timeout.IdleStateHandler.channelRead(IdleStateHandler.java:288)\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:355)\n\tat io.netty.channel.DefaultChannelPipeline$HeadContext.channelRead(DefaultChannelPipeline.java:1429)\n\tat io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:918)\n\tat io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:176)\n\tat io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.handle(AbstractNioChannel.java:445)\n\tat io.netty.channel.nio.NioIoHandler$DefaultNioRegistration.handle(NioIoHandler.java:388)\n\tat io.netty.channel.nio.NioIoHandler.processSelectedKey(NioIoHandler.java:596)\n\tat io.netty.channel.nio.NioIoHandler.processSelectedKeysOptimized(NioIoHandler.java:571)\n\tat io.netty.channel.nio.NioIoHandler.processSelectedKeys(NioIoHandler.java:512)\n\tat io.netty.channel.nio.NioIoHandler.run(NioIoHandler.java:484)\n\tat io.netty.channel.SingleThreadIoEventLoop.runIo(SingleThreadIoEventLoop.java:225)\n\tat io.netty.channel.SingleThreadIoEventLoop.run(SingleThreadIoEventLoop.java:196)\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:1195)\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\n\tat java.lang.Thread.run(Thread.java:1012)\n"}}
+08-21 10:53:36.752  2611  3862 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-21 10:53:36.752  2611  3862 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-21 10:53:36.752 14304 14525 I appium  : channel read: DELETE /session/6e06a45b-2dfd-4957-9015-aea2a8d12c27
+08-21 10:53:36.752  2611  3862 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-21 10:53:36.752  2611  3862 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-21 10:53:36.753 14304 14525 I appium  : DeleteSession command
+08-21 10:53:36.756 14304 14525 I appium  : AppiumResponse: {"sessionId":"6e06a45b-2dfd-4957-9015-aea2a8d12c27","value":null}
+08-21 10:53:36.771 14304 14304 I appium  : Stopping ServerInstrumentation
+08-21 10:53:36.771 14304 14304 I appium  : Stopping MJPEG Server
+08-21 10:53:36.775 14304 14329 E appium  : Socket Server failed to open connection.
+08-21 10:53:36.775 14304 14329 E appium  : java.net.SocketException: Socket closed
+08-21 10:53:36.775 14304 14329 E appium  : 	at java.net.PlainSocketImpl.socketAccept(PlainSocketImpl.java:213)
+08-21 10:53:36.775 14304 14329 E appium  : 	at java.net.AbstractPlainSocketImpl.accept(AbstractPlainSocketImpl.java:451)
+08-21 10:53:36.775 14304 14329 E appium  : 	at java.net.ServerSocket.implAccept(ServerSocket.java:569)
+08-21 10:53:36.775 14304 14329 E appium  : 	at java.net.ServerSocket.accept(ServerSocket.java:537)
+08-21 10:53:36.775 14304 14329 E appium  : 	at io.appium.uiautomator2.server.mjpeg.MjpegScreenshotServer.run(MjpegScreenshotServer.java:66)
+08-21 10:53:36.775 14304 14304 I appium  : MJPEG Server stopped
+08-21 10:53:36.785 14304 14304 I appium  : ServerInstrumentation stopped
+08-21 10:53:36.787 14304 14325 I appium  : >>>Entry point finish<<<
+08-21 10:53:36.788 14304 14325 I TestRunner: finished: startServer(io.appium.uiautomator2.server.test.AppiumUiAutomator2Server)
+08-21 10:53:36.798 14304 14325 I TestRunner: run finished: 1 tests, 0 failed, 0 ignored
+--------- beginning of system
+08-21 10:53:36.807  2331  6600 W WindowMagnificationMgr: requestConnection duplicated request: connect=false, mConnectionState=DISCONNECTED
+08-21 10:53:36.808  2331  6600 D AccessibilityManagerService: restoreCurrentUserForTestAutomationIfNeededLocked(): ignoring because device doesn't support visible background users
+08-21 10:53:36.817  2331  6600 I ActivityManager: Force stopping io.appium.uiautomator2.server appid=10144 user=0: finished inst
+08-21 10:53:36.819 14289 14289 I app_process: System.exit called, status: 0
+08-21 10:53:36.820 14289 14289 I AndroidRuntime: VM exiting with result code 0.
+08-21 10:53:36.823  2331  6600 E ActivityManager: Unable to freeze binder for 14304: -11
+08-21 10:53:36.798     0     0 I binder  : 2331:6600 ioctl 400c620e 75ac20905930 returned -11
+08-21 10:53:36.800     0     0 I binder  : 2331:6600 ioctl 400c620e 75ac20905930 returned -11
+08-21 10:53:36.839  2331  6600 I ActivityManager: Killing 14304:io.appium.uiautomator2.server/u0a144 (adj 0): stop io.appium.uiautomator2.server due to finished inst
+08-21 10:53:36.847  2331  2331 D BatterySaverPolicy: accessibility changed to false, updating policy.
+08-21 10:53:36.882  2331  5961 V ActivityManager: Got obituary of 14304:io.appium.uiautomator2.server
+08-21 10:53:36.853     0     0 I binder  : undelivered TRANSACTION_COMPLETE
+08-21 10:53:36.857     0     0 I binder  : undelivered transaction 322679, process died.
+08-21 10:53:36.885  2260  2260 I Zygote  : Process 14304 exited due to signal 9 (Killed)
+08-21 10:53:36.890  2331  2349 D DisplayManagerService: Drop pending events for gone uid 10144
+08-21 10:53:37.088 14353 14353 I chromium: [INFO:CONSOLE(0)] "Error with Permissions-Policy header: Unrecognized feature: 'hid'.", source:  (0)
+08-21 10:53:37.090 14353 14353 I chromium: [INFO:CONSOLE(0)] "Error with Permissions-Policy header: Unrecognized feature: 'payment'.", source:  (0)
+08-21 10:53:37.091 14353 14353 I chromium: [INFO:CONSOLE(0)] "Error with Permissions-Policy header: Unrecognized feature: 'serial'.", source:  (0)
+08-21 10:53:37.093 14353 14353 I chromium: [INFO:CONSOLE(0)] "Error with Permissions-Policy header: Unrecognized feature: 'usb'.", source:  (0)
+08-21 10:53:37.094 14353 14353 I chromium: [INFO:CONSOLE(0)] "Error with Permissions-Policy header: Unrecognized feature: 'xr-spatial-tracking'.", source:  (0)
+08-21 10:53:37.139  2331  3065 I ActivityManager: Force stopping io.appium.uiautomator2.server appid=10144 user=0: from pid 14538
+08-21 10:53:37.141  2331  3065 I AppsFilter: interaction: PackageSetting{9d7442a com.example.ao3_wrapper/10147} -> PackageSetting{2d1d1aa io.appium.uiautomator2.server/10144} BLOCKED
+08-21 10:53:37.142  2331  3065 I AppsFilter: interaction: PackageSetting{1aa46bc io.appium.settings/10142} -> PackageSetting{2d1d1aa io.appium.uiautomator2.server/10144} BLOCKED
+08-21 10:53:37.161  2720  2720 D CarrierSvcBindHelper: onHandleForceStop: [io.appium.uiautomator2.server]
+08-21 10:53:37.162  2720  2720 D CarrierSvcBindHelper: No carrier app for: 0
+08-21 10:53:37.164  2331  3065 I ActivityManager: Force stopping io.appium.uiautomator2.server.test appid=10143 user=0: from pid 14539
+08-21 10:53:37.165  2331  3065 E libprocessgroup: No such cgroup attribute: /sys/fs/cgroup/uid_10143/cgroup.freeze
+08-21 10:53:37.166  2331  3065 W libprocessgroup: Failed to apply Frozen process profile: No such file or directory
+08-21 10:53:37.173  2331  3065 E libprocessgroup: No such cgroup attribute: /sys/fs/cgroup/uid_10143/cgroup.freeze
+08-21 10:53:37.173  2331  3065 W libprocessgroup: Failed to apply Unfrozen process profile: No such file or directory
+08-21 10:53:37.174  2331  3065 I AppsFilter: interaction: PackageSetting{9d7442a com.example.ao3_wrapper/10147} -> PackageSetting{bbbc9b8 io.appium.uiautomator2.server.test/10143} BLOCKED
+08-21 10:53:37.175  2331  3065 I AppsFilter: interaction: PackageSetting{1aa46bc io.appium.settings/10142} -> PackageSetting{bbbc9b8 io.appium.uiautomator2.server.test/10143} BLOCKED
+08-21 10:53:37.201  2720  2720 D CarrierSvcBindHelper: onHandleForceStop: [io.appium.uiautomator2.server.test]
+08-21 10:53:37.202  2720  2720 D CarrierSvcBindHelper: No carrier app for: 0
+08-21 10:53:37.205  1540  1540 E adbd    : failed to connect to socket 'tcp:6790': Cannot assign requested address
+08-21 10:53:37.214  2522  2532 I ndroid.systemui: Background young concurrent copying GC freed 217101(10209KB) AllocSpace objects, 0(0B) LOS objects, 45% free, 11MB/20MB, paused 6.879ms,125us total 73.562ms
+08-21 10:53:37.326 14544 14544 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 0 <<<<<<
+08-21 10:53:37.337 14544 14544 I AndroidRuntime: Using default boot image
+08-21 10:53:37.340 14544 14544 I AndroidRuntime: Leaving lock profiling enabled
+08-21 10:53:37.344 14544 14544 I app_process: Core platform API reporting enabled, enforcing=false
+08-21 10:53:37.346 14544 14544 I app_process: Using CollectorTypeCC GC.
+08-21 10:53:37.426 14544 14544 D nativeloader: InitDefaultPublicLibraries for_preload=1: libandroid.so:libaaudio.so:libamidi.so:libbinder_ndk.so:libc.so:libcamera2ndk.so:libdl.so:libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libicu.so:libicui18n.so:libicuuc.so:libjnigraphics.so:liblog.so:libmediandk.so:libm.so:libnativehelper.so:libnativewindow.so:libOpenMAXAL.so:libOpenSLES.so:libRS.so:libstdc++.so:libsync.so:libvulkan.so:libwebviewchromium_plat_support.so:libz.so
+08-21 10:53:37.438 14544 14544 D app_process: Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+08-21 10:53:37.438 14544 14544 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt72l.dat
+08-21 10:53:37.444 14544 14544 W app_process: Unexpected CPU variant for x86: x86_64.
+08-21 10:53:37.444 14544 14544 W app_process: Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, tremont, kabylake, default
+08-21 10:53:37.471 14544 14544 D AndroidRuntime: Calling main entry com.android.commands.am.Am
+08-21 10:53:37.484 14544 14544 D UiAutomationConnection: Created on user UserHandle{0}
+08-21 10:53:37.487  2331  3065 I ActivityManager: Force stopping io.appium.uiautomator2.server appid=10144 user=0: start instr
+08-21 10:53:37.492  2331  3065 D CompatibilityChangeReporter: Compat change id reported: 135634846; UID 10144; state: DISABLED
+08-21 10:53:37.493  2331  3065 D CompatibilityChangeReporter: Compat change id reported: 177438394; UID 10144; state: DISABLED
+08-21 10:53:37.497  2331  3065 D CompatibilityChangeReporter: Compat change id reported: 135772972; UID 10144; state: DISABLED
+08-21 10:53:37.499  2331  3065 D CompatibilityChangeReporter: Compat change id reported: 135754954; UID 10144; state: ENABLED
+08-21 10:53:37.501 14353 14374 D EGL_emulation: app_time_stats: avg=705.67ms min=557.81ms max=853.52ms count=2
+08-21 10:53:37.503  2331  2364 D CompatibilityChangeReporter: Compat change id reported: 143937733; UID 10144; state: ENABLED
+08-21 10:53:37.521  2260  2260 D Zygote  : Forked child process 14560
+08-21 10:53:37.532  2331  2364 I ActivityManager: Start proc 14560:io.appium.uiautomator2.server/u0a144 for added application io.appium.uiautomator2.server
+08-21 10:53:37.533  2331  2402 D CompatibilityChangeReporter: Compat change id reported: 265195908; UID 10144; state: ENABLED
+08-21 10:53:37.551 14560 14560 I tomator2.server: Late-enabling -Xcheck:jni
+08-21 10:53:37.565 14560 14560 I tomator2.server: Using CollectorTypeCC GC.
+08-21 10:53:37.567 14560 14560 W tomator2.server: Unexpected CPU variant for x86: x86_64.
+08-21 10:53:37.567 14560 14560 W tomator2.server: Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, tremont, kabylake, default
+08-21 10:53:37.574  1540  1560 I adbd    : jdwp connection from 14560
+08-21 10:53:37.582 14353 14353 I chromium: [INFO:CONSOLE(1)] "Failed to create WebGPU Context Provider", source: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/m1n6q/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto (1)
+08-21 10:53:37.590  2331  3065 D CompatibilityChangeReporter: Compat change id reported: 168419799; UID 10144; state: DISABLED
+08-21 10:53:37.592  2331  3065 D CompatibilityChangeReporter: Compat change id reported: 273564678; UID 10144; state: DISABLED
+08-21 10:53:37.596 14393 14460 I chromium: [INFO:peer_connection_dependency_factory.cc(640)] Running WebRTC with a combined Network and Worker thread.
+08-21 10:53:37.602 14393 14460 W chromium: [WARNING:codec.cc(466)] Explicitly added H264 constrained baseline to list of supported formats.
+08-21 10:53:37.610 14393 14460 W chromium: [WARNING:media_session.cc(949)] RED codec red is missing an associated payload type.
+08-21 10:53:37.619 14560 14560 D CompatibilityChangeReporter: Compat change id reported: 171979766; UID 10144; state: ENABLED
+08-21 10:53:37.619 14560 14560 D CompatibilityChangeReporter: Compat change id reported: 242716250; UID 10144; state: ENABLED
+08-21 10:53:37.627  2331  3065 D CompatibilityChangeReporter: Compat change id reported: 170503758; UID 10144; state: ENABLED
+08-21 10:53:37.640 14560 14560 W tomator2.server: ClassLoaderContext shared library size mismatch. Expected=2, found=0 (PCL[]{PCL[/system/framework/android.test.base.jar*836642756]#PCL[/system/framework/android.test.mock.jar*3186112116]} | PCL[])
+08-21 10:53:37.642 14560 14560 W tomator2.server: ClassLoaderContext classpath size mismatch. expected=0, found=1 (PCL[] | PCL[/system/framework/android.test.runner.jar*4168958247])
+08-21 10:53:37.643 14560 14560 W tomator2.server: ClassLoaderContext classpath size mismatch. expected=0, found=2 (PCL[] | PCL[/system/framework/android.test.runner.jar*4168958247:/system/framework/android.test.mock.jar*3186112116])
+08-21 10:53:37.646 14560 14560 W ziparchive: Unable to open '/data/app/~~kqn7s_V06cbtdWg5jquegw==/io.appium.uiautomator2.server.test-w743Lz0K6mVWRnwjAsZ9lQ==/base.dm': No such file or directory
+08-21 10:53:37.647 14560 14560 W ziparchive: Unable to open '/data/app/~~kqn7s_V06cbtdWg5jquegw==/io.appium.uiautomator2.server.test-w743Lz0K6mVWRnwjAsZ9lQ==/base.dm': No such file or directory
+08-21 10:53:37.652 14560 14560 W ziparchive: Unable to open '/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.dm': No such file or directory
+08-21 10:53:37.652 14560 14560 W ziparchive: Unable to open '/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.dm': No such file or directory
+08-21 10:53:37.711 14393 14461 W chromium: [WARNING:codec.cc(466)] Explicitly added H264 constrained baseline to list of supported formats.
+08-21 10:53:37.715 14393 14461 W chromium: [WARNING:codec.cc(466)] Explicitly added H264 constrained baseline to list of supported formats.
+08-21 10:53:37.752  2611  3862 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-21 10:53:37.752  2611  3862 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-21 10:53:37.752  2611  3862 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-21 10:53:37.753  2611  3862 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-21 10:53:37.788 14393 14461 I chromium: [INFO:ipc_socket_factory.cc(503)] Setting new p2p socket buffer limit to 65536
+08-21 10:53:37.795 14393 14461 I chromium: [INFO:ipc_socket_factory.cc(503)] Setting new p2p socket buffer limit to 65536
+08-21 10:53:37.830 14560 14560 D nativeloader: Configuring clns-6 for other apk /system/framework/android.test.runner.jar:/system/framework/android.test.mock.jar:/system/framework/android.test.base.jar:/data/app/~~kqn7s_V06cbtdWg5jquegw==/io.appium.uiautomator2.server.test-w743Lz0K6mVWRnwjAsZ9lQ==/base.apk:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk. target_sdk_version=34, uses_libraries=, library_path=/data/app/~~kqn7s_V06cbtdWg5jquegw==/io.appium.uiautomator2.server.test-w743Lz0K6mVWRnwjAsZ9lQ==/lib/x86_64:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/io.appium.uiautomator2.server
+08-21 10:53:37.854 14560 14560 V GraphicsEnvironment: Currently set values for:
+08-21 10:53:37.854 14560 14560 V GraphicsEnvironment:   angle_gl_driver_selection_pkgs=[]
+08-21 10:53:37.854 14560 14560 V GraphicsEnvironment:   angle_gl_driver_selection_values=[]
+08-21 10:53:37.857 14560 14560 V GraphicsEnvironment: ANGLE GameManagerService for io.appium.uiautomator2.server: false
+08-21 10:53:37.857 14560 14560 V GraphicsEnvironment: io.appium.uiautomator2.server is not listed in per-application setting
+08-21 10:53:37.857 14560 14560 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+08-21 10:53:37.868 14560 14560 D ApplicationLoaders: Returning zygote-cached class loader: /system/framework/android.test.base.jar
+08-21 10:53:37.871 14560 14560 D nativeloader: Configuring clns-7 for other apk /system/framework/android.test.mock.jar. target_sdk_version=34, uses_libraries=ALL, library_path=/data/app/~~kqn7s_V06cbtdWg5jquegw==/io.appium.uiautomator2.server.test-w743Lz0K6mVWRnwjAsZ9lQ==/lib/x86_64:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/lib/x86_64, permitted_path=/data:/mnt/expand
+08-21 10:53:37.872 14560 14560 D ApplicationLoaders: Returning zygote-cached class loader: /system/framework/android.test.base.jar
+08-21 10:53:37.876 14560 14560 D nativeloader: Configuring clns-8 for other apk /system/framework/android.test.runner.jar. target_sdk_version=34, uses_libraries=ALL, library_path=/data/app/~~kqn7s_V06cbtdWg5jquegw==/io.appium.uiautomator2.server.test-w743Lz0K6mVWRnwjAsZ9lQ==/lib/x86_64:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/lib/x86_64, permitted_path=/data:/mnt/expand
+08-21 10:53:37.879 14560 14560 W tomator2.server: ClassLoaderContext shared library size mismatch. Expected=2, found=3 (PCL[]{PCL[/system/framework/android.test.base.jar*836642756]#PCL[/system/framework/android.test.mock.jar*3186112116]} | PCL[]{PCL[/system/framework/android.test.base.jar*836642756]#PCL[/system/framework/android.test.mock.jar*3186112116]#PCL[/system/framework/android.test.runner.jar*4168958247]{PCL[/system/framework/android.test.base.jar*836642756]#PCL[/system/framework/android.test.mock.jar*3186112116]}};PCL[/system/framework/android.test.runner.jar*4168958247:/system/framework/android.test.mock.jar*3186112116:/system/framework/android.test.base.jar*836642756:/data/app/~~kqn7s_V06cbtdWg5jquegw==/io.appium.uiautomator2.server.test-w743Lz0K6mVWRnwjAsZ9lQ==/base.apk*3951785253:/data/app/~~kqn7s_V06cbtdWg5jquegw==/io.appium.uiautomator2.server.test-w743Lz0K6mVWRnwjAsZ9lQ==/base.apk!classes2.dex*738772062:/data/app/~~kqn7s_V06cbtdWg5jquegw==/io.appium.uiautomator2.server.test-w743Lz0K6mVWRnwjAsZ9lQ==/base.apk!classes3.dex*3399649956:/data/app/~~kqn7s_V06cbtdWg5jquegw==/io.appium.uiautomator2.server.test-w743Lz0K6mVWRnwjAsZ9lQ==/base.apk!classes4.dex*2619343039:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk*906972852:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes2.dex*2165435016:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes3.dex*2017558115:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes4.dex*1867130055:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes5.dex*2864390262:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes6.dex*1457155985:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes7.dex*2823388421:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes8.dex*4229139278:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes9.dex*4086005894:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes10.dex*1080694762:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes11.dex*694908741:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes12.dex*2127882018:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes13.dex*1240329824:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes14.dex*44262215:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes15.dex*1676306457:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes16.dex*3119502957])
+08-21 10:53:37.882 14560 14560 W tomator2.server: ClassLoaderContext classpath size mismatch. expected=0, found=1 (PCL[] | PCL[/system/framework/android.test.runner.jar*4168958247]{PCL[/system/framework/android.test.base.jar*836642756]#PCL[/system/framework/android.test.mock.jar*3186112116]#PCL[/system/framework/android.test.runner.jar*4168958247]{PCL[/system/framework/android.test.base.jar*836642756]#PCL[/system/framework/android.test.mock.jar*3186112116]}};PCL[/system/framework/android.test.runner.jar*4168958247:/system/framework/android.test.mock.jar*3186112116:/system/framework/android.test.base.jar*836642756:/data/app/~~kqn7s_V06cbtdWg5jquegw==/io.appium.uiautomator2.server.test-w743Lz0K6mVWRnwjAsZ9lQ==/base.apk*3951785253:/data/app/~~kqn7s_V06cbtdWg5jquegw==/io.appium.uiautomator2.server.test-w743Lz0K6mVWRnwjAsZ9lQ==/base.apk!classes2.dex*738772062:/data/app/~~kqn7s_V06cbtdWg5jquegw==/io.appium.uiautomator2.server.test-w743Lz0K6mVWRnwjAsZ9lQ==/base.apk!classes3.dex*3399649956:/data/app/~~kqn7s_V06cbtdWg5jquegw==/io.appium.uiautomator2.server.test-w743Lz0K6mVWRnwjAsZ9lQ==/base.apk!classes4.dex*2619343039:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk*906972852:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes2.dex*2165435016:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes3.dex*2017558115:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes4.dex*1867130055:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes5.dex*2864390262:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes6.dex*1457155985:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes7.dex*2823388421:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes8.dex*4229139278:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes9.dex*4086005894:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes10.dex*1080694762:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes11.dex*694908741:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes12.dex*2127882018:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes13.dex*1240329824:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes14.dex*44262215:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes15.dex*1676306457:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes16.dex*3119502957])
+08-21 10:53:37.885 14560 14560 W tomator2.server: ClassLoaderContext classpath size mismatch. expected=0, found=2 (PCL[] | PCL[/system/framework/android.test.runner.jar*4168958247:/system/framework/android.test.mock.jar*3186112116]{PCL[/system/framework/android.test.base.jar*836642756]#PCL[/system/framework/android.test.mock.jar*3186112116]#PCL[/system/framework/android.test.runner.jar*4168958247]{PCL[/system/framework/android.test.base.jar*836642756]#PCL[/system/framework/android.test.mock.jar*3186112116]}};PCL[/system/framework/android.test.runner.jar*4168958247:/system/framework/android.test.mock.jar*3186112116:/system/framework/android.test.base.jar*836642756:/data/app/~~kqn7s_V06cbtdWg5jquegw==/io.appium.uiautomator2.server.test-w743Lz0K6mVWRnwjAsZ9lQ==/base.apk*3951785253:/data/app/~~kqn7s_V06cbtdWg5jquegw==/io.appium.uiautomator2.server.test-w743Lz0K6mVWRnwjAsZ9lQ==/base.apk!classes2.dex*738772062:/data/app/~~kqn7s_V06cbtdWg5jquegw==/io.appium.uiautomator2.server.test-w743Lz0K6mVWRnwjAsZ9lQ==/base.apk!classes3.dex*3399649956:/data/app/~~kqn7s_V06cbtdWg5jquegw==/io.appium.uiautomator2.server.test-w743Lz0K6mVWRnwjAsZ9lQ==/base.apk!classes4.dex*2619343039:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk*906972852:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes2.dex*2165435016:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes3.dex*2017558115:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes4.dex*1867130055:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes5.dex*2864390262:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes6.dex*1457155985:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes7.dex*2823388421:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes8.dex*4229139278:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes9.dex*4086005894:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes10.dex*1080694762:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes11.dex*694908741:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes12.dex*2127882018:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes13.dex*1240329824:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes14.dex*44262215:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes15.dex*1676306457:/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.apk!classes16.dex*3119502957])
+08-21 10:53:37.886 14560 14560 W ziparchive: Unable to open '/data/app/~~kqn7s_V06cbtdWg5jquegw==/io.appium.uiautomator2.server.test-w743Lz0K6mVWRnwjAsZ9lQ==/base.dm': No such file or directory
+08-21 10:53:37.887 14560 14560 W ziparchive: Unable to open '/data/app/~~kqn7s_V06cbtdWg5jquegw==/io.appium.uiautomator2.server.test-w743Lz0K6mVWRnwjAsZ9lQ==/base.dm': No such file or directory
+08-21 10:53:37.893 14560 14560 W ziparchive: Unable to open '/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.dm': No such file or directory
+08-21 10:53:37.894 14560 14560 W ziparchive: Unable to open '/data/app/~~naRw1zjz6CgfftlRB0KPjw==/io.appium.uiautomator2.server-f0IgcbEn5aT8RJkacC3yfQ==/base.dm': No such file or directory
+08-21 10:53:38.098 14560 14560 I AndroidJUnitRunner: newApplication android.app.Application
+08-21 10:53:38.110 14560 14560 I AndroidJUnitRunner: onCreate Bundle[mParcelledData.dataSize=64]
+08-21 10:53:38.117 14560 14560 D AndroidJUnitRunner: Use the raw file system for managing file I/O.
+08-21 10:53:38.198 14560 14560 V TestEventClient: No service name argument was given (testDiscoveryService, testRunEventService or orchestratorService)
+08-21 10:53:38.200 14560 14581 D AndroidJUnitRunner: onStart is called.
+08-21 10:53:38.202  2331  8984 I ActivityManager: Flag disabled. Ignoring finishAttachApplication from uid: 10144. pid: 14560
+08-21 10:53:38.242  1540  1540 E adbd    : failed to connect to socket 'tcp:6790': Cannot assign requested address
+08-21 10:53:38.261  2331  8984 D CompatibilityChangeReporter: Compat change id reported: 161145287; UID 10144; state: ENABLED
+08-21 10:53:38.267 14560 14581 I InstrConnection: Could not send broadcast or register receiver (isolatedProcess?)
+08-21 10:53:38.308 14560 14581 D TestRequestBuilder: Using class path scanning to discover tests
+08-21 10:53:38.310 14560 14581 I TestRequestBuilder: Scanning classpath to find tests in paths [/data/app/~~kqn7s_V06cbtdWg5jquegw==/io.appium.uiautomator2.server.test-w743Lz0K6mVWRnwjAsZ9lQ==/base.apk]
+08-21 10:53:38.319 14560 14581 W tomator2.server: Opening an oat file without a class loader. Are you using the deprecated DexFile APIs?
+08-21 10:53:38.518 14353 14374 D EGL_emulation: app_time_stats: avg=97.49ms min=13.30ms max=481.01ms count=10
+08-21 10:53:38.552 14560 14581 I TestRunner: run started: 1 tests
+08-21 10:53:38.561 14560 14581 I TestRunner: started: startServer(io.appium.uiautomator2.server.test.AppiumUiAutomator2Server)
+08-21 10:53:38.584 14560 14581 I appium  : >>>Entry point start<<<
+08-21 10:53:38.596 14560 14581 I appium  : Starting ServerInstrumentation
+08-21 10:53:38.643  2522  2532 I ndroid.systemui: Background young concurrent copying GC freed 230541(10MB) AllocSpace objects, 0(0B) LOS objects, 48% free, 10MB/21MB, paused 638us,103us total 152.782ms
+08-21 10:53:38.704 14560 14581 I appium  : buildConfig: {"VERSION_NAME":"10.2.4","APPLICATION_ID":"io.appium.uiautomator2.server","BUILD_TYPE":"debug","VERSION_CODE":263,"BUILD_TIME":"1782307918947","DEBUG":true,"FLAVOR":"server"}
+08-21 10:53:38.734 14560 14581 I UiDevice: Creating a new instance, old instance exists: false
+08-21 10:53:38.742 14560 14581 I UiAutomation: Initialized for user 0 on display 0
+08-21 10:53:38.755  2611  3862 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-21 10:53:38.755  2611  3862 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-21 10:53:38.755  2611  3862 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-21 10:53:38.755  2611  3862 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-21 10:53:38.757  2331  8984 D AccessibilityManagerService: changeCurrentUserForTestAutomationIfNeededLocked(0): ignoring because device doesn't support visible background users
+08-21 10:53:38.758  2331  8984 I UiAutomationManager: Registering UiTestAutomationService (id=com.android.server.accessibility/UiAutomation) when called by user 0
+08-21 10:53:38.774  2331  8984 W WindowMagnificationMgr: requestConnection duplicated request: connect=false, mConnectionState=DISCONNECTED
+08-21 10:53:38.782 14560 14583 V UiAutomation: Init UiAutomation@d15d938[id=26, displayId=0, flags=0]
+08-21 10:53:38.789  2331  2331 D BatterySaverPolicy: accessibility changed to true, updating policy.
+08-21 10:53:38.806 14560 14581 D UiDevice: Setting accessibility service flags: 65618
+08-21 10:53:38.814  2331  3065 W WindowMagnificationMgr: requestConnection duplicated request: connect=false, mConnectionState=DISCONNECTED
+08-21 10:53:38.848 14560 14581 D UiDevice: Turning on screen.
+08-21 10:53:38.949 14560 14581 I appium  : AndroidServer created on port 6790
+08-21 10:53:38.950 14560 14581 I appium  : Starting MJPEG Server
+08-21 10:53:38.955 14560 14581 I appium  : MJPEG Server started
+08-21 10:53:38.956 14560 14581 I appium  : ServerInstrumentation started
+08-21 10:53:38.965 14560 14585 D TrafficStats: tagSocket(78) with statsTag=0xffffffff, statsUid=-1
+08-21 10:53:38.970 14560 14585 I appium  : ServerSocket created on port 7810
+08-21 10:53:39.017  2514  2514 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 
+08-21 10:53:39.191 14353 14362 I ple.ao3_wrapper: Background concurrent copying GC freed 64607(4659KB) AllocSpace objects, 17(772KB) LOS objects, 49% free, 5839KB/11MB, paused 1.288ms,85us total 105.366ms
+08-21 10:53:39.259  1540  1540 E adbd    : failed to connect to socket 'tcp:6790': Cannot assign requested address
+08-21 10:53:39.322 14560 14586 I PlatformDependent: Your platform does not provide complete low-level API for accessing direct buffers reliably. Unless explicitly requested, heap buffer will always be preferred to avoid potential system instability.
+08-21 10:53:39.334 14560 14586 W tomator2.server: Accessing hidden field Lsun/nio/ch/SelectorImpl;->selectedKeys:Ljava/util/Set; (unsupported, reflection, allowed)
+08-21 10:53:39.334 14560 14586 W tomator2.server: Accessing hidden field Lsun/nio/ch/SelectorImpl;->publicSelectedKeys:Ljava/util/Set; (unsupported, reflection, allowed)
+08-21 10:53:39.363 14560 14586 D TrafficStats: tagSocket(97) with statsTag=0xffffffff, statsUid=-1
+08-21 10:53:39.387 14560 14586 D CompatibilityChangeReporter: Compat change id reported: 170188668; UID 10144; state: ENABLED
+08-21 10:53:39.384 14560 14560 W Thread-5: type=1400 audit(0.0:192): avc:  denied  { read } for  name="somaxconn" dev="proc" ino=50998 scontext=u:r:untrusted_app:s0:c144,c256,c512,c768 tcontext=u:object_r:proc_net:s0 tclass=file permissive=0 app=io.appium.uiautomator2.server
+08-21 10:53:39.393 14560 14586 W MacAddressUtil: Failed to find a usable hardware address from the network interfaces; using random bytes: 3d:1c:39:16:91:fb:7b:b3
+08-21 10:53:39.538 14353 14374 D EGL_emulation: app_time_stats: avg=55.66ms min=14.82ms max=249.65ms count=16
+08-21 10:53:39.580 14560 14586 W ServerBootstrap: Unknown channel option 'SO_KEEPALIVE' for channel '[id: 0x002c87b3]' of type 'class io.netty.channel.socket.nio.NioServerSocketChannel'
+08-21 10:53:39.580 14560 14586 W ServerBootstrap: Unknown channel option 'TCP_NODELAY' for channel '[id: 0x002c87b3]' of type 'class io.netty.channel.socket.nio.NioServerSocketChannel'
+08-21 10:53:39.695  2255 14590 I resolv  : GetAddrInfoHandler::run: {101 101 101 983141 10147 0}
+08-21 10:53:39.696  2255 14591 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+08-21 10:53:39.696  2255 14592 I resolv  : res_nmkquery: (QUERY, IN, A)
+08-21 10:53:39.696  2255 14591 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0x7ec57830c2b0
+08-21 10:53:39.697  2255 14591 I resolv  : doQuery: rcode=0, ancount=2, return value=108
+08-21 10:53:39.697  2255 14592 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0x7ec57830be30
+08-21 10:53:39.699  2255 14592 I resolv  : doQuery: rcode=0, ancount=0, return value=128
+08-21 10:53:39.753  2611  3862 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-21 10:53:39.753  2611  3862 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-21 10:53:39.753  2611  3862 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-21 10:53:39.753  2611  3862 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-21 10:53:40.094 14393 14460 W chromium: [WARNING:codec.cc(466)] Explicitly added H264 constrained baseline to list of supported formats.
+08-21 10:53:40.126 14353 14353 I chromium: [INFO:CONSOLE(1)] "OTS parsing error: Size of decompressed WOFF 2.0 is less than compressed size", source: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/m1n6q/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto (1)
+08-21 10:53:40.539 14353 14374 D EGL_emulation: app_time_stats: avg=65.56ms min=9.81ms max=203.12ms count=14
+08-21 10:53:40.617 14560 14597 I appium  : channel read: GET /status
+08-21 10:53:40.625 14560 14597 I appium  : Status command
+08-21 10:53:40.644 14560 14597 I appium  : AppiumResponse: {"sessionId":"None","value":{"build":{"version":"10.2.4","versionCode":263},"message":"UiAutomator2 Server is ready to accept commands","ready":true}}
+08-21 10:53:40.694 14560 14597 I appium  : channel read: POST /session
+08-21 10:53:40.701 14560 14597 I appium  : NewSession command
+08-21 10:53:40.754  2611  3862 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-21 10:53:40.754  2611  3862 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-21 10:53:40.754  2611  3862 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-21 10:53:40.754  2611  3862 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-21 10:53:40.762 14560 14597 W tomator2.server: Accessing hidden field Landroid/app/UiAutomation;->mOnAccessibilityEventListener:Landroid/app/UiAutomation$OnAccessibilityEventListener; (max-target-o, reflection, allowed)
+08-21 10:53:40.776 14560 14597 I appium  : Created the new session with id d22e48d4-bfef-462e-a995-88049732bac2 and capabilities {networkConnectionEnabled=true, warnings={}, databaseEnabled=false, deviceName=emulator-5554, platform=LINUX, deviceUDID=emulator-5554, desired={platformName=Android, automationName=UiAutomator2, deviceName=emulator-5556, newCommandTimeout=30.0}, newCommandTimeout=30.0, automationName=UiAutomator2, webStorageEnabled=false, locationContextEnabled=false, takesScreenshot=true, javascriptEnabled=true, platformName=Android}
+08-21 10:53:40.791  2522  2522 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+08-21 10:53:40.799 14560 14597 I appium  : AppiumResponse: {"sessionId":"d22e48d4-bfef-462e-a995-88049732bac2","value":{"capabilities":{"firstMatch":[{"platformName":"Android","automationName":"UiAutomator2","deviceName":"emulator-5554","newCommandTimeout":30.0,"platform":"LINUX","webStorageEnabled":false,"takesScreenshot":true,"javascriptEnabled":true,"datвЂ¦
+08-21 10:53:40.854 14560 14597 I appium  : channel read: GET /session/d22e48d4-bfef-462e-a995-88049732bac2/appium/device/pixel_ratio
+08-21 10:53:40.863 14560 14597 I appium  : GetDevicePixelRatio command
+08-21 10:53:40.886 14560 14597 I appium  : AppiumResponse: {"sessionId":"d22e48d4-bfef-462e-a995-88049732bac2","value":2.625}
+08-21 10:53:40.900 14560 14601 I appium  : channel read: GET /session/d22e48d4-bfef-462e-a995-88049732bac2/appium/device/info
+08-21 10:53:40.911 14560 14599 I appium  : channel read: GET /session/d22e48d4-bfef-462e-a995-88049732bac2/appium/device/system_bars
+08-21 10:53:40.913 14560 14601 I appium  : GetDeviceInfo command
+08-21 10:53:40.914 14560 14599 I appium  : GetSystemBars command
+08-21 10:53:40.916 14560 14600 I appium  : channel read: GET /session/d22e48d4-bfef-462e-a995-88049732bac2/window/current/size
+08-21 10:53:40.918 14560 14599 I appium  : AppiumResponse: {"sessionId":"d22e48d4-bfef-462e-a995-88049732bac2","value":{"statusBar":128}}
+08-21 10:53:40.923 14560 14600 I appium  : GetDeviceSize command
+08-21 10:53:40.923 14560 14600 I appium  : Get window size of the device
+08-21 10:53:40.930 14560 14600 I appium  : AppiumResponse: {"sessionId":"d22e48d4-bfef-462e-a995-88049732bac2","value":{"height":2400,"width":1080}}
+08-21 10:53:40.975 14560 14601 W tomator2.server: Accessing hidden field Landroid/net/NetworkCapabilities;->mSignalStrength:I (max-target-p, reflection, allowed)
+08-21 10:53:40.977 14560 14601 W tomator2.server: Accessing hidden field Landroid/net/NetworkCapabilities;->mSSID:Ljava/lang/String; (max-target-o, reflection, allowed)
+08-21 10:53:40.983 14560 14601 D CompatibilityChangeReporter: Compat change id reported: 263076149; UID 10144; state: ENABLED
+08-21 10:53:40.999 14560 14601 I appium  : AppiumResponse: {"sessionId":"d22e48d4-bfef-462e-a995-88049732bac2","value":{"androidId":"ea613438f674b0b8","apiVersion":"34","bluetooth":{"state":"ON"},"brand":"Android","carrierName":"T-Mobile","displayDensity":420,"locale":"en_US","manufacturer":"unknown","model":"Android SDK built for x86_64","networks":[{"capaвЂ¦
+08-21 10:53:41.020 14560 14601 I appium  : channel read: DELETE /session/d22e48d4-bfef-462e-a995-88049732bac2
+08-21 10:53:41.023 14560 14601 I appium  : DeleteSession command
+08-21 10:53:41.027 14560 14601 I appium  : AppiumResponse: {"sessionId":"d22e48d4-bfef-462e-a995-88049732bac2","value":null}
+08-21 10:53:41.042 14560 14560 I appium  : Stopping ServerInstrumentation
+08-21 10:53:41.042 14560 14560 I appium  : Stopping MJPEG Server
+08-21 10:53:41.048 14560 14585 E appium  : Socket Server failed to open connection.
+08-21 10:53:41.048 14560 14585 E appium  : java.net.SocketException: Socket closed
+08-21 10:53:41.048 14560 14585 E appium  : 	at java.net.PlainSocketImpl.socketAccept(PlainSocketImpl.java:213)
+08-21 10:53:41.048 14560 14585 E appium  : 	at java.net.AbstractPlainSocketImpl.accept(AbstractPlainSocketImpl.java:451)
+08-21 10:53:41.048 14560 14585 E appium  : 	at java.net.ServerSocket.implAccept(ServerSocket.java:569)
+08-21 10:53:41.048 14560 14585 E appium  : 	at java.net.ServerSocket.accept(ServerSocket.java:537)
+08-21 10:53:41.048 14560 14585 E appium  : 	at io.appium.uiautomator2.server.mjpeg.MjpegScreenshotServer.run(MjpegScreenshotServer.java:66)
+08-21 10:53:41.055 14560 14560 I appium  : MJPEG Server stopped
+08-21 10:53:41.063 14560 14560 I appium  : ServerInstrumentation stopped
+08-21 10:53:41.074 14560 14581 I appium  : >>>Entry point finish<<<
+08-21 10:53:41.074 14560 14581 I TestRunner: finished: startServer(io.appium.uiautomator2.server.test.AppiumUiAutomator2Server)
+08-21 10:53:41.102 14560 14581 I TestRunner: run finished: 1 tests, 0 failed, 0 ignored
+08-21 10:53:41.110  2331  8984 W WindowMagnificationMgr: requestConnection duplicated request: connect=false, mConnectionState=DISCONNECTED
+08-21 10:53:41.114  2331  8984 D AccessibilityManagerService: restoreCurrentUserForTestAutomationIfNeededLocked(): ignoring because device doesn't support visible background users
+08-21 10:53:41.122  2331  3065 I ActivityManager: Force stopping io.appium.uiautomator2.server appid=10144 user=0: finished inst
+08-21 10:53:41.128  2331  2331 D BatterySaverPolicy: accessibility changed to false, updating policy.
+08-21 10:53:41.101     0     0 I binder  : 2331:3065 ioctl 400c620e 75ac16e8c930 returned -11
+08-21 10:53:41.104     0     0 I binder  : 2331:3065 ioctl 400c620e 75ac16e8c930 returned -11
+08-21 10:53:41.130  2331  3065 E ActivityManager: Unable to freeze binder for 14560: -11
+08-21 10:53:41.131 14544 14544 I app_process: System.exit called, status: 0
+08-21 10:53:41.131 14544 14544 I AndroidRuntime: VM exiting with result code 0.
+08-21 10:53:41.152  2331  3065 I ActivityManager: Killing 14560:io.appium.uiautomator2.server/u0a144 (adj 0): stop io.appium.uiautomator2.server due to finished inst
+08-21 10:53:41.162  2331  2349 D DisplayManagerService: Drop pending events for gone uid 10144
+08-21 10:53:41.207  2331  3065 V ActivityManager: Got obituary of 14560:io.appium.uiautomator2.server
+08-21 10:53:41.183     0     0 I binder  : undelivered TRANSACTION_COMPLETE
+08-21 10:53:41.183     0     0 I binder  : undelivered transaction 324286, process died.
+08-21 10:53:41.208  2260  2260 I Zygote  : Process 14560 exited due to signal 9 (Killed)
+08-21 10:53:41.413  2331  7269 I ActivityManager: Force stopping io.appium.uiautomator2.server appid=10144 user=0: from pid 14619
+08-21 10:53:41.418  2331  7269 I AppsFilter: interaction: PackageSetting{9d7442a com.example.ao3_wrapper/10147} -> PackageSetting{9ae5429 io.appium.uiautomator2.server/10144} BLOCKED
+08-21 10:53:41.419  2331  7269 I AppsFilter: interaction: PackageSetting{1aa46bc io.appium.settings/10142} -> PackageSetting{9ae5429 io.appium.uiautomator2.server/10144} BLOCKED
+08-21 10:53:41.423  2331  6600 I ActivityManager: Force stopping io.appium.uiautomator2.server.test appid=10143 user=0: from pid 14620
+08-21 10:53:41.428  2331  6600 E libprocessgroup: No such cgroup attribute: /sys/fs/cgroup/uid_10143/cgroup.freeze
+08-21 10:53:41.429  2331  6600 W libprocessgroup: Failed to apply Frozen process profile: No such file or directory
+08-21 10:53:41.431  2331  6600 E libprocessgroup: No such cgroup attribute: /sys/fs/cgroup/uid_10143/cgroup.freeze
+08-21 10:53:41.431  2331  6600 W libprocessgroup: Failed to apply Unfrozen process profile: No such file or directory
+08-21 10:53:41.432  2331  6600 I AppsFilter: interaction: PackageSetting{9d7442a com.example.ao3_wrapper/10147} -> PackageSetting{bbbc9b8 io.appium.uiautomator2.server.test/10143} BLOCKED
+08-21 10:53:41.432  2331  6600 I AppsFilter: interaction: PackageSetting{1aa46bc io.appium.settings/10142} -> PackageSetting{bbbc9b8 io.appium.uiautomator2.server.test/10143} BLOCKED
+08-21 10:53:41.474  2720  2720 D CarrierSvcBindHelper: onHandleForceStop: [io.appium.uiautomator2.server]
+08-21 10:53:41.475  2720  2720 D CarrierSvcBindHelper: No carrier app for: 0
+08-21 10:53:41.476  2720  2720 D CarrierSvcBindHelper: onHandleForceStop: [io.appium.uiautomator2.server.test]
+08-21 10:53:41.476  2720  2720 D CarrierSvcBindHelper: No carrier app for: 0
+08-21 10:53:41.625 14353 14374 D EGL_emulation: app_time_stats: avg=111.47ms min=13.83ms max=761.05ms count=9
+08-21 10:53:41.754  2611  3862 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-21 10:53:41.754  2611  3862 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-21 10:53:41.754  2611  3862 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-21 10:53:41.754  2611  3862 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-21 10:53:42.370  2331  2406 W CpuMonitorService: Current CPU frequency (3562418) is greater than maximum CPU frequency (2) for policy ID (0). Skipping CPU frequency policy
+08-21 10:53:42.371  2331  2406 W CpuMonitorService: Current CPU frequency (3587503) is greater than maximum CPU frequency (2) for policy ID (1). Skipping CPU frequency policy
+08-21 10:53:42.371  2331  2406 W CpuMonitorService: Current CPU frequency (3575227) is greater than maximum CPU frequency (2) for policy ID (2). Skipping CPU frequency policy
+08-21 10:53:42.372  2331  2406 W CpuMonitorService: Current CPU frequency (3590960) is greater than maximum CPU frequency (2) for policy ID (3). Skipping CPU frequency policy
+08-21 10:53:42.755  2611  3862 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-21 10:53:42.755  2611  3862 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-21 10:53:42.755  2611  3862 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-21 10:53:42.755  2611  3862 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-21 10:53:43.173  2331  6600 D CompatibilityChangeReporter: Compat change id reported: 161145287; UID 10147; state: ENABLED
+08-21 10:53:43.192 14353 14374 D EGL_emulation: app_time_stats: avg=61.53ms min=10.80ms max=586.34ms count=22
+08-21 10:53:43.282 14353 14353 I chromium: [INFO:CONSOLE(1)] "Error", source: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/m1n6q/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto (1)
+08-21 10:53:43.295 14353 14353 I chromium: [INFO:CONSOLE(1)] "wuvm3", source: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/m1n6q/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto (1)
+08-21 10:53:43.295 14353 14353 I chromium: [INFO:CONSOLE(1)] "wuvm3", source: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/m1n6q/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto (1)
+08-21 10:53:43.297 14353 14353 I chromium: [INFO:CONSOLE(1)] "kNyHW6", source: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/m1n6q/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto (1)
+08-21 10:53:43.298 14353 14353 I chromium: [INFO:CONSOLE(1)] "kNyHW6", source: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/m1n6q/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto (1)
+08-21 10:53:43.298 14353 14353 I chromium: [INFO:CONSOLE(1)] "[object HTMLAnchorElement]", source: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/m1n6q/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto (1)
+08-21 10:53:43.299 14353 14353 I chromium: [INFO:CONSOLE(1)] "[object HTMLAnchorElement]", source: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/m1n6q/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto (1)
+08-21 10:53:43.299 14353 14353 I chromium: [INFO:CONSOLE(1)] "
+08-21 10:53:43.302 14353 14353 I chromium: [INFO:CONSOLE(1)] "
+08-21 10:53:43.303 14353 14353 I chromium: [INFO:CONSOLE(1)] "%c%d font-size:0;color:transparent NaN", source: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/m1n6q/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto (1)
+08-21 10:53:43.303 14353 14353 I chromium: [INFO:CONSOLE(1)] "%c%d font-size:0;color:transparent NaN", source: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/m1n6q/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto (1)
+08-21 10:53:43.304 14353 14353 I chromium: [INFO:CONSOLE(1)] " sqpVk4: rWUVg7", source: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/m1n6q/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto (1)
+08-21 10:53:43.304 14353 14353 I chromium: [INFO:CONSOLE(1)] " sqpVk4: rWUVg7", source: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/m1n6q/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto (1)
+08-21 10:53:43.305 14353 14353 I chromium: [INFO:CONSOLE(1)] "%c%d font-size:0;color:transparent sqpVk4: rWUVg7", source: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/m1n6q/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto (1)
+08-21 10:53:43.305 14353 14353 I chromium: [INFO:CONSOLE(1)] "%c%d font-size:0;color:transparent sqpVk4: rWUVg7", source: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/m1n6q/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto (1)
+08-21 10:53:43.310 14353 14353 I chromium: [INFO:CONSOLE(1)] "%c%d font-size:0;color:transparent NaN", source: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/m1n6q/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto (1)
+08-21 10:53:43.311 14353 14353 I chromium: [INFO:CONSOLE(1)] "%c%d font-size:0;color:transparent NaN", source: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/m1n6q/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto (1)
+08-21 10:53:43.313 14353 14353 I chromium: [INFO:CONSOLE(1)] "%c%d font-size:0;color:transparent NaN", source: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/m1n6q/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto (1)
+08-21 10:53:43.314 14353 14353 I chromium: [INFO:CONSOLE(1)] "%c%d font-size:0;color:transparent NaN", source: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/m1n6q/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto (1)
+08-21 10:53:43.315 14353 14353 I chromium: [INFO:CONSOLE(1)] "%c%d font-size:0;color:transparent NaN", source: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/m1n6q/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto (1)
+08-21 10:53:43.316 14353 14353 I chromium: [INFO:CONSOLE(1)] "%c%d font-size:0;color:transparent NaN", source: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/m1n6q/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto (1)
+08-21 10:53:43.316 14353 14353 I chromium: [INFO:CONSOLE(1)] "%c%d font-size:0;color:transparent sqpVk4: rWUVg7", source: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/m1n6q/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto (1)
+08-21 10:53:43.317 14353 14353 I chromium: [INFO:CONSOLE(1)] "%c%d font-size:0;color:transparent sqpVk4: rWUVg7", source: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/m1n6q/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto (1)
+08-21 10:53:43.318 14353 14353 I chromium: [INFO:CONSOLE(1)] "%c%d font-size:0;color:transparent NaN", source: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/m1n6q/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto (1)
+08-21 10:53:43.319 14353 14353 I chromium: [INFO:CONSOLE(1)] "%c%d font-size:0;color:transparent NaN", source: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/m1n6q/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto (1)
+08-21 10:53:43.321 14353 14353 I chromium: [INFO:CONSOLE(1)] "%c%d font-size:0;color:transparent NaN", source: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/m1n6q/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto (1)
+08-21 10:53:43.322 14353 14353 I chromium: [INFO:CONSOLE(1)] "%c%d font-size:0;color:transparent NaN", source: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/m1n6q/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto (1)
+08-21 10:53:43.323 14353 14353 I chromium: [INFO:CONSOLE(1)] "console.groupEnd", source: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/m1n6q/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto (1)
+08-21 10:53:43.756  2611  3862 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-21 10:53:43.756  2611  3862 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-21 10:53:43.756  2611  3862 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-21 10:53:43.756  2611  3862 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-21 10:53:44.210 14353 14374 D EGL_emulation: app_time_stats: avg=86.60ms min=11.29ms max=436.08ms count=11
+08-21 10:53:44.757  2611  3862 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-21 10:53:44.758  2611  3862 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-21 10:53:44.758  2611  3862 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-21 10:53:44.758  2611  3862 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-21 10:53:45.759  2611  3862 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-21 10:53:45.759  2611  3862 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-21 10:53:45.759  2611  3862 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-21 10:53:45.759  2611  3862 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:333
+08-21 10:53:46.760  2611  3862 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-21 10:53:46.760  2611  3862 D android.hardware.gnss-service.ranchu: GnssHwListener:consume:87 sz=64
+08-21 10:53:46.760  2611  3862 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:311
+08-21 10:53:46.761  2611  3862 D android.hardware.gnss-service.ranchu: Gnss:onGnssLocationCb:321
+08-21 10:53:46.953  2514  2514 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 

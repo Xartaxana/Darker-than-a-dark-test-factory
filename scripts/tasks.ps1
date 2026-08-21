@@ -806,7 +806,7 @@ function Start-Appium {
     # per-стек --log, /status-поллинг, -Restart).
     # -TimeoutSeconds дефолт 150 (было 60): холодный npx-старт ВТОРОГО Appium-
     # инстанса (порт 4725) занимает ~90-120с - замер постмерж-witness N3
-    # 2026-08-21 (runs/N3-postmerge-device-witness-2026-08-21.md §1), 60с не
+    # 2026-08-21 (runs/N3-p3-postmerge-device-witness-2026-08-21.md §1), 60с не
     # хватало. Переопределяем ЯВНЫМ -TimeoutSeconds на вызове при нужде.
     param([ValidateRange(1,65535)][int]$Port = 4723, [int]$TimeoutSeconds = 150, [switch]$Restart)
 

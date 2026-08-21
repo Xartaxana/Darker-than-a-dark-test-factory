@@ -2891,7 +2891,7 @@ in-flight дифф AT-BUG-075 параллельной Fable-сессии в р�
 **Резолюция Lead (Fable) 2026-08-21T01:55 — ENV_ISSUE-часть снята
 рестартом; deep-link-часть требует recheck.** Эмулятор 5554 был
 ПЕРЕЗАПУЩЕН Lead-сессией в ходе постмерж-верификации N3 (~00:40,
-runs/N3-postmerge-device-witness-2026-08-21.md §2): текущий аптайм
+runs/N3-p3-postmerge-device-witness-2026-08-21.md §2): текущий аптайм
 гостя на 01:49 — 1:09 (замер `adb shell uptime`), т.е. 28.5ч-деградация
 (ANR system) устранена; smoke на свежем эмуляторе — 1 passed in 28.04s.
 Итого по трём отказам: TC-149/TC-009 (`wait_ui_ready` TimeoutException,
