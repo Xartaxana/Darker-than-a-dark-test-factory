@@ -12,8 +12,8 @@ test_cases: ["TC-149"]
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-08-21T15:00:00Z"
-updated: "2026-08-21T15:00:00Z"
+status_since: "2026-08-21T13:20:00Z"
+updated: "2026-08-21T13:20:00Z"
 reopen_count: 0
 dispute_count: 0
 awaiting: none
@@ -177,7 +177,7 @@ WebView<76 — продуктовый дефект «тёмная тема не 
 
 ## Обсуждение
 
-**[Lead @ 2026-08-21T15:00:00Z]** Вердикт триажа p3-n4-tc149-contrast-triage:
+**[Lead @ 2026-08-21T13:20:00Z]** Вердикт триажа p3-n4-tc149-contrast-triage:
 TC-149 стабильно красный из-за ДВУх дефектов оракула, опровергнут продуктовый
 кандидат. Заведён тест_debt-баг (AT-BUG-097) на дефекты D1 и D2, оба требуют
 фикса перед automation-приёмкой. Предшествующие блокеры (AT-BUG-095, AT-BUG-096)
