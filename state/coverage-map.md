@@ -1,13 +1,13 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-21T04:14:08Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-08-21T05:31:56Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 ## Сводка по областям
 
 | Область | Кейсов | Automated | coverage_status |
 |---|---|---|---|
-| accessibility | 9 | 3 | partial |
+| accessibility | 11 | 3 | partial |
 | backup | 6 | 1 | partial |
 | browser | 47 | 13 | partial |
 | canary | 25 | 23 | partial |
@@ -41,7 +41,7 @@ generated_at: 2026-08-21T04:14:08Z · генератор: `scripts/coverage_map.
 | R-09 | BUS | backup:TC-166, filter-profiles:TC-040, filter-profiles:TC-041, filter-profiles:TC-042, filter-profiles:TC-085, filter-profiles:TC-086, filter-profiles:TC-181, filter-profiles:TC-182, filter-profiles:TC-183, filter-profiles:TC-184, filter-profiles:TC-185, filter-profiles:TC-205, filter-profiles:TC-206, sync:TC-212, sync:TC-213 |
 | R-10 | DATA | library:TC-089, rating:TC-043, rating:TC-044, rating:TC-045, rating:TC-056, rating:TC-087, rating:TC-088, rating:TC-090, rating:TC-091, rating:TC-191, rating:TC-192, rating:TC-193, rating:TC-194 |
 | R-12 | PERF | performance:TC-096, performance:TC-097, performance:TC-098, performance:TC-099 |
-| R-13 | A11Y | accessibility:TC-106, accessibility:TC-107, accessibility:TC-148, accessibility:TC-149, accessibility:TC-150, accessibility:TC-276, accessibility:TC-277, accessibility:TC-278, browser:TC-249, settings:TC-188 |
+| R-13 | A11Y | accessibility:TC-106, accessibility:TC-107, accessibility:TC-148, accessibility:TC-149, accessibility:TC-150, accessibility:TC-276, accessibility:TC-277, accessibility:TC-278, accessibility:TC-287, accessibility:TC-288, browser:TC-249, settings:TC-188 |
 | R-14 | COMPAT | compatibility:TC-109, compatibility:TC-110, compatibility:TC-111 |
 | R-15 | SEC | security:TC-100, security:TC-101, security:TC-102, security:TC-103, security:TC-104, security:TC-105, security:TC-232, security:TC-233, security:TC-234 |
 | R-16 | BUS | browser:TC-162, browser:TC-252, browser:TC-253, browser:TC-254, browser:TC-260, browser:TC-263, browser:TC-264, browser:TC-274, browser:TC-275, downloads:TC-156, downloads:TC-239, downloads:TC-240, library:TC-255, settings:TC-251, sync:TC-218, sync:TC-219, sync:TC-220, sync:TC-221, sync:TC-222, sync:TC-223, sync:TC-224, sync:TC-225, sync:TC-230, sync:TC-272 |
@@ -178,10 +178,10 @@ generated_at: 2026-08-21T04:14:08Z · генератор: `scripts/coverage_map.
 | bridge-reading-progress-reporting | ao3-bridge | browser:TC-284[Review] |
 | bridge-scroll-to-percent-resume-retry | ao3-bridge | browser:TC-285[Review] |
 | eink-palette-native | eink | accessibility:TC-276[Review] |
-| eink-no-ripple-indication | eink | нет кейсов |
+| eink-no-ripple-indication | eink | accessibility:TC-287[Review] |
 | eink-snap-animations | eink | accessibility:TC-278[Review] |
 | eink-bridge-badge-palette | eink | accessibility:TC-277[Review] |
-| eink-webview-no-overscroll | eink | нет кейсов |
+| eink-webview-no-overscroll | eink | accessibility:TC-288[Review] |
 | sync-settings-config-fields | sync | sync:TC-218[Approved], sync:TC-219[Approved], sync:TC-220[Approved] |
 | sync-manual-run-result-dialog | sync | sync:TC-216[Approved], sync:TC-221[Approved], sync:TC-222[Approved] |
 | sync-failure-messages | sync | sync:TC-224[Automated], sync:TC-225[Merged], sync:TC-272[Approved] |
@@ -235,8 +235,6 @@ generated_at: 2026-08-21T04:14:08Z · генератор: `scripts/coverage_map.
 - browse-pull-to-refresh (browse): Свайп вниз по странице вкладки Browse перезагружает её (pull-to-refresh поверх WebView)
 - library-open-local-html-reader-css (browse): Скачанный HTML-файл открывается в приложении с подмешанным читательским стилем reader.css (loadDataWithBaseURL), а при нечитаемом файле молча грузится как есть
 - bridge-dark-css (ao3-bridge): CSS-переопределения тёмной темы на AO3-страницах (window.__ao3AppDark)
-- eink-no-ripple-indication (eink): E-ink: нажатие на контролы не рисует ripple-волну (индикация подменена no-op для foundation-clickable и Material3 одновременно)
-- eink-webview-no-overscroll (eink): E-ink: WebView не показывает overscroll-эффект на границе страницы (ни свечения, ни растягивания); выключение режима возвращает штатный overscroll
 - sync-merge-reading-progress-fieldwise (sync): Позиция чтения сливается между устройствами ПОФИЛДОВО по собственным часам readProgressAt, независимо от того, чья строка выиграла LWW: более свежая позиция переносится, а рейтинг/заметка победившей строки при этом не откатываются
 - data-workrating-model (data): Room-сущность WorkRating (rating/comment/tags/fandom/author/wordCount/downloadPath + позиция чтения readProgress* со своими часами и запрос отправки sendRequestedAt/sendHandledAt)
 - data-filterprofile-model (data): Room-сущность FilterProfile (name/queryString)
@@ -245,7 +243,7 @@ generated_at: 2026-08-21T04:14:08Z · генератор: `scripts/coverage_map.
 
 ### accessibility
 
-- coverage_status: **partial** (3/9 Automated)
+- coverage_status: **partial** (3/11 Automated)
 - риски: R-11, R-13
 - кейсы без risk: нет
 - P0/P1 не в Automated: нет
@@ -260,7 +258,7 @@ generated_at: 2026-08-21T04:14:08Z · генератор: `scripts/coverage_map.
 |---|---|---|---|---|---|---|
 | P0 |  |  |  |  |  |  |
 | P1 |  |  |  |  |  |  |
-| P2 |  | 3 | 3 | 3 |  |  |
+| P2 |  | 5 | 3 | 3 |  |  |
 | P3 |  |  |  |  |  |  |
 
 ### backup

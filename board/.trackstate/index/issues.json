@@ -201,6 +201,50 @@
     "archived": false
   },
   {
+    "key": "TC-287",
+    "path": "board/TC-287/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "E-ink: нажатие-и-удержание НЕ рисует ripple/state-layer индикацию — ни на foundation-clickable (строка «Rate / edit note» оверлея действий Library), ни на Material3 (Settings Switch); обычная тема тем же жестом индикацию показывает",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:accessibility",
+      "risk:R-13"
+    ],
+    "updated": "2026-08-21T04:20:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "TC-288",
+    "path": "board/TC-288/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "E-ink: WebView НЕ показывает overscroll-эффект на нижней границе страницы — ни на уже открытой вкладке (живой тоггл), ни на новой вкладке, созданной при включённом режиме; выключение возвращает штатный overscroll",
+    "issueType": "test-case",
+    "status": "tc-review",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "test-case",
+      "area:accessibility",
+      "risk:R-13"
+    ],
+    "updated": "2026-08-21T04:35:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "TC-021",
     "path": "board/TC-021/main.md",
     "parent": null,
@@ -8405,6 +8449,29 @@
     "archived": false
   },
   {
+    "key": "AT-BUG-093",
+    "path": "board/AT-BUG-093/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Примитив «hold-across-two-perform()» (удержание касания между двумя раздельными Appium perform()-вызовами) не верифицирован на стеке appium-uiautomator2-driver@8.0.1 — блокирует живую автоматизацию TC-287 (ripple), TC-288 (overscroll)",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-287",
+      "test_case:TC-288",
+      "sev:major"
+    ],
+    "updated": "2026-08-21T04:45:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "BUG-001",
     "path": "board/BUG-001/main.md",
     "parent": null,
@@ -9918,14 +9985,13 @@
     "epicPath": null,
     "summary": "Implement app version for e-ink reader",
     "issueType": "story",
-    "status": "story-writing-cases",
+    "status": "story-review",
     "priority": "p2",
     "assignee": "qa-agents",
     "labels": [
-      "stage:story-writing-cases",
+      "stage:story-review",
       "регресс сборки: smoke RUN-20260819-1818 49/49 · чисто · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 1",
-      "фич без кейсов: 2/8",
-      "багов на кейсах стори: 1"
+      "багов на кейсах стори: 2"
     ],
     "updated": "2026-08-14T23:12:35Z",
     "resolution": null,

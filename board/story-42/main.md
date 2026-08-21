@@ -2,12 +2,12 @@
 key: "story-42"
 project: "AO3"
 issueType: "story"
-status: "story-writing-cases"
+status: "story-review"
 priority: "p2"
 summary: "Implement app version for e-ink reader"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["stage:story-writing-cases", "регресс сборки: smoke RUN-20260819-1818 49/49 · чисто · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 1", "фич без кейсов: 2/8", "багов на кейсах стори: 1"]
+labels: ["stage:story-review", "регресс сборки: smoke RUN-20260819-1818 49/49 · чисто · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 1", "багов на кейсах стори: 2"]
 components: []
 fixVersions: []
 watchers: []
@@ -23,10 +23,10 @@ resolution: null
 
 _Синтезировано из `state/escalations.md` (QAREADY-42) + `docs/feature-registry.yaml` (story:42) — READ-ONLY, борда не меняет источники._
 
-Стадия: **Кейсы пишутся**
+Стадия: **На ревью**
 
-TC зоны: TC-246, TC-247, TC-248, TC-249, TC-250, TC-276, TC-277, TC-278
+TC зоны: TC-246, TC-247, TC-248, TC-249, TC-250, TC-276, TC-277, TC-278, TC-287, TC-288
 
-Баги: BUG-083
+Баги: AT-BUG-093, BUG-083
 
-Бейджи: регресс сборки: smoke RUN-20260819-1818 49/49 · чисто · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 1, фич без кейсов: 2/8, багов на кейсах стори: 1
+Бейджи: регресс сборки: smoke RUN-20260819-1818 49/49 · чисто · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 1, багов на кейсах стори: 2

@@ -1,20 +1,20 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-21T04:14:06Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-21T05:31:54Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
 - Сборка: dev-local (versionCode 12), commit `fdd3f728`, built_at 2026-08-19T17:47:59Z
-- smoke: Closed · smoke_freshness_hours: **33.9** (RUN-20260819-1818)
-- regression: Closed · regression_freshness_hours: **32.0** (RUN-20260819-2012)
-- canary: Triaged · canary_freshness_hours: **400.5** (RUN-20260804-1317)
+- smoke: Closed · smoke_freshness_hours: **35.2** (RUN-20260819-1818)
+- regression: Closed · regression_freshness_hours: **33.3** (RUN-20260819-2012)
+- canary: Triaged · canary_freshness_hours: **401.8** (RUN-20260804-1317)
 - Открытые blocker/critical: **1** — BUG-083
 - Известные проблемы (known_issue): **2**
 - p0_automation_coverage: **100%** (37/37)
 - p1_automation_coverage: **46%** (85/183)
-- Test debt открыт: **3** — AT-BUG-075, AT-BUG-091, AT-BUG-092
+- Test debt открыт: **4** — AT-BUG-075, AT-BUG-091, AT-BUG-092, AT-BUG-093
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
 - Untriaged: **0** · untriaged_failure_age: **0**
@@ -24,14 +24,14 @@ story-карточки: стадии см. docs/05-board.md §Story
 - dev-local (versionCode 12), commit `fdd3f728`, built_at 2026-08-19T17:47:59Z
 - smoke: passed · regression: passed
 
-## Тест-кейсы (286)
+## Тест-кейсы (288)
 
-- Draft: **1** · Review: **14** · Approved: **110** · Automated: **151** · Merged: **10**
+- Draft: **1** · Review: **16** · Approved: **110** · Automated: **151** · Merged: **10**
 - автотесты (B3): active: **151**
 
 | Область | Draft | Review | Approved | Automated | Merged | Blocked |
 |---|---|---|---|---|---|---|
-| accessibility |  | 3 | 3 | 3 |  |  |
+| accessibility |  | 5 | 3 | 3 |  |  |
 | backup |  |  | 5 | 1 | 1 |  |
 | browser |  | 5 | 29 | 13 | 4 |  |
 | canary |  |  | 2 | 23 |  |  |
@@ -76,7 +76,7 @@ story-карточки: стадии см. docs/05-board.md §Story
 - BUG-012 [minor] Intended — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
 - BUG-013 [minor] Intended — Смена темы, затем немедленный kill процесса (<100 мс) теряет theme_mode — выбор темы не персистится
 
-## Test debt (6)
+## Test debt (7)
 
 - AT-BUG-068 [broken_environment] Fixed — navigator.clipboard.writeText() БЫЛ недоказуем в тестовом WebView (DOMException 'Write permission denied') — блокер Then TC-188 снят window-пробой 2026-08-21
 - AT-BUG-075 [flaky_test] Open — TC-176 burst-окно: натуральный запас tap1->tap2 ~0.52-0.67с после rework attempt4 (path 1/path 2 attempt3 сняты критиком как неокупившиеся/небезопасные, остался только layering-фикс) — ниже критик-ориентира ≥1с, дальнейшее ужатие требует пересмотра сценария/ориентира (test-strategist/Lead)
@@ -84,6 +84,7 @@ story-карточки: стадии см. docs/05-board.md §Story
 - AT-BUG-090 [flaky_test] Blocked — assert_chip_absent — негативный Then сразу после tap_selected_chip/reopen_listing_overlay без settle/hold (4-й член класса AT-BUG-081/082/083/085), TC-091; код-фикс написан 2026-08-20, live-верификация BLOCKED (environment)
 - AT-BUG-091 [broken_environment] Open — Bash-тул схлопывает $env:VAR в пустоту ДО передачи powershell -Command "..." — env-зависимый вызов молча уезжает с пустой переменной (классовый tooling-тикет, 4 измеренных экземпляра)
 - AT-BUG-092 [missing_fixture] Open — Нет безопасного способа переключить ответ сервера на ОДИН и тот же URL между двумя проходами синхронизации ВНУТРИ одного теста — блокирует TC-286 (retry после сбоя закачки, sync/downloads)
+- AT-BUG-093 [missing_fixture] Open — Примитив «hold-across-two-perform()» (удержание касания между двумя раздельными Appium perform()-вызовами) не верифицирован на стеке appium-uiautomator2-driver@8.0.1 — блокирует живую автоматизацию TC-287 (ripple), TC-288 (overscroll)
 
 ## Прогоны (22)
 
@@ -100,7 +101,7 @@ story-карточки: стадии см. docs/05-board.md §Story
 
 - нет
 
-## Эскалации (59)
+## Эскалации (61)
 
 - [2026-07-24T05:10:04Z] **BUG-011** [sla:bug_open_major] — major-баг open с 2026-07-15T14:00:00Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
 - [2026-08-01T16:01:07Z] **BUG-017** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-07-30T00:00:00Z | нужно: ответить в ## Обсуждение
@@ -161,3 +162,5 @@ story-карточки: стадии см. docs/05-board.md §Story
 - [2026-08-21T00:00:23Z] **BUG-074** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-19T00:00:00Z | нужно: ответить в ## Обсуждение
 - [2026-08-21T00:00:23Z] **BUG-075** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-19T00:00:00Z | нужно: ответить в ## Обсуждение
 - [2026-08-21T00:00:23Z] **BUG-076** [sla:question_unanswered] — ждёт ответа разработчика (awaiting: dev) с 2026-08-19T00:00:00Z | нужно: ответить в ## Обсуждение
+- [2026-08-21T04:19:22Z] **BUG-068** [sla:bug_open_major] — major-баг open с 2026-08-14T03:49:31Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
+- [2026-08-21T04:19:22Z] **BUG-070** [sla:bug_open_major] — major-баг open с 2026-08-14T03:49:31Z без движения | нужно: Fixed/Rejected/Intended или комментарий с планом
