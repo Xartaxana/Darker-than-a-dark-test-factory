@@ -278,7 +278,12 @@ defect_found с ref).
    скрипты обвязки — `python scripts/<имя>.py` из корня (их тесты —
    `python -m pytest scripts/tests -q`); adb/устройство — только
    через env.ps1/tasks.ps1 (присутствие — `Get-Device`;
-   `Start-Emulator` сам ждёт буты); git в OS-репо — одна форма
+   `Start-Emulator` сам ждёт буты); **device-стек (П3 N3):** дефолт =
+   стек 1 (легаси, лиза не нужна; отказ — только чужая АКТИВНАЯ
+   лиза), стек 2 — ТОЛЬКО `Use-DeviceStack -N 2` (лиза обязательна,
+   снятие `-Release`); при двух устройствах адресация — env от
+   Use-DeviceStack, не «первое устройство»; отказ DEVICE_LEASE_BLOCKED
+   = Blocked/доклад, НЕ «битая среда»; git в OS-репо — одна форма
    `cd /d/Improving_AI/Operating-System-for-LLMs && git <cmd>`.
 2. Не префиксовать `cd <dir> && ...` в своём репо и не добавлять
    хвост ` 2>&1` — ломает совпадение с allowlist. **`$env:VAR` в
