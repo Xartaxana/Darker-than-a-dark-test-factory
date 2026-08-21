@@ -29,10 +29,18 @@ _PORT = "8080"
 _READY_TIMEOUT = 15  # сек — ждать, пока mitmdump реально слушает порт
 _CAPTURE_ADDON_PATH = Path(__file__).parent / "capture_addon.py"
 
-# --- AT-BUG-011: fail-fast проверка mitm-CA в системном APEX-сторе доверия ---
+# --- AT-BUG-011: fail-fast проверка mitm-CA в системном сторе доверия ---
 
 _DEFAULT_OPENSSL = r"C:\Program Files\Git\usr\bin\openssl.exe"
 _APEX_CACERTS_DIR = "/apex/com.android.conscrypt/cacerts/"
+# AT-BUG-095: `/apex/com.android.conscrypt/cacerts` физически отсутствует на
+# некоторых образах (живой замер: emulator-5556, AVD `ao3_test_api29`, стек 2
+# — APEX_ABSENT, CA живёт ИСКЛЮЧИТЕЛЬНО в system store, `bugs/AT-BUG-095.md`)
+# — install-mitm-ca.sh/ca-mount.sh (AT-BUG-024) уже ветвятся по фактическому
+# присутствию каталога на устройстве (не по номеру API), а не жёстко по
+# версии — `is_ca_installed()` ниже зеркалит эту же проверку по факту, а не
+# по предположению об API.
+_SYSTEM_CACERTS_DIR = "/system/etc/security/cacerts/"
 
 
 def _ca_pem_path() -> Path:
@@ -47,17 +55,37 @@ def _openssl_path() -> str:
 
 
 def is_ca_installed() -> bool:
-    """Проверяет присутствие mitm-CA в системном APEX-сторе доверия conscrypt —
-    ТА ЖЕ проверка, что `install-mitm-ca.sh`/`Install-MitmCA` печатают как
-    «CA visible in apex store: OK» (см. `scripts/install-mitm-ca.sh`, последний
-    блок): вычисляет `subject_hash_old` CA-сертификата через `openssl` (тем же
-    способом, что и сам install-скрипт) и ищет файл `<hash>.0` в
-    `/apex/com.android.conscrypt/cacerts/` на устройстве через `adb shell ls`.
+    """Проверяет присутствие mitm-CA в АКТУАЛЬНОМ для этого устройства сторе
+    доверия — ТА ЖЕ условная логика, что `install-mitm-ca.sh`/`ca-mount.sh`
+    (AT-BUG-024) уже применяют на стороне установки: если
+    `/apex/com.android.conscrypt/cacerts` присутствует на устройстве —
+    проверяется он (печатается install-скриптом как «CA visible in apex
+    store: OK»); если отсутствует (AT-BUG-095: живой пример — emulator-5556,
+    `ao3_test_api29`, стек 2) — проверяется `/system/etc/security/cacerts/`
+    («CA visible in system store: OK»). Вычисляет `subject_hash_old`
+    CA-сертификата через `openssl` (тем же способом, что и сам install-скрипт)
+    и ищет файл `<hash>.0` среди файлов актуального стора через ОДИН `adb
+    shell` вызов, несущий тот же `if [ -d ... ]; then ...; else ...; fi`,
+    что и `ca-mount.sh` — ветвление происходит НА УСТРОЙСТВЕ, не по
+    предположению вызывающей стороны об API/классе образа.
 
     Не устанавливает и не переустанавливает CA — только сообщает присутствие;
     вызывающий код (`framework/tests/conftest.py::_ensure_replay_ca`) решает,
-    что делать при отсутствии (AT-BUG-011: раньше отсутствие CA обнаруживалось
-    только 120–240с ReadTimeoutError'ом на первом replay-тесте)."""
+    что делать при подтверждённом отсутствии (AT-BUG-011: раньше отсутствие
+    CA обнаруживалось только 120–240с ReadTimeoutError'ом на первом
+    replay-тесте).
+
+    AT-BUG-095, п.2: ОТКАЗ самой adb-команды (ненулевой `returncode` —
+    «more than one device», «device offline», недоступное устройство и т.п.)
+    — это НЕ то же самое, что подтверждённое отсутствие CA, и не должен
+    молча читаться как `False` (тот же класс, что уже закрыт для
+    `get_device_proxy()` — AT-BUG-064 F2, CLAUDE.md permission-hygiene п.6:
+    пустой/ошибочный вывод env-зависимого вызова — промах вызова, не факт).
+    Здесь риск выше, чем в `get_device_proxy()`: ложный `False` тут напрямую
+    рождает ложный «CA не установлен», блокируя КАЖДЫЙ replay-тест сессии
+    (живой прецедент — 22 ERROR в RUN-20260821-1100 + сам AT-BUG-095) — поэтому
+    (в отличие от fail-safe `get_device_proxy()`) отказ здесь ЯВНО бросает
+    `RuntimeError`, а не тихо деградирует к `None`/`False`."""
     ca_pem = _ca_pem_path()
     if not ca_pem.exists():
         raise RuntimeError(
@@ -81,16 +109,34 @@ def is_ca_installed() -> bool:
             f"{hash_cp.stdout}{hash_cp.stderr} (AT-BUG-011)"
         )
     ca_hash = hash_cp.stdout.strip()
+    # AT-BUG-095: то же ветвление, что ca-mount.sh, исполняется НА устройстве —
+    # один adb shell вызов, а не предположение вызывающей стороны об API/классе
+    # образа (живой факт: api29-образ стека 2 несёт APEX_ABSENT).
+    store_check_cmd = (
+        f"if [ -d {_APEX_CACERTS_DIR} ]; then ls {_APEX_CACERTS_DIR}; "
+        f"else ls {_SYSTEM_CACERTS_DIR}; fi"
+    )
     try:
         ls_cp = subprocess.run(
-            [settings.ADB, "-s", settings.DEVICE_NAME, "shell", "ls", _APEX_CACERTS_DIR],
+            [settings.ADB, "-s", settings.DEVICE_NAME, "shell", store_check_cmd],
             capture_output=True, text=True, timeout=settings.ADB_SHELL_TIMEOUT,
         )
     except subprocess.TimeoutExpired as exc:
         raise TimeoutError(
-            f"adb shell ls {_APEX_CACERTS_DIR} (is_ca_installed) не ответил за "
-            f"{settings.ADB_SHELL_TIMEOUT}s (AT-BUG-011)"
+            f"adb shell ls (apex/system cacerts, is_ca_installed) не ответил "
+            f"за {settings.ADB_SHELL_TIMEOUT}s (AT-BUG-011)"
         ) from exc
+    if ls_cp.returncode != 0:
+        raise RuntimeError(
+            f"adb shell ls (apex/system cacerts store) вернул код "
+            f"{ls_cp.returncode} (устройство offline/недоступно/неверно "
+            f"адресовано?) — stdout: {ls_cp.stdout!r} stderr: "
+            f"{ls_cp.stderr!r} — is_ca_installed() не может определить "
+            "присутствие CA. Это ОТКАЗ ПРОВЕРКИ, не подтверждённое "
+            "отсутствие CA (AT-BUG-095: раньше это молча читалось как "
+            "«CA отсутствует» и блокировало replay-тесты ложным "
+            "RuntimeError из _ensure_replay_ca)."
+        )
     return f"{ca_hash}.0" in ls_cp.stdout
 
 
