@@ -73,7 +73,9 @@ def dot_source_prefix(fake_root: Path | None = None) -> str:
     device-free. Проба, способная дойти до `Start-Process $emu`/`& $adb ...`,
     ОБЯЗАНА инжектировать соответствующий шов (`-Launcher`,
     `-AdbDevicesProvider`, `-BootCompletedProvider`, `-EmuKiller`,
-    `-WaitForDeviceProvider`, `-OrphanCleaner`) — иначе в worktree она
+    `-WaitForDeviceProvider`, `-OrphanCleaner`, `-GuestPinner` — последний
+    прикрывает голые `adb root`/`adb wait-for-device` ВНУТРИ
+    Set-GuestIPv4Pin, живое зависание постмержа N3) — иначе в worktree она
     «зелёная» лишь потому, что `tools/` отсутствует, а в главном чекауте
     поднимет живой эмулятор. Ровно так шесть проб
     `test_p3_ram_gate.py` годами выглядели device-free, будучи не device-free

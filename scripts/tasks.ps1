@@ -498,6 +498,13 @@ function Start-Emulator {
         },
         [scriptblock]$EmuKiller = { param($AdbPath, $Serial) & $AdbPath -s $Serial emu kill 2>$null | Out-Null },
         [scriptblock]$WaitForDeviceProvider = { param($AdbPath) & $AdbPath wait-for-device },
+        # M1-спутник (постмерж N3, найден живым зависанием test_p3_ram_gate в
+        # ГЛАВНОМ чекауте): Set-GuestIPv4Pin внутри зовёт ГОЛЫЙ `adb root`/
+        # `adb wait-for-device` (строки ~150/217) — проба, прошедшая post-start
+        # гейт, без этого шва блокировалась на реальном adb навсегда (в
+        # worktree маскировалось отсутствием tools/). Дефолт дословно
+        # повторяет прежний прямой вызов.
+        [scriptblock]$GuestPinner = { param($AdbPath) Set-GuestIPv4Pin -Adb $AdbPath },
         # spec-p3-second-emulator N3 (хвост N2 §6 п.3, RAM-гейт КОДОМ; B4
         # критик-вход rework attempt 2 — ПОДКЛЮЧЕНО К РЕАЛЬНОМУ ПУТИ):
         # дефолт зависит от `-Port` — 5554 (первичный/единственный стек,
@@ -685,7 +692,7 @@ function Start-Emulator {
         }
     }
 
-    Set-GuestIPv4Pin -Adb $adb
+    & $GuestPinner $adb
 
     if ($WritableSystem) {
         # Автовызов сразу после boot_completed этого же старта — гарантированно

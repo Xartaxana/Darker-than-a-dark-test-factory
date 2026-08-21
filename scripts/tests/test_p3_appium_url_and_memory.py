@@ -80,7 +80,11 @@ def test_android_serial_set_before_getprop_and_ipv4_pin_calls():
     text = _source()
     start_emulator_body = text.split("function Start-Emulator", 1)[1].split("function Install-MitmCA", 1)[0]
     serial_idx = start_emulator_body.index('Resolve-DeviceSerial -Serial $serial')
-    guest_pin_idx = start_emulator_body.index('Set-GuestIPv4Pin -Adb $adb')
+    # Постмерж N3: IPv4-пин уехал за шов `-GuestPinner` (тот же класс M1, что
+    # getprop ниже — прямой вызов вешал "device-free" пробу на голых
+    # `adb root`/`adb wait-for-device` ВНУТРИ Set-GuestIPv4Pin в главном
+    # чекауте). Якорь — на МЕСТЕ ВЫЗОВА; дефолт шва проверяется ниже.
+    guest_pin_idx = start_emulator_body.index('& $GuestPinner $adb')
     # M1 (критик-раунд 3): getprop-цикл теперь идёт ЧЕРЕЗ ШОВ
     # `-BootCompletedProvider` (device-free юнит post-start ветки был иначе
     # недостижим - цикл БЕЗЛИМИТЕН и вешал пробу). Якорь переставлен на МЕСТО
@@ -94,6 +98,8 @@ def test_android_serial_set_before_getprop_and_ipv4_pin_calls():
     assert serial_idx < getprop_idx
     # Дефолт шва остаётся ТЕМ ЖЕ вызовом (адресация - через env, без -s)
     assert 'Get-AdbOutput -Adb $AdbPath -AdbArgs @("shell", "getprop", "sys.boot_completed")' in start_emulator_body
+    # Дефолт шва пина - дословно прежний вызов (живой прогон не меняется)
+    assert 'Set-GuestIPv4Pin -Adb $AdbPath' in start_emulator_body
 
 
 def test_boot_oracle_adb_devices_call_not_addressed_by_s_flag():

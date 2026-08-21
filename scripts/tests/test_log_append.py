@@ -2179,10 +2179,18 @@ def test_replay_live_routing_log_new_version_signal_no_regressions(opus_config):
             blocked_to_ok.append((task_id, idx))
 
     assert ok_to_blocked == [], f"OK->BLOCKED переворотов быть не должно: {ok_to_blocked}"
-    # Итоговый review_round_ok не меняется НИ ОДНОЙ реальной строкой этого
-    # порта -- сырой флип сигнальной функции (см. тест ниже) поглощён
-    # own_rejected и не всплывает на уровне реального решения append_routing.
-    assert blocked_to_ok == [], f"BLOCKED->OK перевороты требуют разбора: {blocked_to_ok}"
+    # Итоговый review_round_ok не менялся НИ ОДНОЙ строкой, СУЩЕСТВОВАВШЕЙ
+    # на момент порта, -- строгий пустой пин ТОЛЬКО на иммутабельном префиксе
+    # (Б11, _REPLAY_FROZEN_N; сырой флип сигнальной функции -- см. тест ниже,
+    # поглощён own_rejected). Хвост (idx >= N) пишется УЖЕ ПОД НОВОЙ
+    # семантикой: BLOCKED->OK там -- штатная работа порта, гейт легализовал
+    # строку при append (первый живой экземпляр: p3-n3-lease-usedevicestack
+    # idx=2495, повторный delegated критика по сигналу escalated model=fable,
+    # разобран приёмкой N3 2026-08-20T23:36); пин хвоста обучал бы дописывать
+    # индексы в список вместо разбора (комментарий Б11 у _REPLAY_FROZEN_N).
+    frozen_flips = [(t, i) for t, i in blocked_to_ok if i < _REPLAY_FROZEN_N]
+    assert frozen_flips == [], (
+        f"BLOCKED->OK на замороженном префиксе требуют разбора: {frozen_flips}")
 
 
 def test_replay_live_routing_log_raw_signal_flip_is_named_and_explained(opus_config):

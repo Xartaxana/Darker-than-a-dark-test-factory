@@ -397,9 +397,12 @@ def test_snapshot_fallback_relaunch_also_goes_through_launcher_seam(tmp_path):
 
 def test_post_start_ram_gate_boundary_exactly_at_threshold_does_not_abort(tmp_path):
     """M6-граница к бонусу: free РОВНО НА post-start пороге (1.0) - abort'а
-    НЕТ (строгое `<`). Останавливаемся сразу после гейта маркером в
-    Set-GuestIPv4Pin-шаге... его шва нет, поэтому доказываем отсутствие
-    abort'а: сообщения post-start гейта и отката by_serial не появились."""
+    НЕТ (строгое `<`). Позитивный оракул - шов `-GuestPinner` (стоит СРАЗУ
+    ПОСЛЕ гейта): его маркер в stdout доказывает, что гейт пройден без
+    abort'а. Шов введён постмерж N3: без него проба доходила до реального
+    `adb root`/`adb wait-for-device` внутри Set-GuestIPv4Pin и в главном
+    чекауте блокировалась навсегда (в worktree маскировалось отсутствием
+    tools/ - живой экземпляр класса M1)."""
     state_file = tmp_path / "state" / "emulator-session.json"
     state_file.parent.mkdir(parents=True, exist_ok=True)
     state_file.write_text(json.dumps({"by_serial": {}}), encoding="utf-8")
@@ -409,6 +412,9 @@ def test_post_start_ram_gate_boundary_exactly_at_threshold_does_not_abort(tmp_pa
         "-MinFreeGBPreStart 0 -MinFreeGBPostStart 1.0 -FreeMemoryProvider { 1.0 } "
         "-PortListenerResolver { $null } "
         "-AdbDevicesProvider { param($A) @('List of devices attached', 'emulator-5556 device') } "
+        "-WaitForDeviceProvider { param($A) $null } "
+        "-OrphanCleaner { param($Avd) $null } "
+        "-GuestPinner { param($A) Write-Output 'PIN_SEAM_REACHED' } "
         "-BootCompletedProvider { param($A) '1' } "
         "-EmuKiller { param($A,$S) Write-Output \"UNEXPECTED_KILL=$S\" } "
         "-Launcher { param($Path,$ArgList) "
@@ -418,6 +424,7 @@ def test_post_start_ram_gate_boundary_exactly_at_threshold_does_not_abort(tmp_pa
     )
     cp = run_ps(cmd, timeout=120)
     assert cp.returncode == 0, cp.stderr
+    assert "PIN_SEAM_REACHED" in cp.stdout, cp.stdout
     assert "RAM-гейт (post-start)" not in cp.stdout, cp.stdout
     assert "UNEXPECTED_KILL" not in cp.stdout, cp.stdout
 
