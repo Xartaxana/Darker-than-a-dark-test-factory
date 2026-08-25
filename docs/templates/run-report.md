@@ -1,11 +1,21 @@
 ---
 id: RUN-YYYYMMDD-HHMM
-suite: regression      # smoke | regression | canary | verification
-mode: replay           # replay | live
+suite: regression      # smoke | regression | canary | verification | compatibility
+mode: FILL_ME          # replay | live — заполни ФАКТИЧЕСКИМ режимом прогона; плейсхолдер
+                       # намеренно вне enum (validate_frontmatter ловит его как ERROR) — незаполненный
+                       # mode не должен молча пройти как replay (критик-раунд 2, Б6)
 app_version: "1.10 (versionCode 11), build <hash>"
 status: NeedsTriage    # NeedsTriage | Triaged | Closed
+status_since: "FILL_ME"  # ISO-таймстамп перевода в ТЕКУЩИЙ status (пример "2026-08-25T10:00:00Z");
+                         # плейсхолдер намеренно не проходит pattern — SLA-детекторы (sla_sweep) не
+                         # смогут определить возраст прогона без этого поля (критик-раунд 2, Б6)
+updated: "FILL_ME"       # ISO-таймстамп последней правки отчёта — то же требование, тот же приём
 totals: { passed: 0, failed: 0, skipped: 0, quarantined: 0, duration_min: 0 }
 allure: "runs/RUN-.../allure/"
+device_avd: ""         # имя AVD, на котором ШЁЛ прогон (`ao3_test_api29` / `ao3_corridor_api29` / `ao3_test_api34`).
+                       # ОБЯЗАТЕЛЬНО для suite: compatibility — детектор каденции
+                       # (sla_sweep._compatibility_run_wanted) без этого поля прогон не засчитывает
+                       # и продолжает эскалировать. Для прочих suites — факультативно, но полезно.
 blocked_reason: ""    # environment | missing_fixture | product_decision | dev_answer | permissions — заполнить при status: Blocked (docs/06 B5)
 lock: ""
 ---

@@ -67,6 +67,7 @@ except (AttributeError, ValueError):
 import board_sync as bs      # обход артефактов/парсер frontmatter
 import board_inbound as bi   # _rewrite_field/_set_field — правка frontmatter как в inbound
 import charter_utils         # обход exploratory-charters/ (дедуп D-0081, задача B)
+import sla_utils             # parse_ts — единый дом разбора ISO-штампа (Б10)
 
 REPO = bs.REPO
 SLA_PATH = REPO / "state" / "sla.yaml"
@@ -93,18 +94,110 @@ DEFAULTS = {
     # штатной каденции правила rules.yaml (72ч), иначе шумит на каждом цикле.
     "charter_queue_empty": 96,
     # Детектор отказа правила rules.yaml «Еженедельный compatibility-прогон»
-    # (каденция — слово владельца 2026-08-25). Порог ЗАВЕДОМО больше штатного
-    # цикла (2x недельной каденции = 336ч), той же логикой, что
-    # charter_queue_empty: детектор, срабатывающий раньше следующего планового
-    # прогона, шумел бы на каждом проходе. 336 — ОЦЕНКА от каденции (F-30),
-    # не замер; уточняется по evidence первых недель.
-    "compatibility_run_stale": 336,
+    # (каденция — слово владельца 2026-08-25). Критик-раунд (Б-раунд2, З5):
+    # приведено к прецеденту charter_queue_empty (72ч правило / 96ч детектор
+    # = 1.33x) вместо произвольного 2x — 168ч каденция * 1.33 = 223.44,
+    # округлено вверх до целого часа = 224. ОЦЕНКА от каденции (F-30), не
+    # замер; уточняется по evidence первых недель.
+    "compatibility_run_stale": 224,
 }
 
 # Каденция compatibility: статус RUN-артефакта, при котором прогон считается
 # состоявшимся (разобранный прогон), и имя suite в его frontmatter.
 COMPATIBILITY_SUITE = "compatibility"
 COMPATIBILITY_DONE_STATUS = "Closed"
+# Критик-раунд (2026-08-25, доработка Б1): suite+status одни не доказывают
+# каденцию — TC-111 требует ЖИВУЮ страницу (framework/steps/browser_steps.py:
+# 118-121), TC-109 требует api29 (фикстура api26_device_required обесценена
+# на чужом устройстве). Живой прогон = mode: live (не replay).
+COMPATIBILITY_MODE = "live"
+# Машинное свидетельство устройства api29 (критик-раунд Б7, 2026-08-25):
+# голая подстрока "api29" без учёта регистра промахивалась в ОБЕ стороны —
+# ложно ЗАСЧИТЫВАЛА чужой API level (`ao3_test_api34_was_api29`,
+# `ao3_migrate_api29_to_api34`, `ao3_test_api294`, `ao3_api290` — "api29"
+# входит подстрокой в более длинный токен) И ложно ОТВЕРГАЛА штатные имена
+# AVD Manager (`Pixel_5_API_29`, `Nexus_5X_API_29`, `ao3_test_api_29` —
+# разделитель "_"/"-"/" " между "api" и числом). Верный признак: собрать ВСЕ
+# числовые API-уровни, встречающиеся в имени (каждое вхождение
+# `api[ _-]?<цифры>`), и потребовать, чтобы множество было РОВНО {"29"} — имя
+# с ДВУМЯ разными уровнями (миграционные/временные имена) или с уровнем,
+# который лишь НАЧИНАЕТСЯ на "29" (294/290), больше не проходит.
+#
+# ГРАНИЦА (З7, критик-раунд 3 2026-08-25 — не дефект, а требование к
+# ИМЕНОВАНИЮ AVD): признак читает ТОЛЬКО токен `api<цифры>` (допустимы
+# разделители "_"/"-"/" " между "api" и числом, регистр любой). Отсюда два
+# следствия, о которых обязан знать тот, кто заводит новый клон эмулятора:
+#   * ВЕДУЩИЕ НУЛИ НЕ ПОДДЕРЖИВАЮТСЯ — `api029` даёт уровень "029" != "29"
+#     и прогон НЕ засчитывается;
+#   * имя БЕЗ токена уровня вовсе (`ao3_corridor_lower`) уровня не несёт —
+#     тоже не засчитывается.
+# Оба отказа идут в ГРОМКУЮ сторону (эскалация с текстом
+# `device_avd=<значение>`, см. `_compatibility_run_wanted`), а штатные имена
+# топологии (`ao3_test_api29`, `ao3_corridor_api29`) проходят — поэтому
+# ошибка именования видна сразу и не молчит.
+_API_LEVEL_RE = re.compile(r"api[ _-]?(\d+)", re.IGNORECASE)
+
+
+def _avd_api_levels(avd: str) -> set[str]:
+    """Все числовые API-уровни, встречающиеся в имени AVD (см. комментарий
+    выше, Б7)."""
+    return {m.group(1) for m in _API_LEVEL_RE.finditer(avd)}
+
+
+def _is_api29(avd: str) -> bool:
+    """True, только если имя несёт РОВНО один API-уровень и это "29"."""
+    return _avd_api_levels(avd) == {"29"}
+
+
+# Б8 (критик-раунд 2026-08-25): каденция спрашивает «прогон СОСТОЯЛСЯ?», не
+# «прогон зелёный?» — прогон с падениями (failed > 0) каденцию СОБЛЮДАЕТ
+# (красный уходит в триаж, у которого свой SLA — run_needs_triage,
+# дублировать его каденцией неправильно), а прогон, где не выполнено НИ
+# ОДНОГО теста (all-skipped/zero-tests), каденцию НЕ соблюдает — три живые
+# пробы критика (all-red/zero-tests/all-skipped) гасили детектор на полный
+# порог при полной тишине, худшая — all-skipped (падений нет => Closed
+# сразу => триаж не запускается => покрытие нулевое при полной тишине).
+_COMPAT_TC_IDS = ("TC-109", "TC-110", "TC-111")
+
+
+def _has_executed_tests(meta: dict) -> bool:
+    """True, если прогон реально исполнил хотя бы один из TC-109/110/111.
+
+    ПОРЯДОК ОРАКУЛОВ (Б11, критик-раунд 3 2026-08-25 — класс «более грубый
+    оракул перекрывает более специфичный»): `tc_results` — оракул ПО ИМЕНИ
+    кейса, `totals` — безымянный счётчик всего прогона. Пока прежняя редакция
+    молча ПАДАЛА в `totals`, не найдя среди трёх ключей `passed`/`failed`,
+    отчёт, ЯВНО заявляющий «TC-109/110/111 — skipped», засчитывался каденцией
+    из-за любого ЧУЖОГО пройденного теста в `totals` (проба критика:
+    три skipped + totals.passed=5 → True, детектор каденции гас на 224ч) —
+    ровно вектор all-skipped, ради которого функция и писалась.
+    Поэтому: если `tc_results` — словарь и в нём ПРИСУТСТВУЕТ хотя бы один
+    из трёх ключей, решаем ТОЛЬКО по ним (True ⟺ хотя бы один из
+    присутствующих == `passed`/`failed`); `totals` — лишь фолбэк для
+    прогонов, где per-TC свидетельства нет вовсе (`tc_results` отсутствует,
+    не словарь, либо ни одного из трёх ключей в нём нет).
+
+    Устойчиво к битым/чужеформатным полям (`tc_results`/`totals` не dict,
+    нечисловые totals) — трактует их как «не доказано», не роняется
+    исключением (тот же fail-safe принцип модуля: недоказанная свежесть !=
+    свежесть)."""
+    tc_results = meta.get("tc_results")
+    if isinstance(tc_results, dict):
+        present = [tc for tc in _COMPAT_TC_IDS if tc in tc_results]
+        if present:
+            return any(
+                str(tc_results.get(tc) or "").strip().lower() in ("passed", "failed")
+                for tc in present)
+    totals = meta.get("totals")
+    if isinstance(totals, dict):
+        try:
+            passed = float(totals.get("passed") or 0)
+            failed = float(totals.get("failed") or 0)
+        except (TypeError, ValueError):
+            return False
+        return (passed + failed) > 0
+    return False
+
 
 # E5: активные статусы машины charter (schemas/transitions.yaml) — очередь
 # считается непротухшей, пока хотя бы один CH-*.md в одном из них.
@@ -160,16 +253,14 @@ def _utcnow() -> datetime.datetime:
 
 
 def _parse_ts(value) -> datetime.datetime | None:
-    """ISO-строка или datetime (PyYAML коэрсит незакавыченные) → aware datetime."""
-    if isinstance(value, datetime.datetime):
-        return value if value.tzinfo else value.replace(tzinfo=datetime.timezone.utc)
-    if not value:
-        return None
-    try:
-        dt = datetime.datetime.fromisoformat(str(value).strip().replace("Z", "+00:00"))
-        return dt if dt.tzinfo else dt.replace(tzinfo=datetime.timezone.utc)
-    except ValueError:
-        return None
+    """ISO-строка или datetime (PyYAML коэрсит незакавыченные) → aware datetime.
+
+    Б10 (критик-раунд 3, 2026-08-25): тело вынесено в ОБЩИЙ дом
+    `sla_utils.parse_ts` — та же форма разбора жила независимой копией в
+    validate_frontmatter._parse_iso_dt, а coverage_map вовсе сравнивал штампы
+    СТРОКАМИ (из-за чего плейсхолдер `FILL_ME` сортировался как «новейший»).
+    Имя оставлено как тонкая обёртка: на него завязаны вызовы всего модуля."""
+    return sla_utils.parse_ts(value)
 
 
 def load_thresholds() -> dict:
@@ -258,14 +349,46 @@ def _compatibility_run_wanted(now: datetime.datetime, thr: dict) -> dict[tuple[s
     ловится — ровно тот класс, из-за которого compatibility-набор и простоял
     вне всех правил.
 
+    Критик-раунд (2026-08-25, доработка Б1): suite=compatibility + status=Closed
+    ОДНИ не доказывают каденцию — replay-прогон затыкал бы детектор на весь
+    порог, хотя TC-111 требует живую страницу (framework/steps/browser_steps.py:
+    118-121), а прогон на неверном устройстве обесценивает TC-109 (фикстура
+    api26_device_required). Прогон засчитывается свежим ТОЛЬКО когда
+    ОДНОВРЕМЕННО: (1) suite=compatibility, (2) status=Closed, (3) mode=live,
+    (4) есть машинное свидетельство устройства api29 (`device_avd`, см.
+    `_is_api29`), (5) хотя бы один тест реально выполнен (`_has_executed_tests`,
+    Б8 критик-раунд 2 — прогон, где всё skipped/ничего не выполнено, каденцию
+    НЕ соблюдает; прогон С ПАДЕНИЯМИ соблюдает — красный уходит в триаж по
+    своему SLA). З3 (тот же критик-раунд, класс ESC-040 — «updated/status_since
+    из будущего»): штамп ПОЗЖЕ `now` тоже не считается свежим (допуск
+    перекоса — 0, сравнение строгое).
+
     Возвращает {} (тихо) либо один (key, rule) с искусственным key
     "COMPATIBILITY-RUN" — проверка не привязана к одному артефакту (тот же
-    приём, что `_charter_queue_wanted`).
+    приём, что `_charter_queue_wanted`). Сообщение НАЗЫВАЕТ причину отказа
+    самого свежего по времени Closed-прогона suite=compatibility (mode/
+    device_avd/выполненные тесты/будущий штамп/порог) — не глухое «нет
+    свежего прогона».
 
     Fail-safe: прогонов нет вовсе / у всех битая или пустая дата — эскалация,
-    а не тишина (недоказанная свежесть != свежесть, F-30)."""
+    а не тишина (недоказанная свежесть != свежесть, F-30). Б6 п.4 (критик-
+    раунд 2): недатированный Closed-прогон (нет ни status_since, ни updated)
+    ТОЖЕ не должен молча пропадать из диагностики — `ts is None` раньше
+    отсекал запись ДО того, как она успевала стать diag-кандидатом, и
+    сообщение лгало «нет ни одного», хотя файл существовал; такие записи
+    теперь отдельно отслеживаются `diag_untimed_meta` и называются по id."""
     thresh = thr["compatibility_run_stale"]
-    newest: datetime.datetime | None = None
+    best_valid: datetime.datetime | None = None
+    # Кандидат для диагностики: новейший по ts Closed-прогон suite=compatibility,
+    # НЕЗАВИСИМО от валидности mode/device/штампа — так сообщение называет
+    # причину отказа именно у самого свежего кандидата, а не у случайного.
+    diag_ts: datetime.datetime | None = None
+    diag_meta: dict | None = None
+    # Б6 п.4: отдельный кандидат для случая "есть Closed compatibility, но
+    # ВООБЩЕ без штампа времени" — без даты его нельзя сравнивать по
+    # "новизне" с диагностическим ts-кандидатом, поэтому берём первый
+    # встреченный (детерминированный порядок обхода bs._iter_artifacts).
+    diag_untimed_meta: dict | None = None
     for itype, meta, _body, _src in bs._iter_artifacts():
         if itype != "run":
             continue
@@ -275,16 +398,55 @@ def _compatibility_run_wanted(now: datetime.datetime, thr: dict) -> dict[tuple[s
             continue
         ts = _since(meta)
         if ts is None:
+            if diag_untimed_meta is None:
+                diag_untimed_meta = meta
             continue
-        if newest is None or ts > newest:
-            newest = ts
-    if newest is not None and (now - newest).total_seconds() / 3600.0 <= thresh:
+        if diag_ts is None or ts > diag_ts:
+            diag_ts, diag_meta = ts, meta
+        if ts > now:
+            continue  # З3/ESC-040: штамп из будущего — не свежий
+        mode = str(meta.get("mode") or "").strip()
+        if mode != COMPATIBILITY_MODE:
+            continue
+        avd = str(meta.get("device_avd") or "").strip()
+        if not _is_api29(avd):
+            continue
+        if not _has_executed_tests(meta):
+            continue
+        if (now - ts).total_seconds() / 3600.0 > thresh:
+            continue
+        if best_valid is None or ts > best_valid:
+            best_valid = ts
+    if best_valid is not None:
         return {}
-    seen = "нет ни одного" if newest is None else f"новейший от {newest:%Y-%m-%dT%H:%M:%SZ}"
+
+    if diag_ts is None:
+        if diag_untimed_meta is not None:
+            rid = str(diag_untimed_meta.get("id") or "?")
+            seen = (f"найден Closed compatibility {rid}, но у него нет штампа "
+                    f"времени (ни status_since, ни updated)")
+        else:
+            seen = "нет ни одного Closed-прогона suite=compatibility"
+    else:
+        ts_s = f"{diag_ts:%Y-%m-%dT%H:%M:%SZ}"
+        mode = str((diag_meta or {}).get("mode") or "").strip()
+        avd = str((diag_meta or {}).get("device_avd") or "").strip()
+        if mode != COMPATIBILITY_MODE:
+            reason = f"mode={mode or '?'}"
+        elif not avd:
+            reason = "без device_avd"
+        elif not _is_api29(avd):
+            reason = f"device_avd={avd}"
+        elif diag_ts > now:
+            reason = "штамп из будущего (класс ESC-040)"
+        elif not _has_executed_tests(diag_meta or {}):
+            reason = "прогон найден, но выполненных тестов ноль"
+        else:
+            reason = f"порог {thresh:.0f}ч превышен"
+        seen = f"новейший Closed compatibility от {ts_s} отклонён: {reason}"
     return {("COMPATIBILITY-RUN", "compatibility_run_stale"):
             f"каденция compatibility (раз в неделю, слово владельца 2026-08-25) "
-            f"не соблюдается: {seen} Closed-прогон suite=compatibility, порог "
-            f"{thresh:.0f}ч | нужно: прогнать compatibility (правило rules.yaml "
+            f"не соблюдается: {seen} | нужно: прогнать compatibility (правило rules.yaml "
             f"«Еженедельный compatibility-прогон», test-runner, стек 2 api29 по лизе)"}
 
 

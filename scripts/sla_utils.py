@@ -1,4 +1,6 @@
-"""sla_utils — общий парсер порога lock_stale из state/sla.yaml.
+"""sla_utils — общие парсеры SLA-обвязки: порог lock_stale из state/sla.yaml
+и ISO-штамп артефакта (`parse_ts`, см. блок Б10 ниже — единый дом разбора
+штампа для sla_sweep / validate_frontmatter / coverage_map).
 
 Раньше load_lock_stale_hours() существовал двумя байт-идентичными копиями
 в scripts/stale_locks.py и scripts/loop_lock.py (класс «sla-threshold-parser»,
@@ -26,11 +28,67 @@ DEFAULT_LOCK_STALE_H): старые фикстуры/деплои, знающи�
 """
 from __future__ import annotations
 
+import datetime
 import re
 from pathlib import Path
 
 DEFAULT_LOCK_STALE_H = 2.0
 DEFAULT_LOOP_LOCK_TTL_H = 4.0
+
+# --- Б10 (критик-раунд 3, каденция compatibility 2026-08-25): ЕДИНАЯ форма
+# разбора ISO-штампа frontmatter. Класс дефекта — «штампы сравниваются как
+# СТРОКИ»: coverage_map.py сортировал прогоны по `str(updated)`, из-за чего
+# любой нештатный штамп («FILL_ME» — плейсхолдер шаблона run-report,
+# в ASCII 'F'(0x46) > '2'(0x32)) становился НОВЕЙШИМ, делался baseline'ом
+# и ГЛУШИЛ детекторы дисциплины (`tc_results`, `recoveries`) для всего
+# корпуса, а также назывался «последним зелёным прогоном». Плейсхолдер лишь
+# предъявил хрупкость — корневая причина в строковом сравнении, поэтому
+# правило вынесено сюда: разобранная дата или None, и НИКОГДА — «строка
+# как ключ сортировки».
+#
+# Контракт: parse_ts(value) -> aware datetime (UTC для наивных) либо None.
+# None = «штамп не разобран» — вызывающая сторона ОБЯЗАНА трактовать его как
+# САМЫЙ СТАРЫЙ (см. coverage_map._ts_key), направление отказа безопасное:
+# недоказанная свежесть != свежесть (F-30).
+#
+# Дом единый по репозиторию для трёх модулей, читающих возраст артефакта:
+# sla_sweep._parse_ts, validate_frontmatter._parse_iso_dt и coverage_map
+# вызывают ЭТУ функцию (их прежние тела были двумя независимыми копиями
+# одной формы). ОСТАТОК КЛАССА (в очередь Lead, вне owns этой задачи —
+# правило 9 «чини класс»): та же форма живёт ещё в 6 местах —
+# scripts/queue_snapshot.py:56, scripts/doctor.py:165,
+# scripts/factory_watchdog.py:185, scripts/loop_lock.py:122,
+# scripts/stale_locks.py:70, scripts/scheduled_task_reader.py:85
+# (+ scripts/permission_audit.py:156 — эпоха, не frontmatter).
+
+
+def parse_ts(value) -> datetime.datetime | None:
+    """ISO-штамп frontmatter → aware datetime (UTC), либо None если не разобран.
+
+    Принимает то, что реально приходит из PyYAML: `datetime` (коэрция
+    незакавыченного штампа), `date` (штамп без времени), строку (штатный
+    случай — закавыченный ISO, в т.ч. с суффиксом `Z` и с пробелом вместо
+    `T`), а также любой прочий скаляр — он приводится к строке (историческое
+    поведение sla_sweep._parse_ts: `20260825` разбирается как basic-ISO дата
+    средствами `fromisoformat` 3.11+). Пустое/ложное значение, отсутствие
+    ключа и мусор («FILL_ME») → None."""
+    if isinstance(value, datetime.datetime):
+        return value if value.tzinfo else value.replace(tzinfo=datetime.timezone.utc)
+    if isinstance(value, datetime.date):
+        return datetime.datetime(value.year, value.month, value.day,
+                                 tzinfo=datetime.timezone.utc)
+    if not value:
+        return None
+    s = str(value).strip()
+    if not s:
+        return None
+    if s.endswith("Z"):
+        s = s[:-1] + "+00:00"
+    try:
+        dt = datetime.datetime.fromisoformat(s)
+    except ValueError:
+        return None
+    return dt if dt.tzinfo else dt.replace(tzinfo=datetime.timezone.utc)
 
 
 def load_lock_stale_hours(sla_path: Path, default: float = DEFAULT_LOCK_STALE_H) -> float:

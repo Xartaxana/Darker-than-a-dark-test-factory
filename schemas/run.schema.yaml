@@ -9,6 +9,15 @@ fields:
   # детектор каденции (sla_sweep.compatibility_run_stale) — нечем закрыть.
   suite:  { enum: [smoke, regression, canary, verification, compatibility] }
   mode:   { enum: [live, replay] }
+  # device_avd — критик-раунд доработки Б1 (2026-08-25): машинное свидетельство
+  # AVD/API level, на котором прогнан набор — заполняет test-runner из
+  # `emulator -avd <имя>` (см. env.ps1/tasks.ps1). Опционально по схеме (не
+  # каждый suite привязан к устройству, напр. verification может быть device-
+  # free), но ОБЯЗАТЕЛЬНО для зачёта каденции compatibility_run_stale
+  # (sla_sweep._compatibility_run_wanted): без него RUN suite=compatibility
+  # свежим не считается — прогон на неверном устройстве (не api29) обесценивал
+  # бы TC-109 (фикстура api26_device_required).
+  device_avd: {}
   status: { enum: [NeedsTriage, Triaged, Closed, Blocked] }
   updated: { pattern: "^\\d{4}-\\d{2}-\\d{2}[T ][\\d:.+]+Z?$" }
   status_since: { pattern: "^\\d{4}-\\d{2}-\\d{2}[T ][\\d:.+]+Z?$" }

@@ -1,9 +1,15 @@
 """Юнит-тесты coverage_map (scripts/coverage_map.py)."""
 from __future__ import annotations
 
+import datetime
 from pathlib import Path
 
+import pytest
+
 import coverage_map as cm
+import sla_sweep            # Б10: сверка «форма разбора штампа одна на репозиторий»
+import sla_utils            # общий дом parse_ts
+import validate_frontmatter
 
 
 def _patch(repo, monkeypatch) -> None:
@@ -491,3 +497,194 @@ def test_stale_registry_detector_silent_when_no_build_yet(repo, monkeypatch):
     text = cm.render(cm.collect(), "T")
 
     assert "реестр фич протух" not in text
+
+
+# --- Б10 (критик-раунд 3, 2026-08-25): штампы сравниваются РАЗОБРАННЫМИ
+# датами, не строками. Плейсхолдер шаблона `updated: "FILL_ME"` в ASCII
+# больше ЛЮБОГО ISO-штампа ('F' 0x46 > '2' 0x32) — при строковом сравнении
+# недозаполненный отчёт становился «новейшим», делался baseline'ом обоих
+# детекторов дисциплины и назывался last_green_run. Четыре сценария ниже —
+# контрольные значения критика (C1..C4), снятые на живом харнессе
+# coverage_map.collect() ДО правки; в докстринге каждого теста названо и
+# доправочное значение, и то, что теперь обязано получаться.
+
+FILL_ME = "FILL_ME"  # ровно тот плейсхолдер, что несёт docs/templates/run-report.md
+
+
+def test_c1_placeholder_run_without_tc_results_sorts_as_oldest(repo, monkeypatch):
+    """C1. Прогон с `updated: FILL_ME` и БЕЗ tc_results.
+
+    ДО правки: newer_without_tc == ['RUN-B'] — репортился, но по СЛУЧАЙНОСТИ
+    кодировки ("FILL_ME" > "2026-07-01..." как строка), а не по смыслу.
+    ПОСЛЕ правки: [] — неразобранный штамп трактуется как САМЫЙ СТАРЫЙ, то
+    есть ровно так же, как ОТСУТСТВУЮЩИЙ штамп вёл себя до появления
+    плейсхолдера (`str(None or "")` == "" — самый старый ключ). Это и есть
+    заявленное восстановление безопасного направления отказа: незаполненный
+    штамп ловится ERROR'ом validate_frontmatter (enum/pattern), а не тем, что
+    случайно всплывает наверх сортировки в чужом детекторе."""
+    _patch(repo, monkeypatch)
+    _run(repo.root, "RUN-A", suite="smoke", status="Closed", updated="2026-07-01T00:00:00Z",
+         tc_results={"TC-900": "passed"})
+    _run(repo.root, "RUN-B", suite="smoke", status="Closed", updated=FILL_ME)
+
+    data = cm.collect()
+
+    assert data["newer_without_tc"] == []
+
+
+def test_c2_placeholder_baseline_no_longer_silences_tc_results_detector(repo, monkeypatch):
+    """C2 (КРАСНАЯ ПРОБА). Прогон с `updated: FILL_ME` И с tc_results,
+    рядом — настоящий нарушитель (свежий прогон без tc_results).
+
+    ДО правки: newer_without_tc == [] — FILL_ME становился baseline'ом
+    («новейший из несущих поле»), и НИ ОДИН реальный штамп не мог оказаться
+    его «новее»: детектор дисциплины замолкал для ВСЕГО корпуса.
+    ПОСЛЕ правки: ['RUN-C'] — baseline берётся по разобранной дате."""
+    _patch(repo, monkeypatch)
+    _run(repo.root, "RUN-A", suite="smoke", status="Closed", updated="2026-07-01T00:00:00Z",
+         tc_results={"TC-900": "passed"})
+    _run(repo.root, "RUN-B", suite="smoke", status="Closed", updated=FILL_ME,
+         tc_results={"TC-900": "passed"})
+    _run(repo.root, "RUN-C", suite="regression", status="Closed", updated="2026-07-10T00:00:00Z")
+
+    data = cm.collect()
+
+    assert data["newer_without_tc"] == ["RUN-C"]
+    assert "свежие прогоны без tc_results: RUN-C" in cm.render(data, "T")
+
+
+def test_c3_placeholder_baseline_no_longer_silences_recoveries_detector(repo, monkeypatch):
+    """C3 (КРАСНАЯ ПРОБА). То же для детектора recoveries (AT-BUG-026 B3-(б)).
+
+    ДО правки: newer_without_recoveries == [] (детектор замолчал).
+    ПОСЛЕ правки: ['RUN-C']."""
+    _patch(repo, monkeypatch)
+    _run(repo.root, "RUN-A", suite="smoke", status="Closed", updated="2026-07-01T00:00:00Z",
+         recoveries="0/2")
+    _run(repo.root, "RUN-B", suite="smoke", status="Closed", updated=FILL_ME,
+         recoveries="0/2")
+    _run(repo.root, "RUN-C", suite="regression", status="Closed", updated="2026-07-10T00:00:00Z")
+
+    data = cm.collect()
+
+    assert data["newer_without_recoveries"] == ["RUN-C"]
+    assert "свежие прогоны без recoveries: RUN-C" in cm.render(data, "T")
+
+
+def test_c4_last_green_names_really_freshest_run_not_placeholder(repo, monkeypatch):
+    """C4 (КРАСНАЯ ПРОБА). Зелёный прогон с `updated: FILL_ME` против
+    настоящего свежего зелёного.
+
+    ДО правки: last_green_run == RUN-OLD (плейсхолдер «новее» реальной даты —
+    назван НЕ тот прогон).
+    ПОСЛЕ правки: RUN-FRESH."""
+    _patch(repo, monkeypatch)
+    _tc(repo.root, "TC-901", "backup", "Automated", priority="P0", risk="R-01")
+    _run(repo.root, "RUN-OLD", suite="smoke", status="Closed", updated=FILL_ME,
+         passed=5, failed=0)
+    _run(repo.root, "RUN-FRESH", suite="regression", status="Closed",
+         updated="2026-07-10T00:00:00Z", passed=5, failed=0)
+
+    data = cm.collect()
+
+    assert str(data["last_green_global"].get("id")) == "RUN-FRESH"
+    assert "last_green_run: RUN-FRESH" in cm.render(data, "T")
+
+
+def test_c4b_per_tc_last_green_ignores_placeholder_stamp(repo, monkeypatch):
+    """Шестая точка сравнения — `_last_passed_run` (per-TC last green):
+    прогон с мусорным штампом не должен «выигрывать» у датированного."""
+    _patch(repo, monkeypatch)
+    _tc(repo.root, "TC-902", "backup", "Automated", priority="P0", risk="R-01")
+    _run(repo.root, "RUN-PLACEHOLDER", suite="smoke", status="Closed", updated=FILL_ME,
+         tc_results={"TC-902": "passed"})
+    _run(repo.root, "RUN-DATED", suite="regression", status="Closed",
+         updated="2026-07-10T00:00:00Z", tc_results={"TC-902": "passed"})
+
+    section = cm.render(cm.collect(), "T").split("### backup")[1]
+
+    assert "TC-902: RUN-DATED (updated: 2026-07-10T00:00:00Z)" in section
+
+
+def test_unparseable_stamp_sorts_oldest_not_newest(repo, monkeypatch):
+    """Отдельный тест правила сортировки (не сценария): НЕразбираемый штамп
+    — САМЫЙ СТАРЫЙ ключ, а не самый новый. Именно инверсия этого направления
+    и была корневым дефектом (строковое сравнение)."""
+    _patch(repo, monkeypatch)
+    oldest = cm._ts_key(None)
+
+    # мусор/пусто/отсутствие — все дают один и тот же САМЫЙ СТАРЫЙ ключ
+    assert cm._ts_key(FILL_ME) == oldest
+    assert cm._ts_key("") == oldest
+    assert cm._ts_key({}.get("updated")) == oldest
+    assert cm._ts_key("не дата вовсе") == oldest
+    # и он строго МЕНЬШЕ любого настоящего штампа, включая доисторический
+    assert cm._ts_key(FILL_ME) < cm._ts_key("0001-01-02T00:00:00Z")
+    assert cm._ts_key(FILL_ME) < cm._ts_key("2026-07-01T00:00:00Z")
+    # ... тогда как СТРОКОВОЕ сравнение (прежняя форма) давало обратное
+    assert str(FILL_ME) > str("2026-07-01T00:00:00Z")
+
+
+# --- Адверсариальная батарея на сам разбор штампа (DoD п.2). Дом разбора —
+# scripts/sla_utils.parse_ts; здесь же сверяется, что форма разбора ОДНА:
+# sla_sweep._parse_ts и validate_frontmatter._parse_iso_dt дают на всей
+# батарее тот же результат (обе — тонкие обёртки над общим домом).
+
+_UTC = datetime.timezone.utc
+
+BATTERY = [
+    ("пустая строка", "", None),
+    ("отсутствие ключа", {}.get("updated"), None),
+    ("плейсхолдер шаблона", "FILL_ME", None),
+    ("мусор", "не дата вовсе", None),
+    ("невозможная дата", "2026-13-45", None),
+    ("дата без таймзоны", "2026-07-01T12:00:00",
+     datetime.datetime(2026, 7, 1, 12, 0, tzinfo=_UTC)),
+    ("дата с таймзоной Z", "2026-07-01T12:00:00Z",
+     datetime.datetime(2026, 7, 1, 12, 0, tzinfo=_UTC)),
+    ("дата со сдвигом", "2026-07-01T12:00:00+03:00",
+     datetime.datetime(2026, 7, 1, 9, 0, tzinfo=_UTC)),
+    ("дата с пробелом вместо T", "2026-07-01 12:00:00",
+     datetime.datetime(2026, 7, 1, 12, 0, tzinfo=_UTC)),
+    ("дата из будущего", "2099-01-01T00:00:00Z",
+     datetime.datetime(2099, 1, 1, 0, 0, tzinfo=_UTC)),
+    # PyYAML коэрсит НЕзакавыченный штамп в datetime/date — обе формы штатны
+    ("datetime от PyYAML", datetime.datetime(2026, 7, 1, 12, 0),
+     datetime.datetime(2026, 7, 1, 12, 0, tzinfo=_UTC)),
+    ("date от PyYAML", datetime.date(2026, 7, 1),
+     datetime.datetime(2026, 7, 1, 0, 0, tzinfo=_UTC)),
+    # число вместо строки: basic-ISO целое разбирается (историческое поведение
+    # sla_sweep._parse_ts, сохранено при выносе в общий дом), а не-ISO число —
+    # None, а не исключение
+    ("число как basic-ISO", 20260701, datetime.datetime(2026, 7, 1, 0, 0, tzinfo=_UTC)),
+    ("нечисловое число", 3.5, None),
+    ("ноль", 0, None),
+    ("None", None, None),
+    ("bool", True, None),
+    ("список", ["2026-07-01T12:00:00Z"], None),
+]
+
+
+@pytest.mark.parametrize("label,value,expected",
+                         BATTERY, ids=[b[0] for b in BATTERY])
+def test_parse_ts_battery(label, value, expected):
+    got = sla_utils.parse_ts(value)
+    assert got == expected, f"{label}: {value!r} -> {got!r}, ожидалось {expected!r}"
+
+
+@pytest.mark.parametrize("label,value,expected",
+                         BATTERY, ids=[b[0] for b in BATTERY])
+def test_parse_ts_single_home_for_all_three_modules(label, value, expected):
+    """Форма разбора ОДНА на репозиторий: sla_sweep._parse_ts и
+    validate_frontmatter._parse_iso_dt — обёртки над sla_utils.parse_ts,
+    coverage_map._ts_key — она же плюс правило «None == самый старый»."""
+    assert sla_sweep._parse_ts(value) == expected
+    assert validate_frontmatter._parse_iso_dt(value) == expected
+    assert cm._ts_key(value) == (expected if expected is not None else cm._OLDEST_TS)
+
+
+def test_parse_ts_battery_raises_nothing_on_exotic_inputs():
+    """Ни одна форма батареи не роняет разбор исключением (fail-safe)."""
+    for _label, value, _expected in BATTERY:
+        sla_utils.parse_ts(value)
+        cm._ts_key(value)

@@ -1342,3 +1342,146 @@ def test_no_git_repo_untracked_check_degrades_to_silence(repo, schemas):
 
     _errors, warns = vf.validate()
     assert not any("TC-304" in w and "untracked" in w for w in warns)
+
+
+# --- Б6 п.3 (критик-раунд 2, каденция compatibility 2026-08-25): поля,
+# от которых зависит зачёт каденции (sla_sweep._compatibility_run_wanted),
+# ловятся check_cross_field_warn на пути исполнения (WARN, не ERROR).
+
+
+def test_run_compatibility_missing_device_avd_warns(repo, schemas):
+    repo.run("RUN-060", "Closed", extra="suite: compatibility\nmode: live\n")
+
+    _errors, warns = vf.validate()
+    assert any("RUN-060" in w and "device_avd" in w for w in warns)
+
+
+def test_run_compatibility_with_device_avd_no_device_avd_warn(repo, schemas):
+    repo.run("RUN-061", "Closed",
+             extra="suite: compatibility\nmode: live\ndevice_avd: ao3_test_api29\n")
+
+    _errors, warns = vf.validate()
+    assert not any("RUN-061" in w and "device_avd" in w for w in warns)
+
+
+def test_run_canary_missing_device_avd_no_warn(repo, schemas):
+    """Молчит на НЕ-compatibility: device_avd факультативен для прочих suites."""
+    repo.run("RUN-062", "Closed", extra="suite: canary\n")
+
+    _errors, warns = vf.validate()
+    assert not any("RUN-062" in w and "device_avd" in w for w in warns)
+
+
+def test_run_compatibility_mode_replay_warns(repo, schemas):
+    repo.run("RUN-063", "Closed",
+             extra="suite: compatibility\nmode: replay\ndevice_avd: ao3_test_api29\n")
+
+    _errors, warns = vf.validate()
+    assert any("RUN-063" in w and "требует mode: live" in w for w in warns)
+
+
+def test_run_compatibility_mode_missing_warns(repo, schemas):
+    repo.run("RUN-064", "Closed", extra="suite: compatibility\ndevice_avd: ao3_test_api29\n")
+
+    _errors, warns = vf.validate()
+    assert any("RUN-064" in w and "требует mode: live" in w for w in warns)
+
+
+def test_run_compatibility_mode_live_no_mode_warn(repo, schemas):
+    repo.run("RUN-065", "Closed",
+             extra="suite: compatibility\nmode: live\ndevice_avd: ao3_test_api29\n")
+
+    _errors, warns = vf.validate()
+    assert not any("RUN-065" in w and "требует mode: live" in w for w in warns)
+
+
+def test_run_canary_mode_replay_no_mode_warn(repo, schemas):
+    """Молчит на НЕ-compatibility: mode-проверка каденции привязана к suite."""
+    repo.run("RUN-066", "Closed", extra="suite: canary\nmode: replay\n")
+
+    _errors, warns = vf.validate()
+    assert not any("RUN-066" in w and "требует mode: live" in w for w in warns)
+
+
+def test_run_missing_both_stamps_warns(repo, schemas):
+    """`RUN без обоих штампов` — общий чек, НЕ привязан к suite (живой пример
+    дефекта — RUN-20260814-0605, suite: canary, без status_since/updated)."""
+    p = repo.run("RUN-067", "Closed", extra="suite: compatibility\nmode: live\n"
+                 "device_avd: ao3_test_api29\n")
+    text = p.read_text(encoding="utf-8").replace('updated: "2026-07-01T00:00:00Z"\n', "")
+    p.write_text(text, encoding="utf-8")
+
+    _errors, warns = vf.validate()
+    assert any("RUN-067" in w and "status_since" in w and "updated" in w for w in warns)
+
+
+def test_run_canary_missing_both_stamps_also_warns(repo, schemas):
+    """Штамп-чек НЕ молчит на НЕ-compatibility — проблема общая (RUN-20260814-0605
+    из живого корпуса — ровно canary без штампов)."""
+    p = repo.run("RUN-068", "Closed", extra="suite: canary\n")
+    text = p.read_text(encoding="utf-8").replace('updated: "2026-07-01T00:00:00Z"\n', "")
+    p.write_text(text, encoding="utf-8")
+
+    _errors, warns = vf.validate()
+    assert any("RUN-068" in w and "status_since" in w and "updated" in w for w in warns)
+
+
+def test_run_with_updated_only_no_stamp_warn(repo, schemas):
+    """Хотя бы один штамп (updated по умолчанию от фикстуры) — тихо."""
+    repo.run("RUN-069", "Closed", extra="suite: canary\n")
+
+    _errors, warns = vf.validate()
+    assert not any("RUN-069" in w and "status_since" in w and "не заполнены" in w for w in warns)
+
+
+# --- З8 (критик-раунд 3, 2026-08-25): проверка «нет ни status_since, ни
+# updated» была УЖЕ класса, который декларирует — стояла под условием
+# schema.type == "run", хотя возраст через `sla_sweep._since` читается и у
+# багов (severity-правила, question_unanswered, bug_fixed_waiting_build), и у
+# test-case'ов (quarantine_expired), и у ЛЮБОГО артефакта в Blocked
+# (blocked_any). Исключение — exploratory-charters: их возраст считается
+# другим путём (charter_utils/executed_at), штампов у них нет по построению.
+
+def _strip_stamps(p: Path) -> None:
+    text = p.read_text(encoding="utf-8").replace('updated: "2026-07-01T00:00:00Z"\n', "")
+    p.write_text(text, encoding="utf-8")
+
+
+def test_bug_without_any_stamp_warns(repo, schemas):
+    """КРАСНАЯ ПРОБА З8: недатированный БАГ так же невидим для SLA-надзора,
+    как недатированный прогон. ДО правки — тишина (условие по типу `run`)."""
+    p = repo.bug("BUG-140", "Open")
+    _strip_stamps(p)
+
+    _errors, warns = vf.validate()
+    assert any("BUG-140" in w and "status_since" in w and "не заполнены" in w for w in warns)
+
+
+def test_test_case_without_any_stamp_warns(repo, schemas):
+    """КРАСНАЯ ПРОБА З8: то же для test-case (quarantine_expired/blocked_any
+    считают его возраст через `_since`). ДО правки — тишина."""
+    p = repo.test_case("TC-400", "Draft")
+    _strip_stamps(p)
+
+    _errors, warns = vf.validate()
+    assert any("TC-400" in w and "status_since" in w and "не заполнены" in w for w in warns)
+
+
+def test_bug_with_status_since_only_is_quiet(repo, schemas):
+    """Достаточно ОДНОГО штампа (status_since) — тихо, как и у прогонов."""
+    p = repo.bug("BUG-141", "Open", extra='status_since: "2026-07-01T00:00:00Z"\n')
+    _strip_stamps(p)
+
+    _errors, warns = vf.validate()
+    assert not any("BUG-141" in w and "не заполнены" in w for w in warns)
+
+
+def test_charter_without_stamps_stays_quiet(repo, schemas):
+    """ЯВНОЕ ИСКЛЮЧЕНИЕ З8: у чартеров возраст считается через
+    `charter_utils`/`executed_at`, status_since/updated им не заведены —
+    живой корпус дал бы 11 ложных предупреждений. Проверка обязана молчать
+    на этом типе (и до, и после правки)."""
+    repo.charter("CH-020", "Done", extra='executed_at: "2026-07-01T00:00:00Z"\n')
+
+    _errors, warns = vf.validate()
+    assert not any("CH-020" in w and "не заполнены" in w for w in warns)

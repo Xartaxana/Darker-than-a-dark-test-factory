@@ -24,6 +24,7 @@ except (AttributeError, ValueError):
     pass
 
 import board_sync as bs
+import sla_utils
 
 REPO = bs.REPO
 OUT_PATH = REPO / "state" / "coverage-map.md"
@@ -91,6 +92,30 @@ def _areas() -> list[str]:
     return sorted(p.name for p in base.iterdir() if p.is_dir())
 
 
+# --- Б10 (критик-раунд 3, 2026-08-25): штампы прогонов сравниваются РАЗОБРАННЫМИ
+# датами, НИКОГДА не строками. Строковое сравнение `str(updated)` (шесть точек
+# этого файла: _last_passed_run, last_green_global, baseline tc_results и его
+# сравнение, baseline recoveries и его сравнение) переворачивало НАПРАВЛЕНИЕ
+# отказа на любом нештатном штампе: в ASCII 'F' (0x46) > '2' (0x32), поэтому
+# плейсхолдер шаблона `updated: "FILL_ME"` оказывался НОВЕЕ любого настоящего
+# ISO-штампа `2026-...` — недозаполненный отчёт становился baseline'ом и глушил
+# оба детектора дисциплины для ВСЕГО корпуса, а также назывался last_green_run.
+# До появления плейсхолдера незаполненное поле ОТСУТСТВОВАЛО и `str(None or "")`
+# давало "" — самый СТАРЫЙ ключ, отказ шёл в безопасную сторону; здесь это
+# свойство восстановлено явно и уже для ЛЮБОГО неразобранного штампа (мусор,
+# пустое, отсутствующее поле), а не по счастливому совпадению кодировки.
+# Разбор — общий дом scripts/sla_utils.parse_ts (одна форма на репозиторий).
+_OLDEST_TS = datetime.datetime.min.replace(tzinfo=datetime.timezone.utc)
+
+
+def _ts_key(value) -> datetime.datetime:
+    """Ключ сортировки штампа: разобранная дата, а неразобранный / мусорный /
+    отсутствующий штамп — САМЫЙ СТАРЫЙ (`datetime.min`, UTC). Направление
+    отказа безопасное: такой прогон никогда не станет ни baseline'ом
+    детекторов, ни «последним зелёным»."""
+    return sla_utils.parse_ts(value) or _OLDEST_TS
+
+
 def _is_green(run_meta: dict) -> bool:
     totals = run_meta.get("totals")
     if not isinstance(totals, dict):
@@ -122,7 +147,7 @@ def _last_passed_run(tc_id: str, runs_with_tc: list[dict]) -> dict | None:
     candidates = [r for r in runs_with_tc if r.get("tc_results", {}).get(tc_id) == "passed"]
     if not candidates:
         return None
-    return max(candidates, key=lambda r: str(r.get("updated") or ""))
+    return max(candidates, key=lambda r: _ts_key(r.get("updated")))
 
 
 def collect() -> dict:
@@ -141,7 +166,7 @@ def collect() -> dict:
 
     green_runs = [r for r in runs if str(r.get("status")) == "Closed" and _is_green(r)]
     last_green_global = (
-        max(green_runs, key=lambda r: str(r.get("updated") or "")) if green_runs else None
+        max(green_runs, key=lambda r: _ts_key(r.get("updated"))) if green_runs else None
     )
 
     # E4 (Этап 4 п.12 uplift): per-TC last green из tc_results. Если НИ один
@@ -154,12 +179,12 @@ def collect() -> dict:
     runs_with_tc = [r for r in runs if _has_tc_results(r)]
     has_tc_results = bool(runs_with_tc)
     baseline_ts = (
-        str(max(runs_with_tc, key=lambda r: str(r.get("updated") or "")).get("updated") or "")
+        max(_ts_key(r.get("updated")) for r in runs_with_tc)
         if runs_with_tc else None
     )
     newer_without_tc = sorted(
         str(r.get("id")) for r in runs
-        if not _has_tc_results(r) and (baseline_ts is None or str(r.get("updated") or "") > baseline_ts)
+        if not _has_tc_results(r) and (baseline_ts is None or _ts_key(r.get("updated")) > baseline_ts)
     )
 
     # AT-BUG-026 B3-(б): дисциплина переноса счётчика guard'а в run-артефакт —
@@ -171,13 +196,13 @@ def collect() -> dict:
     runs_with_rec = [r for r in runs_rec_eligible if _has_recoveries(r)]
     has_recoveries = bool(runs_with_rec)
     rec_baseline_ts = (
-        str(max(runs_with_rec, key=lambda r: str(r.get("updated") or "")).get("updated") or "")
+        max(_ts_key(r.get("updated")) for r in runs_with_rec)
         if runs_with_rec else None
     )
     newer_without_recoveries = sorted(
         str(r.get("id")) for r in runs_rec_eligible
         if not _has_recoveries(r)
-        and (rec_baseline_ts is None or str(r.get("updated") or "") > rec_baseline_ts)
+        and (rec_baseline_ts is None or _ts_key(r.get("updated")) > rec_baseline_ts)
     )
 
     risk_catalog = _load_risk_catalog()

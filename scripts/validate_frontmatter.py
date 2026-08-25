@@ -37,6 +37,7 @@ except (AttributeError, ValueError):
     pass
 
 import board_sync as bs
+import sla_utils  # parse_ts — единый дом разбора ISO-штампа (Б10)
 
 REPO = bs.REPO
 SCHEMAS = REPO / "schemas"
@@ -180,27 +181,14 @@ FUTURE_TIMESTAMP_SLACK = datetime.timedelta(minutes=10)
 def _parse_iso_dt(value) -> datetime.datetime | None:
     """ISO-таймстамп frontmatter → aware datetime (UTC). None — не парсится
     (форматную валидность уже проверяет `pattern` схемы отдельно; здесь только
-    парсинг для сравнения с now(), тихий отказ — не ошибка этой функции)."""
-    if isinstance(value, datetime.datetime):
-        dt = value
-    elif isinstance(value, datetime.date):
-        dt = datetime.datetime(value.year, value.month, value.day)
-    elif isinstance(value, str):
-        s = value.strip()
-        if not s:
-            return None
-        s = s.replace(" ", "T", 1)
-        if s.endswith("Z"):
-            s = s[:-1] + "+00:00"
-        try:
-            dt = datetime.datetime.fromisoformat(s)
-        except ValueError:
-            return None
-    else:
-        return None
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=datetime.timezone.utc)
-    return dt
+    парсинг для сравнения с now(), тихий отказ — не ошибка этой функции).
+
+    Б10 (критик-раунд 3, 2026-08-25): тело вынесено в ОБЩИЙ дом
+    `sla_utils.parse_ts` — эта функция была независимой копией
+    `sla_sweep._parse_ts`, а coverage_map вовсе сравнивал те же штампы
+    СТРОКАМИ. Имя оставлено тонкой обёрткой (на него завязаны
+    `check_future_timestamps` и `_run_date` этого модуля)."""
+    return sla_utils.parse_ts(value)
 
 
 def _fmt_delta(delta: datetime.timedelta) -> str:
@@ -357,6 +345,42 @@ def check_cross_field_warn(meta: dict, schema: dict, rel: str) -> list[str]:
         warns.append(
             f"{rel}: status Intended с known_issue `{_s(meta.get('known_issue'))}` — "
             "Intended держит known_issue \"true\" (гард D3 still-repro, ESC-029)")
+    # Б6 (критик-раунд 2, каденция compatibility, 2026-08-25): поля, от которых
+    # зависит зачёт каденции (sla_sweep._compatibility_run_wanted), молча
+    # пустовали — ни схема, ни агент их не гарантировали. WARN ставит их на
+    # путь исполнения (не ERROR — цель не ронять гейт, только не дать отчёту
+    # уехать молча). suite/mode/device_avd — только для suite: compatibility
+    # (на прочих suites device_avd/mode факультативны по схеме); штамп — для
+    # ЛЮБОГО RUN (живой пример дефекта — RUN-20260814-0605, suite: canary,
+    # без status_since/updated вовсе).
+    if schema.get("type") == "run":
+        suite = _s(meta.get("suite")).strip()
+        if suite == "compatibility" and not _s(meta.get("device_avd")).strip():
+            warns.append(
+                f"{rel}: suite compatibility без `device_avd` — детектор каденции "
+                f"(sla_sweep.compatibility_run_stale) не засчитает прогон")
+        if suite == "compatibility" and _s(meta.get("mode")).strip() != "live":
+            warns.append(
+                f"{rel}: suite compatibility с `mode: {_s(meta.get('mode')).strip() or '?'}` "
+                f"— каденция требует mode: live (replay/пусто не засчитывается)")
+    # З8 (критик-раунд 3, 2026-08-25): проверка была УЖЕ класса, который сама
+    # декларирует. Возраст артефакта читает `sla_sweep._since` (status_since,
+    # фолбэк updated) — и он применяется НЕ только к прогонам: blocked_any
+    # ловит ЛЮБОЙ тип в Blocked, severity-правила и question_unanswered —
+    # баги, quarantine_expired — test-cases. Недатированный артефакт любого из
+    # этих типов так же невидим для SLA-надзора, как недатированный прогон,
+    # поэтому условие по типу снято.
+    # ИСКЛЮЧЕНИЕ — `exploratory-charters`: их возраст считается ДРУГИМ путём
+    # (charter_utils + поле `executed_at`, см. sla_sweep._charter_queue_wanted),
+    # status_since/updated у них не заведены по построению — замер критика на
+    # живом корпусе: 11 чартеров дали бы 11 ложных предупреждений (нарушителей
+    # bugs 0, test-cases 0, runs 5).
+    if schema.get("type") != "charter":
+        if not _s(meta.get("status_since")).strip() and not _s(meta.get("updated")).strip():
+            warns.append(
+                f"{rel}: ни `status_since`, ни `updated` не заполнены — артефакт "
+                f"недатирован, SLA-детекторы (sla_sweep._since) не смогут "
+                f"определить его возраст")
     return warns
 
 

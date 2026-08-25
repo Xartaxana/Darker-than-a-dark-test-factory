@@ -1,6 +1,6 @@
 ---
 name: run-suite
-description: Прогнать набор тестов (smoke/regression/canary) на эмуляторе и оформить отчёт о прогоне. Использовать, когда пользователь просит "прогнать тесты", "запустить smoke/регрессию/canary", "проверить сборку".
+description: Прогнать набор тестов (smoke/regression/canary) на эмуляторе и оформить отчёт о прогоне. compatibility — ВНЕ области этого скилла (см. ниже). Использовать, когда пользователь просит "прогнать тесты", "запустить smoke/регрессию/canary", "проверить сборку".
 ---
 
 # /run-suite — прогон набора
@@ -17,15 +17,21 @@ description: Прогнать набор тестов (smoke/regression/canary) 
   эмулятор, включать его в базу счёта device-времени нельзя (docs/tasks/
   p2-pyramid-bridge.md Р5).
 - `canary` → `pytest -m live` (canary/tests), режим live — минимально, AO3 сторонний.
-- `compatibility` → `pytest tests/test_compatibility.py`, режим live, **стек 2
-  (`Use-DeviceStack -N 2`, лиза обязательна)**. Каденция — раз в неделю
-  (правило rules.yaml «Еженедельный compatibility-прогон», слово владельца
-  2026-08-25); набор — TC-109/110/111 (второй, нижний практичный API level
-  api29 + системная dark/light матрица + portrait/landscape). Единственный
-  набор, где api29 — не черновой коридор, а САМ объект проверки: посменный
-  api34-якорь топологии 2026-08-21 сюда не применяется. Отказ лизы
-  (`DEVICE_LEASE_BLOCKED`) = `Blocked` + доклад, НЕ «битая среда».
-- допускается `--mode live|replay`.
+- `compatibility` — **НЕ через `/run-suite`.** Этот скилл выбор стека не
+  принимает и работает на стеке 1 (см. ниже) — компатибилити-набор требует
+  стек 2 по лизе, поэтому его диспатчит ТОЛЬКО правило `state/rules.yaml`
+  «Еженедельный compatibility-прогон» напрямую на **test-runner**
+  (`args: { suite: [compatibility], mode: live, device_stack: 2 }`), в обход
+  этого скилла. Справочно: `pytest tests/test_compatibility.py`, режим live,
+  **стек 2 (`Use-DeviceStack -N 2`, лиза обязательна)**. Каденция — раз в
+  неделю (слово владельца 2026-08-25); набор — TC-109/110/111 (второй,
+  нижний практичный API level api29 + системная dark/light матрица +
+  portrait/landscape). Единственный набор, где api29 — не черновой коридор,
+  а САМ объект проверки: посменный api34-якорь топологии 2026-08-21 сюда не
+  применяется. Отказ лизы (`DEVICE_LEASE_BLOCKED`) = `Blocked` + доклад, НЕ
+  «битая среда».
+- допускается `--mode live|replay` (для smoke/regression/canary — `/run-suite`
+  compatibility не запускает, выбора режима для него здесь нет).
 
 Агент сам поднимет окружение (`scripts/tasks.ps1`: `Use-DeviceStack -N 1` (spec-
 p3-second-emulator N3 — берёт машинную лизу стека 1 ДО Start-Emulator/Start-

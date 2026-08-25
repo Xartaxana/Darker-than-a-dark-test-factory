@@ -116,6 +116,22 @@ tools: Read, Bash, Write, Edit
    **Заполни `source_commit`** (frontmatter; поле run.schema, batch dual-mode
    2026-08-10) — из `state/app-under-test.yaml` на момент прогона: без него
    машинная сверка предковости baseline невозможна.
+   **Заполни `device_avd`** (frontmatter; поле run.schema, критик-раунд
+   2026-08-25) — ИМЯ AVD, на котором фактически шёл прогон, а не тот, что
+   планировался: `Get-Device` / переменные окружения `Use-DeviceStack`.
+   Для `suite: compatibility` поле ОБЯЗАТЕЛЬНО: детектор каденции
+   (`sla_sweep._compatibility_run_wanted`) засчитывает прогон свежим только
+   при `mode: live` И `device_avd`, содержащем `api29` — без поля прогон не
+   зачтётся, и правило продолжит эскалировать, как будто его не было.
+   **Заполни `mode` фактическим режимом прогона (live/replay) и штампы
+   `status_since`/`updated`** (frontmatter; критик-раунд 2, Б6) — шаблон
+   `docs/templates/run-report.md` несёт для этих трёх полей плейсхолдер
+   `FILL_ME`, который НАМЕРЕННО не проходит валидацию (`mode` вне enum,
+   `status_since`/`updated` не по pattern) — оставленный как есть отчёт
+   ловится `validate_frontmatter` как ERROR. Штампов нет вовсе не бывает:
+   `status_since` — момент перевода в ТЕКУЩИЙ `status`, `updated` — момент
+   последней правки самого отчёта; без обоих SLA-детекторы (`sla_sweep`) не
+   могут определить возраст прогона и молча теряют его из вида.
 4а. **Сверка с baseline (владелец сверки — ты, пишущий отчёт):** baseline =
    последний Triaged-прогон, чей `source_commit` — ПРЕДОК текущей сборки
    (`git merge-base --is-ancestor <baseline> <текущий>`), НЕ «последний
