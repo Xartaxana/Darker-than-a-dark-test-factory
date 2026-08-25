@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-25T09:44:33Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-08-25T10:01:31Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 ## Сводка по областям
@@ -48,6 +48,7 @@ generated_at: 2026-08-25T09:44:33Z · генератор: `scripts/coverage_map.
 | R-17 | BUS | library:TC-242, library:TC-243, rating:TC-138, rating:TC-139, rating:TC-140, rating:TC-141, rating:TC-142, rating:TC-143, rating:TC-144 |
 | R-18 | DATA | browser:TC-285, library:TC-279, sync:TC-280, sync:TC-282, sync:TC-283, sync:TC-286 |
 | R-19 | SEC | риск не покрыт дизайном |
+| R-20 | DATA | риск не покрыт дизайном |
 
 ## Фичи → покрытие
 
