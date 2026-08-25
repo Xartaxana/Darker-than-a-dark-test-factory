@@ -1,15 +1,15 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-25T10:01:28Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-25T10:30:46Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
 - Сборка: dev-local (versionCode 12), commit `fdd3f728`, built_at 2026-08-19T17:47:59Z
-- smoke: NeedsTriage · smoke_freshness_hours: **95.0** (RUN-20260821-1100)
-- regression: Closed · regression_freshness_hours: **133.8** (RUN-20260819-2012)
-- canary: Triaged · canary_freshness_hours: **502.3** (RUN-20260804-1317)
+- smoke: NeedsTriage · smoke_freshness_hours: **95.5** (RUN-20260821-1100)
+- regression: Closed · regression_freshness_hours: **134.3** (RUN-20260819-2012)
+- canary: Triaged · canary_freshness_hours: **502.8** (RUN-20260804-1317)
 - Открытые blocker/critical: **1** — BUG-083
 - Известные проблемы (known_issue): **2**
 - p0_automation_coverage: **100%** (37/37)
@@ -17,7 +17,7 @@ story-карточки: стадии см. docs/05-board.md §Story
 - Test debt открыт: **6** — AT-BUG-075, AT-BUG-087, AT-BUG-091, AT-BUG-092, AT-BUG-093, AT-BUG-097
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
-- Untriaged: **1** · untriaged_failure_age: **95.0**
+- Untriaged: **1** · untriaged_failure_age: **95.5**
 
 ## Сборка под тестом
 
