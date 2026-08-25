@@ -2,7 +2,7 @@
 key: "AT-BUG-087"
 project: "AO3"
 issueType: "bug"
-status: "bug-blocked"
+status: "bug-open"
 priority: "p1"
 summary: "TC-135 (test_cold_start_deep_link_reuses_single_home_tab) TimeoutError на wait_tabs_persisted(timeout=20) — гонка ActivityManager remove-task после pm clear убивает cold-start процесс до init; фикс детектирует killedByAm=true и ретраит, НО детектор не покрывает все логкэт-варианты того же кила — D1-верификация 2026-08-20T07:44:07Z: 1 red из 2 живых прогонов на одной измеренно свежей сессии, пинг-понг reopen_count=2=sla.reopened_pingpong, Blocked"
 assignee: "qa-agents"
@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-20T12:56:31Z"
-updated: "2026-08-20T12:56:31Z"
+created: "2026-08-25T09:43:17Z"
+updated: "2026-08-25T09:43:17Z"
 archived: false
 resolution: null
 ---
@@ -22,7 +22,7 @@ resolution: null
 # TC-135 (test_cold_start_deep_link_reuses_single_home_tab) TimeoutError на wait_tabs_persisted(timeout=20) — гонка ActivityManager remove-task после pm clear убивает cold-start процесс до init; фикс детектирует killedByAm=true и ретраит, НО детектор не покрывает все логкэт-варианты того же кила — D1-верификация 2026-08-20T07:44:07Z: 1 red из 2 живых прогонов на одной измеренно свежей сессии, пинг-понг reopen_count=2=sla.reopened_pingpong, Blocked
 
 _Спроецировано из `bugs/AT-BUG-087.md` (источник правды).
-Статус в нашей машине: **Blocked**._
+Статус в нашей машине: **Open**._
 
 # AT-BUG-087 — TC-135: `TimeoutError` в cold-start deep-link ветке; гонка ActivityManager remove-task подтверждена независимой D1-верификацией, но детектор `killedByAm=true` не покрывает все логкэт-варианты того же кила — 1/2 живых прогонов красных на одной измеренно свежей сессии, Blocked (пинг-понг reopen_count=2)
 
@@ -699,3 +699,15 @@ Lead). Предписание исполнителю (test-maintainer, штат�
    → raise».
 `reopen_count` не трогать (2 — история пинг-понга честная); Fixed ставится
 guard-переходом B4 после фикса, D1 — штатно.
+
+**[lead:Opus @ 2026-08-25T09:43:17Z] Переход ДОВЕДЁН при коммите
+leftover-набора.** Решение 2026-08-20 объявляло «Blocked снят», но
+frontmatter остался `status: Blocked` при `awaiting: none` /
+`blocked_reason: product_decision` — расхождение текста и полей пролежало
+5 суток вместе с незакоммиченным набором. Приведено к решению:
+`status: Open`, `blocked_reason: ""` (пустая — баг больше не заблокирован),
+`status_since` сохранён на моменте решения (2026-08-20T12:56:31Z — статус
+де-факто держится с него), `updated` — момент этой правки. Матрица:
+`*→Open by human`, актор — слово оператора 2026-08-20, зафиксированное в
+решении выше. `reopen_count`, `known_issue`, `awaiting` не тронуты.
+Предписание исполнителю (п.1-4 выше) в силе — работа штатной очереди B4.

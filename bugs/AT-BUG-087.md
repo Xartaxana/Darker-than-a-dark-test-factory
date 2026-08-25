@@ -4,7 +4,7 @@ title: "TC-135 (test_cold_start_deep_link_reuses_single_home_tab) TimeoutError �
 type: test_debt
 debt_kind: flaky_test
 severity: major
-status: Blocked
+status: Open
 found_in: "критик-гейт D1-батч верификации AT-BUG-076/083/085, живой прогон полного test_tabs.py, 2026-08-20"
 fixed_in: "app dev-local, version_code 12 (source_commit fdd3f72884105d1453448e0c9a7f2b109588b182, apk_sha256 6bc924f9..., built_at 2026-08-19T17:47:59Z) -- фикс чисто фреймворковый (framework/steps/app_steps.py, framework/tests/test_tabs.py), сборка приложения не менялась"
 last_seen_in: "tests/test_tabs.py::test_cold_start_deep_link_reuses_single_home_tab (TC-135), 2026-08-20T07:44:07Z (fix-verifier D1) -- 1 failed in 52.94s, ИТЕРАЦИЯ 2 на измеренно свежей сессии (PID 18316/12104 неизменны между итерациями 1 и 2), TimeoutError на wait_tabs_persisted_after_cold_start_deep_link; anti-масking raise сработал (killedByAm=true НЕ найден в логкэте), но post-mortem логкэт показывает ТОТ ЖЕ класс гонки (Destroy timeout of remove-task -> Killing <pid> ... remove task -> signal 9) другой строкой без литерала killedByAm=true -- см. «Обсуждение»"
@@ -12,15 +12,15 @@ test_cases: ["TC-135"]
 runs: []
 duplicates: []
 regression_of: ""
-status_since: "2026-08-20T07:44:07Z"
-updated: "2026-08-20T07:44:07Z"
+status_since: "2026-08-20T12:56:31Z"
+updated: "2026-08-25T09:43:17Z"
 reopen_count: 2
 dispute_count: 0
-awaiting: dev
+awaiting: none
 resolution: ""
 resolution_comment: ""
 known_issue: "true"
-blocked_reason: "dev_answer"
+blocked_reason: ""
 lock: ""
 gitlab_issue: ""
 ---
@@ -675,3 +675,40 @@ literal), либо в семантической проверке (kill КОНК
 `app-under-test/` не трогал, код фреймворка не трогал (только прогонял и
 читал `app_steps.py`/`allure-results` для диагностики traceback-фрейма).
 Эскалация — `state/escalations.md` ESC-036.
+
+**[lead:Fable @ 2026-08-20T11:48:18Z] РЕШЕНИЕ по ESC-036 — направление
+(а)+(б) вместе; Blocked снят.** Переход `Blocked → Open` исполнен по
+матрице `*→Open` (актор human — слово оператора 2026-08-20 «делай все по
+порядку» на разборе очереди Lead; выбор направления оператор делегировал
+Lead). Предписание исполнителю (test-maintainer, штатный B4-подбор):
+1. Детектор килла в `wait_tabs_persisted_after_cold_start_deep_link`
+   (`framework/steps/app_steps.py:441-544`) сделать СЕМАНТИЧЕСКИМ по pid:
+   якорь — pid, который `adb.pidof_app()` вернул живым до смерти; искать
+   свидетельство килла ИМЕННО этого pid, а не любое вхождение маркера в
+   окне логкэта.
+2. Набор паттернов расширить с литерала `killedByAm=true` до известных
+   вариантов той же AM remove-task гонки: (i) `ProcessRecord{...} start
+   not valid ... killedByAm=true` (оригинальная диагностика 06:52:59Z);
+   (ii) связка `Destroy timeout of remove-task` + `Killing <pid> ...:
+   remove task` + `exited due to signal 9` на том же pid (вариант
+   D1-верификации 07:44:07Z, дословный логкэт в last_seen_in/Обсуждении).
+3. Инвариант анти-маскировки Б5 СОХРАНЯЕТСЯ: неизвестная причина смерти
+   процесса — по-прежнему честный `raise` без ретрая; п.1-2 расширяют
+   распознанное множество, не ослабляют отказ.
+4. Юнит-пины: расширить `test_cold_start_deep_link_am_race_retry_unit.py`
+   кейсами на оба варианта паттерна + негативный пин «незнакомая причина
+   → raise».
+`reopen_count` не трогать (2 — история пинг-понга честная); Fixed ставится
+guard-переходом B4 после фикса, D1 — штатно.
+
+**[lead:Opus @ 2026-08-25T09:43:17Z] Переход ДОВЕДЁН при коммите
+leftover-набора.** Решение 2026-08-20 объявляло «Blocked снят», но
+frontmatter остался `status: Blocked` при `awaiting: none` /
+`blocked_reason: product_decision` — расхождение текста и полей пролежало
+5 суток вместе с незакоммиченным набором. Приведено к решению:
+`status: Open`, `blocked_reason: ""` (пустая — баг больше не заблокирован),
+`status_since` сохранён на моменте решения (2026-08-20T12:56:31Z — статус
+де-факто держится с него), `updated` — момент этой правки. Матрица:
+`*→Open by human`, актор — слово оператора 2026-08-20, зафиксированное в
+решении выше. `reopen_count`, `known_issue`, `awaiting` не тронуты.
+Предписание исполнителю (п.1-4 выше) в силе — работа штатной очереди B4.

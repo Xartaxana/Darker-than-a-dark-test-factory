@@ -1,6 +1,6 @@
 # Карта покрытия (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-21T05:31:56Z · генератор: `scripts/coverage_map.py`
+generated_at: 2026-08-25T09:44:33Z · генератор: `scripts/coverage_map.py`
 Проекция из frontmatter test-cases/ и runs/ (принцип G1, как у `state/factory-status.md`). Рукописной модели покрытия не существует — этот файл не второй источник истины, а вывод.
 
 ## Сводка по областям
@@ -320,13 +320,13 @@ generated_at: 2026-08-21T05:31:56Z · генератор: `scripts/coverage_map.
 - per-TC last green:
   - TC-066: RUN-20260819-1818 (updated: 2026-08-19T18:18:00Z)
   - TC-067: RUN-20260819-2012 (updated: 2026-08-19T20:15:00Z)
-  - TC-068: RUN-20260819-1818 (updated: 2026-08-19T18:18:00Z)
+  - TC-068: RUN-20260821-1100 (updated: 2026-08-21T11:02:11Z)
   - TC-069: RUN-20260819-2012 (updated: 2026-08-19T20:15:00Z)
-  - TC-070: RUN-20260819-1818 (updated: 2026-08-19T18:18:00Z)
+  - TC-070: RUN-20260821-1100 (updated: 2026-08-21T11:02:11Z)
   - TC-071: RUN-20260819-2012 (updated: 2026-08-19T20:15:00Z)
-  - TC-072: RUN-20260819-1818 (updated: 2026-08-19T18:18:00Z)
+  - TC-072: RUN-20260821-1100 (updated: 2026-08-21T11:02:11Z)
   - TC-073: RUN-20260819-2012 (updated: 2026-08-19T20:15:00Z)
-  - TC-074: RUN-20260819-1818 (updated: 2026-08-19T18:18:00Z)
+  - TC-074: RUN-20260821-1100 (updated: 2026-08-21T11:02:11Z)
   - TC-075: RUN-20260819-2012 (updated: 2026-08-19T20:15:00Z)
   - TC-076: RUN-20260819-1818 (updated: 2026-08-19T18:18:00Z)
   - TC-077: RUN-20260819-2012 (updated: 2026-08-19T20:15:00Z)
@@ -336,7 +336,7 @@ generated_at: 2026-08-21T05:31:56Z · генератор: `scripts/coverage_map.
   - TC-081: RUN-20260819-2012 (updated: 2026-08-19T20:15:00Z)
   - TC-082: RUN-20260804-1317 (updated: 2026-08-04T11:44:09Z)
   - TC-083: RUN-20260819-2012 (updated: 2026-08-19T20:15:00Z)
-  - TC-118: RUN-20260819-1818 (updated: 2026-08-19T18:18:00Z)
+  - TC-118: RUN-20260821-1100 (updated: 2026-08-21T11:02:11Z)
   - TC-119: RUN-20260819-2012 (updated: 2026-08-19T20:15:00Z)
   - TC-120: RUN-20260819-2012 (updated: 2026-08-19T20:15:00Z)
   - TC-121: RUN-20260819-2012 (updated: 2026-08-19T20:15:00Z)
@@ -447,7 +447,7 @@ generated_at: 2026-08-21T05:31:56Z · генератор: `scripts/coverage_map.
 - last_green_run: RUN-20260819-2012 (suite: regression, status: Closed, updated: 2026-08-19T20:15:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
   - TC-006: нет зелёного per-TC
-  - TC-016: RUN-20260819-1818 (updated: 2026-08-19T18:18:00Z)
+  - TC-016: RUN-20260821-1100 (updated: 2026-08-21T11:02:11Z)
   - TC-017: RUN-20260819-2012 (updated: 2026-08-19T20:15:00Z)
   - TC-027: RUN-20260819-2012 (updated: 2026-08-19T20:15:00Z)
   - TC-028: RUN-20260819-2012 (updated: 2026-08-19T20:15:00Z)
@@ -509,7 +509,7 @@ generated_at: 2026-08-21T05:31:56Z · генератор: `scripts/coverage_map.
 - автотесты (automated_by): framework/tests/test_rating.py::test_auto_mark_as_read_on_scroll_to_bottom_preserves_download_path_and_local_metadata, framework/tests/test_rating.py::test_deselect_rating_on_work_page_panel, framework/tests/test_rating.py::test_edit_tag_on_already_saved_work_via_panel_does_not_click_kudos, framework/tests/test_rating.py::test_first_panel_save_clicks_kudos_once, framework/tests/test_rating.py::test_rate_work_from_work_page_panel, framework/tests/test_rating_listing.py::test_add_freeform_tag_persists, framework/tests/test_rating_listing.py::test_apply_ratings_syncs_duplicate_blurbs, framework/tests/test_rating_listing.py::test_change_rating_kudosed_to_read_via_listing_does_not_click_kudos, framework/tests/test_rating_listing.py::test_clear_note_removes_comment, framework/tests/test_rating_listing.py::test_comment_only_visible_on_listing_and_absent_from_rating_tabs, framework/tests/test_rating_listing.py::test_deselect_kudosed_via_listing_does_not_click_kudos, framework/tests/test_rating_listing.py::test_edit_tag_on_already_kudosed_work_via_listing_does_not_reclick_kudos, framework/tests/test_rating_listing.py::test_first_kudosed_via_listing_with_open_work_tab_clicks_kudos_once, framework/tests/test_rating_listing.py::test_listing_rate_button_updates_without_reload, framework/tests/test_rating_listing.py::test_matching_personal_tag_highlighted_on_listing, framework/tests/test_rating_listing.py::test_note_button_opens_overlay_with_expanded_comment, framework/tests/test_rating_listing.py::test_panel_rating_updates_without_reload, framework/tests/test_rating_listing.py::test_personal_tags_do_not_affect_visibility, framework/tests/test_rating_listing.py::test_rate_kudosed_via_listing_without_open_work_tab_does_not_click_kudos, framework/tests/test_rating_listing.py::test_rate_work_from_listing_overlay, framework/tests/test_rating_listing.py::test_save_note_persists_comment, framework/tests/test_rating_listing.py::test_tap_selected_chip_removes_tag
 - last_green_run: RUN-20260819-2012 (suite: regression, status: Closed, updated: 2026-08-19T20:15:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
-  - TC-007: RUN-20260819-1818 (updated: 2026-08-19T18:18:00Z)
+  - TC-007: RUN-20260821-1100 (updated: 2026-08-21T11:02:11Z)
   - TC-008: RUN-20260819-1818 (updated: 2026-08-19T18:18:00Z)
   - TC-009: RUN-20260819-2012 (updated: 2026-08-19T20:15:00Z)
   - TC-010: нет зелёного per-TC
@@ -598,11 +598,11 @@ generated_at: 2026-08-21T05:31:56Z · генератор: `scripts/coverage_map.
 - автотесты (automated_by): framework/tests/test_smoke.py::test_app_launches_and_loads_ao3, framework/tests/test_smoke.py::test_bottom_nav_switches_screens, framework/tests/test_smoke.py::test_clear_all_ratings, framework/tests/test_smoke.py::test_seeded_work_appears_in_correct_tab, framework/tests/test_smoke.py::test_theme_toggle_stable
 - last_green_run: RUN-20260819-2012 (suite: regression, status: Closed, updated: 2026-08-19T20:15:00Z) — деградировано до ГЛОБАЛЬНОГО прогона: схемы (test-case/run) не связывают run с конкретным TC ИЛИ с областью (нет поля run↔TC/area), см. отчёт builder'а
 - per-TC last green:
-  - TC-001: RUN-20260819-1818 (updated: 2026-08-19T18:18:00Z)
-  - TC-002: RUN-20260819-2012 (updated: 2026-08-19T20:15:00Z)
-  - TC-003: RUN-20260819-2012 (updated: 2026-08-19T20:15:00Z)
-  - TC-004: RUN-20260819-2012 (updated: 2026-08-19T20:15:00Z)
-  - TC-005: RUN-20260819-2012 (updated: 2026-08-19T20:15:00Z)
+  - TC-001: RUN-20260821-1100 (updated: 2026-08-21T11:02:11Z)
+  - TC-002: RUN-20260821-1100 (updated: 2026-08-21T11:02:11Z)
+  - TC-003: RUN-20260821-1100 (updated: 2026-08-21T11:02:11Z)
+  - TC-004: RUN-20260821-1100 (updated: 2026-08-21T11:02:11Z)
+  - TC-005: RUN-20260821-1100 (updated: 2026-08-21T11:02:11Z)
 
 | Priority | Draft | Review | Approved | Automated | Merged | Blocked |
 |---|---|---|---|---|---|---|

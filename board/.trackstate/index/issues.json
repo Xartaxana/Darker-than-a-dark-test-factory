@@ -107,7 +107,7 @@
       "area:accessibility",
       "risk:R-13"
     ],
-    "updated": "2026-08-20T21:15:00Z",
+    "updated": "2026-08-21T12:51:45Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -8320,7 +8320,7 @@
     "epicPath": null,
     "summary": "TC-135 (test_cold_start_deep_link_reuses_single_home_tab) TimeoutError на wait_tabs_persisted(timeout=20) — гонка ActivityManager remove-task после pm clear убивает cold-start процесс до init; фикс детектирует killedByAm=true и ретраит, НО детектор не покрывает все логкэт-варианты того же кила — D1-верификация 2026-08-20T07:44:07Z: 1 red из 2 живых прогонов на одной измеренно свежей сессии, пинг-понг reopen_count=2=sla.reopened_pingpong, Blocked",
     "issueType": "bug",
-    "status": "bug-blocked",
+    "status": "bug-open",
     "priority": "p1",
     "assignee": "qa-agents",
     "labels": [
@@ -8328,7 +8328,7 @@
       "test_case:TC-135",
       "sev:major"
     ],
-    "updated": "2026-08-20T12:56:31Z",
+    "updated": "2026-08-25T09:43:17Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -8467,6 +8467,94 @@
       "sev:major"
     ],
     "updated": "2026-08-21T04:45:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-094",
+    "path": "board/AT-BUG-094/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "Стек 2 (ao3_test_api29): rating_steps.open_work_page → open_deep_link(HOME) Given-паттерн не обновляет tabs[0].url в приложении — TabStrip никогда не появляется, блокирует live-автоматизацию TC-150 (и потенциально TC-106/TC-148/др. с тем же Given на этом стеке)",
+    "issueType": "bug",
+    "status": "bug-rejected",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-150",
+      "sev:major"
+    ],
+    "updated": "2026-08-21T11:00:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-095",
+    "path": "board/AT-BUG-095/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "framework/core/mitm.py::is_ca_installed() проверяет ТОЛЬКО APEX-стор доверия — на стеке 2 (ao3_test_api29, apex conscrypt отсутствует) ложно сообщает «CA не установлен», хотя CA реально стоит в системном сторе — блокирует ЛЮБОЙ replay-тест на этом стеке",
+    "issueType": "bug",
+    "status": "bug-fixed",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-149",
+      "sev:major"
+    ],
+    "updated": "2026-08-21T11:51:00Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-096",
+    "path": "board/AT-BUG-096/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "framework/web/base_page.py::contrast_of() передаёт WebElement аргументом в execute_script — на стеке 2 (ao3_test_api29, chromedriver=74.0.3729.6/chrome=74.0.3729.185) getComputedStyle получает НЕ Element (`parameter 1 is not of type 'Element'`), блокирует TC-149 ДО оракула",
+    "issueType": "bug",
+    "status": "bug-fixed",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-149",
+      "sev:major"
+    ],
+    "updated": "2026-08-21T12:51:45Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
+    "key": "AT-BUG-097",
+    "path": "board/AT-BUG-097/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "framework/web/base_page.py::contrast_of() оракул контраста даёт ложнокрасные вердикты: фантомный color у icon-only элементов (D1) + захардкоженный белый fallback фона в тёмной теме (D2) — блокирует automation-приёмку TC-149",
+    "issueType": "bug",
+    "status": "bug-open",
+    "priority": "p1",
+    "assignee": "qa-agents",
+    "labels": [
+      "bug",
+      "test_case:TC-149",
+      "sev:major"
+    ],
+    "updated": "2026-08-21T13:20:00Z",
     "resolution": null,
     "children": [],
     "archived": false
@@ -9908,6 +9996,26 @@
     "archived": false
   },
   {
+    "key": "RUN-20260821-1100",
+    "path": "board/RUN-20260821-1100/main.md",
+    "parent": null,
+    "epic": null,
+    "parentPath": null,
+    "epicPath": null,
+    "summary": "RUN-20260821-1100",
+    "issueType": "run",
+    "status": "run-needstriage",
+    "priority": "p2",
+    "assignee": "qa-agents",
+    "labels": [
+      "run"
+    ],
+    "updated": "2026-08-21T11:02:11Z",
+    "resolution": null,
+    "children": [],
+    "archived": false
+  },
+  {
     "key": "story-26",
     "path": "board/story-26/main.md",
     "parent": null,
@@ -9921,7 +10029,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-writing-cases",
-      "регресс сборки: smoke RUN-20260819-1818 49/49 · чисто · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 1",
+      "регресс сборки: smoke RUN-20260821-1100 20/49 · разбирается · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 0",
       "фич без кейсов: 0/2",
       "черновиков: 1",
       "багов на кейсах стори: 3"
@@ -9945,8 +10053,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-covered",
-      "регресс сборки: smoke RUN-20260819-1818 49/49 · чисто · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 1",
-      "зелёные в RUN-20260819-2012: 5/5",
+      "регресс сборки: smoke RUN-20260821-1100 20/49 · разбирается · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 0",
       "багов на кейсах стори: 0"
     ],
     "updated": "2026-08-09T23:04:10Z",
@@ -9968,7 +10075,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-automation",
-      "регресс сборки: smoke RUN-20260819-1818 49/49 · чисто · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 1",
+      "регресс сборки: smoke RUN-20260821-1100 20/49 · разбирается · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 0",
       "багов на кейсах стори: 0"
     ],
     "updated": "2026-08-14T23:12:35Z",
@@ -9990,7 +10097,7 @@
     "assignee": "qa-agents",
     "labels": [
       "stage:story-review",
-      "регресс сборки: smoke RUN-20260819-1818 49/49 · чисто · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 1",
+      "регресс сборки: smoke RUN-20260821-1100 20/49 · разбирается · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 0",
       "багов на кейсах стори: 2"
     ],
     "updated": "2026-08-14T23:12:35Z",

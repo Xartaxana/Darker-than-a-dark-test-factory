@@ -1,23 +1,23 @@
 # Статус фабрики (генерируется, НЕ редактировать руками)
 
-generated_at: 2026-08-21T05:31:54Z · генератор: `scripts/queue_snapshot.py`
+generated_at: 2026-08-25T09:44:30Z · генератор: `scripts/queue_snapshot.py`
 Счётчики очереди ведутся ТОЛЬКО здесь (ревью A4/G1, docs/09). Ручные числа в HANDOFF/докках не имеют силы.
 story-карточки: стадии см. docs/05-board.md §Story
 
 ## Release readiness
 
 - Сборка: dev-local (versionCode 12), commit `fdd3f728`, built_at 2026-08-19T17:47:59Z
-- smoke: Closed · smoke_freshness_hours: **35.2** (RUN-20260819-1818)
-- regression: Closed · regression_freshness_hours: **33.3** (RUN-20260819-2012)
-- canary: Triaged · canary_freshness_hours: **401.8** (RUN-20260804-1317)
+- smoke: NeedsTriage · smoke_freshness_hours: **94.7** (RUN-20260821-1100)
+- regression: Closed · regression_freshness_hours: **133.5** (RUN-20260819-2012)
+- canary: Triaged · canary_freshness_hours: **502.0** (RUN-20260804-1317)
 - Открытые blocker/critical: **1** — BUG-083
 - Известные проблемы (known_issue): **2**
 - p0_automation_coverage: **100%** (37/37)
 - p1_automation_coverage: **46%** (85/183)
-- Test debt открыт: **4** — AT-BUG-075, AT-BUG-091, AT-BUG-092, AT-BUG-093
+- Test debt открыт: **6** — AT-BUG-075, AT-BUG-087, AT-BUG-091, AT-BUG-092, AT-BUG-093, AT-BUG-097
 - Карантин автотестов: **0**
 - Automated без red_probe: **0**
-- Untriaged: **0** · untriaged_failure_age: **0**
+- Untriaged: **1** · untriaged_failure_age: **94.7**
 
 ## Сборка под тестом
 
@@ -76,19 +76,22 @@ story-карточки: стадии см. docs/05-board.md §Story
 - BUG-012 [minor] Intended — Clear all ratings не отправляет broadcast открытым вкладкам браузера — бейджи на открытых работах остаются в выбранном состоянии
 - BUG-013 [minor] Intended — Смена темы, затем немедленный kill процесса (<100 мс) теряет theme_mode — выбор темы не персистится
 
-## Test debt (7)
+## Test debt (10)
 
 - AT-BUG-068 [broken_environment] Fixed — navigator.clipboard.writeText() БЫЛ недоказуем в тестовом WebView (DOMException 'Write permission denied') — блокер Then TC-188 снят window-пробой 2026-08-21
 - AT-BUG-075 [flaky_test] Open — TC-176 burst-окно: натуральный запас tap1->tap2 ~0.52-0.67с после rework attempt4 (path 1/path 2 attempt3 сняты критиком как неокупившиеся/небезопасные, остался только layering-фикс) — ниже критик-ориентира ≥1с, дальнейшее ужатие требует пересмотра сценария/ориентира (test-strategist/Lead)
-- AT-BUG-087 [flaky_test] Blocked — TC-135 (test_cold_start_deep_link_reuses_single_home_tab) TimeoutError на wait_tabs_persisted(timeout=20) — гонка ActivityManager remove-task после pm clear убивает cold-start процесс до init; фикс детектирует killedByAm=true и ретраит, НО детектор не покрывает все логкэт-варианты того же кила — D1-верификация 2026-08-20T07:44:07Z: 1 red из 2 живых прогонов на одной измеренно свежей сессии, пинг-понг reopen_count=2=sla.reopened_pingpong, Blocked
+- AT-BUG-087 [flaky_test] Open — TC-135 (test_cold_start_deep_link_reuses_single_home_tab) TimeoutError на wait_tabs_persisted(timeout=20) — гонка ActivityManager remove-task после pm clear убивает cold-start процесс до init; фикс детектирует killedByAm=true и ретраит, НО детектор не покрывает все логкэт-варианты того же кила — D1-верификация 2026-08-20T07:44:07Z: 1 red из 2 живых прогонов на одной измеренно свежей сессии, пинг-понг reopen_count=2=sla.reopened_pingpong, Blocked
 - AT-BUG-090 [flaky_test] Blocked — assert_chip_absent — негативный Then сразу после tap_selected_chip/reopen_listing_overlay без settle/hold (4-й член класса AT-BUG-081/082/083/085), TC-091; код-фикс написан 2026-08-20, live-верификация BLOCKED (environment)
 - AT-BUG-091 [broken_environment] Open — Bash-тул схлопывает $env:VAR в пустоту ДО передачи powershell -Command "..." — env-зависимый вызов молча уезжает с пустой переменной (классовый tooling-тикет, 4 измеренных экземпляра)
 - AT-BUG-092 [missing_fixture] Open — Нет безопасного способа переключить ответ сервера на ОДИН и тот же URL между двумя проходами синхронизации ВНУТРИ одного теста — блокирует TC-286 (retry после сбоя закачки, sync/downloads)
 - AT-BUG-093 [missing_fixture] Open — Примитив «hold-across-two-perform()» (удержание касания между двумя раздельными Appium perform()-вызовами) не верифицирован на стеке appium-uiautomator2-driver@8.0.1 — блокирует живую автоматизацию TC-287 (ripple), TC-288 (overscroll)
+- AT-BUG-095 [broken_environment] Fixed — framework/core/mitm.py::is_ca_installed() проверяет ТОЛЬКО APEX-стор доверия — на стеке 2 (ao3_test_api29, apex conscrypt отсутствует) ложно сообщает «CA не установлен», хотя CA реально стоит в системном сторе — блокирует ЛЮБОЙ replay-тест на этом стеке
+- AT-BUG-096 [broken_environment] Fixed — framework/web/base_page.py::contrast_of() передаёт WebElement аргументом в execute_script — на стеке 2 (ao3_test_api29, chromedriver=74.0.3729.6/chrome=74.0.3729.185) getComputedStyle получает НЕ Element (`parameter 1 is not of type 'Element'`), блокирует TC-149 ДО оракула
+- AT-BUG-097 [broken_oracle] Open — framework/web/base_page.py::contrast_of() оракул контраста даёт ложнокрасные вердикты: фантомный color у icon-only элементов (D1) + захардкоженный белый fallback фона в тёмной теме (D2) — блокирует automation-приёмку TC-149
 
-## Прогоны (22)
+## Прогоны (23)
 
-- Triaged: **9** · Closed: **12** · Blocked: **1**
+- NeedsTriage: **1** · Triaged: **9** · Closed: **12** · Blocked: **1**
 
 ## Exploratory
 

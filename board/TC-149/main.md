@@ -13,8 +13,8 @@ fixVersions: []
 watchers: []
 parent: null
 epic: null
-created: "2026-08-20T21:15:00Z"
-updated: "2026-08-20T21:15:00Z"
+created: "2026-08-21T12:51:45Z"
+updated: "2026-08-21T12:51:45Z"
 archived: false
 resolution: null
 ---
@@ -132,6 +132,34 @@ C4-банка («смена темы не меняет...»), что TC-108/TC-0
   Динамические состояния (открытый диалог/оверлей, живой снекбар) — вне
   scope, обе точки маршрута — в обычном (не fullscreen, без открытых
   оверлеев) состоянии.
+- **Блокер стабилизации на стеке 2 (test-automator, 2026-08-21, `bugs/
+  AT-BUG-095.md`, не test_debt самой оракульной части кейса — Given/When/
+  Then корректны, код теста написан):** блокер снят фиксами 3c621a67/
+  4a3605c7, стабилизировано на api29 2026-08-21 — CA-чек и device-binding
+  устранены, но следующий прогон (attempt 3) упёрся в НОВЫЙ блокер того же
+  стека, см. ниже.
+- **Блокер стабилизации на стеке 2, попытка 2 — снят фиксом
+  (test-automator, 2026-08-21, `bugs/AT-BUG-096.md` → `Fixed`):**
+  `framework/web/base_page.py::contrast_of()` передавал уже найденный
+  `WebElement` аргументом в `execute_script`; на стеке 2
+  (`chromedriver=74.0.3729.6`/`chrome=74.0.3729.185`, `ao3_test_api29`)
+  `arguments[0]` внутри инжектированного скрипта не резолвился в реальный
+  DOM `Element` — `getComputedStyle` бросал `TypeError: parameter 1 is
+  not of type 'Element'` (ДО первого Then-ассерта оракула). Фикс:
+  `contrast_of()` принимает CSS-селектор (строку), узел резолвится ВНУТРИ
+  инжектированного скрипта через `document.querySelector` (вызывающие
+  места — `listing_page.py::rate_button_contrast/note_button_contrast`,
+  `work_page.py::title_contrast/body_paragraph_contrast` — передают
+  селектор вместо `WebElement`); формула контраста не менялась. Живой
+  прогон на стеке 2 (`Invoke-Pytest ... -k
+  test_computed_contrast_holds_wcag_threshold_light_and_dark`) 2/2 раза
+  дошёл до оракула — исключение больше не возникает. Оракул на стеке 2
+  СТАБИЛЬНО (2/2 идентично) находит красный результат по контрасту (не
+  исключение) на ДВУХ узлах точки «листинг×Dark» (Rate-бейдж/Note-кнопка,
+  ratio 1.32/1.49 против порога 4.5 — см. `AT-BUG-096.md` «Обсуждение» за
+  полным перечнем всех 8 замеров) — кандидат `red_lock`, `automated_by`
+  НЕ заполнен этим ходом (требует продуктового бага, заводит триаж/
+  bug-reporter, не test-automator). TC-149 остаётся `Approved`.
 - **Разрешение эскалации `TC-149-GIVEN-BLURB-VS-WORK-PAGE-CONFLICT`
   (test-designer, 2026-08-20, `state/escalations.md`):** прежний Given
   требовал ОБА набора маркеров (`data-ao3-rate-btn`/`data-ao3-note-btn` —

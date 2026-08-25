@@ -7,7 +7,7 @@ priority: "p2"
 summary: "Implement app version for e-ink reader"
 assignee: "qa-agents"
 reporter: "qa-agents"
-labels: ["stage:story-review", "регресс сборки: smoke RUN-20260819-1818 49/49 · чисто · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 1", "багов на кейсах стори: 2"]
+labels: ["stage:story-review", "регресс сборки: smoke RUN-20260821-1100 20/49 · разбирается · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 0", "багов на кейсах стори: 2"]
 components: []
 fixVersions: []
 watchers: []
@@ -29,4 +29,4 @@ TC зоны: TC-246, TC-247, TC-248, TC-249, TC-250, TC-276, TC-277, TC-278, TC-
 
 Баги: AT-BUG-093, BUG-083
 
-Бейджи: регресс сборки: smoke RUN-20260819-1818 49/49 · чисто · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 1, багов на кейсах стори: 2
+Бейджи: регресс сборки: smoke RUN-20260821-1100 20/49 · разбирается · regression RUN-20260819-2012 461/461 · чисто · новых багов в прогоне: 0, багов на кейсах стори: 2
