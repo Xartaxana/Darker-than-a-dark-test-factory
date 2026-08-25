@@ -47,7 +47,29 @@ def test_theme_dark_applies_instantly_without_recreating_activity(clean_app, dri
     app_steps.open_tab(driver, "Browse")
     app_steps.wait_app_ready(driver)
     url_before = browser_steps.open_stable_tall_page(driver)
-    browser_steps.scroll_webview_to(driver, 900)
+    # Устройство-независимая величина прокрутки (закрытие класса, начатого в
+    # TC-111 — критик-раунд 2026-08-25, «геометрическая хрупкость оракула»):
+    # было `scroll_webview_to(driver, 900)`, абсолютный пиксель снятой на
+    # геометрии одного AVD. Множитель подобран ПОД МИССИЮ ИМЕННО этого теста,
+    # не скопирован из TC-111 механически: TC-111 после поворота допускает
+    # ПОТЕРЮ до 50% позиции (`scroll_landscape > scroll_before * 0.5`) —
+    # поворот реально переверстывает страницу (другая ширина/side panel), и
+    # запас 2×innerHeight там нужен, чтобы позиция осталась заметно
+    # ненулевой даже после реальной потери точности. Здесь инвариант —
+    # ПРОТИВОПОЛОЖНЫЙ: смена темы Light->Dark — чисто цветовая перекраска
+    # Compose-слоя, WebView-viewport/лейаут не меняется (сам тест это и
+    # проверяет: `assert abs(scroll_after - scroll_before) <= 2` ниже —
+    # почти точное совпадение, не 50%-допуск), значит запас TC-111 здесь не
+    # нужен и вреден: чем ближе целевая точка к границе `scrollHeight -
+    # innerHeight`, тем выше риск попасть под клампинг скролла на
+    # устройстве с большим viewport, а неточность клампинга — ложный источник
+    # шума именно для тесной 2px-проверки. Взят множитель 1 (один экран
+    # вниз) — заведомо ненулевая, пропорциональная любому viewport величина
+    # с максимальным запасом до границы клампинга (страница `/tos`
+    # гарантированно выше 2000px scrollHeight — `open_stable_tall_page`,
+    # реальный текст ToS на порядок длиннее одного viewport).
+    inner_height = browser_steps.get_webview_inner_height(driver)
+    browser_steps.scroll_webview_to(driver, int(inner_height * 1))
     scroll_before = browser_steps.get_webview_scroll_y(driver)
 
     # When пользователь в Settings выбирает тему "Dark"

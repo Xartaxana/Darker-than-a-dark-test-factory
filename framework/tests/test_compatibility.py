@@ -173,7 +173,27 @@ def test_orientation_rotation_preserves_tab_state(clean_app, driver):
     # `MainActivity.kt` ~561-579 — явная landscape-логика side panel).
     app_steps.wait_ui_ready(driver)
     url_before = browser_steps.open_stable_tall_page(driver)
-    browser_steps.scroll_webview_to(driver, 900)
+    # Устройство-независимая величина прокрутки (критик-раунд, класс
+    # «геометрическая хрупкость оракула», 2026-08-25): было
+    # `scroll_webview_to(driver, 900)` — абсолютный пиксель, снятый на
+    # геометрии ОДНОГО AVD (документирован в докстринге
+    # `open_stable_tall_page` как измеренный на emulator-5554), а TC-111 по
+    # своей миссии обязан ходить по разным API level/устройствам (топология
+    # api29/api34, docs/tasks/p3-second-emulator.md). На устройстве с другой
+    # плотностью/высотой viewport та же цифра либо не даёт заметного
+    # скролла, либо клампится по-другому — красный/зелёный перестаёт отличать
+    # дефект приложения от смены геометрии. Заменено на множитель РЕАЛЬНОГО
+    # `window.innerHeight`, измеренного в рантайме, — тот же приём, что уже
+    # применяется в `test_volume_paging.py::test_volume_buttons_page_browse_listing`
+    # (`scroll_webview_to(driver, int(inner_height * 2))`), не новая
+    # конвенция. Множитель 2 (не 1) — запас, чтобы позиция гарантированно
+    # была заметно НЕНУЛЕВОЙ на любом viewport и пережила 50%-допуск
+    # ассерта ниже; страница `/tos` заведомо намного выше 2×viewport —
+    # `open_stable_tall_page` ждёт `scrollHeight > 2000`, а сам текст ToS
+    # (эмпирика в её докстринге: `scrollHeight=9768` на одном из измерений)
+    # на порядок длиннее любого мобильного/планшетного viewport.
+    inner_height = browser_steps.get_webview_inner_height(driver)
+    browser_steps.scroll_webview_to(driver, int(inner_height * 2))
     scroll_before = browser_steps.get_webview_scroll_y(driver)
     # Детекция «WebView не пересоздан»: переиспользован СУЩЕСТВУЮЩИЙ примитив
     # `mark_no_reload_baseline`/`assert_no_reload_since` (TC-010/011) — window-
