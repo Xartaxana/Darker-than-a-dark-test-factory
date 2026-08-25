@@ -1,5 +1,25 @@
 # HANDOFF — точка возобновления
 
+**ОКНО ДЕГРАДАЦИИ 2026-08-20T20:54:05 .. 2026-08-25T09:15 ПРИНЯТО**
+(`lead_restored` 2026-08-25T09:15:38, Opus = ярус Lead-привязки). 123
+события, два трека (`/factory 10` проходы 1-9 + П3 N3-постмерж/N4-пилот),
+43 коммита `30e6ffea..9f47f5e8` — все были незапушены, отправлены этим же
+ходом. Ратифицирован 1 queued-to-lead (`feature-registry-reinventory-
+fdd3f728` — сверено в HEAD: `inventoried_at_commit` = fdd3f728, обе новые
+записи реестра, обе P1-области §9). Закрыты ретро: фантом AT-BUG-090
+(свежий witness `6 passed`, приёмка ЧАСТИЧНАЯ — живой слой в ESC-037, баг
+держится Blocked/environment) и `defect_found` AT-BUG-097-frontmatter
+(валидатор на HEAD чист). **Находки окна:** (а) правило 6 не оформлено на
+`needs-design-send-to-other-devices-remainder` (2 rejected sonnet →
+accepted через 84 с без `escalated` и без `dispatch_skipped`; тот же
+координатор двумя часами позже оформил тот же ход образцово дважды);
+(б) D-0083 — диспатч AT-BUG-097 объявил sonnet, frontmatter bug-reporter
+несёт haiku (приёмка записана честно); (в) TC-149 — возврат на sonnet
+после разрешённой эскалации, санкционирован письменно, принят; (г)
+сессия 21.08 закрылась без handoff (незапушенный хвост + незакрытое
+окно 4 суток). **В очередь механизмов Lead: F-50 (фантом-диспатч без
+вердикта) — ТРЕТЬЕ окно подряд, evidence на код-гейт созрел.**
+
 **`/factory 10` ОСТАНОВЛЕНА 2026-08-21T06:08:00Z словом two_empty (9/10, НЕ исчерпание бюджета).**
 Проходы 1-7 закрыли needs-design целиком (sync/downloads Send-to-other-devices,
 bridge reading-progress, accessibility e-ink оракулы ripple/overscroll —
