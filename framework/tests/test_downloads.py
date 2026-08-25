@@ -985,7 +985,7 @@ def restore_scan_workspace():
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
-@pytest.mark.p2
+@pytest.mark.p3
 @allure.id("TC-039")
 @allure.title("Restore from backup сворачивает результат scanForOrphanedDownloads в один диалог")
 def test_restore_folds_orphan_scan_into_single_dialog(restore_scan_workspace, driver):

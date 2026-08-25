@@ -124,12 +124,74 @@ job id, сырой URL дальше не передавать) и вызови p
    правило 3 — сверка replay-записей кейса с parametrize automated_by-теста,
    mech-case-recording-check).
    Код 1 = нарушение архитектуры: НЕ блокируй проход, но заведи/обнови
-   test_debt-баг (B4) на нарушителей + строка в orchestrator-log. [WARN]-строки
-   известных исключений ALLOWLIST — не событие. `[WARN] rule3:`-строка НЕ из
+   test_debt-баг (B4) на нарушителей (правила 1-2, layering `tests/` vs
+   `screens/web/`) + строка в orchestrator-log. [WARN]-строки известных
+   исключений ALLOWLIST — не событие. `[WARN] rule3:`-строка НЕ из
    бейзлайна (`test_real_repo_recording_rule_baseline` в scripts/tests) —
    СОБЫТИЕ, но нарушители — файлы КЕЙСОВ: адресат — батч мелочей
    test-maintainer (НЕ B4-баг на фреймворк), строка в orchestrator-log +
    пункт очереди; rule3-строки бейзлайна — известное состояние, не событие.
+
+   `[WARN] rule4:`-строка (NEGATIVE-THEN-WITHOUT-SETTLE, framework/steps/) —
+   ВСЕГДА WARN (гейт — NEGATIVE_THEN_SETTLE_BASELINE, не ALLOWLIST). Текст
+   `[вердикт: ...]` — известное состояние (разобранная находка, легитимная
+   или в очереди Lead — см. докстринг `NEGATIVE_THEN_SETTLE_BASELINE`), не
+   событие. Текст «без вердикта — НОВАЯ находка» — СОБЫТИЕ: новый негативный
+   Then без settle-hold вне бейзлайна (дрейф — новый инстанс класса
+   `negative_then_settle` в шаге steps/, либо переименование/удаление уже
+   известного); адресат — батч мелочей test-maintainer (добавить вердикт в
+   `NEGATIVE_THEN_SETTLE_BASELINE` ЛИБО почини код), строка в
+   orchestrator-log + пункт очереди (тот же приём, что rule3-дрейф выше; этот
+   дрейф ТАКЖЕ роняет `test_real_repo_negative_then_settle_baseline` в
+   каноническом `python -m pytest scripts/tests` — сильнее сигнал, чем этот
+   CLI-вывод). `rule4: ... не удалось разобрать` (steps-файл SyntaxError/
+   UnicodeDecodeError) — СОБЫТИЕ отдельного класса, тот же адресат, что
+   `parse`-ERROR правил 1-2.
+
+   `[ERROR] rule5:`/`[ERROR] rule6:`-строка (PRIORITY-MARKER-CONSISTENCY /
+   AUTOMATED-BY-ALLURE-ID-LINK направление А, ОБА — ERROR-ярус с 2026-08-25)
+   — часть `Код 1`, но НАРУШИТЕЛИ — связка кейс<->тест-файл (маркер `p<N>` vs
+   `priority` кейса / `automated_by` vs `allure.id`), НЕ layering — адресат
+   как у rule3-дрейфа (батч мелочей test-maintainer: синхронизировать маркер/
+   automated_by/allure.id), НЕ B4-баг на фреймворк. `[WARN] rule5:`/
+   `[WARN] rule6:` с текстом «известное исключение — см. ALLOWLIST» — не
+   событие (ALLOWLIST реально гасит эти находки до WARN, см. `run()` в
+   `scripts/arch_check.py`). Оба ERROR-правила МОЛЧАТ по кейсам вне рабочих
+   статусов (`Merged`/`Draft` — их frontmatter не авторитетен для теста, см.
+   `_NON_WORKING_CASE_STATUSES` в `scripts/arch_check.py`): отсутствие
+   строки по такому кейсу — норма, а не пропуск гейта.
+
+   `[WARN] rule6:`-строка БЕЗ «известное исключение» (направление Б,
+   тест -> кейс, остаётся WARN) НЕ из бейзлайна
+   (`test_real_repo_automated_by_allure_id_link_test_side_baseline` в
+   scripts/tests) — СОБЫТИЕ, тот же адресат/приём, что rule3/rule4-дрейф
+   выше (батч мелочей test-maintainer + orchestrator-log + пункт очереди).
+   Признак события — НОВАЯ СТРОКА, а не новый `TC-id`: пришпилены ДЕВЯТЬ
+   КОНКРЕТНЫХ ТЕСТ-ФУНКЦИЙ (`файл::функция`), не девять id. Связь кейс ->
+   находка здесь 1:N — `TC-020` и `TC-104` несут ПО ДВА теста каждый, и
+   ТРЕТЬЯ находка внутри уже пришпиленного id — полноценное СОБЫТИЕ, хотя её
+   `TC-id` в списке уже есть (пин в scripts/tests — кортежный
+   `(файл, функция, TC-id)` именно поэтому; id-ключевое чтение этого шага
+   было бы слепо ровно к тому классу, что чинил Б1 прошлого раунда, — см.
+   `test_pin_by_extracted_id_is_blind_to_second_finding_within_pinned_id`).
+   Пришпиленные строки:
+   `tests/canary/test_bridge_init_retry.py::test_bridge_init_retry_dcl_loading_idempotent` (TC-195),
+   `tests/canary/test_bridge_init_retry.py::test_bridge_init_retry_setTimeout_only_path` (TC-196),
+   `tests/test_accessibility.py::test_no_interactive_bounds_overlap` (TC-150),
+   `tests/test_accessibility.py::test_computed_contrast_holds_wcag_threshold_light_and_dark` (TC-149),
+   `tests/test_downloads.py::test_open_downloaded_file_applies_viewport_and_reader_css` (TC-034),
+   `tests/test_downloads.py::test_delete_downloaded_file_keeps_rating_row` (TC-035),
+   `tests/test_downloads.py::test_delete_work_removes_row_and_file` (TC-036),
+   `tests/test_security_backup_privacy.py::test_backup_privacy_saf_export_file_permissions_not_widened` (TC-104),
+   `tests/test_settings.py::test_clear_all_ratings_badge_resets_after_reload` (TC-020)
+   — только они известное состояние, не событие.
+
+   `[WARN] cases:`-строка (файл `test-cases/**/*.md` не прочитан — каталог с
+   именем `*.md`, отказ прав, битая кодировка) — СОБЫТИЕ отдельного класса:
+   по этому файлу НЕ применялись правила 3/5/6, то есть кейс выпал из гейта
+   молча. Адресат — тот же батч мелочей test-maintainer (починить/удалить
+   файл), строка в orchestrator-log + пункт очереди. Не путать с
+   `parse`-ERROR правил 1-2 (тот про файлы `framework/`).
 3а. `python scripts/dedup_check.py` — детектор ДУБЛИРУЮЩИХ тест-кейсов
    (WARN-ярус, слово оператора 2026-08-18). Ловит класс «кейс, отличающийся
    от существующего только значениями параметров одного механизма» —
