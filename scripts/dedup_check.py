@@ -123,6 +123,18 @@ BASELINE: dict[frozenset, str] = {
     frozenset({"TC-139", "TC-141"}): VERDICT_NOT_DUP_SURFACE,
     frozenset({"TC-151", "TC-152"}): VERDICT_NOT_DUP_SURFACE,
     frozenset({"TC-207", "TC-212"}): VERDICT_NOT_DUP_SURFACE,
+    # TC-217 (миграция Room 7->8, ОДНА) против TC-281 (составная цепочка
+    # 8->9->10): разный набор колонок и разный Given-снимок базы. Вердикт
+    # «не дубль» вынесен критик-входом прохода 4 (task_id
+    # needs-design-send-to-other-devices, accepted) и повторно подтверждён
+    # на проходе 7 — оба раза записан в state/orchestrator-log.md
+    # (2026-08-21T01:10:48Z и 05:31:20Z), но в BASELINE не внесён: пара
+    # всплывала «новой» на КАЖДОМ прогоне, а с 37a5c507 (заведение TC-281)
+    # держала красным scripts/tests/test_dedup_check.py::
+    # test_repo_baseline_covers_the_current_corpus — окно закрылось, не
+    # прогнав обвязку. Вердикт перенесён сюда Lead 2026-08-25, ничего не
+    # решая заново.
+    frozenset({"TC-217", "TC-281"}): VERDICT_NOT_DUP_SURFACE,
     # одна цель и одна поверхность — слияние обосновано, но отложено
     frozenset({"TC-030", "TC-063"}): VERDICT_MERGE_DEFERRED,
     frozenset({"TC-116", "TC-117"}): VERDICT_MERGE_DEFERRED,
