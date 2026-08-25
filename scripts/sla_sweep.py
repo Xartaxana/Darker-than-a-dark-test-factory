@@ -92,7 +92,19 @@ DEFAULTS = {
     # E5: детектор отказа автозаведения exploratory charter'ов — заведомо позже
     # штатной каденции правила rules.yaml (72ч), иначе шумит на каждом цикле.
     "charter_queue_empty": 96,
+    # Детектор отказа правила rules.yaml «Еженедельный compatibility-прогон»
+    # (каденция — слово владельца 2026-08-25). Порог ЗАВЕДОМО больше штатного
+    # цикла (2x недельной каденции = 336ч), той же логикой, что
+    # charter_queue_empty: детектор, срабатывающий раньше следующего планового
+    # прогона, шумел бы на каждом проходе. 336 — ОЦЕНКА от каденции (F-30),
+    # не замер; уточняется по evidence первых недель.
+    "compatibility_run_stale": 336,
 }
+
+# Каденция compatibility: статус RUN-артефакта, при котором прогон считается
+# состоявшимся (разобранный прогон), и имя suite в его frontmatter.
+COMPATIBILITY_SUITE = "compatibility"
+COMPATIBILITY_DONE_STATUS = "Closed"
 
 # E5: активные статусы машины charter (schemas/transitions.yaml) — очередь
 # считается непротухшей, пока хотя бы один CH-*.md в одном из них.
@@ -236,6 +248,44 @@ def _charter_queue_wanted(now: datetime.datetime, thr: dict) -> dict[tuple[str, 
             f"нет активных charter'ов (Proposed/Planned/InProgress), последний Done "
             f"старше {thresh:.0f}ч или executed_at отсутствует/битый у Done-чартеров "
             f"| нужно: завести charter (charter-designer / вручную)"}
+
+
+def _compatibility_run_wanted(now: datetime.datetime, thr: dict) -> dict[tuple[str, str], str]:
+    """Детектор ОТКАЗА правила rules.yaml «Еженедельный compatibility-прогон»
+    (каденция — слово владельца 2026-08-25: «компатибилити кейсы — раз в
+    неделю»). Правило само по себе — норма в yaml; без этого предиката его
+    молчание (не сработало, некому было прогнать, устройство занято) ничем не
+    ловится — ровно тот класс, из-за которого compatibility-набор и простоял
+    вне всех правил.
+
+    Возвращает {} (тихо) либо один (key, rule) с искусственным key
+    "COMPATIBILITY-RUN" — проверка не привязана к одному артефакту (тот же
+    приём, что `_charter_queue_wanted`).
+
+    Fail-safe: прогонов нет вовсе / у всех битая или пустая дата — эскалация,
+    а не тишина (недоказанная свежесть != свежесть, F-30)."""
+    thresh = thr["compatibility_run_stale"]
+    newest: datetime.datetime | None = None
+    for itype, meta, _body, _src in bs._iter_artifacts():
+        if itype != "run":
+            continue
+        if str(meta.get("suite") or "").strip() != COMPATIBILITY_SUITE:
+            continue
+        if str(meta.get("status") or "").strip() != COMPATIBILITY_DONE_STATUS:
+            continue
+        ts = _since(meta)
+        if ts is None:
+            continue
+        if newest is None or ts > newest:
+            newest = ts
+    if newest is not None and (now - newest).total_seconds() / 3600.0 <= thresh:
+        return {}
+    seen = "нет ни одного" if newest is None else f"новейший от {newest:%Y-%m-%dT%H:%M:%SZ}"
+    return {("COMPATIBILITY-RUN", "compatibility_run_stale"):
+            f"каденция compatibility (раз в неделю, слово владельца 2026-08-25) "
+            f"не соблюдается: {seen} Closed-прогон suite=compatibility, порог "
+            f"{thresh:.0f}ч | нужно: прогнать compatibility (правило rules.yaml "
+            f"«Еженедельный compatibility-прогон», test-runner, стек 2 api29 по лизе)"}
 
 
 def _excerpt(value, limit: int = 80) -> str:
@@ -386,6 +436,7 @@ def collect_wanted(now: datetime.datetime, thr: dict) -> tuple[dict, list]:
 
     wanted.update(_charter_queue_wanted(now, thr))
     wanted.update(_charter_followup_wanted())
+    wanted.update(_compatibility_run_wanted(now, thr))
     return wanted, mutations
 
 

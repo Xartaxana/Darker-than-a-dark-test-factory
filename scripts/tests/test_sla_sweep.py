@@ -40,6 +40,10 @@ def test_open_major_fresh_is_quiet(repo):
     # E5: charter_queue_empty — отдельное правило, не то, что здесь проверяем;
     # активный charter держит его тихим, чтобы sweep() остался пуст.
     repo.charter("CH-900", "Planned")
+    # То же для compatibility_run_stale (каденция 2026-08-25): свежий
+    # Closed-прогон suite=compatibility держит правило тихим.
+    repo.run("RUN-20260707-1000", "Closed",
+             extra=f"suite: compatibility\nstatus_since: {FRESH}\n")
     _sla(repo)
 
     assert ss.sweep(now=NOW) == []
@@ -698,6 +702,94 @@ def test_followup_tc_id_re_unit_malformed_forms_do_not_match():
     НЕ матчатся вовсе."""
     assert ss.FOLLOWUP_TC_ID_RE.search("ABUG-12") is None
     assert ss.FOLLOWUP_TC_ID_RE.search("ATBUG-12") is None
+
+
+# --- compatibility_run_stale (каденция «раз в неделю», слово владельца 2026-08-25) ---
+
+COMPAT_FRESH = '"2026-07-01T00:00:00Z"'   # 276ч до NOW — внутри порога 336ч
+COMPAT_STALE = '"2026-06-20T00:00:00Z"'   # 420ч до NOW — за порогом
+
+
+def _quiet_neighbours(repo):
+    """Гасит соседние правила, чтобы в escalations остался только предмет теста."""
+    repo.charter("CH-901", "Planned")
+
+
+def test_compatibility_no_run_at_all_escalates(repo):
+    """Прогонов compatibility нет вовсе — fail-safe эскалация (недоказанная
+    свежесть != свежесть). Это ровно исходное состояние 2026-08-25, из-за
+    которого набор и простоял вне правил."""
+    _quiet_neighbours(repo)
+    _sla(repo, compatibility_run_stale=336)
+
+    ss.sweep(now=NOW)
+
+    assert "[sla:compatibility_run_stale]" in _esc(repo)
+    assert "COMPATIBILITY-RUN" in _esc(repo)
+
+
+def test_compatibility_fresh_run_is_quiet(repo):
+    _quiet_neighbours(repo)
+    repo.run("RUN-20260701-0000", "Closed",
+             extra=f"suite: compatibility\nstatus_since: {COMPAT_FRESH}\n")
+    _sla(repo, compatibility_run_stale=336)
+
+    ss.sweep(now=NOW)
+
+    assert "compatibility_run_stale" not in _esc(repo)
+
+
+def test_compatibility_stale_run_escalates(repo):
+    _quiet_neighbours(repo)
+    repo.run("RUN-20260620-0000", "Closed",
+             extra=f"suite: compatibility\nstatus_since: {COMPAT_STALE}\n")
+    _sla(repo, compatibility_run_stale=336)
+
+    ss.sweep(now=NOW)
+
+    assert "[sla:compatibility_run_stale]" in _esc(repo)
+
+
+def test_compatibility_other_suite_does_not_count(repo):
+    """Свежий canary НЕ закрывает каденцию compatibility — граница по suite."""
+    _quiet_neighbours(repo)
+    repo.run("RUN-20260707-0900", "Closed",
+             extra=f"suite: canary\nstatus_since: {FRESH}\n")
+    _sla(repo, compatibility_run_stale=336)
+
+    ss.sweep(now=NOW)
+
+    assert "[sla:compatibility_run_stale]" in _esc(repo)
+
+
+def test_compatibility_unclosed_run_does_not_count(repo):
+    """Прогон есть, но не разобран (NeedsTriage) — каденция не считается
+    соблюдённой: прогон без вердикта не доказывает совместимость."""
+    _quiet_neighbours(repo)
+    repo.run("RUN-20260707-0800", "NeedsTriage",
+             extra=f"suite: compatibility\nstatus_since: {FRESH}\n")
+    _sla(repo, compatibility_run_stale=336)
+
+    ss.sweep(now=NOW)
+
+    assert "[sla:compatibility_run_stale]" in _esc(repo)
+
+
+def test_compatibility_broken_status_since_falls_back_to_updated(repo):
+    """Битый `status_since` НЕ делает прогон недатированным: модульная
+    семантика `_since` (status_since, иначе updated) держится и здесь —
+    фикстура пишет свежий `updated`, каденция считается соблюдённой.
+    Пин именно на фолбэк: тихо здесь — это осознанное поведение, а не
+    пропущенная ветка (ветка «даты нет вовсе» закрыта тестом
+    no_run_at_all, где newest is None)."""
+    _quiet_neighbours(repo)
+    repo.run("RUN-20260707-0700", "Closed",
+             extra='suite: compatibility\nstatus_since: "не-дата"\n')
+    _sla(repo, compatibility_run_stale=336)
+
+    ss.sweep(now=NOW)
+
+    assert "compatibility_run_stale" not in _esc(repo)
 
 
 def test_dry_run_writes_nothing(repo):

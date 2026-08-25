@@ -3,7 +3,11 @@ type: run
 id_pattern: "^RUN-[A-Za-z0-9-]+$"
 required: [id, suite, status]
 fields:
-  suite:  { enum: [smoke, regression, canary, verification] }
+  # compatibility — добавлен 2026-08-25 вместе с правилом еженедельной каденции
+  # (state/rules.yaml «Еженедельный compatibility-прогон», слово владельца):
+  # без этого значения отчёт о прогоне набора физически нельзя объявить, а
+  # детектор каденции (sla_sweep.compatibility_run_stale) — нечем закрыть.
+  suite:  { enum: [smoke, regression, canary, verification, compatibility] }
   mode:   { enum: [live, replay] }
   status: { enum: [NeedsTriage, Triaged, Closed, Blocked] }
   updated: { pattern: "^\\d{4}-\\d{2}-\\d{2}[T ][\\d:.+]+Z?$" }

@@ -17,6 +17,14 @@ description: Прогнать набор тестов (smoke/regression/canary) 
   эмулятор, включать его в базу счёта device-времени нельзя (docs/tasks/
   p2-pyramid-bridge.md Р5).
 - `canary` → `pytest -m live` (canary/tests), режим live — минимально, AO3 сторонний.
+- `compatibility` → `pytest tests/test_compatibility.py`, режим live, **стек 2
+  (`Use-DeviceStack -N 2`, лиза обязательна)**. Каденция — раз в неделю
+  (правило rules.yaml «Еженедельный compatibility-прогон», слово владельца
+  2026-08-25); набор — TC-109/110/111 (второй, нижний практичный API level
+  api29 + системная dark/light матрица + portrait/landscape). Единственный
+  набор, где api29 — не черновой коридор, а САМ объект проверки: посменный
+  api34-якорь топологии 2026-08-21 сюда не применяется. Отказ лизы
+  (`DEVICE_LEASE_BLOCKED`) = `Blocked` + доклад, НЕ «битая среда».
 - допускается `--mode live|replay`.
 
 Агент сам поднимет окружение (`scripts/tasks.ps1`: `Use-DeviceStack -N 1` (spec-

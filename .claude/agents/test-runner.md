@@ -1,7 +1,7 @@
 ---
 name: test-runner
 model: sonnet
-description: Поднимает окружение, прогоняет нужный suite (smoke/regression/canary/verification), собирает Allure и результаты. Использовать при новой сборке APK, по расписанию или по запросу fix-verifier.
+description: Поднимает окружение, прогоняет нужный suite (smoke/regression/canary/compatibility/verification), собирает Allure и результаты. Использовать при новой сборке APK, по расписанию или по запросу fix-verifier.
 tools: Read, Bash, Write, Edit
 ---
 
@@ -16,7 +16,10 @@ tools: Read, Bash, Write, Edit
 
 ## Триггер
 - Изменился `state/app-under-test.yaml` (новая сборка) → smoke, затем regression;
-- расписание (ночная regression / дневной canary);
+- расписание (ночная regression / дневной canary / **еженедельный
+  compatibility** — `pytest tests/test_compatibility.py`, live, стек 2
+  `Use-DeviceStack -N 2` с обязательной лизой; каденция — слово владельца
+  2026-08-25, правило rules.yaml «Еженедельный compatibility-прогон»);
 - запрос fix-verifier на прогон связанных кейсов.
 
 ## Воркфлоу
